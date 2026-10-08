@@ -18,6 +18,8 @@
 
 import { defaultPositionForHeilmittel, resolvePositionsnummer } from '../billing/codes/physio_positions.js';
 import { berlinHeute, istStichtag } from './berlin-tag.js';
+import { podologiePositionFuerText } from './podologie-heilmittel-position.js';
+import { PODOLOGIE_POSITIONS_2025, PODOLOGIE_POSITIONS_2026 } from '../billing/codes/podologie_positions.js';
 
 /**
  * Heilmittel-Position auflösen. Bevorzugt eine vom Frontend mitgegebene
@@ -33,6 +35,13 @@ import { berlinHeute, istStichtag } from './berlin-tag.js';
  * @returns {?string}
  */
 export function heilmittelPositionAufloesen(rezept) {
+  if (['podologie', 'podo'].includes(rezept?.therapiebereich || rezept?.therapie_bereich)) {
+    if (rezept?.heilmittel_position) {
+      const code = String(rezept.heilmittel_position).trim();
+      return [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026].some(p => p.hpnr === code) ? code : null;
+    }
+    return podologiePositionFuerText(rezept?.heilmittel_feld_text || rezept?.heilmittel);
+  }
   if (rezept?.heilmittel_position) {
     try { return resolvePositionsnummer(rezept.heilmittel_position, '22'); }
     catch (_e) { return rezept.heilmittel_position; }

@@ -46,6 +46,14 @@ test('kein Heilmittel und keine Position -> null, nicht geraten', () => {
   assert.equal(heilmittelPositionAufloesen(undefined), null);
 });
 
+test('Podologie-Backend nutzt 78xxx und lehnt fremde oder mehrdeutige Positionen ab', () => {
+  assert.equal(heilmittelPositionAufloesen({therapiebereich:'podo',heilmittel:'Hornhautabtragung'}),'78010');
+  assert.equal(heilmittelPositionAufloesen({therapiebereich:'podologie',heilmittel:'Podologische Behandlung (groß)'}),'78020');
+  assert.equal(heilmittelPositionAufloesen({therapie_bereich:'podo',heilmittel:'Podologische Komplexbehandlung'}),null);
+  assert.equal(heilmittelPositionAufloesen({therapiebereich:'podo',heilmittel_position:'20501'}),null);
+  assert.equal(heilmittelPositionAufloesen({therapiebereich:'podo',heilmittel_position:'78020',heilmittel:'Hornhautabtragung'}),'78020');
+});
+
 test('explizite Position gewinnt gegen den Rate-Zweig', () => {
   assert.equal(heilmittelPositionAufloesen({ heilmittel_position: 'X1201', heilmittel: 'KG' }), '21201');
 });

@@ -5619,3 +5619,101 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Durum** | `offen` — sahibi K2b.16 (builder) · **→ `gelöst` (08.10.2026, Claude):** `onprem/docker-compose.yml` kong → `KONG_ANONYMOUS_REPORTS: "off"`, manifest yenilendi. Ölçüldü (WSL, `kong/kong:3.9.1`, `kong prepare` → `.kong_env`): satırsız `anonymous_reports = true`, satırla `false`. Kurulu kutuya `update.sh` (compose bundle) ile gider |
 
 > **08.10.2026 — K2b.16 ön kontrolü:** yeni O-178 (`geplant`), O-179 + O-180 (`offen`). En yüksek madde numarası **O-180**. Bağlantı sayımı (koddan): kutu bugün **beyan edilebilir** olarak ghcr.io · Docker Hub · merkez (`MERKEZ_URL`: kayıt, `ip-melden.sh`) · acme-dns + Let's Encrypt (TLS moduna göre) · KI (`AI_MODE`, varsayılan `aus`) · praksis SMTP (`SMTP_HOST`, varsayılan boş) adreslerine çıkıyor; **beyan edilmemiş** iki tane bulundu (O-179 pm2, O-180 Kong). ITSG kutudan çıkmıyor (O-116, tip B), Google kutuda kapalı (O-08), Sentry DSN kutu compose'unda yok.
+
+## M3 ön kontrolü — 07.10.2026 (uygulama öncesi)
+
+**Hüküm: GEÇER, KAYITLA.** Yerel PDF417 okuma için npm'den üretilip depoya konan
+ZXing JS + PDF renderer/worker, tip **B + G**: yalnız geliştirme sırasında bağımlılık
+indirilir; görüntü/PDF/kamera verisi tarayıcıdan çıkmaz. Yeni env, şema, cron ve dış
+host gerekmiyor. Sahip: **Hat M, M3.1–M3.7**; uygulama ve gerçek kutu testi henüz yok.
+
+- Dağıtım: `onprem/frontend.Dockerfile:101,104` `module/` ve `vendor/` dizinlerini
+  bütünüyle kopyalar; `.github/workflows/publish-frontend.yml:39-40` değişiklikte image
+  üretimini tetikler. Yeni frontend vendor/modül için ek COPY gerekmez.
+- CSP: `onprem/Caddyfile:66` ve `vercel.json:19` eval/WASM izni vermez. **Saf JS ZXing**
+  seçilir; CSP gevşetilmez. PDF worker aynı origin'deki yerel `vendor/` dosyasından
+  açılır (`worker-src` yok: mevcut `script-src`/`default-src` fallback'i); blob-worker,
+  CDN worker ve çalışma anında dış font/CMap/model indirmesi kullanılmaz. PDF renderer
+  eval kapalı çalışır; gerekiyorsa ek font/CMap/WASM kaynakları da yerel paketlenir.
+- Kamera: O-109 zaten çözüldü; `onprem/Caddyfile:82-83` ve `vercel.json:18` kamera için
+  `self` izni verir. `KUTU_HAZIRLIK_SPRINT.md:190-192`: K2b gerçek sertifika getirmeden
+  kutu testi güvenilen kök sertifikalı cihazla yapılır; sertifika uyarısını geçmek
+  Secure Context kanıtı değildir. HTTPS/izin/cihaz yoksa görüntü/PDF ve manuel yol kalır.
+- Kabul: yerel dosyalar + decoder + PDF worker üçüncü parti host'lar engellenirken
+  çalışmalı; kamera durdurulunca tüm track'ler kapanmalı; payload/PHI log, Sentry,
+  analytics veya sayaçlara yazılmamalı. Lisans metinleri korunur ve yeni vendor
+  bileşenleri `vendor/README.md` + `THIRD-PARTY-NOTICES`'a kaydedilir (K2b.16).
+
+**M3.4 paketleme eki (07.10.2026, uygulama planı): GEÇER, KAYITLA.** Ortak podoloji
+Heilmittel → HPNR mantığının asıl kaynağı `module/podologie-heilmittel-position.js`;
+`tools/vendor/build-barcode.mjs` bunun byte-identik türevini
+`api-backend/lib/podologie-heilmittel-position.js`'e üretir. Backend yalnız kendi
+`lib/` yolundan import eder. Neden: API image build context'i `./api-backend`
+(`.github/workflows/publish-calendar-api.yml:198,297`); `../../module` runtime import'u
+image içinde bulunmaz. `api-backend/Dockerfile:22` `lib/` dizinini zaten kopyalar ve
+API workflow `api-backend/**` değişince çalışır (`:7`). Yeni context/COPY/env/şema
+gerekmiyor, aynı mantık iki dağıtımda çalışır (G7). Türev elle düzenlenmez; senkronizasyon
+testi iki dosyanın byte eşitliğini denetler ve sapmada başarısız olur. Sahip **Hat M,
+M3.4**; üretici ve senkronizasyon testinin geçmesi uygulama kabul şartıdır.
+
+**M3 uygulama bildirimi — 07.10.2026 (yerel, tam kutu kabulü değil):** Koordinatör
+bildirimi: ZXing **0.21.3** saf JS ve PDF.js **4.10.38** + worker/lisanslar `vendor/`
+altında; CSP değiştirilmedi. Kaynak sondajı: `module/rezept-barcode-scan.js:38,96-99`
+yerel decoder + yerel worker, PDF eval kapalı; `:6-7` 20 MiB/12 MP sınırları.
+PDF taraması ilk 5 sayfayla sınırlı. Görüntü/PDF tarayıcıda kalır; native capture
+fallback yok. `tools/vendor/build-barcode.mjs:22` ortak mapping kaynağını byte-identik
+olarak backend `lib/` dizinine kopyalar; `api-backend/lib/rezept-felder.js:21` yerel
+kopyayı import eder. Koordinatörün yerel doğrulaması: `npm test` **2864**, typecheck ve
+`tools/browser-probe/rezept-barcode-probe.mjs` **ilk koşu 21/21** başarılı; browser probe tüm
+yabancı origin'leri bloklar, ağ üzerinden write yapmaz. Kamera cancel/stale-permission
+senaryoları sentetik olarak doğrulandı. **Açık:** fiziksel telefon/tablet kamerası,
+gerçek HTTPS kutusu, canlı kaydetme, gerçek kutu image/airgap kabulü. **Push/deploy yok.**
+O-171'in acmedns/Caddy kabul durumu bu M3 bildirimiyle değişmez. Tam M3/kutu kabulü
+yapılmadı; kalan saha doğrulamalarının sahibi **Hat M / K3**.
+
+**PDF font review eki (07.10.2026):** Eksik standard-font uyarısı üzerine PDF.js'in
+14 fontu + `LICENSE_FOXIT`/`LICENSE_LIBERATION` yerel `vendor/pdfjs/standard_fonts/`
+dizinine alındı; bu sicilin karşılaştırması **16/16 dosya npm kaynağıyla byte-identik**.
+`module/rezept-barcode-scan.js:102` same-origin `standardFontDataUrl`; mevcut CSP/COPY
+değişmez. Font lisansları vendor kaydında ayrı belirtiliyor. Koordinatörün T3 browser
+probe sonrası sonucu **29/29**, PDF metin piksel kontrolü dahil. Bu, ilk 21/21 koşunun
+üstüne gelen yerel review doğrulamasıdır; yukarıdaki fiziksel kamera/HTTPS kutusu/
+canlı kaydetme/gerçek image-airgap kabulü hâlâ açık.
+
+
+## M4-Nachtrag — 08.10.2026: lokale KI-Umsetzung geprüft, Aktivierung offen
+
+**NACHWEIS:** `wissensbank/sitzungen/2026-10-08_m4-qa-bericht.md`; Plan 2 und Konsey `2026-10-08-m4-optin-lokal.md`. Dieser Nachtrag ergänzt die historischen Einträge; er erklärt keinen externen Nachweis für erledigt.
+
+| Bezug | Lokaler Stand | Separat offene Grenze |
+|---|---|---|
+| O-151 / O-135 | AI_MODE/AI_* mit AZURE-Legacy-Kompatibilität, explizit aus priorisiert; lokale Gateway-/Transporttests PASS, Start ohne KI-Schlüssel im echten isolierten Backend geprüft | Reale SaaS-/Box-Konfiguration, Rotation und Providerfunktion nicht geprüft; historischer Token-Datei-Vorschlag aus O-135 wird für Jeton nicht übernommen |
+| O-136 | ENV-Oberfläche bereits durch K2 geschlossen; nicht wieder geöffnet | Aktuelle Runtime-/Compose-Vertragsprüfung im M4-Bericht |
+| O-169 | Box-Jetonadapter lokal mit Fakeaussteller abnahmefähig; merkezFetch/Boxidentität wiederverwendet, Token RAM-only, Hostliste im Image leer bis geprüfte Ressource vorliegt | Echter Hat-K-Endpoint, Ausgabe-/TTL-/Quoten-/Budgetvertrag, minimaler Azure-RBAC/Region/Deployment und realer Ausfalltest offen; clientseitiges ≤1-h-Gate ist kein Ausstellerbeweis |
+| O-105 | Bestehender CORS-Abschluss wird nicht wieder geöffnet | M4-Auth-/Config-Abnahme separat, keine neue CORS-Behauptung |
+| M4.2 | NO_NER: 4/139 Restlecks, 6/7 negative Fehlalarme; ONNX-Import Alpine ARM64/AMD64 FAIL | Zwei PM2-Worker im NER-Zielimage nicht ausführbar, keine Änderung von Basisimage/Limits, kein Runtime-Modell |
+
+### Lokale Persistenz ohne Schreibrecht auf kimlik
+
+Beschluss/Compose-Vertrag: eigenes Named Volume **ki_freigaben**, nur API-Mount `/var/lib/praxura/ki-freigaben`; Identität `kimlik` unverändert read-only. Runtime-Defaultpfad und Compose geprüft. Nur Owner-/Praxis-/Box-/Textversionsmetadaten und verbrauchte HMAC-/Expiry-Marker, keine Patientendaten, Prompts, Maps oder Provider-Tokens. Verzeichnis 0700, Datei 0600, atomare Ersetzung. Frischer Widerruf, konkurrierender Einmalverbrauch und Neustart-Replay in je zehn Kindprozessläufen lokal und unter Node 22 Alpine ARM64 PASS; produktive PM2-/Boxprüfung offen. Beschädigt/fremd/fehlend = aus. Keine Sicherung des boxgebundenen Opt-ins; neue Box verlangt erneute Entscheidung.
+
+Frisches Named Volume im lokal gebauten ARM64-Image: nicht privilegierter Benutzer unter Node 22.23.3/Alpine kann Entscheidung schreiben und widerrufen, Verzeichnis 0700 und Datei 0600; Schreibversuch auf read-only gemountetes `kimlik` abgewiesen — PASS. Nachweis: lokales Prüfartefakt `.local-m4-work/fresh-volume-result.json`; ausschließlich für diesen Test erzeugte Volumes anschließend entfernt. Kein Nachweis für AMD64-Runtime oder reale Box.
+
+Box `AI_MODE=aus`; Betreiberflags `AI_ACTIVATION_READY` / `AI_MAIL_READY` / `AI_ALLOW_FREETEXT` sind getrennte Gates und standardmäßig aus. Jeton A-only, B standardmäßig gesperrt, C/OCR gesperrt. Freitextqualität des dritten Korpus FAIL (36/156); keine Freigabe daraus. Lokale Gesamtsuite 3117/3117, M4-Probe 22/22, isolierte Vollbackend-API 14/14 PASS. Lokales ARM64-Image gebaut; Paketmanifest mit 19 Dateien und Größenprüfung über isolierten Git-Testindex PASS. Reale isolierte Boxabnahme und CI offen; keine pauschale M4-/Betriebsfreigabe. Vollständige Grenzen im QA-Bericht.
+
+
+### M3/M4-Integration auf aktuellen Hat-K-Stand — 08.10.2026
+
+Die Integration erhält den auf `71dce32` vorhandenen Hat-K-Stand: API-Image startet
+weiter über **`node start.mjs`** mit zwei `node:cluster`-Workern; `NODE_APP_INSTANCE`
+bleibt 0/1. Die M4-Dateiverträge für frischen Widerruf und atomaren Replay-Verbrauch
+teilen das eigene Volume `ki_freigaben`; der API-Mount von `kimlik` bleibt read-only.
+Die zuvor dokumentierten lokalen M4-Messungen sind Nachweise des damaligen Images,
+keine Abnahme des nun integrierten Starters oder einer Kundenbox.
+
+Das Paketmanifest wird aus dem aktuellen Generator neu erzeugt: **20 Dateien**,
+inklusive `lib-setup-jeton.sh`. Kong `KONG_ANONYMOUS_REPORTS: "off"` bleibt erhalten.
+O-173 bis O-180 und die weiteren Hat-K-Änderungen werden durch M3/M4 nicht zurückgesetzt.
+O-179 Phase 2 (SaaS-VPS-Override/PM2-Abhängigkeit), O-178/ORG und reale Boxprüfungen
+bleiben beim jeweiligen Hat-K-Auftrag offen. Kein Providerzugriff und keine
+KI-Aktivierung durch Integration; Default `AI_MODE=aus`, alle drei Betreiberflags 0.

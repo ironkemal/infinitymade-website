@@ -1,0 +1,40 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><title>M4 lokale KI-Probe</title>
+<style>:root{--text-main:#ddd;--text-muted:#aaa;--bg-card-solid:#222;--border:#555;--bg-input:#111;--primary:#7ab;--success:#9c9;--warning:#dc9;--danger:#c99}body{background:#111;color:var(--text-main);font:16px sans-serif}#confirmModal{position:fixed;inset:10%;background:var(--bg-card-solid);padding:20px} [hidden]{display:none!important}</style>
+<h1>M4 — synthetische lokale Probe</h1><p>Kein echter KI-Aufruf. Keine Datenbankschreibzugriffe.</p><input id="source" value="Synthetic"><div id="settings"></div><pre id="results"></pre>
+<div id="confirmModal" hidden><button class="modal-close">X</button><h2 id="confirmModalTitle"></h2><div id="confirmModalText"></div><button id="confirmModalCancel">Abbrechen</button><button id="confirmModalOk">Bestätigen</button></div>
+<script type="module">
+import {getKiConfig,requestKiTask,updateOwnerOptIn,createKiSourceGuard} from '../../module/ki-client.js?v=20261008m4b';
+import {zeigeKiRueckfrageDialog} from '../../module/ki-rueckfrage.js?v=20261008m4b';
+import {mountKiEinstellungen} from '../../module/ki-einstellungen.js?v=20261008m4b';
+window.m4Probe={complete:false,results:[]};
+const results=window.m4Probe.results;
+const assert=(v,msg='Assertion failed')=>{if(!v)throw Error(msg);};
+const row=async(name,fn)=>{try{await fn();results.push({name,pass:true});}catch(e){results.push({name,pass:false,error:e.message});}};
+const response=(data,status=200)=>({ok:status>=200&&status<300,status,json:async()=>data});
+const state={effective:true,mode:'direkt',mailReady:true,capabilities:{freeText:true,mailDraft:true,appointmentDraft:true}};
+const wire={success:true,active:true,mode:'direkt',operatorReady:true,ownerActive:true,mailReady:true,capabilities:state.capabilities};
+const base={getToken:async()=>'synthetic',fetchImpl:async()=>response(wire)};
+const challenge=(ttl=60000)=>{const expiresAt=Date.now()+ttl;return {challengeId:'a'.repeat(64)+'.'+expiresAt,expiresAt,candidates:[{id:'p1',text:'Synthetic Müller',type:'PERSON'}]};};
+const modal=document.getElementById('confirmModal');
+const dialogDeps={document,openModal:()=>{modal.hidden=false;},closeModal:()=>{modal.hidden=true;}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.hidden=true;});
+const reject=async(p,code)=>{try{await p;throw Error('Expected rejection');}catch(e){assert(e.code===code,`Expected ${code}, received ${e.code}`);}};
+const taskDeps=(overrides={})=>({getKiConfig:async()=>state,getToken:async()=>'synthetic',fetchImpl:async()=>response({success:true}),...overrides});
+for(const [name,patch] of Object.entries({activeFalse:{active:false},activeString:{active:'true'},operatorString:{operatorReady:'true'},modeInjection:{mode:'<img src=x onerror=alert(1)>'}}))await row(name,async()=>assert((await getKiConfig({...base,fetchImpl:async()=>response({...wire,...patch})})).effective===false));
+await row('Mitarbeiter liest healthstate',async()=>{let u;const c=await getKiConfig({...base,isOwner:()=>false,fetchImpl:async url=>{u=url;return response({ok:true,active:true,mode:'direkt',capabilities:state.capabilities});}});assert(u.endsWith('/_healthstate')&&c.effective);});
+await row('String-OptIn ohne Anfrage abgelehnt',async()=>{let n=0;await reject(updateOwnerOptIn({enabled:'false'},{...base,fetchImpl:async()=>{n++;}}),'KI_CONFIG_INVALID');assert(n===0);});
+await row('Taskpfad ohne Anfrage abgelehnt',async()=>{let n=0;await reject(requestKiTask('../_config',{},taskDeps({fetchImpl:async()=>{n++;}})),'KI_TASK_INVALID');assert(n===0);});
+await row('Mail ohne Freitextfreigabe blockiert',async()=>{let n=0;await reject(requestKiTask('b2c-draft',{},taskDeps({getKiConfig:async()=>({...state,capabilities:{mailDraft:true}}),fetchImpl:async()=>{n++;}})),'AI_MAIL_NOT_READY');assert(n===0);});
+for(const action of ['X','Escape','Abbrechen','Generisch verstecken'])await row(`Dialog ${action} beendet`,async()=>{const p=zeigeKiRueckfrageDialog(challenge(),dialogDeps);if(action==='X')modal.querySelector('.modal-close').click();else if(action==='Escape')document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));else if(action==='Abbrechen')document.getElementById('confirmModalCancel').click();else modal.hidden=true;assert(await p===null);assert(modal.hidden);});
+await row('Dialog bestätigt vollständige Auswahl',async()=>{const p=zeigeKiRueckfrageDialog(challenge(),dialogDeps);document.getElementById('confirmModalOk').click();const answer=await p;assert(answer.choices.length===1&&answer.choices[0].id==='p1');});
+await row('Dialog läuft ab und schließt',async()=>{const p=zeigeKiRueckfrageDialog(challenge(30),dialogDeps);assert(await p===null);assert(modal.hidden);});
+await row('Quelländerung schließt Dialog',async()=>{let dirty=false;const p=zeigeKiRueckfrageDialog(challenge(),{...dialogDeps,isSourceEdited:()=>dirty});dirty=true;assert(await p===null);});
+await row('Generischer neuer Dialog bleibt geöffnet',async()=>{const p1=zeigeKiRueckfrageDialog(challenge(),dialogDeps);const p2=zeigeKiRueckfrageDialog(challenge(),dialogDeps);assert(await p1===null);assert(!modal.hidden);document.getElementById('confirmModalCancel').click();assert(await p2===null);});
+await row('Kandidat-HTML wird nur als Text angezeigt',async()=>{window.m4Xss=false;const c=challenge();c.candidates[0].text='<img src=x onerror="window.m4Xss=true">';const p=zeigeKiRueckfrageDialog(c,dialogDeps);assert(!modal.querySelector('img'));assert(modal.textContent.includes('<img'));document.getElementById('confirmModalCancel').click();await p;assert(window.m4Xss===false);});
+await row('Rückfrage-Abbruch kein Retry',async()=>{let n=0;await reject(requestKiTask('b2c-draft',{},taskDeps({fetchImpl:async()=>{n++;return response({code:'KI_RUECKFRAGE',challenge:challenge()},409);},zeigeKiRueckfrageDialog:async()=>null})),'KI_RUECKFRAGE_ABGEBROCHEN');assert(n===1);});
+await row('Quelländerung bei Tokenrefresh kein Retry',async()=>{let n=0,t=0,dirty=false;await reject(requestKiTask('b2c-draft',{},taskDeps({getToken:async()=>{if(++t===2)dirty=true;return 'synthetic';},isSourceEdited:()=>dirty,fetchImpl:async()=>{n++;return response({code:'KI_RUECKFRAGE',challenge:challenge()},409);},zeigeKiRueckfrageDialog:async()=>({choices:[{id:'p1',action:'maskieren'}]})})),'KI_SOURCE_EDITED');assert(n===1);});
+await row('Fehlendes frisches Token kein Retry',async()=>{let n=0,t=0;await reject(requestKiTask('b2c-draft',{},taskDeps({getToken:async()=>++t===1?'synthetic':null,fetchImpl:async()=>{n++;return response({code:'KI_RUECKFRAGE',challenge:challenge()},409);},zeigeKiRueckfrageDialog:async()=>({choices:[{id:'p1',action:'maskieren'}]})})),'KI_AUTH_REQUIRED');assert(n===1);});
+await row('Eingabe ändern/zurücksetzen bleibt ungültig',async()=>{const source=document.getElementById('source');const g=createKiSourceGuard([source]);source.value='next';source.dispatchEvent(new Event('input'));source.value='Synthetic';assert(g.isSourceEdited());g.dispose();});
+await row('Einstellungen keine Env-Labels und kein Mode-XSS',async()=>{await mountKiEinstellungen(document.getElementById('settings'),{getSessionToken:async()=>'synthetic',isOwner:()=>true,fetchImpl:async()=>response({...wire,mode:'<img src=x onerror="window.m4Xss=true">'})});assert(!document.getElementById('settings').querySelector('img'));assert(!document.getElementById('settings').textContent.includes('AI_ACTIVATION_READY'));});
+document.getElementById('results').textContent=results.map(r=>`${r.pass?'PASS':'FAIL'} ${r.name}${r.error?' '+r.error:''}`).join('\n');window.m4Probe.complete=true;
+</script></html>

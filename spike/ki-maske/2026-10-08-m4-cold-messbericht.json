@@ -1,0 +1,590 @@
+{
+  "frozenAt": "2026-10-08T07:13:57.743Z",
+  "sourceDigest": "1eb8c0ebe1f88852c4d21abf8a76a5a49d054af827e7118e2d2682155702f5bb",
+  "corpusSha256": "34909b0efe921e065c841b344a99a7e2e77fa91ed5e75fe4beaf2fb7b594f90b",
+  "generator": "Independent Codex agent, no runtime/old-corpus/source access. Gemini quota exhausted; declared provider deviation.",
+  "firstEvaluation": false,
+  "evaluationExecution": 2,
+  "harnessRecovery": "First mask evaluation completed but post-evaluation gate assertion aborted before report was saved: overlength B payload correctly returned KI_SCHEMA. Recorded run repeats the same frozen source without runtime changes or corpus fitting.",
+  "syntheticOnly": true,
+  "annotations": {
+    "status": "PASS",
+    "cases": 42,
+    "positiveCases": 28,
+    "negativeCases": 14,
+    "truthItems": 156,
+    "longCases": 4
+  },
+  "summary": {
+    "cases": 42,
+    "totalTruth": 156,
+    "rawLeaks": 40,
+    "effectiveLeaks": 36,
+    "sentTruth": 151,
+    "blockedCases": 1,
+    "negativeCases": 14,
+    "negativeFP": 0,
+    "roundtripFailures": 0,
+    "errors": 0,
+    "effectiveLeakRate": 0.23076923076923078,
+    "sentLeakRate": 0.23841059602649006,
+    "blockRate": 0.023809523809523808,
+    "p50ms": 5.244000000000028,
+    "p95ms": 7.3599590000000035,
+    "valid": true,
+    "historicalQualityGate": false
+  },
+  "cases": [
+    {
+      "id": "C01",
+      "truth": 5,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C02",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C03",
+      "truth": 5,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C04",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C05",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C06",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C07",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C08",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C09",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C10",
+      "truth": 5,
+      "rawLeaks": 4,
+      "effectiveLeaks": 0,
+      "blocked": true,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "EMAIL",
+        "PHONE",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C11",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C12",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C13",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C14",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C15",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C16",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C17",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C18",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C19",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C20",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C21",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C22",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C23",
+      "truth": 5,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C24",
+      "truth": 5,
+      "rawLeaks": 1,
+      "effectiveLeaks": 1,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME"
+      ],
+      "error": null
+    },
+    {
+      "id": "C25",
+      "truth": 9,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C26",
+      "truth": 9,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C27",
+      "truth": 9,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C28",
+      "truth": 9,
+      "rawLeaks": 2,
+      "effectiveLeaks": 2,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [
+        "NAME",
+        "ORG"
+      ],
+      "error": null
+    },
+    {
+      "id": "C29",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C30",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C31",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C32",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C33",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C34",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C35",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C36",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C37",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C38",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C39",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C40",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C41",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    },
+    {
+      "id": "C42",
+      "truth": 0,
+      "rawLeaks": 0,
+      "effectiveLeaks": 0,
+      "blocked": false,
+      "negativeFP": false,
+      "roundtrip": true,
+      "leakTypes": [],
+      "error": null
+    }
+  ],
+  "freeTextQuality": {
+    "status": "FAIL",
+    "maximumEffectiveRate": 0.02,
+    "maximumNegativeFP": 1
+  },
+  "structuredGateway": {
+    "status": "PASS",
+    "attempted": 42,
+    "succeeded": 42,
+    "transportCalls": 42,
+    "rawPiiLeaks": 0,
+    "realProviderCalls": 0
+  },
+  "jetonFreeTextGate": {
+    "status": "PASS",
+    "attempted": 42,
+    "blocked": 42,
+    "transportCalls": 0
+  },
+  "limits": [
+    "Mask benchmark is not proof for real Azure, all unseen text, production, legal approval, or Box operation.",
+    "Freitext remains disabled by default; passing A and B gates does not convert raw corpus failures to PASS."
+  ]
+}

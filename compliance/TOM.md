@@ -73,11 +73,49 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 - Logische, nicht physische Trennung — durch Row-Level-Security verifiziert
 
 ### 1.5 Pseudonymisierung
-- KI-Aufrufe an Microsoft Azure (Sweden Central) verwenden **PII-Maskierung**:
-  - Patientennamen werden vor Übertragung durch Platzhalter ersetzt
-  - KVNR, Geburtsdatum werden nicht an externe KI-Modelle gesendet
-  - Nur strukturelle Verordnungsdaten (Diagnose, Heilmittel, Frequenz) gehen an das Modell
-- Marketing-Telemetrie nutzt Pseudonyme (`anonymize_ip` in GA)
+
+**Stand 08.10.2026: lokale M4-Umsetzung und Tests abgeschlossen; Freitextqualität und externe Aktivierung nicht freigegeben.**
+Die früheren pauschalen Zusicherungen dieser Sektion sind ersetzt: Der historische
+Maskierer allein belegte weder vollständige Identitätsentfernung noch eine ausschließliche
+Übertragung von Strukturfeldern. Aktuelle Nachweise und ihre Grenzen stehen in
+`wissensbank/sitzungen/2026-10-08_m4-qa-bericht.md`; lokale Fakes beweisen keine
+Eigenschaften der echten Azure-Ressource, des Ausstellers oder der produktiven Box.
+
+- **Pseudonymisiert, nicht anonymisiert.** Zuordnung bleibt lokal möglich; auch zulässige
+  Strukturfelder können im Gesundheitskontext personenbezogen sein. Die Maskierung ist
+  zusätzliche technische Schutzmaßnahme, keine Rechtsgrundlage oder allgemeine Leckgarantie.
+- **Datenklassen:** A = taskbezogen freigegebene Strukturfelder mit lokalen Platzhaltern;
+  Jeton ausschließlich A. B = Freitext, standardmäßig gesperrt; Ausnahme ausschließlich
+  innerhalb freigegebener direkt-Taskregeln mit Maskierung/Restscan/gebundener Rückfrage.
+  C = Bilder/PDF/OCR, gesperrt. Der M3-Barcodepfad verarbeitet lokal.
+- **NER nicht ausgeliefert:** Kandidat scheitert mit 4/139 Restlecks und 6/7 negativen
+  Fehlalarmen sowie ONNX-Importfehler auf Alpine ARM64/AMD64. Die Messung gilt für die
+  synthetischen Korpora; sie belegt keine allgemeine Sicherheitsquote der Runtime.
+- **Runtime-Messung ohne NER:** Korpus1 0/151, Korpus2 15/139 effektive Restlecks;
+  unabhängiger dritter Korpus 36/156 (23,08 %, Qualitätsgate FAIL), 0/14 negative
+  Fehlalarme. Kein Nachtrainieren an diesem Satz. A-Strukturprüfung 42/42 mit
+  synthetischem Transport ohne Rohdatenlecks; Jeton-Freitext 42/42 vor Transport
+  gesperrt. Diese separaten Gates heben den Freitext-FAIL nicht auf. Eine tatsächliche
+  Freitextfreigabe ist aus diesen Ergebnissen ausdrücklich ausgeschlossen.
+- **Freigabe:** Boxstandard aus; Owner-Opt-in und Operator-/Mailfreigaben sind getrennt.
+  Ownerentscheidung im eigenen privaten Volume `ki_freigaben`, außerhalb Webroot,
+  box-/praxis-/owner-/textversionsgebunden. `kimlik` bleibt read-only. Fehlender oder
+  beschädigter Zustand sperrt die Nutzung. Frischer Widerruf, konkurrierender
+  Einmalverbrauch und Replay nach Neustart wurden mit echten Kindprozessen geprüft:
+  je zehn Läufe lokal und im Node-22-Alpine-ARM64-Container; keine reale PM2-/Boxabnahme.
+- **Speichergrenzen:** Zuordnungsmaps und Azure-/Entra-Tokens nur aufruf-/prozessbezogen
+  im RAM. Persistente Freigabemetadaten und kurzlebige verbrauchte HMAC-/Expiry-Marker
+  enthalten keine Patientendaten, Prompts, Maps oder Zugriffstokens. Logs/Sentry/Audit
+  dürfen nur freigegebene Metadaten und Fehlercodes enthalten; lokale Negativtests werden
+  im QA-Bericht ausgewiesen.
+- **Transport:** lokal implementierte Boxgrenze direkt Box → Azure, kein Inhaltsrelay.
+  Exakte Ressourcen-/Deployment-Hostliste, `chat/completions`, `store:false`; übrige
+  stateful Features sind nicht freigegeben. `store:false` ist **keine ZDR-Garantie**;
+  Abuse Monitoring, Anbieter-Retention und Microsoft-Vertragsnachweise bleiben extern.
+  Region/RBAC/TTL der tatsächlichen Ressource sind noch nicht geprüft.
+- **Vor Praxisaktivierung:** Nachtrag (4) in `LEGAL_DECISIONS.md` bleibt maßgeblich,
+  einschließlich Microsoft-/Anwalts-/Dokumentauflagen. VVT/AVV sind mit dieser technischen
+  Aktualisierung nicht automatisch freigegeben oder geändert.
 
 
 ### 1.6 Kiosk-/Tablet-Modus („Tablet an Patient übergeben")

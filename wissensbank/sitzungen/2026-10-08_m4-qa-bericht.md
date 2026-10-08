@@ -4,6 +4,8 @@ Stand: **08.10.2026**. Repo: `/Users/melihdonmez/infinitymade-website`. Grundlag
 
 Fortschritt und Wiederaufnahme: [[2026-10-08_m4-fortschritt-und-kemal-uebergabe]]. Aktuelle Fortsetzung nach Remote-Abgleich steht dort; früherer K2b.7a-Auftrag ist überholt.
 
+> **Neuester Stand: vollständige Codeintegration und Veröffentlichung vorbereitet.** Frische Integrationsnachweise stehen im Nachtrag am Ende; frühere3117-/PM2-Angaben beschreiben den damaligen lokalen Stand.
+
 ## 1. Management-Zusammenfassung
 
 Lokale Implementierung und Regression abgeschlossen: **3117/3117 Tests**, M4-Browserprobe **22/22**, M3-Regression **39/39**, lokaler Vollbackend **14/14 HTTP-Prüfungen**. Standardzustand bleibt aus; Owner-Opt-in ersetzt keine Betreiberfreigabe. Strukturierte A-Daten und Jeton-B-Sperre bestehen die abgegrenzten synthetischen Gatewaytests. Keine produktiven Schreibzugriffe und keine Aufrufe eines echten KI-Anbieters.
@@ -145,3 +147,41 @@ Kein Commit, Push, Deployment oder produktiver Schreibzugriff.
 ## Veröffentlichungsabgleich
 
 Dokumentationspaket auf Remote `4409428` aufgesetzt. Dort sind K2b.7a/7b bereits dokumentiert umgesetzt; aktueller Hat-K-Prompt nennt Rechte-/Lizenzklärung, O-178 und offene §5b-Prüfungen. Frühere K2b.7a-Empfehlung gilt nur für den damals gelesenen lokalen Checkout. Keine neuen Runtime-/Livetests beim Push. Alle M4-Testzahlen und der Freeze-Digest beziehen sich auf lokalen Stand `00c0a21`, nicht auf den neueren Remote-Code. Insbesondere der inzwischen dokumentierte Boxstart `start.mjs` erfordert bei späterer M4-Integration neue Betriebsprüfungen. Veröffentlicht wird Dokumentation; M4-Code bleibt uncommittet lokal.
+
+## Vollständige Codeintegration für Kemal
+
+Auf ausdrücklichen Pushauftrag vollständigen M3/M4-Stand mit Remotestand ff7e29a (inklusive O-178) zusammengeführt. Kemals Start-/Setup-/Zertifikats-/Kongänderungen erhalten; keine neue Business-DB-Migration. Auth-, Storage- und KI-Grenzen unabhängig nachgeprüft;341 relative Imports ohne fehlende Ziele. Keine echten Anbieteraufrufe oder produktiven Schreibzugriffe.
+
+| Frische Prüfung integrierter Runtime | Status | Ergebnis |
+|---|---|---|
+| Gesamtsuite | PASS | 3196/3196:1798Frontend/1186Backend/188Tools;0FAIL/0Skip. |
+| Zentraldienst | PASS | 49/49. |
+| Typecheck, Funktions-/Tabellenkarte | PASS | 3329Funktionen/409Dateien;96/96Tabellen registriert. |
+| Komplette Browser-Probesuite | PASS | Integrierte Dateien tatsächlich auf localhost8081 ausgeliefert; Modulbytes verglichen. |
+| M4-/M3-Probe | PASS | 22/22 und39/39, fremde Origins/Netzwerkschreibzugriffe0. |
+| Vollbackend | PASS | 14/14; tatsächlicher start.mjs mit2node:cluster-Workern, isolierte lokale Auth/DB und synthetische Konten. |
+| Tatsächlicher ARM64-Backendbuild | PASS | Aktuelles Dockerfile mit20Dateien-Bundle gebaut; kein AMD64-/CI-/Live-Nachweis. |
+| Freitextqualität | FAIL | Cold36/156 bleibt; bekannte Korpora nur Regression, keine neue unabhängige Qualitätsfreigabe. |
+| Reale Box-/Provider-/Rechts-/Produktionsabnahme | NICHT GEPRÜFT | Keine neuen externen Nachweise im Codeübergabeauftrag. |
+
+KI-Kern ohne funktionale Cold-Anpassung; ausschließlich nachgestellte Leerzeichen bereinigt. Byteabweichungen separat in Provenienzmap erfasst; server.js/dashboard.js für Hat-K-Erhalt zusammengeführt. Neue Provenienzmap: `spike/ki-maske/2026-10-08-m4-integration-provenance.json`. Neue Map ersetzt den alten Freeze nicht rückwirkend. Codeübergabe ergänzt den vorherigen Dokumentationspush; Fortschritt und Schnittstellen für Kemal sind vollständig versionierbar. KI-Aktivierung bleibt aus. Weitere Container-/Commit-/CI-Ergebnisse werden getrennt ergänzt.
+
+### Container-Smokes und letzte Gates
+
+Frisches Consent-Volume im tatsächlichen ARM64-Image: **PASS** (Nicht-Root,0700/0600,frischerWiderruf,kimlikread-only). Tatsächlicher Starter mit synthetischem HTTP-Stub: **PASS**,80Antworten überzweiWorker,Shutdown1732ms/Exit0. Netzwerk aus, Root-Dateisystem read-only; eigene Container/Volumes entfernt.
+
+Initialer paralleler Prozesslauf: **FAIL**, erster Fall überschritt unverändertes15s-Timeout; zwei weitere Fälle PASS. Ursache nicht isoliert bestätigt; hohe parallele Last nur Hypothese. Drei unveränderte sequenzielle Läufe danach **9/9 PASS** (6,018/3,755/5,410s). Kein Timeout aufgeweicht und kein Runtimefix an Cold angepasst. Reale Box/AMD64 weiterhin **NICHT GEPRÜFT**.
+
+Finaler Diffcheck fand nachgestellte Leerzeichen in eigenen Dateien; entfernt. Unveränderte Drittanbieter-Lizenzbytes bleiben erhalten, mit eng begrenzter Whitespace-Attributregel nur für diese Lizenzdatei. Secret-Gate fand sechs eindeutig synthetische Testtokens; nur diese Testzeilen explizit gekennzeichnet. Keine echte Geheimnisfreigabe und kein globales Gate übersprungen.
+
+### Zusammenführung mit Kemals O-178 (ff7e29a)
+
+Aktuelle Gesamtsuite: **3196/3196 PASS** (Frontend 1804, Backend 1204, Tools 188; 0 Fehler, 0 abgebrochen, 0 übersprungen). Die zuvor angegebene Summe 3272 war ein Additionsfehler; aktuelle Summe stammt aus den drei Testabschlussprotokollen. Merkez 49/49 PASS, Typecheck PASS, vollständige Browser-Probesuite PASS, M3 39/39 und M4 22/22 PASS. Erste API-Wiederholung brach beim lokalen Login wegen leerer JSON-Antwort ab (FAIL); nach bestätigter Erreichbarkeit von Auth und Backend unveränderter Test erneut 14/14 PASS. Ursache der leeren Antwort nicht abschließend nachgewiesen. Ausschließlich synthetische lokale Konten; keine produktiven Datenzugriffe.
+
+O-178-Seite, Auth-/Ratelimit-Grenzen, Lizenzdateien und Versionsangaben erhalten. Vendor-Lizenzbericht enthält jetzt auch ZXing 0.21.3, PDF.js 4.10.38 und originale Standardfont-Lizenztexte. Separate Upstream-Lizenzdateien bytegenau erhalten; generierter Sammelbericht normalisiert nur nachgestellte Leerzeichen.
+
+### Abschließender Container-Nachweis
+
+PASS: ARM64-Image `1cd47d19184eb087c45732af5cdb27c03260e89ab71569947c900b931ce3994f`, tatsächliches Dockerfile. Lizenztor 308 Pakete geprüft; SBOM enthält 308/308 installierte eindeutige Pakete in 325 Komponenten. Root-package.json nach temporärer Produktionsprojektion bytegleich wiederhergestellt. Fehlende Produktionsabhängigkeit als Gegenprobe weiterhin korrekt abgewiesen (PASS). Erster Build vor Korrektur: FAIL wegen npm-10-SBOM-Prüfung einer absichtlich nicht installierten Testabhängigkeit. Kemals paralleler Fix 39f54b2 als Vorfahr übernommen; SBOM hier weiterhin aus tatsächlichem installiertem Baum erzeugt.
+
+PASS: Prozesssmokes 9/9 in drei unveränderten Läufen; frische Volumes mit Non-root, Verzeichnis 0700, Datei 0600, Widerruf und schreibgeschützter Boxidentität; tatsächlicher node:cluster-Start mit synthetischem HTTP-Stub, 80 Anfragen über beide Worker, SIGTERM beendet mit Exit 0 in 236 ms. Netzwerk gesperrt, Root-Dateisystem read-only, ausschließlich eigene Container/Volumes; Testressourcen danach entfernt. Kein echter Anbieter-/Box-/Produktionsnachweis.

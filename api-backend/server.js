@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 import { google } from 'googleapis';
-import aiRouter from './ai/router.js';
+import { createAiRouter } from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
@@ -29,14 +29,14 @@ import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './lib/rezept-felder.js';
+import { validiereBarcodeErfassung, computedMitErfassung } from './lib/rezept-erfassung.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
-import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
-import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
+import { logCall as aiLogCall, hashRequest as aiHashRequest, safeAiError } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
 import { runMigrations } from './db/migrate.js';
 import { schemaZaehlerSetzen } from './setup/selbstpruefung.js';
@@ -98,14 +98,40 @@ app.use((_req, res, next) => {
   next();
 });
 // Reject oversized payloads early for all non-rezept routes (prevents memory exhaustion).
-app.use((req, res, next) => {
-  const cl = parseInt(req.headers['content-length'] || '0', 10);
-  if (cl > 256 * 1024 && !req.path.startsWith('/api/rezept/')) {
-    return res.status(413).json({ error: 'Payload zu groß' });
+// 1. Scoped AI/OCR JSON Parser & Error Handler
+const aiParser = express.json({ limit: '15mb' });
+const aiErrorHandler = (err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ success: false, error: 'Ungültiges Datenformat' });
   }
-  next();
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({ success: false, error: 'Datenmenge zu groß' });
+  }
+  if (err && err.status >= 400 && err.status < 500) {
+    return res.status(400).json({ success: false, error: 'Ungültige Anfrage' });
+  }
+  next(err);
+};
+
+const handleAiParsing = (req, res, next) => {
+  aiParser(req, res, (err) => {
+    if (err) return aiErrorHandler(err, req, res, next);
+    next();
+  });
+};
+
+// 2. Default JSON Parser for everything else (billing, booking, etc.)
+const defaultParser = express.json({ limit: '256kb' });
+
+app.use((req, res, next) => {
+  const isAiRoute = req.path.startsWith('/api/ai/') || req.path.startsWith('/api/rezept/');
+  if (isAiRoute) {
+    handleAiParsing(req, res, next);
+  } else {
+    // Only apply 256kb limit check for non-AI routes, which defaultParser enforces
+    defaultParser(req, res, next);
+  }
 });
-app.use(express.json({ limit: '15mb' })); // raised for rezept image base64 payloads
 
 // ============================================================================
 // Rate limiters — public endpoint abuse koruması
@@ -506,7 +532,7 @@ if (process.env.SETUP_TOKEN) {
 }
 
 // Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
-app.use('/api/ai', aiRouter);
+app.use('/api/ai', createAiRouter({ supabase }));
 
 // § 302 SGB V Sammelabrechnung routes.
 app.use('/api/billing', billingAbrechnungRouter);
@@ -2062,7 +2088,6 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       },
       genderFilterApplied,
       userFeedback: (userFeedback || '').trim() || null,
-      feedbackApplied: fb.applied,
       previousSelected: Array.isArray(previousSelected) ? previousSelected : [],
       service: { title: svc.title, duration: dur },
       employees: empList,
@@ -2080,10 +2105,36 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     // leer und die deterministische Auswahl unten uebernimmt — wie zuvor bei
     // einem n8n-Ausfall.
     let aiResult = { selected: [], report: '' };
+    const seriesT0 = Date.now();
+    let seriesMeta = {}, seriesStatus = 'ok', seriesError = null;
     try {
-      aiResult = await seriesSchedulerRun(aiPayload);
+      aiResult = await seriesSchedulerRun(aiPayload, {
+        req,
+        auth: req.auth,
+        tenantId: req.auth.tenantId,
+        userId: req.auth.userId,
+        role: req.auth.role,
+        dependencies: { supabase }
+      });
+      seriesMeta = aiResult._meta || {};
     } catch (err) {
-      console.error('[ai-suggest-series] Azure error', err.message);
+      seriesStatus = 'error';
+      seriesError = safeAiError(err).code;
+      console.error('[ai-suggest-series] AI error', seriesError);
+    } finally {
+      aiLogCall({
+        tenantId: req.auth.tenantId,
+        userId: req.auth?.userId,
+        task: 'series-scheduler',
+        model: seriesMeta.model,
+        deployment: seriesMeta.deployment,
+        usage: seriesMeta.usage || {},
+        latencyMs: seriesMeta.latency_ms ?? (Date.now() - seriesT0),
+        status: seriesStatus,
+        error: seriesError,
+        dryRun: !!seriesMeta.dry_run,
+        requestHash: aiHashRequest({ task: 'series-scheduler', count, recurrence })
+      });
     }
 
     // 7) Validate + dedupe AI response, fall back to deterministic pick per target date.
@@ -2334,179 +2385,12 @@ function stripDataUriPrefix(b64) {
 
 // Upload: accept base64 image, store to Supabase Storage, run OCR + validators,
 // return the parsed draft (NO DB write yet — user confirms first).
-app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
-  try {
-    const { image_base64, image_mime } = req.body || {};
-    if (!image_base64) {
-      return res.status(400).json({ error: 'image_base64 required' });
-    }
-
-    const mime = (image_mime || 'image/jpeg').toLowerCase();
-    const ext = mime.includes('png') ? 'png' : (mime.includes('webp') ? 'webp' : 'jpg');
-    const tenantId = req.auth.tenantId;
-    const fileId = crypto.randomUUID();
-    const storagePath = `${tenantId}/${new Date().toISOString().slice(0, 10)}/${fileId}.${ext}`;
-
-    const rawB64 = stripDataUriPrefix(image_base64);
-    const buffer = Buffer.from(rawB64, 'base64');
-    if (buffer.length < 1000) {
-      return res.status(400).json({ error: 'Image too small / decode failed' });
-    }
-
-    const { error: upErr } = await supabase
-      .storage
-      .from('prescriptions')
-      .upload(storagePath, buffer, { contentType: mime, upsert: false });
-    if (upErr) throw upErr;
-
-    // Run OCR — pass the original data-URI so the model gets a proper image block
-    const dataUri = image_base64.startsWith('data:')
-      ? image_base64
-      : `data:${mime};base64,${rawB64}`;
-
-    // OCR happens outside the unified /api/ai router, so audit logging must be
-    // wired explicitly here — otherwise rezept-ocr usage never lands in
-    // ai_audit_log and the admin AI-cost panel undercounts dramatically.
-    const ocrT0 = Date.now();
-    const ocrReqHash = aiHashRequest({ image_mime: mime, size: buffer.length });
-    let ocrResult, ocrStatus = 'ok', ocrError = null, ocrMeta = {};
-    try {
-      ocrResult = await rezeptOcrRun({ image_base64: dataUri });
-      ocrMeta = ocrResult._meta || {};
-    } catch (e) {
-      ocrStatus = 'error';
-      ocrError = e.message || String(e);
-      throw e;
-    } finally {
-      aiLogCall({
-        tenantId,
-        userId: req.auth?.userId,
-        task: 'rezept-ocr',
-        model: ocrMeta.model,
-        deployment: ocrMeta.deployment,
-        usage: ocrMeta.usage || {},
-        latencyMs: ocrMeta.latency_ms ?? (Date.now() - ocrT0),
-        status: ocrStatus,
-        error: ocrError,
-        dryRun: !!ocrMeta.dry_run,
-        requestHash: ocrReqHash,
-      });
-    }
-    const parsed = ocrResult.parsed || {};
-
-    // Leitsymptomatik: das Modell liest die vier Kästchen einzeln
-    // ("leitsymptomatik_boxes"). Das ist die verlässlichere Quelle als der
-    // zusammengefasste Buchstaben-String, der oft leer blieb, obwohl Kästchen
-    // angekreuzt waren. String daraus ableiten, wenn er fehlt oder ärmer ist.
-    if (parsed.rezept) {
-      const boxes = parsed.rezept.leitsymptomatik_boxes;
-      if (boxes && typeof boxes === 'object') {
-        const letters = ['a', 'b', 'c', 'd'].filter(l => boxes[l] === true).join('');
-        const current = (parsed.rezept.leitsymptomatik || '').toLowerCase();
-        if (letters && letters.length >= current.length) {
-          parsed.rezept.leitsymptomatik = letters;
-        }
-      }
-      // Freitext zur patientenindividuellen Leitsymptomatik impliziert Kästchen "d"
-      if (parsed.rezept.pat_leitsymptomatik && !(parsed.rezept.leitsymptomatik || '').includes('d')) {
-        parsed.rezept.leitsymptomatik = (parsed.rezept.leitsymptomatik || '') + 'd';
-      }
-    }
-
-    // Katalog-Zuordnung: OCR-Freitext ("2x wtl.", "KG am Gerät") auf die Werte
-    // abbilden, die unsere Auswahlfelder / die Abrechnung tatsächlich kennen.
-    // Fehlschlag ist nicht fatal — die Maske fällt dann auf den Rohtext zurück.
-    let normalized = null;
-    if (parsed.rezept) {
-      const normT0 = Date.now();
-      let normMeta = {}, normStatus = 'ok', normError = null;
-      try {
-        const normResult = await rezeptNormalizeRun({
-          rezept: parsed.rezept,
-          heilmittel_positionen: PHYSIO_POSITIONS.map(p => ({ x: p.x, label: p.label, kat: p.kat })),
-        });
-        normalized = normResult.normalized;
-        normMeta = normResult._meta || {};
-      } catch (e) {
-        normStatus = 'error';
-        normError = e.message || String(e);
-        console.warn('[rezept/upload] Katalog-Zuordnung fehlgeschlagen', normError);
-      } finally {
-        if (!normMeta.skipped) {
-          aiLogCall({
-            tenantId,
-            userId: req.auth?.userId,
-            task: 'rezept-normalize',
-            model: normMeta.model,
-            deployment: normMeta.deployment,
-            usage: normMeta.usage || {},
-            latencyMs: normMeta.latency_ms ?? (Date.now() - normT0),
-            status: normStatus,
-            error: normError,
-            dryRun: !!normMeta.dry_run,
-            requestHash: aiHashRequest({ task: 'rezept-normalize', rezept: parsed.rezept }),
-          });
-        }
-      }
-
-      // Katalogwerte in parsed übernehmen, Rohtext für die Anzeige behalten.
-      if (normalized) {
-        const apply = (field, target) => {
-          const n = normalized[field];
-          if (n && n.value) {
-            parsed.rezept[target + '_raw'] = parsed.rezept[target] ?? null;
-            parsed.rezept[target] = n.value;
-          }
-        };
-        apply('frequenz', 'frequenz');
-        apply('diagnosegruppe', 'diagnosegruppe');
-        if (normalized.heilmittel?.value) {
-          parsed.rezept.heilmittel_raw = parsed.rezept.heilmittel ?? null;
-          parsed.rezept.heilmittel_position = normalized.heilmittel.value;
-        }
-        if (normalized.ergaenzendes_heilmittel?.value) {
-          parsed.rezept.ergaenzendes_heilmittel_position = normalized.ergaenzendes_heilmittel.value;
-        }
-      }
-    }
-
-    // Map OCR output → validator input shape
-    const rezeptForValidator = {
-      icd10: parsed.rezept?.icd10,
-      diagnosegruppe: parsed.rezept?.diagnosegruppe,
-      heilmittel: parsed.rezept?.heilmittel,
-      heilmittel_feld_text: parsed.rezept?.heilmittel_feld_text,
-      anzahl_einheiten: parsed.rezept?.anzahl_einheiten,
-      frequenz: parsed.rezept?.frequenz,
-      ausstellungsdatum: parsed.arzt?.ausstellungsdatum,
-      behandlungsbeginn: parsed.rezept?.behandlungsbeginn,
-      is_dringend: !!parsed.rezept?.is_dringend,
-      hausbesuch: !!parsed.rezept?.hausbesuch,
-      is_blanko: !!parsed.rezept?.is_blanko,
-      is_lhb_bvb: !!parsed.rezept?.is_lhb_bvb,
-      bericht_angefordert: !!parsed.rezept?.bericht_angefordert,
-      patient_geburtsdatum: parsed.patient?.geburtsdatum
-    };
-
-    const validation = validateRezept(rezeptForValidator);
-
-    res.json({
-      success: true,
-      storage_path: storagePath,
-      parsed,
-      normalized,
-      validation,
-      ocr_confidence: ocrResult.ocr_confidence,
-      dry_run: !!ocrResult._meta?.dry_run
-    });
-  } catch (err) {
-    console.error('[rezept/upload]', err);
-    res.status(500).json({ error: err.message });
-  }
+app.post('/api/rezept/upload', requireAuthAI, (_req, res) => {
+  // OCR remains closed before decoding, storage or provider work. Barcode import stays local.
+  return res.status(503).json({ success: false, code: 'AI_OCR_DISABLED',
+    error: 'KI-Bilderkennung ist deaktiviert. Bitte Barcode einlesen oder Rezept manuell erfassen.' });
 });
 
-// Confirm: accept the user-edited fields, re-validate, write prescription
-// row + validation snapshot, auto-match-or-create patient.
 app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
   try {
     const tenantId = req.auth.tenantId;
@@ -2524,6 +2408,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     } = req.body || {};
 
     if (!parsed) return res.status(400).json({ error: 'parsed required' });
+
+    let erfassung;
+    try { erfassung = validiereBarcodeErfassung(req.body?.erfassung); }
+    catch (e) { return res.status(400).json({ error: e.message }); }
 
     const patient = parsed.patient || {};
     const arzt = parsed.arzt || {};
@@ -2628,7 +2516,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       adresse:      arzt.adresse,
       fachrichtung: arzt.fachrichtung,
       praxis_name:  arzt.praxis_name
-    }, { quelle: 'ocr' });
+    }, { quelle: erfassung ? 'import' : 'ocr' });
     const arztId = arztResult.id;
 
     // --- Re-validate with possibly edited fields ---
@@ -2709,7 +2597,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
         kostentraeger_ik: kostentraegerIk,
         gueltig_bis: validation.computed?.gueltig_bis || null,
-        computed: validation.computed || null,
+        computed: computedMitErfassung(validation.computed, erfassung),
         warnings: validation.warnings || null,
         blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
         confirmed_by: userId,
@@ -2801,12 +2689,15 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
     const { data: bestehend, error: findErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, belegnummer, rezeptart, bg_traeger_name, bg_traeger_anschrift, bg_unfalltag, bg_aktenzeichen, bg_kostenzusage_datum, bg_kostenzusage_zeichen, bg_einverstaendnis_am')
+      .select('id, owner_id, computed, abrechnung_status, belegnummer, rezeptart, bg_traeger_name, bg_traeger_anschrift, bg_unfalltag, bg_aktenzeichen, bg_kostenzusage_datum, bg_kostenzusage_zeichen, bg_einverstaendnis_am')
       .eq('id', id)
       .maybeSingle();
     if (findErr) return res.status(500).json({ error: findErr.message });
     if (!bestehend) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
     if (bestehend.owner_id !== tenantId) return res.status(403).json({ error: 'Kein Zugriff' });
+    let computed;
+    try { computed = computedMitErfassung(null, req.body?.erfassung, bestehend.computed); }
+    catch (e) { return res.status(400).json({ error: e.message }); }
 
     // Vorstufe zu Ops #167 (siehe Dateikopf oben): eine bereits eingereichte
     // oder abgeschlossene Verordnung darf sich nicht mehr leise von der
@@ -2847,7 +2738,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       adresse:      arzt.adresse,
       fachrichtung: arzt.fachrichtung,
       praxis_name:  arzt.praxis_name
-    }, { quelle: 'ocr' });
+    }, { quelle: computed?.erfassung ? 'import' : 'ocr' });
     const arztId = arztResult.id;
 
     // --- Re-validate mit den (möglicherweise editierten) Feldern ---
@@ -2935,7 +2826,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
       kostentraeger_ik: kostentraegerIk,
       gueltig_bis: validation.computed?.gueltig_bis || null,
-      computed: validation.computed || null,
+      computed: computed?.erfassung ? { ...(validation.computed || {}), erfassung: computed.erfassung } : (validation.computed || null),
       warnings: validation.warnings || null,
       blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
       proceed_anyway: !!proceed_anyway,

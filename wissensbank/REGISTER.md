@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 30.09.2026 (**W-01: Q4/2026 Kostenträgerdateien indirildi** —
+> İlk kurulum: 05.09.2026 · Son güncelleme: 08.10.2026 (**W-07: KBV BFB V4.80 metadaten devri + yerel M3 kod zinciri**; ham PDF/TXT entegrasyon checkout/commit içine alınmadı).
+> Önceki: 30.09.2026 (**W-01: Q4/2026 Kostenträgerdateien indirildi** —
 > 4 dosya `curl` ile yayıncıdan byte-exact, sha256 kayıtlı, parser sayımı + öncül farkı ölçüldü;
 > düşenlerin bitiş tarihi 30.09.2026. DB'ye YÜKLENMEDİ. Yeni açık maddeler W-01 #9-#12.)
 > Önceki: 29.09.2026 (**Z-18 açıldı** — Reform S3.6/S3.7, ICD-Endständigkeit + Arzt-Nr./Unterschrift, 2 SPEC-RULES kaydı doğrulanıp düzeltildi. Önce **Z-17 açıldı** — Podologie Reform S1.12 + S2:
@@ -51,13 +52,13 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 39 (38 depoda + 1 depo dışı, W-06) |
-| Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
+| Kayıtlı kaynak belge (INDEX'te) | 40 (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok) |
+| Arşivdeki PDF | 49 (mevcut arşiv sayımı; W-07 PDF yalnız kaynak checkout’ta, bu checkout’a eklenmedi; 16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 18 (Z-01…Z-18) |
-| Tam kimlik kartı yazılmış kaynak | 6 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
-| Depo **dışında** duran kayıtlı kaynak | 1 (W-06 — dağıtım kısıtlı, Drive'da) |
-| **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
+| Tam kimlik kartı yazılmış kaynak | 7 (**W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 2 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta) |
+| **Herkunft (indirme URL'i) kayıtlı** | **7 / 40 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -1270,6 +1271,24 @@ sınıflandırması — AM-01). „2 istisna", SDL-1'in iki kriterde (DEV-01, PS
 **Görüş yine de şartsız** — hiçbir istisna görüşü niteliklendirmiyor ve Azure OpenAI'nin kapsamını
 daraltmıyor. İstisnaların §393 açısından önemsiz olduğu yorumu **`legal-de`'nindir**; sicil yalnız
 sayıyı düzeltir.
+
+---
+
+### W-07 · KBV Technisches Handbuch Blankoformularbedruckung — Muster 13 PDF417
+- **Dosya (yalnız yerel kaynak çalışma klasöründe; checkout/commit içinde yok):** `wissensbank/gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BFB_V4_80_20260513.pdf` + `.txt`.
+- **Herkunft:** https://update.kbv.de/ita-update/Blankoformulare/KBV_ITA_VGEX_Technisches_Handbuch_BFB.pdf · **İndirme:** 07.10.2026 · **İndiren:** Codex / wissensbank.
+- **Yayıncı:** Kassenärztliche Bundesvereinigung (KBV), Dezernat Digitalisierung und IT.
+- **Sürüm / Stand:** 4.80 / 13.05.2026; kapak **IN KRAFT**. Yayıncı dizinindeki dosya değiştirme tarihi 14.08.2026 sürüm tarihi değildir.
+- **Anzuwenden ab:** belirtilmemiş (kapakta IN KRAFT) · **Düşer:** açık uçlu.
+- **Durum:** GEÇERLİ — 07.10.2026 yayıncının güncel dosyası indirildi, kapak doğrulandı.
+- **Neyi besler:** orijinal → deterministik yerel `.txt` → `module/rezept-barcode.js` (Muster-13 PDF417 parser) + `module/rezept-barcode-scan.js` (yerel görüntü/PDF okuma) → `module/rezept-barcode.test.js` / `module/rezept-barcode-scan.test.js` / sentetik browser probe. Speichernutzlast yalnız gerekli yapılandırılmış alanlar ve `computed.erfassung` köken bilgisi taşır; görüntü/barcode ham verisi bu zincirden DB’ye gönderilmez. Mevcut JSON alanı kullanılır; yeni şema/migration yok. M3 kanıtı yerel/sentetik QA ile sınırlıdır; gerçek Box HTTPS ve kalıcı DB iş akışı bu kartla onaylanmaz.
+- **Tazelik kontrolü:** https://update.kbv.de/ita-update/Blankoformulare/ → Handbuch dosyası, kapak sürümü ve §3.11.1 Muster-13 barcode sürümü karşılaştırılır; elle, sahibi wissensbank, sonraki kontrol BFB/parser sürüm değişikliği öncesinde; 08.10.2026 devrinde yeni yayıncı kontrolü yapılmadı (07.10.2026 kaynak doğrulaması devralındı).
+- **Yeniden dağıtım:** şüpheli — herkese açık indirme, yeniden dağıtım izni değildir; açık lisans doğrulanmadı. `.vercelignore` → `wissensbank/` bütün arşivi yayından dışlar. Ham PDF/TXT staging/push öncesi **legal-de** açıklığa kavuşturur; o zamana kadar yalnız yerel kaynak. Metadatenkarte kamu reposuna girebilir, kaynak içeriği giremez.
+- **Yedek:** PDF git tarafından `*.pdf` ile ignore edilir; TXT ilk kaynak checkout’ta untracked ve yereldi; entegrasyon checkout’ına kopyalanmadı. 08.10.2026 devir kontrolünde `.gitignore` TXT’yi henüz kapsamıyordu; kesin yol için ignore koruması yayın sorumlusuna bildirildi. Bu kart ham kaynağın git yedeği değildir. Orijinal PDF SHA256: `df139c1081b43413b575e578fb9965fd9bd7abfcd3e2bfe12cefd3811b2ebe8c`.
+- **Format kararı:** PDF → UTF-8 `.txt`, `pdftotext -enc UTF-8 -layout`, 07.10.2026. Uzun spec md/json'a çevrilmedi; bölüm haritası + hedefli okuma yeterli. Sayısal satztabelle YZ ile dönüştürülmedi.
+- **Anahtar bölümler:** §2.1 (s.10, kısmi veri), §2.4 (s.11, TAB/boş alan/son alan), §2.10 (s.12, ISO 8859-15), §2.11.1 (s.13, genel header), **§3.11.1 (s.59–60, Muster 13: 33 alan, barcode sürümü 10)**; genel header sürümü 05 Muster13'e uygulanmaz.
+- **Kontrol (07.10.2026 kaydından devralındı; bu devirde tekrar çalıştırılmadı):** kaynak 143 PDF sayfası; 33 Muster13 alanı deterministik regex ile sayıldı. Örnekleme alan 03/06/16/22/32 aynı orijinalin s.59–60'ından ayrı `pdftotext -f 59 -l 60` çıkarımıyla karşılaştırıldı.
+- **Açık:** legal-de yeniden dağıtım incelemesi (sahip legal-de, TXT yayınından önce); bu karttaki implementasyon zinciri 08.10.2026 yerel dosyalara bağlandı; gerçek Box/DB işletim kanıtı sahip Kemal/Hat K, ilgili sprint kapıları kapanmadan açık kalır.
 
 ---
 

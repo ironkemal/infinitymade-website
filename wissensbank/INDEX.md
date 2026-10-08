@@ -3,7 +3,7 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-09-28 · **39 belge kayıtlı** (38'i `wissensbank/` altında, **1'i depo dışında**)
+> Son güncelleme: 2026-10-08 · **40 belge kayıtlı** (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel; W-07 ham PDF/TXT bu checkout/commit içinde değildir)
 > (28.09.2026: **Microsoft C5 raporu (Azure, 01.04.2025–31.03.2026)** — ilk depo-dışı kayıt.
 >  Dağıtım kısıtlı olduğu için PDF de `.txt` de depoya girmez; aşağıda en sondaki
 >  „Depo dışı belgeler“ bölümünde yalnız bölüm haritası var. Sicil: REGISTER W-06.)
@@ -700,6 +700,19 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Feld 26: Schlüsselnummer mit Inhalt belegt? (J=Ja, N=Nein)
   - Feld 27: IfSG-Meldung (Arzt-Meldepflicht nach Infektionsschutzgesetz: J=Ja, N=Nein)
   - Feld 28: IfSG-Labor (Laborausschlussziffer EBM 32006: J=Ja, N=Nein)
+
+---
+
+## KBV Blankoformularbedruckung — M3 yerel PDF417 okuyucu
+
+### gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BFB_V4_80_20260513.txt
+- **Ne:** KBV Technisches Handbuch Blankoformularbedruckung; orijinal PDF ve deterministik TXT yalnız kaynak çalışma klasöründe yerel; bu checkout/commit içinde bulunmaz. Sicil W-07.
+- **Kapsam:** PDF417 dinamik satztabellen, Muster13 alanları, TAB ayrımı, ISO 8859-15. Barcode formun yalnız bir bölümünü içerir; eksik alanlar otomatik tamamlanmaz.
+- **Sürüm:** 4.80 / 13.05.2026, kapak IN KRAFT (yayıncının güncel dosyası 07.10.2026 kontrol edildi).
+- **Anzuwenden ab:** belirtilmemiş; kapak IN KRAFT.
+- **Ne zaman lazım:** M3.1 kaynak kontrolü, M3.3 Muster13 parser, yerel barcode testleri.
+- **Anahtar bölümler:** §2.1 s.10 (barcode kısmi veri); §2.4 s.11 (TAB, boş alan korunur, son alandan sonra TAB yok); §2.10 s.12 (ISO 8859-15); §2.11.1 s.13 (standart header); §3.11.1 s.59–60 (**33 alan; Muster13 barcode sürümü 10**, genel sürüm 05 değil); §5.6.2 s.126 (karakter tablosu).
+- **Yayın:** `.vercelignore` bütün wissensbank'ı dışlar; TXT yeniden dağıtım izni belirsiz; legal-de açıklığa kavuşturmadan ham PDF/TXT kopyalama, staging veya push yok (REGISTER W-07). Burada yalnız kaynak kimliği ve bölüm haritası yayımlanır.
 
 ---
 

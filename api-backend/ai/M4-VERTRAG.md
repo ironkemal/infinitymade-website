@@ -164,9 +164,9 @@ chat({
 
 ---
 
-## 3. Zwei-Prozess-Architektur (PM2) & Quoten-Auswirkung
+## 3. Zwei-Prozess-Architektur & Quoten-Auswirkung
 
-Auf der On-Premise Box laufen im Standardbetrieb zwei PM2-Worker-Prozesse (`instances: 2`).
+Auf der aktuellen On-Premise Box startet `start.mjs` zwei `node:cluster`-Worker mit `NODE_APP_INSTANCE=0/1`. Der SaaS-VPS kann während O-179 Phase2 noch den separaten PM2-Compose-Override nutzen. Die folgenden RAM-/Quotenregeln gelten pro Worker in beiden Varianten.
 - **Isolierter RAM:** Jeder PM2-Worker besitzt eine eigene V8-Instanz und damit einen eigenen, getrennten RAM-Speicher.
 - **Keine Prozess-Synchronisation:** Die Singleflight-Erneuerung, der Token-Cache (`currentToken`) und gestagte Berichte arbeiten isoliert pro Prozess. Es existiert absichtlich kein prozessübergreifendes Locking und kein IPC-Token-Sharing.
 - **Quoten-Auswirkung für Hat K:** Bei einem Token-Refresh-Intervall von bspw. 30 Minuten können pro Box rechnerisch bis zu 4 Token pro Stunde (2 Worker × 2 Refreshes) angefordert werden. Der Quoten- und Ausstellervertrag von Hat K muss diese Multi-Worker-Architektur berücksichtigen und darf nicht von einem globalen Distributed Singleflight ausgehen.

@@ -1,4 +1,7 @@
 import { createPendingGuard } from './module/rechnung-speichern.js?v=20261004m111';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261008m4b';
+import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261008m4b';
+import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261008m4b';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -56,11 +59,15 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261006p'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261007m3'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
+import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
+import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
+import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
+import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m113';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261006p';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261007m3';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261007m3';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
@@ -86,7 +93,8 @@ import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, 
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
-import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261004m113';
+import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261007m3';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261007m3';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261004m113';
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261004m113';
@@ -118,7 +126,7 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261004m113';
+} from './module/termin-aktionen.js?v=20261007m3';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261004m113'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
@@ -129,7 +137,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261006a';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261008m4b';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -874,18 +882,7 @@ document.querySelectorAll('.modal-close,[data-modal]').forEach(btn => {
 // Modal'ı dışarı tıklayarak kapatma davranışı kapatıldı (kullanıcı kararı): randevu /
 // rezept oluştururken yanlışlıkla overlay'e tıklayıp tüm girdiyi kaybetme şikayeti.
 // Modal'lar sadece X butonu, Abbrechen veya Escape tuşu ile kapanır.
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  // Der Termin-Seitenbereich liegt UNTER den Dialogen (z-index 400 vs 1000).
-  // Also zuerst einen offenen Dialog schließen und erst danach das Seitenpanel,
-  // sonst verschwindet das Panel unter einem noch offenen Dialog.
-  const open = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => !m.hidden);
-  if (open.length) {
-    closeModal(open[open.length - 1].id);
-    return;
-  }
-  if (isBkActionOpen()) closeModal('bkActionModal');
-});
+installiereModalEscape({ closeModal, istSeitenpanelOffen: isBkActionOpen });
 
 /** Ist der Termin-Seitenbereich sichtbar? (nutzt display, nicht [hidden]) */
 function isBkActionOpen() {
@@ -6333,30 +6330,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
   }
 });
 
-function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary' } = {}) {
-  return new Promise(resolve => {
-    const titleEl = document.getElementById('confirmModalTitle');
-    const textEl = document.getElementById('confirmModalText');
-    const okBtn = document.getElementById('confirmModalOk');
-    const cancelBtn = document.getElementById('confirmModalCancel');
-    const closeBtn = document.querySelector('#confirmModal .modal-close');
-    titleEl.innerHTML = title;
-    textEl.textContent = message;
-    okBtn.textContent = confirmText;
-    cancelBtn.textContent = cancelText;
-    okBtn.className = variant === 'danger' ? 'btn-danger' : 'btn-primary';
-
-    const cleanup = (val) => {
-      okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null;
-      closeModal('confirmModal');
-      resolve(val);
-    };
-    okBtn.onclick = () => cleanup(true);
-    cancelBtn.onclick = () => cleanup(false);
-    closeBtn.onclick = () => cleanup(false);
-    openModal('confirmModal');
-  });
-}
+function showConfirmModal(options = {}) { return zeigeBestaetigungsDialog(options, { openModal, closeModal }); }
 
 function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary', inputLabel, inputPlaceholder } = {}) {
   return new Promise(resolve => {
@@ -6821,24 +6795,21 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
         employeeName: empMap[sl.employeeId] || ''
       })),
       owner_info: {
-        business_name: currentProfile.business_name,
+        business_name: currentProfile.business_name || '',
         sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
         city: currentProfile.city || '',
         phone: currentProfile.phone || ''
       }
     };
 
-    const res = await fetch(`${AI_GATEWAY_BASE}/appointment-confirm-draft`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + s.access_token
-      },
-      body: JSON.stringify(payload)
+    const json = await requestKiTask('appointment-confirm-draft', payload, {
+      apiBase: API + '/ai',
+      getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null,
+      isOwner: () => currentProfile?.role === 'owner',
+      openModal, closeModal, zeigeKiRueckfrageDialog
     });
     closeModal('mailOfferModal');
-    const json = await res.json();
-    if (!json.success || !json.draft) throw new Error(json.error || 'Entwurf fehlgeschlagen');
+    if (!json.draft) throw new Error('Entwurf fehlgeschlagen');
 
     const draft = json.draft;
     if (!draft.to_email) draft.to_email = email;
@@ -6849,8 +6820,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
     openComposeModal(draft);
   } catch (e) {
     closeModal('mailOfferModal');
-    console.error('[appointment-confirm-draft]', e);
-    showToast('Fehler: ' + e.message, 'error');
+    showToast('Termin-E-Mail-Entwurf derzeit nicht verfügbar. Bitte manuell fortfahren.', 'error');
   }
 }
 
@@ -9253,8 +9223,8 @@ async function loadHoursPanel() {
   const { data: emps } = await supabase.from('profiles').select('id,business_name,email')
     .eq('owner_id', getOwnerId());
   const all = currentProfile.role === 'owner'
-    ? [{ id: currentSession.user.id, business_name: currentProfile.business_name, email: currentSession.user.email }, ...(emps || [])]
-    : [{ id: currentSession.user.id, business_name: currentProfile.business_name, email: currentSession.user.email }];
+    ? [{ id: currentSession.user.id, business_name: currentProfile.business_name || '', email: currentSession.user.email }, ...(emps || [])]
+    : [{ id: currentSession.user.id, business_name: currentProfile.business_name || '', email: currentSession.user.email }];
   const sel = document.getElementById('hoursEmpSelect');
   sel.innerHTML = all.map(e => `<option value="${e.id}">${e.business_name || e.email?.split('@')[0]}</option>`).join('');
   hoursEmpId = all[0]?.id || currentSession.user.id;
@@ -11032,7 +11002,6 @@ document.getElementById('b2cConfigBtn').addEventListener('click', () => {
   openModal('b2bConfigModal');
 });
 
-const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 let mailPreviewLeadId = null;
@@ -11237,46 +11206,47 @@ function aiAddMsg(text, role, containerId = 'aiMessages') {
   container.scrollTop = container.scrollHeight;
 }
 
-async function runMailDraft(intent, contactsCache, containerId = 'aiMessages', mapContactFn = null) {
-  aiAddMsg(intent, 'user', containerId);
-  const msgsEl = document.getElementById(containerId);
-  if (!msgsEl) return;
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'msg-bubble ai';
-  loadingDiv.textContent = '⏳ KI bereitet E-Mail vor…';
-  msgsEl.appendChild(loadingDiv);
-  msgsEl.scrollTop = 9999;
-  try {
-    const cache = contactsCache || b2bCache;
-    const contacts = cache.slice(0, 30).map(c => mapContactFn ? mapContactFn(c) : ({
-      id: c.id, company_name: c.company_name, contact_name: c.contact_name,
-      email: c.email, phone: c.phone, notes: c.notes
-    }));
-    const res = await fetch(B2B_AGENT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'draft',
-        intent,
-        contacts,
-        owner_info: {
-          business_name: currentProfile.business_name,
-          sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
-          city: currentProfile.city || '',
-          sector: currentProfile.sector || '',
-          extra_context: currentProfile.system_prompt || ''
-        }
-      })
-    });
-    const json = await res.json();
-    loadingDiv.remove();
-    if (!json.success || !json.draft) throw new Error(json.error || 'Fehler');
-    aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai', containerId);
-    openComposeModal(json.draft);
-  } catch (e) {
-    loadingDiv.remove();
-    aiAddMsg('Fehler: ' + e.message, 'ai', containerId);
-  }
+function getMailOwnerInfo() {
+  return {
+    business_name: currentProfile.business_name || '',
+    sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
+    city: currentProfile.city || '',
+    sector: currentProfile.sector || '',
+    extra_context: currentProfile.system_prompt || ''
+  };
+}
+
+async function runB2bMailDraft(msg) {
+  const contacts = (b2bCache || []).slice(0, 30).map(c => ({
+    id: c.id, company: c.company_name || '', contact_name: c.contact_name || '',
+    email: c.email || '', phone: c.phone || '', notes: c.notes || ''
+  }));
+  const deps = makeKiUiDependencies({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, isOwner: () => currentProfile?.role === 'owner', openModal, closeModal, zeigeKiRueckfrageDialog}, 'aiInput', () => [b2bCache, getMailOwnerInfo()]);
+  return runMailDraftInUi({
+    task: 'b2b-draft',
+    intent: msg,
+    contacts,
+    ownerInfo: getMailOwnerInfo(),
+    containerId: 'aiMessages',
+    aiAddMsg,
+    openComposeModal
+  }, deps).catch(() => {}).finally(deps.dispose);
+}
+
+async function runB2cMailDraft(msg) {
+  const contacts = (b2cCache || []).slice(0, 30).map(c => ({
+    id: c.id, name: c.title || '', email: c.email || '', phone: c.phone || '', notes: ''
+  }));
+  const deps = makeKiUiDependencies({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, isOwner: () => currentProfile?.role === 'owner', openModal, closeModal, zeigeKiRueckfrageDialog}, 'b2cAiInput', () => [b2cCache, getMailOwnerInfo()]);
+  return runMailDraftInUi({
+    task: 'b2c-draft',
+    intent: msg,
+    contacts,
+    ownerInfo: getMailOwnerInfo(),
+    containerId: 'b2cAiMessages',
+    aiAddMsg,
+    openComposeModal
+  }, deps).catch(() => {}).finally(deps.dispose);
 }
 
 document.getElementById('aiSendBtn').addEventListener('click', () => {
@@ -11284,126 +11254,26 @@ document.getElementById('aiSendBtn').addEventListener('click', () => {
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
-  runMailDraft(msg);
+  runB2bMailDraft(msg);
 });
 
 document.getElementById('aiInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('aiSendBtn').click(); }
 });
 
-(function initVoiceInput() {
-  const btn = document.getElementById('aiVoiceBtn');
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { btn.hidden = true; return; }
-  const recog = new SpeechRecognition();
-  recog.lang = 'de-DE'; recog.continuous = false; recog.interimResults = false;
-  let active = false;
-  btn.addEventListener('click', () => {
-    if (active) { recog.stop(); return; }
-    recog.start();
-    active = true; btn.textContent = '🔴';
-  });
-  recog.onresult = e => {
-    const text = e.results[0][0].transcript;
-    document.getElementById('aiInput').value = text;
-    active = false; btn.textContent = '🎤';
-    runMailDraft(text);
-  };
-  recog.onend = () => { active = false; btn.textContent = '🎤'; };
-  recog.onerror = () => { active = false; btn.textContent = '🎤'; };
-})();
-
-// Unified AI gateway endpoint (Phase 0). B2C draft now flows through Azure
-// Frankfurt via api-backend/ai/router.js. B2B path still uses legacy n8n
-// webhook and will be migrated in Phase 5.
-const AI_GATEWAY_BASE = API + '/ai';
-
-async function runMailDraftViaGateway(intent, contactsCache, containerId, mapContactFn) {
-  aiAddMsg(intent, 'user', containerId);
-  const msgsEl = document.getElementById(containerId);
-  if (!msgsEl) return;
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'msg-bubble ai';
-  loadingDiv.textContent = '⏳ KI bereitet E-Mail vor…';
-  msgsEl.appendChild(loadingDiv);
-  msgsEl.scrollTop = 9999;
-  try {
-    const { data: { session: s } } = await supabase.auth.getSession();
-    if (!s?.access_token) throw new Error('Nicht angemeldet');
-
-    const contacts = (contactsCache || []).slice(0, 30).map(c =>
-      mapContactFn ? mapContactFn(c) : ({
-        id: c.id, name: c.title || c.contact_name || c.company_name,
-        email: c.email, phone: c.phone, notes: c.notes || ''
-      })
-    );
-
-    const res = await fetch(`${AI_GATEWAY_BASE}/b2c-draft`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + s.access_token
-      },
-      body: JSON.stringify({
-        intent,
-        contacts,
-        owner_info: {
-          business_name: currentProfile.business_name,
-          sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
-          city: currentProfile.city || '',
-          sector: currentProfile.sector || '',
-          extra_context: currentProfile.system_prompt || ''
-        }
-      })
-    });
-    const json = await res.json();
-    loadingDiv.remove();
-    if (!json.success || !json.draft) throw new Error(json.error || 'Fehler');
-    aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai', containerId);
-    openComposeModal(json.draft);
-  } catch (e) {
-    loadingDiv.remove();
-    aiAddMsg('Fehler: ' + e.message, 'ai', containerId);
-  }
-}
 
 document.getElementById('b2cAiSendBtn').addEventListener('click', () => {
   const input = document.getElementById('b2cAiInput');
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
-  runMailDraftViaGateway(msg, b2cCache, 'b2cAiMessages', c => ({
-    id: c.id, name: c.title, email: c.email, phone: c.phone, notes: ''
-  }));
+  runB2cMailDraft(msg);
 });
 
 document.getElementById('b2cAiInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('b2cAiSendBtn').click(); }
 });
 
-(function initB2cVoiceInput() {
-  const btn = document.getElementById('b2cAiVoiceBtn');
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { btn.hidden = true; return; }
-  const recog = new SpeechRecognition();
-  recog.lang = 'de-DE'; recog.continuous = false; recog.interimResults = false;
-  let active = false;
-  btn.addEventListener('click', () => {
-    if (active) { recog.stop(); return; }
-    recog.start();
-    active = true; btn.textContent = '🔴';
-  });
-  recog.onresult = e => {
-    const text = e.results[0][0].transcript;
-    document.getElementById('b2cAiInput').value = text;
-    active = false; btn.textContent = '🎤';
-    runMailDraftViaGateway(text, b2cCache, 'b2cAiMessages', c => ({
-      id: c.id, name: c.title, email: c.email, phone: c.phone, notes: ''
-    }));
-  };
-  recog.onend = () => { active = false; btn.textContent = '🎤'; };
-  recog.onerror = () => { active = false; btn.textContent = '🎤'; };
-})();
 
 const SECTOR_LABELS = {
   physiotherapy: 'Physiotherapie',
@@ -11415,6 +11285,18 @@ const SECTOR_LABELS = {
 
 
 async function loadSettings() {
+  const kiMount = document.getElementById('kiEinstellungenMount');
+  if (kiMount) {
+    mountKiEinstellungen(kiMount, {
+      apiBase: API + '/ai',
+      getSessionToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null,
+      isOwner: () => currentProfile?.role === 'owner' || currentSession?.user?.id === getOwnerId(),
+      getRole: () => currentProfile?.role || 'employee',
+      showToast,
+      showConfirmModal
+    }).catch(() => { kiMount.textContent = 'KI-Einstellungen derzeit nicht verfügbar.'; });
+  }
+
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   const sectorEl = document.getElementById('setSectorLabel');
   if (sectorEl) {
@@ -11494,6 +11376,7 @@ async function loadSettings() {
   if (tiSection) {
     tiSection.style.display = isPraxisSector(sec) ? '' : 'none';
   }
+
 
   // Praxis-Branding (Madde 8)
   const logoUrl = currentProfile.praxis_logo_url || '';
@@ -12876,27 +12759,13 @@ document.getElementById('aiGenBtn').addEventListener('click', async () => {
   if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
   const notes = document.getElementById('notesTherapist').value.trim();
   if (!notes) { showToast('Therapeutennotizen eingeben', 'error'); return; }
-  const btn = document.getElementById('aiGenBtn');
-  btn.disabled = true; btn.textContent = 'Generiere…';
-  try {
-    const res = await fetch(`${API}/ai-summarize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes, lang: currentLang })
-    });
-    const data = await res.json();
-    const summary = data.summary || 'Keine Zusammenfassung verfügbar.';
-    document.getElementById('aiReportBox').textContent = summary;
-    document.getElementById('aiReportBox').style.display = 'block';
-    const ownerId = getOwnerId();
-    const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
-    if (existing) {
-      await supabase.from('patient_notes').update({ ai_summary: summary }).eq('id', existing.id);
-    }
-  } catch (e) {
-    showToast('AI-Fehler: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = '🤖 AI-Bericht erstellen';
+  showToast('Automatische KI-Zusammenfassung ist derzeit deaktiviert. Therapeutennotizen als Entwurf übernommen.', 'info');
+  document.getElementById('aiReportBox').textContent = notes;
+  document.getElementById('aiReportBox').style.display = 'block';
+  const ownerId = getOwnerId();
+  const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
+  if (existing) {
+    await supabase.from('patient_notes').update({ ai_summary: notes }).eq('id', existing.id);
   }
 });
 
@@ -12928,30 +12797,9 @@ document.getElementById('notesSendBtn').addEventListener('click', async () => {
   openModal('mailPreviewModal');
 });
 
-document.getElementById('mailPreviewSendBtn').addEventListener('click', async () => {
-  const leadId = mailPreviewLeadId;
-  const { data: lead } = await supabase.from('leads').select('email,title,first_name,last_name').eq('id', leadId).single();
-  const summary = document.getElementById('aiReportBox').textContent;
-  try {
-    const res = await fetch(`${API}/b2b-mail-agent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'send',
-        to_email: lead.email,
-        to_name: displayName(lead),
-        subject: 'Ihr Therapie-Bericht',
-        body: summary,
-        sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || 'Praxura',
-        from_email: currentProfile.b2b_from_email
-      })
-    });
-    if (!res.ok) throw new Error('Senden fehlgeschlagen');
-    closeModal('mailPreviewModal');
-    showToast('Bericht gesendet: ' + lead.email);
-  } catch (e) {
-    showToast('Senden fehlgeschlagen: ' + e.message, 'error');
-  }
+document.getElementById('mailPreviewSendBtn').addEventListener('click', () => {
+  showToast('Automatischer E-Mail-Versand ist deaktiviert. Bitte den Entwurf manuell versenden.', 'warning');
+  closeModal('mailPreviewModal');
 });
 
 async function handleGmailCallback() {
@@ -14476,25 +14324,15 @@ async function saveRezept() {
 
   const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
 
+  let riegel = null;
   try {
-    // 1. Arzt ins Register übernehmen. Früher wurde hier nur gesucht — stand
-    //    der Arzt noch nicht drin, ging er verloren (arzt_id blieb leer).
-    //    Jetzt entscheidet das Register: LANR-Treffer = derselbe Arzt (auch
-    //    nach Heirat/Umzug), sonst wird er neu aufgenommen.
+    pruefeBarcodeBestaetigung();
+    riegel = beginRezeptSpeicherlauf(document.getElementById('rzMaskeWrap'));
     const arztName = document.getElementById('rzArztName').value.trim();
     const arztLanrRaw = (document.getElementById('rzLanr')?.value || '').replace(/\D/g, '');
     const arztBsnrRaw = (document.getElementById('rzBsnr')?.value || '').replace(/\D/g, '');
 
     let arztId = null;
-    if (arztName || /^\d{9}$/.test(arztLanrRaw)) {
-      const arztOut = await resolveArzt({
-        name: arztName,
-        lanr: arztLanrRaw,
-        bsnr: arztBsnrRaw
-      }, 'rezept');
-      arztId = arztOut?.arzt_id || null;
-      toastArztErgebnis(arztOut);
-    }
 
     // 2. Parse ICD value — strip the " – Titel" part to get just the code
     const icd10 = nurIcdKode(document.getElementById('rzIcd').value);
@@ -14540,10 +14378,13 @@ async function saveRezept() {
       overridden = true;
     }
 
-    // 4. Anlegen ODER zurückschreiben. Bis zum 06.09.2026 konnte diese
-    // Funktion nur anlegen — eine gespeicherte Verordnung liess sich nirgends
-    // mehr korrigieren (Kemal: „hem değiştiremiyoruz hem neyin hatalı olduğunu
-    // göremiyoruz"). Nutzlast, Riegel und Schreibweg: module/verordnung-maske.js.
+    riegel.pruefe();
+    if (arztName || /^\d{9}$/.test(arztLanrRaw)) {
+      const arztOut = await resolveArzt({ name: arztName, lanr: arztLanrRaw, bsnr: arztBsnrRaw }, 'rezept');
+      arztId = arztOut?.arzt_id || null;
+      toastArztErgebnis(arztOut);
+    }
+    riegel.pruefe();
     const rx = await schreibeVerordnung(supabase, {
       ownerId, patientId, arztId, gueltigBis, icd10, anzahl, ausstDate,
       isDringend, lanr: rzLanr, bsnr: rzBsnr, overridden,
@@ -14621,6 +14462,7 @@ async function saveRezept() {
     console.error('[saveRezept]', e);
     showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
   } finally {
+    riegel?.freigeben();
     btn.disabled = false; delete btn.dataset.laeuft;
   }
 }
@@ -15537,157 +15379,12 @@ async function openBookingFromRxPreset(preset) {
   }
 }
 
-// ===== Phase 2: AI-driven Rezept Scanner =====
-// Webcam/file capture → /api/rezept/upload (Azure OCR + validators)
-// → confirmation modal → /api/rezept/confirm → redirect to Termine.
-
-const REZEPT_API = API + '/rezept';
-let rxStream = null;
-let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence, dataUri }
-
+// M3: one local scanner; unreadable barcodes go to the existing manual mask.
 function initRezeptScanner() {
-  const btn = document.getElementById('rezeptScanBtn');
-  if (!btn) return;
-  if (isPraxisSector(getSector())) btn.style.display = '';
-
-  btn.addEventListener('click', () => oeffneAnlegenWahl(null));
-  verdrahteAnlegenWahl(leadId => openRezeptModal(null, leadId));
-
-  document.getElementById('rxScanWebcamBtn')?.addEventListener('click', startWebcamCapture);
-  document.getElementById('rxScanFileBtn')?.addEventListener('click', () =>
-    document.getElementById('rxScanFileInput').click());
-  document.getElementById('rxScanFileInput')?.addEventListener('change', onFileChosen);
-  document.getElementById('rxScanCameraInput')?.addEventListener('change', onFileChosen);
-  document.getElementById('rxScanShotBtn')?.addEventListener('click', captureWebcamShot);
-  document.getElementById('rxScanCancelCamBtn')?.addEventListener('click', stopWebcam);
-
-  // Der Nachweis-Upload des alten Bestaetigungsfensters stand hier. Er ist mit
-  // dem Fenster entfallen: die Zuzahlungsbefreiung hat seit dem 12.08.2026 ihr
-  // eigenes Formular (module/zuzahlung-befreiung.js), und die LHB-Genehmigung
-  // haengt jetzt an der Maske (module/verordnung-nachweis.js) — dort haben sie
-  // BEIDE Wege, nicht nur der Scan.
-
-  document.querySelectorAll('[data-modal="rezeptScanModal"]').forEach(el => {
-    el.addEventListener('click', () => { stopWebcam(); schliesseAnlegenWahl(); });
-  });
+  initBarcodeDialog({ sichtbar: () => isPraxisSector(getSector()), wahl: oeffneAnlegenWahl,
+    schliessen: schliesseAnlegenWahl, verdrahten: verdrahteAnlegenWahl,
+    maske: leadId => openRezeptModal(null, leadId), patienten: () => rzPatientCache });
 }
-
-function showRxScanError(msg) {
-  const el = document.getElementById('rxScanError');
-  el.textContent = msg;
-  el.style.display = '';
-}
-
-// Native Kamera-App über <input capture> — braucht kein getUserMedia und keine
-// Browser-Kameraberechtigung. Einziger Weg auf HTTP (on-prem LAN ohne TLS),
-// wo getUserMedia mangels Secure Context gar nicht existiert.
-function openNativeCameraInput() {
-  document.getElementById('rxScanCameraInput')?.click();
-}
-
-async function startWebcamCapture() {
-  document.getElementById('rxScanError').style.display = 'none';
-
-  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-    openNativeCameraInput();
-    return;
-  }
-
-  try {
-    try {
-      rxStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1440 } }
-      });
-    } catch (e) {
-      // Rückkamera-Constraint kann auf Desktops/Webcams scheitern → ohne Constraints erneut
-      if (e.name === 'OverconstrainedError' || e.name === 'NotFoundError') {
-        rxStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      } else {
-        throw e;
-      }
-    }
-    const video = document.getElementById('rxScanVideo');
-    video.srcObject = rxStream;
-    document.getElementById('rxScanChooser').style.display = 'none';
-    document.getElementById('rxScanCamera').style.display = '';
-  } catch (e) {
-    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
-      showRxScanError('Kamera-Zugriff wurde blockiert. Bitte im Browser erlauben (Schloss-Symbol neben der Adresse → Kamera → Zulassen) und erneut versuchen — oder „Bild hochladen" nutzen.');
-    } else if (e.name === 'NotFoundError') {
-      showRxScanError('Keine Kamera gefunden — es öffnet sich die Foto-Auswahl.');
-      openNativeCameraInput();
-    } else if (e.name === 'NotReadableError') {
-      showRxScanError('Die Kamera wird gerade von einer anderen App verwendet. Bitte diese App schließen und erneut versuchen.');
-    } else {
-      showRxScanError('Kamera nicht verfügbar: ' + e.message + ' — alternativ „Bild hochladen" nutzen.');
-    }
-  }
-}
-function stopWebcam() {
-  if (rxStream) {
-    rxStream.getTracks().forEach(t => t.stop());
-    rxStream = null;
-  }
-  document.getElementById('rxScanCamera').style.display = 'none';
-  document.getElementById('rxScanChooser').style.display = '';
-}
-
-function captureWebcamShot() {
-  const video = document.getElementById('rxScanVideo');
-  const canvas = document.getElementById('rxScanCanvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUri = canvas.toDataURL('image/jpeg', 0.85);
-  stopWebcam();
-  uploadRezeptImage(dataUri);
-}
-
-function onFileChosen(e) {
-  const f = e.target.files?.[0];
-  if (!f) return;
-  const reader = new FileReader();
-  reader.onload = ev => uploadRezeptImage(ev.target.result);
-  reader.readAsDataURL(f);
-  e.target.value = '';
-}
-
-async function uploadRezeptImage(dataUri) {
-  document.getElementById('rxScanChooser').style.display = 'none';
-  document.getElementById('rxScanCamera').style.display = 'none';
-  document.getElementById('rxScanProcessing').style.display = '';
-  document.getElementById('rxScanError').style.display = 'none';
-  try {
-    const { data: { session: s } } = await supabase.auth.getSession();
-    if (!s?.access_token) throw new Error('Nicht angemeldet');
-    const mimeMatch = dataUri.match(/^data:([^;]+);/);
-    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-    const res = await fetch(`${REZEPT_API}/upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
-      body: JSON.stringify({ image_base64: dataUri, image_mime: mime })
-    });
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Upload fehlgeschlagen');
-    rxLastUpload = { ...json, dataUri };
-    schliesseAnlegenWahl();
-    await uebernehmeRezeptInMaske(rxLastUpload, {
-      oeffneMaske: () => openRezeptModal(null, null),
-      patienten: () => rzPatientCache,
-    });
-  } catch (e) {
-    document.getElementById('rxScanProcessing').style.display = 'none';
-    document.getElementById('rxScanChooser').style.display = '';
-    document.getElementById('rxScanError').textContent = 'Fehler: ' + e.message;
-    document.getElementById('rxScanError').style.display = '';
-  }
-}
-
-// Das Bestaetigungsfenster des Scans () stand bis zum
-// 06.09.2026 hier — eine zweite Maske mit eigenem Feldsatz (rxc*). Ein Scan
-// fuellt jetzt die Muster-13-Maske selbst (module/rezept-in-maske.js), also
-// gibt es das Fenster nicht mehr. Was daraus noch fehlt — Bild, KI-Rozetten,
-// Nachweis-Upload, Leistungswahl — wandert in die Maske, nicht zurueck.
 
 // ===== § 302 SGB V Kassenabrechnung =====
 
@@ -17415,6 +17112,7 @@ function initKioskModeWired() {
   // Einwilligungs-Ablauf (module/patienten-einwilligung.js). Baut sein Overlay
   // selbst, braucht von hier nur den Mandanten- und Sitzungskontext.
   mountEinwilligung({
+    apiBase: API,
     supabase, showToast, showConfirmModal,
     getOwnerId,
     getProfile: () => currentProfile,
@@ -17708,6 +17406,7 @@ function initDruckeinstellungen() {
     const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (profErr) console.error('[profile]', profErr);
     currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
+    refreshKiControls({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, isOwner: () => currentProfile?.role === 'owner'});
     // `currentProfile.language` wird nicht mehr angewendet — die Oberflaeche ist deutsch (28.08.2026).
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {

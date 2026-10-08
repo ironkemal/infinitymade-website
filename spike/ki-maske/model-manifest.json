@@ -1,0 +1,73 @@
+{
+  "model": "Xenova/bert-base-multilingual-cased-ner-hrl",
+  "revision": "263e82c06569c8c2ac46238a7ae5107598934234",
+  "files": [
+    {
+      "file": "config.json",
+      "bytes": 1207,
+      "sha256": "7aa891abae067f95a40f5e2005b3de44824a083f256802934a993d301ec25076"
+    },
+    {
+      "file": "tokenizer.json",
+      "bytes": 2919362,
+      "sha256": "bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088"
+    },
+    {
+      "file": "tokenizer_config.json",
+      "bytes": 367,
+      "sha256": "e6f3b96db926a37d4039995fbf5ad17de158dfb8f6343d607e4dbaad18d75f5a"
+    },
+    {
+      "file": "special_tokens_map.json",
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3"
+    },
+    {
+      "file": "vocab.txt",
+      "bytes": 995526,
+      "sha256": "fe0fda7c425b48c516fc8f160d594c8022a0808447475c1a7c6d6479763f310c"
+    },
+    {
+      "file": "onnx/model_quantized.onnx",
+      "bytes": 178495423,
+      "sha256": "5b65139844be260b624a2a13782b01d122e613d64ce16ed0ba4d82e0b816f1a9"
+    },
+    {
+      "file": "README.md",
+      "bytes": 1147,
+      "sha256": "538f5fa0a885326b02b365cc8aa34906b68ba425e78625c164c7e7973d112664"
+    }
+  ],
+  "base_model": {
+    "model": "Davlan/bert-base-multilingual-cased-ner-hrl",
+    "revision": "e756de7f7b8f64fea0c3d7c3872f1322fab747b1",
+    "declared_license": "afl-3.0",
+    "license_source": "BASE_MODEL_README.md"
+  },
+  "setup_files": [
+    {
+      "file": "model/BASE_MODEL_README.md",
+      "bytes": 3103,
+      "sha256": "b66541651cbd58862affa9bf5ad70ee2dde8a1a1a736d24332f7556a065ed9e3"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 34496,
+      "sha256": "5dd7e4329053b37f24dff5d4893a90c7539d125edadeb2c3c75907b1df9b1c7a"
+    },
+    {
+      "file": "node_modules/@huggingface/transformers/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  ],
+  "runtime": {
+    "package": "@huggingface/transformers",
+    "version": "4.3.1",
+    "license": "Apache-2.0",
+    "node": "v24.12.0",
+    "host": "darwin arm64",
+    "onnxruntime_node": "1.30.0",
+    "onnxruntime_license": "MIT"
+  }
+}

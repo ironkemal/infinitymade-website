@@ -1,4 +1,5 @@
 *.pdf
+!tools/browser-probe/fixtures/m3/*.pdf
 INFRASTRUCTURE.md
 PARTNERSHIP_NOTES.md
 onprem/docker-compose.override.yml
@@ -106,3 +107,9 @@ spike/ki-maske/ergebnis-ist.json
 # Merkez-Namensdienst: lokale SQLite (Box-Name <-> Praxis, B2B-Daten) — nie ins Repo (onprem O-161, 05.10.2026)
 merkez/*.sqlite
 merkez/*.sqlite-*
+
+# Private local M4 execution artifacts; not a web asset.
+.local-m4-work/
+
+# W-07: redistribution rights unresolved; metadata only, source remains local.
+wissensbank/gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BFB_V4_80_20260513.txt

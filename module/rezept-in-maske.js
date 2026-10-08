@@ -31,10 +31,11 @@
  * spaeter und mit Rueckfrage (module/verordnung-patient-abgleich.js).
  */
 
-import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20261006p';
+import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20261007m3';
 import {
   ocrAlsVerordnung, ocrAlsPatientkopf, ocrAlsPatientensuche, patientAbgleichAusOcr,
 } from './verordnung-aus-ocr.js?v=20260930c';
+import { mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 
 const g = (id) => document.getElementById(id);
 
@@ -87,6 +88,8 @@ export async function uebernehmeRezeptInMaske(payload, deps = {}) {
 
   // 1. Maske aufmachen — setzt alle Felder zurueck und laedt die Listen.
   await deps.oeffneMaske?.();
+  // Catalogue/patient loading can outlive a closed mask or a newer scan.
+  if(deps.istAktuell && !deps.istAktuell()) return {status:'abgebrochen',kandidaten:[]};
 
   // 2. Der Verordnungsteil. `alsVorlage: false`, damit auch das LEERE
   //    ankommt: was die KI nicht gelesen hat, soll leer stehen und nicht der
@@ -98,6 +101,7 @@ export async function uebernehmeRezeptInMaske(payload, deps = {}) {
   setzeScanHerkunft({
     storage_path: payload?.storage_path || null,
     ocr_confidence: payload?.ocr_confidence ?? null,
+    quelle: payload?.quelle || 'ocr',
   });
 
   // 3. Der Patientenkopf — direkt vom Papier, nicht aus der Akte (siehe Kopf).
@@ -127,6 +131,7 @@ export async function uebernehmeRezeptInMaske(payload, deps = {}) {
 
   // 6. Sagen, was passiert ist.
   zeigePatientBefund(befund.status, treffer);
+  if(payload?.quelle==='barcode') mountBarcodeBestaetigung({parsed,hinweise:payload.hinweise || []});
 
   return befund;
 }

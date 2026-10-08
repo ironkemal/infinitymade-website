@@ -10,14 +10,16 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 # installierten Baum, nicht auf der Lockfile (npm install ≠ npm ci). Verbotene
 # oder unbekannte Lizenz → dieser RUN schlägt fehl, es entsteht kein Image.
 # SBOM (CycloneDX) = CRA-Stückliste, liegt mit im Image.
-# --package-lock-only: npm 10 (node:22-alpine) bricht `npm sbom` sonst mit
-# ESBOMPROBLEMS ab, weil es die nicht installierte devDependency (node-forge)
-# als „missing" zählt (CI-Lauf ff7e29a6, in WSL nachgestellt). Kein Verlust:
-# `npm install` oben hat die Lockfile auf den tatsächlich installierten Baum
-# geschrieben. Der Lizenztor selbst liest weiter den echten node_modules-Baum.
 COPY tools/lizenzen-erzeugen.mjs ./tools/
+# npm 10.9.9 prueft bei sbom trotz --omit=dev fehlende Root-devDependencies.
+# Fuer diese Produktions-Stueckliste nur das Root-Manifest projizieren; npm
+# liest weiterhin den tatsaechlich installierten Baum. Fehlende Produktions-
+# abhaengigkeiten bleiben Fehler. Originalmanifest danach unveraendert zurueck.
 RUN node tools/lizenzen-erzeugen.mjs --wurzel /app --ausgabe /app/lizenzen/THIRD-PARTY-NOTICES.txt \
-  && npm sbom --omit=dev --package-lock-only --sbom-format cyclonedx > /app/lizenzen/sbom.cdx.json
+  && cp package.json /tmp/praxura-sbom-package.json \
+  && npm pkg delete devDependencies \
+  && npm sbom --omit=dev --sbom-format cyclonedx > /app/lizenzen/sbom.cdx.json \
+  && mv /tmp/praxura-sbom-package.json package.json
 # Container-Komponenten der Box (Postgres, GoTrue, Kong, Caddy …) — dieselbe
 # Tabelle wie onprem/NOTICE.md, ausgeliefert über GET /api/ueber/lizenzen.
 COPY --from=onprem NOTICE.md ./lizenzen/NOTICE-komponenten.md
@@ -82,9 +84,9 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # Caddy läuft als root und liest acmedns.json problemlos; Dateirechte in kayit.js
 # bleiben 0600 für Benutzer app (O-161, onprem-Bedingung 10).
 RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app \
-  && mkdir -p /var/lib/praxura/kimlik /var/lib/praxura/acmedns \
+  && mkdir -p /var/lib/praxura/kimlik /var/lib/praxura/acmedns /var/lib/praxura/ki-freigaben \
   && chown -R app:app /var/lib/praxura \
-  && chmod 700 /var/lib/praxura/kimlik /var/lib/praxura/acmedns
+  && chmod 700 /var/lib/praxura/kimlik /var/lib/praxura/acmedns /var/lib/praxura/ki-freigaben
 # PM2_HOME bleibt nur für Phase 1 von O-179: der SaaS-VPS überschreibt CMD noch
 # per compose-"command:" mit pm2-runtime (api-backend/docker-compose.yml). Fällt mit pm2.
 ENV PM2_HOME=/tmp/.pm2

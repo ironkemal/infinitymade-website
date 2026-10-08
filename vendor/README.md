@@ -29,6 +29,42 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 | `fullcalendar/index.global.min.js` | `fullcalendar@6.1.11` (Standard, MIT — 05.10.2026 Premium/Scheduler entfernt: NonCommercial-Key, legal-de; sha256 8b8bc35b…d481, jsDelivr = unpkg) | `kalender.html` |
 | `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
 | `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html:26-27` → Logo/Profilbild zuschneiden (`dashboard.js:11935`, `13141`) |
+| `zxing.js` | `@zxing/library@0.21.3`, npm + esbuild, pure JavaScript | `module/rezept-barcode-scan.js`, yerel PDF417 |
+| `pdfjs/pdf.mjs` + `pdfjs/pdf.worker.mjs` | `pdfjs-dist@4.10.38`, npm build çıktılarının birebir kopyası | aynı tarayıcı modülü, PDF sayfalarını yerelde render eder |
+
+### M3 — Barcode / PDF (07.10.2026)
+
+```bash
+node tools/vendor/build-barcode.mjs
+```
+
+Sürümler `package.json` ve lock dosyasında sabit. Çıktı commit edilir; müşteride npm,
+CDN veya WASM gerekmez. PDF worker aynı origin'den gelir. `isEvalSupported:false`,
+harici font/CMap yolu yok. Tarayıcı CSP'sine `unsafe-eval` eklenmedi.
+
+Lisans dosyaları: `zxing.LICENSE` (paketin LICENSE metni Apache-2.0; npm metadata'sı
+MIT yazıyor — dağıtımda gerçek LICENSE korunuyor), `zxing-ts-custom-error.LICENSE`
+(MIT), `pdfjs/LICENSE` (Apache-2.0). PDF standart fontları da yereldir:
+`pdfjs/standard_fonts/LICENSE_FOXIT` (BSD koşulları) ve `LICENSE_LIBERATION`
+(SIL OFL 1.1), paket içinden değiştirilmeden kopyalanır. `ts-custom-error` sürümü lock dosyasında.
+
+SHA-256:
+
+```text
+20935d8bbdb7432ac3f3a88308a3e8d85592316cde99925e0507bc8dd5efbe0b  zxing.js
+27fc2a057a00f92a4334ad06e17dbd7259912954e9fb7f76400bcca5fd190a9c  pdfjs/pdf.mjs
+1baa1844c89c80a5b2797c916e75ab29254be46d8e9cb53cb6364d7aad84be36  pdfjs/pdf.worker.mjs
+```
+
+Build aynı zamanda kanonik `module/podologie-heilmittel-position.js` dosyasını
+`api-backend/lib/` içine byte-identik kopyalar. API Docker context'i yalnız
+`api-backend/` içerir; dışarı import yapılamaz. Sync testi `npm test` içinde.
+
+Sentetik kabul sayfası: `tools/browser-probe/rezept-barcode-probe.html`.
+`npm run probe` bu sayfayı gerçek dashboard maskesiyle sınar ve bütün dış
+origin'leri engeller. Fixture üretimi: `tools/browser-probe/m3-fixtures.py`
+(`pdf417gen==0.8.1`, `reportlab==4.4.10`, Pillow; gerçek hasta verisi yok).
+Fiziksel telefon kamerası ve gerçek kutu sertifikası bu testin kapsamı dışında.
 
 Cropper.js de global (UMD) script'tir. cdnjs'ten indirilen iki dosyanın
 sha256'sı **bağımsız ikinci bir kaynakla** (unpkg, yani npm artefaktının kendisi)

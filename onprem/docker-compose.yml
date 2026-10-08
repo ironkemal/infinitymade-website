@@ -435,6 +435,9 @@ services:
       # nur ausgehende Anfragen an Merkez — Schlüsseltausch und Registrierung
       # macht ausschließlich `kayit`. Daher :ro. KEIN acmedns hier.
       - kimlik:/var/lib/praxura/kimlik:ro
+      # M4: lokale Besitzerentscheidung und verbrauchte Rückfrage-IDs.
+      # Eigener Zustand; Identität bleibt read-only. Keine Prompt-/Tokenablage.
+      - ki_freigaben:/var/lib/praxura/ki-freigaben
       # IP-Abgleich (K2b.6, O-161 / L5): Host-Timer schreibt LAN-IP atomar in
       # dieses Verzeichnis. Verzeichnis-Mount (nicht Datei), damit Inode-Wechsel
       # durch atomaren mv sichtbar bleibt. Read-only.
@@ -512,6 +515,12 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL_TEXT: ${AI_MODEL_TEXT:-}
       AI_MODEL_VISION: ${AI_MODEL_VISION:-}
+      AI_REGION: ${AI_REGION:-}
+      AI_API_VERSION: ${AI_API_VERSION:-2024-10-21}
+      AI_ACTIVATION_READY: ${AI_ACTIVATION_READY:-0}
+      AI_MAIL_READY: ${AI_MAIL_READY:-0}
+      AI_ALLOW_FREETEXT: ${AI_ALLOW_FREETEXT:-0}
+      KI_EINWILLIGUNG_DIR: /var/lib/praxura/ki-freigaben
 
       # Einmal-Jeton fuer den Einrichtungsassistenten (Faz 2.2, O-62). Von
       # install.sh VOR "docker compose up" erzeugt und geschrieben — ein
@@ -622,4 +631,6 @@ volumes:
   # Box-Identität (Ed25519) und acme-dns-Zugangsdaten (O-161 / K2b.17).
   # Nie im Backup, nie im Image — Bindeglied zum zentralen Praxura-Namensdienst.
   kimlik:
+  # M4: nicht im Datensicherungsumfang; neue Box benötigt neues Opt-in.
+  ki_freigaben:
   acmedns:

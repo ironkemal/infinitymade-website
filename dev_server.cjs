@@ -40,6 +40,8 @@ const DIR = __dirname;
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.pdf': 'application/pdf',
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',

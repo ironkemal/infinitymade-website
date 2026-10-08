@@ -31,6 +31,8 @@ const PAKETE = [
   'fullcalendar@6.1.11',
   '@fullcalendar/core@6.1.11',
   'cropperjs@1.6.1',
+  '@zxing/library@0.21.3',
+  'pdfjs-dist@4.10.38',
   // Schriften: nur wegen des OFL-Lizenztexts samt Copyright-Zeile des Projekts.
   // fonts/inter.css · outfit.css · system-fonts.css (Fraunces, Plus Jakarta Sans, JetBrains Mono).
   '@fontsource/inter',
@@ -55,11 +57,11 @@ if (fehler.length) {
 const kopf = [
   'Praxura — Lizenzen der Fremdbestandteile der Oberfläche (vendor/ und fonts/)',
   'Erzeugt mit tools/vendor-lizenzen.mjs. Enthalten: Supabase-Client, node-forge,',
-  'FullCalendar, Cropper.js sowie die Schriften Inter, Outfit, Fraunces, Plus Jakarta Sans',
+  'FullCalendar, Cropper.js, ZXing, PDF.js sowie die Schriften Inter, Outfit, Fraunces, Plus Jakarta Sans',
   'und JetBrains Mono (alle SIL Open Font License 1.1).',
   'node-forge wird unter der BSD-3-Clause-Lizenz genutzt (Wahl aus „BSD-3-Clause OR GPL-2.0").',
 ];
 const ziel = path.join(ROOT, 'vendor', 'LICENSES.txt');
-fs.writeFileSync(ziel, erzeugeBericht(ergebnisse, kopf));
+fs.writeFileSync(ziel, (erzeugeBericht(ergebnisse, kopf) + '\nPDF.js-Standardschriften: originale Lizenztexte\n' + ['LICENSE_FOXIT', 'LICENSE_LIBERATION'].map(name => '\n' + name + '\n' + fs.readFileSync(path.join(ROOT, 'vendor/pdfjs/standard_fonts', name), 'utf8')).join('\n')).replace(/[ \t]+$/gm, '').trimEnd() + '\n');
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`✓ ${ergebnisse.length} Pakete → ${path.relative(ROOT, ziel)}`);

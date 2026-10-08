@@ -130,3 +130,6 @@ Claude outputs/
 
 # Merkez-Namensdienst (K2b.2, 05.10.2026) — Zentrale, nie Web-Asset, nie Box-Image
 merkez/
+
+# Private local M4 execution artifacts; not a web asset.
+.local-m4-work/

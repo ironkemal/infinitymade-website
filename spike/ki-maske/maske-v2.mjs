@@ -245,7 +245,7 @@ function resolveSpans(spans, protectedSpans) {
 }
 
 // Restscanner für unmaskierte Verdachtsstellen nach dem Maskieren
-function scanneReste(maskedText, mandantNamen = []) {
+export function scanneReste(maskedText, mandantNamen = []) {
   const befunde = [];
   const clean = maskedText.replace(/⟦[A-Za-z0-9_]+⟧/g, ' ');
 

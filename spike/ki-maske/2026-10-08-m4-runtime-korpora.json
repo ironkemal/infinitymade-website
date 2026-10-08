@@ -1,0 +1,1320 @@
+{
+  "frozenAt": "2026-10-08T07:13:57.743Z",
+  "sourceDigest": "1eb8c0ebe1f88852c4d21abf8a76a5a49d054af827e7118e2d2682155702f5bb",
+  "syntheticOnly": true,
+  "providerCalls": 0,
+  "corpuses": {
+    "korpus": {
+      "sha256": "f46174856b2427c9379128209542a2fd1b22785a5aea1946cfa2b45c439c3948",
+      "summary": {
+        "cases": 60,
+        "totalTruth": 151,
+        "rawLeaks": 0,
+        "effectiveLeaks": 0,
+        "sentTruth": 150,
+        "blockedCases": 1,
+        "negativeCases": 0,
+        "negativeFP": 0,
+        "roundtripFailures": 0,
+        "errors": 0,
+        "effectiveLeakRate": 0,
+        "sentLeakRate": 0,
+        "blockRate": 0.016666666666666666,
+        "p50ms": 4.963624999999979,
+        "p95ms": 9.678167000000002,
+        "valid": true,
+        "historicalQualityGate": false
+      },
+      "cases": [
+        {
+          "id": "mail-01",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-02",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-03",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-04",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-05",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-06",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-07",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-08",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-09",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-10",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-11",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-12",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-13",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-14",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "mail-15",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-01",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-02",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-03",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-04",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-05",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-06",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-07",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-08",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-09",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "series-10",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-01",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-02",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-03",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-04",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-05",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-06",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-07",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-08",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-09",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-10",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-11",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-12",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-13",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-14",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "notes-15",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-01",
+          "truth": 8,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-02",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-03",
+          "truth": 7,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-04",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-05",
+          "truth": 7,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-06",
+          "truth": 5,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-07",
+          "truth": 7,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-08",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-09",
+          "truth": 7,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "ocr-10",
+          "truth": 5,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-01",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-02",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-03",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-04",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-05",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-06",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-07",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-08",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-09",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "edge-10",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        }
+      ]
+    },
+    "korpus2": {
+      "sha256": "1cfd65625535df058d93dfebbf8286f63f79226b918a4f5db1b4883f5371f8e6",
+      "summary": {
+        "cases": 50,
+        "totalTruth": 139,
+        "rawLeaks": 31,
+        "effectiveLeaks": 15,
+        "sentTruth": 89,
+        "blockedCases": 14,
+        "negativeCases": 7,
+        "negativeFP": 1,
+        "roundtripFailures": 0,
+        "errors": 0,
+        "effectiveLeakRate": 0.1079136690647482,
+        "sentLeakRate": 0.16853932584269662,
+        "blockRate": 0.28,
+        "p50ms": 4.590250000000026,
+        "p95ms": 9.541499999999928,
+        "valid": true,
+        "historicalQualityGate": false
+      },
+      "cases": [
+        {
+          "id": "k2-mail-01",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-02",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-mail-03",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-04",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-05",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-mail-06",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-07",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-08",
+          "truth": 2,
+          "rawLeaks": 2,
+          "effectiveLeaks": 2,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-mail-09",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-mail-10",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-11",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-mail-12",
+          "truth": 3,
+          "rawLeaks": 2,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-series-01",
+          "truth": 4,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-series-02",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "DOB"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-series-03",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-series-04",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-series-05",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-series-06",
+          "truth": 2,
+          "rawLeaks": 2,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-series-07",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-series-08",
+          "truth": 3,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "ORGANIZATION"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-notes-01",
+          "truth": 3,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-notes-02",
+          "truth": 4,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-03",
+          "truth": 3,
+          "rawLeaks": 2,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-notes-04",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-05",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-06",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-07",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-08",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-09",
+          "truth": 2,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-notes-10",
+          "truth": 3,
+          "rawLeaks": 2,
+          "effectiveLeaks": 2,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "ORGANIZATION",
+            "DOB"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-notes-11",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-notes-12",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-01",
+          "truth": 8,
+          "rawLeaks": 2,
+          "effectiveLeaks": 2,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-02",
+          "truth": 7,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-03",
+          "truth": 7,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-04",
+          "truth": 8,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-05",
+          "truth": 8,
+          "rawLeaks": 1,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-06",
+          "truth": 4,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-07",
+          "truth": 8,
+          "rawLeaks": 2,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-ocr-08",
+          "truth": 9,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "ORGANIZATION"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-edge-01",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-02",
+          "truth": 2,
+          "rawLeaks": 1,
+          "effectiveLeaks": 1,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-edge-03",
+          "truth": 3,
+          "rawLeaks": 2,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [
+            "NAME",
+            "NAME"
+          ],
+          "error": null
+        },
+        {
+          "id": "k2-edge-04",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-05",
+          "truth": 3,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": true,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-06",
+          "truth": 1,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-07",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-08",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-09",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": true,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        },
+        {
+          "id": "k2-edge-10",
+          "truth": 0,
+          "rawLeaks": 0,
+          "effectiveLeaks": 0,
+          "blocked": false,
+          "negativeFP": false,
+          "roundtrip": true,
+          "leakTypes": [],
+          "error": null
+        }
+      ]
+    }
+  }
+}

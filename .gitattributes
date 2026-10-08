@@ -40,3 +40,6 @@ db/SCHEMA-RLS.sql -text whitespace=cr-at-eol,-blank-at-eol
 *.ttf   binary
 *.otf   binary
 *.zip   binary
+
+# Preserve the upstream font license byte-for-byte, including its whitespace.
+vendor/pdfjs/standard_fonts/LICENSE_LIBERATION whitespace=-blank-at-eol,-blank-at-eof

@@ -57,8 +57,8 @@ export async function requireAuth(req, res, next) {
 
     req.auth = { userId, tenantId, role: profile.role };
     next();
-  } catch (err) {
-    console.error('[ai/auth]', err);
+  } catch (_err) {
+    console.error('[ai/auth] AUTH_CHECK_FAILED');
     res.status(500).json({ error: 'Auth check failed' });
   }
 }

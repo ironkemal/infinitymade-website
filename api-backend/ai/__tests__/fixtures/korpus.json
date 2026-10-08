@@ -1,0 +1,758 @@
+[
+  {
+    "id": "mail-01",
+    "task": "mail_draft",
+    "text": "Schreib Frau Müller, dass ihr Termin am 14.10. ausfällt und sie sich zwecks neuem Termin melden soll.",
+    "entities": [
+      { "value": "Erika Müller", "type": "NAME" },
+      { "value": "erika.m@t-online.de", "type": "EMAIL" }
+    ],
+    "pii_truth": [
+      { "value": "Müller", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-02",
+    "task": "mail_draft",
+    "text": "Mail an Werner Schumacher: Bitte neue Heilmittelverordnung von Dr. Kroll zum Termin am 20.10. mitbringen, sonst keine Behandlung auf Kasse.",
+    "entities": [
+      { "value": "Werner Schumacher", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Werner Schumacher", "type": "NAME" },
+      { "value": "Dr. Kroll", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-03",
+    "task": "mail_draft",
+    "text": "Erstelle Nachricht an Frau Klein: Nagellack vor der Nagelbehandlung am Freitag bitte an beiden Füßen restlos entfernen.",
+    "entities": [
+      { "value": "Renate Klein", "type": "NAME" },
+      { "value": "02241 889900", "type": "PHONE" }
+    ],
+    "pii_truth": [
+      { "value": "Klein", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-04",
+    "task": "mail_draft",
+    "text": "Bitte Herrn Peter Voss anschreiben: Die Rechnung 2026-89 über 44,00 Euro für die Behandlung vom 15.08. ist noch offen.",
+    "entities": [
+      { "value": "Peter Voss", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Peter Voss", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-05",
+    "task": "mail_draft",
+    "text": "Mail an Frau Sommer: Die Spange für Zehe D1 links ist fertig angepasst, Einsetztermin ist am 04.11. um 11:30 Uhr möglich.",
+    "entities": [
+      { "value": "Inge Sommer", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Sommer", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-06",
+    "task": "mail_draft",
+    "text": "Schreib Herrn Krause, dass der Befundbericht für Diabetologe Dr. Arndt abholbereit an unserem Empfang liegt.",
+    "entities": [
+      { "value": "Manfred Krause", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Krause", "type": "NAME" },
+      { "value": "Dr. Arndt", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-07",
+    "task": "mail_draft",
+    "text": "Mail an Helga Schmitz wegen unentschuldigtem Fehlen am 12.10., Ausfallhonorar von 35 Euro wird fällig.",
+    "entities": [
+      { "value": "Helga Schmitz", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Helga Schmitz", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-08",
+    "task": "mail_draft",
+    "text": "Herrn Hoffmann informieren, dass die Zehenorthese fertig ist. Abholung Mo-Fr zwischen 8 und 12 Uhr möglich.",
+    "entities": [
+      { "value": "Dieter Hoffmann", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Hoffmann", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-09",
+    "task": "mail_draft",
+    "text": "Terminbestätigung an Frau Ursula Wagner senden für den 18.11. um 14:00 Uhr zur Abtragung von Hyperkeratosen.",
+    "entities": [
+      { "value": "Ursula Wagner", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Ursula Wagner", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-10",
+    "task": "mail_draft",
+    "text": "Mail an Klaus Meier wegen Hausbesuch am 25.10. um 10 Uhr durch unsere Therapeutin Susanne Berg.",
+    "entities": [
+      { "value": "Klaus Meier", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Klaus Meier", "type": "NAME" },
+      { "value": "Susanne Berg", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-11",
+    "task": "mail_draft",
+    "text": "Frau Fischer schreiben, dass der Kostenvoranschlag für die Nagelkorrekturspange von der Krankenkasse Barmer genehmigt wurde.",
+    "entities": [
+      { "value": "Christa Fischer", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Fischer", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-12",
+    "task": "mail_draft",
+    "text": "Schreib Herrn Jürgen Braun: Rezeptkorrektur bei Hausärztin Dr. Meurer nötig, Diagnosecode E11.74 fehlt auf Verordnung.",
+    "entities": [
+      { "value": "Jürgen Braun", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Jürgen Braun", "type": "NAME" },
+      { "value": "Dr. Meurer", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-13",
+    "task": "mail_draft",
+    "text": "Erinnerungsmail an Frau Lehmann für die Wundkontrolle am rechten Hallux am 22.10. um 09:15 Uhr.",
+    "entities": [
+      { "value": "Gisela Lehmann", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Lehmann", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-14",
+    "task": "mail_draft",
+    "text": "Bitte Wolfgang Koch mailen: Die AOK hat die Folgeverordnung für 6 Behandlungen bewilligt. Nächster Termin am 03.11.",
+    "entities": [
+      { "value": "Wolfgang Koch", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Wolfgang Koch", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "mail-15",
+    "task": "mail_draft",
+    "text": "Absage an Frau Marianne Richter formulieren: Aktuell Aufnahmestopp für Neupatienten ohne diabetisches Fußsyndrom.",
+    "entities": [
+      { "value": "Marianne Richter", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Marianne Richter", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "series-01",
+    "task": "appointment_series",
+    "text": "nur vormittags, Tochter Sabine fährt sie, Tel 0176 1234567, ab 11 Uhr geht nicht wegen Mittagessen",
+    "entities": [
+      { "value": "Gertrud Bauer", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Sabine", "type": "NAME" },
+      { "value": "0176 1234567", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-02",
+    "task": "appointment_series",
+    "text": "Patient Günther Franke wünscht 4-Wochen-Rhythmus, immer donnerstags 14:00 Uhr, Ehefrau Monika Franke begleitet ihn, mobil 0151 98765432",
+    "entities": [
+      { "value": "Günther Franke", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Günther Franke", "type": "NAME" },
+      { "value": "Monika Franke", "type": "NAME" },
+      { "value": "0151 98765432", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-03",
+    "task": "appointment_series",
+    "text": "Termine nur dienstags ab 15 Uhr möglich wegen Arbeitszeiten. Rückfragen per Mail an s.vogel@web.de senden.",
+    "entities": [
+      { "value": "Stefan Vogel", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "s.vogel@web.de", "type": "EMAIL" }
+    ]
+  },
+  {
+    "id": "series-04",
+    "task": "appointment_series",
+    "text": "Hausbesuch-Serie alle 6 Wochen. Schlüssel liegt bei Nachbar Herr Kötter EG links. Patientin Elfriede Mayr ist bettlägerig.",
+    "entities": [
+      { "value": "Elfriede Mayr", "type": "NAME" },
+      { "value": "Kölner Str. 44, 53840 Troisdorf", "type": "ADDRESS" }
+    ],
+    "pii_truth": [
+      { "value": "Herr Kötter", "type": "NAME" },
+      { "value": "Elfriede Mayr", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "series-05",
+    "task": "appointment_series",
+    "text": "Herr Bernd Zimmermann kann nur montags 8 Uhr vor Dienstbeginn. Tagsüber erreichbar im Büro unter 02241 498123.",
+    "entities": [
+      { "value": "Bernd Zimmermann", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Bernd Zimmermann", "type": "NAME" },
+      { "value": "02241 498123", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-06",
+    "task": "appointment_series",
+    "text": "Serie für Hildegard Schütz: Rollstuhlfahrerin, benötigt Rampe. Sohn Thomas bringt sie, Handy 0170 5544332.",
+    "entities": [
+      { "value": "Hildegard Schütz", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Hildegard Schütz", "type": "NAME" },
+      { "value": "Thomas", "type": "NAME" },
+      { "value": "0170 5544332", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-07",
+    "task": "appointment_series",
+    "text": "Wegen Dialyse Mo/Mi/Fr nur Di oder Do vormittags terminieren. Pflegedienst CuraMobil versorgt morgens den Shunt.",
+    "entities": [
+      { "value": "Heinrich Peters", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "CuraMobil", "type": "ORGANIZATION" }
+    ]
+  },
+  {
+    "id": "series-08",
+    "task": "appointment_series",
+    "text": "Herr Walter König wünscht Termine nur bei Behandlerin Frau Sommer, keinesfalls bei Herrn Jansen. Mobil: 0160 1122334.",
+    "entities": [
+      { "value": "Walter König", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Walter König", "type": "NAME" },
+      { "value": "Frau Sommer", "type": "NAME" },
+      { "value": "Herrn Jansen", "type": "NAME" },
+      { "value": "0160 1122334", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-09",
+    "task": "appointment_series",
+    "text": "Immer letzter Freitag im Monat um 16 Uhr. Bei Ausfall WhatsApp an Tochter Melanie unter 0175 9911223.",
+    "entities": [
+      { "value": "Margarete Wolter", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Melanie", "type": "NAME" },
+      { "value": "0175 9911223", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "series-10",
+    "task": "appointment_series",
+    "text": "Serie 6x podologische Komplexbehandlung für Erna Sauer. Taxi Schmitz holt sie ab, Fahrer ruft 10 Min vorher an: 0171 8822441.",
+    "entities": [
+      { "value": "Erna Sauer", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Erna Sauer", "type": "NAME" },
+      { "value": "Taxi Schmitz", "type": "ORGANIZATION"},
+      { "value": "0171 8822441", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "notes-01",
+    "task": "clinical_notes",
+    "text": "Erstbefund DFS bei Diabetes mellitus Typ 2. Wagner-Grad 1 am Metatarsale-I-Köpfchen rechts, Ulcus 8x5mm superficial. Patient nimmt Marcumar wegen VHF, INR aktuell 2.4. Hausarzt Dr. Özdemir stellt Überweisung zur Wundambulanz aus.",
+    "entities": [
+      { "value": "Wilhelm Kramer", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Dr. Özdemir", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-02",
+    "task": "clinical_notes",
+    "text": "Folgebehandlung in Pflegeheim St. Anna Siegburg, Zimmer 114. Patientin Elisabeth Baumgartner desorientiert. Hyperkeratosen an beiden Fersen abgetragen. Nachbarin Frau Weber brachte saubere Kompressionsstrümpfe vorbei.",
+    "entities": [
+      { "value": "Elisabeth Baumgartner", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Pflegeheim St. Anna Siegburg", "type": "ORGANIZATION" },
+      { "value": "Elisabeth Baumgartner", "type": "NAME" },
+      { "value": "Frau Weber", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-03",
+    "task": "clinical_notes",
+    "text": "Herr Hans Werner Schmitz, geb. 12.03.1948. Starker Hallux valgus bds., Clavus neurovasculare D2 plantar links schmerzhaft. Enukleation ohne Blutung. Antikoaguliert mit Eliquis 5mg.",
+    "entities": [
+      { "value": "Hans Werner Schmitz", "type": "NAME" },
+      { "value": "12.03.1948", "type": "DOB" }
+    ],
+    "pii_truth": [
+      { "value": "Hans Werner Schmitz", "type": "NAME" },
+      { "value": "12.03.1948", "type": "DOB" }
+    ]
+  },
+  {
+    "id": "notes-04",
+    "task": "clinical_notes",
+    "text": "Befunddokumentation: Unguis incarnatus Dig. 1 rechts lateral mit Granulationsgewebe. Sulkus tamponiert mit Copoline. Dr. med. Schultze aus Hennef verordnet lokale Antiseptik.",
+    "entities": [
+      { "value": "Karin Engel", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Dr. med. Schultze", "type": "NAME" },
+      { "value": "Hennef", "type": "ADDRESS" }
+    ]
+  },
+  {
+    "id": "notes-05",
+    "task": "clinical_notes",
+    "text": "Diabetischer Fuß, Wagner-Stadium 0, ausgeprägte Polyneuropathie, Monofilament-Test an 4 von 8 Punkten negativ. Schwiegersohn Michael Jansen holt Patientin nach Behandlung ab.",
+    "entities": [
+      { "value": "Franziska Neuhaus", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Michael Jansen", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-06",
+    "task": "clinical_notes",
+    "text": "Hausbesuch Seniorenresidenz am Park Troisdorf bei Herrn Herbert Wolter. Nagelmykose D1-D5 beidseits. Onycholytische Nagelteile mit Diamantfräser abgetragen. Pflegekraft Schwester Olga anwesend.",
+    "entities": [
+      { "value": "Herbert Wolter", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Seniorenresidenz am Park Troisdorf", "type": "ORGANIZATION" },
+      { "value": "Herbert Wolter", "type": "NAME" },
+      { "value": "Schwester Olga", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-07",
+    "task": "clinical_notes",
+    "text": "Wundkontrolle: Ulcus an der Ferse links nach Wagner-Armstrong 2B granuliert gut, reizlos. Wundreinigung mit Ringerlösung, Alginat aufgelegt. Hausärztin Dr. Meurer informiert.",
+    "entities": [
+      { "value": "Kurt Dahl", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Dr. Meurer", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-08",
+    "task": "clinical_notes",
+    "text": "Patient Kurt Becker nimmt Phenprocoumon (Marcumar), Quick 28%. Rhagaden an beiden Fersen atraumatisch versorgt, Propolisbalsam aufgetragen. Nachbar Herr Eckerle begleitete ihn.",
+    "entities": [
+      { "value": "Kurt Becker", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Kurt Becker", "type": "NAME" },
+      { "value": "Herr Eckerle", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-09",
+    "task": "clinical_notes",
+    "text": "Behandlungsnotiz: Orthonyxiespange nach Ross Fraser an D1 links neu aktiviert und fixiert. Patientin schmerzfrei. Nächste Kontrolle in 4 Wochen bei Kollegin Meyer.",
+    "entities": [
+      { "value": "Susanne Albers", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Meyer", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-10",
+    "task": "clinical_notes",
+    "text": "Notfalltermin: Eingewachsener Großzehennagel mit Eiterbildung rechts. Patient Wolfgang Mertens wurde von Tochter Sandra gebracht. Dringende Überweisung an Chirurgen Dr. Kroll Troisdorf veranlasst.",
+    "entities": [
+      { "value": "Wolfgang Mertens", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Wolfgang Mertens", "type": "NAME" },
+      { "value": "Sandra", "type": "NAME" },
+      { "value": "Dr. Kroll", "type": "NAME" },
+      { "value": "Troisdorf", "type": "ADDRESS" }
+    ]
+  },
+  {
+    "id": "notes-11",
+    "task": "clinical_notes",
+    "text": "Hausbesuch Caritas-Haus Sankt Hedwig Siegburg, Bewohnerin Anna Maria Schmidt, geb. 04.09.1936. Starke Onychogrypose an beiden Halluces. Nägel vorsichtig gekürzt.",
+    "entities": [
+      { "value": "Anna Maria Schmidt", "type": "NAME" },
+      { "value": "04.09.1936", "type": "DOB" }
+    ],
+    "pii_truth": [
+      { "value": "Caritas-Haus Sankt Hedwig Siegburg", "type": "ORGANIZATION" },
+      { "value": "Anna Maria Schmidt", "type": "NAME" },
+      { "value": "04.09.1936", "type": "DOB" }
+    ]
+  },
+  {
+    "id": "notes-12",
+    "task": "clinical_notes",
+    "text": "Podologische Teilbehandlung: Abtragung großflächiger Schwielen unter MFK II-IV beidseits. Patient Horst Lindner berichtet über Taubheitsgefühl. Diabetologe Dr. Arndt empfiehlt Kontrolltermin.",
+    "entities": [
+      { "value": "Horst Lindner", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Horst Lindner", "type": "NAME" },
+      { "value": "Dr. Arndt", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-13",
+    "task": "clinical_notes",
+    "text": "Wunddokumentation: Wagner 2 Läsion an D3 rechts abgeheilt nach Antibiose durch Praxis Dr. Özdemir Siegburg. Reepithelisierung vollständig. Betreuer Herr Clemens rief an.",
+    "entities": [
+      { "value": "Rudolf Kraft", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Dr. Özdemir", "type": "NAME" },
+      { "value": "Siegburg", "type": "ADDRESS" },
+      { "value": "Herr Clemens", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-14",
+    "task": "clinical_notes",
+    "text": "Frau Helga Völker, 82 Jahre. Periphere arterielle Verschlusskrankheit Stadium IIb nach Fontaine. Fußpulse nicht tastbar. Nur vorsichtige Frästechnik, kein Skalpell.",
+    "entities": [
+      { "value": "Helga Völker", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Helga Völker", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "notes-15",
+    "task": "clinical_notes",
+    "text": "Behandlung in Wohnstift Beethoven Bonn bei Richard König. Marcumar-Patient mit pAVK. Schwiegersohn Dr. Thomas König war während der Nagelbearbeitung anwesend.",
+    "entities": [
+      { "value": "Richard König", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Wohnstift Beethoven Bonn", "type": "ORGANIZATION" },
+      { "value": "Richard König", "type": "NAME" },
+      { "value": "Dr. Thomas König", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "ocr-01",
+    "task": "ocr_prescription",
+    "text": "Muster 13 / Heilmittelverordnung\nPatient: Werner Klaus Hoffmann geb. 17.08.1951\nKasse: AOK Rheinland/Hamburg KVNR: K123456789\nHeilmittel: 6x Podologische Komplexbehandlung (DF)\nDiagnose: E11.74G Diabetisches Fußsyndrom Wagner 1\nArztstempel: Dr. med. Stefan Özdemir, Facharzt für Allgemeinmedizin\nKölner Str. 22, 53721 Siegburg\nBSNR: 384501200 LANR: 729184503 Tel: 02241 61122",
+    "entities": [
+      { "value": "Werner Klaus Hoffmann", "type": "NAME" },
+      { "value": "K123456789", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "Werner Klaus Hoffmann", "type": "NAME" },
+      { "value": "17.08.1951", "type": "DOB" },
+      { "value": "K123456789", "type": "KVNR" },
+      { "value": "Dr. med. Stefan Özdemir", "type": "NAME" },
+      { "value": "Kölner Str. 22, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "384501200", "type": "BSNR" },
+      { "value": "729184503", "type": "LANR" },
+      { "value": "02241 61122", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "ocr-02",
+    "task": "ocr_prescription",
+    "text": "VO-Datum: 02.10.2026\nHeilmittel: Podologische Behandlung groß 3x\nLeitsymptom: b) krankhafte Schädigung am Fuß infolge sensibler Neuropathie\nStempel: Gemeinschaftspraxis Dres. Meurer & Schultze\nFrankfurter Str. 108, 53840 Troisdorf\nLANR: 441298710 BSNR: 384910200",
+    "entities": [],
+    "pii_truth": [
+      { "value": "Dres. Meurer & Schultze", "type": "NAME" },
+      { "value": "Frankfurter Str. 108, 53840 Troisdorf", "type": "ADDRESS" },
+      { "value": "441298710", "type": "LANR" },
+      { "value": "384910200", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-03",
+    "task": "ocr_prescription",
+    "text": "Verordnung Heilmittel 13 Podologie\nName: Erika Schneider, geb. 29.11.1960\nKostenträger: Techniker Krankenkasse, Vers.-Nr: T987654321\nVerordnungsmenge: 6x Folgeverordnung Hausbesuch: Ja\nDiagnose: G63.2* Diabetische Polyneuropathie\nPraxis Dr. med. Martin Arndt, Diabetologische Schwerpunktpraxis\nWilhelmstr. 45, 53721 Siegburg, LANR: 198273645 BSNR: 384112233",
+    "entities": [
+      { "value": "Erika Schneider", "type": "NAME" },
+      { "value": "T987654321", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "Erika Schneider", "type": "NAME" },
+      { "value": "29.11.1960", "type": "DOB" },
+      { "value": "T987654321", "type": "KVNR" },
+      { "value": "Dr. med. Martin Arndt", "type": "NAME" },
+      { "value": "Wilhelmstr. 45, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "198273645", "type": "LANR" },
+      { "value": "384112233", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-04",
+    "task": "ocr_prescription",
+    "text": "Heilmittel: Nagelspangenbehandlung (Orthonyxie) Erstversorgung 1x\nDiagnose: L60.0 Unguis incarnatus D1 rechts\nAusstellender Arzt: Chirurgische Praxis Dr. med. Hans Kroll\nBonner Str. 12, 53757 Sankt Augustin\nBetriebsstätte: 385019283 Arztnummer: 827103948",
+    "entities": [],
+    "pii_truth": [
+      { "value": "Dr. med. Hans Kroll", "type": "NAME" },
+      { "value": "Bonner Str. 12, 53757 Sankt Augustin", "type": "ADDRESS" },
+      { "value": "385019283", "type": "BSNR" },
+      { "value": "827103948", "type": "LANR" }
+    ]
+  },
+  {
+    "id": "ocr-05",
+    "task": "ocr_prescription",
+    "text": "Muster 13 / Podologie\nPat: Heinrich Becker | geb. 03.05.1939 | Barmer KVNR: M567891234\nTherapie: 6x Hornhautabtragung und Nagelbearbeitung\nBegründung: pAVK Stadium II mit Verhornung\nStempel: Internist Dr. Uwe Bergmann, Markt 8, 53721 Siegburg\nLANR: 918273465 BSNR: 384001928",
+    "entities": [
+      { "value": "Heinrich Becker", "type": "NAME" },
+      { "value": "M567891234", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "Heinrich Becker", "type": "NAME" },
+      { "value": "03.05.1939", "type": "DOB" },
+      { "value": "M567891234", "type": "KVNR" },
+      { "value": "Dr. Uwe Bergmann", "type": "NAME" },
+      { "value": "Markt 8, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "918273465", "type": "LANR" },
+      { "value": "384001928", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-06",
+    "task": "ocr_prescription",
+    "text": "OCR-Scan Rezeptblatt:\nHeilmittel-Pos: 10501 Podologische Komplexbehandlung Erstverordnung\nICD-10: I70.20 pAVK Becken-Bein-Typ\nArzt: Dr. Susanne Weber-Klein, Hausärztliche Gemeinschaftspraxis\nHauptstraße 77, 53797 Lohmar, Tel. 02246 12389\nLANR: 625149830 BSNR: 384772100",
+    "entities": [],
+    "pii_truth": [
+      { "value": "Dr. Susanne Weber-Klein", "type": "NAME" },
+      { "value": "Hauptstraße 77, 53797 Lohmar", "type": "ADDRESS" },
+      { "value": "02246 12389", "type": "PHONE" },
+      { "value": "625149830", "type": "LANR" },
+      { "value": "384772100", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-07",
+    "task": "ocr_prescription",
+    "text": "Kassenrezept Heilmittel Podologie\nVersicherte: Gertrud Klein geb. 15.02.1944\nIK der Kasse: 108018007 KVNR: R819203948\nHeilmittel: 6x Podologische Behandlung NF\nArzt: Dr. med. Frank Wagner, Sieglarer Str. 14, 53842 Troisdorf\nLANR 372819405 / BSNR 384881920",
+    "entities": [
+      { "value": "Gertrud Klein", "type": "NAME" },
+      { "value": "R819203948", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "Gertrud Klein", "type": "NAME" },
+      { "value": "15.02.1944", "type": "DOB" },
+      { "value": "R819203948", "type": "KVNR" },
+      { "value": "Dr. med. Frank Wagner", "type": "NAME" },
+      { "value": "Sieglarer Str. 14, 53842 Troisdorf", "type": "ADDRESS" },
+      { "value": "372819405", "type": "LANR" },
+      { "value": "384881920", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-08",
+    "task": "ocr_prescription",
+    "text": "Rezept Scan Textzeilen:\nVerordnung 6x Podologie Hausbesuch vollstationär\nPatient wohnhaft: Altenzentrum Sankt Josef, Bonner Str. 30, 53757 Sankt Augustin\nDiagnose: E11.75 Diabetes Typ 2 mit mehreren Komplikationen\nArztstempel unvollständig: Praxis Dr. Lehmann, BSNR: 384662910",
+    "entities": [],
+    "pii_truth": [
+      { "value": "Altenzentrum Sankt Josef", "type": "ORGANIZATION" },
+      { "value": "Bonner Str. 30, 53757 Sankt Augustin", "type": "ADDRESS" },
+      { "value": "Dr. Lehmann", "type": "NAME" },
+      { "value": "384662910", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-09",
+    "task": "ocr_prescription",
+    "text": "Heilmittelverordnung 13\nPatient: Alfred Neubert, geb. 22.06.1953, KVNR: Z492018374\nHeilmittel: 3x Behandlung Hyperkeratosen\nDiagnose: Q66.0 Klumpfuß mit Druckstellenbildung\nStempel: Orthopädische Praxis Dres. Voss & Partner\nEuropaplatz 3, 53721 Siegburg | LANR 519284736 | BSNR 384009911",
+    "entities": [
+      { "value": "Alfred Neubert", "type": "NAME" },
+      { "value": "Z492018374", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "Alfred Neubert", "type": "NAME" },
+      { "value": "22.06.1953", "type": "DOB" },
+      { "value": "Z492018374", "type": "KVNR" },
+      { "value": "Dres. Voss & Partner", "type": "NAME" },
+      { "value": "Europaplatz 3, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "519284736", "type": "LANR" },
+      { "value": "384009911", "type": "BSNR" }
+    ]
+  },
+  {
+    "id": "ocr-10",
+    "task": "ocr_prescription",
+    "text": "Verordnungsblatt Muster 13\nHeilmittel: 6x Podologische Komplexbehandlung\nDiagnose: Diabetisches Fußsyndrom Wagner Stadium 0, ICD: E11.74\nVertragsarztstempel:\nDr. med. Christiane Bach\nFachärztin für Allgemeinmedizin\nRathausallee 12, 53757 Sankt Augustin\nLANR: 819204715 | BSNR: 384551920 | Tel. 02241 201190",
+    "entities": [],
+    "pii_truth": [
+      { "value": "Dr. med. Christiane Bach", "type": "NAME" },
+      { "value": "Rathausallee 12, 53757 Sankt Augustin", "type": "ADDRESS" },
+      { "value": "819204715", "type": "LANR" },
+      { "value": "384551920", "type": "BSNR" },
+      { "value": "02241 201190", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "edge-01",
+    "task": "edge_cases",
+    "text": "Termin für Günther vorbereiten, er benötigt wie immer 45 Minuten für die Hornhautabtragung an beiden Fersen.",
+    "entities": [
+      { "value": "Günther Franke", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Günther", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "edge-02",
+    "task": "edge_cases",
+    "text": "herr mueller rief an wegen rezeptänderung für seine frau mueller, bitte rückruf vorbereiten.",
+    "entities": [
+      { "value": "Erika Müller", "type": "NAME" },
+      { "value": "Hans Müller", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "mueller", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "edge-03",
+    "task": "edge_cases",
+    "text": "Müllers Nagelkorrekturspange sitzt fest. Patientin Sabine Schmidt-Kowalski meldet sich morgen wegen Folgetermin.",
+    "entities": [
+      { "value": "Sabine Schmidt-Kowalski", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Müllers", "type": "NAME" },
+      { "value": "Sabine Schmidt-Kowalski", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "edge-04",
+    "task": "edge_cases",
+    "text": "Patient telefonisch nicht erreichbar unter Festnetz. Notfallnummer Mobil: +49 (176) 123 45 67, Alternativnummer Pflege: 0176/1234567.",
+    "entities": [
+      { "value": "Karl Heinz Meier", "type": "NAME" },
+      { "value": "01761234567", "type": "PHONE" }
+    ],
+    "pii_truth": [
+      { "value": "+49 (176) 123 45 67", "type": "PHONE" },
+      { "value": "0176/1234567", "type": "PHONE" }
+    ]
+  },
+  {
+    "id": "edge-05",
+    "task": "edge_cases",
+    "text": "Patientenakten-Abgleich: Hans Zimmermann, geb. 13.4.1952, im System als 13. April 1952 erfasst, auf Überweisung steht nur Jg. 52.",
+    "entities": [
+      { "value": "Hans Zimmermann", "type": "NAME" },
+      { "value": "1952-04-13", "type": "DOB" }
+    ],
+    "pii_truth": [
+      { "value": "Hans Zimmermann", "type": "NAME" },
+      { "value": "13.4.1952", "type": "DOB" },
+      { "value": "13. April 1952", "type": "DOB" },
+      { "value": "Jg. 52", "type": "DOB" }
+    ]
+  },
+  {
+    "id": "edge-06",
+    "task": "edge_cases",
+    "text": "Hausbesuch erwünscht an Anschrift Kaiserstr. 12, 53721 Siegburg. Bestätigung bitte per Mail an hans.becker52@gmx.de senden.",
+    "entities": [
+      { "value": "Hans Becker", "type": "NAME" },
+      { "value": "Kaiserstraße 12, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "hans.becker52@gmx.de", "type": "EMAIL" }
+    ],
+    "pii_truth": [
+      { "value": "Kaiserstr. 12, 53721 Siegburg", "type": "ADDRESS" },
+      { "value": "hans.becker52@gmx.de", "type": "EMAIL" }
+    ]
+  },
+  {
+    "id": "edge-07",
+    "task": "edge_cases",
+    "text": "Kassen-Prüfung: Versichertennummer auf elektronischer Gesundheitskarte lautet a123456789, Status 1000 für AOK Rheinland.",
+    "entities": [
+      { "value": "A123456789", "type": "KVNR" }
+    ],
+    "pii_truth": [
+      { "value": "a123456789", "type": "KVNR" }
+    ]
+  },
+  {
+    "id": "edge-08",
+    "task": "edge_cases",
+    "text": "Patient Peter Wagner beschwert sich über Systemfehler. Notiz im Formular: Nutzer tippt wörtlich <<NAME_1>> in das Bemerkungsfeld.",
+    "entities": [
+      { "value": "Peter Wagner", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Peter Wagner", "type": "NAME" },
+      { "value": "<<NAME_1>>", "type": "INJECTION" }
+    ]
+  },
+  {
+    "id": "edge-09",
+    "task": "edge_cases",
+    "text": "Drei Folgepatienten: Frau Koch braucht Hühneraugen-Behandlung, Herr Fuchs neue Orthose und Frau Weber klagt über Druckschmerz am Großzeh.",
+    "entities": [
+      { "value": "Monika Koch", "type": "NAME" },
+      { "value": "Stefan Fuchs", "type": "NAME" },
+      { "value": "Andrea Weber", "type": "NAME" }
+    ],
+    "pii_truth": [
+      { "value": "Frau Koch", "type": "NAME" },
+      { "value": "Herr Fuchs", "type": "NAME" },
+      { "value": "Frau Weber", "type": "NAME" }
+    ]
+  },
+  {
+    "id": "edge-10",
+    "task": "edge_cases",
+    "text": "Besonderer Behandlungsfall: 98-jährige Patientin aus Lohmar-Wahlscheid mit Amputation D2 rechts benötigt Verbandswechsel und Wundinspektion.",
+    "entities": [],
+    "pii_truth": [
+      { "value": "98-jährige Patientin aus Lohmar-Wahlscheid mit Amputation D2 rechts", "type": "QUASI" }
+    ]
+  }
+]

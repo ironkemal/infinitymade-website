@@ -1,20 +1,13 @@
 // Task: rezept-normalize — OCR-Freitext auf unsere Katalogwerte abbilden.
 //
-// Warum ein eigener Schritt: Ärzte schreiben dieselbe Angabe in beliebig vielen
-// Schreibweisen ("2x wtl.", "2 x / Wo.", "zweimal wöchentlich"). Übernehmen wir
-// den Rohtext 1:1 in die Bestätigungsmaske, steht dort ein Wert, den weder das
-// <select> noch die Serienplanung noch die §302-Abrechnung kennt. Dieser Task
-// wählt stattdessen den passenden EXISTIERENDEN Katalogeintrag aus und meldet
-// mit, wie sicher die Zuordnung ist:
-//
-//   match = "exact" → Wortlaut deckt sich mit dem Katalogwert  → UI zeigt ✓
-//   match = "fuzzy" → sinngemäß zugeordnet, Wortlaut abweichend → UI zeigt ⚠ (prüfen!)
-//   match = "none"  → kein Katalogwert passt                    → UI zeigt ⚠ (manuell wählen)
-//
-// Input  : { rezept: {...OCR-Rohwerte}, heilmittel_positionen: [{x,label,kat}] }
-// Output : { normalized: { frequenz|diagnosegruppe|heilmittel|ergaenzendes_heilmittel: {...} }, _meta }
+// M4 Gateway Integration:
+// - Server-auth context verified ({ tenantId, userId, role })
+// - Routes exclusively via executeKiTask (never directly calls Azure driver)
+// - Patient and doctor identifying fields dropped locally before model prompt
+// - Strict closed output schema validation and canonical catalog mapping
+// - Normalize free text default blocked; deterministic fallback remains usable
 
-import { chat } from '../azureClient.js';
+import { executeKiTask } from '../ki-gateway.js';
 import { FREQUENZ_OPTIONEN, DIAGNOSEGRUPPEN } from '../catalogs/rezept-optionen.js';
 
 const SYSTEM = `Du ordnest Freitext aus einer deutschen Heilmittelverordnung (Muster 13) fest vorgegebenen Katalogwerten zu.
@@ -42,15 +35,6 @@ Antwortschema:
 
 const EMPTY = { value: null, match: 'none', confidence: 0, note: null };
 
-function mockResponse() {
-  return JSON.stringify({
-    frequenz: { value: '2x pro Woche', match: 'exact', confidence: 0.98, note: null },
-    diagnosegruppe: { value: 'WS2', match: 'exact', confidence: 0.97, note: null },
-    heilmittel: { value: 'X0501', label: 'Allgemeine Krankengymnastik (KG) Einzel', match: 'exact', confidence: 0.95, note: null },
-    ergaenzendes_heilmittel: { value: null, match: 'none', confidence: 0, note: null }
-  });
-}
-
 function buildUserPrompt(rez, positionen) {
   const hmListe = positionen
     .map(p => `${p.x} = ${p.label}${p.kat ? ` [${p.kat}]` : ''}`)
@@ -76,9 +60,6 @@ ${hmListe}
 Ordne jeden Rohwert genau einer erlaubten Option zu. Antworte nur mit dem JSON-Objekt.`;
 }
 
-// Ein einzelnes Feld aus der Modellantwort säubern: value muss in der erlaubten
-// Liste stehen, sonst verwerfen. Damit kann eine Halluzination nie als gültige
-// Auswahl in der Maske landen.
 function sanitizeField(raw, allowed, labelLookup) {
   if (!raw || typeof raw !== 'object') return { ...EMPTY };
 
@@ -94,7 +75,6 @@ function sanitizeField(raw, allowed, labelLookup) {
     };
   }
 
-  // Exakte Schreibweise aus dem Katalog übernehmen (Modell könnte Groß-/Kleinschreibung ändern)
   const canonical = allowed.find(a => a.toLowerCase() === value.toLowerCase());
   const match = ['exact', 'fuzzy'].includes(raw.match) ? raw.match : 'fuzzy';
   const confidence = typeof raw.confidence === 'number'
@@ -110,7 +90,23 @@ function sanitizeField(raw, allowed, labelLookup) {
   };
 }
 
-export async function run(payload) {
+function validateNormalizeOutput(parsed, positionen) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).sort().join(',') !== 'diagnosegruppe,ergaenzendes_heilmittel,frequenz,heilmittel') return false;
+  for (const key of ['frequenz','diagnosegruppe','heilmittel','ergaenzendes_heilmittel']) {
+    const field = parsed[key]; const heilmittel = key.includes('heilmittel');
+    const keys = heilmittel ? 'confidence,label,match,note,value' : 'confidence,match,note,value';
+    if (!field || typeof field !== 'object' || Array.isArray(field) || Object.keys(field).sort().join(',') !== keys) return false;
+    if (!['exact','fuzzy','none'].includes(field.match) || typeof field.confidence !== 'number' || !Number.isFinite(field.confidence) || field.confidence < 0 || field.confidence > 1) return false;
+    if (field.note !== null && (typeof field.note !== 'string' || field.note.length > 160)) return false;
+    if (field.value === null) { if (field.match !== 'none' || heilmittel && field.label !== null) return false; continue; }
+    const allowed = key === 'frequenz' ? FREQUENZ_OPTIONEN : key === 'diagnosegruppe' ? DIAGNOSEGRUPPEN : positionen.map(p => p.x);
+    if (typeof field.value !== 'string' || !allowed.includes(field.value) || field.match === 'none') return false;
+    if (heilmittel && field.label !== positionen.find(p => p.x === field.value)?.label) return false;
+  }
+  return true;
+}
+
+export async function run(payload, context = {}) {
   const rez = (payload && payload.rezept) || {};
   const positionen = (payload && payload.heilmittel_positionen) || [];
 
@@ -128,40 +124,33 @@ export async function run(payload) {
     };
   }
 
-  const result = await chat({
-    messages: [
+  const { output, meta } = await executeKiTask({
+    task: 'rezept-normalize',
+    payload,
+    context,
+    buildMessages: (p) => [
       { role: 'system', content: SYSTEM },
-      { role: 'user', content: buildUserPrompt(rez, positionen) }
+      { role: 'user', content: buildUserPrompt(p.rezept || {}, p.heilmittel_positionen || []) }
     ],
-    responseFormat: { type: 'json_object' },
-    temperature: 0.0,
-    maxTokens: 700,
-    mockFn: mockResponse
+    validateOutput: parsed => validateNormalizeOutput(parsed, positionen),
+    chatOptions: {
+      responseFormat: { type: 'json_object' },
+      temperature: 0.0,
+      maxTokens: 700
+    },
+    dependencies: context?.dependencies || {}
   });
-
-  let parsed;
-  try {
-    parsed = JSON.parse(result.content);
-  } catch {
-    throw new Error('rezept-normalize returned non-JSON content');
-  }
 
   const hmCodes = positionen.map(p => p.x);
   const hmLabel = code => (positionen.find(p => p.x === code) || {}).label;
 
   return {
     normalized: {
-      frequenz: sanitizeField(parsed.frequenz, FREQUENZ_OPTIONEN, null),
-      diagnosegruppe: sanitizeField(parsed.diagnosegruppe, DIAGNOSEGRUPPEN, null),
-      heilmittel: sanitizeField(parsed.heilmittel, hmCodes, hmLabel),
-      ergaenzendes_heilmittel: sanitizeField(parsed.ergaenzendes_heilmittel, hmCodes, hmLabel)
+      frequenz: sanitizeField(output.frequenz, FREQUENZ_OPTIONEN, null),
+      diagnosegruppe: sanitizeField(output.diagnosegruppe, DIAGNOSEGRUPPEN, null),
+      heilmittel: sanitizeField(output.heilmittel, hmCodes, hmLabel),
+      ergaenzendes_heilmittel: sanitizeField(output.ergaenzendes_heilmittel, hmCodes, hmLabel)
     },
-    _meta: {
-      model: result.model,
-      deployment: result.deployment,
-      usage: result.usage,
-      dry_run: result.dry_run,
-      latency_ms: result.latency_ms
-    }
+    _meta: meta
   };
 }

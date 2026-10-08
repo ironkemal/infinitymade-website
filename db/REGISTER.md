@@ -394,6 +394,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 > `verordnung_festschreibung()`.
 
 ### `prescriptions`
+- **Barcode-Erfassung (07.10.2026, KHS M3, lokal implementiert):** Kein neues Schema. `quelle` bleibt beim vorhandenen CHECK `papier|ocr|evo`; `computed.erfassung` enthält ausschließlich `{quelle: barcode|barcode+korrigiert, format: PDF417, parser_version: KBV-BFB-4.80-M13-10, bestaetigt: true}`. `POST /rezept/confirm` nimmt nur bestätigte Whitelist-Metadaten an; `PATCH /rezept/:id` erhält sie beim Neuberechnen und markiert Bearbeitung als `barcode+korrigiert`. Warum: Erfassungsweg nachweisen, ohne Barcode-Rohtext, Bild oder eine zweite Datentabelle zu speichern. Kein `fhir_raw`-Missbrauch, keine Migration oder Live-Datenänderung. Wirksam erst nach Veröffentlichung; Browserbestätigung belegt eine Nutzererklärung, keine Prüfung des Originals durch den Server.
 - **Warum:** Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, Logopädie UND (seit 04.09.2026) Podologie. `therapie_bereich` unterscheidet; Podologie-Zeilen tragen zusätzlich neun aus `verordnungen` übernommene Spalten (`patient_name`, `wagner_grad`, `versichertennummer`, `behandlungsanlass`, `absetzung_*`, `storno_*`, `rezeptart`).
 - **Seit:** 16.05.2026 · `v10_prescriptions` (Podologie-Zusammenlegung: 04.09.2026, siehe Kasten oben)
 - **Status:** aktiv

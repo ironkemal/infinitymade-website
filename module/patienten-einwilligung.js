@@ -44,6 +44,7 @@
 
 import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261006a';
 import { IST_KUTU } from '../supabase-config.js';
+import { getKiConfig } from './ki-client.js?v=20261008m4b';
 
 const BUCKET = 'patient-documents';   // existiert bereits, keine neue Infrastruktur
 
@@ -121,6 +122,32 @@ export async function openEinwilligungFlow(opts = {}) {
   }
 
   const profile = deps.getProfile?.() || {};
+
+  let kiAktiv = false;
+  if (typeof opts.kiAktiv === 'boolean') {
+    kiAktiv = opts.kiAktiv;
+  } else if (typeof deps.isKiActive === 'function') {
+    try { kiAktiv = (await deps.isKiActive()) === true; } catch { kiAktiv = false; }
+  } else if (typeof deps.getKiConfig === 'function') {
+    try {
+      const cfg = await deps.getKiConfig();
+      kiAktiv = cfg?.effective === true;
+    } catch {
+      kiAktiv = false;
+    }
+  } else {
+    try {
+      const cfg = await getKiConfig({
+        apiBase: deps.apiBase ? deps.apiBase + '/ai' : undefined,
+        isOwner: () => profile.role === 'owner',
+        getToken: deps.getSessionToken || (async () => (await deps.supabase?.auth?.getSession())?.data?.session?.access_token || null)
+      });
+      kiAktiv = cfg?.effective === true;
+    } catch {
+      kiAktiv = false;
+    }
+  }
+
   _state = {
     patient,
     profile,
@@ -128,6 +155,7 @@ export async function openEinwilligungFlow(opts = {}) {
     types: Array.isArray(opts.types) && opts.types.length ? opts.types : FLOW.slice(),
     optionen: [],
     gespeichert: [],
+    kiAktiv: Boolean(kiAktiv),
     onClose: typeof opts.onClose === 'function' ? opts.onClose : null,
   };
 
@@ -165,8 +193,8 @@ function ctxFor() {
     optionen: _state.optionen,
     // Praxura-Box in der Praxis oder SaaS — bestimmt den Satz zur Praxissoftware (legal-de F6, M2.8).
     betrieb: IST_KUTU ? 'kutu' : 'saas',
-    // KI-Absatz erst, wenn das KI-Modul pro Praxis einschaltbar ist (K-20, M4.11) — bis dahin nie.
-    kiAktiv: false,
+    // KI-Absatz nur, wenn tatsächliche effektive Serverentscheidung aktiv ist (K-20, M4.11) — unbekannt/aus = false.
+    kiAktiv: Boolean(_state?.kiAktiv),
   };
 }
 

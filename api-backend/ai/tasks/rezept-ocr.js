@@ -1,221 +1,35 @@
-// Task: rezept-ocr — parse a Muster 13 / Blankoverordnung image into structured JSON.
+// Task: rezept-ocr — disabled (C5 compliance gate).
 //
-// Vision call to gpt-4.1-mini. Returns the raw extracted fields; the
-// rezept-validate task then applies G-BA / KBV / Blanko rules deterministically.
-//
-// Input  : { image_base64: "data:image/jpeg;base64,..." | "<raw base64>", image_url?: "https://..." }
-// Output : { parsed: {...}, ocr_confidence: 0..1, _meta: {...} }
+// M4 Gateway Integration:
+// - Server-auth context verified ({ tenantId, userId, role })
+// - OCR is always disabled with fixed German error (C5 gate)
+// - Multimodal / vision images must NEVER be sent to external models
+// - Routes through executeKiTask which enforces gate before transport
 
-import { chat } from '../azureClient.js';
+import { executeKiTask } from '../ki-gateway.js';
 
-const SYSTEM = `Du bist ein medizinischer OCR-Assistent für deutsche Physiotherapie-Praxen.
-Du extrahierst Daten aus einem fotografierten Muster 13 (Heilmittelverordnung) oder einer Blankoverordnung.
-
-WICHTIG:
-- Antworte AUSSCHLIESSLICH als JSON-Objekt — keine Erklärungen, keine Code-Fences.
-- Felder, die du nicht sicher lesen kannst, setze auf null. Rate NICHT.
-- Datumsformat: ISO "YYYY-MM-DD". Wenn du nur "TT.MM.JJJJ" siehst, konvertiere.
-- "is_blanko" = true wenn das Formular den Vermerk "BLANKOVERORDNUNG" trägt oder eine Diagnosegruppe der Schulter (z. B. EX) ohne konkrete Heilmittel-Auflistung enthält.
-- "is_lhb_bvb" = true wenn die Felder "Langfristiger Heilmittelbedarf" oder "Besonderer Verordnungsbedarf" angekreuzt sind.
-- "is_dringend" = true wenn "dringlicher Behandlungsbedarf innerhalb 14 Tagen" angekreuzt ist.
-- "hausbesuch" = true wenn "Hausbesuch ja" angekreuzt ist.
-- "bericht_angefordert" = true wenn "Therapiebericht" (meistens als Checkbox/Feld "[X] Therapiebericht" oder ähnlich) angekreuzt ist, sonst false.
-- ICD-10 Code muss dem Schema [A-Z][0-9]{2}(\\.[0-9]{1,2})? entsprechen (z. B. "M54.5", "M75.10").
-- Diagnosegruppe: zwei Buchstaben oder Buchstabe+Ziffer (z. B. "WS2", "EX", "ZN1", "SO4").
-- "heilmittel_feld_text" = exakt der Originaltext aus dem Heilmittel-Feld (mehrzeilig OK).
-- "diagnose_text" = der ausgeschriebene Diagnose-Freitext neben/unter dem ICD-10-Code (z. B. "Lumbago", "Z. n. OP"), sonst null.
-- "icd10_2" = ein ZWEITER ICD-10-Code, falls das Formular zwei Diagnosen enthält, sonst null (gleiches Schema wie icd10).
-- LEITSYMPTOMATIK — WICHTIG, wird oft übersehen. Rechts neben dem Feld "Diagnosegruppe" steht die Überschrift "Leitsymptomatik gemäß Heilmittelkatalog" mit DREI kleinen quadratischen Ankreuzfeldern, beschriftet a, b, c. Rechts daneben steht "patientenindividuelle Leitsymptomatik" mit EINEM weiteren Ankreuzfeld (entspricht "d"). Prüfe JEDES dieser vier Kästchen EINZELN und gib das Ergebnis in "leitsymptomatik_boxes" als Objekt mit vier Booleans zurück. Ein Kästchen gilt als angekreuzt bei Kreuz, Haken, Ausmalung oder jedem anderen handschriftlichen Eintrag darin. Ein leeres Kästchen = false. Kannst du den Bereich gar nicht sehen (abgeschnitten/unscharf), setze alle vier auf null.
-- "leitsymptomatik" = dieselbe Information nochmal als zusammenhängender Kleinbuchstaben-String der angekreuzten Kästchen, z. B. "a", "ac", "abc", "ad". Wenn KEINES angekreuzt ist, null.
-- "pat_leitsymptomatik" = der Freitext der "patientenindividuellen Leitsymptomatik" (Zeile unterhalb, Feld "d"), sonst null. Wenn hier Text steht, ist Kästchen "d" faktisch gesetzt.
-- FREQUENZ — ebenfalls oft übersehen. Das Feld "Therapiefrequenz" steht meist im unteren Formularbereich neben "Hausbesuch" bzw. rechts von der Heilmittel-Tabelle. Übernimm den Text WÖRTLICH so, wie der Arzt ihn geschrieben hat, ohne ihn umzuformulieren — z. B. "2x", "3 x wöchentlich", "1-2 / Woche", "2-3x pro Woche", "täglich", "1x alle 14 Tage". Steht keine eigene Frequenz-Angabe im Feld, suche sie im Heilmittel-Feldtext (z. B. "KG 6x, 2x wtl.") und übernimm auch dort den Originalwortlaut. Nur wenn nirgends eine Frequenz steht: null.
-- "therapieziele" = Freitext aus dem Feld "ggf. Therapieziele / weitere med. Befunde und Hinweise", sonst null.
-- "ergaenzendes_heilmittel" / "anzahl_ergaenzend" = zweite Heilmittel-Zeile ("Ergänzendes Heilmittel") samt Behandlungseinheiten, sonst null.
-- "zuzahlung_befreit" = true wenn "Zuzahlungsfrei" angekreuzt ist (oben in der Versicherten-Box), sonst false.
-- "therapiebereich" = angekreuzter Therapiebereich oben rechts: "physio", "podo", "stimme", "ergo" oder "ernaehrung"; null wenn nicht erkennbar.
-- "unterschrift_vorhanden": Prüfe IMMER das Unterschriftsfeld (unterer Bereich, meist bei "Datum, Unterschrift und Stempel des Arztes"). true = eine handschriftliche Arzt-Unterschrift (Schriftzug/Kürzel, oft mit Stempel) ist sichtbar. false = das Feld ist eindeutig leer. null = Feld abgeschnitten, verdeckt oder Bildqualität zu schlecht, um sicher zu urteilen. Ein Stempel ALLEIN ohne Schriftzug zählt NICHT als Unterschrift.
-- "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher; null wenn "unterschrift_vorhanden" null ist.
-- "ocr_confidence" zwischen 0 und 1: deine Selbsteinschätzung der Bildqualität / Lesbarkeit.
-
-- Arztstempel (unten rechts, beim Unterschriftsfeld): lies dort "praxis_name", "adresse" und "fachrichtung" mit aus, soweit vorhanden. Die Angaben stehen oft mehrzeilig im Stempel; gib "adresse" einzeilig als "Straße Nr., PLZ Ort" zurück. Rate nichts — was nicht lesbar ist, bleibt null.
-- "lanr" und "bsnr" sind reine Ziffernfolgen. Übernimm sie exakt wie gedruckt, ohne führende Buchstaben und ohne Auffüllen auf 9 Stellen.
-
-Schema:
-{
-  "patient": {
-    "name": string|null,                   // "Vorname Nachname"
-    "first_name": string|null,
-    "last_name": string|null,
-    "geburtsdatum": "YYYY-MM-DD"|null,
-    "geschlecht": "m"|"f"|"d"|null,   // f = weiblich (NICHT "w" — die Spalte hat einen CHECK auf m/f/d)
-    "adresse": string|null,                // Straße + PLZ + Ort, einzeilig
-    "krankenkasse": string|null,
-    "versichertennummer": string|null
-  },
-  "arzt": {
-    "name": string|null,
-    "lanr": string|null,                   // 9-stellig
-    "bsnr": string|null,                   // 9-stellig
-    "praxis_name": string|null,            // Praxis-/Einrichtungsname aus dem Arztstempel
-    "adresse": string|null,                // Straße + PLZ + Ort aus dem Arztstempel, einzeilig
-    "fachrichtung": string|null,           // z. B. "Orthopädie", "Allgemeinmedizin", falls im Stempel genannt
-    "ausstellungsdatum": "YYYY-MM-DD"|null
-  },
-  "rezept": {
-    "icd10": string|null,
-    "icd10_2": string|null,                // zweiter ICD-10-Code, falls vorhanden
-    "diagnose_text": string|null,          // ausgeschriebener Diagnose-Freitext
-    "diagnosegruppe": string|null,
-    "leitsymptomatik": string|null,        // angekreuzte Buchstaben, z. B. "a", "ac", "abc"
-    "leitsymptomatik_boxes": {             // jedes Kästchen einzeln geprüft; null = Bereich nicht lesbar
-      "a": boolean|null, "b": boolean|null, "c": boolean|null, "d": boolean|null
-    },
-    "pat_leitsymptomatik": string|null,    // Freitext patientenindividuelle Leitsymptomatik (Feld "d")
-    "heilmittel": string|null,             // Hauptheilmittel, z. B. "KG", "MT", "MLD"
-    "heilmittel_feld_text": string|null,
-    "anzahl_einheiten": integer|null,
-    "ergaenzendes_heilmittel": string|null,
-    "anzahl_ergaenzend": integer|null,
-    "frequenz": string|null,               // z. B. "2x pro Woche"
-    "therapieziele": string|null,          // Freitext Therapieziele / weitere Hinweise
-    "therapiebereich": "physio"|"podo"|"stimme"|"ergo"|"ernaehrung"|null,
-    "zuzahlung_befreit": boolean,
-    "behandlungsbeginn": "YYYY-MM-DD"|null,
-    "is_dringend": boolean,
-    "hausbesuch": boolean,
-    "is_blanko": boolean,
-    "is_lhb_bvb": boolean,
-    "bericht_angefordert": boolean,
-    "unterschrift_vorhanden": boolean|null,   // true = Arzt-Unterschrift sichtbar; false = fehlt; null = nicht erkennbar
-    "signature_confidence": "high"|"medium"|"low"|null  // Konfidenz der Unterschrift-Erkennung
-  },
-  "ocr_confidence": number
-}`;
-
-function mockResponse() {
-  return JSON.stringify({
-    patient: {
-      name: 'Max Mustermann',
-      first_name: 'Max',
-      last_name: 'Mustermann',
-      geburtsdatum: '1978-04-12',
-      geschlecht: 'm',
-      adresse: 'Musterstraße 12, 60313 Frankfurt am Main',
-      krankenkasse: 'AOK Hessen',
-      versichertennummer: 'A123456789'
-    },
-    arzt: {
-      name: 'Dr. med. Anna Schmidt',
-      lanr: '123456701',
-      bsnr: '987654300',
-      praxis_name: 'Orthopädische Gemeinschaftspraxis Schmidt & Kollegen',
-      adresse: 'Zeil 42, 60313 Frankfurt am Main',
-      fachrichtung: 'Orthopädie',
-      ausstellungsdatum: '2026-05-14'
-    },
-    rezept: {
-      icd10: 'M54.5',
-      icd10_2: null,
-      diagnose_text: 'Lumbago mit Ischialgie',
-      diagnosegruppe: 'WS2',
-      leitsymptomatik: 'ab',
-      leitsymptomatik_boxes: { a: true, b: true, c: false, d: false },
-      pat_leitsymptomatik: null,
-      heilmittel: 'KG',
-      heilmittel_feld_text: 'Krankengymnastik (KG), 6 Einheiten, 2x pro Woche',
-      anzahl_einheiten: 6,
-      ergaenzendes_heilmittel: null,
-      anzahl_ergaenzend: null,
-      frequenz: '2x pro Woche',
-      therapieziele: 'Schmerzreduktion, Verbesserung der Beweglichkeit',
-      therapiebereich: 'physio',
-      zuzahlung_befreit: false,
-      behandlungsbeginn: null,
-      is_dringend: false,
-      hausbesuch: false,
-      is_blanko: false,
-      is_lhb_bvb: false,
-      bericht_angefordert: false,
-      unterschrift_vorhanden: true,
-      signature_confidence: 'high'
-    },
-    ocr_confidence: 0.92,
-    insurance_type_hint: 'gkv'
-  });
-}
-
-function buildImageUrl(payload) {
-  if (payload.image_url) return payload.image_url;
-
-  const b64 = payload.image_base64;
-  if (!b64) return null;
-
-  if (b64.startsWith('data:')) return b64;
-
-  const mime = payload.image_mime || 'image/jpeg';
-  return `data:${mime};base64,${b64}`;
-}
-
-// DSGVO note: this task sends an image containing patient PII (name, KVNR,
-// geburtsdatum, ICD-10) to Azure. We cannot text-mask the image. Defense is:
-//   1. Azure region pinned to EU Data Boundary (azureClient.js asserts on boot)
-//   2. Zero-Data-Retention contract with Azure (operational)
-//   3. Image bytes never persisted in our DB; only structured fields after parse
-// If image masking becomes a requirement, route through a local OCR pre-pass
-// (e.g. Tesseract) → mask text → re-render image → then Azure.
-export async function run(payload) {
-  const imageUrl = buildImageUrl(payload || {});
-  if (!imageUrl) {
-    const err = new Error('image_base64 or image_url is required');
-    err.status = 400;
-    throw err;
-  }
-
-  const messages = [
-    { role: 'system', content: SYSTEM },
-    {
-      role: 'user',
-      content: [
-        { type: 'text', text: 'Extrahiere die Felder aus dieser Verordnung. Antworte nur mit dem JSON-Objekt gemäß Schema.' },
-        { type: 'image_url', image_url: { url: imageUrl } }
-      ]
-    }
-  ];
-
-  const result = await chat({
-    messages,
-    responseFormat: { type: 'json_object' },
-    temperature: 0.0,
-    maxTokens: 1500,
-    mockFn: mockResponse
+/**
+ * Executes rezept-ocr task.
+ * Under M4 / C5 gate, OCR is strictly disabled and rejected without transmitting image data.
+ *
+ * @param {object} payload
+ * @param {object} [context]
+ * @throws {Error} always throws AI_OCR_DISABLED (status 503)
+ */
+export async function run(payload, context = {}) {
+  // Pass to gateway to enforce auth verification and C5 OCR gate.
+  // Never builds or transmits image payloads.
+  await executeKiTask({
+    task: 'rezept-ocr',
+    payload: payload || {},
+    context,
+    buildMessages: () => [],
+    dependencies: context?.dependencies || {}
   });
 
-  let parsed;
-  try {
-    parsed = JSON.parse(result.content);
-  } catch {
-    throw new Error('OCR returned non-JSON content');
-  }
-
-  const ocr_confidence = typeof parsed.ocr_confidence === 'number'
-    ? Math.max(0, Math.min(1, parsed.ocr_confidence))
-    : null;
-
-  // Derive a hint from OCR: KVNR present → likely GKV; absent → likely Privat
-  const kvnr = parsed?.patient?.versichertennummer;
-  const insurance_type_hint = kvnr ? 'gkv' : 'privat';
-
-  return {
-    parsed,
-    ocr_confidence,
-    requires_manual_review: typeof ocr_confidence === 'number' && ocr_confidence < 0.7,
-    insurance_type_hint,
-    _meta: {
-      model: result.model,
-      deployment: result.deployment,
-      usage: result.usage,
-      dry_run: result.dry_run,
-      latency_ms: result.latency_ms
-    }
-  };
+  // Fail-safe if gateway ever returned without error:
+  const err = new Error('OCR über diesen Dienst ist deaktiviert');
+  err.code = 'AI_OCR_DISABLED';
+  err.status = 503;
+  throw err;
 }

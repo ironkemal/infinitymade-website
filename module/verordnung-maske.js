@@ -43,6 +43,7 @@
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261006m';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
+import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
@@ -67,7 +68,7 @@ let _scanHerkunft = null;
  * Die Herkunft setzen. Ruft `module/rezept-in-maske.js` nach dem Fuellen.
  * Immer NACH `maskeHeimschicken()`, das sie wieder verwirft.
  */
-export function setzeScanHerkunft(herkunft) { _scanHerkunft = herkunft || null; }
+export function setzeScanHerkunft(herkunft) { _scanHerkunft = herkunft || null; if(!herkunft) entferneBarcodeBestaetigung(); }
 
 /**
  * Die Maske hat „Neuer Patient" gemeldet — es gibt noch keine `patient_id`.
@@ -145,6 +146,7 @@ export function maskeHeimschicken() {
   _bearbeitung = null;
   _scanHerkunft = null;
   _patientNeu = false;
+  entferneBarcodeBestaetigung();
   // Neuanlage ist über dieses Formular immer GKV — ein von der vorherigen
   // Bearbeitung stehengebliebenes `rezeptart=privat` darf für die nächste,
   // per „+ Neue Verordnung" geöffnete Maske nicht mehr gelten
@@ -183,6 +185,7 @@ export function maskeHeimschicken() {
 export async function maskeEinbetten({ host, rx }) {
   const wrap = document.getElementById('rzMaskeWrap');
   if (!wrap || !host || !rx?.id) return false;
+  entferneBarcodeBestaetigung();
 
   _bearbeitung = {
     id: rx.id,
@@ -281,6 +284,11 @@ export async function maskeEinbetten({ host, rx }) {
     const merken = () => { if (_bearbeitung) _bearbeitung.veraendert = true; };
     wrap.addEventListener('input', merken, true);
     wrap.addEventListener('change', merken, true);
+  }
+  const quelle = rx.computed?.erfassung?.quelle;
+  if (quelle === 'barcode' || quelle === 'barcode+korrigiert') {
+    mountBarcodeBestaetigung({ container: wrap, korrigiert: quelle === 'barcode+korrigiert',
+      hinweise: ['Gespeicherte Barcode-Verordnung: Angaben vor erneutem Speichern mit dem Papier vergleichen.'] });
   }
   return true;
 }
@@ -743,7 +751,7 @@ export function nutzlastAusMaske(v) {
     ..._scanHerkunft ? {
       image_storage_path: _scanHerkunft.storage_path || null,
       ocr_confidence: _scanHerkunft.ocr_confidence ?? null,
-      quelle: 'ocr',
+      quelle: _scanHerkunft.quelle === 'barcode' ? 'papier' : 'ocr',
     } : {},
   };
 }
@@ -787,6 +795,7 @@ async function sendeAnServer(supabase, { methode, pfad, rumpf }) {
 }
 
 export async function schreibeVerordnung(supabase, v) {
+  const erfassung = pruefeBarcodeBestaetigung();
   const nutzlast = nutzlastAusMaske(v);
   // `proceed_anyway` merkt sich, dass jemand über Lücken hinweg gespeichert
   // hat. Beim Zurückschreiben darf ein sauberer Durchlauf diese Spur nicht
@@ -804,6 +813,7 @@ export async function schreibeVerordnung(supabase, v) {
       nutzlast, patientFelder: patientkopfAusMaske(),
       patientNeu: _patientNeu, scan: _scanHerkunft, overridden: !!v.overridden,
     });
+    if(erfassung) rumpf.erfassung=erfassung;
     const json = await sendeAnServer(supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf });
     return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null };
   }
@@ -814,6 +824,7 @@ export async function schreibeVerordnung(supabase, v) {
   const rumpf = verordnungFuerAendern({
     nutzlast, patientFelder: patientkopfAusMaske(), overridden: !!v.overridden,
   });
+  if (erfassung) rumpf.erfassung = erfassung;
   const json = await sendeAnServer(supabase, { methode: 'PATCH', pfad: `/rezept/${editId}`, rumpf });
   _bearbeitung.anzahl = nutzlast.anzahl_einheiten;
   // Gespeichert heisst: die Maske und die Datenbank sagen wieder dasselbe —

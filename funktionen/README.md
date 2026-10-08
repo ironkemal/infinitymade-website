@@ -645,6 +645,20 @@ commit'te harita tazelenecek.
   `setPodVorwahl(vordId, { datum: randevu günü })` ile bağlayacak.
 - `tools/check-syntax.sh` (pre-commit, 90c5652) — niye: 2d8aea5'teki template-literal backtick
   hatası canlı dashboard'u boşalttı; `npm test` o modülü yükleyemiyor.
+### 26.09.2026 · QA-Fix `2007c8e` — datetime-local yerel, arama seçimden sonra susar
+- **Yeni export `module/datum.js` `alsDatetimeLocal(d)`** — Zeitpunkt'u yerel okuyup
+  `<input type="datetime-local">` için `YYYY-MM-DDTHH:MM` yazar; `new Date(feld.value)` ile
+  kaydetmenin tersi. Niye: `openBookingModal` `start_time.substring(0,16)` ile UTC metni forma
+  yazıyordu → 2 saat kayma, değiştirmeden kaydetmek termini kaydırıyordu. İlk kullanım:
+  `dashboard.js` `openBookingModal` (`bkStart`). **Aynı işi elle yapan ikizler (henüz göçmedi):**
+  `dashboard.js` Fahrtenbuch-Edit `toLocal = iso => iso.slice(0,16)` (`fbEditStartedAt/EndedAt`,
+  timestamptz → aynı UTC kayması şüphesi, canlıda doğrulanmadı) · getTimezoneOffset hilesiyle
+  inline yerel metin: `loadSlots`, `openManualBooking` (`bkStart.min`), `messDatum` varsayılanı.
+- **Kapalı yardımcı `katalog-suche.js` `attachAutocomplete` → `verwirfSuche()`** (export değil) —
+  seçim/blur sonrası bekleyen debounce'u ve yoldaki RPC cevabını geçersiz kılar (dropdown dolu
+  alanın üstünde yeniden açılıyordu). Kullanım: `selectItem` + blur zamanlayıcısı. İkizi yok.
+- Harita bu commit'te tazelenmedi (paylaşılan dizinde Ops #304 oturumunun commit'siz haritası);
+  o oturumun commit'iyle birlikte üretilecek.
 
 ### 26.09.2026 · Ops #304 Nachtrag — iki ICD alanı, DG'ye tek yazan
 - **Yeni modül `module/icd-dg-verdrahtung.js`** (`verdrahteIcdDg`, `icdAufZweiFelder`,
@@ -664,6 +678,9 @@ commit'te harita tazelenecek.
   canlıda bu yüzden kaldı) ve aynı ipucu iki yerde çıkıyordu.
 - `api-backend/billing/dta/preflight.js` — `icd10` boş + `icd10_2` dolu: V:01002 boş alanda
   yanlış alarm veriyordu ve tek kod hiç denetlenmiyordu (`gkv-302` buldu). `preflight.test.js` +1.
+- `module/icd-dg-verdrahtung.js` `icdMehrAlsEinKodeJeFeld` (26.09.2026 akşam) — `saveRezept`'teki
+  „Trotzdem speichern?" kuralı modüle alındı. Niye: canlı turda yerel `confirm()` otomasyonla
+  doğrulanamadı; kural artık testli. Tek kullanım: `dashboard.js` `saveRezept`.
 - `dashboard.js` `podoCtx()` — ölü `_wireDgIcdPair` aktarımı silindi. `wireM13Toggles` —
   Fachbereich değişince ICD yeniden değerlendirilir.
 - i18n `pod_icd_nach_feld2`, `pod_icd_je_feld` (de/en/tr) · cache `dashboard.js` ve
@@ -679,9 +696,6 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
 - `dashboard.js` `_wireDgIcdPair` — `dataset.manualOverride` kalktı, yerine `dataset.dgAuto`
   (otomatiğin kendi koyduğu değer). `_setDgProgrammatically` yalnız boş alanı ya da kendi
   değerini değiştirir; `''` kendi önerisini geri alır (ICD alanından çıkışta: belirsiz ya da ICD
-- `module/icd-dg-verdrahtung.js` `icdMehrAlsEinKodeJeFeld` (26.09.2026 akşam) — `saveRezept`'teki
-  „Trotzdem speichern?" kuralı modüle alındı. Niye: canlı turda yerel `confirm()` otomasyonla
-  doğrulanamadı; kural artık testli. Tek kullanım: `dashboard.js` `saveRezept`.
   silindi). `markManual` yalnız `change`'i dinler, `dgAuto`'yu siler → focusin/`input` dürtüsü
   ve `verordnung-podo.js:schreibe()` otomatiği artık kapatmaz. >1 aday → aday ipucu her zaman.
 - `dashboard.js` köprü `ensureDgIcdWiring` (tek çağıran `module/verordnung-maske.js`
@@ -780,3 +794,69 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
     Aynı kavram iki tabloda — db-ustasi'ye sorulmalı; tek-praxis owner'da `businesses` kaydı olmayabilir.
   - `anfrage-anliegen.js` — kopya değil; Nagelspange kuralları dashboard/abrechnung'da HPNR/Befundpauschale düzeyinde,
     hasta tarafı Anliegen sorusu başka yerde yok.
+
+
+### 07.10.2026 · M3 — lokale PDF417-Erfassung — Intentmeldung
+
+- `module/rezept-barcode.js`, `rezept-barcode-scan.js`, `rezept-barcode-dialog.js`,
+  `rezept-barcode-bestaetigung.js`: lokale Bild/PDF/Kamera-Erkennung und KBV-BFB-Muster-13-Parser.
+  Zweck: Barcodewerte in bestehende `rezept-in-maske.js` / `verordnung-maske.js` übernehmen;
+  Papiervergleich vor bestehendem Confirm/PATCH erzwingen. Kein zweiter Formular- oder Speicherweg,
+  kein automatischer Cloud-Upload bei erfolglosem Scan. Erste Integration: Rezept anlegen im Dashboard.
+- `module/podologie-heilmittel-position.js` (`podologiePositionFuerText`): kanonische deterministische
+  HPNR-Zuordnung. `api-backend/lib/podologie-heilmittel-position.js` ist byteidentische generierte
+  Spiegelung für Docker-Laufzeitgrenze; Sync-Test verhindert unabhängige Regelpflege. Bewusste Spiegelung,
+  kein eigenständiger zweiter Mappingweg.
+- `api-backend/lib/rezept-erfassung.js` (`validiereBarcodeErfassung`, `computedMitErfassung`):
+  whitelisted Barcode-Provenienz in bestehendem `computed` für POST/PATCH; keine Barcode-Rohdaten.
+- Kartenprüfung: erzeugt 07.10.2026, 3076 Funktionen / 373 Dateien. Gezielte Integrationsprüfung
+  bestätigt bestehende Masken- und Speichernaht; kein konkreter Doppelweg gefunden.
+- Vom Builder gemeldete Prüfung: 2864 Tests grün, Typecheck grün, Browserprobe 21/21.
+  Echte Box, Telefonkamera und Live-Speichern bleiben offen; hier nicht erneut ausgeführt.
+
+
+### 07.10.2026 · M3 Teamreview — Speicherlauf und Dialogabschluss — Intentmeldung
+
+- `module/rezept-speicher-riegel.js` (`beginRezeptSpeicherlauf`): verhindert geänderte
+  Formularwerte während asynchronem Speichern. Erster Einsatz: `dashboard.js` `saveRezept`;
+  Eintrittssnapshot, disabled/inert, Prüfung vor Writes, Freigabe in finally. Bestehender
+  Speicherweg bleibt erhalten.
+- `module/bestaetigungs-dialog.js` (`zeigeBestaetigungsDialog`): bestehender Confirm-Dialog
+  löst auch bei generischem Schließen/Escape mit false auf. Erster Einsatz: `dashboard.js`
+  `showConfirmModal`-Wrapper. Zweck: hängende Speicherläufe und dauerhaft gesperrte Maske vermeiden.
+- Vom Builder gemeldet: gezielte Tests 13/13 und Browserprobe 29/29; hier nicht erneut ausgeführt.
+  Funktionskarte wird durch Builder aktualisiert.
+
+### M3-Nachmeldung: Modal-Escape und gespeicherte Barcode-Verordnungen (07.10.2026)
+
+`module/modal-escape.js` übernimmt bisherigen Dashboard-Escape-Handler, damit
+Produkt und Browserprobe dieselbe Modalpriorität prüfen. Erster Einsatz:
+`dashboard.js`; zusätzlich `tools/browser-probe/rezept-barcode-probe.html`.
+Bestehendes `maskeEinbetten` montiert nach vollständiger Befüllung erneut
+`mountBarcodeBestaetigung`: alte gespeicherte Bestätigung darf aktuelle Änderungen
+nicht freigeben. `schreibeVerordnung` trägt frische Metadaten im PATCH; Backend
+verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Auslöser.
+
+### 08.10.2026 · M4 — KI-Gateway und Freigaben — Intentmeldung
+
+- `api-backend/ai/ki-gateway.js` (`executeKiTask`): gemeinsame Eintrittsstelle für bestehende
+  KI-Tasks. Zweck: geschlossene Eingabeschemas, tenantbezogenes Wörterbuch, Maskierung,
+  Restprüfung und gebundene Rückfragen vor dem Azure-Transport durchsetzen. Erste Integration:
+  bestehende Backend-Task-Handler über `run`; Kategorie C und OCR bleiben früh gesperrt.
+  `ki-schema.js`, `ki-woerterbuch.js` und serverseitiges `ki-rueckfrage.js` sind bewusste
+  Schichten dieses Ablaufs, keine unabhängigen zweiten Task-Wege.
+- `api-backend/ai/ki-einwilligung.js` (`createOwnerDecisionStore`): versionierte Owner-Entscheidung
+  für Tenant und Box in separatem privatem Volume. Zweck: individuelle Freigabe zusätzlich
+  zu Betreiber-, Mail- und Freitextschaltern prüfen; Standard bleibt ausgeschaltet.
+  `ki-jeton.js` (`createJetonClient`) hält Transportberechtigung im RAM. Gateway-Callback
+  `beforeSend` soll aktuelle Freigabe und Konfiguration unmittelbar vor jedem Send prüfen.
+  Auditdaten dienen aggregierter Nutzungserfassung, nicht als Freigabe- oder Produktionsnachweis.
+- `module/ki-client.js` (`requestKiTask`, `runMailDraftInUi`), `module/ki-rueckfrage.js`
+  (`zeigeKiRueckfrageDialog`) und `module/ki-einstellungen.js` (`mountKiEinstellungen`):
+  gemeinsamer Browservertrag für Task-Aufruf, abbrechbare Rückfrage und Owner-Einstellungen.
+  Erster Einsatz: Dashboard-Mailentwürfe, Terminbestätigung und Einstellungen. Bestehende
+  Termin- und Leistungswerte werden lokal wieder eingesetzt; B2B-Kontakte folgen Backend-Feld
+  `company`. Browser-Spracherkennung bleibt ohne freigegebenen Audio-Endpunkt gesperrt.
+- Funktionenkarte bei dieser Nachmeldung: erzeugt 08.10.2026, 3192 Einträge. Gezielte
+  Karten- und Quellenprüfung bestätigt genannte Integrationsstellen. Diese Intentmeldung
+  bestätigt weder abgeschlossene QA noch externe Provider-, Rechts- oder Produktionsfreigabe.

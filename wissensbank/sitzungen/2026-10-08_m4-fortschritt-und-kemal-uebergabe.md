@@ -9,6 +9,8 @@ tags: [sitzung, praxura, m4, fortschritt, uebergabe]
 
 Stand: **08.10.2026**. Auf Melihs Wunsch nach Abschluss und erneuter Prüfung als Fortschrittsnotiz gespeichert. Grundlage sind der vorhandene QA-Bericht und die geprüfte Übergabe; beim Speichern dieser Notiz wurden keine neuen Produkttests ausgeführt.
 
+> **Aktueller Übergabestand:** vollständiger M3/M4-Code mit Remotestand ff7e29a (inklusive O-178) integriert,3196Tests/49Zentraltests/22M4-Probe/39M3-Probe/14API PASS. Frühere Angaben unten sind historische Nachweise vor dieser Integration. Veröffentlichung gemäß ausdrücklichem Nutzerauftrag; Status von CI/Live-App separat prüfen.
+
 ## Erreicht
 
 **M4 ist lokal umgesetzt und erneut geprüft (`✅*`). Kemals lokale Hat-K-Weiterarbeit ist freigegeben.** **Veröffentlichungsabgleich:** Remote `4409428` enthält laut Sprint bereits K2b.7a (`b3da84e6`) und K2b.7b (`82c30d7f`). Der zuvor genannte nächste Auftrag K2b.7a ist überholt. Remote-Code und Boxbetrieb wurden beim Dokumentationspush nicht neu getestet; lokale M4-Nachweise gelten weiterhin für den älteren Checkout `00c0a21`.
@@ -30,7 +32,7 @@ Details, Testmethoden und Grenzen: [[2026-10-08_m4-qa-bericht]]. Die erneute Pr�
 ## Nächste Schritte — Kemal
 
 1. **Kein erneutes K2b.7a/7b:** Diese Arbeiten sind im neueren Remote-Sprint bereits als umgesetzt dokumentiert.
-2. **K2b.16 / ORG und O-178:** Rechte-/Lizenzklärung und Sicherheitsentscheidung gemäß aktuellem Sprintprompt; danach „Über diese Software“ umsetzen. Keine Lizenzrechte oder Entscheidungen erfinden.
+2. **O-178/K2b.16 bereits umgesetzt:** Kemals ff7e29a ist integriert. Offene ORG-/Rechtepunkte und Geräte-/Boxprüfungen gemäß aktuellem Sprint fortführen. Keine Lizenzrechte oder Entscheidungen erfinden.
 3. **Hat-K-Vertrag und Integration:** Merkez-/KI-Jetonvertrag lokal mit Fakes vorbereiten; maximal 3600 Sekunden TTL. M4-Code getrennt mit aktuellen Hat-K-Änderungen integrieren und anschließend erneut testen. Der neuere Boxstart verwendet laut Remote `start.mjs`; ältere PM2-Boxannahmen erneut gegen diesen Stand prüfen.
 4. **Vor K3:** Offene Geräte-/Boxprüfungen nach §5b tatsächlich durchführen. O-179 Phase 2/T20 erfordert gesonderte Kemal-Freigabe für VPS-Arbeit; sie wird durch diesen Dokumentationspush nicht erteilt.
 
@@ -42,9 +44,13 @@ Verbindlicher Arbeitsauftrag: `KEMAL_M4_UEBERGABE.md`. Technischer Vertrag: `api
 - **Keine Freitext-, Anbieter-, Produktions- oder K3-Gesamtabnahme.** Qualitäts-FAIL bleibt offen. Bekannter Cold-Satz ist Regression; eine spätere Qualitätsfreigabe braucht einen neuen unabhängigen Satz.
 - Reale Azure-/Entra-Ressource, Host/Region/Deployment/RBAC, TTL-/Widerrufs-/Quoten-/Budgetvertrag und Microsoft-/Anwalts-/Vertragsnachweise fehlen weiterhin.
 - Physische HTTPS-Box, Handygeräte, zwei PM2-Worker unter Boxlast und Ressourcen-/Offlineverhalten sind separat zu prüfen. Offene M3-Geräteabnahme: [[2026-10-07_m3-offene-abnahme]].
-- M4-Runtime liegt im gemischten **lokalen, uncommitteten Arbeitsstand**; keine Codeveröffentlichung oder Deployment durch diesen Dokumentationspush. Übernahme nach Verantwortlichkeit und bei gemischten Dateien nach Hunks abstimmen. Ein anderer Checkout erhält M4 noch nicht durch `git pull`.
+- Der frühere reine Dokumentationsstand ist durch die vollständige Codeintegration ergänzt. Ursprünglicher schmutziger Checkout bleibt erhalten; aktueller Übergabestand liegt im geprüften Integrationscheckout und wird auf main veröffentlicht. Übernahme nach Verantwortlichkeit und bei gemischten Dateien nach Hunks abstimmen. Ein anderer Checkout erhält M4 noch nicht durch `git pull`.
 - Kemals Weiterarbeit ist dokumentiert freigegeben; keine externe Nachricht an Kemal versendet. VPS-Zugriff und Deployment gehören nicht zu dieser Freigabe.
 
 ## Wiederaufnahme
 
 Zuerst diese Notiz und den Übergabeauftrag lesen. Arbeitsstand prüfen, fremde Änderungen erhalten. **Mit aktuellem Remote-Sprintprompt fortsetzen; K2b.7a/7b und M4-Implementierung nicht erneut von vorn beginnen.** Nach jeder abgeschlossenen Teilaufgabe Tests und tatsächlichen Stand im Sprint sowie in der Fortschrittsdokumentation nachtragen.
+
+## Vollständige Codeübergabe
+
+Code, Vendor-Dateien, Fixtures, Tests und Default-Aus-Konfiguration integriert. Tatsächlicher Boxstart start.mjs/node:cluster mit zwei Workern beim lokalen API-Nachtest verwendet; keine alten PM2-Image-CMDs übernommen. Arbeitsauftrag und frische Grenzen: `KEMAL_M4_UEBERGABE.md`. WeitereContainer-/Commit-/CI-Ergebnisse: [[2026-10-08_m4-qa-bericht]].

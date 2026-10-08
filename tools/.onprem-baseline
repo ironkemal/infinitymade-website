@@ -22,7 +22,7 @@
 # tarihi gerekçe olarak anlatıyor — canlı kod satırı DEĞİL, gerçek dış çağrı
 # SIFIRA indi (aiPayload artık Azure'a gidiyor, n8n'e hiç gitmiyor). Sayaç
 # yorum/kod ayrımı yapamıyor, bu yüzden kapı SKIP_ONPREM_GATE=1 ile geçildi.
-n8n_host=8
+n8n_host=6
 
 # app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).
 app_host=7
@@ -44,7 +44,7 @@ ext_script=0
 # anıyor). İkinci n8n satırı (`N8N_WEBHOOK_URL`, booking bildirimi, PII
 # taşımıyor) henüz taşınmadı — Faz 1.2'nin "grep N8N_ → 0" hedefi bu yüzden
 # hâlâ açık, ama G1 riski taşıyan satır kapandı. SKIP_ONPREM_GATE=1 ile geçildi.
-n8n_env=5
+n8n_env=2
 
 # Sabit Supabase proje adresi. 1 = api-backend/test_schema.js:5 (env fallback'i).
 # Sicil bunu 0 sanıyordu; 04.09. ölçümünde çıktı — test dosyası, düşük risk, kayıtlı.

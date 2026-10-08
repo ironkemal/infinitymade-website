@@ -39,6 +39,18 @@ Die Container-Images enthalten außerdem Betriebssystem-Pakete ihrer Basis-Image
 
 Die npm-Pakete der Server-Komponente und die Bibliotheken/Schriften der Oberfläche stehen mit vollem Lizenztext in „Über diese Software" (`/api/ueber/lizenzen`, `vendor/LICENSES.txt`; O-178).
 
+## Lokaler Barcode-Leser (M3, 07.10.2026)
+
+| Bestandteil | Version | Mitgelieferter Lizenztext | Quelle / Artefakt |
+|---|---|---|---|
+| ZXing JavaScript | `@zxing/library` 0.21.3 | Apache-2.0 laut Paket-LICENSE; Paket-Metadaten nennen abweichend MIT | npm, `vendor/zxing.js`, `vendor/zxing.LICENSE` |
+| ts-custom-error (im ZXing-Bundle) | 3.3.1 | MIT | npm, `vendor/zxing-ts-custom-error.LICENSE` |
+| PDF.js + lokaler Worker | `pdfjs-dist` 4.10.38 | Apache-2.0 | npm, `vendor/pdfjs/`, `vendor/pdfjs/LICENSE` |
+| PDF.js-Standardfonts (unverändert) | aus `pdfjs-dist` 4.10.38 | Foxit: BSD-Bedingungen; Liberation: SIL OFL 1.1 | `vendor/pdfjs/standard_fonts/LICENSE_FOXIT` und `LICENSE_LIBERATION` |
+
+Erzeugung und SHA-256: `vendor/README.md`, `tools/vendor/build-barcode.mjs`.
+Keine zusätzlichen Images, Cloud-Dienste oder Caddy-CSP-Ausnahmen.
+
 ## Bewusst nicht enthalten
 
 | Bestandteil | Warum nicht |

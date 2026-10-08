@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'">
+<title>M3 — lokale Barcode-Prüfung</title>
+<style>
+  :root { --bg-card-solid:#182232; --text-main:#e5edf8; --text-muted:#b4c0d2; --border:#344158; --success:#80d8a0; --warning:#ffcf80; }
+  body { margin:20px; background:var(--bg-card-solid); color:var(--text-main); font:16px system-ui; }
+  pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+</style>
+<h1>M3 — lokale Barcode-Prüfung</h1>
+<p>Synthetische Testdaten. Kein Login, keine Speicherung von Patientendaten.</p>
+<pre id="result">Prüfung läuft …</pre>
+<div id="mask-host"></div>
+<script type="module">
+  const results = [];
+  window.m3Probe = { complete:false, results };
+  const out = document.getElementById('result');
+  const update = () => { out.textContent = JSON.stringify(window.m3Probe, null, 2); };
+  const check=(name,pass)=>{results.push({name,pass:!!pass});update();};
+  let scanned;
+  try {
+    const { scanneRezeptLokal } = await import('/module/rezept-barcode-scan.js?v=20261007m3');
+    for (const [file, succeeds] of [
+      ['muster13.png',true], ['muster13-rotated.png',true],
+      ['muster13.pdf',true], ['muster13-page2.pdf',true],
+      ['unsupported.png',false], ['two-prescriptions.pdf',false],
+      ['large-page.pdf',true], ['duplicate-barcode.pdf',true], ['six-pages.pdf',false],
+    ]) {
+      try {
+        const response = await fetch(`./fixtures/m3/${file}`);
+        if(!response.ok) throw new Error('Fixture fehlt');
+        const blob = new Blob([await response.arrayBuffer()], {type:file.endsWith('.pdf')?'application/pdf':'image/png'});
+        const dataUri = await new Promise((resolve,reject) => {
+          const reader = new FileReader(); reader.onload=()=>resolve(reader.result);
+          reader.onerror=reject; reader.readAsDataURL(blob);
+        });
+        const result = await scanneRezeptLokal(dataUri);
+        if(file==='muster13.png') scanned=result;
+        const p = result.parsed;
+        let previewText=true;
+        if(file==='muster13.pdf') {
+          const image=new Image();image.src=result.dataUri;await image.decode();
+          const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+          const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
+          const pixels=ctx.getImageData(110,110,1000,65).data;let ink=0;
+          for(let i=0;i<pixels.length;i+=4) if(pixels[i+3]>128 && pixels[i]<150 && pixels[i+1]<150 && pixels[i+2]<150) ink++;
+          previewText=ink>50;canvas.width=canvas.height=0;
+        }
+        const pass = succeeds && p.patient.last_name === 'Müller'
+          && p.patient.first_name === 'Zoë' && p.rezept.heilmittel_position === '78010'
+          && p.rezept.anzahl_einheiten === 6 && result.storage_path === null && previewText;
+        results.push({ file, pass, quelle:result.quelle, imagePreview:result.dataUri?.startsWith('data:image/'),previewText });
+      } catch (error) {
+        const expected = file==='unsupported.png' ? /Version/ : file==='six-pages.pdf' ? /höchstens fünf/ : /Mehrere unterschiedliche/;
+        results.push({ file, pass:!succeeds && expected.test(error.message), error:error.message });
+      }
+      update();
+    }
+    const cold=await import('/module/rezept-barcode-scan.js?abort-review');
+    const pdfBlob=await(await fetch('./fixtures/m3/muster13.pdf')).blob();
+    const pdfData=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(pdfBlob);});
+    const abort=new AbortController();
+    const NativeWorker=window.Worker;let workerStarts=0;
+    window.Worker=class extends NativeWorker {constructor(...args){super(...args);workerStarts++;}};
+    try {
+      const pending=cold.scanneRezeptLokal(pdfData,{signal:abort.signal});queueMicrotask(()=>abort.abort());
+      let aborted=false;try {await pending;} catch(e) {aborted=e.name==='AbortError';}
+      check('Abbruch während PDF-Erstimport startet keinen Worker',aborted && workerStarts===0);
+    } finally {window.Worker=NativeWorker;}
+    // Real dashboard markup and real adapter/save path, with a local fake API.
+    const html=await (await fetch('/dashboard.html')).text();
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    document.getElementById('mask-host').append(document.importNode(doc.getElementById('rezeptModal'),true));
+    const maske=await import('/module/verordnung-maske.js?v=20261007m3');
+    const {uebernehmeRezeptInMaske}=await import('/module/rezept-in-maske.js?v=20261007m3');
+    const confirm=await import('/module/rezept-barcode-bestaetigung.js?v=20261007m3');
+    const g=id=>document.getElementById(id);
+    const {installiereModalEscape}=await import('/module/modal-escape.js?v=20261007m3');
+    installiereModalEscape({closeModal:id=>{g(id).hidden=true;}});
+    maske.setzeMaskeBruecke({apiBasis:'/synthetic-api',setTherapiebereich:k=>{g('rzTherapieBereich').value=k;}});
+    await uebernehmeRezeptInMaske(scanned,{oeffneMaske:async()=>{maske.maskeHeimschicken();g('rzTherapieBereich').value='podo';},patienten:()=>[]});
+    check('Adapter übernimmt DG, ICD, HPNR, Anzahl und Datum',
+      g('rzDg').value==='DF' && g('rzIcd').value==='E11.74' && g('rzHmPosition').value==='78010'
+      && g('rzAnzahl').value==='6' && g('rzAusstDate').value==='2026-10-07');
+    check('Bestätigung zeigt fünf kritische Feldgruppen',g('rzBarcodeBestaetigungWrap').querySelectorAll('strong').length===6);
+    document.getElementById('mask-host').append(document.importNode(doc.getElementById('confirmModal'),true));
+    const {zeigeBestaetigungsDialog}=await import('/module/bestaetigungs-dialog.js?v=20261007m3');
+    const dialogDeps={openModal:id=>{g(id).hidden=false;},closeModal:id=>{g(id).hidden=true;}};
+    const closed=zeigeBestaetigungsDialog({message:'Synthetischer Abbruchtest'},dialogDeps);
+    g('confirmModal').hidden=true;
+    check('Generisches Warnungsdialog-Schließen löst Abbruch auf',await closed===false);
+    const accepted=zeigeBestaetigungsDialog({},dialogDeps);g('confirmModalOk').click();
+    check('Explizite Warnungsbestätigung bleibt wahr und räumt Handler auf',await accepted===true && g('confirmModalOk').onclick===null);
+    for(const action of ['Escape','X','Abbrechen']) {
+      const warning=zeigeBestaetigungsDialog({message:'Synthetischer Warnungstest'},dialogDeps);
+      if(action==='Escape') document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+      else (action==='X'?document.querySelector('#confirmModal .modal-close'):g('confirmModalCancel')).click();
+      check(`Gemeinsame Modalsteuerung: Warnungsdialog ${action} löst Abbruch auf`,await warning===false && g('confirmModal').hidden);
+    }
+    const auth={auth:{getSession:async()=>({data:{session:{access_token:'synthetic-test'}}})}};
+    const realFetch=window.fetch;
+    const posts=[];
+    window.fetch=async(url,options)=>{posts.push({url,options});return new Response(JSON.stringify({success:true,prescription_id:'synthetic-rx'}),{status:200});};
+    try {
+      let blocked=false;
+      try {await maske.schreibeVerordnung(auth,{});} catch(e) {blocked=/Papier/.test(e.message);}
+      check('Ohne Papierbestätigung kein API-Aufruf',blocked && posts.length===0);
+      g('rzBarcodeBestaetigt').click();
+      await maske.schreibeVerordnung(auth,{});
+      const body=JSON.parse(posts[0].options.body);
+      check('Bestätigtes Rezept nutzt vorhandenen POST-Speicherweg',posts[0].url==='/synthetic-api/rezept/confirm' && posts[0].options.method==='POST');
+      check('Nutzlast trägt Barcode-Herkunft, kein Bild und keine OCR-Konfidenz',body.erfassung?.quelle==='barcode'
+        && body.erfassung.bestaetigt===true && !body.storage_path && !body.dataUri && body.ocr_confidence==null);
+      g('rzAnzahl').value='7';g('rzAnzahl').dispatchEvent(new Event('input',{bubbles:true}));
+      blocked=false;try {await maske.schreibeVerordnung(auth,{});} catch(e) {blocked=/Papier/.test(e.message);}
+      check('Feldänderung setzt Bestätigung zurück und sperrt Speichern',blocked && !g('rzBarcodeBestaetigt').checked && posts.length===1);
+      g('rzBarcodeBestaetigt').click();
+      check('Korrektur wird als barcode+korrigiert ausgewiesen',confirm.pruefeBarcodeBestaetigung().quelle==='barcode+korrigiert');
+      g('rzPatName').value='Synthetisch geändert';
+      blocked=false;try {confirm.pruefeBarcodeBestaetigung();} catch(e) {blocked=true;}
+      check('Auch programmgesteuerte Patientenkopf-Änderung sperrt Bestätigung sofort',blocked && !g('rzBarcodeBestaetigt').checked);
+      g('rzBarcodeBestaetigt').click();g('rzBarcodePapierGeaendert').click();
+      check('Handschriftliche Korrektur braucht erneute Bestätigung',!g('rzBarcodeBestaetigt').checked);
+      const {beginRezeptSpeicherlauf}=await import('/module/rezept-speicher-riegel.js?v=20261007m3');
+      const root=g('rzMaskeWrap');const number=g('rzAnzahl');number.disabled=true;
+      const lock=beginRezeptSpeicherlauf(root);
+      check('Speicherlauf sperrt echte Formularfelder und Tastaturfokus',root.inert
+        && Array.from(root.querySelectorAll('input,select,textarea,button')).every(el=>el.disabled));
+      number.value='8';let changed=false;try {lock.pruefe();} catch(e) {changed=/Speicherns geändert/.test(e.message);}
+      lock.freigeben();
+      check('Speicherriegel erkennt Programmeingabe und erhält vorherige Sperren',changed && number.disabled && !root.inert);
+      number.disabled=false;
+      maske.maskeHeimschicken();
+      check('Manuelle Maske entfernt Barcode-Zustand',confirm.pruefeBarcodeBestaetigung()===null && !g('rzBarcodeBestaetigungWrap'));
+    } finally {window.fetch=realFetch;confirm.entferneBarcodeBestaetigung();maske.setzeMaskeBruecke(null);}
+    let finishOpening;
+    const delayed=uebernehmeRezeptInMaske(scanned,{oeffneMaske:()=>new Promise(resolve=>{finishOpening=resolve;}),istAktuell:()=>false});
+    g('rzPatName').value='Neue manuelle Maske';finishOpening();
+    const cancelled=await delayed;
+    check('Veralteter Scan überschreibt nach asynchronem Öffnen keine neue Maske',cancelled.status==='abgebrochen'
+      && g('rzPatName').value==='Neue manuelle Maske' && !g('rzBarcodeBestaetigungWrap'));
+    // Acquisition races use real dialog markup, but never open a physical camera.
+    const scanModal=document.importNode(doc.getElementById('rezeptScanModal'),true);
+    document.getElementById('mask-host').append(scanModal,document.importNode(doc.getElementById('rezeptScanBtn'),true));
+    const {initBarcodeDialog}=await import('/module/rezept-barcode-dialog.js?v=20261007m3');
+    initBarcodeDialog({sichtbar:()=>true,wahl:()=>{scanModal.hidden=false;},schliessen:()=>{scanModal.hidden=true;},
+      verdrahten:()=>{},maske:async()=>{maske.maskeHeimschicken();g('rezeptModal').hidden=false;g('rzTherapieBereich').value='podo';},patienten:()=>[]});
+    const oldCapture=navigator.mediaDevices.getUserMedia;
+    let resolveCamera,rejectCamera,stopped=0;
+    navigator.mediaDevices.getUserMedia=()=>new Promise((resolve,reject)=>{resolveCamera=resolve;rejectCamera=reject;});
+    const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+    try {
+      g('rezeptScanBtn').click();g('rxScanWebcamBtn').click();g('rxScanManuellBtn').click();
+      const lateStream=new MediaStream();lateStream.getTracks=()=>[{stop:()=>{stopped++;}}];
+      resolveCamera(lateStream);await tick();
+      check('Verspätete Kamerafreigabe nach Abbruch wird gestoppt',stopped===1 && !g('rxScanVideo').srcObject && g('rxScanCamera').style.display==='none');
+      g('rezeptScanBtn').click();g('rxScanWebcamBtn').click();g('rxScanManuellBtn').click();
+      rejectCamera(new DOMException('synthetic','NotAllowedError'));await tick();
+      check('Verspäteter Kamerafehler überschreibt neuen Zustand nicht',g('rxScanError').style.display==='none');
+      scanModal.hidden=true;await tick();
+    } finally {navigator.mediaDevices.getUserMedia=oldCapture;}
+    // Live synthetic canvas track: exercises real video playback and track cleanup,
+    // without opening a device or claiming physical barcode recognition.
+    const cameraCanvas=document.createElement('canvas');cameraCanvas.width=640;cameraCanvas.height=480;
+    cameraCanvas.getContext('2d').fillRect(0,0,640,480);
+    const fakeStream=cameraCanvas.captureStream(10);
+    navigator.mediaDevices.getUserMedia=async()=>fakeStream;
+    try {
+      g('rezeptModal').hidden=true;await tick();
+      g('rezeptScanBtn').click();g('rxScanWebcamBtn').click();
+      const cameraUntil=Date.now()+5000;
+      while(g('rxScanCamera').style.display==='none' && Date.now()<cameraUntil) await tick();
+      check('Synthetischer aktiver Kamerastream erreicht Videowiedergabe',g('rxScanVideo').srcObject===fakeStream && g('rxScanVideo').readyState>=2);
+      document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await tick();
+      check('Gemeinsames Escape schließt Kamera und beendet alle Tracks',scanModal.hidden && !g('rxScanVideo').srcObject && fakeStream.getTracks().every(track=>track.readyState==='ended'));
+    } finally {fakeStream.getTracks().forEach(track=>track.stop());navigator.mediaDevices.getUserMedia=oldCapture;}
+    g('rezeptScanBtn').click();
+    const png=await(await realFetch('./fixtures/m3/muster13.png')).blob();
+    const transfer=new DataTransfer();transfer.items.add(new File([png],'synthetic.png',{type:'image/png'}));
+    g('rxScanFileInput').files=transfer.files;
+    g('rxScanFileInput').dispatchEvent(new Event('change',{bubbles:true}));
+    const until=Date.now()+20000;
+    while(!g('rzBarcodeBestaetigungWrap') && Date.now()<until) await tick();
+    check('Dateiauswahl führt vollständig vom Dialog in echte Maske',!!g('rzBarcodeBestaetigungWrap')
+      && g('rzPatName').value==='Müller' && !g('rezeptModal').hidden && scanModal.hidden);
+    g('rezeptModal').hidden=true;await tick();
+    check('Maskenschließen räumt Bestätigungszustand und Timer weg',!g('rzBarcodeBestaetigungWrap') && !confirm.istBarcodeAktiv());
+    const saved={id:'synthetic-saved',therapie_bereich:'podo',heilmittel:'Hornhautabtragung',heilmittel_position:'78010',
+      diagnosegruppe:'DF',icd10:'E11.74',anzahl_einheiten:6,ausstellungsdatum:'2026-10-07',
+      computed:{erfassung:{quelle:'barcode+korrigiert',format:'PDF417',parser_version:'KBV-BFB-4.80-M13-10',bestaetigt:true}}};
+    maske.setzeMaskeBruecke({apiBasis:'/synthetic-api',setTherapiebereich:k=>{g('rzTherapieBereich').value=k;}});
+    await maske.maskeEinbetten({host:g('mask-host'),rx:saved});
+    check('Gespeicherte Barcode-Verordnung verlangt frischen Papiervergleich',!!g('rzBarcodeBestaetigungWrap') && !g('rzBarcodeBestaetigt').checked);
+    const patches=[];window.fetch=async(url,options)=>{patches.push({url,options});return new Response(JSON.stringify({success:true,prescription_id:saved.id}),{status:200});};
+    try {
+      let blocked=false;try {await maske.schreibeVerordnung(auth,{});} catch(e) {blocked=/Papier/.test(e.message);}
+      check('Wiedergeöffnete Barcode-Verordnung ohne Bestätigung sendet keinen PATCH',blocked && patches.length===0);
+      g('rzBarcodeBestaetigt').click();g('rzAnzahl').value='8';g('rzAnzahl').dispatchEvent(new Event('input',{bubbles:true}));
+      check('Änderung nach Wiederöffnen entwertet neue Papierbestätigung',!g('rzBarcodeBestaetigt').checked);
+      g('rzBarcodeBestaetigt').click();await maske.schreibeVerordnung(auth,{});
+      const patchBody=JSON.parse(patches[0].options.body);
+      check('PATCH trägt frische Bestätigung und korrigierte Barcode-Herkunft',patches[0].options.method==='PATCH'
+        && patchBody.erfassung?.bestaetigt===true && patchBody.erfassung.quelle==='barcode+korrigiert');
+      await maske.maskeEinbetten({host:g('mask-host'),rx:{...saved,id:'synthetic-manual',computed:{}}});
+      check('Wechsel auf manuelle Verordnung entfernt Barcode-Bestätigung',!g('rzBarcodeBestaetigungWrap') && !confirm.istBarcodeAktiv());
+    } finally {window.fetch=realFetch;maske.maskeHeimschicken();maske.setzeMaskeBruecke(null);}
+  } catch (error) { results.push({ pass:false,error:error.message }); }
+  window.m3Probe.complete = true;
+  update();
+</script>
+</html>
