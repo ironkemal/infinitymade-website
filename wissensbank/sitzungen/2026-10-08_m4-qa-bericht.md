@@ -185,3 +185,17 @@ O-178-Seite, Auth-/Ratelimit-Grenzen, Lizenzdateien und Versionsangaben erhalten
 PASS: ARM64-Image `1cd47d19184eb087c45732af5cdb27c03260e89ab71569947c900b931ce3994f`, tatsächliches Dockerfile. Lizenztor 308 Pakete geprüft; SBOM enthält 308/308 installierte eindeutige Pakete in 325 Komponenten. Root-package.json nach temporärer Produktionsprojektion bytegleich wiederhergestellt. Fehlende Produktionsabhängigkeit als Gegenprobe weiterhin korrekt abgewiesen (PASS). Erster Build vor Korrektur: FAIL wegen npm-10-SBOM-Prüfung einer absichtlich nicht installierten Testabhängigkeit. Kemals paralleler Fix 39f54b2 als Vorfahr übernommen; SBOM hier weiterhin aus tatsächlichem installiertem Baum erzeugt.
 
 PASS: Prozesssmokes 9/9 in drei unveränderten Läufen; frische Volumes mit Non-root, Verzeichnis 0700, Datei 0600, Widerruf und schreibgeschützter Boxidentität; tatsächlicher node:cluster-Start mit synthetischem HTTP-Stub, 80 Anfragen über beide Worker, SIGTERM beendet mit Exit 0 in 236 ms. Netzwerk gesperrt, Root-Dateisystem read-only, ausschließlich eigene Container/Volumes; Testressourcen danach entfernt. Kein echter Anbieter-/Box-/Produktionsnachweis.
+
+### Veröffentlichung und begrenzte Live-Nachweise
+
+| Prüfung | Ergebnis | Nachweis / Grenze |
+|---|---|---|
+| GitHub-main-Codepush | PASS | Vollständiger Codecommit `a227e4cb3297bfae099cf7a09c14896f90b6d2e1` remote bestätigt. |
+| Backend-Imagepipeline | PASS | [37825917736](https://github.com/ironkemal/infinitymade-website/actions/runs/37825917736), Tests, Image-Smokes und Veröffentlichung erfolgreich. |
+| Frontend-Imagepipeline | PASS | [37825917725](https://github.com/ironkemal/infinitymade-website/actions/runs/37825917725), abgeschlossen erfolgreich. |
+| Vercel-Deployments | PASS | Beide GitHub-Commitstatus für a227e4c erfolgreich. |
+| Ausgelieferte App-Dateien | PASS | Sechs genannte Runtime-/Vendor-/Lizenzdateien bytegenau gegen a227e4c verglichen. |
+| Backend-Versionsroute | PASS | GET https://n8n.infinitymade.de/api/ueber meldet 0.4.0+a227e4c. |
+| Vollständiger produktiver Ablauf / DB-Speichern / reale KI | NICHT GEPRÜFT | Keine produktiven Schreibzugriffe, Patienten-/Kundendaten oder Provider-Aufrufe. |
+
+Diese Live-Prüfungen waren ausschließlich lesend. Die synthetischen lokalen Prüfergebnisse und reale Laufzeitqualität bleiben getrennte Nachweise. Aktivierungs- und Cold-FAIL-Grenzen gelten unverändert.

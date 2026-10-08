@@ -1,6 +1,6 @@
 # Kemal — vollständige M3-/M4-Codeübergabe
 
-Stand: **08.10.2026**. Auftrag von Melih: vollständigen Fortschritt committen und auf `main` veröffentlichen, damit Kemal seinen Teil fortführen kann.
+Stand: **08.10.2026**. **Vollständiger Code auf main veröffentlicht: `a227e4c`. Frontend-/Backend-Imagepipelines und beide Vercel-Deployments PASS.** Auftrag von Melih: vollständigen Fortschritt committen und auf `main` veröffentlichen, damit Kemal seinen Teil fortführen kann.
 
 ## Was jetzt übernommen wird
 
@@ -43,3 +43,7 @@ Vor neuen Funktionen Funktionsmeister, vor Schemaannahmen DB-Meister konsultiere
 Code-Push löst bestehende Frontend-/Image-Pipelines aus. Erfolgreicher Push ist kein Beweis erfolgreicher CI, Deployment oder funktionierender Live-App. Diese Zustände separat prüfen; keinen produktiven Daten-/Providerzugriff auslösen. Keine K3-Gesamtabnahme oder allgemeine Freitext-/Produktionsfreigabe.
 
 QA: `wissensbank/sitzungen/2026-10-08_m4-qa-bericht.md`. Fortschritt: `wissensbank/sitzungen/2026-10-08_m4-fortschritt-und-kemal-uebergabe.md`. Browserauftrag: `CHROME-M4-TEST.md`. Private lokale Testzugänge werden nicht veröffentlicht; Kemal benötigt eigene isolierte synthetische Testumgebung.
+
+## Veröffentlichungsnachweis
+
+GitHub-main enthält Codecommit `a227e4cb3297bfae099cf7a09c14896f90b6d2e1`. Frontend-Imagepipeline [37825917725](https://github.com/ironkemal/infinitymade-website/actions/runs/37825917725) und Backend-Imagepipeline [37825917736](https://github.com/ironkemal/infinitymade-website/actions/runs/37825917736) abgeschlossen mit PASS. Beide Vercel-Commitstatus erfolgreich. Auf app.praxura.de wurden ki-client, rezept-barcode-scan, modal-escape, PDF.js, ZXing und Lizenzbericht bytegenau gegen Commit geprüft (PASS). Öffentliche Backend-Versionsroute /api/ueber meldet `0.4.0+a227e4c` (PASS). Das belegt ausgelieferten Stand, keine vollständige produktive Ablauf-/DB-/KI-Abnahme. KI bleibt aus; Kemal kann die dokumentierten offenen Arbeiten fortführen.
