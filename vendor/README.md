@@ -67,16 +67,23 @@ npm install --save-dev @supabase/supabase-js@<sürüm> node-forge@<sürüm> esbu
 
 npx esbuild tools/vendor/supabase-entry.js \
   --bundle --format=esm --platform=browser --target=es2020 \
-  --minify --legal-comments=none --outfile=vendor/supabase-js.js
+  --minify --legal-comments=eof --outfile=vendor/supabase-js.js
 
 npx esbuild tools/vendor/forge-entry.js \
   --bundle --format=esm --platform=browser --target=es2020 \
-  --minify --legal-comments=none --outfile=vendor/node-forge.js
+  --minify --legal-comments=eof --outfile=vendor/node-forge.js
 
 cp vendor/supabase-js.js ops/vendor/supabase-js.js
 ```
 
 Sonra çağrı yerlerindeki `?v=YYYYMMDD` sürümünü **yükselt** (cache busting).
+
+> **`--legal-comments=eof` (K2b.16, 08.10.2026):** önceden `none` idi — esbuild
+> `/*! … */` lisans yorumlarını silerdi. Ölçüldü: supabase-js 2.112.3 ve
+> node-forge 1.3.1'de `none` ile `eof` **birebir aynı** çıktı veriyor (bu iki
+> sürümde korunacak yorum yok; depodaki dosyalar aynı komutla bit bit yeniden
+> üretildi). Yine de `eof` kalır: ileride yorum taşıyan bir sürüm gelirse silinmez.
+> Lisans METİNLERİ ayrıca THIRD-PARTY-NOTICES'te verilir (MIT/BSD şartı).
 
 ### ⚠️ Düz indirme çalışmaz
 

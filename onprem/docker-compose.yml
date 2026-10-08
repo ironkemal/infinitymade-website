@@ -385,6 +385,9 @@ services:
       - ./volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro,z
     environment:
       KONG_DATABASE: "off"
+      # O-180 (08.10.2026): Kong 3.9 schickt sonst anonyme Nutzungsberichte an
+      # kong-hf.konghq.com — undeklarierte Außenverbindung der Box (G1).
+      KONG_ANONYMOUS_REPORTS: "off"
       KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_DNS_NOT_FOUND_TTL: 1
