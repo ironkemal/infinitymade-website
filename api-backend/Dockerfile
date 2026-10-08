@@ -10,9 +10,14 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 # installierten Baum, nicht auf der Lockfile (npm install ≠ npm ci). Verbotene
 # oder unbekannte Lizenz → dieser RUN schlägt fehl, es entsteht kein Image.
 # SBOM (CycloneDX) = CRA-Stückliste, liegt mit im Image.
+# --package-lock-only: npm 10 (node:22-alpine) bricht `npm sbom` sonst mit
+# ESBOMPROBLEMS ab, weil es die nicht installierte devDependency (node-forge)
+# als „missing" zählt (CI-Lauf ff7e29a6, in WSL nachgestellt). Kein Verlust:
+# `npm install` oben hat die Lockfile auf den tatsächlich installierten Baum
+# geschrieben. Der Lizenztor selbst liest weiter den echten node_modules-Baum.
 COPY tools/lizenzen-erzeugen.mjs ./tools/
 RUN node tools/lizenzen-erzeugen.mjs --wurzel /app --ausgabe /app/lizenzen/THIRD-PARTY-NOTICES.txt \
-  && npm sbom --omit=dev --sbom-format cyclonedx > /app/lizenzen/sbom.cdx.json
+  && npm sbom --omit=dev --package-lock-only --sbom-format cyclonedx > /app/lizenzen/sbom.cdx.json
 # Container-Komponenten der Box (Postgres, GoTrue, Kong, Caddy …) — dieselbe
 # Tabelle wie onprem/NOTICE.md, ausgeliefert über GET /api/ueber/lizenzen.
 COPY --from=onprem NOTICE.md ./lizenzen/NOTICE-komponenten.md
