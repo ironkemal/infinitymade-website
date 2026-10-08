@@ -174,6 +174,58 @@ export async function ipAbgleichSchritt(zustand, {
   return antwort;
 }
 
+// ── K2b.4b: CAA accounturi (O-161 (9), guvenlik S-47 Nachtrag 08.10.2026) ──────────────────
+// Der Host-Timer (ip-melden.sh) schreibt die LE-Konto-URL nach <ipDir>/le-konto — api sieht
+// caddy_data selbst nie. Hier wird sie bei Änderung (und einmal nach dem Start) signiert an
+// /v1/caa gemeldet; Merkez bindet den CAA-Eintrag der Box an genau dieses Konto. Nach Verlust
+// von caddy_data meldet die Box so ihr neues Konto selbst (Selbstheilung, ≤ ~15 min).
+const LE_KONTO_RE = /^https:\/\/acme-v02\.api\.letsencrypt\.org\/acme\/acct\/[0-9]{1,20}$/;
+
+export function erzeugeCaaZustand() {
+  return { letzterWert: null, naechsterVersuchErlaubt: 0, fehlWert: null };
+}
+
+export async function caaAbgleichSchritt(zustand, {
+  env = process.env, fetchImpl, jetzt = Date.now, log = console, ipDir, kimlikDir,
+} = {}) {
+  if (!zustand) return;
+  const jetztMs = typeof jetzt === 'function' ? jetzt() : jetzt;
+
+  let kimlik;
+  try { kimlik = ladeKimlik({ dir: kimlikDir || env.KIMLIK_DIR || kimlikVerzeichnis() }); } catch { return; }
+  if (!kimlik || !kimlik.ad) return;
+
+  const datei = path.join(ipDir || env.IP_DIR || '/var/lib/praxura/ip', 'le-konto');
+  let url;
+  try { url = fs.readFileSync(datei, 'utf8').trim(); } catch { return; }
+  if (!LE_KONTO_RE.test(url) || url === zustand.letzterWert) return;
+  // Pause gilt nur für den Wert, der fehlschlug — ein neues Konto wird sofort gemeldet.
+  if (url === zustand.fehlWert && zustand.naechsterVersuchErlaubt && jetztMs < zustand.naechsterVersuchErlaubt) return;
+
+  let antwort;
+  try {
+    antwort = await merkezFetch('/v1/caa', { body: { accountUri: url }, kimlik, fetchImpl, baseUrl: env.MERKEZ_URL, jetzt: jetztMs });
+  } catch (netErr) {
+    zustand.naechsterVersuchErlaubt = jetztMs + FUENF_MINUTEN_MS;
+    zustand.fehlWert = url;
+    try { (log.warn || log.log)(`[caa-abgleich] Netzwerkfehler: ${netErr?.message || netErr}`); } catch {}
+    return;
+  }
+  if (antwort.ok) {
+    zustand.letzterWert = url;
+    zustand.naechsterVersuchErlaubt = 0;
+    zustand.fehlWert = null;
+    if (!antwort.json?.unveraendert) { try { log.log(`[caa-abgleich] LE-Konto an CAA gebunden: ${url}`); } catch {} }
+    return antwort;
+  }
+  // 400 / 401 / 403 / 429 (Wechsel-Limit 24 h): 6 h Pause; 5xx: in 5 min erneut
+  const lang = [400, 401, 403, 429].includes(antwort.status);
+  zustand.naechsterVersuchErlaubt = jetztMs + (lang ? SECHS_STUNDEN_MS : FUENF_MINUTEN_MS);
+  zustand.fehlWert = url;
+  try { (log.warn || log.log)(`[caa-abgleich] fehlgeschlagen: ${antwort.json?.fehler || `HTTP ${antwort.status}`}`); } catch {}
+  return antwort;
+}
+
 /**
  * Startet den periodischen IP-Abgleich im Hintergrund.
  *
@@ -198,9 +250,13 @@ export function starteIpAbgleich({
   }
 
   const zustand = erzeugeZustand();
+  const caaZustand = erzeugeCaaZustand();
   const dir = ipDir || env.IP_DIR || '/var/lib/praxura/ip';
 
+  let tickLaeuft = false; // langsamer Netzaufruf: keine zwei Ticks gleichzeitig
   const tick = async () => {
+    if (tickLaeuft) return;
+    tickLaeuft = true;
     try {
       await ipAbgleichSchritt(zustand, { env, fetchImpl, jetzt, log, ipDir: dir });
     } catch (err) {
@@ -209,6 +265,12 @@ export function starteIpAbgleich({
         (log.warn || log.log)(`[ip-abgleich] Unerwarteter Fehler: ${msg}`);
       } catch {}
     }
+    try {
+      await caaAbgleichSchritt(caaZustand, { env, fetchImpl, jetzt, log, ipDir: dir });
+    } catch (err) {
+      try { (log.warn || log.log)(`[caa-abgleich] Unerwarteter Fehler: ${err?.message || err}`); } catch {}
+    }
+    tickLaeuft = false;
   };
 
   // Erster Tick nach 30 s, dann alle 60 s
@@ -224,6 +286,7 @@ export function starteIpAbgleich({
 
   return {
     zustand,
+    caaZustand,
     timer: { t1, t2 },
     stop() {
       const ct = timer.clearTimeout || globalThis.clearTimeout;

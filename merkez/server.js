@@ -223,15 +223,33 @@ export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now,
     if (typeof uri !== 'string' || !uri.startsWith(accountPraefix) || !/^[0-9]{1,20}$/.test(uri.slice(accountPraefix.length))) {
       return res.status(400).json({ fehler: 'account_uri' });
     }
+    // K2b.4b (guvenlik S-47 Nachtrag 08.10.2026): gleicher Wert → nichts tun (die Box sendet beim
+    // Start einmal). Erstbindung → adminlog 'caa-bindung'. JEDER spätere Kontowechsel →
+    // adminlog 'caa-wechsel' (alt→neu, nur anhängbar) + [ALARM]. Höchstens 3 Wechsel je 24 h
+    // je Box-Identität (nach Rebind zählt die alte nicht), sonst 429 — kein 24-h-Riegel, weil die
+    // Box nach Verlust von caddy_data sofort ihr neues LE-Konto melden muss.
+    const alt = req.box.caa_account || null;
+    if (alt === uri) return res.json({ ok: true, unveraendert: true });
+    if (caaInArbeit.has(req.box.box_id)) return res.status(429).json({ fehler: 'zu_viele_anfragen' });
+    if (alt && db.caaWechselZaehlen(req.box.box_id, sek() - 86400) >= 3) {
+      log.error(`[ALARM] caa: zu viele Kontowechsel für ${req.box.name} (24 h)`);
+      return res.status(429).json({ fehler: 'zu_viele_anfragen' });
+    }
+    caaInArbeit.add(req.box.box_id);
     try {
       await cloudflare.setzeCaa(fqdnVon(req.box.name), uri);
     } catch (e) {
       log.error('[merkez] caa fehlgeschlagen:', e.message);
       return res.status(502).json({ fehler: 'dienst' });
+    } finally {
+      caaInArbeit.delete(req.box.box_id);
     }
     db.boxCaa(req.box.box_id, uri);
+    db.adminLog(`box:${req.box.box_id}`, alt ? 'caa-wechsel' : 'caa-bindung', req.box.name, { alt, neu: uri }, sek());
+    if (alt) log.error(`[ALARM] caa: LE-Konto von ${req.box.name} gewechselt (${alt} → ${uri})`);
     res.json({ ok: true });
   });
+  const caaInArbeit = new Set(); // je Box höchstens eine /v1/caa gleichzeitig (Zählung vor await)
 
   // Fehler: zu großer Body → 413, kaputtes Rohformat → 400. Keine Details nach außen.
   // eslint-disable-next-line no-unused-vars

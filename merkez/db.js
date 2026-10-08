@@ -135,5 +135,7 @@ export function oeffneDb(pfad = ':memory:') {
       run('INSERT INTO adminlog (zeit, akteur, aktion, ziel, details) VALUES (?,?,?,?,?)', jetzt, akteur, aktion, ziel ?? null, details ? JSON.stringify(details) : null);
     },
     adminLogLesen: () => all('SELECT * FROM adminlog ORDER BY id'),
+    /** K2b.4b: CAA-Kontowechsel dieser Box-Identität seit `seit` (Erstbindung zählt nicht). */
+    caaWechselZaehlen: (boxId, seit) => get("SELECT COUNT(*) AS c FROM adminlog WHERE aktion = 'caa-wechsel' AND akteur = ? AND zeit >= ?", `box:${boxId}`, seit)?.c ?? 0,
   };
 }

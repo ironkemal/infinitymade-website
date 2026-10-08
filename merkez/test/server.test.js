@@ -260,6 +260,30 @@ test('/v1/caa: nur LE-Konto-URI, setzt CAA mit accounturi am Box-Namen', async (
   } finally { await s.stop(); }
 });
 
+test('/v1/caa: gleicher Wert ohne Wirkung, Wechsel protokolliert + [ALARM], höchstens 3 Wechsel je 24 h (K2b.4b)', async () => {
+  const s = await starte();
+  try {
+    const r = await registriere(s);
+    const u = (n) => `https://acme-v02.api.letsencrypt.org/acme/acct/${n}`;
+    assert.equal((await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(1) })).status, 200);
+    assert.equal(s.fehlerLog.filter((l) => l.includes('[ALARM]')).length, 0, 'Erstbindung ohne Alarm');
+    const gleich = await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(1) });
+    assert.equal(gleich.status, 200);
+    assert.equal(gleich.json.unveraendert, true);
+    assert.equal((await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(2) })).status, 200);
+    assert.ok(s.fehlerLog.some((l) => l.includes('[ALARM]') && l.includes(u(1)) && l.includes(u(2))), 'Wechsel → Alarm alt→neu');
+    assert.equal(s.cloudflare.rec.get(`CAA|${r.fqdn}`).uri, u(2), 'überschrieben, kein zweiter issue');
+    assert.equal((await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(3) })).status, 200);
+    assert.equal((await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(4) })).status, 200, '3. Wechsel noch erlaubt (Erstbindung zählt nicht)');
+    assert.equal((await signiert(s, r.kimlik, '/v1/caa', { accountUri: u(5) })).status, 429, '4. Wechsel in 24 h');
+    assert.equal(s.cloudflare.rec.get(`CAA|${r.fqdn}`).uri, u(4));
+    const log = s.db.adminLogLesen().filter((e) => e.aktion.startsWith('caa'));
+    assert.deepEqual(log.map((e) => e.aktion), ['caa-bindung', 'caa-wechsel', 'caa-wechsel', 'caa-wechsel']);
+    assert.deepEqual(JSON.parse(log[1].details), { alt: u(1), neu: u(2) });
+    assert.equal(s.db.caaWechselZaehlen(r.kimlik.boxId, 0), 3);
+  } finally { await s.stop(); }
+});
+
 test('Zwei Boxen: jede ändert nur ihre eigenen Einträge', async () => {
   const s = await starte();
   try {

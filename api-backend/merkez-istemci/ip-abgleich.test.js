@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { starteIpAbgleich, ipAbgleichSchritt, erzeugeZustand } from './ip-abgleich.js';
+import { starteIpAbgleich, ipAbgleichSchritt, erzeugeZustand, caaAbgleichSchritt, erzeugeCaaZustand } from './ip-abgleich.js';
 import { erzeugeKimlik, speichereAd } from './kimlik.js';
 
 const tmpDirs = [];
@@ -323,4 +323,56 @@ test('Kaputte lan-ip-Datei -> kein fetch', async () => {
     });
     assert.equal(aufrufe, 0, `bei "${ungueltig}" darf kein fetch stattfinden`);
   }
+});
+
+// K2b.4b — CAA accounturi: Box meldet ihr LE-Konto (le-konto vom Host-Timer)
+test('caaAbgleichSchritt: sendet einmal, dann nur bei Änderung; ungültig/fehlend/ohne Kimlik nie', async () => {
+  const kimlikDir = tmp(); const ipDir = tmp();
+  const aufrufe = [];
+  const fetchImpl = async (url, opt) => { aufrufe.push({ url, body: JSON.parse(opt.body) }); return { status: 200, ok: true, json: async () => ({ ok: true }) }; };
+  const env = { MERKEZ_URL: 'https://merkez.box.beispiel.test' };
+  const z = erzeugeCaaZustand(); const jetzt = () => 1000;
+  const schritt = () => caaAbgleichSchritt(z, { env, fetchImpl, jetzt, kimlikDir, ipDir, log: { log() {}, warn() {} } });
+
+  await schritt(); assert.equal(aufrufe.length, 0, 'ohne Kimlik nichts');
+  erstelleRegistrierteKimlik(kimlikDir);
+  await schritt(); assert.equal(aufrufe.length, 0, 'ohne le-konto nichts');
+  for (const falsch of ['https://acme-staging-v02.api.letsencrypt.org/acme/acct/1', 'https://evil.test/acme/acct/1', 'https://acme-v02.api.letsencrypt.org/acme/acct/1; issue "x"']) {
+    fs.writeFileSync(path.join(ipDir, 'le-konto'), falsch);
+    await schritt();
+  }
+  assert.equal(aufrufe.length, 0, 'Staging/fremd/Injektion nie senden');
+
+  const u1 = 'https://acme-v02.api.letsencrypt.org/acme/acct/3839823376';
+  fs.writeFileSync(path.join(ipDir, 'le-konto'), u1 + '\n');
+  await schritt(); await schritt();
+  assert.equal(aufrufe.length, 1, 'einmal senden, dann still');
+  assert.equal(aufrufe[0].url, 'https://merkez.box.beispiel.test/v1/caa');
+  assert.deepEqual(aufrufe[0].body, { accountUri: u1 });
+
+  const u2 = 'https://acme-v02.api.letsencrypt.org/acme/acct/42';
+  fs.writeFileSync(path.join(ipDir, 'le-konto'), u2);
+  await schritt();
+  assert.equal(aufrufe.length, 2, 'neues Konto (caddy_data verloren) → sofort melden');
+  assert.deepEqual(aufrufe[1].body, { accountUri: u2 });
+});
+
+test('caaAbgleichSchritt: 5xx → 5 min Pause, 401/429 → 6 h, neues Konto überspringt die Pause', async () => {
+  const kimlikDir = tmp(); const ipDir = tmp();
+  erstelleRegistrierteKimlik(kimlikDir);
+  fs.writeFileSync(path.join(ipDir, 'le-konto'), 'https://acme-v02.api.letsencrypt.org/acme/acct/7');
+  let status = 503; let n = 0;
+  const fetchImpl = async () => { n++; return { status, ok: false, json: async () => ({ fehler: 'x' }) }; };
+  const env = { MERKEZ_URL: 'https://merkez.box.beispiel.test' };
+  const z = erzeugeCaaZustand(); let t = 0;
+  const schritt = () => caaAbgleichSchritt(z, { env, fetchImpl, jetzt: () => t, kimlikDir, ipDir, log: { log() {}, warn() {} } });
+  await schritt(); assert.equal(n, 1);
+  t = 4 * 60_000; await schritt(); assert.equal(n, 1, 'Pause hält');
+  t = 6 * 60_000; status = 401; await schritt(); assert.equal(n, 2);
+  t += 5 * 3600_000; await schritt(); assert.equal(n, 2, '401 → 6 h');
+  fs.writeFileSync(path.join(ipDir, 'le-konto'), 'https://acme-v02.api.letsencrypt.org/acme/acct/8');
+  await schritt(); assert.equal(n, 3, 'neues Konto → sofort, trotz Pause');
+  status = 429; t += 60_000; fs.writeFileSync(path.join(ipDir, 'le-konto'), 'https://acme-v02.api.letsencrypt.org/acme/acct/9');
+  await schritt(); assert.equal(n, 4);
+  t += 3 * 3600_000; await schritt(); assert.equal(n, 4, '429 → 6 h (kein Alarm-Sturm am Merkez)');
 });
