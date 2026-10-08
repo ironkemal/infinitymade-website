@@ -1,6 +1,6 @@
 # Praxura Praxis-Box — Installationsanleitung
 
-> Stand 07.10.2026 · Version 0.4.0 · gilt für **Linux-Server**, **Windows-PC** und **Server bei Hetzner Cloud**.
+> Stand 08.10.2026 · Version 0.4.1 · gilt für **Linux-Server**, **Windows-PC** und **Server bei Hetzner Cloud**.
 > Diese Anleitung ist so geschrieben, dass eine technisch interessierte Person
 > die Box ohne uns einrichten kann. Wir haben **keinen Zugang** zu Ihrer Box —
 > alle Schlüssel entstehen auf Ihrem Server bzw. PC und bleiben dort.
@@ -320,6 +320,15 @@ Beim Standardweg mit **Einrichtungscode** entfällt das Eintragen in Router oder
 `hosts`-Dateien vollständig. Die Box wird unter ihrem Namen automatisch im
 Praxisnetz gefunden.
 
+### Feste IP-Adresse für den Box-Rechner (DHCP-Reservierung) — bitte immer
+Geben Sie dem Box-Rechner im Router eine **feste IP-Adresse** (FRITZ!Box:
+*Heimnetz → Netzwerk → Gerät bearbeiten → „Diesem Netzwerkgerät immer die gleiche
+IPv4-Adresse zuweisen"*; Speedport: unter *Heimnetz* das Gerät auswählen und eine
+feste IP-Adresse zuweisen). Ändert sich die Adresse trotzdem, meldet
+die Box sie automatisch neu; die Geräte im Praxisnetz übernehmen die neue Adresse
+aber erst **bis zu etwa einer Stunde** später (Zwischenspeicher, siehe unten).
+Nach einem **Routertausch** daher alle Praxisgeräte einmal neu starten.
+
 ### FRITZ!Box: DNS-Rebind-Schutz
 Nutzen Sie eine FRITZ!Box im Praxisnetz, müssen Sie eine Ausnahme eintragen, da der
 Box-Name auf eine interne IP-Adresse im Praxisnetz verweist (bei Cloud-Servern
@@ -335,18 +344,30 @@ nach Weg C ist dieser Schritt nicht nötig):
 Speedport blockiert die interne Namensauflösung nicht).
 
 ### Verhalten bei Internetausfall
-Die Geräte im Praxisnetz lösen den Namen über das Internet auf. Fällt die
-Internetverbindung der Praxis aus, können Geräte den Namen nach einiger Zeit
-nicht mehr finden (sobald der lokale Zwischenspeicher abgelaufen ist).
+Die Box selbst arbeitet ohne Internet vollständig weiter (gemessen: Seiten und
+Anmeldedienst antworten, auch nach einem Neustart der Box ohne Internet).
+Nur der **Name** der Box wird über das Internet aufgelöst. Jedes Gerät merkt sich
+den Namen bis zu **eine Stunde** lang. Ein Gerät, das die Anwendung in der letzten
+Stunde geöffnet hatte, arbeitet daher bei einem kurzen Ausfall weiter; ein Gerät,
+das gerade neu gestartet wurde, findet die Box erst wieder, wenn das Internet
+zurück ist.
+
+Bei einem Internetausfall in dieser Reihenfolge:
+1. Geräte, auf denen Praxura offen ist, **nicht neu starten** und den Browser
+   nicht schließen.
+2. Am **Box-Rechner selbst** weiterarbeiten — dort funktioniert der Name immer
+   (siehe unten).
+3. Hat Ihr Router eine **LTE-Ersatzverbindung**, schaltet er sie meist selbst ein;
+   dann läuft alles normal weiter.
 
 - **Auf dem Box-PC selbst:** `https://localhost` geht wegen des Zertifikats
   nicht. Deshalb trägt die Einrichtung den Namen fest in die lokale
   `hosts`-Datei des Box-Rechners ein (der Windows-Starter erledigt das
   automatisch). Auf dem Box-Rechner selbst lässt sich die Anwendung daher auch
   bei Internetausfall öffnen.
-- **Für die anderen Geräte (Tablets, weitere PCs):** Hier hilft bei einem
-  Internetausfall aktuell nur das Abwarten, bis die Verbindung wieder steht
-  (eine Messung der genauen Ausfallzeit folgt).
+- **Für die anderen Geräte (Tablets, weitere PCs):** Sie arbeiten weiter, solange
+  sie sich den Namen noch merken (bis zu eine Stunde, siehe oben). Danach hilft
+  nur das Abwarten, bis die Verbindung wieder steht.
 
 ---
 
@@ -670,10 +691,13 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
    Die Festlegung und Umsetzung angemessener technischer und organisatorischer
    Maßnahmen (TOM) liegt in der Verantwortung Ihrer Praxis.
 3. **C5-Typ-2-Prüfbericht (§ 393 Abs. 3 Nr. 2 SGB V):**
-   Hetzner verfügt laut Unternehmensmitteilung vom 25.03.2026 über ein Testat nach
-   dem C5-Kriterienkatalog (Typ 2). Ob dieses Testat auch Hetzner Cloud Server
-   und die gewählten Standorte vollständig abdeckt, ist aktuell noch nicht
-   abschließend geprüft (siehe Kasten „Noch offen").
+   Hetzner verfügt seit 25.03.2026 über ein Testat nach dem C5-Kriterienkatalog
+   (C5:2020, Typ 2). Laut Hetzner umfasst es u. a. Cloud Server, Volumes und
+   Storage Boxes und gilt ausschließlich für die europäischen Standorte
+   Gunzenhausen, Nürnberg, Falkenstein und Helsinki. Standorte in den USA und
+   Singapur sind nicht abgedeckt. Den vollständigen Prüfbericht stellt Hetzner
+   nach Abschluss des AVV automatisch im Kundenportal bereit; Ihre Praxis sollte
+   ihn abrufen, ablegen und den Prüfzeitraum auf Aktualität prüfen.
 4. **Kundenkriterien aus dem Prüfbericht (§ 393 Abs. 3 Nr. 3 SGB V):**
    Die im C5-Bericht definierten korrespondierenden Kriterien für Kunden müssen
    von Ihrer Praxis umgesetzt werden. Fordern Sie den C5-Prüfbericht nach Abschluss
@@ -696,7 +720,9 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
   Wir empfehlen einen Standort in Deutschland: Falkenstein (FSN1) oder Nürnberg
   (NBG1). Ein europäischer Standort wie Helsinki (EU) ist rechtlich möglich.
   Standorte außerhalb der Europäischen Union (wie USA oder Singapur) dürfen für
-  den Betrieb der Praxis-Box keinesfalls gewählt werden.
+  den Betrieb der Praxis-Box keinesfalls gewählt werden. Storage Boxes gibt es
+  nur in Falkenstein (FSN1) und Helsinki (HEL1); wir empfehlen FSN1 — auch wenn
+  der Server in Nürnberg steht.
 - **Ärztliche Schweigepflicht (§ 203 StGB):**
   Hetzner ist in dieser Konstellation als mitwirkende Person nach § 203 Abs. 3
   Satz 2 StGB anzusehen. Die Praxis ist verpflichtet, mitwirkende Personen zur
@@ -723,17 +749,22 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
   Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Vor einer
   eventuellen Aktivierung gelten gesonderte Hinweise (die rechtliche Prüfung dazu läuft).
 
-> ### Noch offen (Stand 07.10.2026)
-> - **C5-Typ-2-Abdeckung:** Ob das C5-Testat von Hetzner neben der Rechenzentrumsinfrastruktur
->   auch Hetzner Cloud Server und die Standorte Falkenstein und Nürnberg vollständig
->   abdeckt, ist derzeit noch nicht abschließend geprüft. Bis zur Klärung empfiehlt
->   es sich, den Prüfbericht bei Hetzner anzufordern.
-> - **§ 203-Klausel:** Ob der Standard-AVV im Hetzner-Portal bereits eine ausdrückliche
->   Verpflichtung nach § 203 StGB enthält, ist von der Praxis zu prüfen.
-> - **Storage Box:** Die C5-Abdeckung und genaue Standortbindung der Storage Box sind
->   bislang nicht abschließend geprüft.
+> ### Stand der Prüfung (08.10.2026)
+> *Keine Rechtsberatung. Angaben nach öffentlichen Hetzner-Quellen; maßgeblich ist
+> der Prüfbericht, den Ihre Praxis im Hetzner-Kundenportal erhält.*
+> - **C5-Typ-2-Abdeckung — geklärt:** Laut Hetzner deckt das Testat (C5:2020, Typ 2)
+>   Cloud Server, Volumes und Storage Boxes an den Standorten Falkenstein, Nürnberg
+>   und Helsinki ab. Bitte rufen Sie den Prüfbericht nach Abschluss des AVV im
+>   Kundenportal ab und bewahren Sie ihn auf.
+> - **Storage Box — geklärt:** Storage Boxes sind in Falkenstein (FSN1) und Helsinki
+>   (HEL1) buchbar, nicht in Nürnberg. Wir empfehlen FSN1. Die Daten liegen am
+>   gewählten Standort; eine Spiegelung an einen zweiten Standort erfolgt nicht.
+> - **§ 203-Klausel — noch offen:** Eine ausdrückliche § 203-StGB-Klausel im
+>   Standard-AVV konnten wir nicht verifizieren. Bitte prüfen Sie Ihren AVV; fehlt
+>   die Klausel, fordern Sie bei Hetzner (data-protection@hetzner.com) eine
+>   schriftliche Verschwiegenheitsverpflichtung nach § 203 StGB an.
 
-> Stand: 07.10.2026
+> Stand: 08.10.2026
 
 ---
 

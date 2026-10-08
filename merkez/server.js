@@ -23,7 +23,10 @@ import { erstelleAcmeDns } from './acmedns.js';
 const RESERVIERUNG_SEK = 600;     // Namensvorschlag gilt 10 min
 const MAX_VORSCHLAEGE = 20;       // pro Code
 const GLOBAL_FEHLER_SPERRE = 20;  // Register-Fehlversuche/h insgesamt → Alarm + harte Sperre (503) bis Fensterende
-const DNS_TTL = 600;
+// A: 3600 — LAN-Geräte überbrücken damit bis zu 1 h Internetausfall (K2b.9, O-162);
+// Preis: IP-Wechsel wirkt bis ~1 h verzögert → DHCP-Reservierung. CNAME liest nur LE: 600.
+const DNS_TTL_A = 3600;
+const DNS_TTL_CNAME = 600;
 
 export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now, log = console }) {
   const { boxDomain, acmeDnsUrl, hostErwartet = null, trustProxy = false } = config;
@@ -148,7 +151,7 @@ export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now,
     try {
       // 4) acme-dns-Konto + DNS (Cloudflare). Wiederholbar: setze* ist idempotent.
       const konto = await acmedns.registrieren();
-      await cloudflare.setzeCname(`_acme-challenge.${fqdn}`, konto.fulldomain, DNS_TTL);
+      await cloudflare.setzeCname(`_acme-challenge.${fqdn}`, konto.fulldomain, DNS_TTL_CNAME);
       await cloudflare.setzeCaa(fqdn, null);
       // 5) Box eintragen
       const box = {
@@ -207,13 +210,13 @@ export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now,
     }
     const unveraendert = req.box.lan_ip === ip && req.box.ip_am && sek() - req.box.ip_am < 6 * 3600;
     try {
-      if (!unveraendert) await cloudflare.setzeA(fqdnVon(req.box.name), ip, DNS_TTL);
+      if (!unveraendert) await cloudflare.setzeA(fqdnVon(req.box.name), ip, DNS_TTL_A);
     } catch (e) {
       log.error('[merkez] ip fehlgeschlagen:', e.message);
       return res.status(502).json({ fehler: 'dienst' });
     }
     if (!unveraendert) db.boxIp(req.box.box_id, ip, sek());
-    res.json({ ip, ttl: DNS_TTL });
+    res.json({ ip, ttl: DNS_TTL_A });
   });
 
   // ---------------------------------------------------------------- /v1/caa

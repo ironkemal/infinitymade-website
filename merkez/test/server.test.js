@@ -30,6 +30,7 @@ test('Vollablauf: Code → Vorschlag → Register → DNS-Einträge + Dateien au
     assert.equal(r.kimlik.ad, r.name);
     // DNS: Challenge-CNAME + CAA am Box-Namen, KEIN Apex-CAA
     assert.match(s.cloudflare.rec.get(`CNAME|_acme-challenge.${r.fqdn}`).ziel, /\.auth\.acme\.example\.org$/);
+    assert.equal(s.cloudflare.rec.get(`CNAME|_acme-challenge.${r.fqdn}`).ttl, 600, "CNAME liest nur LE: TTL bleibt kurz");
     assert.deepEqual(s.cloudflare.rec.get(`CAA|${r.fqdn}`), { uri: null });
     assert.ok(![...s.cloudflare.rec.keys()].some((k) => k === 'CAA|box.example.org'));
     // acme-dns-Datei auf der Box
@@ -189,7 +190,7 @@ test('/v1/ip lan: nur RFC1918; setzt A-Record TTL 600; Wiederholung ohne Änderu
     }
     const ok = await signiert(s, r.kimlik, '/v1/ip', { modus: 'lan', ip: '192.168.2.111' });
     assert.equal(ok.status, 200);
-    assert.deepEqual(s.cloudflare.rec.get(`A|${r.fqdn}`), { ip: '192.168.2.111', ttl: 600 });
+    assert.deepEqual(s.cloudflare.rec.get(`A|${r.fqdn}`), { ip: '192.168.2.111', ttl: 3600 });
     s.cloudflare.rec.delete(`A|${r.fqdn}`);
     await signiert(s, r.kimlik, '/v1/ip', { modus: 'lan', ip: '192.168.2.111' });
     assert.equal(s.cloudflare.rec.has(`A|${r.fqdn}`), false, 'unverändert → kein erneuter Cloudflare-Aufruf');
