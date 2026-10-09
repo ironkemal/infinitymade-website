@@ -304,7 +304,7 @@ export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, j
           empfangen: sek(),
           daten: g.bericht,
         });
-        if (erg === 'neu' || erg === 'gleich') {
+        if (erg === 'neu' || erg === 'gleich' || erg === 'aktualisiert') {
           ack = g.bericht.reportId;
         } else if (erg === 'abweichend') {
           log.error(`[merkez] ki-bericht abweichend: ${req.box.name}`);

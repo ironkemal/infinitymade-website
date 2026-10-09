@@ -179,14 +179,14 @@ test('Vertragstest M4.11 γ: abgelehnter Bericht wird auch bei 402 verworfen und
 
     // 1. Erster Prozess meldet den Bericht, Merkez quittiert, Kontingent (1) ist damit verbraucht
     const a = neuerClient();
-    await a.reportUsage(bericht(1));
+    await a.reportUsage(bericht(2));
     await a.getToken();
     assert.equal(a.getState().hasPendingReport, false);
 
-    // 2. Neuer Prozess (z. B. nach Neustart) meldet dieselbe ID mit anderem Inhalt → Merkez lehnt ab, Limit → 402
+    // 2. Neuer Prozess meldet dieselbe ID mit KLEINEREM Zähler (O-183: nur Wachstum ersetzt) → Merkez lehnt ab, Limit → 402
     s.kiEntra.token = 'fake-entra-token-gamma-zwei'; // secret-scan: ignore (Fake-Testwert)
     const b = neuerClient();
-    await b.reportUsage(bericht(2));
+    await b.reportUsage(bericht(1));
     const warn = console.warn;
     console.warn = () => {};
     try {
@@ -196,6 +196,46 @@ test('Vertragstest M4.11 γ: abgelehnter Bericht wird auch bei 402 verworfen und
     }
     assert.equal(b.getState().hasPendingReport, false, 'abgelehnter Bericht blockiert die Warteschlange nicht mehr');
     assert.deepEqual(await b.reportUsage({ ...bericht(1), reportId: 'rep-vertrag-gamma-2' }), { ok: true, staged: true });
+  } finally {
+    await s.stop();
+  }
+});
+
+test('Vertragstest O-183: wachsender Tagesbericht unter derselben reportId ersetzt den alten (eine Zeile je Tag)', async () => {
+  const s = await starte({ jetzt: Date.now() });
+  try {
+    const r = await registriere(s);
+    kiBereit(s, r.name);
+    s.db.boxKiLimitSetzen(r.name, 10);
+    const cfg = { mode: 'jeton', activationReady: true, valid: true, allowedHosts: ['ki-test.example.openai.azure.com'] };
+    const bericht = (calls, extra = {}) => ({
+      reportId: 'rep-vertrag-o183',
+      windowStart: TAG_START,
+      windowEnd: TAG_ENDE,
+      taskTotals: { 'b2c-draft': { calls, prompt_tokens: 10 * calls, completion_tokens: 5 * calls, total_tokens: 15 * calls }, ...extra },
+    });
+    const melde = async (b, token) => {
+      s.kiEntra.token = token;
+      const c = createJetonClient({ config: cfg, allowedHosts: cfg.allowedHosts, merkezOptions: { kimlik: r.kimlik, baseUrl: s.basis } });
+      await c.reportUsage(b);
+      const warn = console.warn; console.warn = () => {};
+      try { await c.getToken(); } finally { console.warn = warn; }
+      return c.getState().hasPendingReport;
+    };
+
+    assert.equal(await melde(bericht(1), 'fake-entra-o183-a'), false); // secret-scan: ignore (Fake-Testwert)
+    // Wachstum + neue Aufgabe → quittiert, Zeile ersetzt
+    const plus = { 'rezept-ocr': { calls: 1, prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } };
+    assert.equal(await melde(bericht(3, plus), 'fake-entra-o183-b'), false); // secret-scan: ignore (Fake-Testwert)
+    let zeilen = s.db.kiBerichteLesen(r.kimlik.boxId);
+    assert.equal(zeilen.length, 1);
+    assert.equal(JSON.parse(zeilen[0].daten).taskTotals['b2c-draft'].calls, 3);
+    // Aufgabe fehlt plötzlich → abgelehnt, alter Stand bleibt
+    assert.equal(await melde(bericht(4), 'fake-entra-o183-c'), false); // secret-scan: ignore (Fake-Testwert)
+    zeilen = s.db.kiBerichteLesen(r.kimlik.boxId);
+    assert.equal(zeilen.length, 1);
+    assert.equal(JSON.parse(zeilen[0].daten).taskTotals['b2c-draft'].calls, 3);
+    assert.ok(JSON.parse(zeilen[0].daten).taskTotals['rezept-ocr']);
   } finally {
     await s.stop();
   }

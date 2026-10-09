@@ -88,6 +88,22 @@ CREATE TABLE IF NOT EXISTS einstellungen (
 
 const BERICHT_AUFBEWAHRUNG_SEK = 90 * 86400;
 
+
+const KI_METRIKEN = ['calls', 'prompt_tokens', 'completion_tokens', 'total_tokens'];
+
+/** true, wenn jeder Zähler jeder bisherigen Aufgabe im neuen Stand ≥ alt ist (O-183). */
+function berichtWaechst(altJson, neuJson) {
+  let alt; let neu;
+  try { alt = JSON.parse(altJson)?.taskTotals; neu = JSON.parse(neuJson)?.taskTotals; } catch { return false; }
+  if (!alt || !neu || typeof alt !== 'object' || typeof neu !== 'object') return false;
+  for (const [task, m] of Object.entries(alt)) {
+    const n = neu[task];
+    if (!n) return false;
+    for (const k of KI_METRIKEN) if (!(Number(n[k]) >= Number(m[k]))) return false;
+  }
+  return true;
+}
+
 export function oeffneDb(pfad = ':memory:') {
   const db = new DatabaseSync(pfad);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -188,8 +204,18 @@ export function oeffneDb(pfad = ':memory:') {
         boxId, reportId, payloadHash, windowStart, empfangen, datenJson
       );
       if (r.changes === 1) return 'neu';
-      const vorh = get('SELECT payload_hash FROM ki_bericht WHERE box_id = ? AND report_id = ?', boxId, reportId);
-      return (vorh && vorh.payload_hash === payloadHash) ? 'gleich' : 'abweichend';
+      const vorh = get('SELECT payload_hash, window_start, daten FROM ki_bericht WHERE box_id = ? AND report_id = ?', boxId, reportId);
+      if (!vorh) return 'abweichend';
+      if (vorh.payload_hash === payloadHash) return 'gleich';
+      // O-183: Die Box meldet je UTC-Tag EINE reportId mit laufend wachsenden Summen. Ein Stand, in dem
+      // kein Zähler kleiner wird (und das Tagesfenster gleich bleibt), ersetzt den alten — eine Zeile je Tag.
+      // Sinkt ein Zähler oder fehlt eine Aufgabe, bleibt es 'abweichend' (Manipulationssignal, guvenlik S-55).
+      if (vorh.window_start === windowStart && berichtWaechst(vorh.daten, datenJson)) {
+        run('UPDATE ki_bericht SET payload_hash = ?, empfangen = ?, daten = ? WHERE box_id = ? AND report_id = ?',
+          payloadHash, empfangen, datenJson, boxId, reportId);
+        return 'aktualisiert';
+      }
+      return 'abweichend';
     },
     kiBerichteLesen: (boxId, limit = 5) => all(
       'SELECT report_id, window_start, empfangen, daten FROM ki_bericht WHERE box_id = ? ORDER BY empfangen DESC, rowid DESC LIMIT ?',

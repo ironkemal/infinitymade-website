@@ -217,7 +217,7 @@ test('Report ack idempotent: 2 Aufrufe gleiche ID → beide ack, 1 Zeile in DB',
   }
 });
 
-test('gleiche ID anderer Payload → kein ack, Alarm im Log', async () => {
+test('gleiche ID, Zähler sinkt → kein ack, Alarm im Log (Wachstum ersetzt, O-183)', async () => {
   const s = await starte();
   try {
     const r = await registriere(s);
@@ -228,7 +228,7 @@ test('gleiche ID anderer Payload → kein ack, Alarm im Log', async () => {
       windowStart: TAG_START,
       windowEnd: TAG_ENDE,
       taskTotals: {
-        'b2c-draft': { calls: 1, prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
+        'b2c-draft': { calls: 99, prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
       },
     };
     const repB = {
@@ -236,7 +236,7 @@ test('gleiche ID anderer Payload → kein ack, Alarm im Log', async () => {
       windowStart: TAG_START,
       windowEnd: TAG_ENDE,
       taskTotals: {
-        'b2c-draft': { calls: 99, prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
+        'b2c-draft': { calls: 1, prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
       },
     };
 
