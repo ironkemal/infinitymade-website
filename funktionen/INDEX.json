@@ -24027,7 +24027,7 @@
    "start": 18,
    "end": 31,
    "lines": 14,
-   "spiegelHinweis": null,
+   "spiegelHinweis": "Spiegel von module/branding",
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -24154,7 +24154,7 @@
    "start": 39,
    "end": 59,
    "lines": 21,
-   "spiegelHinweis": null,
+   "spiegelHinweis": "Spiegel von module/bg-angaben",
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -177248,7 +177248,9 @@
     "api-backend/lib/rechnung-snapshot.js:18",
     "module/branding.js:70"
    ],
-   "aynalar": []
+   "aynalar": [
+    "api-backend/lib/rechnung-snapshot.js:18 — Spiegel von module/branding"
+   ]
   },
   {
    "name": "authHeaders",
@@ -177426,7 +177428,9 @@
     "api-backend/lib/rechnung-snapshot.js:39",
     "module/bg-angaben.js:95"
    ],
-   "aynalar": []
+   "aynalar": [
+    "api-backend/lib/rechnung-snapshot.js:39 — Spiegel von module/bg-angaben"
+   ]
   },
   {
    "name": "erstePositionAusItems",
@@ -178077,6 +178081,13 @@
  ],
  "bilinciAynalar": [
   {
+   "name": "ausstellerSnapshot",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 18,
+   "end": 31,
+   "hinweis": "Spiegel von module/branding"
+  },
+  {
    "name": "bgFehltFuerRechnung",
    "file": "api-backend/lib/rezept-felder.js",
    "start": 326,
@@ -178089,6 +178100,13 @@
    "start": 102,
    "end": 106,
    "hinweis": "Spiegel von `dgWurzel()` in `module/verordnung-regeln"
+  },
+  {
+   "name": "empfaengerSnapshot",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 39,
+   "end": 59,
+   "hinweis": "Spiegel von module/bg-angaben"
   },
   {
    "name": "fehlendePflichtangaben",

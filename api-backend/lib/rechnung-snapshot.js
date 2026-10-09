@@ -14,7 +14,7 @@
 const t = (w) => String(w ?? '').trim();
 const n = (w) => t(w) || null;
 
-/** Profilzeile der PRAXIS → Aussteller-Snapshot (gleiche Form wie module/branding.js ausstellerSnapshot). */
+/** Spiegel von module/branding.js ausstellerSnapshot — Profilzeile der PRAXIS → Aussteller-Snapshot. */
 export function ausstellerSnapshot(p) {
   const x = p || {};
   const plz = t(x.plz) || t(x.zip);
@@ -35,7 +35,7 @@ const deutsch = (iso) => {
   return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso ?? '');
 };
 
-/** leads- + prescriptions-Zeile → Empfänger-Snapshot (gleiche Form wie module/bg-angaben.js empfaengerSnapshot). */
+/** Spiegel von module/bg-angaben.js empfaengerSnapshot — leads- + prescriptions-Zeile → Empfänger-Snapshot. */
 export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = null } = {}) {
   const name = patient ? ([n(patient.first_name), n(patient.last_name)].filter(Boolean).join(' ') || n(patient.title) || '') : '';
   if (invoiceType === 'bg' && rx?.rezeptart === 'bg' && n(rx.bg_traeger_name)) {
