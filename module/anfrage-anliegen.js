@@ -11,6 +11,8 @@
 // aenderung geht der Grund als erste Zeile in `notizen` (max. 500 Zeichen, die
 // Praxis sieht sie im Anfragen-Detail). Reine Funktionen, kein DOM.
 
+import { kostentraegerTyp } from './leistungen-liste.js?v=20260903';
+
 export const ANLIEGEN = [
   { key: 'rezept', titel: 'Behandlung mit Rezept', hinweis: 'Rezept liegt vor oder wird vom Arzt noch ausgestellt — bitte zum Termin mitbringen', zahlung: ['gkv', 'pkv', 'bg'] },
   { key: 'nagelspange', titel: 'Nagelspange', hinweis: 'Eingewachsener Nagel — mit oder ohne Rezept', zahlung: ['gkv', 'pkv', 'selbstzahler'] },
@@ -105,4 +107,21 @@ export function anliegenNotiz(key, opts, frei, max = 500) {
   // Kopfzeile nie kuerzen, solange sie passt; nur der freie Text weicht.
   if (kopf.length >= max) return kopf.slice(0, max);
   return `${kopf}\n${rest}`.slice(0, max).trimEnd();
+}
+
+/**
+ * Welche Leistungen der Patient bei der Online-Anfrage selbst wählen darf (podoloji 09.10.2026).
+ * Die automatisch angelegten GKV-Positionen (HPNR 78xxx, Befundung, Aufschlag, Therapiebericht,
+ * Hausbesuch) sind Abrechnungsbausteine, keine Patientenwahl — 30.09.-Entscheidung „Patient wählt
+ * nie eine Positionsnummer". Ohne Anliegen (andere Fachbereiche) bleibt die Liste unverändert.
+ *   ohne_rezept  → nur privat/selbstzahler-Leistungen
+ *   nagelspange, rezept → keine Auswahl; die Praxis ordnet beim Bestätigen zu
+ * Leere Liste ⇒ der Schritt verlangt keine Auswahl (Dauer fällt auf 60 min zurück).
+ */
+export function patientenLeistungen(services = [], anliegen = null) {
+  if (!anliegen) return services;
+  if (anliegen === 'ohne_rezept') {
+    return services.filter((s) => ['privat', 'selbstzahler'].includes(kostentraegerTyp(s)));
+  }
+  return [];
 }

@@ -747,3 +747,20 @@
 - **CHECK „Kasse ⇒ Diagnosegruppe“ bleibt aus** (gkv-302 06.10.): fachlich ist die DG überall Pflicht (HeilM-RL § 13 Abs. 2 j, Blanko darf nur f–i weglassen, LHB setzt sie voraus), aber ein CHECK auf `prescriptions` greift schon beim INSERT und könnte halb erfasste Entwürfe (OCR/Maske) blockieren — nicht geprüft, ob ein Schreibweg DG-lose Kassen-Entwürfe anlegt. Die harte Prüfung gehört in die Freigabe auf „bereit“/Preflight.
 - **Physio-Pfad `/abrechnung/create`** bekam denselben Guard wie die Podologie-Wege (`nichtGkvAbrechenbarMeldung`, 422) — gkv-302: Integritätssperre, nicht Physio-Feinschliff; bisher hielt nur die zufällige IK-Gleichheit Privat/BG heraus.
 - **Offen für Beta-1:** Ops #209 „Podologische Behandlung groß“ (Kalender, Auswahlliste oder Rechnung?). Praxisfragen aus podoloji: kommen BG-Fälle überhaupt vor (Annahme: selten)?
+
+## 2026-10-09 · Online-Anfrage: Leistungsliste nach Kostenträgertyp, HPNR-Seed-Leistungen nie patientenwählbar
+
+- **Ersetzt** Punkt 6 der S4-Entscheidung vom 30.09. („Leistungsliste vorerst nicht nach Anliegen filtern").
+  **Neue Tatsache:** die Begründung („services hat keine Kategorie, nur über neue Spalte oder Namensraten")
+  stimmte nicht — `gkv_position_nr`, `kostentraeger_typ` und `kostentraegerTyp()` (`module/leistungen-liste.js`)
+  gab es schon. Und die 13 Einträge, die Patienten sahen, sind der automatisch angelegte HPNR-Katalog
+  (`autoSeedGkvServices`): 78010/78020, Befundung, Nagelspangen-Erstbefundung, 78610/78620, 78510/78520,
+  78530 Therapiebericht, 79933/79934 Hausbesuch — Abrechnungsbausteine, keine Patientenwahl. Widerspruch
+  zur Entscheidung desselben Tages „Patient wählt nie eine Positionsnummer" aufgelöst.
+- **Regel** (`patientenLeistungen`, `module/anfrage-anliegen.js`): Ohne Rezept → nur privat/selbstzahler-
+  Leistungen; Nagelspange und Rezept → keine Auswahl, Hinweis „Die Praxis legt die Leistung bei der
+  Bestätigung fest", Anfrage geht ohne `service_id`, Slot-Dauer 60 min (bestehender Rückfall).
+  Andere Fachbereiche unverändert.
+- **Verworfen:** neue Spalte `patient_waehlbar` (Schema + 13 Seed-Zeilen je Praxis von Hand).
+- **Offen:** passende Standard-Dauer für Anfragen ohne Leistung (35/50/60 min?) — Beta-1 fragen.
+  Quelle: podoloji 09.10.2026; canli-test P3-Beobachtung (wiederholt).

@@ -14,7 +14,7 @@ import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261001z';
 import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15c';
-import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer } from './module/anfrage-anliegen.js?v=20261001v';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, patientenLeistungen } from './module/anfrage-anliegen.js?v=20261009k15c';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -534,9 +534,22 @@ async function loadServices() {
 
   try {
     const data = await apiFetch(`/services/public?owner_id=${encodeURIComponent(state.owner_id)}`);
-    const services = Array.isArray(data) ? data : (data.services || []);
+    const alle = Array.isArray(data) ? data : (data.services || []);
+    // Podologie: Patient wählt keine GKV-Positionen (podoloji 09.10.2026, module/anfrage-anliegen.js).
+    const services = state.anliegenAktiv ? patientenLeistungen(alle, state.anliegen) : alle;
+    state.leistungDurchPraxis = state.anliegenAktiv && !services.length;
+    if (state.leistungDurchPraxis) { state.service_id = null; state.service = null; }
 
     grid.innerHTML = '';
+    if (state.leistungDurchPraxis) {
+      grid.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Die passende Leistung legt die Praxis bei der Bestätigung fest. Sie können einfach weitergehen.</p>';
+      grid.style.display = 'block';
+      show(grid);
+      hide(loading);
+      return;
+    }
+    // Früher gewählte Leistung, die nach Anliegen-Wechsel nicht mehr wählbar ist, verwerfen
+    if (state.service_id && !services.some((x) => x.id === state.service_id)) { state.service_id = null; state.service = null; }
     if (!services.length) {
       grid.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Keine Leistungen verfügbar.</p>';
       grid.style.display = 'block';
@@ -547,7 +560,7 @@ async function loadServices() {
 
     services.forEach(svc => {
       const btn = document.createElement('button');
-      btn.className = 'br-select-card';
+      btn.className = 'br-select-card' + (svc.id === state.service_id ? ' selected' : '');
       btn.dataset.id = svc.id;
 
       // Beta-Rueckmeldung 31.08.2026: Preis und Behandlungsdauer gehoeren nicht in die
@@ -603,7 +616,7 @@ function showSessionPicker() {
 }
 
 function validateStep2() {
-  if (!state.service_id) {
+  if (!state.service_id && !state.leistungDurchPraxis) {
     document.getElementById('serviceError').textContent = 'Bitte eine Leistung auswählen.';
     document.getElementById('serviceError').style.display = 'block';
     return false;
@@ -1353,8 +1366,8 @@ function onStepEnter(logicalStep) {
 
   switch (logicalStep) {
     case 2:
-      // Load services if not yet loaded
-      if (!document.getElementById('servicesGrid').children.length) {
+      // Load services if not yet loaded — Podologie jedes Mal (Liste hängt vom Anliegen ab)
+      if (state.anliegenAktiv || !document.getElementById('servicesGrid').children.length) {
         loadServices();
       }
       // Update session picker max based on payment type

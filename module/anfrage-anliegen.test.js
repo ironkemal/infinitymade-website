@@ -123,3 +123,19 @@ test('ladeKennung: Mitarbeiter-Link und Standort-Slug behalten employeeId / busi
     { ownerId: 'ob', employeeId: null, businessId: 'b1', businessName: 'Filiale Nord' });
   assert.equal(await ladeKennung(stub({}), '?business=keine-uuid'), null);
 });
+
+test('patientenLeistungen: ohne Rezept nur privat/selbstzahler; Nagelspange/Rezept → Praxis wählt; ohne Anliegen alles', async () => {
+  const { patientenLeistungen } = await import('./anfrage-anliegen.js');
+  const liste = [
+    { id: 'a', gkv_position_nr: '78010' },                 // HPNR-Seed → gkv
+    { id: 'b', gkv_position_nr: '78530' },                 // Therapiebericht → gkv
+    { id: 'c', kostentraeger_typ: 'selbstzahler' },
+    { id: 'd' },                                           // ohne Nummer → privat
+    { id: 'e', kostentraeger_typ: 'bg' },
+    { id: 'f', is_internal: true },
+  ];
+  assert.deepEqual(patientenLeistungen(liste, 'ohne_rezept').map((s) => s.id), ['c', 'd']);
+  assert.deepEqual(patientenLeistungen(liste, 'nagelspange'), []);
+  assert.deepEqual(patientenLeistungen(liste, 'rezept'), []);
+  assert.equal(patientenLeistungen(liste, null).length, 6);
+});

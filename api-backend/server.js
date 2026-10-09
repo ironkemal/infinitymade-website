@@ -3862,7 +3862,8 @@ app.get('/api/services/public', async (req, res) => {
       // Preis faellt hier bewusst weg: einziger Konsument ist die oeffentliche
     // Terminanfrage (booking-request.js), und dort wird seit 31.08.2026 weder Preis
     // noch Behandlungsdauer angezeigt. duration bleibt — sie steuert die Slot-Abfrage.
-    .select('id, name:title, description, duration:duration_minutes')
+    // gkv_position_nr/kostentraeger_typ: nur für den Filter „Patient wählt keine GKV-Position" (podoloji 09.10.2026).
+    .select('id, name:title, description, duration:duration_minutes, gkv_position_nr, kostentraeger_typ')
       .eq('owner_id', owner_id)
       // Interne Einträge (Kalender-Blocker "Fortbildung"/"Privat"/"Pause", code
       // BLOCK_*) sind keine buchbaren Leistungen — QA 26.09.2026 fand sie in der
