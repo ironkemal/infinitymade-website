@@ -23,6 +23,9 @@ RUN node tools/lizenzen-erzeugen.mjs --wurzel /app --ausgabe /app/lizenzen/THIRD
 # Container-Komponenten der Box (Postgres, GoTrue, Kong, Caddy …) — dieselbe
 # Tabelle wie onprem/NOTICE.md, ausgeliefert über GET /api/ueber/lizenzen.
 COPY --from=onprem NOTICE.md ./lizenzen/NOTICE-komponenten.md
+# Produkt-LICENSE (K2b.16, Repo-Root) — Ein-Datei-Kontext "lizenz", siehe Workflow.
+# Lokal: docker build --build-context lizenz=<Ordner mit LICENSE> --build-context onprem=../onprem .
+COPY --from=lizenz LICENSE /usr/share/doc/praxura/LICENSE
 
 # Then copy source.
 # ACHTUNG: Diese Liste ist vollstaendig aufzufuehren — es gibt kein "COPY . .".

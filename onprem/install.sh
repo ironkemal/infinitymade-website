@@ -1426,5 +1426,6 @@ else
 fi
 log "  Link abgelaufen:       sudo bash install.sh --neuer-jeton"
 log "  Weiter im Browser:     ${SITE_URL}/login.html"
+log "  Lizenz:               ${SITE_URL}/LICENSE.txt (auch unter „Über diese Software“)"
 log ""
 log "  Ablauf dieser Einrichtung: $LOG_FILE (ohne Geheimnisse)"

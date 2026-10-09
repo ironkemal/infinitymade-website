@@ -26,6 +26,8 @@ on:
       - 'onprem/volumes/db/*.sql'
       # O-178: Container-Lizenztabelle wird ins api-Image kopiert (/api/ueber/lizenzen).
       - 'onprem/NOTICE.md'
+      # K2b.16: Produkt-LICENSE (Repo-Root) liegt im Image unter /usr/share/doc/praxura/.
+      - 'LICENSE'
       - '.github/workflows/publish-calendar-api.yml'
       # O-25/R5 (12.09.2026): api- und frontend-Image teilen sich EINE Produkt-
       # version (VERSION am Repo-Root). Jede Änderung daran löst BEIDE Workflows
@@ -177,6 +179,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # K2b.16: Produkt-LICENSE als Ein-Datei-Kontext — bewusst NICHT das ganze
+      # Repo als benannter Kontext (Dockerfile-Allowlist, O-45(b)/§7J J2; onprem 09.10.).
+      - name: Lizenz-Kontext vorbereiten
+        run: mkdir -p "$RUNNER_TEMP/lizenz" && cp LICENSE "$RUNNER_TEMP/lizenz/"
+
       # ── Smoke-Test: das Image wird gestartet, BEVOR es veröffentlicht wird ──
       #
       # Warum das hier stehen muss (04.09.2026):
@@ -204,6 +211,7 @@ jobs:
           file: ./api-backend/Dockerfile
           build-contexts: |
             onprem=./onprem
+            lizenz=${{ runner.temp }}/lizenz
           build-args: |
             IMAGE_VERSION=${{ steps.version.outputs.bild }}
           push: false
@@ -308,6 +316,7 @@ jobs:
             for f in THIRD-PARTY-NOTICES.txt NOTICE-komponenten.md sbom.cdx.json; do
               test -s /app/lizenzen/$f || { echo "✗ fehlt im Image: /app/lizenzen/$f"; exit 1; }
             done
+            test -s /usr/share/doc/praxura/LICENSE || { echo "✗ fehlt im Image: /usr/share/doc/praxura/LICENSE"; exit 1; }
             echo "✓ Lizenzdateien im Image ($(head -3 /app/lizenzen/THIRD-PARTY-NOTICES.txt | tail -1))"
             [ "$IMAGE_VERSION" = "${{ steps.version.outputs.bild }}" ] || { echo "✗ IMAGE_VERSION=$IMAGE_VERSION"; exit 1; }
             echo "✓ IMAGE_VERSION=$IMAGE_VERSION"
@@ -320,6 +329,7 @@ jobs:
           file: ./api-backend/Dockerfile
           build-contexts: |
             onprem=./onprem
+            lizenz=${{ runner.temp }}/lizenz
           build-args: |
             IMAGE_VERSION=${{ steps.version.outputs.bild }}
           push: true
