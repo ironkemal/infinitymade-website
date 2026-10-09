@@ -13,6 +13,8 @@ function sahteClient(ueberschreiben = {}) {
       if (/pg_tables t/.test(sql)) return { rows: erwartet.zaehler.rls_kapali_tablolar.map((n) => ({ n })) };
       // Zuordnung über eindeutige Fragmente der SORGULAR
       const map = [
+        ["has_table_privilege('anon','public.businesses'", 'anon_businesses_tablo_hakki'],
+        ["attrelid='public.businesses'", 'anon_businesses_kolon'],
         ['has_table_privilege', 'anon_profiles_tablo_hakki'],
         ['has_column_privilege', 'anon_profiles_kolon'],
         ['pg_policies', 'rls_policy'], ['auth', 'auth_trigger'], ['pg_trigger', 'trigger'],
@@ -39,4 +41,10 @@ test('S-56 zurück (Tabellenrecht + 88 Spalten) → abweichung', async () => {
   const r = await zaehlerPruefen(sahteClient({ anon_profiles_tablo_hakki: true, anon_profiles_kolon: 88 }), erwartet, erwartet.bis_version);
   assert.equal(r.status, 'abweichung');
   assert.deepEqual(r.abweichungen.map((a) => a.name).sort(), ['anon_profiles_kolon', 'anon_profiles_tablo_hakki']);
+});
+
+test('S-57 zurück (businesses Tabellenrecht + 26 Spalten) → abweichung', async () => {
+  const r = await zaehlerPruefen(sahteClient({ anon_businesses_tablo_hakki: true, anon_businesses_kolon: 26 }), erwartet, erwartet.bis_version);
+  assert.equal(r.status, 'abweichung');
+  assert.deepEqual(r.abweichungen.map((a) => a.name).sort(), ['anon_businesses_kolon', 'anon_businesses_tablo_hakki']);
 });

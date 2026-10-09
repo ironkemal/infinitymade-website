@@ -40,6 +40,11 @@ const SORGULAR = {
   anon_profiles_kolon: `SELECT count(*)::int AS n FROM pg_attribute a
                         WHERE a.attrelid='public.profiles'::regclass AND a.attnum>0 AND NOT a.attisdropped
                         AND has_column_privilege('anon', a.attrelid, a.attnum, 'SELECT')`,
+  // S-57 / 0074 (09.10.2026): dasselbe für businesses — erwartet false und 6 Spalten.
+  anon_businesses_tablo_hakki: `SELECT has_table_privilege('anon','public.businesses','SELECT,INSERT,UPDATE,DELETE') AS n`,
+  anon_businesses_kolon: `SELECT count(*)::int AS n FROM pg_attribute a
+                          WHERE a.attrelid='public.businesses'::regclass AND a.attnum>0 AND NOT a.attisdropped
+                          AND has_column_privilege('anon', a.attrelid, a.attnum, 'SELECT')`,
 };
 
 // Isim listesi olarak, sayı olarak DEĞİL (onprem-Audit, 12.09.2026): bu tek
