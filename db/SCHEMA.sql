@@ -3,27 +3,24 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005194119 prescriptions_clientrechte_0066
--- EXPORTED AT:        2026-10-03T19:36:25.349Z
--- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
+-- LAST MIGRATION:     20261009083226 profiles_anon_spaltenrechte
+-- EXPORTED AT:        2026-10-09T08:35:28.654Z
+-- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1380
+--   table_columns:       1390
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           103
---   triggers:            91
+--   functions:           107
+--   triggers:            96
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
---
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0066 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
--- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
 -- This document is a deterministic structural documentation snapshot.
@@ -230,7 +227,7 @@ CREATE TABLE public.abrechnung_artefakt_freeze (
   owner_id uuid NOT NULL,
   frozen_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   FK owner_id -> users(id)
+--   FK owner_id -> auth.users(id)
 ALTER TABLE ONLY public.abrechnung_artefakt_freeze OWNER TO postgres;
 COMMENT ON TABLE public.abrechnung_artefakt_freeze IS 'Owner-Freeze (DSGVO-Loeschlauf): keine neuen Reservierungen';
 
@@ -259,7 +256,7 @@ CREATE TABLE public.abrechnung_artefakt_version (
   updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 --   FK abrechnung_id -> abrechnung(id)
---   FK owner_id -> users(id)
+--   FK owner_id -> auth.users(id)
 ALTER TABLE ONLY public.abrechnung_artefakt_version OWNER TO postgres;
 COMMENT ON TABLE public.abrechnung_artefakt_version IS 'Registry aller Dateien im Bucket abrechnungen (M1.16); schuetzt Dateien vor Loeschung, ersetzt keine Rechnungs-Zustandsmaschine';
 
@@ -300,7 +297,7 @@ ALTER TABLE ONLY public.abrechnung_artefakt_version
   ADD CONSTRAINT artefakt_pfad_sauber CHECK (storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
 
 ALTER TABLE ONLY public.abrechnung_artefakt_version
-  ADD CONSTRAINT artefakt_rolle_kind CHECK (role = ANY (ARRAY['dta'::text, 'auftrag'::text, 'begleit'::text]) AND kind = 'unsigned'::text OR role = 'signed'::text AND kind = 'signed'::text OR role = 'encrypted'::text AND kind = 'encrypted'::text);
+  ADD CONSTRAINT artefakt_rolle_kind CHECK ((role = ANY (ARRAY['dta'::text, 'auftrag'::text, 'begleit'::text])) AND kind = 'unsigned'::text OR role = 'signed'::text AND kind = 'signed'::text OR role = 'encrypted'::text AND kind = 'encrypted'::text);
 
 CREATE TABLE public.abrechnung_uebermittlung (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2847,6 +2844,14 @@ COMMENT ON COLUMN public.prescriptions.rezeptart IS 'Zahlerachse: kassen|privat|
 COMMENT ON COLUMN public.prescriptions.notizen IS 'Interne Notiz der Praxis. Gegenstueck: hinweise = Therapieziel vom Arzt (aus dem gescannten Muster 13).';
 COMMENT ON COLUMN public.prescriptions.nagel IS 'Nagelspange: behandelter Zehennagel dieser Verordnung, Schreibweise nach § 3b Satz 5 Aenderungsvereinbarung 16.06.2025 ("U1 links" .. "U5 rechts"). Nur bei diagnosegruppe UI1/UI2 gefuellt. Haelt die Behandlungsserie ueber mehrere Verordnungen zusammen (§ 3b lit. a).';
 COMMENT ON COLUMN public.prescriptions.krankenkasse_ik IS 'IK der Krankenkasse von der Versichertenkarte (Karten-IK, §302 Anlage 1 TP5 V21 § 5.5.3.1), 9 Ziffern. NICHT die Kostentraeger-IK: kostentraeger_ik wird serverseitig immer aus diesem Wert abgeleitet (Kostentraegerdatei). Im DTA Mussfeld (V:01017) - kein Rueckfall auf kostentraeger_ik, ohne Karten-IK lehnt der Bau ab (KARTEN_IK_FEHLT). NULL = noch nicht erfasst, Verordnung nicht abrechnungsbereit.';
+COMMENT ON COLUMN public.prescriptions.bg_traeger_name IS 'BG/Unfallkasse (UV-Traeger) = Rechnungsempfaenger der BG-Rechnung. Nur bei rezeptart=bg. PE-006 B.';
+COMMENT ON COLUMN public.prescriptions.bg_traeger_anschrift IS 'Anschrift des UV-Traegers (mehrzeilig). Nur bei rezeptart=bg.';
+COMMENT ON COLUMN public.prescriptions.bg_unfalltag IS 'Unfalltag. Pflicht erst beim Erstellen der BG-Rechnung (Frontend), nicht beim Speichern.';
+COMMENT ON COLUMN public.prescriptions.bg_aktenzeichen IS 'Aktenzeichen/Schadennummer des UV-Traegers, optional, Freitext (kein Format belegt).';
+COMMENT ON COLUMN public.prescriptions.bg_kostenzusage_datum IS 'Datum der Kostenzusage der BG (Podologie: kein DGUV-Vertrag, Einzelfall). Fehlt sie: Warnung, keine Sperre.';
+COMMENT ON COLUMN public.prescriptions.bg_kostenzusage_zeichen IS 'Zeichen/Nummer der Kostenzusage.';
+COMMENT ON COLUMN public.prescriptions.bg_einverstaendnis_am IS 'Datum des dokumentierten Patienten-Einverstaendnisses zur Uebermittlung an den UV-Traeger (§ 100 SGB X, § 203 StGB).';
+COMMENT ON COLUMN public.prescriptions.bg_einverstaendnis_version IS 'Version des Einverstaendnis-Wortlauts (module/bg-angaben.js EINVERSTAENDNIS_VERSION), dem zugestimmt wurde. Gehoert zu bg_einverstaendnis_am.';
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
@@ -2865,6 +2870,12 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_bericht_status_check CHECK (bericht_status = ANY (ARRAY['offen'::text, 'in_arbeit'::text, 'erledigt'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_bg_einverstaendnis_version_check CHECK (bg_einverstaendnis_version IS NULL OR char_length(bg_einverstaendnis_version) <= 60);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_bg_laengen_check CHECK ((bg_traeger_name IS NULL OR char_length(bg_traeger_name) <= 200) AND (bg_traeger_anschrift IS NULL OR char_length(bg_traeger_anschrift) <= 500) AND (bg_aktenzeichen IS NULL OR char_length(bg_aktenzeichen) <= 80) AND (bg_kostenzusage_zeichen IS NULL OR char_length(bg_kostenzusage_zeichen) <= 80));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
@@ -2898,12 +2909,6 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
-
-ALTER TABLE ONLY public.prescriptions
-  ADD CONSTRAINT prescriptions_bg_einverstaendnis_version_check CHECK (((bg_einverstaendnis_version IS NULL) OR (char_length(bg_einverstaendnis_version) <= 60)));
-
-ALTER TABLE ONLY public.prescriptions
-  ADD CONSTRAINT prescriptions_bg_laengen_check CHECK (((bg_traeger_name IS NULL) OR (char_length(bg_traeger_name) <= 200)) AND ((bg_traeger_anschrift IS NULL) OR (char_length(bg_traeger_anschrift) <= 500)) AND ((bg_aktenzeichen IS NULL) OR (char_length(bg_aktenzeichen) <= 80)) AND ((bg_kostenzusage_zeichen IS NULL) OR (char_length(bg_kostenzusage_zeichen) <= 80)));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_signature_confidence_check CHECK (signature_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text]));
@@ -3024,12 +3029,8 @@ COMMENT ON COLUMN public.profiles.tablet_kiosk_pin_set IS 'Kiosk-PIN hinterlegt?
 COMMENT ON COLUMN public.profiles.selbstzahler_stufen IS 'Ops #266: benannte Selbstzahler-Preisstufen des Owners, [{id,name,betrag_eur}]. Eingabehelfer bei der Rechnungserfassung — der berechnete Betrag wird in invoices.line_items festgeschrieben, nicht die Stufe.';
 COMMENT ON COLUMN public.profiles.buchungskonten IS 'Owner-gepflegter Kontenrahmen: [{code,label,aktiv}] — Form und Normalisierung in module/buchungskonten.js. Leer = Modul-Standard (1000 Kasse, 1100 Postbank, 1200 Bank, 1210 Bank 2, 8700 Erloesschmaelerung, 4900 Teilabsetzung). Gebuchte Zeilen referenzieren NICHT hierher, sie speichern code+label als Snapshot (GoBD Rz. 107).';
 COMMENT ON COLUMN public.profiles.gps_checkin_pruefen IS 'Owner-Einstellung: beim Check-in einmalig pruefen, ob der Mitarbeiter im 150-m-Umkreis der Praxis ist. Gespeichert wird nur das Ergebnis, nie Koordinaten. Standard aus.';
-
-ALTER TABLE ONLY public.profiles
-  ADD CONSTRAINT profiles_praxis_inhaber_laenge_check CHECK (((praxis_inhaber IS NULL) OR (char_length(praxis_inhaber) <= 200)));
-
-ALTER TABLE ONLY public.profiles
-  ADD CONSTRAINT profiles_praxis_stempel_path_check CHECK (((praxis_stempel_path IS NULL) OR (praxis_stempel_path ~ '^[0-9a-f-]{36}/stempel\.(png|jpg)$'::text)));
+COMMENT ON COLUMN public.profiles.praxis_stempel_path IS 'Pfad des Praxisstempels im privaten Bucket praxis-stempel (<owner_id>/stempel.png|jpg). Nie eine URL. Nur die Owner-Zeile zaehlt (Belege lesen ownerProfile).';
+COMMENT ON COLUMN public.profiles.praxis_inhaber IS 'Buergerlicher Name der Inhaberin/des Inhabers fuer Rechnungen (§ 14 Abs. 4 Nr. 1 UStG, Einzelpraxis).';
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
@@ -3066,6 +3067,12 @@ ALTER TABLE ONLY public.profiles
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_plan_status_check CHECK (plan_status = ANY (ARRAY['pending'::text, 'trial'::text, 'active'::text, 'past_due'::text, 'canceled'::text, 'expired'::text, 'deleted'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_inhaber_laenge_check CHECK (praxis_inhaber IS NULL OR char_length(praxis_inhaber) <= 200);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_stempel_path_check CHECK (praxis_stempel_path IS NULL OR praxis_stempel_path ~ '^[0-9a-f-]{36}/stempel\.(png|jpg)$'::text);
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_role_check CHECK (role = ANY (ARRAY['owner'::text, 'employee'::text]));

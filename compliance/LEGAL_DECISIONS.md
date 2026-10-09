@@ -821,3 +821,23 @@ GKV-Sammelabrechnung — 8 oder 10 Jahre?"
 - Pseudonymisierung ist keine Anonymisierung. Lokale Maps/Provider-Tokens nur im RAM; persistiert werden Freigabemetadaten und kurzlebige verbrauchte HMAC-/Expiry-Marker, keine Patientendaten/Prompts/Maps/Provider-Tokens. `store:false` ist keine Zusage über ZDR, Abuse Monitoring oder alle Anbieter-Speicherwege.
 - Clientseitige Grenze TTL ≤1 h bestätigt nicht das Ablauf-/Widerrufsverhalten des externen Ausstellers. Echte Azure-Ressource/Region/Host/Deployment/RBAC/Retention, Hat-K-Vertrag, Microsoft C5-Scope/Bridge Letter/Product Terms/Professional-Secrecy-Nachweis und Anwaltsvotum bleiben **nicht geprüft**. Finale lokale Testergebnisse stehen im QA-Bericht.
 - VVT/AVV werden in dieser technischen Ergänzung nicht vorzeitig geändert. Die Dokumente/Patienteninformation müssen vor echter Aktivierung gemäß Nachtrag (4) fertig und geprüft sein; Mail-Entwürfe bleiben bis zur vorgesehenen Anwaltsantwort gesperrt. Keine uneingeschränkte Rechts-/Produktionsfreigabe.
+
+## 2026-10-09 · Box: Patientenseiten `booking.html` / `booking-request.html` — Impressum, Datenschutz, Cookie (Fortsetzung O-178)
+- Vorentscheidung 08.10.2026 (O-178): In der Box kein Praxura-Impressum; Box-Login/-Konto-Seiten verlinken „Über diese Software" (`ueber.html`, umgesetzt `ff7e29a6`).
+- Rolle: Betreiber und Verantwortlicher ist die Praxis; Praxura nur Hersteller. 0 €, kein Veto.
+- **Datenschutzhinweis (Art. 13 DSGVO):** Link nie ausblenden. Reihenfolge `praxis_datenschutz_url` (nur https) → sonst generierte Seite „Datenschutzhinweise zur Terminanfrage" aus M2.8-Bausteinen (Verantwortlicher, Software-Satz Box) mit eigenem Zweck „Terminvereinbarung" (Art. 6 Abs. 1 lit. b, ggf. Art. 9 Abs. 2 lit. h i.V.m. § 22 Abs. 1 Nr. 1 lit. b BDSG), Speicherdauer, Empfänger, Rechte, Aufsichtsbehörde. Formular nur sperren, wenn Praxisname oder Anschrift im Profil fehlen („Online-Terminanfrage ist noch nicht eingerichtet").
+- **Pflicht-Checkbox „Ich stimme … zu"** (`booking-request.html:655-660`) durch Hinweissatz ersetzen — Einwilligung ist nicht die Rechtsgrundlage, eine Pflicht-Einwilligung ist nicht freiwillig. Box und SaaS, niedrige Priorität.
+- **Impressum (§ 5 DDG, Wortlaut geprüft 09.10.2026):** Pflicht der Praxis bei öffentlich erreichbarer Seite (inkl. Nr. 5 reglementierter Beruf: Berufsbezeichnung, Staat, Berufsregeln — nicht automatisch erzeugbar). Mit `praxis_impressum_url` → Link „Impressum"; ohne → kein „Impressum"-Link, nur Klartext „Praxisname · Anschrift". „Über diese Software" zusätzlich, nie als Impressum-Ersatz. Reine LAN-Seite: praktisch kein Risiko.
+- **Cookie-Einstellungen** in der Box entfernen (kein Umami, kein Banner); Voraussetzung: nur technisch notwendige Speicherung (§ 25 Abs. 2 Nr. 2 TDDDG).
+- **Hinweis im Owner-Setup:** „Ihre Online-Terminseite betreiben Sie als Praxis selbst: Tragen Sie die Adressen Ihres Impressums und Ihrer Datenschutzerklärung ein – ohne Eintrag erscheint ein automatisch aus Ihren Praxisdaten erzeugter Datenschutzhinweis, aber kein Impressum, für das Sie bei einer öffentlich erreichbaren Seite selbst verantwortlich sind."
+- Offen (niedrig): SaaS-Patientenseiten verlinken heute Praxuras `datenschutz.html`, obwohl die Praxis verantwortlich ist.
+
+## 2026-10-09 — Datenpanne S-56: `profiles` anonym lesbar (22.06.–09.10.2026)
+Rolle: Verantwortlicher (Kontodaten Inhaber) + Auftragsverarbeiter (Mitarbeiterdaten, AVV Ziff. Betroffene „Mitarbeiter")
+Sachverhalt: 18 Zeilen (booking_slug + accepts_bookings) ohne Login über Anon-Key lesbar, alle Spalten inkl. IBAN (1×), company_code. Geschlossen durch Migration 0072, live verifiziert (42501). Zugriff nicht feststellbar (Edge-Logs ~24 h, gesampelt).
+Entscheidung:
+- Art. 33: MELDEN an LDI NRW bis 12.10.2026 (ggf. schrittweise, Art. 33(4)). Begründung: Zugriff nicht ausschließbar, 3,5 Monate, trivial ausnutzbar, Mitarbeiterkontaktdaten nicht öffentlich, IBAN, company_code = mittelbarer Weg zu Patientendaten bis Gegenprüfung.
+- Art. 33(2)/AVV §-Meldung (24 h): Inhaber aller betroffenen Beta-Praxen bis 10.10.2026 informieren.
+- Art. 34: nicht erforderlich (kein hohes Risiko); freiwillige Information an betroffene Personen, insb. IBAN-Inhaber.
+- Bedingung: Prüfung aller im Zeitraum angelegten Mitarbeiterkonten + Rotation company_code. Findet sich ein unbekanntes Konto → Neubewertung (Patientendaten betroffen, Art. 33 Nachtrag, Praxis prüft Art. 34).
+Dokumentation Art. 33(5): Runbook-Register + diese Zeile; LDI-Aktenzeichen: ____.

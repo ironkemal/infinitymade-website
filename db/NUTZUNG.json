@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-10-08",
+ "erzeugt": "2026-10-09",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-10-03)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-08)",
+  "schema": "db/SCHEMA.sql (Stand 2026-10-09)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-09)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 96,
@@ -291,14 +291,14 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 67,
+   "sqlTreffer": 71,
    "codeStumm": false
   },
   {
    "name": "abrechnung_artefakt_freeze",
    "spalten": 2,
    "fkRaus": [
-    "users"
+    "auth.users"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
@@ -315,7 +315,7 @@
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 6,
+   "sqlTreffer": 20,
    "codeStumm": true
   },
   {
@@ -323,7 +323,7 @@
    "spalten": 16,
    "fkRaus": [
     "abrechnung",
-    "users"
+    "auth.users"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
@@ -382,7 +382,7 @@
     "api-backend/dsgvo/loeschen.js"
    ],
    "module": [],
-   "sqlTreffer": 27,
+   "sqlTreffer": 42,
    "codeStumm": false
   },
   {
@@ -719,7 +719,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 49,
+   "sqlTreffer": 52,
    "codeStumm": false
   },
   {
@@ -11552,7 +11552,7 @@
     "api-backend/billing/api/zuzahlungsforderung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 47,
+   "sqlTreffer": 48,
    "codeStumm": false
   },
   {
@@ -14008,7 +14008,7 @@
     "module/verordnung-nachweis.js"
    ],
    "module": [],
-   "sqlTreffer": 43,
+   "sqlTreffer": 44,
    "codeStumm": false
   },
   {
@@ -16479,7 +16479,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 84,
+   "sqlTreffer": 85,
    "codeStumm": false
   },
   {
@@ -18639,7 +18639,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 327,
+   "sqlTreffer": 334,
    "codeStumm": false
   },
   {
@@ -22180,7 +22180,7 @@
  "codeStumm": [
   {
    "name": "abrechnung_artefakt_freeze",
-   "sql": 6,
+   "sql": 20,
    "status": "aktiv"
   },
   {

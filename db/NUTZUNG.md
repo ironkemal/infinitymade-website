@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-10-08 · 96 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-03), funktionen/INDEX.json (erzeugt 2026-10-08)
+**Erzeugt:** 2026-10-09 · 96 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-09), funktionen/INDEX.json (erzeugt 2026-10-09)
 
 ## Kayıt durumu
 
@@ -17,7 +17,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 
 | Tabelle | SQL-Treffer | Register-Status |
 |---|---|---|
-| `abrechnung_artefakt_freeze` | 6 | aktiv |
+| `abrechnung_artefakt_freeze` | 20 | aktiv |
 | `accommodations` | 39 | fremd |
 | `applications` | 41 | fremd |
 | `datenaustausch_zaehler` | 47 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |

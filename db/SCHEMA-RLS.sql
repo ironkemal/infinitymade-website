@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005194119 prescriptions_clientrechte_0066
--- EXPORTED AT:        2026-10-03T19:36:25.349Z
--- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
+-- LAST MIGRATION:     20261009083226 profiles_anon_spaltenrechte
+-- EXPORTED AT:        2026-10-09T08:35:28.654Z
+-- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1380
+--   table_columns:       1390
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
@@ -22,9 +22,6 @@
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0066 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
--- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
---
 -- CAUTION / HINWEIS:
 -- This document is a deterministic structural documentation snapshot.
 -- It is NOT guaranteed to be standalone restore-executable in one single pass
@@ -35,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_09_30, realtime.messages_2026_10_01, realtime.messages_2026_10_02, realtime.messages_2026_10_03, realtime.messages_2026_10_04, realtime.messages_2026_10_05, realtime.messages_2026_10_06])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_04, realtime.messages_2026_10_05, realtime.messages_2026_10_06, realtime.messages_2026_10_07, realtime.messages_2026_10_08, realtime.messages_2026_10_09, realtime.messages_2026_10_10])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -70,6 +67,23 @@
 --     WITH CHECK: (((bucket_id = 'patient-documents'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (((storage.foldername(name))[1])::uuid IN ( SELECT profiles.owner_id
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id IS NOT NULL)))))))
+--   Policy: "praxis_stempel_owner_delete" ON storage."objects" (cmd: DELETE, permissive: true, roles: [authenticated])
+--     USING: (((bucket_id = 'praxis-stempel'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.role = 'owner'::text))))))
+--   Policy: "praxis_stempel_owner_insert" ON storage."objects" (cmd: INSERT, permissive: true, roles: [authenticated])
+--     WITH CHECK: (((bucket_id = 'praxis-stempel'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.role = 'owner'::text))))))
+--   Policy: "praxis_stempel_owner_update" ON storage."objects" (cmd: UPDATE, permissive: true, roles: [authenticated])
+--     USING: (((bucket_id = 'praxis-stempel'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.role = 'owner'::text))))))
+--     WITH CHECK: (((bucket_id = 'praxis-stempel'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.role = 'owner'::text))))))
+--   Policy: "praxis_stempel_read" ON storage."objects" (cmd: SELECT, permissive: true, roles: [authenticated])
+--     USING: (((bucket_id = 'praxis-stempel'::text) AND ((storage.foldername(name))[1] = (auth_tenant_id())::text)))
 --   Policy: "prescriptions_storage_owner_delete" ON storage."objects" (cmd: DELETE, permissive: true, roles: [PUBLIC])
 --     USING: (((bucket_id = 'prescriptions'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (auth.uid() IN ( SELECT p.id
    FROM profiles p
@@ -281,11 +295,6 @@ ALTER TABLE public.zuzahlung_korrekturen ENABLE ROW LEVEL SECURITY;
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY POLICIES
 -- ----------------------------------------------------------------------------
-CREATE POLICY artefakt_version_owner_select ON public.abrechnung_artefakt_version
-  AS PERMISSIVE
-  FOR SELECT
-  TO authenticated
-  USING ((owner_id = ( SELECT auth.uid() AS uid)));
 CREATE POLICY abrechnung_owner_all ON public.abrechnung
   AS PERMISSIVE
   FOR ALL
@@ -293,6 +302,12 @@ CREATE POLICY abrechnung_owner_all ON public.abrechnung
   USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
    FROM profiles
   WHERE (profiles.owner_id = abrechnung.owner_id)))));
+
+CREATE POLICY artefakt_version_owner_select ON public.abrechnung_artefakt_version
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)));
 
 CREATE POLICY "Abrechnung uebermittlung select scoping" ON public.abrechnung_uebermittlung
   AS PERMISSIVE
@@ -1232,7 +1247,7 @@ CREATE POLICY "Public booking lookup profiles" ON public.profiles
   AS PERMISSIVE
   FOR SELECT
   TO PUBLIC
-  USING (((auth.uid() IS NULL) AND (booking_slug IS NOT NULL) AND (accepts_bookings = true)));
+  USING (((auth.uid() IS NULL) AND (booking_slug IS NOT NULL) AND (accepts_bookings = true) AND (NOT ((role = 'employee'::text) AND (is_active IS FALSE)))));
 
 CREATE POLICY "Rechnungszahlungen insert scoping" ON public.rechnung_zahlungen
   AS PERMISSIVE
@@ -1737,9 +1752,8 @@ BEGIN
   INSERT INTO public.abrechnung_artefakt_freeze (owner_id) VALUES (p_owner) ON CONFLICT DO NOTHING;
   RETURN true;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_owner_freeze(uuid) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_owner_freeze(p_owner uuid) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_owner_unfreeze(p_owner uuid)
  RETURNS boolean
@@ -1752,9 +1766,8 @@ BEGIN
   DELETE FROM public.abrechnung_artefakt_freeze WHERE owner_id = p_owner;
   RETURN true;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_owner_unfreeze(uuid) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_owner_unfreeze(p_owner uuid) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_publish(p_owner uuid, p_id uuid, p_expected_updated_at text, p_patch jsonb)
  RETURNS boolean
@@ -1792,7 +1805,6 @@ BEGIN
     IF NOT (k = ANY (v_allowed)) THEN RAISE EXCEPTION 'artefakt_publish: Patchfeld % nicht erlaubt', k; END IF;
   END LOOP;
   v_new := jsonb_populate_record(v_hdr, p_patch);
-  -- Patch muss die zur Rolle gehoerende Header-Spalte auf genau diese Registry-Zeile setzen.
   v_pfad := CASE v_reg.role WHEN 'dta' THEN v_new.storage_path WHEN 'auftrag' THEN v_new.auftragsdatei_path
     WHEN 'begleit' THEN v_new.begleitzettel_path WHEN 'signed' THEN v_new.signed_storage_path
     ELSE v_new.encrypted_storage_path END;
@@ -1805,7 +1817,6 @@ BEGIN
   IF v_hashfeld AND v_hash IS DISTINCT FROM v_reg.sha256 THEN
     RAISE EXCEPTION 'artefakt_publish: Hash passt nicht zur Registry-Version';
   END IF;
-  -- Alle anderen Pfadfelder im Ergebnis muessen unveraendert oder published-registriert sein.
   IF v_hdr.status IN ('gesendet','accepted','rejected','paid')
      AND (v_new.storage_path IS DISTINCT FROM v_hdr.storage_path
           OR v_new.auftragsdatei_path IS DISTINCT FROM v_hdr.auftragsdatei_path
@@ -1838,9 +1849,8 @@ BEGIN
      SET state = 'published', published_at = now() WHERE id = p_id;
   RETURN true;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_publish(uuid, uuid, text, jsonb) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_publish(p_owner uuid, p_id uuid, p_expected_updated_at text, p_patch jsonb) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_registriere_veroeffentlicht(p_owner uuid, p_abrechnung uuid, p_items jsonb, p_legacy boolean DEFAULT false)
  RETURNS integer
@@ -1891,9 +1901,8 @@ BEGIN
   END LOOP;
   RETURN v_n;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_registriere_veroeffentlicht(uuid, uuid, jsonb, boolean) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_registriere_veroeffentlicht(p_owner uuid, p_abrechnung uuid, p_items jsonb, p_legacy boolean) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text, p_kind text, p_role text, p_sha256 text)
  RETURNS uuid
@@ -1916,9 +1925,8 @@ BEGIN
   RETURNING id INTO v_id;
   RETURN v_id;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_reserve(uuid, uuid, text, text, text, text) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text, p_kind text, p_role text, p_sha256 text) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_retire_claim(p_owner uuid, p_id uuid)
  RETURNS uuid
@@ -1967,9 +1975,8 @@ BEGIN
      SET state = 'retire_pending', claim_token = v_tok, claim_error = NULL WHERE id = p_id;
   RETURN v_tok;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_retire_claim(uuid, uuid) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_retire_claim(p_owner uuid, p_id uuid) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_retire_done(p_owner uuid, p_id uuid, p_token uuid, p_error text DEFAULT NULL::text)
  RETURNS boolean
@@ -1988,9 +1995,8 @@ BEGIN
    WHERE id = p_id AND owner_id = p_owner AND state = 'retire_pending' AND claim_token = p_token;
   RETURN FOUND;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_retire_done(uuid, uuid, uuid, text) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_retire_done(p_owner uuid, p_id uuid, p_token uuid, p_error text) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_upload_done(p_owner uuid, p_id uuid, p_ok boolean)
  RETURNS boolean
@@ -2005,9 +2011,8 @@ BEGIN
    WHERE id = p_id AND owner_id = p_owner AND state = 'reserved' AND upload_state = 'pending';
   RETURN FOUND;
 END $function$
-
 ;
-ALTER FUNCTION public.artefakt_upload_done(uuid, uuid, boolean) OWNER TO postgres;
+ALTER FUNCTION public.artefakt_upload_done(p_owner uuid, p_id uuid, p_ok boolean) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_version_guard()
  RETURNS trigger
@@ -2036,7 +2041,6 @@ BEGIN
   NEW.updated_at := now();
   RETURN NEW;
 END $function$
-
 ;
 ALTER FUNCTION public.artefakt_version_guard() OWNER TO postgres;
 
@@ -2048,62 +2052,8 @@ AS $function$
 BEGIN
   RAISE EXCEPTION 'artefakt_version: Zeilen werden nie geloescht (retire statt delete)';
 END $function$
-
 ;
 ALTER FUNCTION public.artefakt_version_no_delete() OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-DECLARE
-  v_hdr public.abrechnung%ROWTYPE;
-  g jsonb;
-  v_zeilen int := 0;
-  n int;
-BEGIN
-  IF jsonb_typeof(p_fehler) <> 'array' OR jsonb_array_length(p_fehler) = 0 THEN
-    RAISE EXCEPTION 'zaa_fehler_anwenden: leere Fehlerliste';
-  END IF;
-  IF jsonb_typeof(p_gruende) <> 'array' THEN
-    RAISE EXCEPTION 'zaa_fehler_anwenden: gruende muss Array sein';
-  END IF;
-  PERFORM 1 FROM public.profiles WHERE id = p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
-  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Owner nicht aktiv'; END IF;
-  SELECT * INTO v_hdr FROM public.abrechnung WHERE id = p_abrechnung AND owner_id = p_owner FOR UPDATE;
-  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Abrechnung nicht gefunden'; END IF;
-  IF v_hdr.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
-    RETURN jsonb_build_object('konflikt', true);
-  END IF;
-
-  DELETE FROM public.zaa_fehler WHERE abrechnung_id = p_abrechnung;
-  INSERT INTO public.zaa_fehler (abrechnung_id, prescription_id, fehler_code, fehler_text, uebersetzung, loesung_hint, status)
-  SELECT p_abrechnung, NULLIF(e->>'prescription_id','')::uuid, e->>'fehler_code', e->>'fehler_text',
-         e->>'uebersetzung', e->>'loesung_hint', 'offen'
-    FROM jsonb_array_elements(p_fehler) e;
-
-  UPDATE public.abrechnung
-     SET status = 'rejected', rejected_count = jsonb_array_length(p_gruende), zaa_uploaded_at = now()
-   WHERE id = p_abrechnung;
-
-  FOR g IN SELECT * FROM jsonb_array_elements(p_gruende) LOOP
-    UPDATE public.prescriptions
-       SET abrechnung_status = p_vord_status, absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
-     WHERE id = (g->>'prescription_id')::uuid AND owner_id = p_owner;
-    UPDATE public.abrechnung_zeile
-       SET status = 'abgesetzt', absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
-     WHERE abrechnung_id = p_abrechnung AND prescription_id = (g->>'prescription_id')::uuid;
-    GET DIAGNOSTICS n = ROW_COUNT;
-    v_zeilen := v_zeilen + n;
-  END LOOP;
-
-  RETURN jsonb_build_object('konflikt', false, 'zeilen', v_zeilen, 'fehler', jsonb_array_length(p_fehler));
-END $function$
-
-;
-ALTER FUNCTION public.zaa_fehler_anwenden(uuid, uuid, text, jsonb, jsonb, text, date) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.audit_write_log()
  RETURNS trigger
@@ -3784,6 +3734,602 @@ $function$
 ;
 ALTER FUNCTION public.profiles_privilegierte_spalten_schuetzen() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.pruefe_abrechnung_clientrechte()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF current_user NOT IN ('authenticated', 'anon') THEN
+    RETURN COALESCE(NEW, OLD);   -- Backend (service_role/postgres/supabase_admin): unveraendert
+  END IF;
+  IF TG_OP IN ('INSERT', 'DELETE') THEN
+    RAISE EXCEPTION 'abrechnung: % nur ueber das Backend' , TG_OP USING ERRCODE = '42501';
+  END IF;
+  -- UPDATE: alles ausser status/updated_at muss unveraendert bleiben ...
+  IF (to_jsonb(NEW) - 'status' - 'updated_at') IS DISTINCT FROM (to_jsonb(OLD) - 'status' - 'updated_at') THEN
+    RAISE EXCEPTION 'abrechnung: Datei-, Hash- und Kopffelder nur ueber das Backend' USING ERRCODE = '42501';
+  END IF;
+  -- ... und der Status darf nur von erstellt auf heruntergeladen springen.
+  IF NEW.status IS DISTINCT FROM OLD.status
+     AND NOT (OLD.status = 'erstellt' AND NEW.status = 'heruntergeladen') THEN
+    RAISE EXCEPTION 'abrechnung: Statuswechsel % -> % nur ueber das Backend', OLD.status, NEW.status USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $function$
+;
+ALTER FUNCTION public.pruefe_abrechnung_clientrechte() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.pruefe_abrechnung_zuzahlungsforderung()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_owner_id uuid;
+  v_business_id uuid;
+  v_abrechnung_id uuid;
+  v_herkunft text;
+  v_original_vkz text;
+  v_parent_owner_id uuid;
+  v_parent_business_id uuid;
+  v_prescription_id uuid;
+  v_leistungen jsonb;
+  v_daten jsonb;
+  v_position jsonb;
+  v_seen integer[] := ARRAY[]::integer[];
+  v_index integer;
+  v_proof_date date;
+  v_original_kostentraeger_ik text;
+  v_patient_id uuid;
+  v_proof jsonb;
+  v_gueltig_ab date;
+  v_gueltig_bis date;
+  v_geprueft_am date;
+  v_geprueft_zeitpunkt timestamptz;
+  v_status_wechsel_datum date;
+  v_za_datum date;
+  v_versand_datum date;
+  v_mahnung_faelligkeit date;
+  v_zeile_status text;
+BEGIN
+  -- SECURITY INVOKER keeps current_user equal to effective PostgREST role.
+  -- Do not use SECURITY DEFINER or trust user-editable request metadata.
+  -- VKZ03 operations require backend execution (service_role or postgres).
+  -- Existing abrechnung_owner_all allows authenticated tenant users to write
+  -- ordinary headers, but VKZ03 reservations, updates, and deletes must be
+  -- restricted to backend roles to prevent unauthorized status/totals/storage tampering.
+  IF (TG_OP = 'DELETE' AND OLD.verarbeitungskennzeichen = '03')
+     OR (TG_OP = 'UPDATE' AND (OLD.verarbeitungskennzeichen = '03' OR NEW.verarbeitungskennzeichen = '03'))
+     OR (TG_OP = 'INSERT' AND NEW.verarbeitungskennzeichen = '03') THEN
+    IF current_user IN ('authenticated', 'anon') THEN
+      RAISE EXCEPTION 'VKZ03 operations require backend execution'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.verarbeitungskennzeichen = '03' THEN
+      RAISE EXCEPTION 'VKZ03 claim reservation must be retained; retry the same claim'
+        USING ERRCODE = '23514';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  -- Never relabel historical files or change established claim identity.
+  -- NULL legacy headers also cannot be silently converted to VKZ03.
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.verarbeitungskennzeichen IS DISTINCT FROM OLD.verarbeitungskennzeichen
+       OR NEW.zuzahlungsforderung_ursprung_id
+          IS DISTINCT FROM OLD.zuzahlungsforderung_ursprung_id
+       OR NEW.zuzahlungsforderung_daten
+          IS DISTINCT FROM OLD.zuzahlungsforderung_daten THEN
+      RAISE EXCEPTION 'Abrechnung processing code and source linkage are immutable'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF OLD.verarbeitungskennzeichen = '03' THEN
+      IF (NEW.owner_id IS DISTINCT FROM OLD.owner_id
+          OR NEW.business_id IS DISTINCT FROM OLD.business_id
+          OR NEW.kostentraeger_ik IS DISTINCT FROM OLD.kostentraeger_ik
+          OR NEW.id IS DISTINCT FROM OLD.id) THEN
+        RAISE EXCEPTION 'VKZ03 claim tenant, location and identity are immutable'
+          USING ERRCODE = '23514';
+      END IF;
+
+      -- Finalized claim rewind protection:
+      -- Presence of immutable claim snapshot in abrechnung_zeile is the durable completion marker.
+      IF EXISTS (SELECT 1 FROM public.abrechnung_zeile z WHERE z.abrechnung_id = OLD.id) THEN
+        IF NEW.status = 'verworfen' THEN
+          RAISE EXCEPTION 'VKZ03 finalized claim cannot be discarded (verworfen)'
+            USING ERRCODE = '23514';
+        END IF;
+
+        IF OLD.status IS DISTINCT FROM 'erstellt' AND NEW.status = 'erstellt' THEN
+          RAISE EXCEPTION 'VKZ03 finalized claim cannot rewind to erstellt'
+            USING ERRCODE = '23514';
+        END IF;
+      END IF;
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+  IF NEW.verarbeitungskennzeichen IS DISTINCT FROM '03' THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT z.owner_id, z.business_id, z.abrechnung_id, z.herkunft,
+         a.verarbeitungskennzeichen, z.prescription_id, z.leistungen,
+         a.owner_id, a.business_id, a.kostentraeger_ik, z.status
+    INTO v_owner_id, v_business_id, v_abrechnung_id, v_herkunft, v_original_vkz,
+         v_prescription_id, v_leistungen, v_parent_owner_id, v_parent_business_id,
+         v_original_kostentraeger_ik, v_zeile_status
+    FROM public.abrechnung_zeile z
+    JOIN public.abrechnung a ON a.id = z.abrechnung_id
+   WHERE z.id = NEW.zuzahlungsforderung_ursprung_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'VKZ03 original claim line not found or not accessible'
+      USING ERRCODE = '23503';
+  END IF;
+
+  IF v_parent_owner_id IS DISTINCT FROM v_owner_id
+     OR v_parent_business_id IS DISTINCT FROM v_business_id THEN
+    RAISE EXCEPTION 'VKZ03 original header and line tenant or location mismatch'
+      USING ERRCODE = '23514';
+  END IF;
+
+  -- Preserve original location identity even when NULL: the standard trigger
+  -- has just supplied today's default, which is not historical evidence.
+  IF TG_OP = 'INSERT' AND v_business_id IS NULL THEN
+    NEW.business_id := NULL;
+  END IF;
+
+  IF NEW.owner_id IS DISTINCT FROM v_owner_id
+     OR NEW.business_id IS DISTINCT FROM v_business_id THEN
+    RAISE EXCEPTION 'VKZ03 original claim must belong to same tenant and location'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NEW.kostentraeger_ik IS DISTINCT FROM v_original_kostentraeger_ik THEN
+    RAISE EXCEPTION 'VKZ03 kostentraeger_ik must match original claim header'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF v_abrechnung_id = NEW.id OR v_herkunft IS DISTINCT FROM 'einreichung'
+     OR v_zeile_status IS DISTINCT FROM 'akzeptiert'
+     OR (v_original_vkz IS NOT NULL AND v_original_vkz <> '01') THEN
+    RAISE EXCEPTION 'VKZ03 requires a genuine original VKZ01 submission'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF v_prescription_id IS NOT NULL THEN
+    SELECT p.patient_id
+      INTO v_patient_id
+      FROM public.prescriptions p
+     WHERE p.id = v_prescription_id
+       AND p.owner_id = NEW.owner_id;
+  END IF;
+
+  -- Reservation proof metadata validation (INSERT only).
+  v_daten := NEW.zuzahlungsforderung_daten;
+  IF jsonb_typeof(v_daten) IS DISTINCT FROM 'object'
+     OR (v_daten - ARRAY['grund', 'nachweisDatum', 'positionIndices',
+                         'bestaetigt', 'mahnungId', 'nachweisDokumentId',
+                         'nachweisPruefung']) <> '{}'::jsonb
+     OR jsonb_typeof(v_daten->'grund') IS DISTINCT FROM 'string'
+     OR (v_daten->>'grund') NOT IN ('1', '2', '5')
+     OR v_daten->'bestaetigt' IS DISTINCT FROM 'true'::jsonb
+     OR jsonb_typeof(v_daten->'nachweisDatum') IS DISTINCT FROM 'string'
+     OR (v_daten->>'nachweisDatum') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+     OR jsonb_typeof(v_daten->'positionIndices') IS DISTINCT FROM 'array'
+     OR ((v_daten->>'grund') = '2' AND NOT (v_daten ? 'mahnungId'))
+     OR NOT (v_daten ? 'nachweisPruefung') THEN
+    RAISE EXCEPTION 'Invalid VKZ03 frozen intent metadata'
+      USING ERRCODE = '23514';
+  END IF;
+
+  BEGIN
+    v_proof_date := (v_daten->>'nachweisDatum')::date;
+  EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof date' USING ERRCODE = '23514';
+  END;
+  IF v_proof_date > (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+    RAISE EXCEPTION 'VKZ03 proof date must not be in future'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_array_length(v_daten->'positionIndices') = 0
+     OR jsonb_typeof(v_leistungen) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'VKZ03 requires original session indices'
+      USING ERRCODE = '23514';
+  END IF;
+  FOR v_position IN SELECT value FROM jsonb_array_elements(v_daten->'positionIndices') LOOP
+    IF jsonb_typeof(v_position) <> 'number'
+       OR (v_position #>> '{}') !~ '^(0|[1-9][0-9]{0,5})$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 original session index' USING ERRCODE = '23514';
+    END IF;
+    v_index := (v_position #>> '{}')::integer;
+    IF v_index >= jsonb_array_length(v_leistungen) OR v_index = ANY(v_seen) THEN
+      RAISE EXCEPTION 'VKZ03 original session index missing or duplicated'
+        USING ERRCODE = '23514';
+    END IF;
+    v_seen := array_append(v_seen, v_index);
+  END LOOP;
+
+  IF v_daten ? 'nachweisDokumentId' THEN
+    IF jsonb_typeof(v_daten->'nachweisDokumentId') IS DISTINCT FROM 'string'
+       OR (v_daten->>'nachweisDokumentId') !~ '^[1-9][0-9]{0,17}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof document identifier' USING ERRCODE = '23514';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM public.prescription_documents d
+                    WHERE d.id = (v_daten->>'nachweisDokumentId')::bigint
+                      AND d.owner_id = NEW.owner_id
+                      AND d.prescription_id = v_prescription_id
+                      AND (d.business_id IS NULL
+                           OR d.business_id = v_business_id)
+                      AND (d.patient_id IS NULL
+                           OR d.patient_id = v_patient_id)) THEN
+      RAISE EXCEPTION 'VKZ03 proof document must belong to original prescription'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  v_proof := v_daten->'nachweisPruefung';
+  IF jsonb_typeof(v_proof) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof object' USING ERRCODE = '23514';
+  END IF;
+
+  IF (v_daten->>'grund') = '1' THEN
+    IF (v_proof - ARRAY['art', 'referenz', 'gueltigAb', 'gueltigBis',
+                        'geprueftAm', 'geprueftZeitpunkt', 'prueferId',
+                        'patientId', 'kostentraegerIk', 'bestaetigt']) <> '{}'::jsonb
+       OR NOT (v_proof ? 'art' AND v_proof ? 'referenz' AND v_proof ? 'gueltigAb'
+               AND v_proof ? 'gueltigBis' AND v_proof ? 'geprueftAm'
+               AND v_proof ? 'geprueftZeitpunkt' AND v_proof ? 'prueferId'
+               AND v_proof ? 'patientId' AND v_proof ? 'kostentraegerIk'
+               AND v_proof ? 'bestaetigt') THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof metadata keys for grund 1'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF (v_proof->>'art') IS DISTINCT FROM 'belastungsgrenze62' THEN
+      RAISE EXCEPTION 'VKZ03 proof art must be belastungsgrenze62 for grund 1'
+        USING ERRCODE = '23514';
+    END IF;
+
+  ELSIF (v_daten->>'grund') = '2' THEN
+    IF (v_proof - ARRAY['art', 'referenz', 'geprueftAm', 'geprueftZeitpunkt',
+                        'prueferId', 'patientId', 'kostentraegerIk', 'bestaetigt',
+                        'versandDatum', 'versandArt', 'nachweisBeigefuegtBestaetigt',
+                        'erfolgloserEinzugBestaetigt']) <> '{}'::jsonb
+       OR NOT (v_proof ? 'art' AND v_proof ? 'referenz' AND v_proof ? 'geprueftAm'
+               AND v_proof ? 'geprueftZeitpunkt' AND v_proof ? 'prueferId'
+               AND v_proof ? 'patientId' AND v_proof ? 'kostentraegerIk'
+               AND v_proof ? 'bestaetigt' AND v_proof ? 'versandDatum'
+               AND v_proof ? 'versandArt' AND v_proof ? 'nachweisBeigefuegtBestaetigt'
+               AND v_proof ? 'erfolgloserEinzugBestaetigt') THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof metadata keys for grund 2'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF (v_proof->>'art') IS DISTINCT FROM 'zahlungsaufforderung43c' THEN
+      RAISE EXCEPTION 'VKZ03 proof art must be zahlungsaufforderung43c for grund 2'
+        USING ERRCODE = '23514';
+    END IF;
+
+  ELSIF (v_daten->>'grund') = '5' THEN
+    IF (v_proof - ARRAY['art', 'referenz', 'gueltigAb', 'gueltigBis',
+                        'geprueftAm', 'geprueftZeitpunkt', 'prueferId',
+                        'patientId', 'kostentraegerIk', 'bestaetigt',
+                        'statusWechselDatum', 'zahlungsaufforderungReferenz',
+                        'zahlungsaufforderungDatum', 'originalAbzugBestaetigt']) <> '{}'::jsonb
+       OR NOT (v_proof ? 'art' AND v_proof ? 'referenz' AND v_proof ? 'gueltigAb'
+               AND v_proof ? 'gueltigBis' AND v_proof ? 'geprueftAm'
+               AND v_proof ? 'geprueftZeitpunkt' AND v_proof ? 'prueferId'
+               AND v_proof ? 'patientId' AND v_proof ? 'kostentraegerIk'
+               AND v_proof ? 'bestaetigt' AND v_proof ? 'statusWechselDatum'
+               AND v_proof ? 'zahlungsaufforderungReferenz'
+               AND v_proof ? 'zahlungsaufforderungDatum'
+               AND v_proof ? 'originalAbzugBestaetigt') THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof metadata keys for grund 5'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF (v_proof->>'art') IS DISTINCT FROM 'statuswechsel_jahreswechsel' THEN
+      RAISE EXCEPTION 'VKZ03 proof art must be statuswechsel_jahreswechsel for grund 5'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  IF jsonb_typeof(v_proof->'referenz') IS DISTINCT FROM 'string'
+     OR (v_proof->>'referenz') = ''
+     OR length(v_proof->>'referenz') > 240
+     OR btrim(v_proof->>'referenz') <> (v_proof->>'referenz') THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof reference'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_typeof(v_proof->'geprueftAm') IS DISTINCT FROM 'string'
+     OR (v_proof->>'geprueftAm') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof geprueftAm date format'
+      USING ERRCODE = '23514';
+  END IF;
+
+  BEGIN
+    v_geprueft_am := (v_proof->>'geprueftAm')::date;
+  EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof geprueftAm date' USING ERRCODE = '23514';
+  END;
+
+  IF v_geprueft_am > (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+    RAISE EXCEPTION 'VKZ03 proof geprueftAm date must not be in future'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_typeof(v_proof->'geprueftZeitpunkt') IS DISTINCT FROM 'string'
+     OR (v_proof->>'geprueftZeitpunkt') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$' THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof inspection timestamp (strict UTC required)'
+      USING ERRCODE = '23514';
+  END IF;
+
+  BEGIN
+    v_geprueft_zeitpunkt := (v_proof->>'geprueftZeitpunkt')::timestamptz;
+  EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+    RAISE EXCEPTION 'Invalid VKZ03 proof inspection timestamp' USING ERRCODE = '23514';
+  END;
+
+  IF v_geprueft_zeitpunkt > CURRENT_TIMESTAMP THEN
+    RAISE EXCEPTION 'VKZ03 proof inspection timestamp must not be in future'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF (v_geprueft_zeitpunkt AT TIME ZONE 'Europe/Berlin')::date <> v_geprueft_am THEN
+    RAISE EXCEPTION 'VKZ03 proof inspection timestamp must match geprueftAm date in Europe/Berlin'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_typeof(v_proof->'prueferId') IS DISTINCT FROM 'string'
+     OR (v_proof->>'prueferId') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     OR (v_proof->>'prueferId')::uuid IS DISTINCT FROM NEW.owner_id THEN
+    RAISE EXCEPTION 'VKZ03 proof prueferId must match owner'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_typeof(v_proof->'patientId') IS DISTINCT FROM 'string'
+     OR (v_proof->>'patientId') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     OR v_patient_id IS NULL
+     OR (v_proof->>'patientId')::uuid IS DISTINCT FROM v_patient_id THEN
+    RAISE EXCEPTION 'VKZ03 proof patientId must match original prescription'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF jsonb_typeof(v_proof->'kostentraegerIk') IS DISTINCT FROM 'string'
+     OR (v_proof->>'kostentraegerIk') !~ '^[0-9]{9}$'
+     OR (v_proof->>'kostentraegerIk') IS DISTINCT FROM v_original_kostentraeger_ik THEN
+    RAISE EXCEPTION 'VKZ03 proof kostentraegerIk must match original claim header IK'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF v_proof->'bestaetigt' IS DISTINCT FROM 'true'::jsonb THEN
+    RAISE EXCEPTION 'VKZ03 proof confirmation must be strict boolean true'
+      USING ERRCODE = '23514';
+  END IF;
+
+  -- Period validation applies ONLY to grounds 1 and 5 (ground 2 has no gueltigAb/gueltigBis)
+  IF (v_daten->>'grund') IN ('1', '5') THEN
+    IF jsonb_typeof(v_proof->'gueltigAb') IS DISTINCT FROM 'string'
+       OR (v_proof->>'gueltigAb') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+       OR jsonb_typeof(v_proof->'gueltigBis') IS DISTINCT FROM 'string'
+       OR (v_proof->>'gueltigBis') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof validity dates format'
+        USING ERRCODE = '23514';
+    END IF;
+
+    BEGIN
+      v_gueltig_ab := (v_proof->>'gueltigAb')::date;
+    EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof gueltigAb date' USING ERRCODE = '23514';
+    END;
+
+    BEGIN
+      v_gueltig_bis := (v_proof->>'gueltigBis')::date;
+    EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+      RAISE EXCEPTION 'Invalid VKZ03 proof gueltigBis date' USING ERRCODE = '23514';
+    END;
+
+    IF v_gueltig_bis < v_gueltig_ab THEN
+      RAISE EXCEPTION 'VKZ03 proof validity period end must be on or after start'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  IF (v_daten->>'grund') = '5' THEN
+    IF jsonb_typeof(v_proof->'statusWechselDatum') IS DISTINCT FROM 'string'
+       OR (v_proof->>'statusWechselDatum') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 status change date format'
+        USING ERRCODE = '23514';
+    END IF;
+
+    BEGIN
+      v_status_wechsel_datum := (v_proof->>'statusWechselDatum')::date;
+    EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+      RAISE EXCEPTION 'Invalid VKZ03 status change date' USING ERRCODE = '23514';
+    END;
+
+    IF v_status_wechsel_datum > (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+      RAISE EXCEPTION 'VKZ03 status change date must not be in future'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_status_wechsel_datum <= v_gueltig_bis THEN
+      RAISE EXCEPTION 'VKZ03 status change date must be after exemption period end'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF jsonb_typeof(v_proof->'zahlungsaufforderungReferenz') IS DISTINCT FROM 'string'
+       OR (v_proof->>'zahlungsaufforderungReferenz') = ''
+       OR length(v_proof->>'zahlungsaufforderungReferenz') > 240
+       OR btrim(v_proof->>'zahlungsaufforderungReferenz') <> (v_proof->>'zahlungsaufforderungReferenz') THEN
+      RAISE EXCEPTION 'Invalid VKZ03 payment request reference'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF jsonb_typeof(v_proof->'zahlungsaufforderungDatum') IS DISTINCT FROM 'string'
+       OR (v_proof->>'zahlungsaufforderungDatum') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 payment request date format'
+        USING ERRCODE = '23514';
+    END IF;
+
+    BEGIN
+      v_za_datum := (v_proof->>'zahlungsaufforderungDatum')::date;
+    EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+      RAISE EXCEPTION 'Invalid VKZ03 payment request date' USING ERRCODE = '23514';
+    END;
+
+    IF v_za_datum > (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+      RAISE EXCEPTION 'VKZ03 payment request date must not be in future'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_za_datum > v_proof_date THEN
+      RAISE EXCEPTION 'VKZ03 payment request date must be on or before proof date'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_za_datum < v_status_wechsel_datum THEN
+      RAISE EXCEPTION 'VKZ03 payment request date must be on or after status change date'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_proof->'originalAbzugBestaetigt' IS DISTINCT FROM 'true'::jsonb THEN
+      RAISE EXCEPTION 'VKZ03 original deduction confirmation must be strict boolean true'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  IF (v_daten->>'grund') = '2' THEN
+    IF jsonb_typeof(v_proof->'versandDatum') IS DISTINCT FROM 'string'
+       OR (v_proof->>'versandDatum') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 dispatch date format'
+        USING ERRCODE = '23514';
+    END IF;
+
+    BEGIN
+      v_versand_datum := (v_proof->>'versandDatum')::date;
+    EXCEPTION WHEN invalid_datetime_format OR datetime_field_overflow THEN
+      RAISE EXCEPTION 'Invalid VKZ03 dispatch date' USING ERRCODE = '23514';
+    END;
+
+    IF v_versand_datum > (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+      RAISE EXCEPTION 'VKZ03 dispatch date must not be in future'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_versand_datum <> v_proof_date OR v_versand_datum > v_geprueft_am THEN
+      RAISE EXCEPTION 'VKZ03 dispatch date must match proof date'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF jsonb_typeof(v_proof->'versandArt') IS DISTINCT FROM 'string'
+       OR (v_proof->>'versandArt') NOT IN ('post', 'elektronisch', 'persoenlich') THEN
+      RAISE EXCEPTION 'Invalid VKZ03 dispatch type'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_proof->'nachweisBeigefuegtBestaetigt' IS DISTINCT FROM 'true'::jsonb THEN
+      RAISE EXCEPTION 'VKZ03 proof attached confirmation must be strict boolean true'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_proof->'erfolgloserEinzugBestaetigt' IS DISTINCT FROM 'true'::jsonb THEN
+      RAISE EXCEPTION 'VKZ03 unsuccessful collection confirmation must be strict boolean true'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  IF v_daten ? 'mahnungId' THEN
+    IF jsonb_typeof(v_daten->'mahnungId') IS DISTINCT FROM 'string'
+       OR (v_daten->>'mahnungId') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+      RAISE EXCEPTION 'Invalid VKZ03 notice identifier' USING ERRCODE = '23514';
+    END IF;
+
+    SELECT COALESCE(m.neue_faelligkeit, m.original_faelligkeit)
+      INTO v_mahnung_faelligkeit
+      FROM public.mahnungen m
+     WHERE m.id = (v_daten->>'mahnungId')::uuid
+       AND m.owner_id = NEW.owner_id
+       AND m.prescription_id = v_prescription_id
+       AND m.patient_id = v_patient_id
+       AND m.ausfallrechnung_id IS NULL
+       AND m.status = 'offen';
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'VKZ03 notice must belong to original prescription'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF v_mahnung_faelligkeit IS NULL
+       OR v_mahnung_faelligkeit >= (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Berlin')::date THEN
+      RAISE EXCEPTION 'VKZ03 notice deadline has not expired'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF (v_daten->>'grund') = '2' AND v_versand_datum > v_mahnung_faelligkeit THEN
+      RAISE EXCEPTION 'VKZ03 dispatch date must be on or before notice deadline'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.pruefe_abrechnung_zuzahlungsforderung() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.pruefe_booking_leistung_owner()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE b_owner uuid;
+BEGIN
+  SELECT owner_id INTO b_owner FROM public.bookings WHERE id = NEW.booking_id;
+  IF b_owner IS DISTINCT FROM NEW.owner_id THEN
+    RAISE EXCEPTION 'Termin gehoert einem anderen Inhaber' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $function$
+;
+ALTER FUNCTION public.pruefe_booking_leistung_owner() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.pruefe_booking_verordnung_owner()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_owner uuid;
+BEGIN
+  IF NEW.verordnung_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT owner_id INTO v_owner FROM prescriptions WHERE id = NEW.verordnung_id;
+
+  IF v_owner IS NULL OR v_owner IS DISTINCT FROM NEW.owner_id THEN
+    RAISE EXCEPTION 'Diese Verordnung gehoert zu einer anderen Praxis.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.pruefe_booking_verordnung_owner() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.pruefe_prescriptions_clientrechte()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3855,49 +4401,7 @@ BEGIN
   RETURN NEW;
 END $function$
 ;
-ALTER FUNCTION public.pruefe_abrechnung_zuzahlungsforderung() OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION public.pruefe_booking_leistung_owner()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE b_owner uuid;
-BEGIN
-  SELECT owner_id INTO b_owner FROM public.bookings WHERE id = NEW.booking_id;
-  IF b_owner IS DISTINCT FROM NEW.owner_id THEN
-    RAISE EXCEPTION 'Termin gehoert einem anderen Inhaber' USING ERRCODE = '42501';
-  END IF;
-  RETURN NEW;
-END $function$
-;
-ALTER FUNCTION public.pruefe_booking_leistung_owner() OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION public.pruefe_booking_verordnung_owner()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE v_owner uuid;
-BEGIN
-  IF NEW.verordnung_id IS NULL THEN
-    RETURN NEW;
-  END IF;
-
-  SELECT owner_id INTO v_owner FROM prescriptions WHERE id = NEW.verordnung_id;
-
-  IF v_owner IS NULL OR v_owner IS DISTINCT FROM NEW.owner_id THEN
-    RAISE EXCEPTION 'Diese Verordnung gehoert zu einer anderen Praxis.'
-      USING ERRCODE = '42501';
-  END IF;
-
-  RETURN NEW;
-END;
-$function$
-;
-ALTER FUNCTION public.pruefe_booking_verordnung_owner() OWNER TO postgres;
+ALTER FUNCTION public.pruefe_prescriptions_clientrechte() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.pruefe_rechnung_zahlung_owner()
  RETURNS trigger
@@ -4541,7 +5045,6 @@ BEGIN
   END IF;
   RETURN COALESCE(NEW, OLD);
 END $function$
-
 ;
 ALTER FUNCTION public.sperre_clientschreibzugriff() OWNER TO postgres;
 
@@ -4775,25 +5278,84 @@ AS $function$ SELECT jsonb_build_object('current_user', current_user, 'role', cu
 ;
 ALTER FUNCTION public.whoami() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_hdr public.abrechnung%ROWTYPE;
+  g jsonb;
+  v_zeilen int := 0;
+  n int;
+BEGIN
+  IF jsonb_typeof(p_fehler) <> 'array' OR jsonb_array_length(p_fehler) = 0 THEN
+    RAISE EXCEPTION 'zaa_fehler_anwenden: leere Fehlerliste';
+  END IF;
+  IF jsonb_typeof(p_gruende) <> 'array' THEN
+    RAISE EXCEPTION 'zaa_fehler_anwenden: gruende muss Array sein';
+  END IF;
+  PERFORM 1 FROM public.profiles WHERE id = p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Owner nicht aktiv'; END IF;
+  SELECT * INTO v_hdr FROM public.abrechnung WHERE id = p_abrechnung AND owner_id = p_owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Abrechnung nicht gefunden'; END IF;
+  IF v_hdr.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
+    RETURN jsonb_build_object('konflikt', true);
+  END IF;
+
+  DELETE FROM public.zaa_fehler WHERE abrechnung_id = p_abrechnung;
+  INSERT INTO public.zaa_fehler (abrechnung_id, prescription_id, fehler_code, fehler_text, uebersetzung, loesung_hint, status)
+  SELECT p_abrechnung, NULLIF(e->>'prescription_id','')::uuid, e->>'fehler_code', e->>'fehler_text',
+         e->>'uebersetzung', e->>'loesung_hint', 'offen'
+    FROM jsonb_array_elements(p_fehler) e;
+
+  UPDATE public.abrechnung
+     SET status = 'rejected', rejected_count = jsonb_array_length(p_gruende), zaa_uploaded_at = now()
+   WHERE id = p_abrechnung;
+
+  FOR g IN SELECT * FROM jsonb_array_elements(p_gruende) LOOP
+    UPDATE public.prescriptions
+       SET abrechnung_status = p_vord_status, absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
+     WHERE id = (g->>'prescription_id')::uuid AND owner_id = p_owner;
+    UPDATE public.abrechnung_zeile
+       SET status = 'abgesetzt', absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
+     WHERE abrechnung_id = p_abrechnung AND prescription_id = (g->>'prescription_id')::uuid;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    v_zeilen := v_zeilen + n;
+  END LOOP;
+
+  RETURN jsonb_build_object('konflikt', false, 'zeilen', v_zeilen, 'fehler', jsonb_array_length(p_fehler));
+END $function$
+;
+ALTER FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date) OWNER TO postgres;
+
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
-CREATE TRIGGER trg_a_prescriptions_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION pruefe_prescriptions_clientrechte();
-CREATE TRIGGER trg_a_abrechnung_zeile_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
-CREATE TRIGGER trg_a_abrechnung_zahlung_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
-CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON abrechnung FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER trg_z_pruefe_abrechnung_zuzahlungsforderung BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_zuzahlungsforderung();
 
+CREATE TRIGGER artefakt_version_guard_trg BEFORE UPDATE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_guard();
+
+CREATE TRIGGER artefakt_version_no_delete_trg BEFORE DELETE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_no_delete();
+
+CREATE TRIGGER artefakt_version_no_truncate_trg BEFORE TRUNCATE ON abrechnung_artefakt_version FOR EACH STATEMENT EXECUTE FUNCTION artefakt_version_no_delete();
+
 CREATE TRIGGER trg_abrechnung_uebermittlung_festschreibung BEFORE DELETE OR UPDATE ON abrechnung_uebermittlung FOR EACH ROW EXECUTE FUNCTION fn_abrechnung_uebermittlung_festschreibung();
+
+CREATE TRIGGER trg_a_abrechnung_zahlung_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
 CREATE TRIGGER trg_abrechnung_zahlung_status AFTER INSERT ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION fn_abrechnung_zahlung_status();
 
 CREATE TRIGGER trg_prevent_abrechnung_zahlung_mod BEFORE DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION prevent_abrechnung_zahlung_mod();
+
+CREATE TRIGGER trg_a_abrechnung_zeile_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
 CREATE TRIGGER trg_abrechnung_zeile_festschreibung BEFORE DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION fn_abrechnung_zeile_festschreibung();
 
@@ -4804,9 +5366,6 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON aerzte FOR EACH ROW EXECUTE 
 CREATE TRIGGER anamnese_unveraenderlich_trg BEFORE UPDATE ON anamnese FOR EACH ROW EXECUTE FUNCTION anamnese_unveraenderlich();
 
 CREATE TRIGGER anamnese_versionieren_trg BEFORE INSERT ON anamnese FOR EACH ROW EXECUTE FUNCTION anamnese_versionieren();
-CREATE TRIGGER artefakt_version_guard_trg BEFORE UPDATE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_guard();
-CREATE TRIGGER artefakt_version_no_delete_trg BEFORE DELETE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_no_delete();
-CREATE TRIGGER artefakt_version_no_truncate_trg BEFORE TRUNCATE ON abrechnung_artefakt_version FOR EACH STATEMENT EXECUTE FUNCTION artefakt_version_no_delete();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON anamnese FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -4864,7 +5423,7 @@ CREATE TRIGGER trg_feedback_telegram AFTER INSERT ON feedbacks FOR EACH ROW EXEC
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON feedbacks FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
-CREATE TRIGGER trg_invoice_festschreibung BEFORE UPDATE OR DELETE ON invoices FOR EACH ROW EXECUTE FUNCTION invoice_festschreibung();
+CREATE TRIGGER trg_invoice_festschreibung BEFORE DELETE OR UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION invoice_festschreibung();
 
 CREATE TRIGGER trg_invoice_nummer BEFORE INSERT OR UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION set_invoice_nummer();
 
@@ -4903,6 +5462,8 @@ CREATE TRIGGER codex_192_session_booking_guard BEFORE INSERT OR UPDATE OF bookin
 CREATE TRIGGER prescriptions_mandant_pruefen BEFORE INSERT OR UPDATE OF owner_id, patient_id, arzt_id ON prescriptions FOR EACH ROW EXECUTE FUNCTION prescriptions_mandant_pruefen();
 
 CREATE TRIGGER prescriptions_updated_at BEFORE UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION trg_prescriptions_updated_at();
+
+CREATE TRIGGER trg_a_prescriptions_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION pruefe_prescriptions_clientrechte();
 
 CREATE TRIGGER trg_audit_write_prescriptions AFTER INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION audit_write_log();
 
@@ -4950,6 +5511,8 @@ CREATE TRIGGER trg_warteliste_updated_at BEFORE UPDATE ON warteliste FOR EACH RO
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON working_hours FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
+
 CREATE TRIGGER trg_befreiung_backfill_prescriptions AFTER INSERT OR DELETE OR UPDATE ON zuzahlung_befreiung FOR EACH ROW EXECUTE FUNCTION fn_befreiung_backfill_prescriptions();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON zuzahlung_befreiung FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -4978,11 +5541,15 @@ CREATE INDEX idx_abrechnung_owner_status ON abrechnung USING btree (owner_id, st
 
 -- Index abrechnung_artefakt_freeze_pkey ON public.abrechnung_artefakt_freeze is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX abrechnung_artefakt_freeze_pkey ON abrechnung_artefakt_freeze USING btree (owner_id);
+
 -- Index abrechnung_artefakt_version_pkey ON public.abrechnung_artefakt_version is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX abrechnung_artefakt_version_pkey ON abrechnung_artefakt_version USING btree (id);
+
 -- Index artefakt_pfad_eindeutig ON public.abrechnung_artefakt_version is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX artefakt_pfad_eindeutig ON abrechnung_artefakt_version USING btree (storage_path);
+
 CREATE INDEX artefakt_version_abrechnung_idx ON abrechnung_artefakt_version USING btree (owner_id, abrechnung_id, state);
+
 CREATE INDEX abr_uebermittlung_abrechnung_idx ON abrechnung_uebermittlung USING btree (abrechnung_id) WHERE abrechnung_id IS NOT NULL;
 
 CREATE INDEX abr_uebermittlung_owner_zeit_idx ON abrechnung_uebermittlung USING btree (owner_id, begonnen_am DESC);
@@ -5765,6 +6332,17 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACCESS CONTROL LISTS (ACL) & DEFAULT ACLS
 -- ----------------------------------------------------------------------------
 -- Structured documentation rows of all effective and default privileges.
+-- ACL: type=COLUMN schema=public object=profiles column=accepts_bookings grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=anrede grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=avatar_url grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=booking_slug grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=business_name grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=id grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=is_active grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=owner_first_name grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=owner_id grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=owner_last_name grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=profiles column=role grantee=anon privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=_postgis_deprecate(oldname text, newname text, version text) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=_postgis_deprecate(oldname text, newname text, version text) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=_postgis_deprecate(oldname text, newname text, version text) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -6073,6 +6651,32 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=anamnese_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_owner_unfreeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_owner_unfreeze(p_owner uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_publish(p_owner uuid, p_id uuid, p_expected_updated_at column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_publish(p_owner uuid, p_id uuid, p_expected_updated_at column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_registriere_veroeffentlicht(p_owner uuid, p_abrechnung column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_registriere_veroeffentlicht(p_owner uuid, p_abrechnung column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text,  column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text,  column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_retire_claim(p_owner uuid, p_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_retire_claim(p_owner uuid, p_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_retire_done(p_owner uuid, p_id uuid, p_token uuid, p_e column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_retire_done(p_owner uuid, p_id uuid, p_token uuid, p_e column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_upload_done(p_owner uuid, p_id uuid, p_ok boolean) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_upload_done(p_owner uuid, p_id uuid, p_ok boolean) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_guard() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_guard() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_guard() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_guard() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_sitzungen_beenden(p_user uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -8892,12 +9496,16 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=prevent_zuzahlung_korrekturen_mod() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=profiles_privilegierte_spalten_schuetzen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=profiles_privilegierte_spalten_schuetzen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=pruefe_abrechnung_clientrechte() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=pruefe_abrechnung_clientrechte() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_abrechnung_zuzahlungsforderung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_abrechnung_zuzahlungsforderung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_booking_leistung_owner() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_booking_leistung_owner() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_booking_verordnung_owner() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_booking_verordnung_owner() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=pruefe_prescriptions_clientrechte() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=pruefe_prescriptions_clientrechte() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_rechnung_zahlung_owner() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_rechnung_zahlung_owner() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
@@ -8975,6 +9583,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=similarity(text, text) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=sperre_clientschreibzugriff() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=sperre_clientschreibzugriff() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=spheroid_in(cstring) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=spheroid_in(cstring) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=spheroid_in(cstring) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -11760,6 +12370,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=SCHEMA schema=public object=public column=- grantee=anon privilege=USAGE grantor=pg_database_owner grantable=NO
 -- ACL: type=SCHEMA schema=public object=public column=- grantee=authenticated privilege=USAGE grantor=pg_database_owner grantable=NO
 -- ACL: type=SCHEMA schema=public object=public column=- grantee=pg_database_owner privilege=CREATE grantor=pg_database_owner grantable=NO
@@ -11922,6 +12534,31 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=abrechnung column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=abrechnung column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=abrechnung column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_freeze column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=abrechnung_artefakt_version column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=abrechnung_uebermittlung column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=abrechnung_uebermittlung column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=abrechnung_uebermittlung column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -14123,14 +14760,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=prescriptions column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescriptions column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescriptions column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=REFERENCES grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=SELECT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=TRIGGER grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=TRUNCATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=profiles column=- grantee=anon privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=profiles column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=profiles column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=profiles column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
@@ -14806,6 +15435,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=zuzahlung_korrekturen column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_abrechnung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_abrechnung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_abrechnung_artefakt_freeze column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_abrechnung_artefakt_freeze column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_abrechnung_artefakt_version column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_abrechnung_artefakt_version column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_abrechnung_uebermittlung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_abrechnung_uebermittlung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_abrechnung_zahlung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -15036,6 +15669,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_zuzahlung_korrekturen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=abrechnung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=abrechnung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=abrechnung_artefakt_freeze column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=abrechnung_artefakt_freeze column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=abrechnung_artefakt_version column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=abrechnung_artefakt_version column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=abrechnung_uebermittlung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=abrechnung_uebermittlung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=abrechnung_zahlung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
