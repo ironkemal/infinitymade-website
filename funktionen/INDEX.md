@@ -477,7 +477,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
 - `applyLang` — kalender.js:67 · login.js:52 · setup.js:86
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
-- `env_wert` — onprem/backup.sh:142 · onprem/restore.sh:93 · onprem/update.sh:125
+- `env_wert` — onprem/backup.sh:149 · onprem/restore.sh:93 · onprem/update.sh:125
 
 ## Shell (onprem/)
 
@@ -505,21 +505,21 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `ok()` — Zeile 48 · calledBy: onprem/backup.sh
 - `warn()` — Zeile 49 · calledBy: onprem/backup.sh, sicherung_alarm
 - `fehler()` — Zeile 50 · calledBy: onprem/backup.sh
-- `sicherung_alarm()` — Zeile 97 · calledBy: bitis, bitis_alarm
-- `sicherung_status_yaz()` — Zeile 135 · calledBy: sicherung_alarm
-- `env_wert()` — Zeile 142 · calledBy: onprem/backup.sh, sicherung_alarm
-- `bitis_alarm()` — Zeile 148
-- `temizle()` — Zeile 219 · calledBy: bitis
-- `bitis()` — Zeile 224
-- `sema_versiyonu_oku()` — Zeile 279 · calledBy: onprem/backup.sh
-- `pki_sammeln()` — Zeile 292 · calledBy: onprem/backup.sh
-- `parmak_izi_dek()` — Zeile 366 · calledBy: onprem/backup.sh
-- `parmak_izi_db_taraf()` — Zeile 386 · calledBy: onprem/backup.sh
-- `kanonischer_meta_text()` — Zeile 440 · calledBy: onprem/backup.sh
-- `meta_hmac_berechnen()` — Zeile 447 · calledBy: onprem/backup.sh
-- `json_deger()` — Zeile 480 · calledBy: onprem/backup.sh
-- `rotasyon_vor_migration()` — Zeile 524 · calledBy: onprem/backup.sh
-- `rotasyon_nightly()` — Zeile 527 · calledBy: onprem/backup.sh
+- `sicherung_alarm()` — Zeile 98 · calledBy: bitis, bitis_alarm
+- `sicherung_status_yaz()` — Zeile 142 · calledBy: sicherung_alarm
+- `env_wert()` — Zeile 149 · calledBy: onprem/backup.sh, sicherung_alarm
+- `bitis_alarm()` — Zeile 155
+- `temizle()` — Zeile 226 · calledBy: bitis
+- `bitis()` — Zeile 231
+- `sema_versiyonu_oku()` — Zeile 286 · calledBy: onprem/backup.sh
+- `pki_sammeln()` — Zeile 299 · calledBy: onprem/backup.sh
+- `parmak_izi_dek()` — Zeile 373 · calledBy: onprem/backup.sh
+- `parmak_izi_db_taraf()` — Zeile 393 · calledBy: onprem/backup.sh
+- `kanonischer_meta_text()` — Zeile 447 · calledBy: onprem/backup.sh
+- `meta_hmac_berechnen()` — Zeile 454 · calledBy: onprem/backup.sh
+- `json_deger()` — Zeile 487 · calledBy: onprem/backup.sh
+- `rotasyon_vor_migration()` — Zeile 531 · calledBy: onprem/backup.sh
+- `rotasyon_nightly()` — Zeile 534 · calledBy: onprem/backup.sh
 
 ### `onprem/install.sh`
 - sources: `lib-ip.sh`, `lib-setup-jeton.sh`, `||`, `lib-health.sh`
@@ -575,22 +575,22 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 
 ### `onprem/update.sh`
 - sources: `lib-health.sh`, `lib-ip.sh`, `lib-setup-jeton.sh`
-- `log()` — Zeile 59 · calledBy: fehler, onprem/update.sh, zertifikat_pruefen
+- `log()` — Zeile 59 · calledBy: fehler, mail_gonder_container, onprem/update.sh, zertifikat_pruefen
 - `ok()` — Zeile 60 · calledBy: bildirim_degerlendir, onprem/update.sh, zertifikat_pruefen
 - `warn()` — Zeile 61 · calledBy: bildirim_degerlendir, mail_gonder_container, onprem/update.sh, zertifikat_pruefen
 - `fehler()` — Zeile 65 · calledBy: fail, onprem/update.sh
 - `fail()` — Zeile 79
 - `env_wert()` — Zeile 125 · calledBy: onprem/update.sh, owner_bilgisini_guncelle, zertifikat_pruefen
 - `mail_gonder_container()` — Zeile 141 · calledBy: bildirim_degerlendir, zertifikat_pruefen
-- `zertifikat_pruefen()` — Zeile 167 · calledBy: onprem/update.sh
-- `manifest_feld()` — Zeile 253 · calledBy: onprem/update.sh
-- `dateien_sha_icerik()` — Zeile 300 · calledBy: durumu_yaz
-- `onceki_sha()` — Zeile 303 · calledBy: onprem/update.sh
-- `durumu_yaz()` — Zeile 309 · calledBy: onprem/update.sh
-- `owner_bilgisini_guncelle()` — Zeile 337 · calledBy: onprem/update.sh
-- `bildirim_alani_oku()` — Zeile 353 · calledBy: bildirim_degerlendir
-- `bildirim_kaydet()` — Zeile 365 · calledBy: bildirim_degerlendir
-- `bildirim_degerlendir()` — Zeile 382 · calledBy: durumu_yaz
-- `geri_yukle()` — Zeile 531 · calledBy: onprem/update.sh
-- `anahtarlari_oku()` — Zeile 550 · calledBy: onprem/update.sh
-- `deger_oku()` — Zeile 554 · calledBy: onprem/update.sh
+- `zertifikat_pruefen()` — Zeile 173 · calledBy: onprem/update.sh
+- `manifest_feld()` — Zeile 259 · calledBy: onprem/update.sh
+- `dateien_sha_icerik()` — Zeile 306 · calledBy: durumu_yaz
+- `onceki_sha()` — Zeile 309 · calledBy: onprem/update.sh
+- `durumu_yaz()` — Zeile 315 · calledBy: onprem/update.sh
+- `owner_bilgisini_guncelle()` — Zeile 343 · calledBy: onprem/update.sh
+- `bildirim_alani_oku()` — Zeile 359 · calledBy: bildirim_degerlendir
+- `bildirim_kaydet()` — Zeile 371 · calledBy: bildirim_degerlendir
+- `bildirim_degerlendir()` — Zeile 388 · calledBy: durumu_yaz
+- `geri_yukle()` — Zeile 541 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 560 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 564 · calledBy: onprem/update.sh

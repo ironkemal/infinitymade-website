@@ -90,12 +90,13 @@ fi
 # Ein Fehlschlag beim Mailen ändert den Exit-Code nicht (Trap ruft kein exit).
 # ⚠️ KOPIE von update.sh mail_gonder_container() + bildirim_degerlendir()
 # (bewusst, onprem: lib-Datei hätte ein Bootstrap-Problem auf alten Boxen) —
-# gemeinsamer Vertrag ist die argv von setup/update-alarm-mail.mjs. Ändert sich
-# einer der beiden, den anderen mitziehen.
+# gemeinsamer Vertrag ist die argv von setup/update-alarm-mail.mjs + ihr Exit-Code
+# (0 gesendet · 3 SMTP nicht eingerichtet: kein Fallback, Stempel bleibt — O-185 ·
+# sonst Fehler). Ändert sich einer der beiden, den anderen mitziehen.
 SICHERUNG_NOTIFY_FILE="$SCRIPT_DIR/.praxura-stand/son-sicherung-bildirim.json"
 OWNER_MAIL_CACHE="$SCRIPT_DIR/.praxura-stand/owner-bilgi.json"
 sicherung_alarm() {
-  local rc="$1" sonuc eposta isim eski eski_epoch simdi
+  local rc="$1" sonuc eposta isim eski eski_epoch simdi mrc=0
   [ "$SEBEP" = "nightly" ] || return 0
   simdi="$(date -u +%s)"
   if [ "$rc" -eq 0 ]; then
@@ -122,10 +123,16 @@ sicherung_alarm() {
   eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
   isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
   [ -n "$eposta" ] || return 0
-  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 \
-     || timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
+  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || mrc=$?
+  if [ "$mrc" -ne 0 ] && [ "$mrc" -ne 3 ]; then
+    mrc=0
+    timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || mrc=$?
+  fi
+  if [ "$mrc" -eq 0 ]; then
     log "  Alarm-Mail gesendet ($sonuc)"
     eski_epoch="$simdi"
+  elif [ "$mrc" -eq 3 ]; then
+    log "  Alarm-Mail übersprungen: SMTP nicht eingerichtet ($sonuc)"
   else
     warn "Alarm-Mail nicht gesendet ($sonuc) — nächster Lauf versucht es erneut"
   fi

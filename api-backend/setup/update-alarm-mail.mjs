@@ -14,9 +14,11 @@ import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
 
 const [, , sonuc, email, businessName] = process.argv;
 
-// SMTP kurulu değilse sessizce çık — install.sh'ın kendisi SMTP'yi atlamaya
-// izin veriyor (O-66), o kutularda alarm da yoktur. Sicilde ayrıca not edilmiş.
-if (!process.env.SMTP_HOST) process.exit(0);
+// SMTP kurulu değilse çık — install.sh SMTP'yi sormuyor (O-142), yani SMTP'siz kutu
+// varsayılan. Çıkış 3 = "gönderilmedi, SMTP yok" (O-185): 0 dönseydi update.sh/backup.sh
+// logda "gönderildi" yazıp 7 günlük sessizliği başlatırdı. Sözleşme: 0 gönderildi ·
+// 3 SMTP yok (atlandı, epoch ilerlemez) · diğer = hata (yeniden dene).
+if (!process.env.SMTP_HOST) process.exit(3);
 if (!sonuc || !email) process.exit(0);
 
 const METINLER = {

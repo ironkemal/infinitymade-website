@@ -144,15 +144,21 @@ mail_gonder_container() {
   eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
   isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
   [ -n "$eposta" ] || { warn "  bildirim: önbellek bozuk/boş, mail atlanıyor"; return 1; }
-  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
-    return 0
-  fi
+  # Rückgabe 0 = gesendet · 3 = SMTP nicht eingerichtet (O-185: kein Fallback, kein
+  # "gesendet") · sonst Fehler. `|| rc=$?`, damit set -e hier nicht greift.
+  local rc=0
+  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || rc=$?
+  [ "$rc" -eq 0 ] && return 0
+  if [ "$rc" -eq 3 ]; then log "  Bildirim atlandı: SMTP kurulu değil (sonuc=$sonuc)"; return 3; fi
   warn "  bildirim: 'exec' başarısız oldu (api container sağlıksız olabilir) — 'run --rm' ile tek seferlik deneniyor"
   # --pull never: compose'un `pull_policy: always`'ı olmasa bile 'run' varsayılan
   # olarak önce dışarı çıkmayı dener — internetsiz kutu (bakim_modu'nun en
   # olası eşlikçisi) bu yüzden burada da takılırdı (onprem-Gegenlesen 13.09.2026).
   # İmaj zaten yerel: konteyner ondan koşuyordu.
-  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1
+  rc=0
+  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || rc=$?
+  if [ "$rc" -eq 3 ]; then log "  Bildirim atlandı: SMTP kurulu değil (sonuc=$sonuc)"; fi
+  return "$rc"
 }
 
 # ── Zertifikats-Ablauf (O-172, guvenlik S-47 Bed. 5, 08.10.2026) ───────────
@@ -400,9 +406,13 @@ bildirim_degerlendir() {
 
   yeni_epoch="$eski_epoch"
   if [ "$gonder" -eq 1 ]; then
-    if mail_gonder_container "$yeni"; then
+    local mrc=0
+    mail_gonder_container "$yeni" || mrc=$?
+    if [ "$mrc" -eq 0 ]; then
       ok "  Bildirim maili gönderildi (sonuc=$yeni)"
       yeni_epoch="$simdi"
+    elif [ "$mrc" -eq 3 ]; then
+      : # O-185: SMTP yok — mail_gonder_container logladı; epoch ilerlemez, son_sonuc yine yazılır
     else
       warn "  Bildirim maili gönderilemedi — güncelleme sonucu bundan ETKİLENMEDİ, bir sonraki koşuda tekrar denenecek"
     fi
