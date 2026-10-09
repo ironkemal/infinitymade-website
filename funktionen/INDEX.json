@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-08",
- "dateien": 409,
- "funktionen": 3329,
+ "erzeugt": "2026-10-09",
+ "dateien": 410,
+ "funktionen": 3331,
  "module": [
   "abrechnung",
   "anamnese",
@@ -4745,6 +4745,7 @@
     "pruefe",
     "pruefeAbrechnungssperre",
     "pruefeBestaetigung",
+    "pruefeKiBericht",
     "pruefePodologieEmpfangsnachweise",
     "pruefeVerordnung",
     "pruefeVersionen",
@@ -5235,6 +5236,7 @@
     "pruefe",
     "pruefeAbrechnungssperre",
     "pruefeBestaetigung",
+    "pruefeKiBericht",
     "pruefePodologieEmpfangsnachweise",
     "pruefeVerordnung",
     "pruefeVersionen",
@@ -24696,6 +24698,52 @@
    "uiPfad": [
     "ortak yardımcı — 35 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "pruefeKiBericht",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/merkez-istemci/ki-bericht-schema.js",
+   "start": 43,
+   "end": 194,
+   "lines": 152,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "has"
+   ],
+   "calledBy": [
+    "kiBerichtHash"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kiBerichtHash",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/merkez-istemci/ki-bericht-schema.js",
+   "start": 203,
+   "end": 241,
+   "lines": 39,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "pruefeKiBericht"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "kimlikVerzeichnis",

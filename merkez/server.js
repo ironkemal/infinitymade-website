@@ -5,6 +5,7 @@
 //   Box          → POST /v1/vorschlag {code}               unsigniert, Name zufällig, 10 min reserviert
 //   Box          → POST /v1/register {code,name,public_key} mit dem NEUEN Schlüssel signiert (Besitznachweis)
 //   Box          → POST /v1/ip, /v1/caa                      signiert (Kimlik der Box)
+//   Box          → POST /v1/ki/jeton                         signiert (Kimlik der Box, Token-Ausgabe)
 // Es gibt KEINEN HTTP-Admin-Endpunkt — Verwaltung nur per CLI (admin.js).
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -19,6 +20,10 @@ import { zufallsName, nameErlaubt, NAME_FORMAT } from './namen.js';
 import { klassifiziereIpv4, entferneV4Praefix, ratenSchluessel } from './ip.js';
 import { erstelleCloudflare } from './cloudflare.js';
 import { erstelleAcmeDns } from './acmedns.js';
+import {
+  kiConfigAusEnv, erstelleKiEntra, monatsSchluessel, naechsterMonatsanfangBerlin, tokenFingerabdruck,
+} from './ki-jeton.js';
+import { pruefeKiBericht, kiBerichtHash, RE_REPORT_ID } from '../api-backend/merkez-istemci/ki-bericht-schema.js';
 
 const RESERVIERUNG_SEK = 600;     // Namensvorschlag gilt 10 min
 const MAX_VORSCHLAEGE = 20;       // pro Code
@@ -28,7 +33,7 @@ const GLOBAL_FEHLER_SPERRE = 20;  // Register-Fehlversuche/h insgesamt → Alarm
 const DNS_TTL_A = 3600;
 const DNS_TTL_CNAME = 600;
 
-export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now, log = console }) {
+export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, jetzt = Date.now, log = console }) {
   const { boxDomain, acmeDnsUrl, hostErwartet = null, trustProxy = false } = config;
   const accountPraefix = config.accountPraefix || 'https://acme-v02.api.letsencrypt.org/acme/acct/';
   if (!boxDomain) throw new Error('BOX_DOMAIN ist Pflicht');
@@ -45,6 +50,9 @@ export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now,
   // Nur Fehlversuche zählen (Statuscode ≥ 400); Erfolg verbraucht das Kontingent nicht.
   const registerLimit = rateLimit({ ...limitOpt, windowMs: 3_600_000, limit: config.limitRegister ?? 5, skipSuccessfulRequests: true, message: { fehler: 'zu_viele_anfragen' } });
   const signiertLimit = rateLimit({ ...limitOpt, windowMs: 60_000, limit: config.limitSigniert ?? 60, message: { fehler: 'zu_viele_anfragen' } });
+  const kiLimit = rateLimit({ ...limitOpt, windowMs: 60_000, limit: config.limitKi ?? 30, statusCode: 503, message: { fehler: 'zu_viele_anfragen' } });
+
+  const kiLetztes = new Map(); // box_id -> { fp, exp }
 
   // Body roh lesen (Signatur braucht die exakten Bytes); Größenlimit greift VOR dem Hashen.
   const roh = express.raw({ type: () => true, limit: '8kb' });
@@ -254,6 +262,135 @@ export function erstelleApp({ db, cloudflare, acmedns, config, jetzt = Date.now,
   });
   const caaInArbeit = new Set(); // je Box höchstens eine /v1/caa gleichzeitig (Zählung vor await)
 
+  // ---------------------------------------------------------------- /v1/ki/jeton
+  // Async-Handler: eine Ausnahme (z. B. DB) darf nie als unbehandelte Ablehnung den Prozess treffen → 503 'dienst'.
+  const kiJeton = async (req, res) => {
+    // 0. Body prüfen
+    const body = jsonBody(req);
+    if (!body || body.antragsteller !== 'praxura-box') {
+      return res.status(400).json({ fehler: 'body' });
+    }
+
+    // 1. KI-Konfiguration, Entra-Instanz und globaler Schalter
+    if (!config.ki?.gueltig || !kiEntra || db.einstellungLesen('ki_global') !== 'an') {
+      return res.status(503).json({ fehler: 'ki_aus' });
+    }
+
+    // 2. Box KI-Status (Freigabe)
+    if (req.box.ki_status !== 'aktiv') {
+      return res.status(503).json({ fehler: 'ki_nicht_freigeschaltet' });
+    }
+
+    // 3. Report verarbeiten (falls vorhanden)
+    let ack = null;
+    // Dauerhaft abgelehnter Bericht (abweichender Inhalt unter bekannter ID, oder ungültig mit lesbarer ID):
+    // der Box sagen, dass sie ihn verwerfen soll — sonst blockiert ihr einziger ausstehender Bericht jede
+    // weitere Meldung bis zum Neustart (onprem O-169, Befund γ 09.10.2026). Zusatzfeld, Client darf es ignorieren.
+    let abgelehnt = null;
+    if (body.report != null) {
+      const g = pruefeKiBericht(body.report);
+      // guvenlik S-55 (D): Tagesfenster muss nahe an der Serverzeit liegen (±2 Tage) — sonst könnte eine
+      // signierte Box mit erfundenen IDs/Tagen beliebig viele Zeilen anlegen. Wie ungültig behandeln.
+      if (g.ok && Math.abs(Date.parse(g.bericht.windowStart) - jetzt()) > 2 * 86_400_000) {
+        g.ok = false; g.grund = 'fenster_zeit';
+      }
+      if (g.ok) {
+        const hash = kiBerichtHash(g.bericht);
+        const erg = db.kiBerichtSpeichern({
+          boxId: req.box.box_id,
+          reportId: g.bericht.reportId,
+          payloadHash: hash,
+          windowStart: g.bericht.windowStart,
+          empfangen: sek(),
+          daten: g.bericht,
+        });
+        if (erg === 'neu' || erg === 'gleich') {
+          ack = g.bericht.reportId;
+        } else if (erg === 'abweichend') {
+          log.error(`[merkez] ki-bericht abweichend: ${req.box.name}`);
+          abgelehnt = g.bericht.reportId;
+        }
+      } else {
+        log.error(`[merkez] bericht_ungueltig: ${req.box.name} (${g.grund})`);
+        const id = body.report?.reportId;
+        if (typeof id === 'string' && RE_REPORT_ID.test(id)) abgelehnt = id;
+      }
+    }
+
+    // 4. Entra-Token holen
+    let token;
+    let entraExp;
+    try {
+      const r = await kiEntra.holeToken();
+      token = r.token;
+      entraExp = r.entraExp;
+    } catch (e) {
+      log.error('[merkez] ki-entra fehlgeschlagen:', e.message);
+      return res.status(503).json({ fehler: 'dienst' });
+    }
+
+    // 5. exp berechnen und prüfen
+    const jetztSek = sek();
+    const exp = Math.min(entraExp, jetztSek + 3600);
+    if (exp <= jetztSek + 60) {
+      return res.status(503).json({ fehler: 'dienst' });
+    }
+
+    // 6. Kein Doppelzählen: gleiches Token für dieselbe Box wiederverwenden
+    const fp = tokenFingerabdruck(token);
+    const letztes = kiLetztes.get(req.box.box_id);
+    if (letztes && letztes.fp === fp && letztes.exp > jetztSek) {
+      return res.json({
+        token,
+        exp,
+        endpoint: config.ki.endpoint,
+        deployment: config.ki.deployment,
+        region: config.ki.region,
+        apiVersion: config.ki.apiVersion,
+        ...(ack ? { acknowledgedReportId: ack } : {}),
+        ...(abgelehnt ? { rejectedReportId: abgelehnt } : {}),
+      });
+    }
+
+    // 7. Monatskontingent prüfen
+    const monat = monatsSchluessel(jetzt());
+    const limit = req.box.ki_limit ?? config.ki.monatsLimit;
+    if (db.kiZaehlen(req.box.box_id, monat) >= limit) {
+      return res.status(402).json({
+        code: 'AI_QUOTA_EXCEEDED',
+        resetAt: naechsterMonatsanfangBerlin(jetzt()),
+      });
+    }
+
+    // 8. Erfolg: Zähler eintragen und RAM-Cache aktualisieren (ohne await dazwischen)
+    db.kiAusgabeEintragen({
+      boxId: req.box.box_id,
+      zeit: jetztSek,
+      monat,
+      exp,
+      entraExp,
+    });
+    kiLetztes.set(req.box.box_id, { fp, exp });
+
+    // 9. Erfolgsantwort
+    return res.json({
+      token,
+      exp,
+      endpoint: config.ki.endpoint,
+      deployment: config.ki.deployment,
+      region: config.ki.region,
+      apiVersion: config.ki.apiVersion,
+      ...(ack ? { acknowledgedReportId: ack } : {}),
+      ...(abgelehnt ? { rejectedReportId: abgelehnt } : {}),
+    });
+  };
+  app.post('/v1/ki/jeton', kiLimit, roh, signiert, (req, res) => {
+    kiJeton(req, res).catch((e) => {
+      log.error('[merkez] ki-jeton intern:', e?.message);
+      if (!res.headersSent) res.status(503).json({ fehler: 'dienst' });
+    });
+  });
+
   // Fehler: zu großer Body → 413, kaputtes Rohformat → 400. Keine Details nach außen.
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {
@@ -294,7 +431,12 @@ export function baueAusEnv(env = process.env) {
   const db = oeffneDb(env.MERKEZ_DB || './merkez.sqlite');
   const cloudflare = erstelleCloudflare({ zoneId: env.CF_ZONE_ID, token: env.CF_API_TOKEN });
   const acmedns = erstelleAcmeDns({ internUrl: env.ACME_DNS_INTERN_URL });
-  return { db, cloudflare, acmedns, config };
+  const ki = kiConfigAusEnv(env);
+  if (!ki.gueltig) {
+    console.warn('[merkez] KI-Jeton-Ausgabe aus (' + ki.grund + ')');
+  }
+  const kiEntra = ki.gueltig ? erstelleKiEntra({ config: ki }) : null;
+  return { db, cloudflare, acmedns, config: { ...config, ki }, kiEntra };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

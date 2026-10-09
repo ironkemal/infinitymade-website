@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS boxes (
   acme_fulldomain  TEXT,
   lan_ip           TEXT,
   ip_am            INTEGER,
-  caa_account      TEXT
+  caa_account      TEXT,
+  ki_status        TEXT NOT NULL DEFAULT 'aus' CHECK (ki_status IN ('aus','aktiv')),
+  ki_limit         INTEGER
 );
 CREATE TABLE IF NOT EXISTS codes (
   code_hash        TEXT PRIMARY KEY,              -- sha256 hex des normalisierten Codes
@@ -60,12 +62,45 @@ CREATE TRIGGER IF NOT EXISTS adminlog_kein_update BEFORE UPDATE ON adminlog
 BEGIN SELECT RAISE(ABORT, 'adminlog ist nur anhaengbar'); END;
 CREATE TRIGGER IF NOT EXISTS adminlog_kein_delete BEFORE DELETE ON adminlog
 BEGIN SELECT RAISE(ABORT, 'adminlog ist nur anhaengbar'); END;
+CREATE TABLE IF NOT EXISTS ki_ausgabe (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  box_id     TEXT NOT NULL,
+  zeit       INTEGER NOT NULL,
+  monat      TEXT NOT NULL,
+  exp        INTEGER NOT NULL,
+  entra_exp  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ki_ausgabe_box_monat ON ki_ausgabe (box_id, monat);
+CREATE TABLE IF NOT EXISTS ki_bericht (
+  box_id       TEXT NOT NULL,
+  report_id    TEXT NOT NULL,
+  payload_hash TEXT NOT NULL,
+  window_start TEXT NOT NULL,
+  empfangen    INTEGER NOT NULL,
+  daten        TEXT NOT NULL,
+  PRIMARY KEY (box_id, report_id)
+);
+CREATE TABLE IF NOT EXISTS einstellungen (
+  schluessel TEXT PRIMARY KEY,
+  wert       TEXT NOT NULL
+);
 `;
+
+const BERICHT_AUFBEWAHRUNG_SEK = 90 * 86400;
 
 export function oeffneDb(pfad = ':memory:') {
   const db = new DatabaseSync(pfad);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+
+  // Migration: Spalten für bestehende boxes-Tabellen nachrüsten (idempotent, K-20 Opt-in: Default 'aus')
+  const spalten = new Set(db.prepare('PRAGMA table_info(boxes)').all().map((c) => c.name));
+  if (!spalten.has('ki_status')) {
+    db.exec("ALTER TABLE boxes ADD COLUMN ki_status TEXT NOT NULL DEFAULT 'aus' CHECK (ki_status IN ('aus','aktiv'))");
+  }
+  if (!spalten.has('ki_limit')) {
+    db.exec('ALTER TABLE boxes ADD COLUMN ki_limit INTEGER');
+  }
 
   const tx = (fn) => {
     db.exec('BEGIN IMMEDIATE');
@@ -114,14 +149,52 @@ export function oeffneDb(pfad = ':memory:') {
     boxNachId: (boxId) => get('SELECT * FROM boxes WHERE box_id = ?', boxId),
     boxNachName: (name) => get('SELECT * FROM boxes WHERE name = ?', name),
     boxLoeschenNachName: (name) => { run('DELETE FROM boxes WHERE name = ?', name); },
-    /** Neu-Bindung: neuer Schlüssel + neues acme-dns-Konto, gleicher Name; alter Schlüssel ist damit sofort tot. */
-    boxRebind: (name, b) => { run(
-      "UPDATE boxes SET box_id=?, public_key=?, acme_user=?, acme_subdomain=?, acme_fulldomain=?, caa_account=NULL, status='aktiv', iptal_am=NULL WHERE name=?",
-      b.boxId, b.publicKey, b.acmeUser, b.acmeSubdomain, b.acmeFulldomain, name); },
+    /** Neu-Bindung: neuer Schlüssel + neues acme-dns-Konto, gleicher Name; alter Schlüssel ist damit sofort tot.
+     * Überträgt Zähler und Berichte auf die neue box_id (Kontingent-Umgehungsschutz). */
+    // Läuft im tx() des Aufrufers (server.js) — hier keine eigene Transaktion (kein BEGIN in BEGIN).
+    boxRebind(name, b) {
+      const alt = get('SELECT box_id FROM boxes WHERE name = ?', name);
+      if (alt && alt.box_id !== b.boxId) {
+        run('UPDATE ki_ausgabe SET box_id = ? WHERE box_id = ?', b.boxId, alt.box_id);
+        run('UPDATE ki_bericht SET box_id = ? WHERE box_id = ?', b.boxId, alt.box_id);
+      }
+      run(
+        "UPDATE boxes SET box_id=?, public_key=?, acme_user=?, acme_subdomain=?, acme_fulldomain=?, caa_account=NULL, status='aktiv', iptal_am=NULL WHERE name=?",
+        b.boxId, b.publicKey, b.acmeUser, b.acmeSubdomain, b.acmeFulldomain, name
+      );
+    },
     boxIptal: (name, jetzt) => run("UPDATE boxes SET status='iptal', iptal_am=? WHERE name=? AND status='aktiv'", jetzt, name).changes === 1,
     boxIp: (boxId, ip, jetzt) => { run('UPDATE boxes SET lan_ip=?, ip_am=? WHERE box_id=?', ip, jetzt, boxId); },
     boxCaa: (boxId, accountUri) => { run('UPDATE boxes SET caa_account=? WHERE box_id=?', accountUri, boxId); },
-    boxenListe: () => all('SELECT name, box_id, status, erstellt, iptal_am, lan_ip, ip_am, caa_account FROM boxes ORDER BY id'),
+    boxenListe: () => all('SELECT name, box_id, status, erstellt, iptal_am, lan_ip, ip_am, caa_account, ki_status, ki_limit FROM boxes ORDER BY id'),
+
+    // --- KI-Jeton & Einstellungen ---
+    einstellungLesen: (schluessel) => get('SELECT wert FROM einstellungen WHERE schluessel = ?', schluessel)?.wert ?? null,
+    einstellungSetzen(schluessel, wert) {
+      run('INSERT INTO einstellungen (schluessel, wert) VALUES (?, ?) ON CONFLICT(schluessel) DO UPDATE SET wert = excluded.wert', schluessel, wert);
+    },
+    boxKiSetzen: (name, status) => run('UPDATE boxes SET ki_status = ? WHERE name = ?', status, name).changes === 1,
+    boxKiLimitSetzen: (name, limit) => run('UPDATE boxes SET ki_limit = ? WHERE name = ?', limit, name).changes === 1,
+    kiZaehlen: (boxId, monat) => get('SELECT COUNT(*) AS c FROM ki_ausgabe WHERE box_id = ? AND monat = ?', boxId, monat)?.c ?? 0,
+    kiAusgabeEintragen({ boxId, zeit, monat, exp, entraExp }) {
+      run('INSERT INTO ki_ausgabe (box_id, zeit, monat, exp, entra_exp) VALUES (?, ?, ?, ?, ?)', boxId, zeit, monat, exp, entraExp);
+    },
+    kiBerichtSpeichern({ boxId, reportId, payloadHash, windowStart, empfangen, daten }) {
+      const datenJson = typeof daten === 'string' ? daten : JSON.stringify(daten);
+      // guvenlik S-55 (D): Berichte sind nur Diagnose — nach 90 Tagen weg, die Tabelle wächst nicht unbegrenzt.
+      run('DELETE FROM ki_bericht WHERE box_id = ? AND empfangen < ?', boxId, empfangen - BERICHT_AUFBEWAHRUNG_SEK);
+      const r = run(
+        'INSERT OR IGNORE INTO ki_bericht (box_id, report_id, payload_hash, window_start, empfangen, daten) VALUES (?, ?, ?, ?, ?, ?)',
+        boxId, reportId, payloadHash, windowStart, empfangen, datenJson
+      );
+      if (r.changes === 1) return 'neu';
+      const vorh = get('SELECT payload_hash FROM ki_bericht WHERE box_id = ? AND report_id = ?', boxId, reportId);
+      return (vorh && vorh.payload_hash === payloadHash) ? 'gleich' : 'abweichend';
+    },
+    kiBerichteLesen: (boxId, limit = 5) => all(
+      'SELECT report_id, window_start, empfangen, daten FROM ki_bericht WHERE box_id = ? ORDER BY empfangen DESC, rowid DESC LIMIT ?',
+      boxId, limit
+    ),
 
     // --- Nonces (Replay-Schutz) ---
     /** true = Nonce war neu und ist jetzt für `ttl` Sekunden gemerkt. */

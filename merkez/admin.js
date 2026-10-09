@@ -6,6 +6,11 @@
 //   node admin.js iptal <name>             Kimlik sperren (Ad/Y3/KI zugleich) + acme-dns-Zugang (CNAME) schließen; A-Eintrag BLEIBT
 //   node admin.js adresse-loeschen <name>  A-/CAA-Eintrag entfernen (nur nach iptal); Name bleibt auf dem Grabstein
 //   node admin.js liste                    alle Boxen
+//   node admin.js ki-an <name>             KI für Box freischalten (Status: aktiv)
+//   node admin.js ki-aus <name>            KI für Box sperren (Status: aus)
+//   node admin.js ki-limit <name> <n|std>  Monatslimit für Box setzen (1..1000000 oder 'standard')
+//   node admin.js ki-global <an|aus>       Globalen KI-Schalter ein-/ausschalten
+//   node admin.js ki-stand [name]          KI-Status, Monatszähler und Berichte anzeigen
 //
 // Klartext-Codes erscheinen EINMAL auf der Konsole; gespeichert wird nur der SHA-256.
 // Jede Aktion landet im nur anhängbaren adminlog (ohne Codes).
@@ -14,11 +19,12 @@ import { pathToFileURL } from 'node:url';
 import { generateSetupCode, formatSetupCode, hashCode, FORMAT_KUTU } from '../api-backend/routes/mitarbeiter-zugang-code.js';
 import { oeffneDb } from './db.js';
 import { erstelleCloudflare } from './cloudflare.js';
+import { monatsSchluessel } from './ki-jeton.js';
 
 const TAG = 86400;
 
-export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now, akteur = 'unbekannt' }, argv) {
-  const [befehl, name] = argv;
+export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now, akteur = 'unbekannt', kiStandardLimit = 600 }, argv) {
+  const [befehl, name, arg3] = argv;
   const t = Math.floor(jetzt() / 1000);
   const fqdn = (n) => `${n}.${boxDomain}`;
 
@@ -65,8 +71,97 @@ export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now,
       const zeilen = db.boxenListe().map((b) => `${b.name}\t${b.status}\t${b.lan_ip || '-'}\t${b.box_id}`);
       return { text: ['name\tstatus\tip\tbox_id', ...zeilen].join('\n') };
     }
+    case 'ki-an': {
+      if (!name || !db.boxNachName(name)) throw new Error('Unbekannte Box: ' + (name || ''));
+      db.boxKiSetzen(name, 'aktiv');
+      db.adminLog(akteur, 'ki-an', name, null, t);
+      return { text: `KI aktiviert für ${name}.` };
+    }
+    case 'ki-aus': {
+      if (!name || !db.boxNachName(name)) throw new Error('Unbekannte Box: ' + (name || ''));
+      db.boxKiSetzen(name, 'aus');
+      db.adminLog(akteur, 'ki-aus', name, null, t);
+      return { text: `KI deaktiviert für ${name}.` };
+    }
+    case 'ki-limit': {
+      if (!name || !db.boxNachName(name)) throw new Error('Unbekannte Box: ' + (name || ''));
+      const limitArg = arg3 ?? argv[2];
+      let limit = null;
+      if (limitArg === 'standard') {
+        limit = null;
+      } else if (limitArg && /^\d+$/.test(limitArg)) {
+        const n = parseInt(limitArg, 10);
+        if (n >= 1 && n <= 1000000) {
+          limit = n;
+        } else {
+          throw new Error('Limit muss zwischen 1 und 1000000 liegen oder "standard" sein');
+        }
+      } else {
+        throw new Error('Limit muss zwischen 1 und 1000000 liegen oder "standard" sein');
+      }
+      db.boxKiLimitSetzen(name, limit);
+      db.adminLog(akteur, 'ki-limit', name, { limit }, t);
+      return { text: `KI-Limit für ${name} gesetzt auf: ${limit === null ? 'standard' : limit}.` };
+    }
+    case 'ki-global': {
+      if (name !== 'an' && name !== 'aus') {
+        throw new Error('Wert muss "an" oder "aus" sein');
+      }
+      db.einstellungSetzen('ki_global', name);
+      db.adminLog(akteur, 'ki-global', null, { wert: name }, t);
+      const hinweis = name === 'an' ? ' Nur öffnen nach O-169 Bedingung 7 + ORG-Freigabe.' : '';
+      return { text: `Globaler KI-Schalter: ${name}.${hinweis}` };
+    }
+    case 'ki-stand': {
+      const globalKi = db.einstellungLesen('ki_global') ?? 'aus';
+      const monat = monatsSchluessel(jetzt());
+      let boxen;
+      if (name) {
+        const b = db.boxNachName(name);
+        if (!b) throw new Error('Unbekannte Box: ' + name);
+        boxen = [b];
+      } else {
+        boxen = db.boxenListe();
+      }
+
+      const abschnitte = [`Globaler KI-Schalter: ${globalKi}`];
+      for (const b of boxen) {
+        const status = b.ki_status ?? 'aus';
+        const limit = b.ki_limit ?? kiStandardLimit;
+        const zaehler = db.kiZaehlen(b.box_id, monat);
+        const zeilen = [
+          `Box: ${b.name}`,
+          `  KI-Status: ${status}`,
+          `  Zähler (${monat}): ${zaehler} / ${limit}`,
+        ];
+        const berichte = db.kiBerichteLesen(b.box_id, 5);
+        if (berichte.length === 0) {
+          zeilen.push('  Letzte Berichte: keine');
+        } else {
+          zeilen.push('  Letzte Berichte:');
+          for (const ber of berichte) {
+            let tokens = 0;
+            try {
+              const d = typeof ber.daten === 'string' ? JSON.parse(ber.daten) : ber.daten;
+              if (d?.taskTotals) {
+                for (const m of Object.values(d.taskTotals)) {
+                  if (typeof m?.total_tokens === 'number') {
+                    tokens += m.total_tokens;
+                  }
+                }
+              }
+            } catch {
+              // Ignorieren
+            }
+            zeilen.push(`    - ${ber.report_id} (${ber.window_start}): ${tokens} Tokens`);
+          }
+        }
+        abschnitte.push(zeilen.join('\n'));
+      }
+      return { text: abschnitte.join('\n\n') };
+    }
     default:
-      throw new Error('Befehl: kod-neu | kod-rebind <name> | iptal <name> | adresse-loeschen <name> | liste');
+      throw new Error('Befehl: kod-neu | kod-rebind <name> | iptal <name> | adresse-loeschen <name> | liste | ki-an <name> | ki-aus <name> | ki-limit <name> <n|standard> | ki-global an|aus | ki-stand [name]');
   }
 }
 
@@ -74,10 +169,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const env = process.env;
   try {
     const db = oeffneDb(env.MERKEZ_DB || './merkez.sqlite');
-    const braucht = ['iptal', 'adresse-loeschen'].includes(process.argv[2]);
+    const befehl = process.argv[2];
+    const braucht = ['iptal', 'adresse-loeschen'].includes(befehl);
     if (braucht && !(env.BOX_DOMAIN && env.CF_ZONE_ID && env.CF_API_TOKEN)) throw new Error('BOX_DOMAIN, CF_ZONE_ID, CF_API_TOKEN nötig');
     const cloudflare = braucht ? erstelleCloudflare({ zoneId: env.CF_ZONE_ID, token: env.CF_API_TOKEN }) : null;
-    const r = await adminBefehl({ db, cloudflare, boxDomain: env.BOX_DOMAIN, akteur: os.userInfo().username }, process.argv.slice(2));
+    const rawLimit = env.KI_MONATS_LIMIT;
+    const kiStandardLimit = /^\d+$/.test(rawLimit || '') ? parseInt(rawLimit, 10) : 600;
+    const r = await adminBefehl({ db, cloudflare, boxDomain: env.BOX_DOMAIN, akteur: os.userInfo().username, kiStandardLimit }, process.argv.slice(2));
     console.log(r.text);
   } catch (e) {
     console.error('Fehler: ' + e.message);

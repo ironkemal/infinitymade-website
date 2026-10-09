@@ -116,6 +116,23 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 09.10.2026 · 3b.4 Merkez KI jeton ucu (`POST /v1/ki/jeton`)
+- `api-backend/merkez-istemci/ki-bericht-schema.js` (yeni): `pruefeKiBericht`, `kiBerichtHash`, `KI_TASKS`,
+  `RE_REPORT_ID`, `RE_UTC_DAY` — kutu↔merkez KI kullanım raporu sözleşmesinin (M4-VERTRAG §2.2) **TEK şeması**,
+  bilerek import'suz (VPS sparse-checkout'a tek dosya ekler). İlk kullanım: `merkez/server.js` `/v1/ki/jeton`.
+  **Açık (karar Melih/kullanıcı):** `ai/ki-jeton.js` `validateReportSnapshot` bu şemaya geçmeli (KHS M4
+  "Hat K → Hat M notları"); bilinen task listesinin üç kopyası (`ai/ki-jeton.js` `ALLOWED_TASKS`,
+  `ai/ki-privacy.js` `KNOWN_AI_TASKS`, `ai/router.js` `TASKS` anahtarları) burada birleşebilir. Yeni bir
+  task listesi açılmaz.
+- `merkez/ki-jeton.js` (yeni): `kiConfigAusEnv`, `erstelleKiEntra`, `monatsSchluessel`,
+  `naechsterMonatsanfangBerlin`, `tokenFingerabdruck` — merkezin Entra client_credentials istemcisi (repodaki
+  ilk ve tek), KI env config'i, Berlin ayı/kota sıfırlama. Yalnız `merkez/server.js` + `merkez/admin.js` kullanır.
+  Berlin hesabı `api-backend/lib/berlin-tag.js` `berlinHeute` üzerinden — ikinci bir `Intl` kopyası yazılmaz.
+- `merkez/db.js` `ki*` metotları + `merkez/admin.js` komutları `ki-an` / `ki-aus` / `ki-limit` / `ki-global` /
+  `ki-stand` (hepsi adminlog'a).
+- **Kural:** kutu↔merkez sözleşmesine dokunan her değişiklikte `merkez/test/ki-jeton-vertrag.test.js` koşulur
+  (gerçek `createJetonClient` ile uçtan uca).
+
 ### 08.10.2026 · O-178 / K2b.16 „Über diese Software" (Lizenzen, Verbindungen, Rechtslinks in der Box)
 - `api-backend/tools/lizenzen-erzeugen.mjs` (yeni): `bewerteLizenz`, `sammlePakete`, `pruefe`, `erzeugeBericht` —
   imajdaki `node_modules`'un lisans kapısı + THIRD-PARTY-NOTICES üretimi; boş/UNKNOWN/yasak lisansta build kırılır.
