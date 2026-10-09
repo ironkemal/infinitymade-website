@@ -30,8 +30,14 @@ export function pruefeDatei(dateiname, inhalt) {
   let hatSpaltenGrant = false;
 
   for (const satz of saetze) {
-    if (/^CREATE\s+(OR\s+REPLACE\s+)?VIEW\s+(public\.)?"?profiles_public"?\b/i.test(satz)) hatSicht = true;
+    if (/^CREATE\s+(OR\s+REPLACE\s+)?VIEW\s+("?public"?\s*\.\s*)?"?profiles_public"?\b/i.test(satz)) hatSicht = true;
 
+    // ALTER DEFAULT PRIVILEGES … GRANT … ON TABLES TO anon: jede künftige Tabelle offen
+    const adp = satz.match(/^ALTER\s+DEFAULT\s+PRIVILEGES\b.*\bGRANT\b.*\bON\s+TABLES\s+TO\s+(.*)$/i);
+    if (adp && ANON.test(adp[1])) {
+      befunde.push({ regel: 'default_privileges', datei: dateiname, satz });
+      continue;
+    }
     const g = satz.match(/^GRANT\s+(.*?)\s+ON\s+(.*?)\s+TO\s+(.*)$/i);
     if (!g) continue;
     const [, rechte, objekt, empfaenger] = g;
@@ -43,7 +49,7 @@ export function pruefeDatei(dateiname, inhalt) {
       continue;
     }
     // (2) Tabellenrecht auf profiles ohne Spaltenliste
-    if (/^(TABLE\s+)?(public\.)?"?profiles"?$/i.test(objekt)) {
+    if (/^(TABLE\s+)?("?public"?\s*\.\s*)?"?profiles"?$/i.test(objekt)) {
       if (rechte.includes('(')) {
         if (/^SELECT\s*\(/i.test(rechte)) hatSpaltenGrant = true;
       } else {
@@ -82,6 +88,7 @@ export function pruefeDateien(dateien, leseFn = standardLeseFn) {
 }
 
 const TEXT = {
+  default_privileges: 'ALTER DEFAULT PRIVILEGES … ON TABLES TO anon — jede künftige Tabelle wäre anon-lesbar (S-56)',
   alle_tabellen: 'GRANT … ON ALL TABLES … TO anon — dreht 0072 zurück (S-56, S-04-Klasse)',
   profiles_ohne_spaltenliste: 'Tabellenrecht auf public.profiles für anon ohne Spaltenliste — IBAN/E-Mail wieder lesbar (S-56)',
   sicht_ohne_spaltengrant: 'profiles_public neu angelegt, aber kein GRANT SELECT (…) ON public.profiles TO anon in derselben Datei — Buchungsseite bricht lautlos',

@@ -32,6 +32,14 @@ const SORGULAR = {
   storage_bucket: `SELECT count(*)::int AS n FROM storage.buckets`,
   publication_uye_tablo: `SELECT count(*)::int AS n FROM pg_publication_tables`,
   extension: `SELECT count(*)::int AS n FROM pg_extension`,
+  // S-56 / O-181 b (09.10.2026): anon darf profiles nur SPALTENWEISE lesen (0072).
+  // has_column_privilege zählt auch ein Tabellenrecht mit — kehrt S-56 zurück,
+  // springt die Zahl von 11 auf ~88. information_schema.column_privileges taugt
+  // dafür nicht (zeigt nur Rechte, die die verbundene Rolle sieht).
+  anon_profiles_tablo_hakki: `SELECT has_table_privilege('anon','public.profiles','SELECT,INSERT,UPDATE,DELETE') AS n`,
+  anon_profiles_kolon: `SELECT count(*)::int AS n FROM pg_attribute a
+                        WHERE a.attrelid='public.profiles'::regclass AND a.attnum>0 AND NOT a.attisdropped
+                        AND has_column_privilege('anon', a.attrelid, a.attnum, 'SELECT')`,
 };
 
 // Isim listesi olarak, sayı olarak DEĞİL (onprem-Audit, 12.09.2026): bu tek

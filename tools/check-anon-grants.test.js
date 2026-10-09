@@ -40,3 +40,9 @@ test('Kommentare und Strings zählen nicht', () => {
 test('0000_baseline wird übersprungen', () => {
   assert.deepEqual(pruefeDateien(['x/0000_baseline.sql'], () => 'GRANT ALL ON TABLE public.profiles TO anon;'), []);
 });
+
+test('Tırnaklı Schema, Mehrrollen-Liste und ALTER DEFAULT PRIVILEGES', () => {
+  assert.equal(pruefeDatei('0099_x.sql', 'GRANT SELECT ON TABLE "public"."profiles" TO authenticated, anon;')[0].regel, 'profiles_ohne_spaltenliste');
+  assert.equal(pruefeDatei('0099_x.sql', 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;')[0].regel, 'default_privileges');
+  assert.deepEqual(pruefeDatei('0099_x.sql', 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO service_role;'), []);
+});
