@@ -147,7 +147,7 @@ const ausnahmenSet = new Set(AUSNAHMEN.map((a) => a.name.toLowerCase()));
  * @param {string} sql - Vollstaendiger SQL-Quelltext
  * @returns {string} Text nur aus dem Normalzustand
  */
-function extrahiereNormalenText(sql) {
+export function extrahiereNormalenText(sql) {
   let normalerText = '';
   let zustand = 'normal'; // 'normal' | 'satirYorumu' | 'blokYorumu' | 'dizgi' | 'govde'
   let aktivesTag = '';
