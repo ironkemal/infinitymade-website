@@ -56,6 +56,13 @@ KI-Verwaltung (CLI, alles im adminlog): `ki-an <name>` · `ki-aus <name>` · `ki
 Bestehende Boxen sind nach dem Update `aus` (Opt-in, K-20); der globale Schalter ist standardmäßig `aus`.
 ⚠️ **`ki-global an` erst nach O-169 Bedingung 7 + ORG-Freigabe.** Nicht zum Ausprobieren auf der Produktiv-VPS.
 
+**Nächtlicher Abgleich (O-169 Bed. 7):** `node admin.js ki-abgleich <JJJJ-MM-TT> <azure_tokens> [--abschalten] [--toleranz-prozent=N] [--toleranz-tokens=N]`
+— UTC-Tag (nicht Berlin), nur abgeschlossene Tage; Azure-Summe ↔ letzter Bericht je Box (Standard +10 % +20 000).
+Exit **0** = im Rahmen · **2** = überschritten · **1** = ungültige Eingabe (nie still „ok"). `--abschalten` setzt dann
+`ki_global=aus` (Akteur `ki-abgleich-auto`), nie `an` — **erst nach O-186** (Box meldet den letzten Tagesstand nicht
+nach). Azure-Zahl nur aus der Box-eigenen Ressource (S-55 A/B); Timer 02–03 UTC für den Vortag, Optionen in der
+Unit-Datei im Repo (keine Env, Drift). Azure-Leser + Timer: nach T23/ORG.
+
 ## Lokal
 
 ```

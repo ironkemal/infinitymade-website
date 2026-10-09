@@ -11,6 +11,9 @@
 //   node admin.js ki-limit <name> <n|std>  Monatslimit für Box setzen (1..1000000 oder 'standard')
 //   node admin.js ki-global <an|aus>       Globalen KI-Schalter ein-/ausschalten
 //   node admin.js ki-stand [name]          KI-Status, Monatszähler und Berichte anzeigen
+//   node admin.js ki-abgleich <JJJJ-MM-TT> <azure_tokens> [--abschalten] [--toleranz-prozent=N] [--toleranz-tokens=N]
+//                                          Azure-Tagessumme (UTC-Tag) ↔ Box-Berichte (O-169 Bed. 7). Exit 0 = im Rahmen,
+//                                          2 = über der Toleranz; mit --abschalten dann ki-global aus (erst nach O-186)
 //
 // Klartext-Codes erscheinen EINMAL auf der Konsole; gespeichert wird nur der SHA-256.
 // Jede Aktion landet im nur anhängbaren adminlog (ohne Codes).
@@ -20,11 +23,12 @@ import { generateSetupCode, formatSetupCode, hashCode, FORMAT_KUTU } from '../ap
 import { oeffneDb } from './db.js';
 import { erstelleCloudflare } from './cloudflare.js';
 import { monatsSchluessel } from './ki-jeton.js';
+import { abgleichen, berichtTokens, utcTag, STANDARD_TOLERANZ } from './ki-abgleich.js';
 
 const TAG = 86400;
 
 export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now, akteur = 'unbekannt', kiStandardLimit = 600 }, argv) {
-  const [befehl, name, arg3] = argv;
+  const [befehl, name, arg3, ...optionen] = argv;
   const t = Math.floor(jetzt() / 1000);
   const fqdn = (n) => `${n}.${boxDomain}`;
 
@@ -140,19 +144,7 @@ export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now,
         } else {
           zeilen.push('  Letzte Berichte:');
           for (const ber of berichte) {
-            let tokens = 0;
-            try {
-              const d = typeof ber.daten === 'string' ? JSON.parse(ber.daten) : ber.daten;
-              if (d?.taskTotals) {
-                for (const m of Object.values(d.taskTotals)) {
-                  if (typeof m?.total_tokens === 'number') {
-                    tokens += m.total_tokens;
-                  }
-                }
-              }
-            } catch {
-              // Ignorieren
-            }
+            const tokens = berichtTokens(ber.daten);
             zeilen.push(`    - ${ber.report_id} (${ber.window_start}): ${tokens} Tokens`);
           }
         }
@@ -160,8 +152,52 @@ export async function adminBefehl({ db, cloudflare, boxDomain, jetzt = Date.now,
       }
       return { text: abschnitte.join('\n\n') };
     }
+    case 'ki-abgleich': {
+      // O-169 Bed. 7 (onprem O-186, guvenlik S-55): nur abgeschlossene UTC-Tage; ohne --abschalten nur Bericht + Exit 2,
+      // weil die Box den letzten Tagesstand heute nicht nachmeldet (O-186) — sonst Fehlalarm-Abschaltung jede Nacht.
+      const { windowStart, von, bis } = utcTag(name);
+      if (bis > t) throw new Error(`UTC-Tag ${name} ist noch nicht abgeschlossen`);
+      const opt = { abschalten: false, toleranz: { ...STANDARD_TOLERANZ } };
+      for (const o of optionen) {
+        const m = /^--toleranz-(prozent|tokens)=(\d{1,15})$/.exec(o);
+        if (o === '--abschalten') opt.abschalten = true;
+        else if (m) opt.toleranz[m[1]] = m[2];
+        else throw new Error('Unbekannte Option: ' + o);
+      }
+      const erg = abgleichen({ berichte: db.kiBerichteTag(windowStart), azureTokens: arg3, toleranz: opt.toleranz });
+      const namen = new Map(db.boxenListe().map((b) => [b.box_id, b.name]));
+      const nameVon = (id) => namen.get(id) ?? id;
+      const gemeldetJe = new Map(erg.kutular.map((k) => [k.box_id, k.tokens]));
+      // Zuordnung (guvenlik a): Boxen mit Jeton-Ausgabe an dem Tag, aber ohne/leeren Bericht.
+      const ohneBericht = db.kiAusgabenZwischen(von, bis)
+        .filter((a) => !(gemeldetJe.get(a.box_id) > 0)).map((a) => nameVon(a.box_id));
+      const globalVorher = db.einstellungLesen('ki_global') ?? 'aus';
+      let abgeschaltet = false;
+      if (erg.ueberschritten && opt.abschalten && globalVorher !== 'aus') {
+        db.einstellungSetzen('ki_global', 'aus');
+        db.adminLog('ki-abgleich-auto', 'ki-global', null, { wert: 'aus', grund: 'ki-abgleich', tag: name }, t);
+        abgeschaltet = true;
+      }
+      db.adminLog(akteur, 'ki-abgleich', name, {
+        azure: erg.azure, gemeldet: erg.gemeldet, grenze: erg.grenze, ueberschritten: erg.ueberschritten,
+        mehr_gemeldet: erg.mehrGemeldet, abschalten: opt.abschalten, abgeschaltet, ohne_bericht: ohneBericht,
+        boxen: erg.kutular.map((k) => ({ name: nameVon(k.box_id), tokens: k.tokens })),
+      }, t);
+      const zeilen = [
+        `KI-Abgleich ${name} (UTC): Azure ${erg.azure} · gemeldet ${erg.gemeldet} · Grenze ${erg.grenze} (+${opt.toleranz.prozent} % +${opt.toleranz.tokens})`,
+        ...erg.kutular.map((k) => `  ${nameVon(k.box_id)}: ${k.tokens}`),
+      ];
+      if (ohneBericht.length) zeilen.push(`  Jetons bezogen, kein Bericht: ${ohneBericht.join(', ')}`);
+      if (erg.mehrGemeldet) zeilen.push('  Warnung: Boxen melden mehr als Azure zählt (keine Abschaltung).');
+      if (erg.ueberschritten) {
+        zeilen.push(abgeschaltet ? 'ÜBERSCHRITTEN — globaler KI-Schalter jetzt AUS.'
+          : opt.abschalten ? 'ÜBERSCHRITTEN — globaler KI-Schalter war bereits aus.'
+            : 'ÜBERSCHRITTEN — nur Bericht (ohne --abschalten, O-186 offen).');
+      } else zeilen.push('Im Rahmen.');
+      return { text: zeilen.join('\n'), exitCode: erg.ueberschritten ? 2 : 0 };
+    }
     default:
-      throw new Error('Befehl: kod-neu | kod-rebind <name> | iptal <name> | adresse-loeschen <name> | liste | ki-an <name> | ki-aus <name> | ki-limit <name> <n|standard> | ki-global an|aus | ki-stand [name]');
+      throw new Error('Befehl: kod-neu | kod-rebind <name> | iptal <name> | adresse-loeschen <name> | liste | ki-an <name> | ki-aus <name> | ki-limit <name> <n|standard> | ki-global an|aus | ki-stand [name] | ki-abgleich <JJJJ-MM-TT> <azure_tokens> [--abschalten]');
   }
 }
 
@@ -177,6 +213,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const kiStandardLimit = /^\d+$/.test(rawLimit || '') ? parseInt(rawLimit, 10) : 600;
     const r = await adminBefehl({ db, cloudflare, boxDomain: env.BOX_DOMAIN, akteur: os.userInfo().username, kiStandardLimit }, process.argv.slice(2));
     console.log(r.text);
+    if (r.exitCode) process.exitCode = r.exitCode;
   } catch (e) {
     console.error('Fehler: ' + e.message);
     process.exitCode = 1;

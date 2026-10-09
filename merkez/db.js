@@ -217,6 +217,19 @@ export function oeffneDb(pfad = ':memory:') {
       }
       return 'abweichend';
     },
+    /** O-169 Bed. 7: je Box die letzte Zeile des UTC-Tages (gleiche Reihenfolge wie kiBerichteLesen). */
+    kiBerichteTag: (windowStart) => all(
+      `SELECT box_id, report_id, empfangen, daten FROM (
+         SELECT box_id, report_id, empfangen, daten,
+                ROW_NUMBER() OVER (PARTITION BY box_id ORDER BY empfangen DESC, rowid DESC) AS rn
+         FROM ki_bericht WHERE window_start = ?) WHERE rn = 1 ORDER BY box_id`,
+      windowStart
+    ),
+    /** Jeton-Ausgaben je Box in [von, bis) — für die Zuordnung beim Abgleich (wer hat an dem Tag Jetons bezogen). */
+    kiAusgabenZwischen: (von, bis) => all(
+      'SELECT box_id, COUNT(*) AS anzahl FROM ki_ausgabe WHERE zeit >= ? AND zeit < ? GROUP BY box_id ORDER BY box_id',
+      von, bis
+    ),
     kiBerichteLesen: (boxId, limit = 5) => all(
       'SELECT report_id, window_start, empfangen, daten FROM ki_bericht WHERE box_id = ? ORDER BY empfangen DESC, rowid DESC LIMIT ?',
       boxId, limit
