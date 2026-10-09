@@ -102,9 +102,12 @@ test('Vertragstest: echter Box-Client createJetonClient gegen Merkez', async () 
       }
     );
 
-    // Client-Zustand: Tokenkontingent erschöpft, dauerhaft prozessweit deaktiviert
+    // Client-Zustand: Tokenkontingent erschöpft, gesperrt bis zum resetAt des Zentrums (M4.11 β)
     assert.equal(client.getState().tokenDisabled, true);
     assert.equal(client.getState().disabledReason, 'AI_QUOTA_EXCEEDED');
+    const bis = client.getState().disabledUntil;
+    assert.ok(bis > Date.now() && bis <= Date.now() + 32 * 86_400_000, 'Sperre endet am Monatsanfang, nicht nie');
+    assert.equal(bis % 1000, 0, 'Sperrende kommt aus resetAt (UNIX-Sekunden), nicht aus der 6-h-Obergrenze');
   } finally {
     await s.stop();
   }
@@ -150,6 +153,49 @@ test('Vertragstest: vorübergehender Ausfall (503) deaktiviert Kontingent nicht 
     s.kiEntra.fehler = false;
     const tokenInfo = await client.getToken();
     assert.equal(tokenInfo.token, 'fake-entra-token-abcdefghij');
+  } finally {
+    await s.stop();
+  }
+});
+
+test('Vertragstest M4.11 γ: abgelehnter Bericht wird auch bei 402 verworfen und blockiert nicht', async () => {
+  const s = await starte({ jetzt: Date.now() });
+  try {
+    const r = await registriere(s);
+    kiBereit(s, r.name);
+    s.db.boxKiLimitSetzen(r.name, 1);
+    const cfg = { mode: 'jeton', activationReady: true, valid: true, allowedHosts: ['ki-test.example.openai.azure.com'] };
+    const neuerClient = () => createJetonClient({
+      config: cfg,
+      allowedHosts: cfg.allowedHosts,
+      merkezOptions: { kimlik: r.kimlik, baseUrl: s.basis },
+    });
+    const bericht = (calls) => ({
+      reportId: 'rep-vertrag-gamma',
+      windowStart: TAG_START,
+      windowEnd: TAG_ENDE,
+      taskTotals: { 'b2c-draft': { calls, prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 } },
+    });
+
+    // 1. Erster Prozess meldet den Bericht, Merkez quittiert, Kontingent (1) ist damit verbraucht
+    const a = neuerClient();
+    await a.reportUsage(bericht(1));
+    await a.getToken();
+    assert.equal(a.getState().hasPendingReport, false);
+
+    // 2. Neuer Prozess (z. B. nach Neustart) meldet dieselbe ID mit anderem Inhalt → Merkez lehnt ab, Limit → 402
+    s.kiEntra.token = 'fake-entra-token-gamma-zwei'; // secret-scan: ignore (Fake-Testwert)
+    const b = neuerClient();
+    await b.reportUsage(bericht(2));
+    const warn = console.warn;
+    console.warn = () => {};
+    try {
+      await assert.rejects(b.getToken(), (err) => err.code === 'AI_QUOTA_EXCEEDED');
+    } finally {
+      console.warn = warn;
+    }
+    assert.equal(b.getState().hasPendingReport, false, 'abgelehnter Bericht blockiert die Warteschlange nicht mehr');
+    assert.deepEqual(await b.reportUsage({ ...bericht(1), reportId: 'rep-vertrag-gamma-2' }), { ok: true, staged: true });
   } finally {
     await s.stop();
   }

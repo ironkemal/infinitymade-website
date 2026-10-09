@@ -356,9 +356,12 @@ export function erstelleApp({ db, cloudflare, acmedns, config, kiEntra = null, j
     const monat = monatsSchluessel(jetzt());
     const limit = req.box.ki_limit ?? config.ki.monatsLimit;
     if (db.kiZaehlen(req.box.box_id, monat) >= limit) {
+      // Bericht-Ergebnis auch hier: sonst wartet ein abgelehnter Bericht bis Monatsende (M4.11 γ).
       return res.status(402).json({
         code: 'AI_QUOTA_EXCEEDED',
         resetAt: naechsterMonatsanfangBerlin(jetzt()),
+        ...(ack ? { acknowledgedReportId: ack } : {}),
+        ...(abgelehnt ? { rejectedReportId: abgelehnt } : {}),
       });
     }
 

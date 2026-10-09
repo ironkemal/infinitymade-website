@@ -7,7 +7,11 @@
 // - Singleflight deduplication for concurrent refresh calls, isolated caller aborts.
 // - Revalidates cached target against CURRENT allowlist and dynamic config.
 // - Centre failure retains existing valid token ONLY until real expiry.
-// - Centre quota errors immediately disable token cache with AI_QUOTA_EXCEEDED.
+// - Centre quota (402 + AI_QUOTA_EXCEEDED) locks token issuance until the centre's resetAt
+//   (UNIX s), capped at 6 h if missing/invalid; the lock lifts by itself on the next request
+//   (M4.11 β). 429/other errors are transient: keep a valid token, never lock (M4.11 α).
+//   The quota authority is the centre — this lock only saves requests (RAM, reset on restart).
+// - rejectedReportId matching the staged report drops it, so it cannot block forever (M4.11 γ).
 // - Constant German error messages and codes — no TTL/region/token/raw error reflection.
 // - Aggregate contract: staged cumulative UTC-day window snapshot piggybacked on /v1/ki/jeton.
 //   Acknowledged only when response acknowledgedReportId matches exactly.
@@ -15,6 +19,7 @@
 
 import { merkezFetch } from '../merkez-istemci/merkez-fetch.js';
 import { createAiConfig, validateEndpointUrl, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
+import { pruefeKiBericht } from '../merkez-istemci/ki-bericht-schema.js';
 
 const MAX_TTL_SECONDS = 3600;
 const MIN_TOKEN_LENGTH = 10;
@@ -26,19 +31,34 @@ const INTERNAL_CENTRE_TIMEOUT_MS = 15_000;
 
 const RE_SAFE_SEGMENT = /^[a-zA-Z0-9_-]{1,64}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
-const RE_REPORT_ID = /^[a-zA-Z0-9_-]{1,64}$/;
-const RE_UTC_DAY = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 
-const ALLOWED_TASKS = Object.freeze(new Set([
-  'b2c-draft',
-  'rezept-validate',
-  'rezept-ocr',
-  'appointment-confirm-draft',
-  'series-scheduler',
-  'b2b-draft',
-  'rezept-normalize'
-]));
+// M4.11 β: quota lock bounds. resetAt is the centre's next Berlin month start (≤ 31 days + DST).
+const QUOTA_LOCK_FALLBACK_MS = 6 * 3600_000;
+const QUOTA_LOCK_MAX_MS = 32 * 86_400_000;
+
+// Gründe aus pruefeKiBericht → feste deutsche Meldungen (keine Eingabe wird gespiegelt).
+const BERICHT_FEHLER = Object.freeze({
+  form: 'Aggregatdaten ungültig',
+  zusatzfeld: 'Aggregatdaten enthalten unzulässige Felder',
+  report_id: 'reportId ungültig',
+  fenster: 'Zeitfenster muss ein kanonischer UTC-Tag (00:00:00.000Z, 24 Stunden) sein',
+  tasks: 'Unbekannter Task in taskTotals',
+  metrik: 'Token-Metriken müssen nicht-negative Ganzzahlen sein'
+});
+
+/**
+ * Ende der Kontingentsperre (ms). resetAt = UNIX-Sekunden vom Zentrum; fehlt er, ist er
+ * keine Ganzzahl, liegt er nicht in der Zukunft oder weiter als 32 Tage entfernt → now + 6 h.
+ * Rein, ohne Seiteneffekte (M4.11 β).
+ */
+export function kilitBitisMs(resetAtSec, nowMs) {
+  if (Number.isSafeInteger(resetAtSec)) {
+    const bis = resetAtSec * 1000;
+    if (bis > nowMs && bis - nowMs <= QUOTA_LOCK_MAX_MS) return bis;
+  }
+  return nowMs + QUOTA_LOCK_FALLBACK_MS;
+}
 
 /**
  * Races a promise against an AbortSignal.
@@ -93,7 +113,7 @@ function raceSignal(promise, signal, defaultErrMsg = 'Anfrage vor Jeton-Abruf ab
  *   getToken: (opts?: {forceRefresh?: boolean, rejectedToken?: string, signal?: AbortSignal}) => Promise<{token: string, exp: number, endpoint: string, deployment: string, region: string, apiVersion: string}>,
  *   invalidate: (rejectedToken?: string) => void,
  *   reportUsage: (report?: object) => Promise<{ok: boolean, staged: boolean}>,
- *   getState: () => {hasToken: boolean, tokenDisabled: boolean, exp: number|null, disabledReason: string|null, hasPendingReport: boolean}
+ *   getState: () => {hasToken: boolean, tokenDisabled: boolean, disabledUntil: number|null, exp: number|null, disabledReason: string|null, hasPendingReport: boolean}
  * }}
  */
 export function createJetonClient(options = {}) {
@@ -112,7 +132,7 @@ export function createJetonClient(options = {}) {
   // RAM-only state closure
   let currentToken = null;
   let singleflightPromise = null;
-  let tokenDisabled = false;
+  let disabledUntilMs = null; // M4.11 β: quota lock end; checked on each request, no timer
   let disabledReason = null;
   let pendingReport = null; // Staged cumulative snapshot
   let aggregateDiagnostic = null;
@@ -120,6 +140,35 @@ export function createJetonClient(options = {}) {
   function invalidate(rejectedToken) {
     if (!rejectedToken || (currentToken && currentToken.token === rejectedToken)) {
       currentToken = null;
+    }
+  }
+
+  // Lifts an expired quota lock (checked at request time — no setTimeout).
+  function isLocked() {
+    if (disabledUntilMs === null) return false;
+    if (nowFn() >= disabledUntilMs) {
+      disabledUntilMs = null;
+      disabledReason = null;
+      return false;
+    }
+    return true;
+  }
+
+  function quotaError() {
+    const err = new Error('KI-Jetonkontingent erschöpft (Zentrum)');
+    err.code = disabledReason || 'AI_QUOTA_EXCEEDED';
+    err.status = 503;
+    return err;
+  }
+
+  // Report acknowledgement / permanent rejection from the centre (M4.11 γ). Only the ID is logged.
+  function handleReportOutcome(json) {
+    if (!pendingReport || !json || typeof json !== 'object') return;
+    if (json.acknowledgedReportId === pendingReport.reportId) {
+      pendingReport = null;
+    } else if (json.rejectedReportId === pendingReport.reportId) {
+      console.warn(`[ki-jeton] Aggregatmeldung vom Zentrum abgelehnt und verworfen: ${pendingReport.reportId}`);
+      pendingReport = null;
     }
   }
 
@@ -205,97 +254,15 @@ export function createJetonClient(options = {}) {
     };
   }
 
+  // Gemeinsames Schema mit dem Zentrum (merkez-istemci/ki-bericht-schema.js) — eine Quelle.
   function validateReportSnapshot(report) {
-    if (!report || typeof report !== 'object') {
-      throw new Error('Aggregatdaten ungültig');
-    }
-
-    const { reportId, windowStart, windowEnd, taskTotals } = report;
-
-    if (typeof reportId !== 'string' || !RE_REPORT_ID.test(reportId)) {
-      throw new Error('reportId ungültig');
-    }
-
-    if (typeof windowStart !== 'string' || !RE_UTC_DAY.test(windowStart)) {
-      throw new Error('windowStart muss gültiges UTC-ISO-Datum sein');
-    }
-
-    if (typeof windowEnd !== 'string' || !RE_UTC_DAY.test(windowEnd)) {
-      throw new Error('windowEnd muss gültiges UTC-ISO-Datum sein');
-    }
-
-    const startMs = Date.parse(windowStart);
-    const endMs = Date.parse(windowEnd);
-    if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
-      throw new Error('Ungültiges Datum');
-    }
-    const dStart = new Date(startMs);
-    const dEnd = new Date(endMs);
-    if (dStart.toISOString() !== windowStart || dEnd.toISOString() !== windowEnd) {
-      throw new Error('Zeitfenster muss kanonisch ISO-formatiert sein');
-    }
-    if (dStart.getUTCHours() !== 0 || dStart.getUTCMinutes() !== 0 || dStart.getUTCSeconds() !== 0 || dStart.getUTCMilliseconds() !== 0) {
-      throw new Error('Zeitfenster muss um 00:00:00.000Z beginnen');
-    }
-    if (endMs !== startMs + 86400000) {
-      throw new Error('Zeitfenster muss exakt 24 Stunden umfassen');
-    }
-
-    if (!taskTotals || typeof taskTotals !== 'object') {
-      throw new Error('taskTotals ungültig');
-    }
-
-    const taskKeys = Object.keys(taskTotals);
-    if (taskKeys.length > 20) {
-      throw new Error('taskTotals überschreitet Höchstgrenze');
-    }
-
-    const sanitizedTotals = {};
-    for (const task of taskKeys) {
-      if (!ALLOWED_TASKS.has(task)) {
-        throw new Error('Unbekannter Task in taskTotals');
-      }
-      const m = taskTotals[task];
-      if (!m || typeof m !== 'object') {
-        throw new Error('Metriken ungültig');
-      }
-      const calls = m.calls;
-      const pt = m.prompt_tokens;
-      const ct = m.completion_tokens;
-      const tt = m.total_tokens;
-
-      if (
-        !Number.isSafeInteger(calls) || calls < 0 ||
-        !Number.isSafeInteger(pt) || pt < 0 ||
-        !Number.isSafeInteger(ct) || ct < 0 ||
-        !Number.isSafeInteger(tt) || tt < 0
-      ) {
-        throw new Error('Token-Metriken müssen nicht-negative Ganzzahlen sein');
-      }
-
-      sanitizedTotals[task] = {
-        calls,
-        prompt_tokens: pt,
-        completion_tokens: ct,
-        total_tokens: tt
-      };
-    }
-
-    return {
-      reportId,
-      windowStart,
-      windowEnd,
-      taskTotals: sanitizedTotals
-    };
+    const g = pruefeKiBericht(report);
+    if (!g.ok) throw new Error(BERICHT_FEHLER[g.grund] || BERICHT_FEHLER.form);
+    return g.bericht;
   }
 
   async function performRefresh() {
-    if (tokenDisabled) {
-      const err = new Error('KI-Jetonkontingent erschöpft (Zentrum)');
-      err.code = disabledReason || 'AI_QUOTA_EXCEEDED';
-      err.status = 503;
-      throw err;
-    }
+    if (isLocked()) throw quotaError();
 
     const cfg = getConfig();
     const effectiveAllowedHosts = options.allowedHosts || cfg.allowedHosts;
@@ -352,21 +319,18 @@ export function createJetonClient(options = {}) {
       clearTimeout(centreTimer);
     }
 
-    // Quota error check
-    const isQuotaStatus = res.status === 402 || res.status === 429;
-    const isQuotaCode = res.json?.code === 'AI_QUOTA_EXCEEDED' || res.json?.error === 'quota';
-
-    if (isQuotaStatus || isQuotaCode) {
+    // Quota: only 402 + code AI_QUOTA_EXCEEDED (M4.11 α). Report outcome first, then lock (β).
+    // 429, a 402 without that code and non-JSON bodies fall through to the transient path below.
+    const body = res && res.json && typeof res.json === 'object' ? res.json : null;
+    if (res?.status === 402 && body?.code === 'AI_QUOTA_EXCEEDED') {
+      handleReportOutcome(body);
       currentToken = null;
-      tokenDisabled = true;
+      disabledUntilMs = kilitBitisMs(body.resetAt, nowFn());
       disabledReason = 'AI_QUOTA_EXCEEDED';
-      const quotaErr = new Error('KI-Jetonkontingent erschöpft (Zentrum)');
-      quotaErr.code = 'AI_QUOTA_EXCEEDED';
-      quotaErr.status = 503;
-      throw quotaErr;
+      throw quotaError();
     }
 
-    if (!res.ok || !res.json) {
+    if (!res?.ok || !body) {
       const currentSec = Math.floor(nowFn() / 1000);
       if (currentToken && currentSec < currentToken.exp) {
         const epVal = validateEndpointUrl(currentToken.endpoint, effectiveAllowedHosts);
@@ -383,7 +347,7 @@ export function createJetonClient(options = {}) {
     // Validate payload strictly
     let validated;
     try {
-      validated = validateTokenPayload(res.json, effectiveAllowedHosts);
+      validated = validateTokenPayload(body, effectiveAllowedHosts);
     } catch (valErr) {
       const currentSec = Math.floor(nowFn() / 1000);
       if (currentToken && currentSec < currentToken.exp) {
@@ -398,10 +362,8 @@ export function createJetonClient(options = {}) {
       throw invalidErr;
     }
 
-    // Check acknowledgment of staged report (exact match required)
-    if (pendingReport && res.json?.acknowledgedReportId === pendingReport.reportId) {
-      pendingReport = null; // Acknowledged and cleared
-    }
+    // Acknowledgement / rejection of the staged report (exact match required)
+    handleReportOutcome(body);
 
     currentToken = validated;
     return validated;
@@ -430,12 +392,7 @@ export function createJetonClient(options = {}) {
       throw err;
     }
 
-    if (tokenDisabled) {
-      const err = new Error('KI-Jetonkontingent erschöpft (Zentrum)');
-      err.code = disabledReason || 'AI_QUOTA_EXCEEDED';
-      err.status = 503;
-      throw err;
-    }
+    if (isLocked()) throw quotaError();
 
     if (signal?.aborted) {
       throw new DOMException('Anfrage vor Jeton-Abruf abgebrochen', 'AbortError');
@@ -541,7 +498,8 @@ export function createJetonClient(options = {}) {
   function getState() {
     return {
       hasToken: Boolean(currentToken),
-      tokenDisabled,
+      tokenDisabled: isLocked(),
+      disabledUntil: disabledUntilMs,
       exp: currentToken ? currentToken.exp : null,
       disabledReason,
       hasPendingReport: Boolean(pendingReport),

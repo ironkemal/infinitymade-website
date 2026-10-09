@@ -437,16 +437,16 @@ test('centre failure: retains unexpired valid token on centre downtime', async (
   await assert.rejects(async () => client.getToken(), /Zentrum für KI-Jeton nicht erreichbar/);
 });
 
-test('quota error: centre quota status disables token immediately and throws AI_QUOTA_EXCEEDED', async () => {
+test('quota error: centre 402 AI_QUOTA_EXCEEDED locks token issuance and throws AI_QUOTA_EXCEEDED', async () => {
   const fakeNow = 1_700_000_000_000;
   let shouldQuota = false;
 
   const merkezImpl = async () => {
     if (shouldQuota) {
       return {
-        status: 429,
+        status: 402,
         ok: false,
-        json: { code: 'AI_QUOTA_EXCEEDED', error: 'quota' }
+        json: { code: 'AI_QUOTA_EXCEEDED', resetAt: Math.floor(fakeNow / 1000) + 86_400 }
       };
     }
     return {
