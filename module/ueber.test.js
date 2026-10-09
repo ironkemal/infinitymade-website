@@ -1,7 +1,7 @@
 // O-178 / K2b.16 — „Über diese Software".
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { verbindungenHtml, herstellerHtml, rechtslinksFuerKutu, ueberSeiteStarten, RECHTEVERMERK } from './ueber.js';
+import { verbindungenHtml, herstellerHtml, rechtslinksFuerKutu, praxisFusszeileHtml, ueberSeiteStarten, RECHTEVERMERK } from './ueber.js';
 
 test('Rechtevermerk ist bis K2b.16 offen (null) und erscheint dann NICHT auf der Seite', () => {
   // Wird dieser Test rot, ist T21 erledigt: Erwartung hier anpassen.
@@ -72,4 +72,33 @@ test('angemeldet: Verbindungen mit Bearer-Token geladen', async () => {
   await ueberSeiteStarten({ doc, apiBase: '/api', holeToken: async () => 'tok', fetchFn });
   assert.match(doc.els.verbindungen.innerHTML, /ghcr\.io/);
   assert.deepEqual(headers, [null, 'Bearer tok']);
+});
+
+test('Patientenseite (data-rechtslinks="praxis"): Praxisangaben in Box UND SaaS; ohne Impressum-URL nur Klartext', () => {
+  const blk = () => ({ innerHTML: 'alt', getAttribute: () => 'praxis' });
+  const praxis = { name: 'Praxis <Nord>', anschrift: 'Weg 1, 53721 Siegburg', impressumUrl: '', datenschutzHref: '#datenschutzhinweise' };
+  const saas = blk();
+  assert.equal(rechtslinksFuerKutu(false, fakeDoc([], [saas]), praxis), 1);
+  assert.match(saas.innerHTML, /<span>Praxis &lt;Nord&gt; · Weg 1, 53721 Siegburg<\/span>/);
+  assert.doesNotMatch(saas.innerHTML, /Impressum|ueber\.html|Cookie/);
+  assert.match(saas.innerHTML, /href="#datenschutzhinweise"/);
+  const box = blk();
+  rechtslinksFuerKutu(true, fakeDoc([], [box]), praxis);
+  assert.match(box.innerHTML, /Über diese Software/);
+});
+
+test('Patientenseite: https-URLs als externe Links mit noreferrer, javascript: wird verworfen', () => {
+  const html = praxisFusszeileHtml({ name: 'P', anschrift: 'A', impressumUrl: 'https://praxis.de/impressum', datenschutzHref: 'https://praxis.de/ds' }, false);
+  assert.match(html, /href="https:\/\/praxis\.de\/impressum" target="_blank" rel="noopener noreferrer">Impressum/);
+  assert.match(html, /href="https:\/\/praxis\.de\/ds"[^>]*>Datenschutz</);
+  assert.doesNotMatch(html, /<span>/);
+  const boese = praxisFusszeileHtml({ name: 'P', anschrift: 'A', impressumUrl: 'javascript:alert(1)', datenschutzHref: 'http://x.de' }, false);
+  assert.doesNotMatch(boese, /javascript|http:\/\/x/);
+  assert.match(boese, /<span>P · A<\/span>/);
+});
+
+test('Patientenseite ohne Praxisdaten (noch nicht geladen): SaaS unverändert, Box nur „Über diese Software"', () => {
+  const b = { innerHTML: 'alt', getAttribute: () => 'praxis' };
+  assert.equal(rechtslinksFuerKutu(false, fakeDoc([], [b])), 0);
+  assert.equal(b.innerHTML, 'alt');
 });

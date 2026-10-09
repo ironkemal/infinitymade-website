@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EINWILLIGUNG_TEXTE, renderEinwilligungText } from './einwilligung-texte.js';
+import { EINWILLIGUNG_TEXTE, renderEinwilligungText, renderTerminDatenschutz } from './einwilligung-texte.js';
 
 const basis = { praxis_name: 'Praxis Nord', praxis_adresse: 'Weg 1, 53721 Siegburg', patient_name: 'A B', patient_geburtsdatum: '01.01.1970', datum: '06.10.2026', profile: {}, optionen: [] };
 const ds = (extra = {}) => renderEinwilligungText('datenschutz', { ...basis, ...extra }).text;
 
-test('Version erhöht: v3 (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
-  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v3-2026-10-06');
+test('Version erhöht: v4 (Herstellername 09.10.) (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
+  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v4-2026-10-09');
   assert.equal(EINWILLIGUNG_TEXTE.foto.version, 'foto-v2-2026-10-06');
 });
 
@@ -25,14 +25,14 @@ test('Kutu: Software läuft in der Praxis, Hersteller ohne Zugriff, keine „Ser
 
 test('SaaS: Anbieter als Auftragsverarbeiter nach Weisung, ohne ungeprüfte Zusätze (§-203-Halbsatz, Hosting-Ort)', () => {
   const t = ds({ betrieb: 'saas' });
-  assert.match(t, /InfinityMade/);
+  assert.match(t, /Yavuz Kemal Demir \(Siegburg\)/);
   assert.match(t, /Weisung der Praxis als Auftragsverarbeiter \(Art\. 28 DSGVO\)/);
   assert.doesNotMatch(t, /§ 203|Server in Deutschland|\[saas_hosting_satz\]/);
 });
 
 test('Standard ist SaaS (bisheriges Verhalten), unbekannter Betrieb ebenso', () => {
-  assert.match(ds({}), /InfinityMade/);
-  assert.match(ds({ betrieb: 'quatsch' }), /InfinityMade/);
+  assert.match(ds({}), /Yavuz Kemal Demir \(Siegburg\)/);
+  assert.match(ds({ betrieb: 'quatsch' }), /Yavuz Kemal Demir \(Siegburg\)/);
 });
 
 test('Empfänger: Kasse, UV-Träger bei Unfall, Arzt, Steuerberater — und NICHT mehr „nicht an Dritte“', () => {
@@ -89,7 +89,27 @@ test('KI-Absatz: durchgängig Europäischer Wirtschaftsraum, nie „außerhalb d
 });
 
 test('Box + KI aktiv: Hersteller ist für die KI Auftragsverarbeiter; Box ohne KI und SaaS bekommen den Satz nicht', () => {
-  assert.match(ds({ betrieb: 'kutu', kiAktiv: true }), /Nur für die optionale KI-Unterstützung \(siehe unten\) handelt der Softwareanbieter, InfinityMade \(Siegburg\), als Auftragsverarbeiter/);
+  assert.match(ds({ betrieb: 'kutu', kiAktiv: true }), /Nur für die optionale KI-Unterstützung \(siehe unten\) handelt der Softwarehersteller, Yavuz Kemal Demir \(Siegburg\), als Auftragsverarbeiter/);
   assert.doesNotMatch(ds({ betrieb: 'kutu' }), /Nur für die optionale KI-Unterstützung/);
   assert.doesNotMatch(ds({ betrieb: 'saas', kiAktiv: true }), /Nur für die optionale KI-Unterstützung \(siehe unten\) handelt/);
+});
+
+test('Kein „InfinityMade" mehr in Patiententexten (legal-de 09.10.)', () => {
+  for (const b of ['saas', 'kutu']) assert.doesNotMatch(ds({ betrieb: b, kiAktiv: true }), /InfinityMade/);
+});
+
+test('Terminseite: Verantwortlicher, Rechtsgrundlagen, kein Platzhalter-Rest, keine Einwilligung', () => {
+  const r = renderTerminDatenschutz({ praxis_name: 'Praxis Nord', inhaber_name: 'Eva Muster', praxis_anschrift: 'Weg 1, 53721 Siegburg' }, { betrieb: 'kutu' });
+  const text = r.absaetze.map((a) => a.text).join('\n');
+  assert.match(text, /^Verantwortlich für die Verarbeitung Ihrer Daten ist Praxis Nord, Inhaber\/in Eva Muster, Weg 1, 53721 Siegburg\.$/m);
+  assert.match(text, /Art\. 6 Abs\. 1 lit\. b DSGVO/);
+  assert.match(text, /§ 22 Abs\. 1 Nr\. 1 lit\. b BDSG/);
+  assert.match(text, /keinen Zugriff/);
+  assert.match(text, /der für die Praxis zuständigen Datenschutzaufsichtsbehörde/);
+  assert.doesNotMatch(text, /\{\{|\[\w+\]|Widerruf|InfinityMade/);
+});
+
+test('Terminseite: Inhaber gleich Praxisname wird nicht doppelt genannt', () => {
+  const r = renderTerminDatenschutz({ praxis_name: 'Eva Muster', inhaber_name: 'Eva Muster', praxis_anschrift: 'X' });
+  assert.match(r.absaetze[0].text, /ist Eva Muster, X\./);
 });

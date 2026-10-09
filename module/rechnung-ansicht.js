@@ -24,7 +24,7 @@
  */
 
 import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006i';
-import { brandingAus } from './branding.js?v=20261006g';
+import { brandingAus } from './branding.js?v=20261009k15';
 import { typKennzeichen } from './rechnung-summen.js?v=20261006n';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 

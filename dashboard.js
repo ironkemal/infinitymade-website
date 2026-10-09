@@ -43,7 +43,7 @@ import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrah
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261003m16';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
-import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
+import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261006n';
@@ -70,7 +70,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261007m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261007m3';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009k15';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -137,7 +137,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261008m4b';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261009k15';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -11305,7 +11305,7 @@ async function loadSettings() {
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
   set('setStreet', currentProfile.street);
-  set('setPlz', currentProfile.plz);
+  set('setPlz', currentProfile.zip || currentProfile.plz); // zip kanonisch, plz Altlast (09.10.2026)
   set('setCity', currentProfile.city);
   set('setPhone', currentProfile.phone);
   set('setBankName', currentProfile.bank_name);
@@ -12327,7 +12327,7 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
     business_name: biz,
     language: 'de',
     street: v('setStreet') || null,
-    plz: v('setPlz') || null,
+    plz: v('setPlz') || null, zip: v('setPlz') || null,   // beide Spalten gleich halten (RPC/Art.-13-Text lesen zip)
     city: v('setCity') || null,
     phone: v('setPhone') || null,
     kim_adresse: v('set-kim-adresse') || null,
@@ -14992,7 +14992,7 @@ async function init() {
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
-    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast });
+    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal });
     console.log('[init] ausfallConfig ok');
@@ -17115,7 +17115,7 @@ function initKioskModeWired() {
     apiBase: API,
     supabase, showToast, showConfirmModal,
     getOwnerId,
-    getProfile: () => currentProfile,
+    getProfile: () => ownerProfile || currentProfile,   // Verantwortliche = Praxis, auch bei Mitarbeiter-Login (09.10.2026)
     getBusinessId: () => currentBusiness?.id || null,
     getSessionUserId: () => currentSession?.user?.id || null,
   });

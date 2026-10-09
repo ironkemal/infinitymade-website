@@ -3946,11 +3946,13 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       behandlungsart, verordnung_sitzungen, frequenz, verordnung_typ, doppelbehandlung,
       pkv_versicherung, arzt_ueberweisung, arzt_ueberweisung_name,
       bg_aktenzeichen, bg_name, unfalldatum, durchgangsarzt,
-      notizen, dsgvo_consent
+      notizen
     } = req.body || {};
 
-    if (!owner_id || !payment_type || !dsgvo_consent) {
-      return res.status(400).json({ error: 'owner_id, payment_type und DSGVO-Zustimmung erforderlich' });
+    // Keine Einwilligungspflicht mehr (legal-de 09.10.2026, K2b.15): Rechtsgrundlage ist
+    // Art. 6(1)(b) / 9(2)(h) + § 22 BDSG; ein mitgeschicktes dsgvo_consent wird ignoriert.
+    if (!owner_id || !payment_type) {
+      return res.status(400).json({ error: 'owner_id und payment_type erforderlich' });
     }
     if (!['gkv', 'pkv', 'selbstzahler', 'bg'].includes(payment_type)) {
       return res.status(400).json({ error: 'Ungültiger Zahlungstyp' });
@@ -4012,7 +4014,8 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         bg_aktenzeichen: bg_aktenzeichen || null, bg_name: bg_name || null,
         unfalldatum: unfalldatum || null, durchgangsarzt: durchgangsarzt || null,
         notizen: notizen ? notizen.substring(0, 500) : null,
-        dsgvo_consent: true, consent_at: new Date().toISOString(),
+        // dsgvo_consent/consent_at nicht mehr setzen (Default false/null) — sonst wäre eine
+        // nie eingeholte Einwilligung dokumentiert (legal-de 09.10.2026). Altzeilen bleiben.
       })
       .select('id').single();
     if (reqErr) throw reqErr;

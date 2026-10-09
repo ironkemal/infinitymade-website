@@ -748,8 +748,8 @@
           <label class="form-label">Telefonnummer</label>
           <input class="form-input" id="custPhone" type="tel" required />
           <p style="font-size:0.78rem;color:#888;margin:0.5rem 0 0.75rem;line-height:1.4;">
-  Ihre Daten werden zur Buchungsabwicklung verarbeitet.
-  <a href="/datenschutz.html" target="_blank" style="color:#888;text-decoration:underline;">Datenschutzerklärung</a>
+  Ihre Angaben verarbeitet <span data-praxis-name>die Praxis</span> zur Vereinbarung Ihres Termins und zur Vorbereitung Ihrer Behandlung. Angaben zu Ihrer Gesundheit werden nur hierfür verwendet und unterliegen der beruflichen Schweigepflicht. Näheres in den
+  <a href="#datenschutzhinweise" data-datenschutz-link data-datenschutzhinweise style="color:#888;text-decoration:underline;">Datenschutzhinweisen</a>.
 </p>
           <div style="position:absolute;left:-10000px;" aria-hidden="true"><label for="bookingWebsite">Website</label><input type="text" id="bookingWebsite" name="website" tabindex="-1" autocomplete="off"></div>
           <div class="step-footer">
@@ -770,12 +770,10 @@
     </main>
   </div>
 
-  <script type="module" src="booking.js?v=20261004m112"></script>
-<footer style="text-align:center;padding:1.5rem 1rem;font-size:0.82rem;color:#999;border-top:1px solid #f0f0f0;margin-top:2rem;">
-  <a href="/impressum.html" style="color:#999;text-decoration:underline;margin:0 0.5rem;">Impressum</a> ·
-  <a href="/datenschutz.html" style="color:#999;text-decoration:underline;margin:0 0.5rem;">Datenschutz</a> ·
-  <a href="/datenschutz.html#cookie-einstellungen" style="color:#999;text-decoration:underline;margin:0 0.5rem;">Cookie-Einstellungen</a>
-</footer>
+  <script type="module" src="booking.js?v=20261009k15"></script>
+<!-- K2b.15: Inhalt setzt module/termin-rechtstexte.js aus den Angaben der Praxis (Betreiberin). -->
+<footer class="praxis-rechtslinks" data-rechtslinks="praxis" style="text-align:center;padding:1.5rem 1rem;font-size:0.82rem;color:#999;border-top:1px solid #f0f0f0;margin-top:2rem;"></footer>
+<style>.praxis-rechtslinks a{color:#999;text-decoration:underline;margin:0 0.5rem;}</style>
 </body>
 
 </html>

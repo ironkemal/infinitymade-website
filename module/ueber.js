@@ -9,6 +9,7 @@
 // Lizenztexte der Server-Komponente (routes/ueber.js — Begründung dort).
 
 import { SUPPORT_ADRESSE } from './support-kontakt.js';
+import { httpsUrl } from './branding.js?v=20261009k15';
 
 export const HERSTELLER = Object.freeze({
   name: 'Yavuz Kemal Demir',
@@ -91,10 +92,43 @@ export async function ueberSeiteStarten({ doc = document, apiBase, holeToken, fe
  * Box-Fußzeilen: Impressum/Datenschutz/AGB/Cookie-Links (SaaS-Seiten von
  * Praxura) durch „Über diese Software" ersetzen. Markiert mit data-rechtslinks.
  * Auf SaaS bleibt alles wie es ist (O-58 (a): ein Code, Flaggen-Zweig).
+ * Ausnahme data-rechtslinks="praxis" + `praxis`: Patientenseiten, in beiden Betrieben
+ * die Angaben der Praxis (praxisFusszeileHtml).
  */
-export function rechtslinksFuerKutu(istKutu, doc = globalThis.document) {
-  if (!istKutu || !doc) return 0;
-  const bloecke = doc.querySelectorAll('[data-rechtslinks]');
-  for (const b of bloecke) b.innerHTML = '<a href="/ueber.html">Über diese Software</a>';
-  return bloecke.length;
+export function rechtslinksFuerKutu(istKutu, doc = globalThis.document, praxis = null) {
+  if (!doc) return 0;
+  let n = 0;
+  for (const b of doc.querySelectorAll('[data-rechtslinks]')) {
+    // Patientenseiten (K2b.15, legal-de 09.10.2026): Betreiberin ist die Praxis — in Box UND SaaS
+    // ihre Angaben (G7). Ohne Impressum-URL kein „Impressum"-Link, nur Klartext Name · Anschrift.
+    if (praxis && b.getAttribute?.('data-rechtslinks') === 'praxis') {
+      b.innerHTML = praxisFusszeileHtml(praxis, istKutu);
+      n++;
+    } else if (istKutu) {
+      b.innerHTML = '<a href="/ueber.html">Über diese Software</a>';
+      n++;
+    }
+  }
+  return n;
+}
+
+/**
+ * Fußzeile der Patientenseiten. `praxis` = { name, anschrift, impressumUrl, datenschutzHref }.
+ * datenschutzHref ist entweder die https-URL der Praxis oder ein Anker auf die erzeugten Hinweise.
+ * Fremde Links: rel="noopener noreferrer" — der Buchungs-Slug soll nicht als Referer abfließen (O-181 ii).
+ */
+export function praxisFusszeileHtml(praxis, istKutu) {
+  const extern = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>`;
+  const teile = [];
+  const impressum = httpsUrl(praxis.impressumUrl);
+  if (impressum) teile.push(extern(impressum, 'Impressum'));
+  else {
+    const klartext = [praxis.name, praxis.anschrift].map((s) => String(s || '').trim()).filter(Boolean).join(' · ');
+    if (klartext) teile.push(`<span>${esc(klartext)}</span>`);
+  }
+  const ds = String(praxis.datenschutzHref || '');
+  if (ds.startsWith('#')) teile.push(`<a href="${esc(ds)}" data-datenschutzhinweise>Datenschutzhinweise</a>`);
+  else if (httpsUrl(ds)) teile.push(extern(ds, 'Datenschutz'));
+  if (istKutu) teile.push('<a href="/ueber.html">Über diese Software</a>');
+  return teile.join(' · ');
 }

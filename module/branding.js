@@ -27,7 +27,16 @@ export const BRANDING_SPALTEN = 'business_name,praxis_inhaber,owner_first_name,o
 
 const t = (w) => String(w ?? '').trim();
 
-const httpsUrl = (w) => { const u = t(w); return /^https:\/\/\S+$/i.test(u) ? u : ''; };
+/**
+ * Nur https, ≤500 Zeichen, ohne Leer-/Steuerzeichen — sonst ''. Der DB-CHECK (0069/0073)
+ * hält javascript: & Co. fern; hier wird VOR dem href noch einmal geprüft (onprem O-181 i,
+ * Box-Kopien könnten abweichen). Auch für praxis_impressum_url/praxis_datenschutz_url (K2b.15).
+ */
+export const httpsUrl = (w) => {
+  const u = t(w);
+  if (!u || u.length > 500 || /[\s\u0000-\u001f\u007f]/.test(u)) return '';
+  try { return new URL(u).protocol === 'https:' ? u : ''; } catch { return ''; }
+};
 
 /** Profilzeile -> einheitliches Branding-Objekt. */
 export function brandingAus(p) {

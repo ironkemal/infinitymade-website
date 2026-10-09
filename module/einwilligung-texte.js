@@ -148,7 +148,7 @@ export const EINWILLIGUNG_TEXTE = {
   // einzeln waehlbar und standardmaessig AUS.
   // -------------------------------------------------------------------
   datenschutz: {
-    version: 'datenschutz-v3-2026-10-06',
+    version: 'datenschutz-v4-2026-10-09',
     consentType: 'datenschutz',
     titel: 'Datenschutz — Information und Einwilligung',
     kurzfassung: [
@@ -344,15 +344,16 @@ function ersetze(str, ctx) {
  */
 // Box + aktives KI-Modul: nur für die KI-Unterstützung ist der Hersteller Auftragsverarbeiter (LEGAL_DECISIONS Nachtrag 4 Nr. 1).
 // Ohne diesen Satz widerspräche „hat keinen Zugriff" dem KI-Absatz („Unterauftragsverarbeiter des Softwareanbieters").
-const KI_AV_SATZ_KUTU = ' Nur für die optionale KI-Unterstützung (siehe unten) handelt der Softwareanbieter, InfinityMade (Siegburg), '
+const KI_AV_SATZ_KUTU = ' Nur für die optionale KI-Unterstützung (siehe unten) handelt der Softwarehersteller, Yavuz Kemal Demir (Siegburg), '
   + 'als Auftragsverarbeiter der Praxis (Art. 28 DSGVO).';
 
-function softwareSatz(betrieb) {
+// Herstellername: bürgerlicher Name, nicht „InfinityMade" (legal-de 09.10.2026, v4).
+export function softwareSatz(betrieb) {
   if (betrieb === 'kutu') {
     return 'Die Praxis nutzt die Praxissoftware Praxura, die auf einem Rechner in den Räumen der Praxis betrieben wird. '
       + 'Ihre Daten werden dort gespeichert; der Softwarehersteller hat darauf keinen Zugriff.';
   }
-  return 'Die Praxis nutzt die Praxissoftware Praxura. Deren Anbieter, InfinityMade (Siegburg), verarbeitet Ihre Daten '
+  return 'Die Praxis nutzt die Praxissoftware Praxura. Deren Hersteller, Yavuz Kemal Demir (Siegburg), verarbeitet Ihre Daten '
     + 'ausschließlich nach Weisung der Praxis als Auftragsverarbeiter (Art. 28 DSGVO).';
 }
 
@@ -424,4 +425,73 @@ export async function sha256Hex(text) {
   return Array.from(new Uint8Array(digest))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+// -------------------------------------------------------------------
+// K2b.15 (legal-de 09.10.2026): Datenschutzhinweise der Patientenseiten
+// booking.html + booking-request.html, wenn die Praxis keine eigene
+// Datenschutzerklärung (profiles.praxis_datenschutz_url) hinterlegt hat.
+// Reine Information nach Art. 13 — KEINE Einwilligung, deshalb kein Widerruf.
+// Keine feste Löschfrist: booking_requests hat (noch) keine automatische Löschung.
+// -------------------------------------------------------------------
+export const TERMIN_DATENSCHUTZ = Object.freeze({
+  version: 'termin-datenschutz-v1-2026-10-09',
+  titel: 'Datenschutzhinweise zur Online-Terminvereinbarung',
+  absaetze: [
+    { ueberschrift: 'Verantwortlich',
+      text: 'Verantwortlich für die Verarbeitung Ihrer Daten ist {{praxis_name}}{{inhaber_satz}}, {{praxis_anschrift}}.{{praxis_kontakt}}{{dsb_satz}}' },
+    { ueberschrift: 'Zweck und Rechtsgrundlage',
+      text: 'Wir verarbeiten die Angaben, die Sie bei der Online-Terminbuchung oder Terminanfrage machen (z. B. Name, '
+        + 'Geburtsdatum, Kontaktdaten, gewünschter Termin, Art der Kostenübernahme), um Ihren Termin zu vereinbaren und '
+        + 'Ihre Behandlung vorzubereiten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Durchführung vorvertraglicher '
+        + 'Maßnahmen auf Ihre Anfrage bzw. Erfüllung des Behandlungsvertrags).\n'
+        + 'Soweit Sie Angaben zu Ihrer Gesundheit machen (z. B. Diagnose, Angaben zur ärztlichen Verordnung, Krankenkasse, '
+        + 'Hinweise im Freitextfeld), verarbeiten wir diese auf Grundlage von Art. 9 Abs. 2 lit. h, Abs. 3 DSGVO in '
+        + 'Verbindung mit § 22 Abs. 1 Nr. 1 lit. b BDSG ausschließlich zur Terminplanung und Behandlung. Alle '
+        + 'Mitarbeitenden der Praxis unterliegen der beruflichen Schweigepflicht.' },
+    { ueberschrift: 'Pflicht zur Bereitstellung',
+      text: 'Name, Geburtsdatum und eine Kontaktmöglichkeit benötigen wir, um Ihren Termin zu vereinbaren; ohne diese '
+        + 'Angaben ist eine Online-Terminvereinbarung nicht möglich. Weitere Angaben sind freiwillig. Sie können einen '
+        + 'Termin auch telefonisch oder persönlich vereinbaren.' },
+    { ueberschrift: 'Praxissoftware', text: '{{software_satz}}' },
+    { ueberschrift: 'Empfänger',
+      text: 'Ihre Angaben sind nur für die Praxis bestimmt. Eine Übermittlung an Dritte erfolgt nur, wenn Sie eingewilligt '
+        + 'haben oder eine gesetzliche Pflicht bzw. Erlaubnis besteht. Sendet die Praxis Ihnen eine Bestätigung per '
+        + 'E-Mail, wird diese über den E-Mail-Anbieter der Praxis zugestellt.' },
+    { ueberschrift: 'Speicherdauer',
+      text: 'Kommt eine Behandlung zustande, werden Ihre Angaben Teil der Patientendokumentation und nach den gesetzlichen '
+        + 'Aufbewahrungspflichten (in der Regel zehn Jahre nach Abschluss der Behandlung, § 630f Abs. 3 BGB) aufbewahrt. '
+        + 'Kommt keine Behandlung zustande, werden Ihre Angaben gelöscht, sobald sie für die Bearbeitung Ihrer Anfrage '
+        + 'nicht mehr erforderlich sind.' },
+    { ueberschrift: 'Ihre Rechte',
+      text: 'Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung '
+        + 'der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20). Wenden Sie sich dazu an die oben genannte Praxis.' },
+    { ueberschrift: 'Beschwerderecht',
+      text: 'Sie können sich bei einer Datenschutzaufsichtsbehörde beschweren, insbesondere bei {{aufsichtsbehoerde}}.' },
+  ],
+});
+
+/**
+ * Datenschutzhinweise der Patientenseiten als Absätze (Seite rendert mit textContent).
+ * @param {object} angaben  { praxis_name, inhaber_name?, praxis_anschrift, praxis_kontakt?, dsb_kontakt?, aufsichtsbehoerde? }
+ * @param {{betrieb?: 'kutu'|'saas'}} [opt]
+ */
+export function renderTerminDatenschutz(angaben = {}, { betrieb } = {}) {
+  const name = String(angaben.praxis_name || '').trim();
+  const inhaber = String(angaben.inhaber_name || '').trim();
+  const ctx = {
+    praxis_name: name,
+    inhaber_satz: inhaber && inhaber !== name ? `, Inhaber/in ${inhaber}` : '',
+    praxis_anschrift: angaben.praxis_anschrift || '',
+    praxis_kontakt: angaben.praxis_kontakt ? ` Kontakt: ${angaben.praxis_kontakt}.` : '',
+    dsb_satz: angaben.dsb_kontakt ? ` Unsere Datenschutzbeauftragte bzw. unseren Datenschutzbeauftragten erreichen Sie unter ${angaben.dsb_kontakt}.` : '',
+    software_satz: softwareSatz(betrieb),
+    aufsichtsbehoerde: angaben.aufsichtsbehoerde || 'der für die Praxis zuständigen Datenschutzaufsichtsbehörde',
+  };
+  const fuellen = (str) => String(str).replace(/\{\{(\w+)\}\}/g, (_, k) => ctx[k] ?? '');
+  return {
+    version: TERMIN_DATENSCHUTZ.version,
+    titel: TERMIN_DATENSCHUTZ.titel,
+    absaetze: TERMIN_DATENSCHUTZ.absaetze.map((a) => ({ ueberschrift: a.ueberschrift, text: fuellen(a.text) })),
+  };
 }

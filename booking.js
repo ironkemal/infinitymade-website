@@ -1,6 +1,7 @@
-import { API_BASE } from './supabase-config.js?v=20260701';
-import { getPublicClient } from './module/public-supabase.js?v=20261001z';
+import { API_BASE, IST_KUTU } from './supabase-config.js';
+import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
 import { ladeKennung } from './module/public-owner.js?v=20261001z';
+import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15';
 
 const supabase = await getPublicClient();
 const API = API_BASE; // O-01, 11.09.2026
@@ -91,6 +92,17 @@ async function init() {
 
   if (profile.accepts_bookings === false) {
     document.getElementById('empList').innerHTML = '<div class="slots-empty">Dieses Unternehmen nimmt derzeit keine Online-Termine an.<br>Bitte kontaktieren Sie uns telefonisch.</div>';
+    return;
+  }
+
+  // K2b.15: Impressum/Datenschutz der Praxis; ohne Name + Anschrift keine Online-Buchung (legal-de 09.10.2026).
+  const recht = await praxisRechtstexteAnbringen({ sb: supabase, ownerId: state.ownerId, businessId: state.businessId, istKutu: IST_KUTU });
+  if (!recht.vollstaendig) {
+    const box = document.createElement('div');
+    box.className = 'slots-empty';
+    box.textContent = NICHT_EINGERICHTET;
+    box.dataset.grund = recht.grund || '';
+    document.getElementById('empList').replaceChildren(box);
     return;
   }
 

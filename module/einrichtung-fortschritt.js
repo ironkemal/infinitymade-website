@@ -13,7 +13,7 @@
  *
  * Reine Funktionen; die Zeichnung steht in `einrichtung-ring.js`.
  */
-import { brandingAus, brandingLuecken } from './branding.js?v=20261006g';
+import { brandingAus, brandingLuecken } from './branding.js?v=20261009k15';
 
 const GEWICHT = { pflicht: 2, soll: 1 };
 const PFLICHT_ANZAHL = 5;

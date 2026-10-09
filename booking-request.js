@@ -10,9 +10,10 @@
 // dieselbe Garantie, die auch die anderen Frontend-Dateien nutzen. Vorher hatte
 // diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
-import { API_BASE } from './supabase-config.js?v=20260701';
-import { getPublicClient } from './module/public-supabase.js?v=20261001z';
-import { ladeOwnerId } from './module/public-owner.js?v=20261001z';
+import { API_BASE, IST_KUTU } from './supabase-config.js';
+import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
+import { ladeKennung } from './module/public-owner.js?v=20261001z';
+import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer } from './module/anfrage-anliegen.js?v=20261001v';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -1177,14 +1178,8 @@ function buildSummary() {
 
 async function handleSubmit() {
   clearAllErrors();
-  const dsgvo1 = document.getElementById('dsgvo1').checked;
-  const dsgvo2 = document.getElementById('dsgvo2').checked;
-  if (!dsgvo1 || !dsgvo2) {
-    showFieldError('dsgvoError', 'Bitte beide Datenschutz-Checkboxen bestätigen.');
-    document.getElementById('dsgvoError').style.display = 'block';
-    return;
-  }
-  state.dsgvo_consent = true;
+  // Keine Pflicht-Checkboxen mehr (legal-de 09.10.2026): Rechtsgrundlage ist Art. 6(1)(b) /
+  // 9(2)(h) + § 22 BDSG, nicht Einwilligung — an ihrer Stelle steht ein Hinweissatz.
 
   const submitBtn = document.getElementById('submitBtn');
   const submitError = document.getElementById('submitError');
@@ -1231,6 +1226,8 @@ async function handleSubmit() {
     // Anliegen (Podologie) steht als erste Zeile in notizen — booking_requests hat
     // keine eigene Spalte; die Praxis sieht die Zeile im Anfragen-Detail.
     notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, { hausbesuch: state.hausbesuch, adresse: state.hausbesuch_adresse, hbAufRezept: state.hb_auf_rezept }, state.notizen) : (state.notizen || null),
+    // Nur noch für ältere Backends (Pflichtfeld bis K2b.15); das neue Backend ignoriert es
+    // und speichert keine Einwilligung mehr (legal-de 09.10.2026). Entfällt mit :stable.
     dsgvo_consent: true,
     website: document.getElementById('requestWebsite')?.value || '',
   };
@@ -1431,19 +1428,32 @@ async function init() {
 
   // Zwei Linkschemata, beide gueltig: ?business=<owner_id> und ?u=<slug> (wie booking.html).
   let ownerId = null;
+  let recht = null;
   try {
     const sb = await getPublicClient();
-    ownerId = await ladeOwnerId(sb, window.location.search);
+    const kn = await ladeKennung(sb, window.location.search);
+    ownerId = kn?.ownerId || null;
     // Fachbereich der Praxis: Podologie bekommt die Anliegen-Auswahl.
     if (ownerId) {
       const { data: bereich } = await sb.rpc('public_praxis_sector', { p_owner_id: ownerId });
       state.bereich = bereich || null;
+      // K2b.15: Impressum/Datenschutz der Praxis (legal-de 09.10.2026).
+      recht = await praxisRechtstexteAnbringen({ sb, ownerId, businessId: kn.businessId, istKutu: IST_KUTU });
     }
   } catch (e) {
     console.error('[booking-request] Praxis-Aufloesung:', e);
   }
   if (!ownerId) {
     document.getElementById('errorScreen').classList.add('active');
+    return;
+  }
+  // Ohne Praxisname + Anschrift kein Formular (kein Verantwortlicher benennbar).
+  if (!recht?.vollstaendig) {
+    const screen = document.getElementById('errorScreen');
+    screen.querySelector('.br-result-title').textContent = 'Noch nicht eingerichtet';
+    screen.querySelector('.br-result-body').textContent = NICHT_EINGERICHTET;
+    screen.dataset.grund = recht?.grund || 'rpc';
+    screen.classList.add('active');
     return;
   }
 

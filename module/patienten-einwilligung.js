@@ -42,7 +42,7 @@
  * (`trg_patient_consents_immutable`) und Löschen 10 Jahre lang (§ 630f Abs. 3 BGB).
  */
 
-import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261006a';
+import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261009k15';
 import { IST_KUTU } from '../supabase-config.js';
 import { getKiConfig } from './ki-client.js?v=20261008m4b';
 
@@ -183,7 +183,9 @@ function ctxFor() {
     praxis_name: p.business_name
       || [p.owner_first_name, p.owner_last_name].filter(Boolean).join(' ')
       || 'die Praxis',
-    praxis_adresse: [p.street, [p.plz, p.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    // zip ist die geschriebene Spalte, plz Altlast; Hausnummer steht getrennt (db-ustasi 09.10.2026, v4).
+    praxis_adresse: [[p.street, p.house_number].filter(Boolean).join(' '),
+      [p.zip || p.plz, p.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     patient_name: patientName(_state.patient),
     patient_geburtsdatum: _state.patient.geburtsdatum
       ? new Date(_state.patient.geburtsdatum).toLocaleDateString('de-DE')

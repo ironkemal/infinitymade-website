@@ -645,30 +645,20 @@
         <!-- Extra note -->
         <div class="br-field" style="margin-bottom:1.25rem;">
           <label for="notizen">Zusätzliche Hinweise für die Praxis <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
-          <textarea id="notizen" maxlength="500" placeholder="z.B. Rollstuhlzugang benötigt, Allergien, besondere Wünsche…"></textarea>
+          <textarea id="notizen" maxlength="500" placeholder="z.B. Rollstuhlzugang benötigt, Terminwünsche…"></textarea>
           <div class="br-char-count"><span id="notizenCount">0</span>/500</div>
         </div>
 
         <!-- DSGVO -->
+        <!-- Hinweis statt Pflicht-Einwilligung (legal-de 09.10.2026, K2b.15) -->
         <div class="br-dsgvo">
           <h3>Datenschutz</h3>
-          <label class="br-checkbox-wrap">
-            <input type="checkbox" id="dsgvo1" />
-            <span>
-              Ich stimme der Verarbeitung meiner personenbezogenen Daten gemäß der
-              <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a> zu.
-              <span class="req"> *</span>
-            </span>
-          </label>
-          <label class="br-checkbox-wrap">
-            <input type="checkbox" id="dsgvo2" />
-            <span>
-              Ich bin damit einverstanden, dass meine Gesundheitsdaten (soweit angegeben) zum Zweck
-              der Terminvermittlung gemäß Art. 9 Abs. 2 lit. h DSGVO verarbeitet werden.
-              <span class="req"> *</span>
-            </span>
-          </label>
-          <span class="br-field-error" id="dsgvoError" style="display:none;"></span>
+          <p style="margin:0;font-size:0.88rem;line-height:1.5;">
+            Ihre Angaben verarbeitet <span data-praxis-name>die Praxis</span> zur Vereinbarung Ihres Termins
+            und zur Vorbereitung Ihrer Behandlung. Angaben zu Ihrer Gesundheit (z. B. Diagnose oder Verordnung)
+            werden nur hierfür verwendet und unterliegen der beruflichen Schweigepflicht. Näheres in den
+            <a href="#datenschutzhinweise" data-datenschutz-link data-datenschutzhinweise>Datenschutzhinweisen</a>.
+          </p>
         </div>
 
         <div class="br-nav">
@@ -685,17 +675,14 @@
     </div><!-- /.br-container -->
   </main>
 
-  <footer class="br-footer">
-    <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a> ·
-    <a href="/datenschutz.html#cookie-einstellungen" target="_blank">Cookie-Einstellungen</a> ·
-    <a href="/impressum.html" target="_blank">Impressum</a>
-  </footer>
+  <!-- K2b.15: Inhalt setzt module/termin-rechtstexte.js aus den Angaben der Praxis (Betreiberin). -->
+  <footer class="br-footer" data-rechtslinks="praxis"></footer>
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261004m112"></script>
+<script type="module" src="booking-request.js?v=20261009k15"></script>
 <script type="module">
-  import { getPublicClient } from './module/public-supabase.js?v=20261001z';
+  import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
   import { ladeOwnerId } from './module/public-owner.js?v=20261001z';
   import { anliegenFuerBereich } from './module/anfrage-anliegen.js?v=20261001v';
