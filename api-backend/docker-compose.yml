@@ -70,7 +70,9 @@ services:
     # Watchtower das neue Image laengst gezogen hatte. Jetzt synchron mit
     # api-backend/Dockerfile CMD, auf dem VPS live nachvollzogen und verifiziert
     # (docker inspect --format '{{.Config.Cmd}}' zeigt beide Flags).
-    command: ["./node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "2", "--max-memory-restart", "500M", "--node-args", "--max-old-space-size=256 --import ./instrument.js"]
+    # O-179 Faz 2 (KHS T20, Kemal 09.10.2026): pm2 raus, node:cluster-Starter aus dem Image
+    # (2 Worker, RSS-Grenze, Sentry-Import, SIGTERM) — api-backend/start.mjs. VPS live nachgezogen.
+    command: ["node", "start.mjs"]
     container_name: calendar-api
     restart: unless-stopped
     pull_policy: always
