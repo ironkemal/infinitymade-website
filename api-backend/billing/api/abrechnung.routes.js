@@ -2775,7 +2775,8 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
         strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
         plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' '),
         telefon: praxisProfil.phone || '',
-        ik: praxisProfil.ik_number || rx.doctor_bsnr || '',
+        // Nie die BSNR des Arztes als Praxis-IK drucken (gkv-302, 09.10.2026): fehlt die IK, bleibt das Feld leer.
+        ik: praxisProfil.ik_number || '',
         steuernummer: praxisProfil.steuernummer || '',
         ust_id: praxisProfil.ust_id || '',
         email: user.email || ''
