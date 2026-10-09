@@ -414,7 +414,7 @@ Ağır kodu agy worker'larına ver, soğuk ikinci worker'la denetlet, diff'i ken
 Aşama bitince §6 adımlarını uygula; kalan aşama yoksa K3 prompt'unu ver, varsa hangilerinin beklendiğini söyle.
 ```
 
-**K-hattı devam (09.10.2026 devri — kaldığın yer: K2b.15 kalanı = hasta sayfaları + 0073):**
+**K-hattı devam (09.10.2026 devri — ✅ 09.10 öğleden sonra K2b.15 kalanı BİTTİ: 9c8280dd b7064f87 131e8233 a09647b1; aşağıdaki SIRADAKİ İŞ a0/a/b/c yapıldı, ölçüm §5b T25/T26. Kalan K kodu: guvenlik'e `businesses` anon tablo hakkı (S-56 kardeşi, db-ustasi 09.10) · `loeschen.js` `praxis_inhaber`/`praxis_stempel_path` null'lanmıyor · `booking_requests` için ~6 ay silme (legal-de, düşük). Gerisi Kemal'de (T20–T26, S-56 bildirimleri)):**
 ```
 Sen bu oturumun orkestra şefisin: ağır işi agy worker'larına dağıt (builder ajanı üzerinden ya da doğrudan `agy -p "$(cat C:/tmp/agy-tasks/<görev>.md)" --model gemini-3.8-flash-high --mode accept-edits --output-format json`, worker'a "Shell-Befehl gerekmez, testleri ben koşarım"), ikinci soğuk agy (`--mode plan`) diff'i denetler, diff'i sen okursun; küçük işi (≤ ~40 satır) kendin yaz. Raporu kısa, günlük Türkçe ver; her cevaba "Patron" ile başla.
 Önce git pull --rebase --autostash. Sonra oku: KUTU_HAZIRLIK_SPRINT.md (§0, K2b tablosu K2b.15/K2b.16, 3b.4 satırı, M4 bölümündeki "Hat K → Hat M notları", §5b T20–T24), fortschritte/2026-10-08.md + 2026-10-09.md, compliance/LEGAL_DECISIONS.md'nin SON İKİ bloğu (09.10: Box-Patientenseiten + Datenpanne S-56), onprem/REGISTER.md O-178 + O-169, db/REGISTER.md profiles girdisi (S-56 kuralı).
