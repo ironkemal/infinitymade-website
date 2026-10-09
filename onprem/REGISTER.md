@@ -5028,12 +5028,14 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) · **O-174** |
+| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) · **O-174** | · **O-183** (09.10.2026)
 | `geplant` | 21 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-159** · **O-169** (K-20) · **O-175** (K2b.18 d) |
 | 🟡 `kısmen gelöst` | 35 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** · **O-155** (T13) · **O-157** + **O-176** (T17) · **O-161** (izleme + T7/T8/T15) · **O-162** (T16) · **O-163** (T17 b) · **O-172** (`6aac145c`, kalan şart i) · **O-177** (`45268912`, kalan T19) · **O-178** (K2b.16 kodu, 08.10 gece; kalan T21 + K2b.15) · **O-181** (S-56/S-57, kalan businesses sayaçları + T25 kutu ölçümü) |
 | `gelöst` | 92 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** · **O-171** (`004fc537`) · **O-173** (`1736768f`) · **O-164** (`293ac5be`) · **O-165** (K2b.10, 08.10) · **O-180** (08.10) · **O-179** (`d1a0bf70`, 09.10) · **O-146** + **O-182** (`b1ce69bb`, 09.10) |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
 | `widerlegt` | 3 | **O-134** · **O-137** · **O-167** (05.10.2026, K-20) |
+
+> ✅ **09.10.2026 gece (`faccf4b9` M4.11 bildirimi):** O-183 yeni, `offen`. O-169 `geplant` kalır (M4.11 kalemi kapandı, §7AH). 19 + 21 + 35 + 92 + 13 + 3 = **183**, en yüksek **O-183**. Uyuşuyor.
 
 > ✅ **09.10.2026 akşam (T20/T22/0074 bildirimi):** O-179 🟡 → `gelöst`. 19 + 21 + 35 + 90 + 13 + 3 = **181**, en yüksek **O-181**. Uyuşuyor.
 
@@ -5787,3 +5789,21 @@ Commit'liler: `9c8280dd` (O-181 (a) kapı) · `b7064f87` (O-181 (b) sayaçlar) �
 > ✅ **09.10.2026 (`b1ce69bb` bildirimi):** O-182 + O-146 `offen` → `gelöst`. 18 + 21 + 35 + 92 + 13 + 3 = **182**, en yüksek **O-182**. Uyuşuyor. Aynı bildirimde `76daf84d`: `/services/public` (`server.js:3866`) artık `gkv_position_nr, kostentraeger_typ` döndürüyor — yerel DB okuması, dış çağrı/şema/env yok → GEÇER, kayıt gerekmez. (Public uca yeni alan açılması güvenlik sorusu ise `guvenlik`'in; katalog numarası hasta verisi değil.)
 
 > ✅ **09.10.2026 (booking_requests Löschfrist ön kontrolü):** O-182 yeni, `offen`. 20 + 21 + 35 + 90 + 13 + 3 = **182**, en yüksek **O-182**. Uyuşuyor.
+
+---
+
+## 7AH — M4.11 sonra-bildir + rapor kimliği bulgusu (09.10.2026 gece; O-169 · O-183)
+
+**(1) M4.11 (α)(β)(γ) → kapandı, `faccf4b9`.** 09.10 ön kontrolündeki 7 şartın hepsi bildirildi: 402'de önce ack/reject, sonra kilit · 429, JSON'suz cevap ve kodsuz 402 geçici sayılır (kilit yok) · kilit istek anında `isLocked()` ile çözülür, timer yok, `nowFn` enjekte · restart kilidi sıfırlar (kabul: kota otoritesi merkez `merkez/server.js:357`, kutudaki kilit yalnız istek azaltır) · merkez 402'ye `acknowledgedReportId`/`rejectedReportId` ek alan olarak koydu, iki yön uyumlu (eski istemci yok sayar, eski merkez = bugünkü davranış) · (γ) logu yalnız `reportId` · commit'te sahiplik notu (Melih'in dosyası, Kemal 09.10 izni). Testler: `api-backend/ai/ki-jeton-m411.test.js` (9) + `merkez/test/ki-jeton-vertrag.test.js`'e γ uçtan uca (merkez değişikliği geri alınınca kırıldığı ölçüldü), merkez 96/96. **O-169 `geplant` kalır** — açılış kapısında hâlâ açık: 7. şart (otomatik `ki-global aus` + gece Azure↔bildirilen karşılaştırması) ve ORG kalemleri. 7. şart artık O-183'e de bağlı.
+
+### O-183 — KI kullanım raporu: `reportId` gün boyu sabit, içerik kümülatif → günün ilk raporundan sonraki her güncelleme merkezde reddediliyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutu günlük raporuna gün boyu aynı kimliği veriyor ama içerik gün içinde büyüyor; merkez aynı kimlikte farklı içeriği "abweichend" sayıp reddediyor |
+| **Nerede** | `api-backend/ai/audit.js:127-130` (`reportId = rep_<UTC-gün>_<hmac(tenant:box)>`, sabit) + aynı fonksiyondaki `taskTotals` (sayfalı DB okuması, gün başından kümülatif) · `merkez/db.js:192` (`payload_hash` farklı → `'abweichend'`) · `merkez/server.js:309-311` (→ `rejectedReportId`) |
+| **Tip** | **H** (KI yetkisi/sayaç) + **G** (merkez tarafı rapor defteri) |
+| **Kutuda ne olur** | Günün ilk raporu kabul edilir, sonraki her güncelleme reddedilir. M4.11 öncesi bu reddedilen rapor tek bekleyen rapor olarak kuyruğu restart'a kadar tıkıyordu; `faccf4b9`'dan sonra kutu onu düşürüyor ve her jeton yenilemesinde bir warn satırı yazıyor. Merkezde günün **ilk** ara toplamı kalıyor. Jeton sayacı (`ki_ausgabe`, şart 6) etkilenmez — kota bu yüzden doğru işler. Ama O-169 **şart 7** (gece Azure toplamı ↔ bildirilen toplam) bu hâliyle anlamsız: bildirilen toplam sistematik olarak eksik kalır, karşılaştırma her gece yanlış alarm verir ya da eşik gevşetilip körleşir. Hasta verisi yok (rapor yalnız görev başına sayaç) → G1'e değmiyor |
+| **Çözüm** | **Tavsiye (a):** merkez aynı `(box_id, reportId)` için **monoton artan** güncellemeyi kabul eder ve satırı günceller. Her metrik ≥ önceki ise yeni sonuç `'guncellendi'` (ack döner); herhangi bir metrik azalıyorsa, `windowStart` değişiyorsa ya da yeni görev anahtarı dışında yapı farklıysa `'abweichend'` (red). İstemci değişmez. Gerekçe: `taskTotals` RAM'den değil kutunun DB'sindeki audit kayıtlarından sayfalanarak hesaplanıyor, yani restart'tan sonra da monoton; şişirme ancak imzalı kutunun **kendi** sayacını büyütmesi olur, zararsız. (b) (sıra numarası + merkez pencere başına max) istemci + merkez + sözleşme değişikliği ister, (a)'nın verdiğinden fazlasını vermiyor. Şartlar: monoton karşılaştırma sözleşme testinde hem kabul hem azalma reddi için ölçülsün · gece karşılaştırması gün başına **son** satırı okusun · ±2 gün pencere kontrolü (`server.js:294`) aynen kalsın. Sahip: Hat M uygular; (a)/(b) seçimi Hat M/Kemal. O-169 şart 7'nin ön koşulu |
+| **Durum** | `offen` (09.10.2026). Canlı müşteri yok — bugüne kadar kaybolan rapor verisi yok sayılabilir |
+
