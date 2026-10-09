@@ -14,6 +14,7 @@ import { renderAusfallrechnung } from '../pdf/ausfallrechnung.template.js';
 import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
 import { standortFuerName, standortFuerZuordnung } from '../ausfall/standort.js';
 import { ZAHLARTEN } from '../belegliste/helper.js';
+import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -70,8 +71,8 @@ async function loadPraxisProfile(profile, tenantId) {
 // den alten Ladennamen (Beta-2, 12.08.2026). Nur bei mehreren Standorten ist der
 // Standortname die richtige Antwort; das entscheidet der Aufrufer.
 function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort = null, patient, vorlage }) {
-  const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');
-  const plz_ort = [praxisProfile.zip || praxisProfile.plz, praxisProfile.city].filter(Boolean).join(' ').trim();
+  // userEmail nur, wenn der Inhaber selbst druckt (Aufrufer) — nie die Login-Adresse eines Mitarbeiters.
+  const kopf = praxisKopf(praxisProfile, { ersatzEmail: userEmail });
 
   const bankverbindung = [
     praxisProfile.bank_name,
@@ -87,12 +88,12 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
 
   return renderAusfallrechnung({
     praxis: {
-      name: standort?.business_name || praxisProfile.business_name || 'Praxis',
-      strasse,
-      plz_ort,
-      telefon: standort?.phone || praxisProfile.phone || '',
+      name: standort?.business_name || kopf.name,
+      strasse: kopf.strasse,
+      plz_ort: kopf.plz_ort,
+      telefon: standort?.phone || kopf.telefon,
       steuernummer: praxisProfile.steuernummer || '',
-      email: praxisProfile.email || userEmail || '',
+      email: kopf.email,
     },
     patient,
     rechnung: {
@@ -273,7 +274,7 @@ router.post('/ausfall/create', async (req, res) => {
     const praxisProfile = await loadPraxisProfile(profile, tenantId);
     const html = renderInvoiceHtml({
       praxisProfile,
-      userEmail: user.email,
+      userEmail: praxisProfile.id === user.id ? user.email : '',
       row,
       business,
       standort: standortName,
@@ -408,7 +409,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
 
     const html = renderInvoiceHtml({
       praxisProfile,
-      userEmail: user.email,
+      userEmail: praxisProfile.id === user.id ? user.email : '',
       row,
       business: row.businesses || null,
       standort: standortName,

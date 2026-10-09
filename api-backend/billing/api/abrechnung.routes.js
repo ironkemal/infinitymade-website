@@ -30,6 +30,7 @@ import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
 import { bgFehltFuerRechnung, nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
+import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
 import { entferneUnsignierteDta, wiederholeAusmusterung, dtaEntfernungAktiv } from './artefakt-ausmustern.js';
@@ -232,7 +233,8 @@ function frequenzToDigit(freq) {
 // ---------------------------------------------------------------------------
 
 // Zusatzfelder, die jedes Druck-Route-Profil braucht.
-const PRAXIS_DRUCK_FELDER = 'steuernummer, ust_id, iban, bic, bank_name';
+// email/plz/praxis_inhaber: Praxis-Kopf über praxisKopf() (lib/rechnung-snapshot.js, KHS §4 Snapshot (v)).
+const PRAXIS_DRUCK_FELDER = 'steuernummer, ust_id, iban, bic, bank_name, email, plz, praxis_inhaber';
 
 // Fachbereich der Praxis → LEGS (Leistungserbringergruppenschlüssel).
 //
@@ -2771,15 +2773,10 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     // ---- Render PDF/HTML Template ----
     const html = renderZuzahlungsrechnung({
       praxis: {
-        name: praxisProfil.business_name || 'Praxis',
-        strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
-        plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' '),
-        telefon: praxisProfil.phone || '',
         // Nie die BSNR des Arztes als Praxis-IK drucken (gkv-302, 09.10.2026): fehlt die IK, bleibt das Feld leer.
-        ik: praxisProfil.ik_number || '',
+        ...praxisKopf(praxisProfil, { ersatzEmail: tenantId === user.id ? user.email : '' }),
         steuernummer: praxisProfil.steuernummer || '',
         ust_id: praxisProfil.ust_id || '',
-        email: user.email || ''
       },
       patient: {
         nachname: rx.leads?.last_name || '',
@@ -2931,14 +2928,9 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     const zuzahlungBefreitVerordnung = !!rx.zuzahlung_befreit;
 
     const praxisData = {
-      name: praxisProfil.business_name || 'Praxis',
-      strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
-      plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' '),
-      telefon: praxisProfil.phone || '',
-      ik: praxisProfil.ik_number || '',
+      ...praxisKopf(praxisProfil, { ersatzEmail: tenantId === user.id ? user.email : '' }),
       steuernummer: praxisProfil.steuernummer || '',
       ust_id: praxisProfil.ust_id || '',
-      email: user.email || ''
     };
     const patientData = {
       nachname: rx.leads?.last_name || '',

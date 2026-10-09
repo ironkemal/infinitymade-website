@@ -7,6 +7,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { renderMahnung } from '../pdf/mahnung.template.js';
+import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { pruefeStufe, LEVEL_DAYS } from '../mahnwesen/stufe.js';
 
@@ -28,7 +29,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
+    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, ik_number, email, bank_name, iban, bic')
     .eq('id', u.user.id)
     .maybeSingle();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -296,7 +297,7 @@ router.post('/mahnwesen/create', async (req, res) => {
     if (profile.role === 'employee' && profile.owner_id) {
       const { data: ownerProf } = await supabase
         .from('profiles')
-        .select('id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
+        .select('id, business_name, phone, city, zip, plz, street, house_number, ik_number, email, bank_name, iban, bic')
         .eq('id', profile.owner_id)
         .maybeSingle();
       if (ownerProf) praxisProfile = ownerProf;
@@ -342,8 +343,6 @@ router.post('/mahnwesen/create', async (req, res) => {
     if (insErr) return res.status(500).json({ error: 'mahnungen insert failed: ' + insErr.message });
 
     // 5. Render HTML letter
-    const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');
-    const plz_ort = [praxisProfile.zip, praxisProfile.city].filter(Boolean).join(' ').trim();
 
     const bankverbindung = [
       praxisProfile.bank_name,
@@ -352,14 +351,8 @@ router.post('/mahnwesen/create', async (req, res) => {
     ].filter(Boolean).join(' · ');
 
     const html = renderMahnung({
-      praxis: {
-        name:     praxisProfile.business_name || 'Praxis für Physiotherapie',
-        strasse,
-        plz_ort,
-        telefon:  praxisProfile.phone || '',
-        email:    praxisProfile.email || user.email || '',
-        ik:       praxisProfile.ik_number || '',
-      },
+      // Ersatz-E-Mail nur für den druckenden Inhaber, nie die eines Mitarbeiters (KHS §4 Snapshot (v)).
+      praxis: praxisKopf(praxisProfile, { ersatzEmail: praxisProfile.id === user.id ? user.email : '' }),
       patient: {
         vorname:  patientRow?.first_name || '',
         nachname: patientRow?.last_name  || '',

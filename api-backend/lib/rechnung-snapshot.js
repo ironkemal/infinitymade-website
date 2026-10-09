@@ -30,6 +30,20 @@ export function ausstellerSnapshot(p) {
   };
 }
 
+/**
+ * Praxis-Kopf der Server-Renderings (RE-/ZU-/Ausfallrechnung, Mahnung) aus ausstellerSnapshot — eine
+ * Normalisierung statt vier eigener Blöcke (PLZ `plz|zip`, Hausnummer, Praxis-E-Mail). `ersatzEmail` nur,
+ * wenn der Inhaber selbst druckt: die Login-Adresse eines Mitarbeiters gehört nicht auf den Beleg.
+ * Nur serverseitig (kein Gegenstück im Frontend, das liest den Snapshot direkt).
+ */
+export function praxisKopf(p, { ersatzEmail = '' } = {}) {
+  const a = ausstellerSnapshot(p);
+  return {
+    name: a.name || 'Praxis', strasse: a.strasse, plz_ort: a.plzOrt, telefon: a.telefon, ik: a.ik,
+    email: a.email || t(ersatzEmail),
+  };
+}
+
 const deutsch = (iso) => {
   const m = String(iso ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso ?? '');

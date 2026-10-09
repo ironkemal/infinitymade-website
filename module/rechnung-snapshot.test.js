@@ -95,3 +95,13 @@ test('rechnungSnapshots: liest Patient + Verordnung, Lesefehler → Empfänger n
     assert.equal(r2.aussteller_snapshot.ik, '123456789');
   } finally { console.error = err; }
 });
+
+test('praxisKopf (Server-Renderings): Praxis-E-Mail vor Ersatz, PLZ plz|zip, Hausnummer, kein Ersatz = leer', () => {
+  const p = { business_name: 'Fußpflege Muster', street: 'Hauptstr.', house_number: '5a', plz: '53721', city: 'Siegburg', phone: '0221', ik_number: '123456789', email: 'praxis@example.de' };
+  assert.deepEqual(server.praxisKopf(p, { ersatzEmail: 'mitarbeiter@example.de' }),
+    { name: 'Fußpflege Muster', strasse: 'Hauptstr. 5a', plz_ort: '53721 Siegburg', telefon: '0221', ik: '123456789', email: 'praxis@example.de' });
+  assert.equal(server.praxisKopf({ ...p, email: null, plz: null, zip: '50667' }, { ersatzEmail: 'inhaber@example.de' }).email, 'inhaber@example.de');
+  assert.equal(server.praxisKopf({ ...p, plz: null, zip: '50667' }).plz_ort, '50667 Siegburg');
+  assert.equal(server.praxisKopf({ email: '' }).email, '');
+  assert.equal(server.praxisKopf(null).name, 'Praxis');
+});
