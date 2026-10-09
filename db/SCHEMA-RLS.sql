@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009091146 praxis_rechtstexte_urls
--- EXPORTED AT:        2026-10-09T09:14:40.823Z
+-- LAST MIGRATION:     20261009101324 businesses_anon_spaltenrechte_demo_bookings
+-- EXPORTED AT:        2026-10-09T17:43:11.908Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
@@ -13,7 +13,7 @@
 --   table_columns:       1392
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        168
+--   rls_policies:        166
 --   functions:           108
 --   triggers:            96
 --   indexes:             335
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_04, realtime.messages_2026_10_05, realtime.messages_2026_10_06, realtime.messages_2026_10_07, realtime.messages_2026_10_08, realtime.messages_2026_10_09, realtime.messages_2026_10_10])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_06, realtime.messages_2026_10_07, realtime.messages_2026_10_08, realtime.messages_2026_10_09, realtime.messages_2026_10_10, realtime.messages_2026_10_11, realtime.messages_2026_10_12])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -750,18 +750,6 @@ CREATE POLICY dss_update ON public.data_sharing_settings
   TO PUBLIC
   USING ((owner_id = auth.uid()))
   WITH CHECK ((owner_id = auth.uid()));
-
-CREATE POLICY "anon can insert demo_bookings" ON public.demo_bookings
-  AS PERMISSIVE
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
-
-CREATE POLICY "authenticated can select demo_bookings" ON public.demo_bookings
-  AS PERMISSIVE
-  FOR SELECT
-  TO authenticated
-  USING (true);
 
 CREATE POLICY diagnosegruppen_read ON public.diagnosegruppen
   AS PERMISSIVE
@@ -6361,6 +6349,12 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACCESS CONTROL LISTS (ACL) & DEFAULT ACLS
 -- ----------------------------------------------------------------------------
 -- Structured documentation rows of all effective and default privileges.
+-- ACL: type=COLUMN schema=public object=businesses column=booking_slug grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=businesses column=business_name grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=businesses column=closed_days grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=businesses column=id grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=businesses column=is_default grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=COLUMN schema=public object=businesses column=owner_id grantee=anon privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=COLUMN schema=public object=profiles column=accepts_bookings grantee=anon privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=COLUMN schema=public object=profiles column=anrede grantee=anon privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=COLUMN schema=public object=profiles column=avatar_url grantee=anon privilege=SELECT grantor=postgres grantable=NO
@@ -13216,14 +13210,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=breaks column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=breaks column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=breaks column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=REFERENCES grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=SELECT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=TRIGGER grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=TRUNCATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=businesses column=- grantee=anon privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=businesses column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=businesses column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=businesses column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
@@ -13472,22 +13458,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=datenaustausch_zaehler column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=datenaustausch_zaehler column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=datenaustausch_zaehler column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=REFERENCES grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=SELECT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=TRIGGER grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=TRUNCATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=anon privilege=UPDATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=TRUNCATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=authenticated privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=demo_bookings column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO

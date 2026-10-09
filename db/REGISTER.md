@@ -94,6 +94,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
     - Beide Spalten stehen (wie `praxis_inhaber`) **nicht** in der S-39-Sperrliste: ein Mitarbeiter kann sie auf seiner eigenen Zeile setzen. Unschädlich, weil der RPC nur die Owner-Zeile liest und `module/branding.js` `ownerProfile || currentProfile` nimmt. Ein neuer Leser, der `profiles` direkt liest, muss dieselbe Regel einhalten.
     - Der Inhalt ist Impressum-Pflichtangabe (ladungsfähige Anschrift), also öffentlich gewollt. Trotzdem den RPC **nicht** um weitere Spalten (Telefon, E-Mail, Steuernummer …) erweitern, ohne guvenlik zu fragen: als DEFINER umgeht er die Spaltenrechte.
     - DSGVO: `api-backend/dsgvo/loeschen.js` setzt beide URLs bei der Anonymisierung auf NULL (`profiles` ist dort ohnehin klassifiziert).
+- **DSGVO-Anonymisierung bei Sperrbestand (09.10.2026):** `api-backend/dsgvo/loeschen.js` (`kontoLoeschenIntern`) setzt neben `business_name`/`zip`/Rechtstext-URLs jetzt auch `praxis_inhaber`, `praxis_stempel_path` (0069) und die Altspalte `plz` auf NULL; die Stempel-Datei selbst löscht `bereinigeStorage` (Bucket `praxis-stempel`). Neue personenbezogene `profiles`-Spalte ⇒ dort mit aufnehmen.
 
 
 ### `businesses`
@@ -102,6 +103,9 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** Standort-Verwaltung im Dashboard, Buchungsseite, Attendance, Stripe-Webhook.
 - **Achtung:** Einzelstandort-Inhaber haben hier **keine Zeile**. Eine Einstellung, die nur hier landet, ist für sie unsichtbar — siehe `profiles`.
+- **⛔ anon sieht nur noch Spalten, nicht die Tabelle (seit 09.10.2026 · `0074_businesses_anon_spaltenrechte_demo_bookings`, Ledger `20261009101324`, guvenlik S-57):** Gleiche Lücke wie `profiles` (S-56): die anon-Policy `Public booking lookup businesses` stand auf der Tabelle, anon hatte Tabellenrechte auf alle Spalten (`email`, `phone`, `ik_number` …). Jetzt `REVOKE ALL … FROM anon` + `GRANT SELECT (id, owner_id, business_name, booking_slug, is_default, closed_days) TO anon` — genau das, was Buchungsseite und anon-Unterabfragen brauchen. authenticated/service_role unverändert. Live geprüft 09.10.2026: anon 6 Spaltenrechte, kein Tabellenrecht.
+  - **⚠️ Folgeregel:** Braucht eine öffentliche Seite oder eine anon-Policy eine weitere `businesses`-Spalte ⇒ in **derselben** Migration `GRANT SELECT (<spalte>) ON public.businesses TO anon;`, sonst bricht die Buchungsseite lautlos. Nie `GRANT SELECT ON businesses TO anon` (dreht den Fix zurück). `tools/check-anon-grants.mjs` prüft seit 0074 neben `profiles` auch `businesses` (`ANON_SPALTEN_TABELLEN`).
+  - **DSGVO:** Bleibt ein Standort wegen Sperrbestand stehen, setzt `api-backend/dsgvo/loeschen.js` (`kontoLoeschenIntern`) `booking_slug`, `email`, `phone` auf NULL — sonst wäre er über die anon-Policy weiter auffindbar. `ik_number` bleibt (GoBD-Zuordnung, wie im Profil).
 
 ### `employee_business_assignments`
 - **Warum:** Ein Angestellter kann an mehreren Standorten arbeiten. Die Zuordnung passt weder in `profiles` (1:n) noch in `businesses`.
@@ -333,6 +337,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** ausschließlich `api/demo-booking.js`.
 - **Achtung:** Läuft **nicht** über `supabase.from()`, sondern über direkte PostgREST-Aufrufe (`adminFetch('/demo_bookings?…')`). Wer nur nach `.from('demo_bookings')` sucht, hält die Tabelle für tot.
+- **Client-Rechte und Policies entfernt (seit 09.10.2026 · `0074_businesses_anon_spaltenrechte_demo_bookings`, guvenlik S-58):** Die Policies `anon can insert demo_bookings` (WITH CHECK true) und `authenticated can select demo_bookings` (USING true — jeder eingeloggte Nutzer sah alle Demo-Anfragen samt Kontaktdaten) sind gedroppt, alle Rechte für `anon`/`authenticated` entzogen. Zugriff **nur noch `service_role` über `api/demo-booking.js`**. RLS bleibt an, 0 Policies = Client gesperrt — so gewollt, nicht „reparieren". In der Box existiert die Tabelle nicht (Marketing ist SaaS-only), deshalb steht der Teil in 0074 in einem `to_regclass`-DO-Block. Live geprüft 09.10.2026: 0 Policies, keine anon/authenticated-Rechte.
 
 ---
 

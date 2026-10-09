@@ -693,6 +693,11 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       praxis_logo_url: null,
       praxis_impressum_url: null,
       praxis_datenschutz_url: null,
+      // 0069 + Altspalte plz (db-ustasi 09.10.2026): gleiche Kategorie wie business_name/zip.
+      // Die Stempel-DATEI löscht bereinigeStorage (praxis-stempel, pfadQuellen []).
+      praxis_inhaber: null,
+      praxis_stempel_path: null,
+      plz: null,
       booking_slug: null,
       iban: null,
       bic: null,
@@ -720,6 +725,16 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       is_active: false,
     }).eq('owner_id', ownerId);
     if (maErr) throw maErr;
+
+    // Standorte, die wegen Sperrbestand stehen bleiben (Schritt 6): Kontakt + Slug weg, sonst
+    // blieben sie über die anon-Policy „Public booking lookup businesses" auffindbar (S-57,
+    // db-ustasi 09.10.2026). ik_number bleibt wie im Profil (GoBD-Zuordnung).
+    const { error: bzErr } = await supabase.from('businesses').update({
+      booking_slug: null,
+      email: null,
+      phone: null,
+    }).eq('owner_id', ownerId);
+    if (bzErr) throw bzErr;
 
     log.push({ step: 'profiles:anonymize', ok: true });
   } catch (err) {

@@ -18,8 +18,8 @@ test('(1) GRANT ON ALL TABLES TO anon → Befund', () => {
 });
 
 test('(2) Tabellenrecht auf profiles ohne Spaltenliste → Befund (auch TABLE und PUBLIC)', () => {
-  assert.equal(pruefeDatei('0099_x.sql', 'GRANT SELECT ON public.profiles TO anon;')[0].regel, 'profiles_ohne_spaltenliste');
-  assert.equal(pruefeDatei('0099_x.sql', 'grant all on table profiles to PUBLIC;')[0].regel, 'profiles_ohne_spaltenliste');
+  assert.equal(pruefeDatei('0099_x.sql', 'GRANT SELECT ON public.profiles TO anon;')[0].regel, 'ohne_spaltenliste');
+  assert.equal(pruefeDatei('0099_x.sql', 'grant all on table profiles to PUBLIC;')[0].regel, 'ohne_spaltenliste');
 });
 
 test('(2) Spaltengrant und authenticated-Grant sind erlaubt', () => {
@@ -42,7 +42,15 @@ test('0000_baseline wird übersprungen', () => {
 });
 
 test('Tırnaklı Schema, Mehrrollen-Liste und ALTER DEFAULT PRIVILEGES', () => {
-  assert.equal(pruefeDatei('0099_x.sql', 'GRANT SELECT ON TABLE "public"."profiles" TO authenticated, anon;')[0].regel, 'profiles_ohne_spaltenliste');
+  assert.equal(pruefeDatei('0099_x.sql', 'GRANT SELECT ON TABLE "public"."profiles" TO authenticated, anon;')[0].regel, 'ohne_spaltenliste');
   assert.equal(pruefeDatei('0099_x.sql', 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO anon;')[0].regel, 'default_privileges');
   assert.deepEqual(pruefeDatei('0099_x.sql', 'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO service_role;'), []);
+});
+
+test('businesses (S-57): Tabellenrecht ohne Spaltenliste → Befund; Spaltengrant frei', () => {
+  const b = pruefeDatei('0099_x.sql', 'GRANT SELECT ON public.businesses TO anon;');
+  assert.equal(b[0].regel, 'ohne_spaltenliste');
+  assert.equal(b[0].tabelle, 'businesses');
+  assert.deepEqual(pruefeDatei('0099_x.sql', 'GRANT SELECT (id, owner_id) ON public.businesses TO anon;'), []);
+  assert.deepEqual(pruefeDatei('0099_x.sql', 'GRANT SELECT ON public.services TO anon;'), []);
 });

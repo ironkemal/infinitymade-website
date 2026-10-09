@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009091146 praxis_rechtstexte_urls
--- EXPORTED AT:        2026-10-09T09:14:40.823Z
+-- LAST MIGRATION:     20261009101324 businesses_anon_spaltenrechte_demo_bookings
+-- EXPORTED AT:        2026-10-09T17:43:11.908Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
@@ -13,7 +13,7 @@
 --   table_columns:       1392
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        168
+--   rls_policies:        166
 --   functions:           108
 --   triggers:            96
 --   indexes:             335

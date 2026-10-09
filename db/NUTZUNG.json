@@ -3792,7 +3792,7 @@
     {
      "name": "renderBookingCalendar",
      "file": "booking.js",
-     "start": 295,
+     "start": 307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5102,7 +5102,9 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api-backend/dsgvo/klassifikation.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "tools/check-anon-grants.mjs",
+    "tools/check-anon-grants.test.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -5148,7 +5150,7 @@
     {
      "name": "renderBookingCalendar",
      "file": "booking.js",
-     "start": 295,
+     "start": 307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5419,7 +5421,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 67,
+   "sqlTreffer": 65,
    "codeStumm": false
   },
   {
@@ -5741,7 +5743,7 @@
     {
      "name": "loadBookingSlots",
      "file": "booking.js",
-     "start": 217,
+     "start": 229,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5786,7 +5788,7 @@
     {
      "name": "renderBookingCalendar",
      "file": "booking.js",
-     "start": 295,
+     "start": 307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6082,7 +6084,7 @@
     "api/demo-booking.js"
    ],
    "module": [],
-   "sqlTreffer": 43,
+   "sqlTreffer": 23,
    "codeStumm": false
   },
   {
@@ -7202,7 +7204,7 @@
     {
      "name": "init",
      "file": "booking.js",
-     "start": 63,
+     "start": 64,
      "module": [],
      "uiPfad": []
     },
@@ -8048,7 +8050,7 @@
     {
      "name": "loadServices",
      "file": "booking.js",
-     "start": 164,
+     "start": 176,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12425,7 +12427,7 @@
     {
      "name": "kopieOeffnen",
      "file": "module/patienten-einwilligung.js",
-     "start": 604,
+     "start": 606,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12470,7 +12472,7 @@
     {
      "name": "renderEinwilligungListe",
      "file": "module/patienten-einwilligung.js",
-     "start": 490,
+     "start": 492,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12517,7 +12519,7 @@
     {
      "name": "speichereEinwilligung",
      "file": "module/patienten-einwilligung.js",
-     "start": 340,
+     "start": 342,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12565,7 +12567,7 @@
     {
      "name": "widerrufen",
      "file": "module/patienten-einwilligung.js",
-     "start": 580,
+     "start": 582,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16505,6 +16507,7 @@
     "api-backend/dsgvo/artefakt-schutz.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "module/stempel.test.js",
+    "tools/check-anon-grants.mjs",
     "tools/check-anon-grants.test.js",
     "tools/schema-dokumente.test.js"
    ],
@@ -18413,6 +18416,54 @@
      ]
     },
     {
+     "name": "speichern",
+     "file": "module/praxis-rechtslinks-einstellungen.js",
+     "start": 100,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "belegliste",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 35 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "stempelEntfernen",
      "file": "module/stempel.js",
      "start": 70,
@@ -18598,6 +18649,7 @@
     "module/buchungskonten.js",
     "module/fahrtenbuch-export.js",
     "module/fussbefund.js",
+    "module/praxis-rechtslinks-einstellungen.js",
     "module/praxis-standort.js",
     "module/selbstzahler-stufen.js",
     "module/stempel.js",
@@ -18852,7 +18904,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4129,
+     "start": 4132,
      "module": [],
      "uiPfad": []
     },
@@ -21405,7 +21457,7 @@
     {
      "name": "renderBookingCalendar",
      "file": "booking.js",
-     "start": 295,
+     "start": 307,
      "module": [
       "abrechnung",
       "anamnese",

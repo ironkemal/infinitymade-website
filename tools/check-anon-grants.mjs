@@ -17,6 +17,9 @@ export const BEKANNTE_ALTLASTEN = [
 
 const ANON = /\b(anon|PUBLIC)\b/i;
 
+// Tabellen, die anon nur über Spaltenrechte lesen darf.
+export const ANON_SPALTEN_TABELLEN = ['profiles', 'businesses'];
+
 /**
  * Prüft eine Migrationsdatei auf die drei S-56-Rückfallwege.
  * @returns {Array<{ regel: string, datei: string, satz?: string }>}
@@ -48,12 +51,14 @@ export function pruefeDatei(dateiname, inhalt) {
       befunde.push({ regel: 'alle_tabellen', datei: dateiname, satz });
       continue;
     }
-    // (2) Tabellenrecht auf profiles ohne Spaltenliste
-    if (/^(TABLE\s+)?("?public"?\s*\.\s*)?"?profiles"?$/i.test(objekt)) {
+    // (2) Tabellenrecht ohne Spaltenliste auf Tabellen, die anon nur spaltenweise sieht
+    //     (profiles: S-56/0072, businesses: S-57/0074)
+    const t = objekt.match(/^(?:TABLE\s+)?(?:"?public"?\s*\.\s*)?"?(\w+)"?$/i)?.[1]?.toLowerCase();
+    if (t && ANON_SPALTEN_TABELLEN.includes(t)) {
       if (rechte.includes('(')) {
-        if (/^SELECT\s*\(/i.test(rechte)) hatSpaltenGrant = true;
+        if (t === 'profiles' && /^SELECT\s*\(/i.test(rechte)) hatSpaltenGrant = true;
       } else {
-        befunde.push({ regel: 'profiles_ohne_spaltenliste', datei: dateiname, satz });
+        befunde.push({ regel: 'ohne_spaltenliste', tabelle: t, datei: dateiname, satz });
       }
     }
   }
@@ -90,7 +95,7 @@ export function pruefeDateien(dateien, leseFn = standardLeseFn) {
 const TEXT = {
   default_privileges: 'ALTER DEFAULT PRIVILEGES … ON TABLES TO anon — jede künftige Tabelle wäre anon-lesbar (S-56)',
   alle_tabellen: 'GRANT … ON ALL TABLES … TO anon — dreht 0072 zurück (S-56, S-04-Klasse)',
-  profiles_ohne_spaltenliste: 'Tabellenrecht auf public.profiles für anon ohne Spaltenliste — IBAN/E-Mail wieder lesbar (S-56)',
+  ohne_spaltenliste: 'Tabellenrecht für anon ohne Spaltenliste auf einer nur spaltenweise freigegebenen Tabelle (profiles S-56 / businesses S-57)',
   sicht_ohne_spaltengrant: 'profiles_public neu angelegt, aber kein GRANT SELECT (…) ON public.profiles TO anon in derselben Datei — Buchungsseite bricht lautlos',
 };
 
@@ -101,7 +106,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error('  ✗ COMMIT REDDEDILDI — anon-Rechte auf profiles (S-56 / O-181)');
     console.error('');
     for (const b of befunde) {
-      console.error('      ' + b.datei + '  →  ' + TEXT[b.regel]);
+      console.error('      ' + b.datei + '  →  ' + TEXT[b.regel] + (b.tabelle ? ' [' + b.tabelle + ']' : ''));
       if (b.satz) console.error('        ' + b.satz.slice(0, 160));
     }
     console.error('');
