@@ -321,19 +321,18 @@ async function renderBookingCalendar(year, month) {
   const todayY = todayParts[0], todayM = todayParts[1], todayD = todayParts[2];
 
   const userId = state.employeeId;
-  const monthStartIso = new Date(year, month, 1).toISOString();
-  const monthEndIso = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
   let openDow = new Set([1, 2, 3, 4, 5]);
   let closedDates = new Set();
-  let bookedDates = new Set();
   let businessClosedDow = new Set();
 
   if (userId) {
-    const [{ data: wh }, { data: cd }, { data: bks }, { data: biz }] = await Promise.all([
+    const [{ data: wh }, { data: cd }, { data: biz }] = await Promise.all([
       supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
       supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month + 1).padStart(2, '0')}-01`).lte('date', `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`),
-      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status', 'cancelled'),
+      // Kein bookings-Lesen mehr (09.10.2026): anon darf bookings nicht lesen (keine Policy) — die
+      // „belegt"-Markierung war immer leer und würde sonst Auslastung öffentlich machen. Freie
+      // Zeiten kommen aus /booking/get-slots.
       // İş günleri: explicit businessId varsa onu, yoksa owner default business
       state.businessId
         ? supabase.from('businesses').select('closed_days').eq('id', state.businessId).maybeSingle()
@@ -351,10 +350,6 @@ async function renderBookingCalendar(year, month) {
     (cd || []).forEach(c => {
       if (!c.start_time && !c.end_time && (c.type === 'closed' || c.type === 'holiday')) closedDates.add(c.date);
     });
-    (bks || []).forEach(b => {
-      const d = new Date(b.start_time).toLocaleDateString('sv-SE', { timeZone: tz });
-      bookedDates.add(d);
-    });
     businessClosedDow = new Set((biz?.closed_days || []).map(Number));
   }
 
@@ -371,7 +366,6 @@ async function renderBookingCalendar(year, month) {
     const isClosedDow = !openDow.has(dow);
     const isClosedDate = closedDates.has(dStr);
     const isBizClosed = businessClosedDow.has(dow);
-    const isBooked = bookedDates.has(dStr);
 
     let cls = 'cal-cell';
     if (isPast) cls += ' past';
@@ -379,7 +373,6 @@ async function renderBookingCalendar(year, month) {
     else cls += ' avail';
     if (isToday) cls += ' today';
     if (isSelected) cls += ' selected';
-    if (isBooked && !isPast && !isClosedDow && !isClosedDate) cls += ' booked';
 
     html += `<button class="${cls}" data-day="${d}" type="button">${d}</button>`;
   }
