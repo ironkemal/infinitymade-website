@@ -33,7 +33,7 @@ import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
-import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
+import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261005b';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
@@ -70,7 +70,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261007m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261007m3';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009k15';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261009rs'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshots } from './module/rechnung-snapshot.js?v=20261009rs'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -13584,7 +13584,7 @@ async function saveInvoice() {
       brutto_gesamt: st.brutto,
       steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
       steuernummer_snapshot: currentProfile.steuernummer || null,
-      ust_id_snapshot: currentProfile.ust_id || null,
+      ust_id_snapshot: currentProfile.ust_id || null, ...(await rechnungSnapshots(supabase, { profil: ownerProfile || currentProfile, patientId, rezeptId: invPrescriptionId || verordnungAuswahl().prescriptionId || invVerordnungId || null, invoiceType: invPatientInsuranceType || null })), // 0075: Aussteller/Empfänger wie gedruckt (module/rechnung-snapshot.js)
       leistung_von: zeitraum.von,
       leistung_bis: zeitraum.bis,
     };

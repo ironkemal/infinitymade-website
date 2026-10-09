@@ -44,7 +44,7 @@
  */
 
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
-import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261006i';
+import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261009rs';
 import { rechnungsTitel } from './rechnung-anzeige.js?v=20261006q';
 
 /** Rezeptarten, die nicht über die Kasse laufen. */

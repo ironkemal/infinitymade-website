@@ -60,6 +60,21 @@ export function brandingAus(p) {
   };
 }
 
+/**
+ * Aussteller-Block der Rechnung, eingefroren beim Entwurfsspeichern (`invoices.aussteller_snapshot`, Migration 0075;
+ * § 147 Abs. 2 Nr. 1 AO, § 14 Abs. 4 Nr. 1 UStG — legal-de/gkv-302 09.10.2026). Nur was gedruckt wird
+ * (Art. 5 Abs. 1 lit. c DSGVO); Steuernummer/USt-IdNr. haben eigene Snapshot-Spalten.
+ * Spiegel: `api-backend/lib/rechnung-snapshot.js` (Paritätstest `module/rechnung-snapshot.test.js`).
+ * @param {object} p  Profilzeile der PRAXIS (`ownerProfile || currentProfile`)
+ */
+export function ausstellerSnapshot(p) {
+  const b = brandingAus(p);
+  return {
+    v: 1, name: b.name, inhaber: b.inhaber, strasse: b.strasse, plzOrt: b.plzOrt,
+    telefon: b.telefon, email: b.email, ik: b.ik, bank: { name: b.bank.name, iban: b.bank.iban, bic: b.bank.bic },
+  };
+}
+
 /** Der bisherige Vertrag von `terminzettelPraxis()` (dashboard.js) — Termin- und Behandlungsbeleg. */
 export function terminzettelPraxis(b) {
   return {

@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FESTGESCHRIEBENE_SPALTEN, payloadFuerUpdate } from './rechnung-festschreibung.js';
 
 const payload = {
@@ -25,9 +28,16 @@ test('Festgeschrieben (sent/paid/cancelled): gesperrte Spalten und status fallen
   }
 });
 
-test('Die Liste deckt alle Spalten der DB-Sperre (Migration 0070) ab', () => {
-  const db = ['line_items', 'subtotal', 'total_patient', 'netto_gesamt', 'steuer_gesamt', 'brutto_gesamt', 'tax_summary', 'patient_id', 'issued_at',
-    'steuerhinweis_text', 'steuernummer_snapshot', 'ust_id_snapshot', 'steuer_status', 'leistung_von', 'leistung_bis', 'patient_name', 'invoice_type'];
+test('Die Liste deckt alle Spalten der DB-Sperre ab (jüngste Migration mit invoice_festschreibung)', () => {
+  // Aus der Migrationskette gelesen statt abgeschrieben: eine neue gesperrte Spalte ohne Browser-Eintrag
+  // ließe an einer versendeten Rechnung schon das Speichern einer Bemerkung scheitern (db-ustasi 09.10.2026).
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'api-backend', 'db', 'migrations');
+  const datei = fs.readdirSync(dir).filter((f) => /^\d{4}_.*\.sql$/.test(f)).sort().reverse()
+    .find((f) => /CREATE OR REPLACE FUNCTION public\.invoice_festschreibung/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  assert.ok(datei, 'Migration mit invoice_festschreibung gefunden');
+  const sql = fs.readFileSync(path.join(dir, datei), 'utf8');
+  const db = [...new Set([...sql.matchAll(/NEW\.(\w+)\s+IS DISTINCT FROM OLD\.\1/g)].map((m) => m[1]))];
+  assert.ok(db.length >= 24, `${datei}: ${db.length} Spalten`);
   for (const sp of db) assert.ok(FESTGESCHRIEBENE_SPALTEN.includes(sp), sp);
 });
 

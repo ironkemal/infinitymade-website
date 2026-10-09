@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-09",
- "dateien": 413,
- "funktionen": 3355,
+ "dateien": 415,
+ "funktionen": 3363,
  "module": [
   "abrechnung",
   "anamnese",
@@ -11456,6 +11456,7 @@
    "calls": [],
    "calledBy": [
     "buildAuftragsdatei",
+    "empfaengerSnapshot",
     "getRadio",
     "physioSpalten",
     "renderOverviewMonthly",
@@ -23819,6 +23820,358 @@
    ]
   },
   {
+   "name": "t",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 14,
+   "end": 31,
+   "lines": 18,
+   "spiegelHinweis": "Spiegel von `module/branding",
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausstellerSnapshot"
+   ],
+   "calledBy": [
+    "_doStripePortalRedirect",
+    "applyI18n",
+    "aufteilen",
+    "ausstellerSnapshot",
+    "belegDruckDeps",
+    "bgAusWerte",
+    "bookingErrMsg",
+    "brandingAus",
+    "deleteAerzte",
+    "deleteBusiness",
+    "dgOptionenSperren",
+    "editAerzte",
+    "empfaengerSnapshot",
+    "fmt",
+    "getKnownCatalogLabels",
+    "getRadio",
+    "handleKioskPinConfirm",
+    "handleKioskPinForgot",
+    "handleKioskPinSetup",
+    "handleKioskStart",
+    "httpsUrl",
+    "initCalendar",
+    "initLeadSuche",
+    "kassiereZuzahlung",
+    "loadAerzte",
+    "loadEmpHours",
+    "loadPatientDetailRezepte",
+    "loadPodologieBilling",
+    "loadSettings",
+    "loadStatistik",
+    "loadTeam",
+    "n",
+    "offerAusfallrechnung",
+    "onIcdChange",
+    "openB2BModal",
+    "openBookingActionModal",
+    "openBookingModal",
+    "openEmpDetail",
+    "openKassierenDialog",
+    "openLeadModal",
+    "physioSpalten",
+    "podVordRowHtml",
+    "praxisAngabenAus",
+    "prefillBookingModal",
+    "prefillBookingModalFromSlot",
+    "renderBusinessesSection",
+    "renderCalEmpChips",
+    "renderEmpStandortList",
+    "renderHoursGrid",
+    "renderOtherStandortEmps",
+    "renderOverview",
+    "renderServices",
+    "renderSidebar",
+    "resetServiceForm",
+    "saveDataSharing",
+    "saveEmpPermissions",
+    "saveRezept",
+    "saveSpecialDays",
+    "showKioskPinModal",
+    "showMyBookingLink",
+    "storniereZuzahlung",
+    "therapeutName",
+    "toggleStandortDay",
+    "tr",
+    "verdrahteIcdDg",
+    "wireBusinessModal",
+    "zahlartChipsHtml",
+    "zahlartLabel",
+    "zeichneSitzungenLeer"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 36 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "n",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 15,
+   "end": 31,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausstellerSnapshot",
+    "t"
+   ],
+   "calledBy": [
+    "buildAuftragsdatei",
+    "empfaengerSnapshot",
+    "getRadio",
+    "physioSpalten",
+    "renderOverviewMonthly",
+    "t"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 36 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "ausstellerSnapshot",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 18,
+   "end": 31,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "t"
+   ],
+   "calledBy": [
+    "n",
+    "openInvView",
+    "rechnungSnapshots",
+    "t"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 36 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "deutsch",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 33,
+   "end": 36,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "bgEmpfaengerBlock",
+    "empfaengerSnapshot"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "empfaengerSnapshot",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 39,
+   "end": 59,
+   "lines": 21,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "deutsch",
+    "n"
+   ],
+   "calledBy": [
+    "rechnungSnapshots"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "validiereBarcodeErfassung",
    "kind": "function",
    "lang": "js",
@@ -34801,6 +35154,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -34809,6 +35163,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -56026,6 +56381,7 @@
     "loadRechnungen",
     "openInvView",
     "payloadFuerUpdate",
+    "rechnungSnapshots",
     "rechnungsSummen",
     "renderInvLines",
     "showToast",
@@ -82177,6 +82533,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -82185,6 +82542,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -82305,6 +82663,7 @@
    ],
    "calledBy": [
     "buildAuftragsdatei",
+    "empfaengerSnapshot",
     "getRadio",
     "physioSpalten",
     "renderOverviewMonthly",
@@ -87326,6 +87685,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -87334,6 +87694,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -87643,7 +88004,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "bgEmpfaengerBlock"
+    "bgEmpfaengerBlock",
+    "empfaengerSnapshot"
    ],
    "modules": [
     "abrechnung",
@@ -87706,6 +88068,7 @@
     "deutsch"
    ],
    "calledBy": [
+    "empfaengerSnapshot",
     "openInvView"
    ],
    "modules": [
@@ -87751,12 +88114,38 @@
    ]
   },
   {
+   "name": "empfaengerSnapshot",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/bg-angaben.js",
+   "start": 95,
+   "end": 108,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "bgAusZeile",
+    "bgEmpfaengerBlock",
+    "t"
+   ],
+   "calledBy": [
+    "rechnungSnapshots"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "bgAusMaske",
    "kind": "function",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 88,
-   "end": 94,
+   "start": 111,
+   "end": 117,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -87822,8 +88211,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 97,
-   "end": 104,
+   "start": 120,
+   "end": 127,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -87883,8 +88272,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 107,
-   "end": 111,
+   "start": 130,
+   "end": 134,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -87897,6 +88286,7 @@
     "f10"
    ],
    "calledBy": [
+    "empfaengerSnapshot",
     "openInvView",
     "starteRechnungAusVerordnung"
    ],
@@ -87947,8 +88337,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 112,
-   "end": 118,
+   "start": 135,
+   "end": 141,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -88007,8 +88397,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 120,
-   "end": 123,
+   "start": 143,
+   "end": 146,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -88068,8 +88458,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/bg-angaben.js",
-   "start": 130,
-   "end": 136,
+   "start": 153,
+   "end": 159,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -88848,6 +89238,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -88856,6 +89247,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -89044,6 +89436,7 @@
    ],
    "calledBy": [
     "$",
+    "ausstellerSnapshot",
     "darf",
     "einrichtungFortschritt",
     "mountBrandingExtras",
@@ -89085,6 +89478,7 @@
     "rechnungen",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -89094,7 +89488,73 @@
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 35 modülden çağrılıyor"
+    "ortak yardımcı — 36 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "ausstellerSnapshot",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/branding.js",
+   "start": 70,
+   "end": 76,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "brandingAus"
+   ],
+   "calledBy": [
+    "n",
+    "openInvView",
+    "rechnungSnapshots",
+    "t"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 36 modülden çağrılıyor"
    ]
   },
   {
@@ -89102,8 +89562,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/branding.js",
-   "start": 64,
-   "end": 72,
+   "start": 79,
+   "end": 87,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -89164,8 +89624,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/branding.js",
-   "start": 80,
-   "end": 95,
+   "start": 95,
+   "end": 110,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -89230,8 +89690,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/branding.js",
-   "start": 82,
-   "end": 94,
+   "start": 97,
+   "end": 109,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -103350,6 +103810,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -103358,6 +103819,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -122657,8 +123119,8 @@
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
    "start": 123,
-   "end": 311,
-   "lines": 189,
+   "end": 331,
+   "lines": 209,
    "spiegelHinweis": null,
    "tables": [
     "leads",
@@ -122670,6 +123132,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "ausstellerSnapshot",
     "bgAusZeile",
     "bgEmpfaengerBlock",
     "brandingAus",
@@ -122734,8 +123197,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 199,
-   "end": 204,
+   "start": 203,
+   "end": 208,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -122808,8 +123271,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 313,
-   "end": 315,
+   "start": 333,
+   "end": 335,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -124297,8 +124760,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-festschreibung.js",
-   "start": 21,
-   "end": 27,
+   "start": 23,
+   "end": 29,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -124673,6 +125136,35 @@
    ],
    "calledBy": [
     "waehleLeistung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "rechnungSnapshots",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-snapshot.js",
+   "start": 27,
+   "end": 39,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [
+    "leads",
+    "prescriptions"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausstellerSnapshot",
+    "empfaengerSnapshot",
+    "error"
+   ],
+   "calledBy": [
+    "saveInvoice"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -128169,6 +128661,7 @@
     "proceedToRechnungForPhysio",
     "pruefeRelation",
     "rebindeNoShowSitzungen",
+    "rechnungSnapshots",
     "registriereVeroeffentlicht",
     "renderEmpStandortList",
     "renderFussbefundArchiv",
@@ -140630,6 +141123,7 @@
     "_doStripePortalRedirect",
     "applyI18n",
     "aufteilen",
+    "ausstellerSnapshot",
     "belegDruckDeps",
     "bgAusWerte",
     "bookingErrMsg",
@@ -140638,6 +141132,7 @@
     "deleteBusiness",
     "dgOptionenSperren",
     "editAerzte",
+    "empfaengerSnapshot",
     "fmt",
     "getKnownCatalogLabels",
     "getRadio",
@@ -176074,7 +176569,7 @@
     "dashboard.js:18091",
     "dashboard.js:18151",
     "module/kalender-raster.js:71",
-    "module/rechnung-ansicht.js:199",
+    "module/rechnung-ansicht.js:203",
     "module/rezeptinfo-geld.js:69"
    ],
    "aynalar": []
@@ -176230,6 +176725,21 @@
    "aynalar": []
   },
   {
+   "name": "t",
+   "orte": [
+    "api-backend/lib/rechnung-snapshot.js:14",
+    "dashboard.js:513",
+    "module/anamnese.js:381",
+    "module/bg-angaben.js:36",
+    "module/branding.js:28",
+    "module/kiosk.js:56",
+    "module/termin-rechtstexte.js:20"
+   ],
+   "aynalar": [
+    "api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding"
+   ]
+  },
+  {
    "name": "zeile",
    "orte": [
     "module/branding-ui.js:39",
@@ -176263,18 +176773,6 @@
     "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
     "api-backend/merkez-istemci/signatur.js:22",
     "module/einwilligung-texte.js:422"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "t",
-   "orte": [
-    "dashboard.js:513",
-    "module/anamnese.js:381",
-    "module/bg-angaben.js:36",
-    "module/branding.js:28",
-    "module/kiosk.js:56",
-    "module/termin-rechtstexte.js:20"
    ],
    "aynalar": []
   },
@@ -176521,7 +177019,7 @@
    "name": "f",
    "orte": [
     "dashboard.js:1110",
-    "module/branding.js:82",
+    "module/branding.js:97",
     "module/kiosk.js:199"
    ],
    "aynalar": []
@@ -176595,6 +177093,15 @@
     "booking-request.js:636",
     "dashboard.js:9630",
     "kalender.js:219"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "n",
+   "orte": [
+    "api-backend/billing/dta/auftragsdatei.js:31",
+    "api-backend/lib/rechnung-snapshot.js:15",
+    "module/anamnese.js:382"
    ],
    "aynalar": []
   },
@@ -176736,6 +177243,14 @@
    "aynalar": []
   },
   {
+   "name": "ausstellerSnapshot",
+   "orte": [
+    "api-backend/lib/rechnung-snapshot.js:18",
+    "module/branding.js:70"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "authHeaders",
    "orte": [
     "attendance.js:82",
@@ -176866,6 +177381,14 @@
    "aynalar": []
   },
   {
+   "name": "deutsch",
+   "orte": [
+    "api-backend/lib/rechnung-snapshot.js:33",
+    "module/bg-angaben.js:64"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "dgsAcceptingIcd",
    "orte": [
     "api-backend/ai/validators/icdDgRules.js:157",
@@ -176894,6 +177417,14 @@
    "orte": [
     "api-backend/billing/api/artefakt-ausmustern.js:50",
     "api-backend/tools/lizenzen-erzeugen.mjs:65"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "empfaengerSnapshot",
+   "orte": [
+    "api-backend/lib/rechnung-snapshot.js:39",
+    "module/bg-angaben.js:95"
    ],
    "aynalar": []
   },
@@ -177154,14 +177685,6 @@
    "orte": [
     "api-backend/lib/passwort-regel.js:16",
     "module/passwort-regel.js:16"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "n",
-   "orte": [
-    "api-backend/billing/dta/auftragsdatei.js:31",
-    "module/anamnese.js:382"
    ],
    "aynalar": []
   },
@@ -177499,7 +178022,7 @@
    "name": "terminzettelPraxis",
    "orte": [
     "dashboard.js:5897",
-    "module/branding.js:64"
+    "module/branding.js:79"
    ],
    "aynalar": []
   },
@@ -177608,6 +178131,13 @@
    "start": 533,
    "end": 539,
    "hinweis": "Spiegel von `pruefTitel` in module/verordnung-liste"
+  },
+  {
+   "name": "t",
+   "file": "api-backend/lib/rechnung-snapshot.js",
+   "start": 14,
+   "end": 31,
+   "hinweis": "Spiegel von `module/branding"
   },
   {
    "name": "zuVieleBehandlungenJeTag",

@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009101324 businesses_anon_spaltenrechte_demo_bookings
--- EXPORTED AT:        2026-10-09T17:43:11.908Z
+-- LAST MIGRATION:     20261009194407 0075_rechnung_aussteller_empfaenger_snapshot
+-- EXPORTED AT:        2026-10-09T19:45:31.000Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1392
+--   table_columns:       1394
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
@@ -2918,6 +2918,15 @@ BEGIN
   OR NEW.leistung_bis          IS DISTINCT FROM OLD.leistung_bis
   OR NEW.patient_name          IS DISTINCT FROM OLD.patient_name
   OR NEW.invoice_type          IS DISTINCT FROM OLD.invoice_type
+  -- 0075: Aussteller/Empfänger wie gedruckt + Eigenanteil/Kassenzuzahlung direkt
+  OR NEW.aussteller_snapshot   IS DISTINCT FROM OLD.aussteller_snapshot
+  OR NEW.empfaenger_snapshot   IS DISTINCT FROM OLD.empfaenger_snapshot
+  OR NEW.eigenanteil_pct       IS DISTINCT FROM OLD.eigenanteil_pct
+  OR NEW.eigenanteil_eur       IS DISTINCT FROM OLD.eigenanteil_eur
+  OR NEW.kassenzuzahlung       IS DISTINCT FROM OLD.kassenzuzahlung
+  -- 0075: Nummer nur, wenn schon vergeben (eine fehlende Nummer darf einmalig gesetzt werden)
+  OR (OLD.invoice_number IS NOT NULL AND NEW.invoice_number IS DISTINCT FROM OLD.invoice_number)
+  OR (OLD.rechnung_nr    IS NOT NULL AND NEW.rechnung_nr    IS DISTINCT FROM OLD.rechnung_nr)
   THEN
     RAISE EXCEPTION 'Festgeschriebene Rechnung % kann inhaltlich nicht geaendert werden. Bitte stornieren und neu ausstellen.', OLD.invoice_number
       USING ERRCODE = 'check_violation';

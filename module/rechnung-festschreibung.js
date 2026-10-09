@@ -13,8 +13,10 @@ export const FESTGESCHRIEBENE_SPALTEN = Object.freeze([
   'line_items', 'subtotal', 'total_patient', 'netto_gesamt', 'steuer_gesamt', 'brutto_gesamt', 'tax_summary',
   'patient_id', 'issued_at', 'steuerhinweis_text',
   'steuernummer_snapshot', 'ust_id_snapshot', 'steuer_status', 'leistung_von', 'leistung_bis', 'patient_name', 'invoice_type',
-  // Eigenanteil/Zuzahlung gehören zum Betrag, den die DB-Sperre über `total_patient` mitschützt.
+  // 0075: Eigenanteil/Zuzahlung jetzt auch direkt in der DB-Sperre; Aussteller/Empfänger wie gedruckt;
+  // Nummer (sendet saveInvoice nie, steht der Vollständigkeit halber hier).
   'eigenanteil_pct', 'eigenanteil_eur', 'kassenzuzahlung',
+  'aussteller_snapshot', 'empfaenger_snapshot', 'invoice_number', 'rechnung_nr',
 ]);
 
 /** @param {object} payload  Nutzlast aus saveInvoice()   @param {?string} status  Status der bestehenden Rechnung */

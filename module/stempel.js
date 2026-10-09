@@ -12,7 +12,7 @@
  * Reine Helfer sind getestet; Canvas-Kodierung (`kodiereAlsPng`) ist die einzige DOM-Stelle
  * und wird in den Tests ersetzt.
  */
-import { STEMPEL_PFAD_RE } from './branding.js?v=20261009k15';
+import { STEMPEL_PFAD_RE } from './branding.js?v=20261009rs';
 
 export const STEMPEL_BUCKET = 'praxis-stempel';
 export const STEMPEL_MAX_BYTES = 512 * 1024;

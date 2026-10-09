@@ -84,6 +84,29 @@ export function bgEmpfaengerBlock(bg = {}, { patientName = '', geburtsdatum = nu
   return { empfaenger, bezug };
 }
 
+/**
+ * Empfänger-Block der Rechnung, eingefroren beim Entwurfsspeichern (`invoices.empfaenger_snapshot`, Migration 0075).
+ * BG-Rechnung (Typ bg + BG-Verordnung mit Träger): UV-Träger + Bezugszeilen wie `bgEmpfaengerBlock`;
+ * sonst die Patientin / der Patient aus der Akte. Nur gedruckte Felder — kein IBAN, keine Diagnose.
+ * Spiegel: `api-backend/lib/rechnung-snapshot.js`.
+ * @param {{patient?: ?object, rx?: ?object, invoiceType?: ?string}} q  patient = `leads`-Zeile, rx = `prescriptions`-Zeile
+ * @returns {?object}  null, wenn kein Patient verknüpft ist
+ */
+export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = null } = {}) {
+  const name = patient ? ([t(patient.first_name), t(patient.last_name)].filter(Boolean).join(' ') || t(patient.title) || '') : '';
+  if (invoiceType === 'bg' && rx?.rezeptart === 'bg' && t(rx.bg_traeger_name)) {
+    const blk = bgEmpfaengerBlock(bgAusZeile(rx), { patientName: name, geburtsdatum: patient?.geburtsdatum || null });
+    return { v: 1, art: 'bg', empfaenger: blk.empfaenger, bezug: blk.bezug };
+  }
+  if (!name) return null;
+  return {
+    v: 1, art: 'patient', name,
+    strasse: t(patient.street), plzOrt: [t(patient.plz), t(patient.city)].filter(Boolean).join(' ') || null,
+    geburtsdatum: patient.geburtsdatum ? String(patient.geburtsdatum).slice(0, 10) : null,
+    krankenkasse: t(patient.krankenkasse), versichertennummer: t(patient.versichertennummer),
+  };
+}
+
 /** Maske -> Angaben (nur lesen). */
 export function bgAusMaske(doc) {
   const w = {};

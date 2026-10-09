@@ -227,6 +227,9 @@ function createTestEnvironment(customMocks = {}) {
     leistungszeitraum: () => ({ von: '2026-10-01', bis: '2026-10-04' }),
     // KHS M2: festgeschriebene Rechnungen schreiben nur noch erlaubte Spalten (module/rechnung-festschreibung.js)
     payloadFuerUpdate: (payload) => payload,
+    // 0075: Aussteller/Empfänger-Snapshot (module/rechnung-snapshot.js) — hier nur die Verdrahtung
+    ownerProfile: null,
+    rechnungSnapshots: async (_sb, q) => ({ aussteller_snapshot: { v: 1, quelle: q.profil === null ? 'leer' : 'profil' }, empfaenger_snapshot: { v: 1, art: 'patient', patientId: q.patientId } }),
     rechnungsSummen,
     invListCache: [],
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
@@ -345,6 +348,9 @@ describe('saveInvoice & createPendingGuard module suite', () => {
     await env.saveInvoice();
 
     assert.strictEqual(env.supabaseMock.insertCalls.length, 1);
+    const nutzlast = env.supabaseMock.insertCalls[0];
+    assert.deepEqual(nutzlast.aussteller_snapshot, { v: 1, quelle: 'profil' }, '0075: Aussteller-Snapshot aus dem Praxisprofil in der Nutzlast');
+    assert.equal(nutzlast.empfaenger_snapshot.patientId, nutzlast.patient_id, '0075: Empfänger-Snapshot zum gewählten Patienten');
     assert.strictEqual(saveBtn.disabled, false, 'Save button must be restored after DB error');
     assert.ok(env.toastCalls.some(t => t.type === 'error' && t.msg.includes('Fehler beim Speichern')));
     assert.ok(env.consoleErrors.length > 0);

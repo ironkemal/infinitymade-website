@@ -19,7 +19,7 @@
  * @param {Function} deps.userId     () => id des angemeldeten Owners
  * @param {Function} deps.showToast
  */
-import { httpsUrl } from './branding.js?v=20261009k15';
+import { httpsUrl } from './branding.js?v=20261009rs';
 
 export const OWNER_HINWEIS = 'Ihre Online-Terminseite betreiben Sie als Praxis selbst: Tragen Sie die Adressen Ihres '
   + 'Impressums und Ihrer Datenschutzerklärung ein – ohne Eintrag erscheint ein automatisch aus Ihren Praxisdaten '

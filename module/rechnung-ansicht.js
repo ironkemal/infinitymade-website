@@ -23,8 +23,8 @@
  * Erste Verwendung: dashboard.js, Rechnungen-Panel (`#panel-rechnungen`).
  */
 
-import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006i';
-import { brandingAus } from './branding.js?v=20261009k15';
+import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261009rs';
+import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261009rs';
 import { typKennzeichen } from './rechnung-summen.js?v=20261006n';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 
@@ -163,14 +163,17 @@ export async function openInvView(invoiceId) {
     if (logoUrl) { invvLogo.src = logoUrl; invvLogo.hidden = false; }
     else invvLogo.hidden = true;
   }
-  document.getElementById('invvBizName').textContent = currentProfile.business_name || '—';
+  // Aussteller wie beim Speichern eingefroren (0075, § 147 Abs. 2 Nr. 1 AO); Altbelege ohne Snapshot live —
+  // über dieselbe Normalisierung (PLZ aus plz|zip, Hausnummer, E-Mail der PRAXIS statt fünf eigener Blöcke).
+  const aus = inv.aussteller_snapshot || ausstellerSnapshot(currentProfile);
+  document.getElementById('invvBizName').textContent = aus.name || '—';
   const bizMeta = [];
-  if (currentProfile.street) bizMeta.push(currentProfile.street);
-  const cityLine = [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ');
-  if (cityLine) bizMeta.push(cityLine);
-  if (currentProfile.phone) bizMeta.push('Tel: ' + currentProfile.phone);
-  if (currentProfile.email) bizMeta.push(currentProfile.email);
-  if (currentProfile.ik_number) bizMeta.push('IK: ' + currentProfile.ik_number);
+  if (aus.inhaber && aus.inhaber !== aus.name) bizMeta.push('Inhaber/in: ' + aus.inhaber);
+  if (aus.strasse) bizMeta.push(aus.strasse);
+  if (aus.plzOrt) bizMeta.push(aus.plzOrt);
+  if (aus.telefon) bizMeta.push('Tel: ' + aus.telefon);
+  if (aus.email) bizMeta.push(aus.email);
+  if (aus.ik) bizMeta.push('IK: ' + aus.ik);
   document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
   // Praxisstempel (M2.4): aus dem PRIVATEN Bucket, als Data-URL eingebettet — nie als URL im Beleg.
   const stempelEl = document.getElementById('invvStempel');
@@ -189,7 +192,8 @@ export async function openInvView(invoiceId) {
   document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
   document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
-  document.getElementById('invvStatus').textContent = statusMap[inv.status] || inv.status || '—';
+  document.getElementById('invvStatus').textContent = (statusMap[inv.status] || inv.status || '—')
+    + (inv.aussteller_snapshot ? '' : ' · Altbeleg ohne Snapshot');
 
   // Leistungszeitraum (§ 14 Abs. 4 Nr. 6 UStG). Zuerst das eingefrorene Feld
   // der Rechnung, sonst die Zeilen, erst zuletzt die verknüpften Termine.
@@ -242,13 +246,29 @@ export async function openInvView(invoiceId) {
     blk.empfaenger.forEach((z, i) => patientLines.push(i === 0 ? `<strong>${escapeHtml(z)}</strong>` : escapeHtml(z)));
     blk.bezug.forEach((z, i) => patientLines.push(i === 0 ? `<span style="display:block;margin-top:6px;">${escapeHtml(z)}</span>` : escapeHtml(z)));
   }
+  // Empfänger wie beim Speichern eingefroren (0075) — hat Vorrang vor der Akte: nach Umzug, Namenskorrektur
+  // oder DSGVO-Anonymisierung muss die ausgestellte Rechnung unverändert bleiben (§ 147 Abs. 2 Nr. 1 AO).
+  const emp = inv.empfaenger_snapshot;
+  if (emp?.art === 'bg') {
+    patientLines.length = 0;
+    (emp.empfaenger || []).forEach((z, i) => patientLines.push(i === 0 ? `<strong>${escapeHtml(z)}</strong>` : escapeHtml(z)));
+    (emp.bezug || []).forEach((z, i) => patientLines.push(i === 0 ? `<span style="display:block;margin-top:6px;">${escapeHtml(z)}</span>` : escapeHtml(z)));
+  } else if (emp?.art === 'patient' && emp.name) {
+    patientLines.length = 0;
+    patientLines.push(`<strong>${escapeHtml(emp.name)}</strong>`);
+    if (emp.strasse) patientLines.push(escapeHtml(emp.strasse));
+    if (emp.plzOrt) patientLines.push(escapeHtml(emp.plzOrt));
+    if (emp.geburtsdatum) patientLines.push('Geboren: ' + new Date(emp.geburtsdatum).toLocaleDateString('de-DE'));
+    if (emp.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(emp.krankenkasse));
+    if (emp.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(emp.versichertennummer));
+  }
   document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
 
   if (rx) {
     document.getElementById('invvRxBlock').hidden = false;
     document.getElementById('invvRx').innerHTML = [
       `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
-      rx.icd10 && !istBg ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
+      rx.icd10 && !istBg && emp?.art !== 'bg' ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
       rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
       rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : '',
       arzt?.arzt_name
@@ -281,17 +301,17 @@ export async function openInvView(invoiceId) {
 
   // Footer: contact / bank / tax IDs
   const contact = [
-    currentProfile.business_name,
-    [currentProfile.street, [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
-    currentProfile.phone ? 'Tel: ' + currentProfile.phone : '',
-    currentProfile.email
+    aus.name,
+    [aus.strasse, aus.plzOrt].filter(Boolean).join(', '),
+    aus.telefon ? 'Tel: ' + aus.telefon : '',
+    aus.email
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterContact').textContent = contact || '—';
 
   const bank = [
-    currentProfile.bank_name,
-    currentProfile.iban ? 'IBAN: ' + currentProfile.iban : '',
-    currentProfile.bic ? 'BIC: ' + currentProfile.bic : ''
+    aus.bank?.name,
+    aus.bank?.iban ? 'IBAN: ' + aus.bank.iban : '',
+    aus.bank?.bic ? 'BIC: ' + aus.bank.bic : ''
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterBank').textContent = bank || '—';
 
@@ -302,7 +322,7 @@ export async function openInvView(invoiceId) {
   const tax = [
     stNr ? 'Steuernr.: ' + stNr : '',
     ustId ? 'USt-IdNr.: ' + ustId : '',
-    currentProfile.ik_number ? 'IK: ' + currentProfile.ik_number : ''
+    aus.ik ? 'IK: ' + aus.ik : ''
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterTax').textContent = tax || '—';
 

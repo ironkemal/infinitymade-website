@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009101324 businesses_anon_spaltenrechte_demo_bookings
--- EXPORTED AT:        2026-10-09T17:43:11.908Z
+-- LAST MIGRATION:     20261009194407 0075_rechnung_aussteller_empfaenger_snapshot
+-- EXPORTED AT:        2026-10-09T19:45:31.000Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1392
+--   table_columns:       1394
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
@@ -1934,7 +1934,9 @@ CREATE TABLE public.invoices (
   leistung_bis date,
   rechnung_nr bigint,
   storno_grund text,
-  storno_am date
+  storno_am date,
+  aussteller_snapshot jsonb,
+  empfaenger_snapshot jsonb
 );
 --   FK business_id -> businesses(id)
 --   FK lead_id -> leads(id)
@@ -1949,6 +1951,8 @@ COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologie-Verordnung (verord
 COMMENT ON COLUMN public.invoices.tax_summary IS 'Eingefrorene Aufschluesselung je Steuersatz/Befreiung (§ 14 Abs. 4 Nr. 7 UStG): [{satz, grund, netto, steuer, brutto}].';
 COMMENT ON COLUMN public.invoices.steuerhinweis_text IS 'Wortlaut des gedruckten Steuerhinweises, eingefroren. Nicht zur Druckzeit aus profiles lesen — sonst druckt dieselbe Rechnung in zwei Jahren anders (GoBD Rz. 107 ff., § 146 Abs. 4 AO).';
 COMMENT ON COLUMN public.invoices.steuernummer_snapshot IS 'Steuernummer der Praxis zum Zeitpunkt der Rechnungsstellung (Snapshot, § 14 Abs. 4 Nr. 2 UStG).';
+COMMENT ON COLUMN public.invoices.aussteller_snapshot IS 'Praxis (Aussteller) wie gedruckt, eingefroren beim Entwurfsspeichern: name, inhaber, strasse, plzOrt, telefon, email, ik, bank{name,iban,bic}. Ab status<>draft gesperrt (invoice_festschreibung, 0075). § 147 Abs. 2 Nr. 1 AO, § 14 Abs. 4 Nr. 1 UStG.';
+COMMENT ON COLUMN public.invoices.empfaenger_snapshot IS 'Rechnungsempfänger wie gedruckt (Patient: name, strasse, plzOrt, geburtsdatum, krankenkasse, versichertennummer; BG: art=bg, empfaenger[], bezug[]). Kein IBAN, keine Diagnose. Ab status<>draft gesperrt (0075).';
 
 ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;

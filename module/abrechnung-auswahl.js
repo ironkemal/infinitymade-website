@@ -61,7 +61,7 @@
 import { fmtEur } from './geld.js?v=20260909';
 import { kasseAbrechnungsbereit } from './krankenkasse-suche.js?v=20261003e';
 // Gleiche ?v-Zeichenfolge wie dashboard.js — sonst zweite Modulinstanz, `aktuell` spaltet sich.
-import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
+import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20261009rs';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';

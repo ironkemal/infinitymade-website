@@ -10,7 +10,7 @@
  * Verdrahtung: `mountBrandingExtras(ctx)` einmal aus dashboard.js. Gezeichnet wird, sobald
  * der Abschnitt sichtbar wird (IntersectionObserver) und nach jeder Änderung.
  */
-import { brandingAus, brandingLuecken } from './branding.js?v=20261009k15';
+import { brandingAus, brandingLuecken } from './branding.js?v=20261009rs';
 import { stempelHochladen, stempelEntfernen, ladeStempelDataUrl } from './stempel.js?v=20261006g';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
