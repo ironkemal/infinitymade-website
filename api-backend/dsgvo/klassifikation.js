@@ -296,12 +296,17 @@ export const TABELLEN = [
     export: { filter: 'owner_id' },
     mitarbeiterFilter: 'employee_id',
     anmerkung: 'Terminanfragen aus Online-Buchung',
+    // legal-de 09.10.2026 / onprem O-182: nicht angenommene Anfragen nach 6 Monaten weg
+    // (dsgvo/fristen.js). approved bleibt — der Termin steht in bookings.
+    loeschfrist: { monate: 6, feld: 'created_at', status: ['declined', 'cancelled', 'pending'] },
   },
   {
     table: 'patients',
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },
     anmerkung: 'Interessenten-Topf des Terminanfrage-Flows',
+    // Nach den Anfragen: nur Zeilen, auf die keine Anfrage mehr zeigt (FK NO ACTION).
+    loeschfrist: { monate: 6, feld: 'created_at', nurOhneVerweis: { table: 'booking_requests', spalte: 'patient_id' } },
   },
   {
     table: 'warteliste',
@@ -501,6 +506,8 @@ export const TABELLEN = [
     kategorie: 'praxura_eigen',
     export: { filter: 'owner_id', select: 'occurred_at,action,resource,method' },
     anmerkung: 'Zugriffsprotokoll Art. 32; in Auskunft nur Zeit, Aktion, Ressource, Methode',
+    // onprem O-146: 12 Monate Rotation (dsgvo/fristen.js)
+    loeschfrist: { monate: 12, feld: 'occurred_at' },
   },
 
   // ── Sperrbestand & System ───────────────────────────────────────────────────

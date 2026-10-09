@@ -432,10 +432,10 @@ export async function sha256Hex(text) {
 // booking.html + booking-request.html, wenn die Praxis keine eigene
 // Datenschutzerklärung (profiles.praxis_datenschutz_url) hinterlegt hat.
 // Reine Information nach Art. 13 — KEINE Einwilligung, deshalb kein Widerruf.
-// Keine feste Löschfrist: booking_requests hat (noch) keine automatische Löschung.
+// v2: „spätestens nach sechs Monaten" — seit dsgvo/fristen.js nicht angenommene Anfragen löscht (O-182).
 // -------------------------------------------------------------------
 export const TERMIN_DATENSCHUTZ = Object.freeze({
-  version: 'termin-datenschutz-v1-2026-10-09',
+  version: 'termin-datenschutz-v2-2026-10-09',
   titel: 'Datenschutzhinweise zur Online-Terminvereinbarung',
   absaetze: [
     { ueberschrift: 'Verantwortlich',
@@ -462,7 +462,7 @@ export const TERMIN_DATENSCHUTZ = Object.freeze({
       text: 'Kommt eine Behandlung zustande, werden Ihre Angaben Teil der Patientendokumentation und nach den gesetzlichen '
         + 'Aufbewahrungspflichten (in der Regel zehn Jahre nach Abschluss der Behandlung, § 630f Abs. 3 BGB) aufbewahrt. '
         + 'Kommt keine Behandlung zustande, werden Ihre Angaben gelöscht, sobald sie für die Bearbeitung Ihrer Anfrage '
-        + 'nicht mehr erforderlich sind.' },
+        + 'nicht mehr erforderlich sind, spätestens nach sechs Monaten.' },
     { ueberschrift: 'Ihre Rechte',
       text: 'Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung '
         + 'der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20). Wenden Sie sich dazu an die oben genannte Praxis.' },

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-09",
- "dateien": 412,
- "funktionen": 3344,
+ "dateien": 413,
+ "funktionen": 3350,
  "module": [
   "abrechnung",
   "anamnese",
@@ -4710,6 +4710,7 @@
     "loadTenantDictionary",
     "loadVisibility",
     "loadVorlagenPanel",
+    "loescheEintrag",
     "logCall",
     "main",
     "makeUsageAggregateSupplier",
@@ -5201,6 +5202,7 @@
     "loadTenantDictionary",
     "loadVisibility",
     "loadVorlagenPanel",
+    "loescheEintrag",
     "logCall",
     "main",
     "makeUsageAggregateSupplier",
@@ -8012,8 +8014,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3487,
-   "end": 3631,
+   "start": 3488,
+   "end": 3632,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -21796,8 +21798,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/db/schema-zaehler.js",
-   "start": 56,
-   "end": 59,
+   "start": 61,
+   "end": 64,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -21819,8 +21821,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/db/schema-zaehler.js",
-   "start": 72,
-   "end": 105,
+   "start": 77,
+   "end": 110,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
@@ -21909,6 +21911,150 @@
    "uiPfad": []
   },
   {
+   "name": "grenzeIso",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 18,
+   "end": 22,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fristenSchritt"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fristEintraege",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 25,
+   "end": 27,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fristenSchritt"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "loescheEintrag",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 29,
+   "end": 62,
+   "lines": 34,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "has"
+   ],
+   "calledBy": [
+    "fristenSchritt"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fristenSchritt",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 68,
+   "end": 78,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fristEintraege",
+    "grenzeIso",
+    "loescheEintrag"
+   ],
+   "calledBy": [
+    "starteFristen",
+    "tick"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "starteFristen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 84,
+   "end": 118,
+   "lines": 35,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fristenSchritt",
+    "log",
+    "stop"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "tick",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/dsgvo/fristen.js",
+   "start": 97,
+   "end": 112,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fristenSchritt",
+    "log"
+   ],
+   "calledBy": [
+    "startClock"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "antworttextFallB",
    "kind": "function",
    "lang": "js",
@@ -21969,8 +22115,8 @@
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
    "start": 75,
-   "end": 745,
-   "lines": 671,
+   "end": 760,
+   "lines": 686,
    "spiegelHinweis": null,
    "tables": [
     "abrechnung_artefakt_version",
@@ -22005,7 +22151,8 @@
     "employee_groups:delete",
     "leads:delete",
     "leads:update",
-    "profiles:update"
+    "profiles:update",
+    "businesses:update"
    ],
    "endpoints": [
     "https://api.stripe.com/v1/subscriptions/${encodeURIComponent(stripeSubId)}"
@@ -22172,8 +22319,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 750,
-   "end": 821,
+   "start": 765,
+   "end": 836,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -22199,8 +22346,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 786,
-   "end": 801,
+   "start": 801,
+   "end": 816,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -26239,8 +26386,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 103,
-   "end": 114,
+   "start": 104,
+   "end": 115,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -26263,8 +26410,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 116,
-   "end": 121,
+   "start": 117,
+   "end": 122,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -26285,8 +26432,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 238,
-   "end": 251,
+   "start": 239,
+   "end": 252,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -26307,8 +26454,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 255,
-   "end": 259,
+   "start": 256,
+   "end": 260,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26329,8 +26476,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 260,
-   "end": 269,
+   "start": 261,
+   "end": 270,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -26351,8 +26498,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 275,
-   "end": 278,
+   "start": 276,
+   "end": 279,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -26373,8 +26520,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 279,
-   "end": 283,
+   "start": 280,
+   "end": 284,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26395,8 +26542,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 287,
-   "end": 295,
+   "start": 288,
+   "end": 296,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -26418,8 +26565,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 298,
-   "end": 305,
+   "start": 299,
+   "end": 306,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -26440,8 +26587,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 308,
-   "end": 312,
+   "start": 309,
+   "end": 313,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26467,8 +26614,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 315,
-   "end": 321,
+   "start": 316,
+   "end": 322,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -26491,8 +26638,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 324,
-   "end": 329,
+   "start": 325,
+   "end": 330,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -26516,8 +26663,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 331,
-   "end": 335,
+   "start": 332,
+   "end": 336,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26541,8 +26688,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 340,
-   "end": 350,
+   "start": 341,
+   "end": 351,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -26566,8 +26713,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 493,
-   "end": 504,
+   "start": 494,
+   "end": 505,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [
@@ -26588,8 +26735,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 775,
-   "end": 1035,
+   "start": 776,
+   "end": 1036,
    "lines": 261,
    "spiegelHinweis": null,
    "tables": [
@@ -26630,8 +26777,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1432,
-   "end": 1437,
+   "start": 1433,
+   "end": 1438,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -26652,8 +26799,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1479,
-   "end": 1483,
+   "start": 1480,
+   "end": 1484,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26677,8 +26824,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1562,
-   "end": 1680,
+   "start": 1563,
+   "end": 1681,
    "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
@@ -26705,8 +26852,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1564,
-   "end": 1680,
+   "start": 1565,
+   "end": 1681,
    "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
@@ -26733,8 +26880,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1579,
-   "end": 1594,
+   "start": 1580,
+   "end": 1595,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -26759,8 +26906,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1580,
-   "end": 1594,
+   "start": 1581,
+   "end": 1595,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -26785,8 +26932,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1784,
-   "end": 1832,
+   "start": 1785,
+   "end": 1833,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [
@@ -26817,8 +26964,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1832,
-   "end": 1832,
+   "start": 1833,
+   "end": 1833,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -26841,8 +26988,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1833,
-   "end": 1833,
+   "start": 1834,
+   "end": 1834,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -26864,8 +27011,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1844,
-   "end": 1848,
+   "start": 1845,
+   "end": 1849,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26884,8 +27031,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1893,
-   "end": 1970,
+   "start": 1894,
+   "end": 1971,
    "lines": 78,
    "spiegelHinweis": null,
    "tables": [],
@@ -26914,8 +27061,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1981,
-   "end": 2027,
+   "start": 1982,
+   "end": 2028,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -26942,8 +27089,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2148,
-   "end": 2164,
+   "start": 2149,
+   "end": 2165,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -26965,8 +27112,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2380,
-   "end": 2384,
+   "start": 2381,
+   "end": 2385,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -26985,8 +27132,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3269,
-   "end": 3277,
+   "start": 3270,
+   "end": 3278,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -27010,8 +27157,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3279,
-   "end": 3283,
+   "start": 3280,
+   "end": 3284,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -27032,8 +27179,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3285,
-   "end": 3297,
+   "start": 3286,
+   "end": 3298,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -27054,8 +27201,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3318,
-   "end": 3332,
+   "start": 3319,
+   "end": 3333,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -27076,8 +27223,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3499,
-   "end": 3508,
+   "start": 3500,
+   "end": 3509,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -27098,8 +27245,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3501,
-   "end": 3514,
+   "start": 3502,
+   "end": 3515,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -27122,8 +27269,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3514,
-   "end": 3516,
+   "start": 3515,
+   "end": 3517,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -27146,8 +27293,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3778,
-   "end": 3788,
+   "start": 3779,
+   "end": 3789,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -27215,8 +27362,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3790,
-   "end": 3804,
+   "start": 3791,
+   "end": 3805,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -27240,8 +27387,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3921,
-   "end": 3927,
+   "start": 3924,
+   "end": 3930,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -27262,8 +27409,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4132,
-   "end": 4186,
+   "start": 4135,
+   "end": 4189,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -27286,8 +27433,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4134,
-   "end": 4134,
+   "start": 4137,
+   "end": 4137,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -27351,8 +27498,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4350,
-   "end": 4353,
+   "start": 4353,
+   "end": 4356,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -27823,7 +27970,9 @@
     "selectDate",
     "showToast",
     "starte",
+    "starteFristen",
     "stoppe",
+    "tick",
     "zaehlerLaufen"
    ],
    "modules": [
@@ -28155,8 +28304,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 61,
-   "end": 65,
+   "start": 56,
+   "end": 60,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -28217,8 +28366,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 68,
-   "end": 73,
+   "start": 63,
+   "end": 68,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -28242,8 +28391,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 70,
-   "end": 78,
+   "start": 65,
+   "end": 73,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -28266,8 +28415,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 80,
-   "end": 92,
+   "start": 75,
+   "end": 87,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -28329,8 +28478,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 98,
-   "end": 103,
+   "start": 93,
+   "end": 98,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -28352,8 +28501,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 106,
-   "end": 112,
+   "start": 101,
+   "end": 107,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -28375,8 +28524,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 120,
-   "end": 152,
+   "start": 115,
+   "end": 147,
    "lines": 33,
    "spiegelHinweis": null,
    "tables": [],
@@ -28403,8 +28552,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 122,
-   "end": 131,
+   "start": 117,
+   "end": 126,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -28428,8 +28577,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 132,
-   "end": 149,
+   "start": 127,
+   "end": 144,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
@@ -28458,8 +28607,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 155,
-   "end": 158,
+   "start": 150,
+   "end": 153,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -28478,8 +28627,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 163,
-   "end": 178,
+   "start": 158,
+   "end": 173,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -28545,8 +28694,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 185,
-   "end": 209,
+   "start": 180,
+   "end": 204,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -28565,8 +28714,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/tools/lizenzen-erzeugen.mjs",
-   "start": 213,
-   "end": 216,
+   "start": 208,
+   "end": 211,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -33337,13 +33486,12 @@
    "lang": "js",
    "file": "booking.js",
    "start": 307,
-   "end": 397,
-   "lines": 91,
+   "end": 390,
+   "lines": 84,
    "spiegelHinweis": null,
    "tables": [
     "working_hours",
     "custom_days",
-    "bookings",
     "businesses"
    ],
    "rpcs": [],
@@ -33353,6 +33501,7 @@
    "calls": [
     "add",
     "has",
+    "lesen",
     "loadBookingSlots"
    ],
    "calledBy": [
@@ -33405,8 +33554,8 @@
    "kind": "function",
    "lang": "js",
    "file": "booking.js",
-   "start": 410,
-   "end": 416,
+   "start": 403,
+   "end": 409,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -33988,6 +34137,7 @@
     "init",
     "markiereNichtErschienen",
     "pruefeMaske",
+    "renderBookingCalendar",
     "scanneRezeptLokal"
    ],
    "modules": [
@@ -111752,6 +111902,7 @@
    "calls": [],
    "calledBy": [
     "initBarcodeDialog",
+    "starteFristen",
     "starteIpAbgleich",
     "stopCamera"
    ],
@@ -128534,6 +128685,7 @@
     "init",
     "markiereNichtErschienen",
     "pruefeMaske",
+    "renderBookingCalendar",
     "scanneRezeptLokal"
    ],
    "modules": [
@@ -128595,6 +128747,7 @@
    "calls": [],
    "calledBy": [
     "initBarcodeDialog",
+    "starteFristen",
     "starteIpAbgleich",
     "stopCamera"
    ],
@@ -141042,8 +141195,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 29,
-   "end": 44,
+   "start": 26,
+   "end": 41,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -141229,8 +141382,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 32,
-   "end": 44,
+   "start": 29,
+   "end": 41,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -141292,8 +141445,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 46,
-   "end": 51,
+   "start": 43,
+   "end": 48,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -141317,8 +141470,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 54,
-   "end": 89,
+   "start": 51,
+   "end": 86,
    "lines": 36,
    "spiegelHinweis": null,
    "tables": [],
@@ -141342,8 +141495,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 55,
-   "end": 61,
+   "start": 52,
+   "end": 58,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -141365,8 +141518,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 98,
-   "end": 113,
+   "start": 95,
+   "end": 110,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -141389,8 +141542,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 120,
-   "end": 134,
+   "start": 117,
+   "end": 131,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -141415,8 +141568,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/ueber.js",
-   "start": 121,
-   "end": 128,
+   "start": 118,
+   "end": 125,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -170655,8 +170808,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "bookings:delete"
        ],
@@ -171210,8 +171363,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "profiles:update"
        ],
@@ -172125,8 +172278,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "prescriptions:delete"
        ],
@@ -172471,7 +172624,7 @@
    ]
   },
   {
-   "tabelle": "leads",
+   "tabelle": "businesses",
    "anzahl": 6,
    "pfade": [
     {
@@ -172481,146 +172634,16 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
-        "leads:delete",
-        "leads:update"
+        "businesses:update"
        ],
        "modules": [],
        "uiPfad": []
       }
      ]
     },
-    {
-     "leitfunktion": "handleDirectAusfallrechnung",
-     "funktionen": [
-      {
-       "name": "handleDirectAusfallrechnung",
-       "file": "dashboard.js",
-       "start": 3976,
-       "end": 4122,
-       "lines": 147,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "maybeOfferAppointmentConfirmEmail",
-     "funktionen": [
-      {
-       "name": "maybeOfferAppointmentConfirmEmail",
-       "file": "dashboard.js",
-       "start": 6738,
-       "end": 6825,
-       "lines": 88,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "initSchnellerfassung",
-     "funktionen": [
-      {
-       "name": "initSchnellerfassung",
-       "file": "dashboard.js",
-       "start": 16981,
-       "end": 17102,
-       "lines": 122,
-       "writes": [
-        "leads:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "verordnungPatientenAbgleich",
-     "funktionen": [
-      {
-       "name": "verordnungPatientenAbgleich",
-       "file": "module/verordnung-patient-abgleich.js",
-       "start": 19,
-       "end": 98,
-       "lines": 80,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "beantworteAltbestand",
-     "funktionen": [
-      {
-       "name": "beantworteAltbestand",
-       "file": "module/verordnung-podo.js",
-       "start": 919,
-       "end": 932,
-       "lines": 14,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "tabelle": "businesses",
-   "anzahl": 5,
-   "pfade": [
     {
      "leitfunktion": "toggleStandortDay",
      "funktionen": [
@@ -172831,6 +172854,153 @@
        ],
        "modules": [],
        "uiPfad": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tabelle": "leads",
+   "anzahl": 6,
+   "pfade": [
+    {
+     "leitfunktion": "kontoLoeschenIntern",
+     "funktionen": [
+      {
+       "name": "kontoLoeschenIntern",
+       "file": "api-backend/dsgvo/loeschen.js",
+       "start": 75,
+       "end": 760,
+       "lines": 686,
+       "writes": [
+        "leads:delete",
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "handleDirectAusfallrechnung",
+     "funktionen": [
+      {
+       "name": "handleDirectAusfallrechnung",
+       "file": "dashboard.js",
+       "start": 3976,
+       "end": 4122,
+       "lines": 147,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "maybeOfferAppointmentConfirmEmail",
+     "funktionen": [
+      {
+       "name": "maybeOfferAppointmentConfirmEmail",
+       "file": "dashboard.js",
+       "start": 6738,
+       "end": 6825,
+       "lines": 88,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "initSchnellerfassung",
+     "funktionen": [
+      {
+       "name": "initSchnellerfassung",
+       "file": "dashboard.js",
+       "start": 16981,
+       "end": 17102,
+       "lines": 122,
+       "writes": [
+        "leads:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "verordnungPatientenAbgleich",
+     "funktionen": [
+      {
+       "name": "verordnungPatientenAbgleich",
+       "file": "module/verordnung-patient-abgleich.js",
+       "start": 19,
+       "end": 98,
+       "lines": 80,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "beantworteAltbestand",
+     "funktionen": [
+      {
+       "name": "beantworteAltbestand",
+       "file": "module/verordnung-podo.js",
+       "start": 919,
+       "end": 932,
+       "lines": 14,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
       }
      ]
     }
@@ -173451,8 +173621,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "employee_services:delete"
        ],
@@ -174139,8 +174309,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "employee_business_assignments:delete"
        ],
@@ -174369,8 +174539,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "employee_scope_overrides:delete"
        ],
@@ -174952,8 +175122,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 75,
-       "end": 745,
-       "lines": 671,
+       "end": 760,
+       "lines": 686,
        "writes": [
         "prescription_documents:delete"
        ],
@@ -175520,7 +175690,7 @@
     "module/patientenkarte.js:44",
     "module/podo-einheiten.js:372",
     "module/rechnung-zahlungseingang.js:165",
-    "module/ueber.js:29",
+    "module/ueber.js:26",
     "module/verordnung-feldmarker.js:80",
     "module/verordnung-uebersicht.js:112",
     "module/zuzahlung-befreiung.js:305",
@@ -175592,7 +175762,7 @@
     "module/branding-ui.js:31",
     "module/kiosk.js:72",
     "module/rechnung-zahlungseingang.js:376",
-    "module/ueber.js:55",
+    "module/ueber.js:52",
     "module/verordnung-podo.js:83",
     "module/verordnung-pruefen-knopf.js:42",
     "module/zuzahlung-korrektur.js:206",
@@ -175720,8 +175890,8 @@
     "api-backend/ai/validators/lhbBvbRules.js:24",
     "api-backend/ai/validators/standardRules.js:42",
     "api-backend/billing/api/mahnwesen.routes.js:45",
-    "api-backend/server.js:331",
-    "api-backend/server.js:1479"
+    "api-backend/server.js:332",
+    "api-backend/server.js:1480"
    ],
    "aynalar": []
   },
@@ -175912,6 +176082,16 @@
    "aynalar": []
   },
   {
+   "name": "tick",
+   "orte": [
+    "api-backend/dsgvo/fristen.js:97",
+    "api-backend/merkez-istemci/ip-abgleich.js:257",
+    "api-backend/server.js:3791",
+    "dashboard.js:13353"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "v",
    "orte": [
     "dashboard.js:12324",
@@ -176098,7 +176278,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4134",
+    "api-backend/server.js:4137",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:115"
    ],
@@ -176119,15 +176299,6 @@
     "admin.js:22",
     "dashboard.js:925",
     "module/kiosk.js:55"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "tick",
-   "orte": [
-    "api-backend/merkez-istemci/ip-abgleich.js:257",
-    "api-backend/server.js:3790",
-    "dashboard.js:13353"
    ],
    "aynalar": []
   },
@@ -176200,7 +176371,7 @@
   {
    "name": "arg",
    "orte": [
-    "api-backend/tools/lizenzen-erzeugen.mjs:213",
+    "api-backend/tools/lizenzen-erzeugen.mjs:208",
     "ops/tools/ingest.mjs:46"
    ],
    "aynalar": []
@@ -176224,7 +176395,7 @@
   {
    "name": "berlinOffsetMin",
    "orte": [
-    "api-backend/server.js:287",
+    "api-backend/server.js:288",
     "api/demo-booking.js:98"
    ],
    "aynalar": []
@@ -176363,7 +176534,7 @@
    "name": "einzeln",
    "orte": [
     "api-backend/billing/api/artefakt-ausmustern.js:50",
-    "api-backend/tools/lizenzen-erzeugen.mjs:70"
+    "api-backend/tools/lizenzen-erzeugen.mjs:65"
    ],
    "aynalar": []
   },
@@ -176775,7 +176946,7 @@
    "name": "pruefe",
    "orte": [
     "api-backend/dsgvo/loeschen.js:463",
-    "api-backend/tools/lizenzen-erzeugen.mjs:163"
+    "api-backend/tools/lizenzen-erzeugen.mjs:158"
    ],
    "aynalar": []
   },
@@ -176840,7 +177011,7 @@
   {
    "name": "schliesse",
    "orte": [
-    "api-backend/server.js:3778",
+    "api-backend/server.js:3779",
     "module/kalender-kontextmenue.js:91"
    ],
    "aynalar": []

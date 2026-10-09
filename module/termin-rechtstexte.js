@@ -11,7 +11,7 @@
 // Alles Fremde geht mit textContent bzw. esc() in die Seite (guvenlik: Praxisname auf anon-Seite).
 
 import { httpsUrl } from './branding.js?v=20261009k15';
-import { renderTerminDatenschutz } from './einwilligung-texte.js?v=20261009k15';
+import { renderTerminDatenschutz } from './einwilligung-texte.js?v=20261009k15c';
 import { rechtslinksFuerKutu } from './ueber.js?v=20261009k15';
 
 export const ANKER = '#datenschutzhinweise';
