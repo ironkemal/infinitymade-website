@@ -3,18 +3,18 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009083226 profiles_anon_spaltenrechte
--- EXPORTED AT:        2026-10-09T08:35:28.654Z
+-- LAST MIGRATION:     20261009091146 praxis_rechtstexte_urls
+-- EXPORTED AT:        2026-10-09T09:14:40.823Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1390
+--   table_columns:       1392
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           107
+--   functions:           108
 --   triggers:            96
 --   indexes:             335
 --   auth_triggers:       1
@@ -4422,6 +4422,35 @@ END;
 $function$
 ;
 ALTER FUNCTION public.pruefe_rechnung_zahlung_owner() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.public_praxis_angaben(p_owner_id uuid, p_business_id uuid DEFAULT NULL::uuid)
+ RETURNS TABLE(praxis_name text, inhaber_name text, strasse text, hausnummer text, plz text, ort text, impressum_url text, datenschutz_url text)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  SELECT
+    COALESCE(NULLIF(btrim(b.business_name), ''), NULLIF(btrim(p.business_name), '')),
+    COALESCE(NULLIF(btrim(p.praxis_inhaber), ''),
+             NULLIF(btrim(concat_ws(' ', p.owner_first_name, p.owner_last_name)), '')),
+    CASE WHEN b.id IS NOT NULL THEN b.street       ELSE p.street       END,
+    CASE WHEN b.id IS NOT NULL THEN b.house_number ELSE p.house_number END,
+    CASE WHEN b.id IS NOT NULL THEN b.zip          ELSE COALESCE(NULLIF(p.zip, ''), NULLIF(p.plz, '')) END,
+    CASE WHEN b.id IS NOT NULL THEN b.city         ELSE p.city         END,
+    p.praxis_impressum_url,
+    p.praxis_datenschutz_url
+  FROM public.profiles p
+  LEFT JOIN public.businesses b
+         ON b.id = p_business_id AND b.owner_id = p.id AND b.booking_slug IS NOT NULL
+  WHERE p.id = p_owner_id
+    AND p.role = 'owner'
+    AND p.accepts_bookings IS TRUE
+    AND p.plan_status IS DISTINCT FROM 'deleted'
+  LIMIT 1;
+$function$
+;
+ALTER FUNCTION public.public_praxis_angaben(p_owner_id uuid, p_business_id uuid) OWNER TO postgres;
+COMMENT ON FUNCTION public.public_praxis_angaben(p_owner_id uuid, p_business_id uuid) IS 'Patientenseiten booking/booking-request (anon): Verantwortlicher (Name + Anschrift) und Rechtstext-URLs. Nur Inhaber-Zeile mit accepts_bookings, nie Mitarbeiter; Standortadresse nur für eigenen Standort mit booking_slug. K2b.15, legal-de/guvenlik 09.10.2026.';
 
 CREATE OR REPLACE FUNCTION public.public_praxis_sector(p_owner_id uuid)
  RETURNS text
@@ -9508,6 +9537,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=pruefe_prescriptions_clientrechte() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_rechnung_zahlung_owner() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pruefe_rechnung_zahlung_owner() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_praxis_angaben(p_owner_id uuid, p_business_id uuid) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_praxis_angaben(p_owner_id uuid, p_business_id uuid) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_praxis_angaben(p_owner_id uuid, p_business_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_praxis_angaben(p_owner_id uuid, p_business_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO

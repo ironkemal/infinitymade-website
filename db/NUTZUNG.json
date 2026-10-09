@@ -5419,7 +5419,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 66,
+   "sqlTreffer": 67,
    "codeStumm": false
   },
   {
@@ -16484,7 +16484,7 @@
   },
   {
    "name": "profiles",
-   "spalten": 87,
+   "spalten": 89,
    "fkRaus": [
     "auth.users",
     "profiles"
@@ -16505,6 +16505,7 @@
     "api-backend/dsgvo/artefakt-schutz.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "module/stempel.test.js",
+    "tools/check-anon-grants.test.js",
     "tools/schema-dokumente.test.js"
    ],
    "register": true,
@@ -18639,7 +18640,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 334,
+   "sqlTreffer": 335,
    "codeStumm": false
   },
   {

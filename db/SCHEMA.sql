@@ -3,18 +3,18 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009083226 profiles_anon_spaltenrechte
--- EXPORTED AT:        2026-10-09T08:35:28.654Z
+-- LAST MIGRATION:     20261009091146 praxis_rechtstexte_urls
+-- EXPORTED AT:        2026-10-09T09:14:40.823Z
 -- ERZEUGT AM:         2026-10-09
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1390
+--   table_columns:       1392
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           107
+--   functions:           108
 --   triggers:            96
 --   indexes:             335
 --   auth_triggers:       1
@@ -3015,7 +3015,9 @@ CREATE TABLE public.profiles (
   buchungskonten jsonb DEFAULT '[]'::jsonb NOT NULL,
   gps_checkin_pruefen boolean DEFAULT false NOT NULL,
   praxis_stempel_path text,
-  praxis_inhaber text
+  praxis_inhaber text,
+  praxis_impressum_url text,
+  praxis_datenschutz_url text
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -3031,6 +3033,8 @@ COMMENT ON COLUMN public.profiles.buchungskonten IS 'Owner-gepflegter Kontenrahm
 COMMENT ON COLUMN public.profiles.gps_checkin_pruefen IS 'Owner-Einstellung: beim Check-in einmalig pruefen, ob der Mitarbeiter im 150-m-Umkreis der Praxis ist. Gespeichert wird nur das Ergebnis, nie Koordinaten. Standard aus.';
 COMMENT ON COLUMN public.profiles.praxis_stempel_path IS 'Pfad des Praxisstempels im privaten Bucket praxis-stempel (<owner_id>/stempel.png|jpg). Nie eine URL. Nur die Owner-Zeile zaehlt (Belege lesen ownerProfile).';
 COMMENT ON COLUMN public.profiles.praxis_inhaber IS 'Buergerlicher Name der Inhaberin/des Inhabers fuer Rechnungen (§ 14 Abs. 4 Nr. 1 UStG, Einzelpraxis).';
+COMMENT ON COLUMN public.profiles.praxis_impressum_url IS 'Impressum der Praxis (§ 5 DDG), nur https, ≤500. Leer -> Patientenseite zeigt kein Impressum, nur Klartext Praxisname · Anschrift (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
+COMMENT ON COLUMN public.profiles.praxis_datenschutz_url IS 'Datenschutzerklärung der Praxis (Art. 13 DSGVO), nur https, ≤500. Leer -> erzeugte Seite „Datenschutzhinweise zur Terminanfrage" (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
@@ -3067,6 +3071,12 @@ ALTER TABLE ONLY public.profiles
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_plan_status_check CHECK (plan_status = ANY (ARRAY['pending'::text, 'trial'::text, 'active'::text, 'past_due'::text, 'canceled'::text, 'expired'::text, 'deleted'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_datenschutz_url_check CHECK (praxis_datenschutz_url IS NULL OR char_length(praxis_datenschutz_url) <= 500 AND praxis_datenschutz_url ~ '^https://[^[:space:][:cntrl:]]+$'::text);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_impressum_url_check CHECK (praxis_impressum_url IS NULL OR char_length(praxis_impressum_url) <= 500 AND praxis_impressum_url ~ '^https://[^[:space:][:cntrl:]]+$'::text);
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_praxis_inhaber_laenge_check CHECK (praxis_inhaber IS NULL OR char_length(praxis_inhaber) <= 200);

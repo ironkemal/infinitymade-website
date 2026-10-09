@@ -15,8 +15,8 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Stand:** 2026-10-09 · letzte SaaS-Migration `20261009083226 profiles_anon_spaltenrechte` (Datei `0072`); vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
-(davor `prescription_sessions_booking_unique`,
+**Stand:** 2026-10-09 · letzte SaaS-Migration `20261009091146 praxis_rechtstexte_urls` (Datei `0073`); vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
+(davor `20261009083226 profiles_anon_spaltenrechte`, `prescription_sessions_booking_unique`,
 `leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
 (davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
 davor `20260815233848_verordnungsnummer_belegnummer`)

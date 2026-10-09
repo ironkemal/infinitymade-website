@@ -199,9 +199,9 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (4), PROTECTED (26) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (26) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 4 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
-  assert.equal(AUSNAHMEN.length, 4);
+  assert.equal(AUSNAHMEN.length, 5);
   const erwarteteAusnahmen = [
     'search_diagnosen',
     'search_heilmittel',

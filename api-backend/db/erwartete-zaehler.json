@@ -29,12 +29,12 @@
   "_hinweis_0056": "0056_db_aufraeumen (KHS K1.6, 02.10.2026): DROP \"fußstatus\" (-1 Tabelle, -1 Policy owner_fußstatus, -1 Index PK), DROP visibility_reports (nur SaaS, in der Box nicht vorhanden -> neutral), DROP CONSTRAINT aerzte_owner_id_arzt_name_key (-1 Index), DELETE Mock-Kostentraeger (Daten, neutral). Rechnerisch: public_tablo 83->82, rls_policy 156->155, index 305->303. NACHGERECHNET, nicht gemessen. ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
   "_hinweis_0057": "0057_aufbewahrung_sperre (KHS K1.4, 02.10.2026): +1 Tabelle (aufbewahrung_sperre, RLS an OHNE Policy wie nummernkreise -> rls_policy unveraendert), +2 Index (PK + UNIQUE NULLS NOT DISTINCT aufbewahrung_sperre_eindeutig), profiles_plan_status_check ersetzt (CHECK, kein Zaehler), DROP FUNCTION delete_expired_accounts (in der Box seit 0000_baseline nie vorhanden -> fonksiyon unveraendert). FKs legen keinen Index an (_hinweis_0025). Rechnerisch: public_tablo 82->83, index 303->305. NACHGERECHNET, nicht gemessen.",
   "_hinweis_messung_20261002": "PHYSISCH gemessen 02.10.2026 (KHS K2.11): frische Box in eigener WSL-Umgebung Praxura (Ubuntu 24.04, systemd, Docker Engine), install.sh von Grund auf, Kanal :beta (acc51d5), 58 Migrationen 0000-0057. Selbstcheck des Einrichtungsassistenten: schema=gruen, rls=gruen, sifreleme=gruen — die seit 17.09.2026 NACHGERECHNETEN Werte (0038-0057) stimmen mit der Messung ueberein, zaehler unveraendert.",
-  "bis_version": "0072",
+  "bis_version": "0073",
   "gemessen_am": "2026-10-05",
   "zaehler": {
     "public_tablo": 86,
     "rls_policy": 157,
-    "fonksiyon": 99,
+    "fonksiyon": 100,
     "trigger": 92,
     "index": 313,
     "auth_trigger": 1,
@@ -60,5 +60,6 @@
   "_hinweis_0070": "0070_invoice_festschreibung_pflichtangaben (KHS M2, 06.10.2026): CREATE OR REPLACE einer BESTEHENDEN Funktion (invoice_festschreibung, +7 gesperrte Spalten) + 1 nullable Spalte + 1 CHECK auf prescriptions. Keine neue Funktion/Trigger/Policy/Index/Tabelle -> alle Zaehler unveraendert (nachgerechnet, README Kural 6 dritter Weg).",
   "_hinweis_0071": "0071_rechnung_verordnung_clientsperre (KHS M2, guvenlik S-50/S-51, 06.10.2026): CREATE OR REPLACE der BESTEHENDEN Funktionen invoice_festschreibung und pruefe_prescriptions_clientrechte; der Trigger trg_invoice_festschreibung wird ERSETZT (DROP+CREATE gleicher Name, jetzt BEFORE UPDATE OR DELETE) -> Funktions-, Trigger-, Policy-, Index-, Tabellenzahl unveraendert (nachgerechnet, README Kural 6 dritter Weg).",
   "_hinweis_0072": "0072_profiles_anon_spaltenrechte (guvenlik S-56, 09.10.2026): REVOKE ALL ON profiles FROM anon + GRANT SELECT auf 11 Spalten (nur ACLs, kein Zaehler liest ACLs — Herleitung wie _hinweis_0024/_0035), DROP POLICY + CREATE POLICY mit GLEICHEM Namen (\"Public booking lookup profiles\", nur USING erweitert) -> rls_policy unveraendert. Keine Tabelle/Funktion/Trigger/Index. COUNTER-NEUTRAL, nachgerechnet, nicht gemessen; zaehler/gemessen_am unveraendert. Gegenprobe SaaS-Katalogexport 09.10.2026: Policies 168, Funktionen 107, Trigger 96, Indizes 335 — identisch mit dem Stand vor 0072. ✅ Am 09.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
-  "_hinweis_anon_zaehler": "O-181 b (09.10.2026): anon_profiles_tablo_hakki (false) und anon_profiles_kolon (11 = 10 Sichtspalten von profiles_public + is_active) aus dem SaaS-Katalogexport zu 0072 übernommen, nicht in einer Box gemessen — erste Box-Messung KHS §5b. Neue anon-Spalte auf profiles ⇒ Zahl hier mitziehen, sonst zeigt die Box 'veraltet'/'abweichung'."
+  "_hinweis_anon_zaehler": "O-181 b (09.10.2026): anon_profiles_tablo_hakki (false) und anon_profiles_kolon (11 = 10 Sichtspalten von profiles_public + is_active) aus dem SaaS-Katalogexport zu 0072 übernommen, nicht in einer Box gemessen — erste Box-Messung KHS §5b. Neue anon-Spalte auf profiles ⇒ Zahl hier mitziehen, sonst zeigt die Box 'veraltet'/'abweichung'.",
+  "_hinweis_0073": "0073_praxis_rechtstexte_urls (K2b.15, 09.10.2026): +2 nullable Spalten profiles (praxis_impressum_url, praxis_datenschutz_url) mit CHECK + COMMENT (keine Zähler), +1 Funktion public_praxis_angaben (SECURITY DEFINER, anon) → fonksiyon 99 → 100. profiles_public unverändert → anon_profiles_kolon bleibt 11. Nachgerechnet, nicht gemessen (Kural 6, dritte Form)."
 }

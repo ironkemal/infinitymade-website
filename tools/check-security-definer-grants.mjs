@@ -68,6 +68,10 @@ export const AUSNAHMEN = [
     grund: 'Oeffentliche Terminanfrageseite booking-request.html:677 ruft anon auf; liefert ausschliesslich Fachbereich-Text der Praxis.',
   },
   {
+    name: 'public_praxis_angaben',
+    grund: 'Patientenseiten booking.html/booking-request.html (anon, 0073): Verantwortlicher (Name+Anschrift) und Impressum-/Datenschutz-URL der Praxis, legal-de/guvenlik 09.10.2026 (K2b.15). Nur Inhaber-Zeile mit accepts_bookings, nie Mitarbeiter.',
+  },
+  {
     name: 'find_owner_id_by_code',
     grund: 'Oeffentliche Buchungsseite booking.js:75 loest Slug zu owner_id auf; anon-Zugriff zwingend notwendig.',
   },

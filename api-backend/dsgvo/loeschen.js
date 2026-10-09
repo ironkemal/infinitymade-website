@@ -691,6 +691,8 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       phone: null,
       avatar_url: null,
       praxis_logo_url: null,
+      praxis_impressum_url: null,
+      praxis_datenschutz_url: null,
       booking_slug: null,
       iban: null,
       bic: null,
