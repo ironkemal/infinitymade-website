@@ -88,6 +88,8 @@ COPY setup.html setup.js ./
 # Ersetzt in der Box die Praxura-Impressum/Datenschutz-Links (legal-de 08.10).
 # module/ueber.js kommt über COPY module, vendor/LICENSES.txt über COPY vendor.
 COPY ueber.html ./
+# Produkt-Lizenz (T21, 09.10.2026) — verlinkt aus ueber.html.
+COPY LICENSE ./LICENSE.txt
 
 # ── Öffentliche Patienten-Seiten (kein Login, Slug-basiert) ─────────────────
 COPY booking.html booking.js ./

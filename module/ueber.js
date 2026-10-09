@@ -18,13 +18,10 @@ export const HERSTELLER = Object.freeze({
   mail: SUPPORT_ADRESSE,
 });
 
-// ⚠️ K2b.16-OFFEN — Platzhalter (KHS §5b T21). Wer die ausschließlichen
-// Nutzungsrechte hält, hängt an der Antwort auf: deckt die Rechteübertragung
-// vom 06.08.2026 auch Melihs SPÄTERE Beiträge? Bis dahin steht hier null und
-// die Seite zeigt KEINEN Rechtevermerk — lieber keiner als ein falscher in
-// jeder Kundenbox. Mit der Antwort: Text eintragen (z. B. „© 2026 Yavuz Kemal
-// Demir"), LICENSE ins Repo + Image, T21 abhaken.
-export const RECHTEVERMERK = null;
+// KHS §5b T21, Kemal 09.10.2026: Melih schreibt im Auftrag — die ausschließlichen
+// Nutzungsrechte liegen bei Yavuz Kemal Demir, auch für spätere Beiträge.
+// Lizenztext: LICENSE (Repo-Wurzel, im Frontend-Image als /LICENSE.txt).
+export const RECHTEVERMERK = '© 2026 Yavuz Kemal Demir — alle Rechte vorbehalten';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

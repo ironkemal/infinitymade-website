@@ -22,6 +22,7 @@ on:
       - 'setup.html'
       - 'setup.js'
       - 'ueber.html'
+      - 'LICENSE'
       - 'booking.html'
       - 'booking.js'
       - 'booking-request.html'

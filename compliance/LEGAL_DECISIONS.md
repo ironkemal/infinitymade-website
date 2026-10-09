@@ -849,3 +849,9 @@ Rolle: Praxis = Verantwortliche; Praxura Hersteller (Box) bzw. AV (SaaS). 0 €,
 - **Erzeugte Seite** „Datenschutzhinweise zur Online-Terminvereinbarung" (gilt für booking.html + booking-request.html), Wortlaut legal-de 09.10. (in `module/` hinterlegt). Keine feste Löschfrist versprochen, solange `booking_requests` keine automatische Löschung hat (offen, niedrig: unangenommene Anfragen nach ~6 Monaten löschen).
 - **Herstellername:** In Patiententexten steht der bürgerliche Name „Yavuz Kemal Demir (Siegburg)", nicht „InfinityMade". M2.8 → `datenschutz-v4-2026-10-09`; zusammen mit der Adresskorrektur (ctxFor: `zip`/`house_number`). Unterschriebene v2/v3-Snapshots bleiben unverändert, keine Neuunterzeichnung (inhaltlich zutreffend; Adresse bestimmbar, Art. 13 Abs. 4).
 - **Anschrift für anon** (Fußzeile, Hinweisseite, Sperre „noch nicht eingerichtet") nur über RPC `public_praxis_angaben` (0073, guvenlik: Sicht+Spaltenrecht hätte Mitarbeiterzeilen mit geöffnet).
+
+### 2026-10-09 · Nachtrag S-56 — Entscheidung des Verantwortlichen: keine Meldung (Variante B)
+- **Entscheidung (Yavuz Kemal Demir, 09.10.2026):** keine Meldung an die LDI NRW nach Art. 33 und keine gesonderte Datenpanne-Meldung an die Beta-Praxen. Die Beta-Praxen werden später formlos informiert (Zeitpunkt offen).
+- **Begründung des Verantwortlichen:** sehr geringes Zugriffsvolumen, Zugriff durch Dritte nicht anzunehmen; die Angaben sind überwiegend auf den Webseiten der Praxen ohnehin öffentlich; Beta-Teilnahme mit bekanntem Risiko.
+- **Hinweis (dokumentiert, vom Verantwortlichen zur Kenntnis genommen):** legal-de hatte Meldung empfohlen (Block oben). Nicht öffentlich waren u. a. eine IBAN (1×) und `company_code`. Risiko: eine spätere Feststellung des Vorfalls ohne Meldung (Art. 33 Abs. 5 Dokumentationspflicht bleibt — diese Einträge sind die Dokumentation).
+- Technisch geschlossen durch 0072 (09.10.2026), Rückfall-Tor `check-anon-grants`.

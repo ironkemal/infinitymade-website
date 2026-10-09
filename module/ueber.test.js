@@ -3,11 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { verbindungenHtml, herstellerHtml, rechtslinksFuerKutu, praxisFusszeileHtml, ueberSeiteStarten, RECHTEVERMERK } from './ueber.js';
 
-test('Rechtevermerk ist bis K2b.16 offen (null) und erscheint dann NICHT auf der Seite', () => {
-  // Wird dieser Test rot, ist T21 erledigt: Erwartung hier anpassen.
-  assert.equal(RECHTEVERMERK, null);
-  assert.doesNotMatch(herstellerHtml(), /©|vermerk/);
-  assert.match(herstellerHtml(undefined, '© 2026 Test'), /class="vermerk">© 2026 Test/);
+test('Rechtevermerk (T21, 09.10.2026): Yavuz Kemal Demir, erscheint auf der Seite; ohne Vermerk kein ©', () => {
+  assert.match(RECHTEVERMERK, /^© 2026 Yavuz Kemal Demir/);
+  assert.match(herstellerHtml(), /class="vermerk">© 2026 Yavuz Kemal Demir/);
+  assert.doesNotMatch(herstellerHtml(undefined, null), /©|vermerk/);
 });
 
 test('Verbindungstabelle escaped und markiert Betriebssystem-Zeilen', () => {

@@ -1,0 +1,41 @@
+Praxura — Praxissoftware für Heilmittelerbringer
+Copyright © 2026 Yavuz Kemal Demir, Siegburg
+Inhaber der ausschließlichen Nutzungsrechte: Yavuz Kemal Demir
+
+LIZENZBEDINGUNGEN (verbindlich ist die deutsche Fassung)
+
+1. Geltungsbereich
+   Diese Bedingungen gelten für den Quelltext in diesem Repository und für die daraus
+   erstellten Programme, einschließlich der Installationspakete und Container-Images
+   („Praxura-Box").
+
+2. Keine Open-Source-Software
+   Praxura ist keine Open-Source-Software. Alle Rechte sind vorbehalten. Die ausschließlichen
+   Nutzungsrechte liegen bei Yavuz Kemal Demir. Ohne seine schriftliche Zustimmung darf die
+   Software weder vervielfältigt, verbreitet, bearbeitet noch öffentlich zugänglich gemacht
+   werden, soweit nicht Ziffer 3, 5 oder 6 etwas anderes bestimmt.
+
+3. Öffentlich einsehbares Repository
+   Dass das Repository öffentlich einsehbar ist, räumt keine Nutzungsrechte ein. Unberührt
+   bleiben nur die Rechte, die die Nutzungsbedingungen von GitHub zwingend vorsehen (Ansehen
+   und Forken auf GitHub).
+
+4. Bestandteile Dritter
+   Bestandteile Dritter (Bibliotheken, Schriften, Container-Images) unterliegen ausschließlich
+   ihren eigenen Lizenzen. Diese Bedingungen schränken sie weder ein noch erweitern sie sie.
+   Übersicht: vendor/LICENSES.txt, onprem/NOTICE.md und THIRD-PARTY-NOTICES.txt im
+   Server-Image.
+
+5. Nutzung in Praxen
+   Der Einsatz der Software in einer Praxis ist nur auf Grundlage eines gesonderten
+   Nutzungsvertrags mit Yavuz Kemal Demir erlaubt.
+
+6. Gesetzliche Rechte
+   Die Rechte nach §§ 69d und 69e Urheberrechtsgesetz bleiben unberührt (§ 69g Abs. 2 UrhG).
+
+---------------------------------------------------------------------------------------
+English summary (not binding): Praxura is proprietary software, all rights reserved.
+Exclusive rights holder: Yavuz Kemal Demir. A public repository grants no rights beyond
+what GitHub's terms mandate (viewing, forking). Third-party components keep their own
+licences. Use in a practice requires a separate agreement. Statutory rights under
+§§ 69d, 69e of the German Copyright Act remain unaffected.
