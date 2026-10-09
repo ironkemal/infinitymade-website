@@ -855,3 +855,13 @@ Rolle: Praxis = Verantwortliche; Praxura Hersteller (Box) bzw. AV (SaaS). 0 €,
 - **Begründung des Verantwortlichen:** sehr geringes Zugriffsvolumen, Zugriff durch Dritte nicht anzunehmen; die Angaben sind überwiegend auf den Webseiten der Praxen ohnehin öffentlich; Beta-Teilnahme mit bekanntem Risiko.
 - **Hinweis (dokumentiert, vom Verantwortlichen zur Kenntnis genommen):** legal-de hatte Meldung empfohlen (Block oben). Nicht öffentlich waren u. a. eine IBAN (1×) und `company_code`. Risiko: eine spätere Feststellung des Vorfalls ohne Meldung (Art. 33 Abs. 5 Dokumentationspflicht bleibt — diese Einträge sind die Dokumentation).
 - Technisch geschlossen durch 0072 (09.10.2026), Rückfall-Tor `check-anon-grants`.
+
+### 2026-10-09 · Rechnungs-Snapshot Aussteller/Empfänger — schließt „Offen (a)/(b)" vom 06.10.
+Rolle: Praxis = Verantwortliche/Rechnungsausstellerin; Praxura AV (SaaS) bzw. Hersteller (Box). 0 €, kein Veto.
+- **Pflicht vor der ersten echten Rechnung** (nicht für Demo): § 147 Abs. 2 Nr. 1 AO (Buchungsbelege „bildlich" übereinstimmend, Wortlaut geprüft 09.10.2026), Abs. 3 S. 1 (8 J.), § 146 Abs. 4 AO; § 14 Abs. 4, § 14b UStG.
+- `invoices.aussteller_snapshot jsonb` + `empfaenger_snapshot jsonb`, beim Ausstellen geschrieben, in `invoice_festschreibung()` gesperrt. Inhalt = **nur was gedruckt wird** (Art. 5 Abs. 1 lit. c): Aussteller wie gkv-302-Liste + Zahlungsbedingungen, Logo/Stempel-Referenz (versioniert), tatsächlich gedruckte Standort-Anschrift; Empfänger inkl. BG-Angaben, Geburtsdatum/Versichertennr. nur wenn gedruckt. Praxis-IBAN zulässig (ohnehin gedruckt); Patienten-IBAN nicht.
+- **Zusätzlich sperren:** `invoice_number`, `rechnung_nr` (§ 14 Abs. 4 Nr. 4 UStG — fehlen heute im Trigger), ferner `eigenanteil_*`/`kassenzuzahlung`, soweit betragsrelevant.
+- Gilt gleich für Zuzahlungsquittung, Privat- und BG-Rechnung (alle Buchungsbelege, § 147 Abs. 1 Nr. 4 AO). § 302-DTA: eigener Weg (`abrechnung_uebermittlung`).
+- DSGVO-Löschung: Snapshots bleiben gesperrt (Art. 17 Abs. 3 lit. b, K1.4), Purge nach 8 J.; Anonymisierung von `leads` darf Snapshots nicht berühren.
+- Altbelege ohne Snapshot: Fallback live + Kennzeichnung „Altbeleg ohne Snapshot" = Risikoakzeptanz (keine Live-Kunden).
+- Folgeschritt (niedrig): Layout-Version im Snapshot oder PDF beim Ausstellen einfrieren („bildlich"). Steuerberater-Durchsicht (≈0,5 h) um dieses Thema ergänzen.
