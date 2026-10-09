@@ -87,9 +87,6 @@ RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app \
   && mkdir -p /var/lib/praxura/kimlik /var/lib/praxura/acmedns /var/lib/praxura/ki-freigaben \
   && chown -R app:app /var/lib/praxura \
   && chmod 700 /var/lib/praxura/kimlik /var/lib/praxura/acmedns /var/lib/praxura/ki-freigaben
-# PM2_HOME bleibt nur für Phase 1 von O-179: der SaaS-VPS überschreibt CMD noch
-# per compose-"command:" mit pm2-runtime (api-backend/docker-compose.yml). Fällt mit pm2.
-ENV PM2_HOME=/tmp/.pm2
 USER app
 
 # O-179 (08.10.2026): start.mjs statt pm2-runtime — pm2 (AGPL-3.0) ruft täglich

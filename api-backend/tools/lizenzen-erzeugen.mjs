@@ -41,12 +41,7 @@ export const VERBOTEN = /\b(A?GPL|LGPL|SSPL|BUSL|Elastic|Commons[- ]Clause|Susta
 // Benannte, begründete Ausnahmen. Jede Ausnahme muss im Baum noch vorkommen —
 // sonst bricht der Bau ab ("veraltet"), damit sie mit dem Paket verschwindet.
 export const AUSNAHMEN = {
-  // O-179 Phase 2: der SaaS-VPS startet das Image per compose-"command:" noch
-  // mit pm2-runtime. In der Box läuft pm2 seit 67b0cab5 nicht mehr (CMD =
-  // start.mjs), das Paket liegt aber noch im Image. Fällt mit KHS §5b T20 —
-  // dann pm2 aus package.json entfernen und diese beiden Zeilen löschen.
-  'pm2': 'O-179: nur noch für den SaaS-VPS-Override, in der Box nicht gestartet',
-  '@pm2/agent': 'O-179: Abhängigkeit von pm2, siehe dort',
+  // leer seit 09.10.2026: pm2 (AGPL, O-179) entfernt, KHS §5b T20 erledigt.
 };
 
 const NORMAL = new Map([

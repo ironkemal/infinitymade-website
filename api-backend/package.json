@@ -7,7 +7,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "start:cluster": "pm2-runtime start server.js -i 2 --node-args=\"--import ./instrument.js\"",
     "test": "node --test",
     "katalog:sync": "node sync_heilmittel_katalog.js",
     "katalog:check": "node sync_heilmittel_katalog.js --check",
@@ -27,7 +26,6 @@
     "nodemailer": "^6.10.1",
     "pg": "^8.23.0",
     "pkijs": "^3.4.1",
-    "pm2": "^5.4.3",
     "pvutils": "^1.2.0",
     "ws": "^8.21.0",
     "yauzl": "^2.10.0"
