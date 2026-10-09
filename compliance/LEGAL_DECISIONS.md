@@ -865,3 +865,4 @@ Rolle: Praxis = Verantwortliche/Rechnungsausstellerin; Praxura AV (SaaS) bzw. He
 - DSGVO-Löschung: Snapshots bleiben gesperrt (Art. 17 Abs. 3 lit. b, K1.4), Purge nach 8 J.; Anonymisierung von `leads` darf Snapshots nicht berühren.
 - Altbelege ohne Snapshot: Fallback live + Kennzeichnung „Altbeleg ohne Snapshot" = Risikoakzeptanz (keine Live-Kunden).
 - Folgeschritt (niedrig): Layout-Version im Snapshot oder PDF beim Ausstellen einfrieren („bildlich"). Steuerberater-Durchsicht (≈0,5 h) um dieses Thema ergänzen.
+- **Nachtrag 09.10.2026 (Kemal):** Umsetzung Variante (a) — Snapshot bei jedem Speichern des Entwurfs, gesperrt sobald die Rechnung den Entwurf verlässt (heute: bezahlt). Ein eigener Schritt „Rechnung ausstellen" (Variante b, rechtlich sauberer: Sperre ab Übergabe) kommt vorerst nicht. Restrisiko akzeptiert: zwischen Druck/Übergabe und Zahlung ist die Rechnung noch änderbar.
