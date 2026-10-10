@@ -40,7 +40,7 @@ import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
-import { baueZuBelegZeile, zuDruckDaten, zuBelegVeraltet, baueGegenbeleg } from '../zuzahlung/zu-beleg.js';
+import { baueZuBelegZeile, zuDruckDaten, zuBelegVeraltet, baueGegenbeleg, ladeAktivenZuBeleg } from '../zuzahlung/zu-beleg.js';
 import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
@@ -2825,15 +2825,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 
     // Sonst aktive ZU suchen:
     // invoices mit prescription_id = rx.id, invoice_type = 'zuzahlung', storno_von IS NULL, status <> 'cancelled', owner_id = tenantId (maybeSingle).
-    let { data: aktiveZu, error: zuErr } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('prescription_id', rx.id)
-      .eq('invoice_type', 'zuzahlung')
-      .is('storno_von', null)
-      .neq('status', 'cancelled')
-      .eq('owner_id', tenantId)
-      .maybeSingle();
+    let { data: aktiveZu, error: zuErr } = await ladeAktivenZuBeleg(supabase, { prescriptionId: rx.id, tenantId });
 
     if (zuErr) {
       console.error('[zuzahlungsrechnung/aktiveZu]', zuErr);

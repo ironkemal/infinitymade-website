@@ -5,6 +5,8 @@ import {
   zuDruckDaten,
   zuBelegVeraltet,
   baueGegenbeleg,
+  fremdeZuNummern,
+  ladeAktivenZuBeleg,
 } from './zu-beleg.js';
 
 test('baueZuBelegZeile: erzeugt INSERT-Objekt mit korrekten Pflichtfeldern und OHNE Nummer/Datum', () => {
@@ -349,4 +351,29 @@ test('baueZuBelegZeile: schon kassiertes Rezept -> Beleg entsteht bezahlt (keine
   assert.equal(z.payment_method, 'karte');
   const offen = baueZuBelegZeile({ tenantId: 'o1', rx: { id: 'rx1', patient_id: 'p1' }, printSessions: [], totals: {} });
   assert.equal(offen.status, 'sent');
+});
+
+test('fremdeZuNummern: nur der aktive ZU-Beleg der Verordnung ist als Referenz zulässig (KZ2)', () => {
+  const aktiv = { invoice_number: 'ZU-2026-0007', total_patient: 20 };
+  assert.deepEqual(fremdeZuNummern('Mahnung vom 01.10.', aktiv), []);
+  assert.deepEqual(fremdeZuNummern('Beleg zu-2026-0007, Mahnung', aktiv), []);
+  assert.deepEqual(fremdeZuNummern('ZU-2026-0006 (storniert)', aktiv), ['ZU-2026-0006']);
+  assert.deepEqual(fremdeZuNummern('ZU-2026-0007 und ZU-2025-0001', aktiv), ['ZU-2025-0001']);
+  // Kein aktiver Beleg (vor 0078) oder Betrag 0: Freitext ok, jede ZU-Nummer fremd
+  assert.deepEqual(fremdeZuNummern('Formular „Zuzahlung verweigert"', null), []);
+  assert.deepEqual(fremdeZuNummern('ZU-2026-0007', null), ['ZU-2026-0007']);
+  assert.deepEqual(fremdeZuNummern('ZU-2026-0007', { invoice_number: 'ZU-2026-0007', total_patient: 0 }), ['ZU-2026-0007']);
+});
+
+test('ladeAktivenZuBeleg: filtert Gegenbeleg, Storno und Mandant', async () => {
+  const calls = [];
+  const q = new Proxy({}, {
+    get: (_, m) => (...a) => { calls.push([m, ...a]); return m === 'maybeSingle' ? Promise.resolve({ data: null, error: null }) : q; },
+  });
+  const r = await ladeAktivenZuBeleg({ from: (t) => { calls.push(['from', t]); return q; } }, { prescriptionId: 'rx1', tenantId: 'o1' });
+  assert.deepEqual(r, { data: null, error: null });
+  assert.deepEqual(calls.map((c) => c.join(':')), [
+    'from:invoices', 'select:*', 'eq:prescription_id:rx1', 'eq:invoice_type:zuzahlung',
+    'is:storno_von:', 'neq:status:cancelled', 'eq:owner_id:o1', 'maybeSingle',
+  ]);
 });

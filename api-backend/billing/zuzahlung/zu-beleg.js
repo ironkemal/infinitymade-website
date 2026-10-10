@@ -280,6 +280,36 @@ export function zuBelegVeraltet(row, { printSessions = [], totals = {} } = {}) {
 }
 
 /**
+ * Liest den aktiven ZU-Beleg einer Verordnung: kein Gegenbeleg (storno_von IS NULL), nicht storniert.
+ * Ergebnis wie supabase: { data, error }.
+ */
+export function ladeAktivenZuBeleg(supabase, { prescriptionId, tenantId }) {
+  return supabase
+    .from('invoices')
+    .select('*')
+    .eq('prescription_id', prescriptionId)
+    .eq('invoice_type', 'zuzahlung')
+    .is('storno_von', null)
+    .neq('status', 'cancelled')
+    .eq('owner_id', tenantId)
+    .maybeSingle();
+}
+
+/**
+ * VKZ 03 KZ2 (gkv-302, 10.10.2026): Nennt die Nachweisreferenz eine ZU-Nummer, muss es der aktive
+ * ZU-Beleg dieser Verordnung sein — eine stornierte oder fremde Nummer ist ein ungültiger Urbeleg.
+ * Freitext ohne ZU-Muster und Verordnungen ohne ZU-Beleg (vor 0078, oder Mahnung/Formular als Urbeleg)
+ * bleiben zulässig. Gibt die nicht passenden Nummern zurück (leer = ok).
+ */
+export function fremdeZuNummern(referenz, aktiverZu) {
+  const genannt = String(referenz || '').match(/ZU-\d{4}-\d+/gi) || [];
+  const aktiv = aktiverZu && Number(aktiverZu.total_patient) > 0 && aktiverZu.invoice_number
+    ? String(aktiverZu.invoice_number).toUpperCase()
+    : null;
+  return genannt.filter((n) => n.toUpperCase() !== aktiv);
+}
+
+/**
  * Erzeugt das INSERT-Objekt für den Storno-Gegenbeleg zu einem ZU-Original.
  *
  * Storno = Gegenbeleg mit eigener Nummer + Verweis auf storno_von, alle Beträge negiert.

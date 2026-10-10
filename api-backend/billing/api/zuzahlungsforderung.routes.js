@@ -34,6 +34,7 @@ import {
   artefaktVersuchPfad,
 } from './artefakt-version.js';
 import { bereinigeUnveroeffentlichtenEntwurf } from './entwurf-bereinigung.js';
+import { ladeAktivenZuBeleg, fremdeZuNummern } from '../zuzahlung/zu-beleg.js';
 
 function sha256Hex(buf) {
   return createHash('sha256').update(buf).digest('hex');
@@ -693,6 +694,18 @@ export function createZuzahlungsforderungRouter(deps) {
         }
         if (enrichedNachweisPruefung.versandDatum > faelligkeit) {
           return res.status(422).json({ error: 'Der Versand muss spätestens zur Zahlungsfrist erfolgt sein.', code: 'INVALID_SHIPPING_DATE' });
+        }
+        // Genannte ZU-Nummer muss der aktive ZU-Beleg dieser Verordnung sein (gkv-302 10.10.2026)
+        if (/ZU-\d{4}-\d+/i.test(enrichedNachweisPruefung.referenz)) {
+          const { data: aktiverZu, error: zuErr } = await ladeAktivenZuBeleg(supabase, { prescriptionId: sourceZeile.prescription_id, tenantId });
+          if (zuErr) return res.status(500).json({ error: 'Fehler beim Prüfen des Zuzahlungsbelegs.' });
+          const fremd = fremdeZuNummern(enrichedNachweisPruefung.referenz, aktiverZu);
+          if (fremd.length) {
+            return res.status(422).json({
+              error: `Die Nachweisreferenz nennt ${fremd.join(', ')} — das ist nicht der aktive Zuzahlungsbeleg dieser Verordnung${aktiverZu?.invoice_number ? ` (${aktiverZu.invoice_number})` : ''}.`,
+              code: 'ZU_REFERENZ_MISMATCH',
+            });
+          }
         }
         validatedMahnungId = mahnRow.id;
         }
