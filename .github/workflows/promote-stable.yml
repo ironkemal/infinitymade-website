@@ -147,17 +147,39 @@ jobs:
           # :stable'ın ESKİ digest'i okunur (ilk promote'ta yok = boş); bir
           # taşıma düşerse o ana kadar taşınanlar eskiye geri alınır — kanalda
           # yarım çift (yeni api + eski frontend) kalmaz.
-          ESKI_API="$(docker buildx imagetools inspect "${REPO}/calendar-api:stable" --format '{{.Manifest.Digest}}' 2>/dev/null || true)"
-          ESKI_FRONTEND="$(docker buildx imagetools inspect "${REPO}/frontend:stable" --format '{{.Manifest.Digest}}' 2>/dev/null || true)"
+          # O-189 (b) 2: "etiket yok" (ilk promote) ile "okunamadı" ayrılır —
+          # okunamayan eski digest'le geri alma imkânsız olur, o zaman hiçbir şey taşınmaz.
+          eski_oku() {
+            if OUT="$(docker buildx imagetools inspect "${REPO}/$1:stable" --format '{{.Manifest.Digest}}' 2>/tmp/eski_err)"; then
+              printf '%s' "$OUT"; return 0
+            fi
+            if grep -qiE 'not found|MANIFEST_UNKNOWN|404' /tmp/eski_err; then return 0; fi
+            echo "✗ $1:stable okunamadı (etiket-yok değil): $(cat /tmp/eski_err) — hiçbir şey taşınmadı" >&2
+            return 1
+          }
+          ESKI_API="$(eski_oku calendar-api)" || exit 1
+          ESKI_FRONTEND="$(eski_oku frontend)" || exit 1
           echo "önceki :stable — calendar-api=${ESKI_API:-yok} frontend=${ESKI_FRONTEND:-yok}"
           TASINAN=""
+          ozet() { printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          # O-189 (b) 3+4: geri aldıktan sonra yeniden ölç; sonuç özete yazılır (Kayıt adımı hata sonrası koşmaz).
           geri_al() {
+            ozet "## ✗ \`:stable\` → ${SURUM} başarısız — geri alma"
             for G in $TASINAN; do
               IMAGE="${G%%=*}"; ESKI="${G#*=}"
-              if [ -n "$ESKI" ] && docker buildx imagetools create --tag "${REPO}/${IMAGE}:stable" "${REPO}/${IMAGE}@${ESKI}"; then
-                echo "↩ ${IMAGE}:stable eskiye geri alındı (${ESKI})"
+              if [ -z "$ESKI" ]; then
+                ozet "- ${IMAGE}:stable: önceki yok (ilk promote) — YARIM ÇİFT olabilir, aynı girdilerle YENİDEN ÇALIŞTIR (RELEASE-STANDARD §9 B, durum iii)"
+                echo "✗ YARIM ÇİFT olabilir: ${IMAGE}:stable önceki yok — aynı girdilerle yeniden çalıştır"
+                continue
+              fi
+              docker buildx imagetools create --tag "${REPO}/${IMAGE}:stable" "${REPO}/${IMAGE}@${ESKI}" || true
+              SIMDI_D="$(docker buildx imagetools inspect "${REPO}/${IMAGE}:stable" --format '{{.Manifest.Digest}}' 2>/dev/null || true)"
+              if [ "$SIMDI_D" = "$ESKI" ]; then
+                ozet "- ${IMAGE}:stable eskiye döndü (\`${ESKI}\`, ölçüldü) — durum i: aynı girdilerle yeniden çalıştır"
+                echo "↩ ${IMAGE}:stable eskiye geri alındı (${ESKI}, ölçüldü)"
               else
-                echo "✗ YARIM ÇİFT: ${IMAGE}:stable geri alınamadı (önceki: ${ESKI:-yok}) — aynı girdilerle iş akışını YENİDEN ÇALIŞTIR, kutular :stable'ı çekmeden önce"
+                ozet "- ✗ YARIM ÇİFT: ${IMAGE}:stable = \`${SIMDI_D:-okunamadı}\`, olması gereken eski \`${ESKI}\` — durum ii: elle imagetools create + ölç"
+                echo "✗ YARIM ÇİFT: ${IMAGE}:stable = ${SIMDI_D:-okunamadı}, eski ${ESKI} — elle düzelt (RELEASE-STANDARD §9 B, durum ii)"
               fi
             done
           }

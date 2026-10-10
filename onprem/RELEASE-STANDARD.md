@@ -855,7 +855,12 @@ geçer: 72 saat çalışmamış bir image yayınlanır. Kapı "registry = girdi"
 yeniden çalıştırılmaz. Soak kutusu `X.Y.Z` etiketine sabitlenir (`.env`, `:beta` değil); yoksa her
 main push'u kutuyu taşır ve saat anlamsızlaşır (O-187).
 
-`soak_kanit` metninde `"`, ters tırnak ve `$` kullanılmaz (O-189 a kapanana kadar).
+**Taşıma yarıda düşerse (O-189 b).** Registry iki etiketi tek işlemde taşıyamaz. İş akışı taşımadan önce
+iki `:stable`'ın eski digest'ini okur (okunamazsa — "etiket yok" dışında bir hata — hiçbir şey taşımaz), bir
+adım düşerse taşınanları eskiye geri alır, **yeniden ölçer** ve sonucu iş özetine yazar. Özette üç durumdan biri:
+- **(i) eskiye döndü (ölçüldü)** — kanal tutarlı. Sebebi gider, aynı girdilerle iş akışını yeniden çalıştır.
+- **(ii) YARIM ÇİFT, eski digest vardı** — geri alma da düştü. Elle: `docker buildx imagetools create --tag ghcr.io/<repo>/<image>:stable ghcr.io/<repo>/<image>@<eski digest>`, sonra `imagetools inspect … --format '{{.Manifest.Digest}}'` ile ölç. Kutular saatlik çekmeden önce yapılır.
+- **(iii) ilk promote, önceki yok** — zararsız: `:stable`'da kutu yok, eksik etikette `update.sh` hiçbir şeyi değiştirmeden durur (§7AM (3)). Aynı girdilerle yeniden çalıştır.
 
 ### C — Taşıdıktan sonra (ilk 24 saat)
 
