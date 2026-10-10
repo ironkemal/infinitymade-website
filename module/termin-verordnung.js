@@ -25,7 +25,7 @@
 
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261010zc';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { ausTopf } from './verordnung-topf.js?v=20260930c';
+import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
 import { RX_FELDER } from './termin-laden.js?v=20261010za';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
     const freq = rx.frequenz ? ` · ${escapeHtml(rx.frequenz)}` : '';
     // Geschlossene (nur als Termin-Bindung sichtbare) Verordnung: markiert und
     // nicht wählbar — sonst bindet man neue Termine an eine abgerechnete VO (podoloji).
-    const geschlossen = RX_GESCHLOSSEN[rx.status] || null;
+    const geschlossen = rxGeschlossen(rx);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
         <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}${geschlossen ? ` <span data-vero-geschlossen style="font-size:10px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);padding:0 6px;border-radius:8px;">${geschlossen}</span>` : ''}</div>
@@ -332,6 +332,21 @@ export function resetVerordnungFelder() {
 }
 
 const RX_GESCHLOSSEN = { completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
+const ABR_GESCHLOSSEN = new Set(['abgerechnet', 'storniert', 'archiviert']);
+
+/**
+ * Ist die Verordnung fuer neue Termine/Behandlungen geschlossen? Zwei Achsen:
+ * `status` (Physio-Sitzungsbuch) und `abrechnung_status` (Podologie, §302).
+ * Eine eingereichte Podo-VO traegt weiter status='confirmed' — nur `status`
+ * zu lesen liess sie als aktiv waehlbar (KHS 10.10.2026, 4 Zeilen live).
+ * @returns {string|null} Etikett oder null = offen
+ */
+export function rxGeschlossen(rx) {
+  if (!rx) return null;
+  if (RX_GESCHLOSSEN[rx.status]) return RX_GESCHLOSSEN[rx.status];
+  const abr = statusAusTopf(rx.abrechnung_status);
+  return ABR_GESCHLOSSEN.has(abr) ? abr : null;
+}
 
 /**
  * Verordnungen für Termin-Fenster und Termin-Aktionen: die neuesten 5 aktiven,
@@ -349,6 +364,7 @@ export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {})
     .select(felder)
     .eq('patient_id', leadId)
     .not('status', 'in', '("completed","billed","cancelled")')
+    .or(PODO_ARBEITSLISTE_OR)   // eingereichte/stornierte nach abrechnung_status auch raus
     .order('created_at', { ascending: false })
     .limit(5);
   const rxs = data || [];

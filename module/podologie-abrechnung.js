@@ -83,7 +83,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
   from './eingangsbefundung-regel.js?v=20261003a';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, statusAusTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260930c';
 import { behandlungGesperrt } from './podo-arztangaben.js?v=20261010zc';
 import { istKasse } from './rezeptart.js?v=20261006a';
@@ -95,6 +95,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261006n';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
+import { dokumentationsLage } from './podo-dokumentations-sperre.js?v=20261010a';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz, massnahmeAusLeitsymptomatik } from './podo-behandlungsposition-regel.js?v=20261002a';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
@@ -715,8 +716,19 @@ async function loadPodologieBilling() {
   const { behFaturali, behBekliyor } = podAbrechnetZaehler(dokumentiert, cutoffCreatedAt);
   const abgerechnetHinweisHtml = istAbgerechnet ? `
   <div style="font-size:12px;color:var(--text-muted);background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;">
-    Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen. Neue Behandlungen können weiterhin dokumentiert werden.
+    Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen.
   </div>` : '';
+
+  // Darf hier noch dokumentiert werden? (gkv-302 + podoloji 10.10.2026, Regel in
+  // podo-dokumentations-sperre.js). Sperre → Hinweis statt Formular; Warnung →
+  // eine Bestätigung im Formular. Verbindlich ist die Prüfung im Speichern-Handler.
+  const dokuLage = selectedVord ? dokumentationsLage(selectedVord, dokumentiert, behDatumStr) : { stufe: 'frei' };
+  const dokuLageHtml = dokuLage.stufe === 'frei' ? '' : `
+  <div id="podDokuLage" data-stufe="${dokuLage.stufe}" style="font-size:12px;color:var(--warning-text,var(--text-main));background:var(--warning-dim,var(--bg-card-solid));border:1px solid ${dokuLage.stufe === 'sperre' ? 'var(--border)' : 'var(--warning,var(--border))'};border-radius:6px;padding:8px 10px;margin-bottom:12px;">
+    <div style="font-weight:600;margin-bottom:2px;">${ctx.escapeHtml(dokuLage.titel)}</div>
+    <div style="color:var(--text-muted);">${ctx.escapeHtml(dokuLage.text)}</div>
+    ${dokuLage.stufe === 'warnung' ? `<label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer;color:var(--text-main);"><input type="checkbox" id="podDokuTrotzdem"> Trotzdem dokumentieren</label>` : ''}
+  </div>`;
 
   const bereitsDokumentiertHtml = `
         <div style="border-top:1px solid var(--border);padding-top:12px;">
@@ -777,11 +789,22 @@ async function loadPodologieBilling() {
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
+  } else if (dokuLage.stufe === 'sperre') {
+    // Kein Formular — aber die Liste bleibt: Stornieren und Empfangsnachweise
+    // vorhandener Behandlungen müssen weiter gehen.
+    behandlungFormHtml = `
+    <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
+      ${abgerechnetHinweisHtml}
+      ${dokuLageHtml}
+      ${bereitsDokumentiertHtml}
+    </div>`;
   } else {
     behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} <span id="podWagnerRozet">${wagnerHtml}</span>${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
       ${abgerechnetHinweisHtml}
+      ${dokuLageHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
       ${diabetesNotiz ? `<div id="podDiabetesKonfliktNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(diabetesNotiz)}</div>` : ''}
@@ -1020,7 +1043,18 @@ async function loadPodologieBilling() {
     const heuteStr = alsISODatum(new Date());
     let err = '';
     // Reform S3.7: ohne Arzt-Nr. oder Unterschrift/Stempel darf keine Behandlung beginnen (kein Override).
+    // Frisch gelesen, nicht aus der Anzeige: die Verordnung kann seit dem Rendern
+    // eingereicht oder storniert worden sein (gkv-302 10.10.2026).
+    const frischRx = vord ? (await ctx.supabase.from(TOPF).select('abrechnung_status')
+      .eq('id', _podState.selectedVordId).maybeSingle()).data : null;
+    const dokuJetzt = vord && datum
+      ? dokumentationsLage({ ...vord, status: frischRx ? statusAusTopf(frischRx.abrechnung_status) : vord.status },
+          await podBehandlungenDerVerordnung(_podState.selectedVordId), datum)
+      : { stufe: 'frei' };
     if (behandlungGesperrt(vord).gesperrt) err = behandlungGesperrt(vord).text;
+    else if (dokuJetzt.stufe === 'sperre') err = `${dokuJetzt.titel}. ${dokuJetzt.text}`;
+    else if (dokuJetzt.stufe === 'warnung' && !document.getElementById('podDokuTrotzdem')?.checked)
+      err = `${dokuJetzt.titel}: bitte „Trotzdem dokumentieren“ ankreuzen.`;
     else if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
     // Ohne Kasse und ohne Diagnosegruppe gibt es keine Positionsnummern: die Behandlung wird ohne Code

@@ -6,7 +6,7 @@
 // jemand auch nur die Notiz aenderte. Diese Tests halten beide Richtungen fest.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, ladeTerminVerordnungen, resetVerordnungFelder, aktualisiereBindungBeimSpeichern } from './termin-verordnung.js';
+import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, ladeTerminVerordnungen, resetVerordnungFelder, aktualisiereBindungBeimSpeichern, rxGeschlossen } from './termin-verordnung.js';
 
 /** Minimales DOM: nur das eine versteckte Feld, an dem alles haengt. */
 function mitFeld(startwert = '') {
@@ -89,6 +89,7 @@ function mockSupabase(bookings = []) {
     neq: () => qb,
     is: () => qb,
     not: () => qb,
+    or: () => qb,
     order: () => qb,
     limit: () => qb,
     then: (resolve) => Promise.resolve({ data: bookings, error: null }).then(resolve),
@@ -229,7 +230,8 @@ function erstelleSbMock({ bookingVerordnungId = null, rxs = [], gebundeneRx = nu
                     };
                   },
                   not() {
-                    return {
+                    const kette = {
+                      or() { return kette; },
                       order() {
                         return {
                           async limit() {
@@ -239,6 +241,7 @@ function erstelleSbMock({ bookingVerordnungId = null, rxs = [], gebundeneRx = nu
                         };
                       },
                     };
+                    return kette;
                   },
                 };
               },
@@ -455,4 +458,14 @@ test('aktualisiereBindung: Physio-Auswahl (keine podoVordId) bleibt unberuehrt',
   const r = await aktualisiereBindungBeimSpeichern(sbMitUpdates(log), 'b-1', { binde: async () => { throw new Error('nicht erwartet'); } });
   assert.equal(r, null);
   assert.equal(log.length, 0);
+});
+
+test('rxGeschlossen: Podo-VO mit status=confirmed, aber eingereicht/storniert, ist geschlossen (KHS 10.10.2026)', () => {
+  assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: 'gesendet' }), 'abgerechnet');
+  assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: 'in_abrechnung' }), 'abgerechnet');
+  assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: 'storniert' }), 'storniert');
+  assert.equal(rxGeschlossen({ status: 'billed', abrechnung_status: null }), 'abgerechnet');
+  assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: 'bereit' }), null);
+  assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: null }), null);
+  assert.equal(rxGeschlossen(null), null);
 });

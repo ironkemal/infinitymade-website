@@ -260,11 +260,16 @@ import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) 
 düşer, ama kaybolmaz — liste altında kapalı bir **"Abgerechnet (n)"** başlığı altında
 durur (`_podState.verordnungenAbgerechnet`, `PODO_ABGERECHNET_OR`). Açılınca aynı satır
 biçimiyle listelenirler, fakat "Status" düğmesi **gösterilmez** (Abrechnungsstatus artık
-buradan değişmez). Böyle bir Verordnung seçilince Tagesbehandlung formu **kapanmaz** —
-§630f Abs. 1 S. 2 BGB ve gkv-302'nin onayı gereği (Teilabrechnung normal, kalan
-Einheiten dokümante edilebilir kalmalı) — form üstünde bilgi şeridi çıkar:
-"Diese Verordnung wurde bereits (teilweise) eingereicht — X Einheit(en) abgerechnet,
-Y Einheit(en) noch offen."
+buradan değişmez). ⚠️ **10.10.2026'dan beri DEĞİŞTİ** (gkv-302: Teilabrechnung'dan sonra
+açık birimler düşer — SPEC-RULES 29.09 düzeltmesi + Reform S2.3; podoloji UX kararı):
+böyle bir Verordnung seçilince Tagesbehandlung **formu yok** — bilgi şeridi ("… X Einheit(en)
+abgerechnet, Y Einheit(en) noch offen.") + `#podDokuLage` kutusu „Abgerechnet – keine
+Behandlung mehr möglich" (+ Support/Korrekturabrechnung yönlendirmesi) + "Bereits
+dokumentiert" listesi (Storno çalışmaya devam eder). Aynı kutu: verordnete Menge dolmuşsa
+(yeni gün için) „Verordnete Menge erreicht (n von n)". `bereit` / abgesetzt VO'da form açık,
+kutu sarı, „Trotzdem dokumentieren" işaretlenmeden kaydetmez. Kural: `module/podo-dokumentations-sperre.js`;
+kaydetmeden önce taze `abrechnung_status` ile tekrar bakılır. Eski metin: form kapanmaz,
+"Neue Behandlungen können weiterhin dokumentiert werden."
 **Bağımlı ekranlar:** `abrechnung`, hasta dosyası zaman çizelgesi (`patientenkarte.js`
 → `verordnung-uebersicht.js`, aynı `PODO_ABGERECHNET_OR` filtresini paylaşır)
 **Son test:** 2026-09-20 (`1d549f6`) — GEÇTİ (kısmi). Grup kapalı geliyor, "▸/▾" ile

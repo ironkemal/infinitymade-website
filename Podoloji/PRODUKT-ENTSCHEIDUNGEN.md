@@ -807,3 +807,20 @@
     Zeile ohne Kode das „Was wurde gemacht" nur in den Notizen).
   - **→ `legal-de`:** medizinische Behandlung ohne ärztliche Verordnung bei Selbstzahlern — nicht Sache der
     Software-Sperre, nicht bewertet.
+
+## PE-007 (10.10.2026) — Behandlung an geschlossener Verordnung dokumentieren
+
+**Kemal-Auftrag:** benutzerfreundlich, nur was im Praxisalltag wirklich vorkommt. **podoloji** (UX) + **gkv-302** (Abrechnung, UE Korrekturverfahren 13.02.2025 Frage 1/2/5, Anlage 3 Podologie p).
+
+| Lage der Verordnung | Verhalten in der Tagesbehandlung |
+|---|---|
+| aktiv | frei |
+| bereit (abrechenbar, nicht eingereicht) · abgesetzt | Formular offen, gelber Hinweis + Haken „Trotzdem dokumentieren" (1 Klick, kein Modal, kein „wieder öffnen" — podoloji: das vergisst man wieder zu schließen) |
+| verordnete Menge erreicht (neuer Tag) | kein Formular, Hinweis „Verordnete Menge erreicht (n von n)" + „neue Verordnung erfassen / Menge korrigieren" |
+| abgerechnet | kein Formular; „Abgerechnet – keine Behandlung mehr möglich" + „Nachträgliche Leistung? → Korrekturabrechnung (Support)" |
+| storniert / archiviert | kein Formular |
+
+- Liste „Bereits dokumentiert" bleibt sichtbar (Storno, Empfangsnachweis).
+- **Nicht gebaut, bewusst:** VKZ 02 Nachforderung (selten, Auslöser = erster echter Fall); „VO folgt" (Behandlung ohne Verordnung, VO später zuordnen — eigener Punkt); Sperre „nach Behandlungsabbruch" (kein Abbruch-Datum im Schema).
+- Termin-Fenster: eingereichte Podo-VO trug `status='confirmed'` und war deshalb wählbar — jetzt zählt auch `abrechnung_status` (`rxGeschlossen`, termin-verordnung.js).
+- Code: `module/podo-dokumentations-sperre.js` (+ Test), Speichern prüft frisch gelesen.
