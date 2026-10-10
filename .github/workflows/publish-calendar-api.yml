@@ -96,7 +96,12 @@ jobs:
           # O-178 Bedingung 4: Version im Image (/health, /api/ueber) = VERSION+sha7.
           echo "bild=${VERSION}+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+          # Tag'i paralel koşan kardeş workflow (R5) bu koşudan ÖNCE basmış olabilir
+          # (10.10.2026: frontend v0.5.1'i bastı, calendar-api "zaten basılmış" sandı,
+          # :0.5.1 image etiketi hiç çıkmadı — O-187). Tag AYNI commit'i gösteriyorsa
+          # bu hâlâ bir yayın koşusudur.
+          TAG_SHA="$(git rev-list -n1 "refs/tags/v$VERSION" 2>/dev/null || true)"
+          if [ -n "$TAG_SHA" ] && [ "$TAG_SHA" != "$GITHUB_SHA" ]; then
             echo "release=false" >> "$GITHUB_OUTPUT"
             echo "→ v$VERSION zaten basılmış — bu bir yayın koşusu değil, yalnız :beta + sha"
           else
@@ -104,7 +109,7 @@ jobs:
             echo "→ v$VERSION henüz yok — bu bir YAYIN koşusu, X.Y.Z de basılacak"
           fi
 
-          ONCEKI="$(git tag -l 'v*.*.*' | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 || true)"
+          ONCEKI="$(git tag -l 'v*.*.*' | sed 's/^v//' | grep -vx "$VERSION" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 || true)"
           echo "onceki=$ONCEKI" >> "$GITHUB_OUTPUT"
           echo "→ önceki yayın: ${ONCEKI:-<yok — ilk yayın>}"
 
