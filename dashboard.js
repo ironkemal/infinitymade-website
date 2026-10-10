@@ -3307,43 +3307,6 @@ async function uebernehmeDienstleistungAusRx(rx) {
   }
 }
 
-async function loadCalRpRezeptInfo(leadId) {
-  const section = document.getElementById('calRpRezeptSection');
-  if (!section) return;
-
-  const { data: rxs } = await supabase
-    .from('prescriptions')
-    .select('id, rezept_typ, status, heilmittel, ausstellungsdatum, anzahl_einheiten, prescription_sessions(id, session_number, status)')
-    .eq('patient_id', leadId)
-    .not('status', 'in', '("completed","billed","cancelled")')
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  if (!rxs || rxs.length === 0) {
-    section.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">Kein aktives Rezept</div>';
-    return;
-  }
-
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-
-  section.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Rezepte</div>` +
-    rxs.map(rx => {
-      const sessions = rx.prescription_sessions || [];
-      const done = sessions.filter(s => s.status === 'done').length;
-      const total = rx.anzahl_einheiten || sessions.length || 0;
-      return `<div style="padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:6px;">
-        <div style="color:var(--text-main);font-size:12px;font-weight:600;">${escapeHtml(rx.heilmittel || rx.rezept_typ || '—')}</div>
-        <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Ausgestellt: ${fmt(rx.ausstellungsdatum)}</div>
-        <div style="margin-top:6px;">
-          <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-            <div style="width:${total ? Math.round((done/total)*100) : 0}%;height:100%;background:#22c55e;"></div>
-          </div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${done}/${total} Sitzungen</div>
-        </div>
-      </div>`;
-    }).join('');
-}
-
 async function loadCalRpUnverga(leadId) {
   const section = document.getElementById('calRpUnverga');
   if (!section) return;
