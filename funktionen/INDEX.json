@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
  "dateien": 433,
- "funktionen": 3470,
+ "funktionen": 3469,
  "module": [
   "abrechnung",
   "anamnese",
@@ -2541,6 +2541,7 @@
     "(datei) api-backend/billing/api/abrechnung.routes.js",
     "(datei) api-backend/billing/api/ausfall.routes.js",
     "(datei) api-backend/billing/api/mahnwesen.routes.js",
+    "(datei) api-backend/routes/ueber.js",
     "(datei) api-backend/server.js",
     "(datei) api/admin/data.js",
     "(datei) ops/tools/ingest.mjs",
@@ -2605,7 +2606,6 @@
     "naeher",
     "norm",
     "normalizedCurrent",
-    "nurKutu",
     "nurZiffern",
     "oeffneArztDetail",
     "offeneJeVerordnung",
@@ -7215,6 +7215,7 @@
     "(datei) api-backend/billing/api/warteliste.routes.js",
     "(datei) api-backend/billing/api/zuzahlung.routes.js",
     "(datei) api-backend/billing/pdf/begleitzettel.template.js",
+    "(datei) api-backend/routes/ueber.js",
     "(datei) api-backend/server.js",
     "(datei) api-backend/setup/router.js",
     "(datei) api-backend/start.mjs",
@@ -7305,7 +7306,6 @@
     "normName",
     "normalisiereName",
     "normalizedCurrent",
-    "nurKutu",
     "nurZiffern",
     "oeffneArztDetail",
     "oeffneDb",
@@ -27346,12 +27346,36 @@
    "uiPfad": []
   },
   {
+   "name": "nurKutu",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/dagitim.js",
+   "start": 7,
+   "end": 25,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "appBaseUrl",
+    "istKutu",
+    "json"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "appBaseUrl",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/dagitim.js",
-   "start": 17,
-   "end": 20,
+   "start": 22,
+   "end": 25,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -27361,7 +27385,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "(datei) api-backend/server.js"
+    "(datei) api-backend/server.js",
+    "nurKutu"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -28065,8 +28090,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/phi-encrypt.js",
-   "start": 43,
-   "end": 46,
+   "start": 47,
+   "end": 50,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -28087,8 +28112,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/phi-encrypt.js",
-   "start": 56,
-   "end": 66,
+   "start": 60,
+   "end": 70,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -28114,8 +28139,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/phi-encrypt.js",
-   "start": 73,
-   "end": 84,
+   "start": 77,
+   "end": 88,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -28139,8 +28164,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/phi-encrypt.js",
-   "start": 92,
-   "end": 112,
+   "start": 96,
+   "end": 116,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -29653,7 +29678,7 @@
     "istKutu"
    ],
    "calledBy": [
-    "nurKutu"
+    "(datei) api-backend/routes/ueber.js"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -32477,35 +32502,12 @@
    "uiPfad": []
   },
   {
-   "name": "nurKutu",
-   "kind": "arrow",
-   "lang": "js",
-   "file": "api-backend/routes/status.js",
-   "start": 27,
-   "end": 30,
-   "lines": 4,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "istKutu",
-    "json"
-   ],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
    "name": "createStatusRouter",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/status.js",
-   "start": 34,
-   "end": 64,
+   "start": 32,
+   "end": 62,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -32544,35 +32546,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "nurKutu"
+    "(datei) api-backend/routes/ueber.js"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "nurKutu",
-   "kind": "arrow",
-   "lang": "js",
-   "file": "api-backend/routes/ueber.js",
-   "start": 44,
-   "end": 79,
-   "lines": 36,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "get",
-    "istKutu",
-    "json",
-    "lizenzenLesen",
-    "set",
-    "verbindungenListe"
-   ],
-   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -35292,6 +35267,7 @@
     "(datei) api-backend/billing/api/zuzahlung.routes.js",
     "(datei) api-backend/billing/zaa/anwenden.js",
     "(datei) api-backend/routes/mitarbeiter-zugang.js",
+    "(datei) api-backend/routes/ueber.js",
     "(datei) api-backend/server.js",
     "(datei) api-backend/setup/router.js",
     "(datei) api-backend/tools/lizenzen-erzeugen.mjs",
@@ -57646,6 +57622,7 @@
     "(datei) api-backend/billing/api/abrechnung.routes.js",
     "(datei) api-backend/billing/api/ausfall.routes.js",
     "(datei) api-backend/billing/api/mahnwesen.routes.js",
+    "(datei) api-backend/routes/ueber.js",
     "(datei) api-backend/server.js",
     "(datei) api/admin/data.js",
     "(datei) ops/tools/ingest.mjs",
@@ -57710,7 +57687,6 @@
     "naeher",
     "norm",
     "normalizedCurrent",
-    "nurKutu",
     "nurZiffern",
     "oeffneArztDetail",
     "offeneJeVerordnung",
@@ -74075,6 +74051,7 @@
     "(datei) api-backend/billing/api/warteliste.routes.js",
     "(datei) api-backend/billing/api/zuzahlung.routes.js",
     "(datei) api-backend/billing/pdf/begleitzettel.template.js",
+    "(datei) api-backend/routes/ueber.js",
     "(datei) api-backend/server.js",
     "(datei) api-backend/setup/router.js",
     "(datei) api-backend/start.mjs",
@@ -74165,7 +74142,6 @@
     "normName",
     "normalisiereName",
     "normalizedCurrent",
-    "nurKutu",
     "nurZiffern",
     "oeffneArztDetail",
     "oeffneDb",
@@ -189862,14 +189838,6 @@
    "orte": [
     "api-backend/billing/dta/builder.js:61",
     "module/abrechnung-verlauf.js:72"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "nurKutu",
-   "orte": [
-    "api-backend/routes/status.js:27",
-    "api-backend/routes/ueber.js:44"
    ],
    "aynalar": []
   },

@@ -19,12 +19,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth, requireOwner } from '../ai/auth.js';
-import { istKutu } from '../lib/dagitim.js';
+import { nurKutu } from '../lib/dagitim.js';
 import { statusSammeln } from '../lib/status.js';
 
 const CACHE_MS = 30_000;
-
-const nurKutu = (req, res, next) => (istKutu() ? next() : res.status(404).json({ error: 'Not found' }));
 
 /**
  * @param {object}   o

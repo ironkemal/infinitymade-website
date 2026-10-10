@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requireAuth } from '../ai/auth.js';
-import { istKutu } from '../lib/dagitim.js';
+import { nurKutu } from '../lib/dagitim.js';
 import { verbindungenListe } from '../lib/verbindungen.js';
 
 const LIZENZ_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'lizenzen');
@@ -40,8 +40,6 @@ function lizenzenLesen() {
   }
   return lizenzText;
 }
-
-const nurKutu = (req, res, next) => (istKutu() ? next() : res.status(404).json({ error: 'Not found' }));
 
 // Vor requireAuth, damit auch die Token-Prüfung (2 DB-Abfragen) gedeckelt ist.
 const ueberLimiter = rateLimit({

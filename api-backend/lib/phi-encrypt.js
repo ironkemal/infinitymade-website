@@ -12,7 +12,7 @@
 //   const plain = decryptPHI(enc);            // → 'M54.5'
 //   // Pass enc directly to .insert({ icd10_enc: enc })
 
-import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes, createHmac } from 'node:crypto';
 
 const IV_LEN  = 12;   // GCM nonce length (recommended)
 const TAG_LEN = 16;   // GCM auth-tag length
@@ -34,7 +34,11 @@ export function encryptionAvailable() {
 }
 
 /**
- * SHA-256 des Schluessels, erste 8 Hex-Zeichen. NIE der Schluessel selbst oder
+ * HMAC-SHA256 ueber die Domain `praxura-backup-fingerprint-v1:dek`, Schluessel =
+ * die Variable als Zeichenkette, erste 16 Hex-Zeichen — EXAKT das Verfahren von
+ * onprem/backup.sh `parmak_izi_dek` (backup.meta.json `data_key_fingerprint`)
+ * und restore.sh. Ein Verfahren fuer Panel, Kuenye und /status-Vergleich
+ * (Kemal 11.10.2026; vorher SHA-256/8 hier, HMAC/16 dort). NIE der Schluessel selbst oder
  * dessen Praefix — nur sein Fingerabdruck (RELEASE-STANDARD.md §5.4/8: "Fingerabdruck
  * im Panel"). Zeigt einem Kunden, der von einem Backup mit falschem Schluessel
  * zurueckspielt, dass es NICHT derselbe Schluessel ist, ohne ihn preiszugeben.
@@ -42,7 +46,7 @@ export function encryptionAvailable() {
  */
 export function keyFingerprint() {
   if (!process.env.DATA_ENCRYPTION_KEY) return null;
-  return createHash('sha256').update(process.env.DATA_ENCRYPTION_KEY).digest('hex').slice(0, 8);
+  return createHmac('sha256', process.env.DATA_ENCRYPTION_KEY).update('praxura-backup-fingerprint-v1:dek').digest('hex').slice(0, 16);
 }
 
 /**
