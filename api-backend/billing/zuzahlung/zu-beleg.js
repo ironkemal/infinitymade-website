@@ -165,7 +165,7 @@ export function baueZuBelegZeile({
 
 // Spiegel von module/rechnung-zahlung.js ZAHLART_ZU_PAYMENT_METHOD (prescriptions.zuzahlung_zahlart →
 // invoices.payment_method); api-backend kann nichts oberhalb seines Verzeichnisses importieren.
-const ZAHLART_ZU_PAYMENT_METHOD = { bar: 'bar', ec: 'karte', ueberweisung: 'ueberweisung', paypal: 'sonstiges', sonstiges: 'sonstiges' };
+export const ZAHLART_ZU_PAYMENT_METHOD = { bar: 'bar', ec: 'karte', ueberweisung: 'ueberweisung', paypal: 'sonstiges', sonstiges: 'sonstiges' };
 
 /**
  * Wandelt eine gespeicherte invoices-Zeile in genau die Argumente um,

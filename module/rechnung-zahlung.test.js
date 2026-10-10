@@ -153,3 +153,9 @@ test('markiereZuBelegBezahlt: DB-Fehler meldet false', async () => {
   };
   assert.equal(await markiereZuBelegBezahlt(fakeSbUpdateErr, 'rx-err2', 'bar'), false);
 });
+
+test('Parität: ZAHLART_ZU_PAYMENT_METHOD in api-backend/billing/zuzahlung/zu-beleg.js ist ein Spiegel (10.10.2026)', async () => {
+  const front = await import('./rechnung-zahlung.js');
+  const back = await import('../api-backend/billing/zuzahlung/zu-beleg.js');
+  assert.deepEqual(back.ZAHLART_ZU_PAYMENT_METHOD, front.ZAHLART_ZU_PAYMENT_METHOD);
+});

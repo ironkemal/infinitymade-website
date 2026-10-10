@@ -52,7 +52,7 @@
 // 08.09.2026 nur in prescriptions/belegliste ergänzt), fällt deshalb auf
 // „sonstiges" — sonst stand hier `undefined`, und die Rechnung verlor ihren
 // Zahlungsweg lautlos (payment_method || null -> null).
-const ZAHLART_ZU_PAYMENT_METHOD = {
+export const ZAHLART_ZU_PAYMENT_METHOD = {
   bar: 'bar',
   ec: 'karte',
   ueberweisung: 'ueberweisung',
