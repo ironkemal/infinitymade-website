@@ -49,6 +49,9 @@ export const PROTECTED = [
   'artefakt_owner_unfreeze',
   'zaa_fehler_anwenden',
   'artefakt_registriere_veroeffentlicht',
+  // 0078 (10.10.2026, db-ustasi): Nummern-Trigger der invoices, zieht naechste_nummer() (seit 0002 ohne
+  // EXECUTE fuer authenticated) -> muss DEFINER bleiben; seit 0078 per CREATE OR REPLACE in der Kette, drei REVOKEs.
+  'set_invoice_nummer',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

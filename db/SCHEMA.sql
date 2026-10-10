@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010002216 0076_ausfallrechnung_snapshot_festschreibung
--- EXPORTED AT:        2026-10-10T00:24:43.000Z
+-- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
+-- EXPORTED AT:        2026-10-10T01:02:45.000Z
 -- ERZEUGT AM:         2026-10-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1396
+--   table_columns:       1397
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
 --   functions:           109
 --   triggers:            97
---   indexes:             335
+--   indexes:             337
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -1940,23 +1940,26 @@ CREATE TABLE public.invoices (
   storno_grund text,
   storno_am date,
   aussteller_snapshot jsonb,
-  empfaenger_snapshot jsonb
+  empfaenger_snapshot jsonb,
+  storno_von uuid
 );
 --   FK business_id -> businesses(id)
 --   FK lead_id -> leads(id)
 --   FK owner_id -> auth.users(id)
 --   FK patient_id -> leads(id)
 --   FK prescription_id -> prescriptions(id)
+--   FK storno_von -> invoices(id)
 --   FK verordnung_id -> prescriptions(id)
 ALTER TABLE ONLY public.invoices OWNER TO postgres;
 COMMENT ON COLUMN public.invoices.prescription_id IS 'Linked Muster-13/Blanko prescription (multi-prescription patients). Set automatically when invoice is created from a physio workflow.';
-COMMENT ON COLUMN public.invoices.invoice_type IS 'gkv = GKV Abrechnung (fixed tariff + Zuzahlung), privat = Privatrechnung (practice prices, no Zuzahlung)';
+COMMENT ON COLUMN public.invoices.invoice_type IS 'gkv = GKV Abrechnung (fixed tariff + Zuzahlung), privat = Privatrechnung (practice prices, no Zuzahlung), selbstzahler, bg = UV-Träger (0068), zuzahlung = Zuzahlungsaufforderung/-beleg ZU-JJJJ-nnnn an den Patienten (0078; VKZ-03-Urbeleg, ab INSERT festgeschrieben, nie draft).';
 COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologie-Verordnung (verordnungen.id). Gegenstueck zu prescription_id fuer den Physio/Ergo/Logo-Topf. Es ist immer hoechstens eines von beiden gesetzt.';
 COMMENT ON COLUMN public.invoices.tax_summary IS 'Eingefrorene Aufschluesselung je Steuersatz/Befreiung (§ 14 Abs. 4 Nr. 7 UStG): [{satz, grund, netto, steuer, brutto}].';
 COMMENT ON COLUMN public.invoices.steuerhinweis_text IS 'Wortlaut des gedruckten Steuerhinweises, eingefroren. Nicht zur Druckzeit aus profiles lesen — sonst druckt dieselbe Rechnung in zwei Jahren anders (GoBD Rz. 107 ff., § 146 Abs. 4 AO).';
 COMMENT ON COLUMN public.invoices.steuernummer_snapshot IS 'Steuernummer der Praxis zum Zeitpunkt der Rechnungsstellung (Snapshot, § 14 Abs. 4 Nr. 2 UStG).';
 COMMENT ON COLUMN public.invoices.aussteller_snapshot IS 'Praxis (Aussteller) wie gedruckt, eingefroren beim Entwurfsspeichern: name, inhaber, strasse, plzOrt, telefon, email, ik, bank{name,iban,bic}. Ab status<>draft gesperrt (invoice_festschreibung, 0075). § 147 Abs. 2 Nr. 1 AO, § 14 Abs. 4 Nr. 1 UStG.';
 COMMENT ON COLUMN public.invoices.empfaenger_snapshot IS 'Rechnungsempfänger wie gedruckt (Patient: name, strasse, plzOrt, geburtsdatum, krankenkasse, versichertennummer; BG: art=bg, empfaenger[], bezug[]). Kein IBAN, keine Diagnose. Ab status<>draft gesperrt (0075).';
+COMMENT ON COLUMN public.invoices.storno_von IS 'Nur ZU (0078): diese Zeile ist der Gegenbeleg (Storno) zur ZU storno_von — eigene ZU-Nummer, negative Beträge, status sent. Das Original steht danach auf cancelled. Je Original höchstens ein Gegenbeleg.';
 
 ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
@@ -1965,7 +1968,7 @@ ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_ein_verordnungsbezug CHECK (prescription_id IS NULL OR verordnung_id IS NULL);
 
 ALTER TABLE ONLY public.invoices
-  ADD CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IS NULL OR (invoice_type = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
+  ADD CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IS NULL OR (invoice_type = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text, 'zuzahlung'::text])));
 
 ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
@@ -1999,7 +2002,16 @@ ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_steuer_status_check CHECK (steuer_status IS NULL OR (steuer_status = ANY (ARRAY['regel'::text, 'kleinunternehmer'::text])));
 
 ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_storno_von_fkey FOREIGN KEY (storno_von) REFERENCES invoices(id);
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_storno_von_nur_zuzahlung CHECK (storno_von IS NULL OR invoice_type = 'zuzahlung'::text AND storno_von <> id);
+
+ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_verordnung_id_fkey FOREIGN KEY (verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_zuzahlung_nie_entwurf CHECK (invoice_type IS DISTINCT FROM 'zuzahlung'::text OR COALESCE(status, 'draft'::text) <> 'draft'::text);
 
 CREATE TABLE public.kiosk_pins (
   user_id uuid NOT NULL,

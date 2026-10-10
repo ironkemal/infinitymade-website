@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010002216 0076_ausfallrechnung_snapshot_festschreibung
--- EXPORTED AT:        2026-10-10T00:24:43.000Z
+-- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
+-- EXPORTED AT:        2026-10-10T01:02:45.000Z
 -- ERZEUGT AM:         2026-10-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1396
+--   table_columns:       1397
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
 --   functions:           109
 --   triggers:            97
---   indexes:             335
+--   indexes:             337
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -2097,20 +2097,34 @@ CREATE OR REPLACE FUNCTION public.ausfallrechnung_festschreibung()
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  -- b) zurück auf offen: aus keinem anderen Status
+  -- c) zurück auf offen: aus keinem anderen Status
   IF NEW.status = 'offen' AND OLD.status IS DISTINCT FROM 'offen' THEN
     RAISE EXCEPTION 'Ausfallrechnung AF-% (Status %) kann nicht wieder auf offen gesetzt werden.', OLD.rechnung_nr, OLD.status
       USING ERRCODE = 'check_violation';
   END IF;
 
-  IF OLD.status IS DISTINCT FROM 'bezahlt' THEN
-    RETURN NEW;
+  -- c) bezahlt ist endgültig
+  IF OLD.status = 'bezahlt'
+     AND (NEW.status IS DISTINCT FROM OLD.status OR NEW.bezahlt_at IS DISTINCT FROM OLD.bezahlt_at) THEN
+    RAISE EXCEPTION 'Bezahlte Ausfallrechnung AF-% ist festgeschrieben (Status und Zahlungsdatum).', OLD.rechnung_nr
+      USING ERRCODE = 'check_violation';
   END IF;
 
-  -- a) + c) + d): bezahlte Ausfallrechnung ist festgeschrieben
-  IF NEW.status          IS DISTINCT FROM OLD.status
-  OR NEW.bezahlt_at      IS DISTINCT FROM OLD.bezahlt_at
-  OR NEW.amount_eur      IS DISTINCT FROM OLD.amount_eur
+  -- c) storniert ist endgültig (Hauptsitzung 10.10.2026): POST /ausfall/create erlaubt nach Storno eine neue
+  --    AF für denselben Termin — ein Zurück aus storniert ergäbe zwei lebende AF für einen Termin.
+  IF OLD.status = 'storniert' AND NEW.status IS DISTINCT FROM OLD.status THEN
+    RAISE EXCEPTION 'Stornierte Ausfallrechnung AF-% ist endgültig. Für den Termin bitte eine neue Ausfallrechnung anlegen.', OLD.rechnung_nr
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  -- c) bezahlt_at nur zusammen mit dem Übergang auf bezahlt
+  IF NEW.bezahlt_at IS DISTINCT FROM OLD.bezahlt_at AND NEW.status IS DISTINCT FROM 'bezahlt' THEN
+    RAISE EXCEPTION 'Ausfallrechnung AF-%: Zahlungsdatum nur zusammen mit Status bezahlt.', OLD.rechnung_nr
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  -- a) + b): Inhalt ab Anlage gesperrt (es gibt keinen Entwurf)
+  IF NEW.amount_eur      IS DISTINCT FROM OLD.amount_eur
   OR NEW.service_name    IS DISTINCT FROM OLD.service_name
   OR NEW.leistung_datum  IS DISTINCT FROM OLD.leistung_datum
   OR NEW.rechnung_nr     IS DISTINCT FROM OLD.rechnung_nr
@@ -2123,7 +2137,7 @@ BEGIN
   OR (NEW.patient_id IS NOT NULL AND NEW.patient_id IS DISTINCT FROM OLD.patient_id)
   OR (NEW.booking_id IS NOT NULL AND NEW.booking_id IS DISTINCT FROM OLD.booking_id)
   THEN
-    RAISE EXCEPTION 'Bezahlte Ausfallrechnung AF-% ist festgeschrieben und kann inhaltlich nicht geaendert werden.', OLD.rechnung_nr
+    RAISE EXCEPTION 'Ausfallrechnung AF-% ist ausgestellt und kann inhaltlich nicht geaendert werden. Bitte stornieren.', OLD.rechnung_nr
       USING ERRCODE = 'check_violation';
   END IF;
 
@@ -2933,16 +2947,38 @@ BEGIN
     END IF;
     RETURN OLD;
   END IF;
-
+  -- 0078: Zuzahlungsbeleg (ZU). Form „OLD.x … NEW.x" absichtlich — siehe Kopf (4).
+  IF NEW.invoice_type = 'zuzahlung' AND OLD.invoice_type IS DISTINCT FROM 'zuzahlung' THEN
+    RAISE EXCEPTION 'Rechnung % kann nicht nachtraeglich zum Zuzahlungsbeleg werden.', OLD.invoice_number
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF OLD.invoice_type = 'zuzahlung' THEN
+    IF OLD.status = 'cancelled' AND NEW.status IS DISTINCT FROM 'cancelled' THEN
+      RAISE EXCEPTION 'Stornierter Zuzahlungsbeleg % bleibt storniert.', OLD.invoice_number
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF OLD.storno_von IS NOT NULL AND OLD.status IS DISTINCT FROM NEW.status THEN
+      RAISE EXCEPTION 'Gegenbeleg % ist festgeschrieben (Status).', OLD.invoice_number
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF NEW.status = 'cancelled' AND OLD.status IS DISTINCT FROM 'cancelled'
+       AND NOT EXISTS (SELECT 1 FROM public.invoices g WHERE g.storno_von = OLD.id) THEN
+      RAISE EXCEPTION 'Zuzahlungsbeleg % nur mit Gegenbeleg stornierbar.', OLD.invoice_number
+        USING ERRCODE = 'check_violation';
+    END IF;
+    IF OLD.storno_von IS DISTINCT FROM NEW.storno_von
+       OR (NEW.prescription_id IS NOT NULL AND OLD.prescription_id IS DISTINCT FROM NEW.prescription_id) THEN
+      RAISE EXCEPTION 'Zuzahlungsbeleg % kann nicht umgehaengt werden.', OLD.invoice_number
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
   IF OLD.status = 'draft' THEN
     RETURN NEW;
   END IF;
-
   IF NEW.status = 'draft' THEN
     RAISE EXCEPTION 'Festgeschriebene Rechnung % kann nicht auf Entwurf zurueckgesetzt werden. Bitte stornieren und neu ausstellen.', OLD.invoice_number
       USING ERRCODE = 'check_violation';
   END IF;
-
   IF NEW.line_items    IS DISTINCT FROM OLD.line_items
   OR NEW.subtotal      IS DISTINCT FROM OLD.subtotal
   OR NEW.total_patient IS DISTINCT FROM OLD.total_patient
@@ -2973,7 +3009,6 @@ BEGIN
     RAISE EXCEPTION 'Festgeschriebene Rechnung % kann inhaltlich nicht geaendert werden. Bitte stornieren und neu ausstellen.', OLD.invoice_number
       USING ERRCODE = 'check_violation';
   END IF;
-
   RETURN NEW;
 END;
 $function$
@@ -4995,9 +5030,38 @@ CREATE OR REPLACE FUNCTION public.set_invoice_nummer()
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-DECLARE v_jahr int; v_nr bigint;
+DECLARE v_jahr int; v_nr bigint; v_orig record;
 BEGIN
   IF TG_OP = 'INSERT' THEN
+    IF NEW.invoice_type = 'zuzahlung' THEN
+      -- 0078: ZU — Nummer und Datum immer vom Trigger, nie vom Aufrufer
+      IF NEW.prescription_id IS NULL THEN
+        RAISE EXCEPTION 'Zuzahlungsbeleg ohne Verordnung.' USING ERRCODE = 'check_violation';
+      END IF;
+      -- guvenlik S-59: nur zur EIGENEN Verordnung (FK prüft keinen Mandanten); gleiche, allgemeine Meldung.
+      IF NOT EXISTS (SELECT 1 FROM public.prescriptions p
+                      WHERE p.id = NEW.prescription_id AND p.owner_id = NEW.owner_id) THEN
+        RAISE EXCEPTION 'Zuzahlungsbeleg: Verordnung ungueltig.' USING ERRCODE = 'check_violation';
+      END IF;
+      IF NEW.storno_von IS NOT NULL THEN
+        SELECT owner_id, invoice_type, storno_von, status, prescription_id
+          INTO v_orig FROM public.invoices WHERE id = NEW.storno_von;
+        IF NOT FOUND
+           OR v_orig.owner_id IS DISTINCT FROM NEW.owner_id
+           OR v_orig.invoice_type IS DISTINCT FROM 'zuzahlung'
+           OR v_orig.storno_von IS NOT NULL
+           OR v_orig.status = 'cancelled'
+           OR v_orig.prescription_id IS DISTINCT FROM NEW.prescription_id THEN
+          RAISE EXCEPTION 'Gegenbeleg: Original-Zuzahlungsbeleg ungueltig.' USING ERRCODE = 'check_violation';
+        END IF;
+      END IF;
+      NEW.issued_at      := (now() AT TIME ZONE 'Europe/Berlin')::date;
+      v_jahr             := EXTRACT(YEAR FROM NEW.issued_at)::int;
+      v_nr               := naechste_nummer(NEW.owner_id, 'zuzahlung', v_jahr);
+      NEW.rechnung_nr    := v_nr;
+      NEW.invoice_number := 'ZU-' || v_jahr || '-' || lpad(v_nr::text, 4, '0');
+      RETURN NEW;
+    END IF;
     IF NEW.rechnung_nr IS NULL THEN
       v_jahr := COALESCE(EXTRACT(YEAR FROM NEW.issued_at)::int, EXTRACT(YEAR FROM now())::int);
       v_nr   := naechste_nummer(NEW.owner_id, 'rechnung', v_jahr);
@@ -5006,7 +5070,6 @@ BEGIN
     END IF;
     RETURN NEW;
   END IF;
-
   -- § 14 Abs. 4 Nr. 4 UStG: einmal vergeben, nie wieder geaendert.
   -- COALESCE statt harter Zuweisung: war noch keine Nummer da (Altbestand),
   -- darf genau einmal eine gesetzt werden.
@@ -6023,6 +6086,10 @@ CREATE INDEX idx_invoices_verordnung_id ON invoices USING btree (verordnung_id) 
 
 -- Index invoices_pkey ON public.invoices is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX invoices_pkey ON invoices USING btree (id);
+
+CREATE UNIQUE INDEX invoices_storno_von_einmal ON invoices USING btree (storno_von) WHERE storno_von IS NOT NULL;
+
+CREATE UNIQUE INDEX invoices_zuzahlung_ein_aktiver_je_rezept ON invoices USING btree (owner_id, prescription_id) WHERE invoice_type = 'zuzahlung'::text AND storno_von IS NULL AND status <> 'cancelled'::text;
 
 -- Index kiosk_pins_pkey ON public.kiosk_pins is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX kiosk_pins_pkey ON kiosk_pins USING btree (user_id);

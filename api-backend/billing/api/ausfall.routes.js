@@ -469,6 +469,10 @@ router.patch('/ausfall/:id/status', async (req, res) => {
     if (existing.status === 'bezahlt') {
       return res.status(409).json({ error: 'Bereits als bezahlt gebucht — nicht mehr änderbar.' });
     }
+    // Storno ist endgültig (0077): nach Storno darf /ausfall/create eine neue AF für den Termin anlegen.
+    if (existing.status === 'storniert') {
+      return res.status(409).json({ error: 'Storniert — nicht mehr änderbar. Für den Termin kann eine neue Ausfallrechnung angelegt werden.' });
+    }
 
     const update = { status };
     if (status === 'bezahlt') update.bezahlt_at = new Date().toISOString();
