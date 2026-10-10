@@ -5861,3 +5861,15 @@ Commit'liler: `9c8280dd` (O-181 (a) kapı) · `b7064f87` (O-181 (b) sayaçlar) �
 | **Çözüm** | `unkritisch` — gerekçe: onay satırı (`KLARTEXT-WIEDERHERSTELLEN`, anahtar sorusu) **bilerek** bir insanın yazması için var; borudan verilebilmesi o korumayı boşa çıkarırdı. Bugün restore'u otomatik çağıran bir yol yok. **Yeniden açılma koşulu:** panel (Faz 2.5) ya da destek aracı restore'u etkileşimsiz çağıracaksa onay borudan **değil**, açık bir bayrakla verilir (`--onay=…`) ve stdin'e ihtiyacı olmayan `exec -T` çağrılarına `</dev/null` eklenir (aynı yutma başka bir `read`'i de bozmasın). Builder'a o gün tek satırlık iş |
 | **Durum** | `unkritisch` (09.10.2026) |
 
+
+---
+
+## 7AJ — `0076_ausfallrechnung_snapshot_festschreibung` ön kontrolü (10.10.2026, Hat K, uygulama öncesi)
+
+**Numara notu:** 7AI (3)'te "0076" diye anılan invoices zorunlu-snapshot migration'ı **artık 0076 değil**; ayrı, daha sonraki bir numara alacak. 7AI (3)'ün şartları (i)-(iv) o migration'a aynen bağlı, yeni numaraya taşınır. `0076` bu bölümdeki dosyadır.
+
+**HÜKÜM: GEÇER.** Tip D, expand + sıkılaştırma. 2 nullable jsonb (DEFAULT/CHECK yok), yeni INVOKER fonksiyon + BEFORE UPDATE trigger, `REVOKE ALL ON ausfallrechnungen FROM anon`. Sayaç `erwartete-zaehler.json`: fonksiyon 100→101, trigger 92→93, `bis_version` 0076 (nachgerechnet).
+- **`:stable` kırılıyor mu: hayır.** Trigger kuralı (b) "offen'a dönüş yok": tek yazma yolu `PATCH /ausfall/:id/status` (`api-backend/billing/api/ausfall.routes.js:442`) yalnız `bezahlt|storniert|abgeschrieben` kabul ediyor, `offen` yazan yol yok. Kural (a/c): aynı route `bezahlt` satırda zaten 409 dönüyor (`:461`). Mahnwesen (`mahnwesen.routes.js:249`) yalnız okuyor. `loeschen.js:420` yalnız okuyor; lead/booking silme FK SET NULL → trigger (d) NULL'a izin veriyor. Snapshot yazmayan eski kod sorun değil: kolonlar nullable, kilit yalnız bezahlt satırda "değişmez" diyor, "dolu olmalı" demiyor. 7AI'daki invoices tuzağı burada yok.
+- **Trigger service_role'u da kapsıyor** (`invoice_festschreibung`'un `current_user` koşulu yok). Bugün service_role'un bezahlt satıra yazan yolu yok → sorun değil; ileride anonimleştirme/düzeltme betiği bezahlt satırda `notes` dışında kolon yazarsa reddedilir. Bilinçli tercih olarak not edildi.
+- **Kutu:** runner dizini sırayla okur, manifest dosyası yok (`api-backend/db/` altında yalnız `migrate.js` + sayaç). Kutuda `anon` rolü Supabase yığınında var, REVOKE idempotent. Selbstcheck `ausfallrechnungen` anon hakkını saymıyor → yeni sayaç gerekmez. Kutuda kod ve şema aynı image ile geldiği için Hat M'nin create'te snapshot yazan kodu 0076 ile aynı ya da sonraki image'da olabilir; tersi sırada da kırılmaz (nullable).
+- **Kalan tek şart (süreç):** aynı commit'te `db/SCHEMA.sql` + `SCHEMA-RLS.sql` tazelenir; `db/REGISTER.md` `ausfallrechnungen` girdisine iki kolon + trigger yazılır. Madde açılmadı.

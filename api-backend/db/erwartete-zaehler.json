@@ -29,13 +29,13 @@
   "_hinweis_0056": "0056_db_aufraeumen (KHS K1.6, 02.10.2026): DROP \"fußstatus\" (-1 Tabelle, -1 Policy owner_fußstatus, -1 Index PK), DROP visibility_reports (nur SaaS, in der Box nicht vorhanden -> neutral), DROP CONSTRAINT aerzte_owner_id_arzt_name_key (-1 Index), DELETE Mock-Kostentraeger (Daten, neutral). Rechnerisch: public_tablo 83->82, rls_policy 156->155, index 305->303. NACHGERECHNET, nicht gemessen. ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
   "_hinweis_0057": "0057_aufbewahrung_sperre (KHS K1.4, 02.10.2026): +1 Tabelle (aufbewahrung_sperre, RLS an OHNE Policy wie nummernkreise -> rls_policy unveraendert), +2 Index (PK + UNIQUE NULLS NOT DISTINCT aufbewahrung_sperre_eindeutig), profiles_plan_status_check ersetzt (CHECK, kein Zaehler), DROP FUNCTION delete_expired_accounts (in der Box seit 0000_baseline nie vorhanden -> fonksiyon unveraendert). FKs legen keinen Index an (_hinweis_0025). Rechnerisch: public_tablo 82->83, index 303->305. NACHGERECHNET, nicht gemessen.",
   "_hinweis_messung_20261002": "PHYSISCH gemessen 02.10.2026 (KHS K2.11): frische Box in eigener WSL-Umgebung Praxura (Ubuntu 24.04, systemd, Docker Engine), install.sh von Grund auf, Kanal :beta (acc51d5), 58 Migrationen 0000-0057. Selbstcheck des Einrichtungsassistenten: schema=gruen, rls=gruen, sifreleme=gruen — die seit 17.09.2026 NACHGERECHNETEN Werte (0038-0057) stimmen mit der Messung ueberein, zaehler unveraendert.",
-  "bis_version": "0075",
+  "bis_version": "0076",
   "gemessen_am": "2026-10-09",
   "zaehler": {
     "public_tablo": 86,
     "rls_policy": 157,
-    "fonksiyon": 100,
-    "trigger": 92,
+    "fonksiyon": 101,
+    "trigger": 93,
     "index": 313,
     "auth_trigger": 1,
     "storage_bucket": 6,
@@ -66,5 +66,6 @@
   "_hinweis_anon_zaehler": "O-181 b (09.10.2026): anon_profiles_tablo_hakki (false) und anon_profiles_kolon (11 = 10 Sichtspalten von profiles_public + is_active) aus dem SaaS-Katalogexport zu 0072 übernommen, nicht in einer Box gemessen — erste Box-Messung KHS §5b. Neue anon-Spalte auf profiles ⇒ Zahl hier mitziehen, sonst zeigt die Box 'veraltet'/'abweichung'.",
   "_hinweis_0073": "0073_praxis_rechtstexte_urls (K2b.15, 09.10.2026): +2 nullable Spalten profiles (praxis_impressum_url, praxis_datenschutz_url) mit CHECK + COMMENT (keine Zähler), +1 Funktion public_praxis_angaben (SECURITY DEFINER, anon) → fonksiyon 99 → 100. profiles_public unverändert → anon_profiles_kolon bleibt 11. Nachgerechnet, nicht gemessen (Kural 6, dritte Form).",
   "_hinweis_0075": "0075_rechnung_aussteller_empfaenger_snapshot (Rechnungs-Snapshot, Entscheidung (a) Kemal 09.10.2026): +2 nullable jsonb-Spalten an invoices (aussteller_snapshot, empfaenger_snapshot; kein DEFAULT/CHECK/FK/Index), CREATE OR REPLACE der BESTEHENDEN Funktion invoice_festschreibung (gleicher Trigger, SECURITY INVOKER bleibt), zwei COMMENT ON COLUMN. Keiner der zehn Zaehler zaehlt Spalten oder pg_description; keine neue Funktion/Trigger/Index/Policy/Tabelle -> COUNTER-NEUTRAL, zaehler/gemessen_am unveraendert. Nachgerechnet, nicht gemessen (dritte Form von Kural 6, wie 0042/0049; db-ustasi 09.10.2026 bestaetigt).",
-  "_hinweis_0074": "0074_businesses_anon_spaltenrechte_demo_bookings (guvenlik S-57/S-58, 09.10.2026): nur ACL auf businesses (anon spaltenweise, 6 Spalten) — keine Zähler. demo_bookings-Teil ist in der Box ein No-op (Tabelle nur SaaS). Nachgerechnet, nicht gemessen. Selbstcheck: anon_businesses_tablo_hakki=false, anon_businesses_kolon=6 (aus SaaS-Katalog 09.10., Box-Messung T25)."
+  "_hinweis_0074": "0074_businesses_anon_spaltenrechte_demo_bookings (guvenlik S-57/S-58, 09.10.2026): nur ACL auf businesses (anon spaltenweise, 6 Spalten) — keine Zähler. demo_bookings-Teil ist in der Box ein No-op (Tabelle nur SaaS). Nachgerechnet, nicht gemessen. Selbstcheck: anon_businesses_tablo_hakki=false, anon_businesses_kolon=6 (aus SaaS-Katalog 09.10., Box-Messung T25).",
+  "_hinweis_0076": "0076_ausfallrechnung_snapshot_festschreibung (Hat K, db-ustasi 10.10.2026): +2 nullable jsonb-Spalten an ausfallrechnungen (aussteller_snapshot, empfaenger_snapshot; kein DEFAULT/CHECK/FK/Index), +1 Funktion (ausfallrechnung_festschreibung, SECURITY INVOKER, drei REVOKEs), +1 Trigger (trg_ausfallrechnung_festschreibung, BEFORE UPDATE), REVOKE ALL ON ausfallrechnungen FROM anon (nur ACL, kein Zaehler; anon_profiles_*/anon_businesses_* unberuehrt), zwei COMMENT ON COLUMN. Rechnerisch: fonksiyon 100->101, trigger 92->93, alle anderen unveraendert. NACHGERECHNET, nicht gemessen — gemessen_am bleibt."
 }

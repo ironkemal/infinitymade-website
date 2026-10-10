@@ -3,19 +3,19 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009194407 0075_rechnung_aussteller_empfaenger_snapshot
--- EXPORTED AT:        2026-10-09T19:45:31.000Z
--- ERZEUGT AM:         2026-10-09
+-- LAST MIGRATION:     20261010002216 0076_ausfallrechnung_snapshot_festschreibung
+-- EXPORTED AT:        2026-10-10T00:24:43.000Z
+-- ERZEUGT AM:         2026-10-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1394
+--   table_columns:       1396
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           108
---   triggers:            96
+--   functions:           109
+--   triggers:            97
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -758,7 +758,9 @@ CREATE TABLE public.ausfallrechnungen (
   notes text,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   created_by uuid,
-  bezahlt_at timestamp with time zone
+  bezahlt_at timestamp with time zone,
+  aussteller_snapshot jsonb,
+  empfaenger_snapshot jsonb
 );
 --   FK booking_id -> bookings(id)
 --   FK business_id -> businesses(id)
@@ -766,6 +768,8 @@ CREATE TABLE public.ausfallrechnungen (
 --   FK patient_id -> leads(id)
 ALTER TABLE ONLY public.ausfallrechnungen OWNER TO postgres;
 COMMENT ON TABLE public.ausfallrechnungen IS 'Private Ausfallhonorar-Rechnungen (Schadensersatz, umsatzsteuerfrei) für No-Shows und kurzfristige Absagen. Nicht GKV-relevant.';
+COMMENT ON COLUMN public.ausfallrechnungen.aussteller_snapshot IS 'Praxis (Aussteller) wie gedruckt, eingefroren beim Anlegen (POST /billing/ausfall/create): gleiche Schlüssel wie invoices.aussteller_snapshot (v, name, inhaber, strasse, plzOrt, telefon, email, ik, bank{name,iban,bic}); name = tatsächlich gedruckter Name (Standortname bei mehreren Standorten). Ab status=bezahlt gesperrt (ausfallrechnung_festschreibung, 0076). § 147 Abs. 2 Nr. 1 AO.';
+COMMENT ON COLUMN public.ausfallrechnungen.empfaenger_snapshot IS 'Rechnungsempfänger (Patient) wie gedruckt: gleiche Schlüssel wie invoices.empfaenger_snapshot art=patient (v, art, name, strasse, plzOrt, geburtsdatum, krankenkasse, versichertennummer). Kein IBAN, keine Diagnose. Ab status=bezahlt gesperrt (0076).';
 
 ALTER TABLE ONLY public.ausfallrechnungen
   ADD CONSTRAINT ausfallrechnungen_amount_check CHECK (amount_eur > 0::numeric);

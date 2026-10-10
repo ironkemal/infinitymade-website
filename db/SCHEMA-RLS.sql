@@ -3,19 +3,19 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261009194407 0075_rechnung_aussteller_empfaenger_snapshot
--- EXPORTED AT:        2026-10-09T19:45:31.000Z
--- ERZEUGT AM:         2026-10-09
+-- LAST MIGRATION:     20261010002216 0076_ausfallrechnung_snapshot_festschreibung
+-- EXPORTED AT:        2026-10-10T00:24:43.000Z
+-- ERZEUGT AM:         2026-10-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1394
+--   table_columns:       1396
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           108
---   triggers:            96
+--   functions:           109
+--   triggers:            97
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -2090,6 +2090,48 @@ exception when others then
 end $function$
 ;
 ALTER FUNCTION public.audit_write_log() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.ausfallrechnung_festschreibung()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  -- b) zurück auf offen: aus keinem anderen Status
+  IF NEW.status = 'offen' AND OLD.status IS DISTINCT FROM 'offen' THEN
+    RAISE EXCEPTION 'Ausfallrechnung AF-% (Status %) kann nicht wieder auf offen gesetzt werden.', OLD.rechnung_nr, OLD.status
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  IF OLD.status IS DISTINCT FROM 'bezahlt' THEN
+    RETURN NEW;
+  END IF;
+
+  -- a) + c) + d): bezahlte Ausfallrechnung ist festgeschrieben
+  IF NEW.status          IS DISTINCT FROM OLD.status
+  OR NEW.bezahlt_at      IS DISTINCT FROM OLD.bezahlt_at
+  OR NEW.amount_eur      IS DISTINCT FROM OLD.amount_eur
+  OR NEW.service_name    IS DISTINCT FROM OLD.service_name
+  OR NEW.leistung_datum  IS DISTINCT FROM OLD.leistung_datum
+  OR NEW.rechnung_nr     IS DISTINCT FROM OLD.rechnung_nr
+  OR NEW.reason          IS DISTINCT FROM OLD.reason
+  OR NEW.created_at      IS DISTINCT FROM OLD.created_at
+  OR NEW.owner_id        IS DISTINCT FROM OLD.owner_id
+  OR NEW.aussteller_snapshot IS DISTINCT FROM OLD.aussteller_snapshot
+  OR NEW.empfaenger_snapshot IS DISTINCT FROM OLD.empfaenger_snapshot
+  -- FK ON DELETE SET NULL muss durchgehen; Umhängen auf eine andere Zeile nicht
+  OR (NEW.patient_id IS NOT NULL AND NEW.patient_id IS DISTINCT FROM OLD.patient_id)
+  OR (NEW.booking_id IS NOT NULL AND NEW.booking_id IS DISTINCT FROM OLD.booking_id)
+  THEN
+    RAISE EXCEPTION 'Bezahlte Ausfallrechnung AF-% ist festgeschrieben und kann inhaltlich nicht geaendert werden.', OLD.rechnung_nr
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.ausfallrechnung_festschreibung() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.auth_sitzungen_beenden(p_user uuid)
  RETURNS integer
@@ -5397,6 +5439,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON anamnese FOR EACH ROW EXECUT
 
 CREATE TRIGGER trg_attendance_updated_at BEFORE UPDATE ON attendance FOR EACH ROW EXECUTE FUNCTION update_attendance_updated_at();
 
+CREATE TRIGGER trg_ausfallrechnung_festschreibung BEFORE UPDATE ON ausfallrechnungen FOR EACH ROW EXECUTE FUNCTION ausfallrechnung_festschreibung();
+
 CREATE TRIGGER trg_set_ausfallrechnung_nr BEFORE INSERT ON ausfallrechnungen FOR EACH ROW EXECUTE FUNCTION set_next_ausfallrechnung_nr();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON b2b_contacts FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -6711,6 +6755,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_sitzungen_beenden(p_user uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_sitzungen_beenden(p_user uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_tenant_id() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
@@ -12931,14 +12977,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=aufbewahrung_sperre column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=aufbewahrung_sperre column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=aufbewahrung_sperre column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=REFERENCES grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=SELECT grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=TRIGGER grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=TRUNCATE grantor=postgres grantable=NO
--- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=anon privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=ausfallrechnungen column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO

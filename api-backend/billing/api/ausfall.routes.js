@@ -14,7 +14,7 @@ import { renderAusfallrechnung } from '../pdf/ausfallrechnung.template.js';
 import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
 import { standortFuerName, standortFuerZuordnung } from '../ausfall/standort.js';
 import { ZAHLARTEN } from '../belegliste/helper.js';
-import { praxisKopf } from '../../lib/rechnung-snapshot.js';
+import { ausfallAusstellerSnapshot, ausfallEmpfaengerSnapshot } from '../ausfall/snapshot.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -34,7 +34,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
+    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis, ik_number, praxis_inhaber, owner_first_name, owner_last_name')
     .eq('id', u.user.id)
     .maybeSingle();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -51,7 +51,7 @@ async function loadPraxisProfile(profile, tenantId) {
   if (profile.role === 'employee' && profile.owner_id) {
     const { data: ownerProf } = await supabase
       .from('profiles')
-      .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
+      .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis, ik_number, praxis_inhaber, owner_first_name, owner_last_name')
       .eq('id', tenantId)
       .maybeSingle();
     if (ownerProf) return ownerProf;
@@ -71,13 +71,17 @@ async function loadPraxisProfile(profile, tenantId) {
 // den alten Ladennamen (Beta-2, 12.08.2026). Nur bei mehreren Standorten ist der
 // Standortname die richtige Antwort; das entscheidet der Aufrufer.
 function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort = null, patient, vorlage }) {
-  // userEmail nur, wenn der Inhaber selbst druckt (Aufrufer) — nie die Login-Adresse eines Mitarbeiters.
-  const kopf = praxisKopf(praxisProfile, { ersatzEmail: userEmail });
+  // Eingefrorener Beleg: Kopf, Bank und Empfänger aus dem Snapshot; Altbelege (ohne) wie bisher live.
+  const snap = row.aussteller_snapshot || ausfallAusstellerSnapshot(praxisProfile, { standort, userEmail });
+  const emp = row.empfaenger_snapshot;
+  if (emp) {
+    patient = { vorname: emp.name || '', nachname: '', strasse: emp.strasse || '', plz: emp.plzOrt || '', ort: '', geburtsdatum: emp.geburtsdatum || null };
+  }
 
   const bankverbindung = [
-    praxisProfile.bank_name,
-    praxisProfile.iban ? ('IBAN: ' + praxisProfile.iban) : null,
-    praxisProfile.bic ? ('BIC: ' + praxisProfile.bic) : null
+    snap.bank?.name,
+    snap.bank?.iban ? ('IBAN: ' + snap.bank.iban) : null,
+    snap.bank?.bic ? ('BIC: ' + snap.bank.bic) : null
   ].filter(Boolean).join(' · ');
 
   const createdAt = row.created_at ? new Date(row.created_at) : new Date();
@@ -88,12 +92,12 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
 
   return renderAusfallrechnung({
     praxis: {
-      name: standort?.business_name || kopf.name,
-      strasse: kopf.strasse,
-      plz_ort: kopf.plz_ort,
-      telefon: standort?.phone || kopf.telefon,
-      steuernummer: praxisProfile.steuernummer || '',
-      email: kopf.email,
+      name: snap.name || 'Praxis',
+      strasse: snap.strasse,
+      plz_ort: snap.plzOrt,
+      telefon: snap.telefon,
+      steuernummer: snap.steuernummer || '',
+      email: snap.email,
     },
     patient,
     rechnung: {
@@ -251,9 +255,15 @@ router.post('/ausfall/create', async (req, res) => {
         : null,
     ].filter(Boolean);
 
+    const praxisProfile = await loadPraxisProfile(profile, tenantId);
+    const userEmail = praxisProfile.id === user.id ? user.email : '';
+    const patient = patientFromBooking(booking);
+
     const { data: row, error: insErr } = await supabase
       .from('ausfallrechnungen')
       .insert({
+        aussteller_snapshot: ausfallAusstellerSnapshot(praxisProfile, { standort: standortName, userEmail }),
+        empfaenger_snapshot: ausfallEmpfaengerSnapshot(patient),
         owner_id: tenantId,
         business_id: business?.id || booking.business_id || null,
         booking_id: booking.id,
@@ -271,14 +281,13 @@ router.post('/ausfall/create', async (req, res) => {
     if (insErr) return res.status(500).json({ error: 'insert failed: ' + insErr.message });
 
     // 5. Render
-    const praxisProfile = await loadPraxisProfile(profile, tenantId);
     const html = renderInvoiceHtml({
       praxisProfile,
-      userEmail: praxisProfile.id === user.id ? user.email : '',
+      userEmail,
       row,
       business,
       standort: standortName,
-      patient: patientFromBooking(booking),
+      patient,
       vorlage: vorlageJson,
     });
 
@@ -393,10 +402,8 @@ router.get('/ausfall/:id/print', async (req, res) => {
       : patientFromBooking({ customer_name: row.bookings?.customer_name || '' });
 
     // Gleiche Regel wie beim Erstellen: der Standortname zählt nur bei mehreren
-    // Standorten. Beim Nachdrucken einer alten Rechnung erscheint damit der
-    // heutige Praxisname — die Rechnung wird ohnehin bei jedem Aufruf neu
-    // gerendert, es gibt keinen eingefrorenen Beleg (GoBD-Frage dazu offen,
-    // siehe Ops-Dashboard).
+    // Standorten. Seit 0076 kommt der Kopf aus row.aussteller_snapshot; nur
+    // Altbelege ohne Snapshot zeigen hier noch den heutigen Praxisnamen.
     const { data: alleStandorte } = await supabase
       .from('businesses')
       .select('id')
