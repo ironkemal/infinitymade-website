@@ -31,6 +31,19 @@ test('BG ohne Träger/Anschrift/Unfalltag: keine Rechnung, Fehlermeldung nennt d
   assert.doesNotMatch(meldungen[0][0], /UV-Träger \(Name\)/);
 });
 
+test('Ohne offene Behandlung: leerer Entwurf mit Patient + Verordnung statt stiller Rückkehr (canli-test 10.10.2026 P2)', async () => {
+  const k = { select: () => k, eq: () => k, is: () => k, order: async () => ({ data: [], error: null }) };
+  const meldungen = []; let editor = 0; let entwurf = null;
+  await starteRechnungAusVerordnung({
+    sb: { from: () => k }, ownerId: 'o', verordnung: { id: 'v', rezeptart: 'privat', lead_id: 'p1' },
+    services: [], katalogPodo: [], switchPanel: () => {}, openInvEditor: async () => { editor++; },
+    setzeEntwurf: async (e) => { entwurf = e; }, toast: (t, art) => meldungen.push([t, art]),
+  });
+  assert.equal(editor, 1);
+  assert.deepEqual(entwurf, { patientId: 'p1', zeilen: [], verordnungId: 'v', behandlungIds: [], zahlertyp: 'privat' });
+  assert.match(meldungen[0][0], /Leistungen im Editor eintragen/);
+});
+
 // ── behandlungenVerknuepfen: kein stilles „ok" bei 0 Treffern (KHS M2.3) ────
 import { behandlungenVerknuepfen } from './rechnung-bruecke.js';
 

@@ -117,7 +117,7 @@ export function verdrahteAktionsPatientensuche(deps) {
       // gebuchter Termin sich als „nächster Termin" des Patienten. Dieselbe
       // Statusliste wie beim Terminzettel (dashboard.js).
       const { data: naechster, error } = await supabase.from('bookings')
-        .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+        .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
         .eq('lead_id', lead.id)
         .gte('start_time', new Date(Date.now() - 3600000).toISOString())
         .in('status', ['confirmed', 'pending'])
@@ -203,7 +203,7 @@ export function setzePatientenKarte({ lead, booking, oeffneAkte }) {
 
 // Dieselben Felder, die der Termin-Join mitbringt — sonst fehlten der
 // Rezeptinfo nach dem Blättern Angaben, die vorher da waren.
-const RX_FELDER = 'id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
+const RX_FELDER = 'id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
   + 'anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,'
   + 'zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
   + 'abrechnung_status,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'

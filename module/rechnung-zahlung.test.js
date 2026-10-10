@@ -191,3 +191,10 @@ test('Parität: ZAHLART_ZU_PAYMENT_METHOD in api-backend/billing/zuzahlung/zu-be
   const back = await import('../api-backend/billing/zuzahlung/zu-beleg.js');
   assert.deepEqual(back.ZAHLART_ZU_PAYMENT_METHOD, front.ZAHLART_ZU_PAYMENT_METHOD);
 });
+
+test('frageZahlungsstatus: Verordnung ohne Zuzahlungsfall → Signal für den Ledger-Dialog (canli-test 10.10.2026 P2)', async () => {
+  const { frageZahlungsstatus } = await import('./rechnung-zahlung.js');
+  const { sb, updates } = zahlungsSb({ rechnung: { status: 'draft', aussteller_snapshot: { v: 1 }, empfaenger_snapshot: { v: 1 } } });
+  assert.equal(await frageZahlungsstatus('inv-1', { supabase: sb, prescriptionId: null }), 'ohne_zuzahlungsfall');
+  assert.equal(updates.length, 0);
+});

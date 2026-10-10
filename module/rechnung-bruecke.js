@@ -275,7 +275,16 @@ export async function starteRechnungAusVerordnung(ctx) {
 
   const offene = await offeneBehandlungen(sb, { ownerId, verordnungId: verordnung.id });
   if (!offene.length) {
-    toast?.('Zu dieser Verordnung gibt es keine dokumentierte Behandlung, die noch nicht abgerechnet ist.', 'info');
+    // canli-test 10.10.2026 (P2): früher Rückkehr ohne Editor — die Akte war schon zu, der Nutzer stand auf der
+    // Übersicht. Jetzt: leerer Entwurf mit Patient, Verordnung und Zahlertyp, Leistungen trägt der Nutzer ein.
+    switchPanel('rechnungen');
+    await openInvEditor(null);
+    await setzeEntwurf({
+      patientId: verordnung.lead_id || verordnung.patient_id || '',
+      zeilen: [], verordnungId: verordnung.id, behandlungIds: [],
+      zahlertyp: zahlertypAusRezeptart(verordnung.rezeptart),
+    });
+    toast?.('Zu dieser Verordnung gibt es keine dokumentierte Behandlung, die noch nicht abgerechnet ist — bitte Leistungen im Editor eintragen.', 'info');
     return;
   }
 

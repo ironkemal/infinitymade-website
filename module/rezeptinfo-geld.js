@@ -64,7 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
-import { preisAusService } from './rechnung-bruecke.js?v=20261010z';
+import { preisAusService } from './rechnung-bruecke.js?v=20261010x';
 
 const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0);
 
@@ -412,7 +412,10 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     // `prescriptions`). Ohne solche Verordnung bleibt der vorhandene
     // Rechnungseditor.
     if (aktion === 'rechnung') {
-      if (sector === 'podologie' && booking.lead_id) {
+      // canli-test 10.10.2026 (P1): die Verordnung, die hier angezeigt wird — nicht „die neueste des Patienten"
+      // (bei gleichem Ausstellungsdatum war das Zufall). Ohne rx.id bleibt die alte Suche als Rückfall.
+      if (sector === 'podologie' && rx?.id) { panelSchliessen(); return rechnungAusVerordnung(rx.id); }
+      if (sector === 'podologie' && booking?.lead_id) {
         const { data: vs } = await sb.from('prescriptions')
           .select('id').eq('owner_id', ownerId).eq('patient_id', booking.lead_id)
           .eq('therapie_bereich', 'podo')
@@ -420,13 +423,13 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
         if (vs?.[0]) { panelSchliessen(); return rechnungAusVerordnung(vs[0].id); }
       }
       panelSchliessen();
-      return rechnungsEditorFuerPatient(rx.patient_id || booking.lead_id || '');
+      return rechnungsEditorFuerPatient(rx.patient_id || booking?.lead_id || '');
     }
 
     if (aktion !== 'kassieren') return;
     const ok = await kassieren({
       rxId: rx.id,
-      patientId: rx.patient_id || booking.lead_id || null,
+      patientId: rx.patient_id || booking?.lead_id || null,
       patientName,
       betragEur: stand.gesamt,
     });

@@ -46,7 +46,7 @@ import {
   aktiveKonten, kontoAnzeige, istZahlungskategorie,
   AUSBUCHUNGSKONTO_STANDARD,
 } from './buchungskonten.js?v=20260909';
-import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20261010s';
+import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20261010w';
 import { alsISODatum } from './datum.js?v=20261001a';
 
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */
@@ -198,9 +198,11 @@ export async function zahlungsartNachRechnungAbfragen({
   supabase, apiBasis, profile, showToast, kassiere, token,
 }) {
   if (hatRezeptbezug) {
-    return frageZahlungsstatus(invoiceId, {
+    const r = await frageZahlungsstatus(invoiceId, {
       supabase, prescriptionId, patientId, patientName, kassiere, toast: showToast,
     });
+    // Verordnung ohne Zuzahlungsfall (Podologie Privat/BG): wie eine Rechnung ohne Rezept (canli-test 10.10.2026 P2).
+    if (r !== 'ohne_zuzahlungsfall') return r;
   }
   return starteZahlungseingang({ invoiceId, apiBasis, profile, showToast, token });
 }

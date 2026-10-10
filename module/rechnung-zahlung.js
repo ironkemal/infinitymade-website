@@ -223,6 +223,8 @@ export async function frageZahlungsstatus(invoiceId, {
   // mehr behandelt: der Aufrufer (dashboard.js) erreicht diesen Zweig gar
   // nicht mehr, er öffnet stattdessen direkt den Ledger-Dialog aus
   // module/rechnung-zahlungseingang.js (Ops #271, 08.09.2026 — Begründung
-  // im Dateikopf). Defensiv belassen für den Fall, dass diese Funktion doch
-  // einmal ohne die Verzweigung im Aufrufer erreicht wird.
+  // im Dateikopf). Doch erreicht wird er bei Rechnungen MIT Verordnung, aber ohne Zuzahlungsfall
+  // (Podologie Privat/BG: verordnung_id gesetzt, keine Kassen-Zuzahlung) — canli-test 10.10.2026 P2.
+  // Signal an den Aufrufer: Ledger-Dialog öffnen (rechnung-zahlungseingang.js).
+  return 'ohne_zuzahlungsfall';
 }
