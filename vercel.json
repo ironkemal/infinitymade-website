@@ -1,5 +1,5 @@
 {
-  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)*.md' ':(exclude)fortschritte' ':(exclude)konsey' ':(exclude)wissensbank' ':(exclude)canli-test' ':(exclude)db' ':(exclude)funktionen' ':(exclude)api-backend' ':(exclude)onprem' ':(exclude)merkez' ':(exclude)tools' ':(exclude)archive' ':(exclude)compliance' ':(exclude)Podoloji' ':(exclude)guvenlik' ':(exclude)mentor' ':(exclude)*.sql' ':(exclude)*.py' ':(exclude)module/*.test.js' ':(exclude).github' ':(exclude).claude'",
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':!*.md' ':!db' ':!funktionen' ':!api-backend' ':!onprem' ':!merkez' ':!tools' ':!archive' ':!.github' ':!.claude' ':!module/*.test.js'",
   "functions": {
     "api/**/*.js": {
       "regions": [
