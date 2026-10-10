@@ -121,18 +121,28 @@ export function verdrahteDruckenMenue(root, { onEintrag } = {}) {
  * @returns {Promise<string|null>} Rechnungs-ID oder null
  */
 export async function sucheRechnungZurVerordnung(supabase, rxId) {
+  return (await ladeRechnungZurVerordnung(supabase, rxId))?.id || null;
+}
+
+/**
+ * Dieselbe Suche, mit Nummer und Betrag — die Geldzeile zeigt damit den Betrag der vorhandenen Rechnung
+ * statt „—“ (canli-test T33, 10.10.2026: nach dem Speichern sind die Behandlungen nicht mehr „offen“).
+ *
+ * @returns {Promise<{id:string, invoice_number:string|null, total_patient:number|null, brutto_gesamt:number|null, status:string|null}|null>}
+ */
+export async function ladeRechnungZurVerordnung(supabase, rxId) {
   if (!supabase || typeof rxId !== 'string' || !UUID_REGEX.test(rxId)) return null;
   try {
     const { data, error } = await supabase
       .from('invoices')
-      .select('id')
+      .select('id,invoice_number,total_patient,brutto_gesamt,status')
       .or(`prescription_id.eq.${rxId},verordnung_id.eq.${rxId}`)
       .or('invoice_type.is.null,invoice_type.neq.zuzahlung')
       .neq('status', 'cancelled')
       .order('created_at', { ascending: false })
       .limit(1);
     if (error || !data || !data.length) return null;
-    return data[0]?.id || null;
+    return data[0]?.id ? data[0] : null;
   } catch {
     return null;
   }

@@ -65,6 +65,7 @@
 import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
 import { preisAusService, offeneBehandlungen, zeilenAusBehandlungen } from './rechnung-bruecke.js?v=20261010x';
+import { ladeRechnungZurVerordnung } from './rechnung-zur-verordnung.js?v=20261010zb';
 
 const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0);
 
@@ -273,6 +274,13 @@ export function euroZustand(rx, stand, lead) {
   }
 
   if (stand.zahler === 'privat') {
+    // Rechnung liegt schon vor: ihr Betrag, nicht die Summe der noch offenen Behandlungen (canli-test T33).
+    if (stand.rechnung) {
+      const betrag = Number(stand.rechnung.total_patient ?? stand.rechnung.brutto_gesamt);
+      const nr = stand.rechnung.invoice_number || 'Rechnung';
+      return { ton: 'offen', text: Number.isFinite(betrag) && betrag > 0 ? fmt(betrag) : 'vorhanden', label: 'Rechnungsbetrag',
+               aktion: 'rechnung', titel: `${nr} öffnen` };
+    }
     if (stand.unbekannt || !(stand.gesamt > 0)) {
       // Podologie: der Betrag fehlt (BG ohne feste Preise, Leistung ohne Privatpreis, noch keine Behandlung) —
       // die Rechnung zur Verordnung lässt sich trotzdem öffnen, Beträge trägt die Praxis im Editor ein.
@@ -402,7 +410,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
   } = deps;
 
-  let lead = null, position = null, privat = null, podo = null;
+  let lead = null, position = null, privat = null, podo = null, rechnung = null;
   let standGkv = null, standPrivat = null;
 
   const zeichne = () => {
@@ -413,6 +421,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     standGkv.geschaetzt = sector === 'podologie' && !podo;
     standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
     standPrivat.rechnungOhneBetrag = sector === 'podologie' && !!rx?.id;
+    standPrivat.rechnung = rechnung;
     const stand = zahler === 'privat' ? { ...standPrivat, zahler }
                 : zahler === 'gkv'    ? { ...standGkv, zahler }
                 : { ...standGkv, zahler: 'unbekannt' };
@@ -469,6 +478,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
       // services darf eine Funktion sein: direkt nach dem Laden sind die Leistungen der Praxis noch nicht da (canli-test P2).
       ? await ladePodoPrivatSumme({ sb, ownerId, rx, services: typeof services === 'function' ? await services() : services, katalogPodo: katalog })
       : await ladePrivatSumme(sb, rx.id);
+    if (sector === 'podologie' && rx?.id) rechnung = await ladeRechnungZurVerordnung(sb, rx.id);
     if (sector === 'podologie' && ladePodoPositionen) {
       const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
       position = findePosition(rx, { podoKarte: karte, katalog }) || position;

@@ -292,3 +292,14 @@ test('euroZustand: Podologie privat ohne Betrag → Rechnung bleibt erreichbar; 
   assert.equal(z.aktion, 'rechnung');
   assert.equal(z.text, '—');
 });
+
+test('euroZustand: vorhandene Rechnung zeigt ihren Betrag, nicht „—" (canli-test T33)', () => {
+  const rx = { id: 'v', rezeptart: 'selbstzahler' };
+  const st = ermittleGeldstand({ rx, zahler: 'privat', privat: { summe: 0, positionen: 0, offenePreise: 0 } });
+  const z = euroZustand(rx, { ...st, rechnungOhneBetrag: true, rechnung: { id: 'r', invoice_number: 'INV-2026-0004', total_patient: 65.21 } });
+  assert.equal(z.aktion, 'rechnung');
+  assert.match(z.text, /65,21/);
+  assert.match(z.titel, /INV-2026-0004/);
+  const ohne = euroZustand(rx, { ...st, rechnungOhneBetrag: true, rechnung: { id: 'r', invoice_number: null, total_patient: null } });
+  assert.equal(ohne.text, 'vorhanden');
+});
