@@ -68,7 +68,8 @@ export function renderRezeptBadges(inv) {
   const dmrzBadge = rx.dmrz_exported_at
     ? `<span class="badge badge-green" title="DMRZ exportiert am ${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`
     : `<span class="badge badge-gray" title="Noch nicht exportiert">DMRZ offen</span>`;
-  return `<div style="display:flex;gap:4px;flex-wrap:wrap;">${typBadge}${dmrzBadge}</div>`;
+  // ZU-Beleg ist kein DMRZ-Export-Gegenstand — dort nur der Rezepttyp.
+  return `<div style="display:flex;gap:4px;flex-wrap:wrap;">${typBadge}${inv.invoice_type === 'zuzahlung' ? '' : dmrzBadge}</div>`;
 }
 
 export function renderInvList() {
@@ -90,7 +91,9 @@ export function renderInvList() {
     const st = inv.status || 'draft';
     const payBadge = inv.payment_status === 'paid'
       ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
-      : (inv.payment_status === 'pending' ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
+      // Stornierte Belege und Gegenbelege (negativ) sind keine offene Forderung (canli-test 10.10.2026).
+      : (inv.payment_status === 'pending' && st !== 'cancelled' && !inv.storno_von && !(Number(inv.total_patient) < 0)
+          ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
     const invTypeBadgeHtml = inv.invoice_type
       ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${inv.invoice_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:var(--info);' : 'background:rgba(177,137,27,0.15);color:var(--bronze);'}">${typKennzeichen(inv.invoice_type)}</span>`
       : '';

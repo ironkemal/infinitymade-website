@@ -46,7 +46,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010h';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010i';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
@@ -70,23 +70,23 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261007m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261007m3';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010b'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshots } from './module/rechnung-snapshot.js?v=20261009rs'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010i'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshots } from './module/rechnung-snapshot.js?v=20261009rs'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261010b'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010e';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
 import { rechnungMenueEintrag, zuzahlungMenueEintraege, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010h';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010h';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261010h';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010i';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261010i';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010h';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010i';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010h';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010i';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261004m113';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -6404,7 +6404,7 @@ async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false, drucken = 
 // Bewusst keine Vorauswahl — eine per Gewohnheit durchgeklickte Zahlart macht das
 // Kassenbuch falsch, und Belege lassen sich nachträglich nicht korrigieren.
 // Auflösung: { zahlart, drucken } oder null bei Abbruch.
-function openKassierenDialog({ betragEur, patientName }) {
+function openKassierenDialog({ betragEur, patientName, titel }) {
   return new Promise(resolve => {
     document.getElementById('_kassierenModal')?.remove();
 
@@ -6419,7 +6419,7 @@ function openKassierenDialog({ betragEur, patientName }) {
     box.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:400px;';
 
     box.innerHTML = `
-      <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(t('kass_title'))}</h3>
+      <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(titel || t('kass_title'))}</h3>
       <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);">${escapeHtml(patientName || '')}</p>
       <div style="text-align:center;font-size:30px;font-weight:700;color:var(--text-main);letter-spacing:-0.5px;margin-bottom:18px;">${escapeHtml(fmtEur(betragEur))}</div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-main);cursor:pointer;margin-bottom:14px;">
@@ -16753,7 +16753,7 @@ async function loadAusfallrechnungen() {
         // Zuzahlung-Kassieren, bewusst ohne Vorauswahl.
         const id = btn.dataset.af;
         const row = rows.find(r => r.id === id);
-        const gewahlt = await openKassierenDialog({ betragEur: row?.amount_eur, patientName: row?.patient_name });
+        const gewahlt = await openKassierenDialog({ betragEur: row?.amount_eur, patientName: row?.patient_name, titel: 'Ausfallrechnung kassieren' });
         if (!gewahlt) return;
         try {
           await setAfStatus(id, 'bezahlt', gewahlt.zahlart);

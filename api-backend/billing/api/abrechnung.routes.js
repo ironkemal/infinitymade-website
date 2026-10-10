@@ -2724,13 +2724,14 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
+      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
         bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
         code: s.code,
         datum: dateStr,
         abrechnungscode: abrechnungscodeFuer(preisBereich),
       });
-      return { session: s, preis_eur, zuzahlung_eur, position_frei };
+      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
+      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
     });
     // position_frei haengt an der Position/dem Abrechnungscode UND am Preis-
     // fenster (ein Code kann in einem Fenster frei sein, im naechsten nicht —
@@ -2765,11 +2766,11 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
 
-    const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei }) => ({
+    const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei, label }) => ({
       session_id: s.id,
       datum: s.done_at,
       position: s.code,
-      bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
+      bezeichnung: label || rx.heilmittel || bereichTexte(tenantSector).leistung,
       brutto: preis_eur,
       zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
     }));
@@ -3089,13 +3090,14 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
+      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
         bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
         code: s.code,
         datum: dateStr,
         abrechnungscode: abrechnungscodeFuer(preisBereich),
       });
-      return { session: s, preis_eur, zuzahlung_eur, position_frei };
+      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
+      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
     });
     // Pro Sitzung, nicht von der ersten auf alle uebertragen — O-101-Nachtrag,
     // gleiche Begruendung wie in der Zuzahlungsrechnung oben.
@@ -3167,10 +3169,10 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         // wie oben: die Pauschale haengt an der Verordnung, nicht an der Position
         verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
       });
-      const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur, position_frei }) => ({
+      const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur, position_frei, label }) => ({
         datum: s.done_at,
         position: s.code,
-        bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
+        bezeichnung: label || rx.heilmittel || bereichTexte(tenantSector).leistung,
         zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
       }));
       html = renderRzgQuittung({

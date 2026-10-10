@@ -275,7 +275,7 @@ export async function starteRechnungAusVerordnung(ctx) {
 
   const offene = await offeneBehandlungen(sb, { ownerId, verordnungId: verordnung.id });
   if (!offene.length) {
-    toast?.('Alle Behandlungen dieser Verordnung sind bereits abgerechnet.', 'info');
+    toast?.('Zu dieser Verordnung gibt es keine dokumentierte Behandlung, die noch nicht abgerechnet ist.', 'info');
     return;
   }
 
