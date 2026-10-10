@@ -16,6 +16,7 @@
  * Nur fuer therapie_bereich 'podo'; Physio/Ergo/Logo bleiben unberuehrt.
  */
 
+import { istKasse } from './rezeptart.js?v=20261006a';
 import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';
 
 export const LANR_ERSATZWERT = '999999999';
@@ -44,9 +45,14 @@ export function arztangabenLage({ lanr, unterschrift } = {}) {
   return { lanrFehlt: !l || l === LANR_ERSATZWERT, unterschriftFehlt: unterschrift !== true };
 }
 
-/** Saubere Verordnung aus `prescriptions` (podo). null/andere Bereiche: nie gesperrt. */
+/**
+ * Saubere Verordnung aus `prescriptions` (podo). null/andere Bereiche: nie gesperrt.
+ * Nur Kasse: der Riegel ist eine Regel des GKV-Vertrags. Selbstzahler haben oft keinen Arzt, Privat/BG
+ * keinen Vertrag mit dieser Anlage (podoloji 10.10.2026, canli-test T33 P1; die Maske hielt es schon so).
+ * `rezeptart` leer = Kasse (Altzeilen).
+ */
 export function behandlungGesperrt(rx) {
-  if (!rx || rx.therapie_bereich !== 'podo') return { gesperrt: false, text: '' };
+  if (!rx || rx.therapie_bereich !== 'podo' || !istKasse(rx.rezeptart)) return { gesperrt: false, text: '' };
   const a = arztangabenLage({ lanr: rx.doctor_lanr, unterschrift: rx.unterschrift_vorhanden });
   const gesperrt = a.lanrFehlt || a.unterschriftFehlt;
   return { gesperrt, text: sperreTextAusLage(a) };

@@ -63,3 +63,9 @@ test('Sperr-Text: ein Wortlaut fuer Banner, Speichern-Hinweis und Behandlung', (
   assert.equal(podoArztHinweise({ bereich: 'podo', lanr: ok.doctor_lanr, bsnr: 'x', unterschrift: false }).satz, b);
   assert.equal(sperreTextAusLage({ lanrFehlt: false, unterschriftFehlt: false }), '');
 });
+
+test('Riegel gilt nur bei Kasse — Selbstzahler/Privat/BG nie gesperrt (canli-test T33)', () => {
+  const leer = { therapie_bereich: 'podo', doctor_lanr: '', unterschrift_vorhanden: false };
+  for (const art of ['selbstzahler', 'privat', 'bg']) assert.equal(behandlungGesperrt({ ...leer, rezeptart: art }).gesperrt, false);
+  for (const art of ['kassen', 'gkv', null, undefined, '']) assert.equal(behandlungGesperrt({ ...leer, rezeptart: art }).gesperrt, true);
+});

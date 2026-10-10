@@ -85,7 +85,8 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260930c';
-import { behandlungGesperrt } from './podo-arztangaben.js?v=20261001g';
+import { behandlungGesperrt } from './podo-arztangaben.js?v=20261010zc';
+import { istKasse } from './rezeptart.js?v=20261006a';
 import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Reform-Sprint S1.5 (28.09.2026): Rezept-Position (78010/78020) für die
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
@@ -807,7 +808,7 @@ async function loadPodologieBilling() {
         </div>
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${ctx.t('pod_hpnr')}</label>
-          <div id="podVerordnetZeile" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${ctx.escapeHtml(verordnetZeile(selectedVord.heilmittel_position || erstePositionAusItems(selectedVord.heilmittel_items), rezeptPosition))}</div>
+          <div id="podVerordnetZeile" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${(!hpnrRows.length && !istKasse(selectedVord.rezeptart)) ? 'Keine Positionsnummer nötig — der Preis wird in der Rechnung festgelegt.' : ctx.escapeHtml(verordnetZeile(selectedVord.heilmittel_position || erstePositionAusItems(selectedVord.heilmittel_items), rezeptPosition))}</div>
           <div id="podHpnrChecks" style="display:flex;flex-wrap:wrap;gap:8px;">
             ${hpnrRows.map(r => {
               const code = r.code;
@@ -1022,7 +1023,9 @@ async function loadPodologieBilling() {
     if (behandlungGesperrt(vord).gesperrt) err = behandlungGesperrt(vord).text;
     else if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
-    else if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
+    // Ohne Kasse und ohne Diagnosegruppe gibt es keine Positionsnummern: die Behandlung wird ohne Code
+    // dokumentiert, der Preis entsteht in der Rechnung (podoloji 10.10.2026, canli-test T33 P1).
+    else if (checks.length === 0 && (istKasse(vord?.rezeptart) || dRoot)) err = ctx.t('pod_kein_hpnr');
     else if (hausbesuchSpeicherFehler(vord, checks)) err = hausbesuchSpeicherFehler(vord, checks);
     else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
     // Regeln nicht geladen → auf die feste Literal-Regel zurückfallen, nicht durchwinken.
@@ -1164,7 +1167,7 @@ async function loadPodologieBilling() {
       verordnung_id: _podState.selectedVordId,
       behandlungsdatum: datum,
       hpnr_codes: checks,
-      diagnosegruppe: dRoot,
+      diagnosegruppe: dRoot || null,
       lokalisation: lokal || null,
       notizen: notiz || null,
       therapiezeit_min: therapiezeitFuerSpeichern(podVordMassnahme(vord), document.getElementById('podTherapiezeit')?.value),   // Konsey S0 2b; NULL außerhalb c)

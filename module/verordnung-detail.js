@@ -66,6 +66,7 @@
  * über `module/zuzahlung-korrektur.js`.
  */
 
+import { istKasse } from './rezeptart.js?v=20261006a';
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
@@ -88,7 +89,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261010z';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261010zc';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261006a';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 
@@ -232,7 +233,7 @@ function _merkmale(rx, esc, quelle, pruefung) {
   if (rx.is_lhb_bvb) an.push(['LHB/BVB', '#a855f7']);
   if (rx.zuzahlung_befreit) an.push(['Zuzahlungsbefreit', '#22c55e']);
   if (rx.bericht_angefordert || rx.therapiebericht) an.push(['Therapiebericht angefordert', '#f59e0b']);
-  if (rx.unterschrift_vorhanden === false) an.push(['Unterschrift fehlt', '#ef4444']);
+  if (rx.unterschrift_vorhanden === false && istKasse(rx.rezeptart)) an.push(['Unterschrift fehlt', '#ef4444']);
   if (rx.proceed_anyway) an.push(['Trotz Lücken gespeichert', '#f59e0b']);
   if (!an.length) return '';
   return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">` + an.map(([txt, farbe]) =>

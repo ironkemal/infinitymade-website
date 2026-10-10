@@ -47,7 +47,7 @@ import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBes
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
-import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
+import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zc';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006p';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010z';

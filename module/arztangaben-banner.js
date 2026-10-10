@@ -10,7 +10,8 @@
  * (Bereich podo + arztangabenLage() meldet fehlende LANR oder Unterschrift).
  */
 
-import { arztangabenLage, sperreTextAusLage } from './podo-arztangaben.js?v=20261001g';
+import { istKasse } from './rezeptart.js?v=20261006a';
+import { arztangabenLage, sperreTextAusLage } from './podo-arztangaben.js?v=20261010zc';
 
 export const BANNER_ID = 'rzSperreBanner';
 
@@ -21,9 +22,9 @@ export const BANNER_ID = 'rzSperreBanner';
  * @param {{bereich?: string, lanr?: string, unterschrift?: boolean}} [param0]
  * @returns {string} Der Banner-Text oder leerer String (kein Banner).
  */
-export function sperreBannerText({ bereich, lanr, unterschrift } = {}) {
+export function sperreBannerText({ bereich, lanr, unterschrift, rezeptart } = {}) {
   const b = String(bereich || '').trim().toLowerCase();
-  if (b !== 'podo') return '';
+  if (b !== 'podo' || !istKasse(rezeptart)) return '';   // nur Kasse (podoloji 10.10.2026)
   return sperreTextAusLage(arztangabenLage({ lanr, unterschrift }));
 }
 
@@ -46,7 +47,7 @@ export function aktualisiereArztSperreBanner() {
     const lanr = lanrEl.value;
     const unterschrift = Boolean(unterschriftEl.checked);
 
-    const text = sperreBannerText({ bereich, lanr, unterschrift });
+    const text = sperreBannerText({ bereich, lanr, unterschrift, rezeptart: document.getElementById('rzMaskeWrap')?.dataset?.rezeptart });
     let banner = document.getElementById(BANNER_ID);
 
     if (!text) {
