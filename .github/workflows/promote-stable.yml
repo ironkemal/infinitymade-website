@@ -15,9 +15,21 @@ on:
       soak_kanit:
         description: "72 saatlik soak kanıtı: hangi sponsor kutu, ne zamandan beri, ne gözlemlendi (log/panel özeti)"
         required: true
+      soak_baslangic:
+        description: "Kutunun bu sürüme geçtiği an (ISO, örn. 2026-10-10T13:36:44+02:00) — 72 saat buradan sayılır"
+        required: true
+      api_digest:
+        description: "Soak edilen calendar-api digest'i (sha256:…, kutuda docker image inspect RepoDigests)"
+        required: true
+      frontend_digest:
+        description: "Soak edilen frontend digest'i (sha256:…)"
+        required: true
 
 env:
   REGISTRY: ghcr.io
+  SOAK_BASLANGIC: ${{ github.event.inputs.soak_baslangic }}
+  API_DIGEST: ${{ github.event.inputs.api_digest }}
+  FRONTEND_DIGEST: ${{ github.event.inputs.frontend_digest }}
 
 jobs:
   promote:
@@ -46,6 +58,16 @@ jobs:
             echo "✗ soak_kanit boş olamaz — RELEASE-STANDARD.md §9: kanıt olmadan taşıma yok"
             exit 1
           fi
+          for D in "$API_DIGEST" "$FRONTEND_DIGEST"; do
+            if ! printf '%s' "$D" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+              echo "✗ digest sha256:<64 hex> biçiminde değil: $D"
+              exit 1
+            fi
+          done
+          if ! date -d "$SOAK_BASLANGIC" +%s >/dev/null 2>&1; then
+            echo "✗ soak_baslangic okunamadı: $SOAK_BASLANGIC"
+            exit 1
+          fi
           echo "✓ girdiler geçerli"
 
       # R8: 72 saatlik saat kapısı. Tag'in kendi oluşturulma anı ayrıca
@@ -62,8 +84,13 @@ jobs:
           fi
           TAG_ZAMAN="$(git log -1 --format=%ct "refs/tags/${TAG}")"
           SIMDI="$(date +%s)"
+          # O-187: saat tag'den değil, kutunun bu sürüme geçtiği andan sayılır
+          # (hangisi daha geçse). Tag zamanı alt sınır olarak kalır — soak
+          # yayından önce başlamış olamaz.
+          SOAK_ZAMAN="$(date -d "$SOAK_BASLANGIC" +%s)"
+          if [ "$SOAK_ZAMAN" -gt "$TAG_ZAMAN" ]; then TAG_ZAMAN="$SOAK_ZAMAN"; fi
           FARK_SAAT=$(( (SIMDI - TAG_ZAMAN) / 3600 ))
-          echo "${TAG} yayınlandığından beri: ${FARK_SAAT} saat"
+          echo "${TAG} soak başlangıcından beri: ${FARK_SAAT} saat"
           if [ "$FARK_SAAT" -lt 72 ]; then
             echo "✗ ${TAG} yalnız ${FARK_SAAT} saatlik — 72 saatlik soak dolmadı (RELEASE-STANDARD.md §6.3 Katman 2)"
             exit 1
@@ -88,11 +115,36 @@ jobs:
         run: |
           set -e
           SURUM="${{ github.event.inputs.surum }}"
-          for IMAGE in calendar-api frontend; do
-            KAYNAK="${{ env.REGISTRY }}/${{ github.repository }}/${IMAGE}:${SURUM}"
-            HEDEF="${{ env.REGISTRY }}/${{ github.repository }}/${IMAGE}:stable"
-            echo "→ ${HEDEF} = ${KAYNAK} (retag, build yok)"
-            docker buildx imagetools create --tag "$HEDEF" "$KAYNAK"
+          REPO="${{ env.REGISTRY }}/${{ github.repository }}"
+          # O-187/O-188: ÖNCE iki kaynağı da doğrula, SONRA taşı. Etiket
+          # değişmez değildir (yayın koşusu yeniden çalıştırılırsa üzerine
+          # yazılır) — registry'deki digest soak edilenle aynı değilse dur.
+          # Biri eksikse hiçbiri taşınmaz: yarım çift kanala çıkmaz, döngü
+          # sırasına güvenilmez.
+          for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
+            IMAGE="${CIFT%%=*}"; BEKLENEN="${CIFT#*=}"
+            GERCEK="$(docker buildx imagetools inspect "${REPO}/${IMAGE}:${SURUM}" --format '{{.Manifest.Digest}}')" || {
+              echo "✗ ${IMAGE}:${SURUM} registry'de yok — hiçbir şey taşınmadı"
+              exit 1
+            }
+            if [ "$GERCEK" != "$BEKLENEN" ]; then
+              echo "✗ ${IMAGE}:${SURUM} = ${GERCEK}, soak edilen ${BEKLENEN} — artefakt değişmiş, hiçbir şey taşınmadı"
+              exit 1
+            fi
+            echo "✓ ${IMAGE}:${SURUM} = ${GERCEK}"
+          done
+          # Kaynak digest ile verilir: doğrulama ile retag arasında etiket
+          # oynasa bile taşınan, doğrulanan artefakttır.
+          for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
+            IMAGE="${CIFT%%=*}"; DIGEST="${CIFT#*=}"
+            HEDEF="${REPO}/${IMAGE}:stable"
+            echo "→ ${HEDEF} = ${IMAGE}@${DIGEST} (retag, build yok)"
+            docker buildx imagetools create --tag "$HEDEF" "${REPO}/${IMAGE}@${DIGEST}"
+            SONUC="$(docker buildx imagetools inspect "$HEDEF" --format '{{.Manifest.Digest}}')"
+            if [ "$SONUC" != "$DIGEST" ]; then
+              echo "✗ ${HEDEF} = ${SONUC}, beklenen ${DIGEST}"
+              exit 1
+            fi
           done
           echo "✓ iki image de :stable'a taşındı"
 
@@ -102,6 +154,13 @@ jobs:
             echo "## \`:stable\` → ${{ github.event.inputs.surum }}"
             echo ""
             echo "**Tetikleyen:** ${{ github.actor }}"
+            echo ""
+            echo "**Soak başlangıcı:** ${SOAK_BASLANGIC}"
+            echo ""
+            echo "**Taşınan artefaktlar:**"
+            echo ""
+            echo "- \`calendar-api:stable\` = \`${API_DIGEST}\`"
+            echo "- \`frontend:stable\` = \`${FRONTEND_DIGEST}\`"
             echo ""
             echo "**Soak kanıtı:**"
             echo ""
