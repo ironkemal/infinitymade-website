@@ -116,6 +116,27 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 10.10.2026 · KHS 10. tur a–d — Zähler = dokumentierte Einheit, Kasse/VersNr nur auf Kassenbelegen, RX_FELDER überall, Speichern-Text (c6afd9ae)
+- `module/verordnung-termine.js` `podoBelegung(verordnet, termine, behandlungen, alsTag)` + `ladeVerordnungsBehandlungen`.
+  Niye: gkv-302 hükmü — **verbraucht = dokümante Einheit, termin değil** (T33: kart 0/2, Akte 1/2 gösteriyordu).
+  Kullanım: `module/termin-verordnung.js` `rendereVeroKarten` rozeti + `waehleVerordnung` „Noch X offen";
+  `module/podo-einheiten.js` `einheitenPlan(vordId)` (→ `zeichnePodoEinheiten`).
+  `terminZaehler` yalnız `module/verordnung-detail.js`'te kaldı — orada „belegt = vergebene Termine", **ayrı kavram,
+  kopya değil.** Sayım için üçüncü bir sayaç yazılmaz; bu ikisinden biri çağrılır.
+- `istBehandlungseinheit` + `POD_BEHANDLUNGSPOSITIONEN` `module/verordnung-uebersicht.js`'ten `module/verordnung-termine.js`'e
+  taşındı (hafif modül, döngü yok); `verordnung-uebersicht.js` geriye dönük **re-export** ediyor.
+- `module/bg-angaben.js` `mitKassenfeldern(invoiceType)`. Niye: legal-de — Kasse/VersNr yalnız `gkv`/`zuzahlung`
+  belgesinde. Kullanım: `empfaengerSnapshot` + `module/rechnung-ansicht.js` snapshot'sız eski yol.
+  **Sunucu aynası:** `api-backend/lib/rechnung-snapshot.js` (satır içi koşul, „Spiegel von" yorumu) — biri
+  değişirse diğeri de.
+- `module/rechnung-speichern.js` `setzeSpeichernText(btn, vorhanden)`. Niye: mevcut fatura açılınca `invSaveBtn`
+  hâlâ „Rechnung erstellen" diyordu → mevcutta „Änderungen speichern". Kullanım: dashboard.js `resetInvEditor` /
+  `openInvEditor` / `saveInvoice`. Düğme metnini yazan tek yer budur.
+- **Yeni fonksiyon değil (c):** `module/termin-verordnung.js`, `module/termin-folge.js` ve dashboard.js aktif-Verordnung
+  sorgusu artık `${RX_FELDER},prescription_sessions(...)` — elle yazılmış üç kolon listesi kalktı (`rezeptart`
+  eksikti). Koruyucu test: `module/termin-laden.test.js`. Termine bağlı yeni bir Verordnung sorgusu `RX_FELDER`
+  kullanır, kendi listesini yazmaz.
+
 ### 10.10.2026 · Selbstzahler/Privat/BG: Behandlung ohne Arzt-Riegel und ohne Positionsnummer (efbb2dd0)
 - **Yeni fonksiyon yok — davranış değişti.** Niye: canli-test T33 P1 + podoloji hükmü 10.10.2026 — kilit bir GKV
   sözleşme kuralıdır; Selbstzahler'de hekim ve HPNR yoktur, o yüzden kilit orada anlamsızdı.

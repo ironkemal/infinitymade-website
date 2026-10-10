@@ -876,3 +876,11 @@ Rolle: Praxis = Ausstellerin/Verantwortliche; Praxura AV (SaaS) bzw. Hersteller 
 - Storno: kein Löschen/Ändern; Gegenbeleg mit eigener Nummer + Verweis, Original „storniert"; technische Lücken protokollieren.
 - Steuerberater-Durchsicht (≈0,5 h) um die ZU-Frage ergänzen.
 - Grenzen: UStAE-Text nur aus Sekundärquellen (Stand 2010) geprüft; § 14 Abs. 2-Fundstelle zur fehlenden Rechnungspflicht bei § 4 Nr. 14 nicht verifiziert.
+
+### 2026-10-10 · Empfänger-Snapshot: Krankenkasse/Versichertennummer nur auf Kassenbelegen — verfeinert den Block vom 09.10.
+Rolle wie oben. 0 €, kein Veto, kein Anwalt. (legal-de 10.10.2026, Frage aus KHS 10. Runde (b), canli-test T33)
+- § 14 Abs. 4 Nr. 1 UStG verlangt vom Empfänger nur Name + Anschrift. Krankenkasse und Versichertennummer auf Selbstzahler-, Privat- und BG-Rechnung = nicht erforderlich (Art. 5 Abs. 1 lit. c DSGVO); bei Privat steht in `leads.krankenkasse` oft eine GKV-Kasse → irreführend.
+- Regel: beide Felder nur bei `invoice_type` `gkv` und `zuzahlung` (Bezug zum Kassenrezept). Selbstzahler/Privat/BG/ohne Typ: weder im Snapshot noch im Druck. BG: Empfänger = UV-Träger + Unfalltag/Aktenzeichen (unverändert). Braucht Privat später eine Versicherungsangabe, wird das ein eigenes Feld, nicht die GKV-Felder.
+- Umgesetzt `c6afd9ae`: `mitKassenfeldern()` (`module/bg-angaben.js`) in `empfaengerSnapshot`, Server-Spiegel `api-backend/lib/rechnung-snapshot.js`, Druck ohne Snapshot (`module/rechnung-ansicht.js`). Bereits eingefrorene Snapshots bleiben unverändert (GoBD; keine Live-Kunden).
+- BG ohne UV-Träger: Rechnung lässt sich schon heute nicht speichern (`bgSperreBeimSpeichern`, `module/rechnung-zur-verordnung.js`) — kein Patienten-Fallback im Editorweg. Steuerberater-Durchsicht (≈0,5 h) um „Privat: VersNr nötig?" ergänzen.
+- Grenze: § 14 UStG-Wortlaut in dieser Runde nicht neu geprüft (stützt sich auf 06./09.10.).
