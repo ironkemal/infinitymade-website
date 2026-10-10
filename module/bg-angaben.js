@@ -135,14 +135,15 @@ export function bgAusZeile(rx = {}) {
 const f10 = (key) => !!BG_FELDER.find(f => f.key === key)?.datum;
 
 /**
- * Hinweis an der Verordnungszeile VOR der Behandlung (podoloji 06.10.2026): ohne Kostenzusage
- * zahlt die BG nicht (ZFD-Merkblatt) — und bei der Rechnung ist die Behandlung schon erbracht.
+ * Hinweis an der Verordnungszeile VOR der Behandlung (podoloji 06.10.2026). Grund: kein DGUV-Vertrag/Tarif für
+ * Podologie (wissensbank Z-19) — Vergütung ist vorher offen, bei der Rechnung ist die Behandlung schon erbracht.
+ * Kostenzusage = Risikovorsorge, keine belegte Pflicht (gkv-302 10.10.2026; ein „ZFD-Merkblatt" war nicht auffindbar).
  * Warnt, blockiert nie. `v` = Verordnungszeile (Spalten `bg_*`, Alias aus `ausTopf` bleiben erhalten).
  * @returns {?string}
  */
 export function bgKostenzusageHinweis(v) {
   if (String(v?.rezeptart ?? '').trim().toLowerCase() !== 'bg') return null;
-  return String(v?.bg_kostenzusage_datum ?? '').trim() ? null : 'Kostenzusage der BG fehlt — vor der Behandlung einholen';
+  return String(v?.bg_kostenzusage_datum ?? '').trim() ? null : 'Keine Kostenzusage der BG erfasst — für Podologie gibt es keinen DGUV-Vertrag; Vergütung vor der Behandlung mit dem UV-Träger klären (empfohlen)';
 }
 
 /**

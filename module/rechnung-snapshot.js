@@ -11,7 +11,7 @@
  * Die Feldauswahl steckt in `ausstellerSnapshot` (branding.js) und `empfaengerSnapshot` (bg-angaben.js).
  */
 import { ausstellerSnapshot } from './branding.js?v=20261009rs';
-import { empfaengerSnapshot } from './bg-angaben.js?v=20261009rs';
+import { empfaengerSnapshot } from './bg-angaben.js?v=20261010z';
 
 /** `leads`-Spalten, die der Empfängerblock druckt (gleiche Auswahl wie die Rechnungsansicht, ohne Telefon/E-Mail). */
 export const EMPFAENGER_PATIENT_SPALTEN = 'first_name,last_name,title,geburtsdatum,street,plz,city,versichertennummer,krankenkasse';

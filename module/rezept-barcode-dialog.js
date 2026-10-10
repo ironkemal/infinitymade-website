@@ -1,5 +1,5 @@
 import { scanneRezeptLokal, pruefeScanDatei, zaehleBarcode } from './rezept-barcode-scan.js?v=20261007m3';
-import { uebernehmeRezeptInMaske } from './rezept-in-maske.js?v=20261007m3';
+import { uebernehmeRezeptInMaske } from './rezept-in-maske.js?v=20261010z';
 import { entferneBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 
 export function initBarcodeDialog(deps) {

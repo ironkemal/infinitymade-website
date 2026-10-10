@@ -13,7 +13,7 @@
  */
 
 import { istKasse, istBg, rezeptartLabel } from './rezeptart.js?v=20261006a';
-import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261009rs';
+import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261010z';
 
 const UUID_REGEX = /^[0-9a-f-]{36}$/i;
 

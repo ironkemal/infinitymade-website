@@ -66,7 +66,7 @@ test('bgAusZeile liest die bg_*-Spalten, Datum auf 10 Zeichen, null bleibt null'
 });
 
 test('Kostenzusage-Hinweis: nur bei BG ohne Datum, sonst null', () => {
-  assert.match(bgKostenzusageHinweis({ rezeptart: 'bg' }), /Kostenzusage der BG fehlt/);
+  assert.match(bgKostenzusageHinweis({ rezeptart: 'bg' }), /Keine Kostenzusage der BG erfasst/);
   assert.match(bgKostenzusageHinweis({ rezeptart: 'bg', bg_kostenzusage_datum: '  ' }), /vor der Behandlung/);
   assert.equal(bgKostenzusageHinweis({ rezeptart: 'bg', bg_kostenzusage_datum: '2026-09-20' }), null);
   assert.equal(bgKostenzusageHinweis({ rezeptart: 'privat' }), null);

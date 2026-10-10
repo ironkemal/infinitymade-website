@@ -44,7 +44,7 @@
  */
 
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
-import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261009rs';
+import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261010z';
 import { rechnungsTitel } from './rechnung-anzeige.js?v=20261006q';
 import { normalisiereRezeptart, istKasse, istBg } from './rezeptart.js?v=20261006a';
 
