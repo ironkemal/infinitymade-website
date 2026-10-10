@@ -38,8 +38,10 @@ import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest, safeAiError } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
-import { runMigrations } from './db/migrate.js';
-import { schemaZaehlerSetzen } from './setup/selbstpruefung.js';
+import { runMigrations, migrationenLesen } from './db/migrate.js';
+import { schemaZaehlerSetzen, schemaZaehlerLesen } from './setup/selbstpruefung.js';
+import { createStatusRouter } from './routes/status.js';
+import { standardPruefungen } from './lib/status.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
@@ -417,6 +419,24 @@ app.get('/health/ready', async (req, res) => {
     });
   }
 });
+
+// Tiefer Box-Status (O-40, §6.5) — nur Box + Inhaber, Details in routes/status.js.
+// Steht hier, vor Wartungsmodus-Middleware und accessLogger (Begründung dort).
+{
+  let imageMax = null;
+  try {
+    imageMax = migrationenLesen(pfadJoin(dirname(fileURLToPath(import.meta.url)), 'db', 'migrations'))
+      .reduce((max, d) => (d.version > max ? d.version : max), '0000');
+  } catch { /* unbekannt */ }
+  const pruefBasis = standardPruefungen({ supabase });
+  app.use('/api', createStatusRouter({
+    pruefungen: () => ({
+      ...pruefBasis,
+      version: { version: process.env.IMAGE_VERSION || 'dev' },
+      schema: { imageMax, wartung: wartungsmodus, zaehler: schemaZaehlerLesen() },
+    }),
+  }));
+}
 
 // Öffentliche Config — derselbe Vertrag wie api/config.js (Vercel, SaaS). Muss
 // über der Wartungsmodus-Middleware stehen: ohne sie kann das Frontend nicht

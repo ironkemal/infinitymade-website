@@ -62,3 +62,14 @@ export async function requireAuth(req, res, next) {
     res.status(500).json({ error: 'Auth check failed' });
   }
 }
+
+// Nur Inhaber, nach requireAuth. Strenge Form wie ai/router.js:116 — role
+// allein reicht nicht, der Inhaber ist sein eigener Mandant (O-40 /api/status,
+// guvenlik S-60). Die ~12 Inline-Prüfungen bleiben, wo sie sind.
+export function requireOwner(req, res, next) {
+  const a = req.auth;
+  if (!a || a.role !== 'owner' || a.userId !== a.tenantId) {
+    return res.status(403).json({ error: 'Nur für Inhaber' });
+  }
+  next();
+}
