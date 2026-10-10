@@ -756,6 +756,7 @@ gezildi, "Absenden" bilerek BASILMADI (mail tetikler) → owner onayı sınanmad
 **Son test:** 2026-10-10 ~18:27–18:55 Berlin regresyon (`4e8a57ff`, tur ortasında `e84d3d4d` indi → son ölçümler canlı `dashboard.js?v=20261010q` / `rezeptinfo-geld.js?v=20261010v` = yerel; QA test2, `-s=praxura-qa`, yazma yok) — **KALDI** (eski [P1] KAPANDI; 1 yeni P1 + 1 P2, ikisi de soğuk önbellek). Termin 20.10: Privat 71f72ce8 ve BG b06494c8 kartlarında „Rechnungsbetrag", € ETKİN, Zuzahlung/kassieren yok ✓. Privat € → `rechnungen` editörü „Privatrechnung", hasta seçili, yalnız #13 (71f72ce8) işaretli, 3 satır 65,21 € ✓ → Abbrechen. BG: tutar „—" ✓ (beklenen); € → `rechnungen` listesi yüklüyken INV-2026-0002 (BG, 3 satır, 65,21 €) ✓, ama F5 sonrası ilk tıkta boş hastasız editör (Kassenzuzahlung 10,00 €) → devir [P1]. Privat tutarı soğukta „—", editör bir kez açıldıktan sonra „65,21 €" → devir [P2]. `4e8a57ff` tek başına (`…?v=20261010p`): BG € mevcut faturayı aramadan boş yeni BG taslağı açıyordu — `e84d3d4d` bunu sıcak önbellekte kapattı. GKV 28.09 (796aae21): „Zuzahlung 15,92 € · Summe 59,21 €", „Bereits kassiert — Beleg öffnen" ✓. Konsol 0 hata (gürültü 4, 6). Yeni fatura yok (INV-0001…0003 aynı; INV-2026-0003 önceki turdan duruyor). Denenmedi: Akte → „Rechnung ▾" mevcut fatura soğuk önbellekte.
 **Son test:** 2026-10-10 ~18:41–18:50 Berlin regresyon (`30ef4955`, canlı `dashboard.js?v=20261010r` / `rezeptinfo-geld.js?v=20261010u` = yerel; QA test2, `-s=praxura-qa`, yazma yok) — **GEÇTİ.** Hepsi soğuk (F5, `rechnungen` paneline girmeden): Termin 20.10 → Privat 71f72ce8 „Rechnungsbetrag 65,21 €", „Privatrechnung über 65,21 € vorbereiten" ✓; BG b06494c8 „—" + € etkin → € → INV-2026-0002 editörde (BG-Rechnung, hasta seçili, 3 satır, 65,21 €) ✓. İkinci F5 → Akte → Verordnungen → b06494c8 „Rechnung ▾" → „Rechnung · BG / Unfallkasse" → aynı INV-2026-0002 ✓ → Abbrechen. Konsol 0 hata (gürültü 4, 6). Faturalar değişmedi (INV-0001 paid, 0002/0003 draft). Kaydetme/kassieren/buchen yapılmadı. Bu turda bakılmadı: GKV kartı, Privat € → editör (önceki turda geçti).
 **Son test:** 2026-10-10 ~19:17–19:50 Berlin — T33 Selbstzahler yolu (tur başında canlı `dashboard.js?v=20261010r`, tur ortasında `011deb4a` indi → fatura adımından itibaren `?v=20261010za` = yerel; QA test2, `-s=praxura-qa`, gerçek yazma, Kemal izniyle) — **GEÇTİ** (çekirdek yol; yanında 1 P1 + 1 P2 + 1 P3 devri). Muster-13-Maske „Abrechnung über → Selbstzahler" ile YENİ Verordnung a616f476 (1-15) açıldı, F5 sonrası `rezeptart` selbstzahler duruyor. Akte kartı: rozet „Selbstzahler", düğme „Rechnung ▾", menü „📄 Rechnung · Selbstzahler" + Rezeptvorderseite (Zuzahlung öğesi yok) ✓. Soğuk önbellek → „Rechnung · Selbstzahler": editör, hasta seçili, #15 işaretli, 3 satır 65,21 € (Praxis-Preis), Zuzahlung satırı gizli, „Zu zahlen 65,21 €" ✓ → „Rechnung erstellen" → „INV-2026-0004 erstellt" + diyalog „Zahlungseingang verbuchen" (65,21 / gebucht 0,00 / offen 65,21) ✓ → Abbrechen (buchen yapılmadı). Ağ yanıtı: `aussteller_snapshot` dolu (name, inhaber, strasse, plzOrt, ik, email, bank; telefon boş), `empfaenger_snapshot` dolu (art=patient, name, strasse, plzOrt, geburtsdatum) ✓. F5 → Akte „Rechnung ▾" → aynı INV-2026-0004 (`_currentInvoiceId` f2f5ce8c), POST yok; F5 → Termin 20.10 → kart a616f476 → Geldzeile „Rechnungsbetrag", Zuzahlung/kassieren YOK ✓, € → aynı INV-2026-0004 ✓; listede tek 0004. Konsol: kaydetme anında 2× `ERR_CONNECTION_CLOSED` (snapshot okumaları leads/prescriptions) — işlevsel etki yok, snapshot dolu, tekrar görülmedi. **Ön doldurmaya ancak dolanarak ulaşıldı:** Behandlung önce LANR/Unterschrift kilidine, sonra boş HPNR listesine takıldı → test Verordnung'una LANR (uydurma) + Unterschrift + Diagnosegruppe DF sonradan girildi (devir P1). Denenmedi: faturasız Selbstzahler'de Geldzeile tutarı (fatura önce kesildi), seanssız Selbstzahler boş taslak, buchen. **Test verisi (silinmedi):** Verordnung a616f476 (1-15), 1 Behandlung (10.10., 78010·78030·79933), INV-2026-0004 (f2f5ce8c, Selbstzahler, draft, 65,21 €), Arztregister kaydı „Unbekannt (LANR 123456601)".
+**Son test:** 2026-10-10 ~19:39–20:05 Berlin regresyon (`67402613` + `efbb2dd0`; Vercel 19:39'da indi, canlı `dashboard.js?v=20261010zc` = yerel; QA test2, `-s=praxura-qa`, gerçek yazma) — **GEÇTİ** (üç T33 paketi KAPANDI; 2 yeni P2). **P1:** yeni saf Selbstzahler Verordnung 3928f125 (1-16; LANR boş, imza işaretsiz, DG boş, 2 Einheiten) → Behandlungen formu „Keine Positionsnummer nötig — der Preis wird in der Rechnung festgelegt.", kod kutusu yok, kilit yok → „Behandlung gespeichert ✓" (10.10., kodsuz) → F5 → Akte kartı „1 / 2 Einheiten noch 1", detayda „Unterschrift fehlt" rozeti yok („Bitte prüfen" + „Trotz Lücken gespeichert" duruyor) → „Rechnung · Selbstzahler": tek satır (başlık = Anlass), 1 × 0, toast „1 Position(en) ohne Privatpreis — bitte Betrag eintragen." → 30 girildi → „INV-2026-0005 erstellt" + „Zahlungseingang verbuchen" (30,00 / 0,00 / 30,00) → Abbrechen. POST `verordnung_id`=3928f125, `invoice_type` selbstzahler; Behandlung `invoice_id` PATCH 200; iki snapshot dolu. Soğuk F5 → Geldzeile € ve Akte „Rechnung ▾" ikisi de INV-2026-0005'i açtı, ikinci fatura yok. Küçük: bu yolda editörde #16 kutucuğu işaretsiz (bağ kayıtta doğru). **Kasse regresyonu:** Kasse 1-7'de tüm kodlar kaldırılıp kaydet → „Bitte mindestens einen HPNR-Code wählen.", ağda yazma yok ✓. Kilit: QA'da LANR'ı boş Kasse Verordnung YOK (işaretli 4 Kasse kaydının hepsinde LANR + imza dolu) → Behandlung formunda canlı veriyle denenemedi; yerine (a) kaydedilmemiş yeni maskede Kasse + boş LANR → banner metni aynen, (b) canlı `podo-arztangaben.js?v=20261010zc` `behandlungGesperrt` uydurma girdiyle: kassen/NULL → gesperrt + aynı metin, selbstzahler/privat/bg → serbest. **P2:** Termin 20.10, soğuk: a616f476 „Rechnungsbetrag 65,21 €", tooltip „INV-2026-0004 öffnen"; 3928f125 „30,00 €" / „INV-2026-0005 öffnen" ✓. **P3:** editör rozeti „SELBSTZAHLER-RECHNUNG" ✓ (düğme mevcut faturada hâlâ „Rechnung erstellen"). Konsol 0 hata (gürültü 4, 6), 4xx/5xx yok. **Test verisi (silinmedi):** Verordnung 3928f125 (1-16), 1 kodsuz Behandlung (10.10.), INV-2026-0005 (47123294, Selbstzahler, draft, 30,00 €). Kasse verisi değişmedi.
 
 ### Ausfallrechnung — Snapshot + Festschreibung (T30, 0076/0077) — nav etiketi: Termin-Aktionen „Ausfallrechnung erstellen" · `mahnwesen` (Ausfallrechnungen listesi)
 
@@ -792,6 +793,7 @@ gezildi, "Absenden" bilerek BASILMADI (mail tetikler) → owner onayı sınanmad
 - 2026-10-10 · canli-test · Termin-Aktionen „Aktive Verordnungen" kartı vs. Akte kartı: aynı Verordnung (a616f476, 1 Behandlung dokümante) Termin-Aktionen'de „0/2", Akte'de „1 / 2 Einheiten noch 1" (71f72ce8'de de aynı) — aynı bilgi iki yerde farklı; hangi sayacın ne saydığı `podoloji`'ye sorulacak.
 - 2026-10-10 · canli-test · Selbstzahler faturasının `empfaenger_snapshot`'ı `krankenkasse` + `versichertennummer` taşıyor (`module/rechnung-snapshot.js:17`) — Selbstzahler belgesinde gerekli mi, `legal-de`/`podoloji`'ye sorulacak; hata diye sınıflanmadı.
 - 2026-10-10 · canli-test · Muster-13-Maske, Selbstzahler: „Verordnung speichern?" diyaloğu „Arzt-Nr. (LANR)" ve „Unterschrift des Arztes" eksik diye uyarıyor, karta „Bitte prüfen / Unterschrift fehlt" rozeti düşüyor — Selbstzahler'de hekim şartı var mı, `podoloji`/`gkv-302` cevabı bekliyor (devir P1 ile bağlantılı).
+- 2026-10-10 · canli-test · Rechnungseditor, kodsuz Selbstzahler ön doldurması (3928f125): satır geliyor ama „Verordnung wählen" listesinde #16 kutucuğu işaretsiz; kayıtta `verordnung_id` doğru (eski „kutucuk işaretsiz" anomalisiyle aynı sınıf).
 
 Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta verisi yok)`
 
@@ -1026,7 +1028,31 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 
 ## builder'a devredilenler
 
-### [P1] Selbstzahler-Verordnung (Maske varsayılan yolu): Behandlung dokümante edilemiyor — LANR/Unterschrift kilidi + boş HPNR listesi (2026-10-10, T33)
+### [P2] „+ Neue Verordnung": boş maske önceki Verordnung'un „Behandlungsanlass (Text auf der Rechnung)" değerini taşıyor (2026-10-10, T33 regresyon)
+
+**Nerede:** `verordnungen` → Muster-13-Maske (`#rzPodoAnlass`)
+**Yeniden üretme:**
+1. `verordnungen` → Anlass'ı dolu bir Verordnung satırına tıkla (detay açılır, ör. 1-16)
+2. „✕ Auswahl aufheben" → „+ Neue Verordnung"
+→ Beklenen: boş maske (yalnız Datum, Bereich, Bericht-Status, IK)
+→ Gerçekleşen: `rzPodoAnlass` önceki kaydın metniyle dolu (hasta seçili değil, diğer alanlar boş). Alan Kasse modunda gizli; Selbstzahler/Privat/BG seçilince görünür ve kaydedilirse yeni Verordnung'a, oradan fatura satır başlığına gider. 2/2 tekrarlandı.
+**Kanıt:** canlı DOM (`dashboard.js?v=20261010zc`), konsol 0 hata
+**Şüpheli:** `module/verordnung-maske.js:537` `setz('rzPodoAnlass', …)` detay yüklemesinde yazıyor; sıfırlama `module/verordnung-podo.js:1112` „Neue Verordnung" yolunda çalışmıyor (ya da alan o an DOM'da değil — aynı dosya `:734` yorumu benzer bir sıra sorununu anlatıyor)
+**Katman:** 2 (Verordnung) → 4 (fatura metni)
+**Etki:** başka hastanın/başka reçetenin Anlass metni yeni Verordnung'a ve faturasına sızabilir; podolog alanı görürse düzeltebilir
+
+### [P2] Muster-13-Maske: Selbstzahler/Privat/BG'de hâlâ „Behandlung gesperrt …" banner'ı ve LANR/Unterschrift uyarısı (2026-10-10, T33 regresyon)
+
+**Nerede:** `verordnungen` → „+ Neue Verordnung" (kaydedilmemiş maske) → „Abrechnung über"
+**Yeniden üretme:** yeni maske (Kasse, LANR boş) → banner görünür → „Selbstzahler" / „Privat" / „BG" seç
+→ Beklenen: banner kaybolur (`efbb2dd0`: kilit yalnız Kasse); kaydetme diyaloğu hekim alanlarını eksik saymaz
+→ Gerçekleşen: üç türde de banner „Behandlung gesperrt: Arzt-Nr. (LANR) und Unterschrift/Stempel fehlen (Podologie-Vertrag Anlage 3) …" duruyor; „Verordnung speichern?" diyaloğu „Arzt-Nr. (LANR)" + „Unterschrift des Arztes" eksik diyor. Kaydedilmiş Selbstzahler detayında (1-16) banner yok, Behandlung gerçekten serbest — yani metin yanlış, davranış doğru.
+**Kanıt:** canlı DOM, `?v=20261010zc`
+**Şüpheli:** `module/arztangaben-banner.js:113-117` — handler tık anında `rzMaskeWrap.dataset.rezeptart`'ı okuyor (`:50`), `module/rezeptart-umschalter.js` değeri sonra yazıyor olabilir (sıra) · eksik-alan listesi: `dashboard.js:14313` civarı (`missing.push`), `maskeIstKasse()` yalnız ICD ve `:14322` için sorulmuş
+**Katman:** 2 (yalnız bildirim)
+**Etki:** podolog Selbstzahler'de Behandlung'un kilitli olduğunu sanar; işlem engellenmiyor
+
+### ~~[P1] Selbstzahler-Verordnung (Maske varsayılan yolu): Behandlung dokümante edilemiyor — LANR/Unterschrift kilidi + boş HPNR listesi (2026-10-10, T33)~~ — KAPANDI (`efbb2dd0`, regresyon 2026-10-10 ~19:45: kodsuz Behandlung kaydoldu, kilit yalnız Kasse; kalan bildirim artığı → yeni [P2] Maske-Banner)
 
 **Nerede:** `podologie-billing` → „Aktive Verordnungen" → Selbstzahler kartı → „Tagesbehandlung erfassen"
 **Yeniden üretme:**
@@ -1039,7 +1065,7 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 **Katman:** 3 (Behandlung) → 4'ü besliyor (fatura ön doldurması Behandlung'dan gelir)
 **Etki:** podolog Selbstzahler hastada Behandlung'u dokümante edemiyor; fatura yalnız elle doldurulan boş taslakla kesilebiliyor. Dolanma: uydurma LANR + Unterschrift işareti + gizli GKV alanında Diagnosegruppe
 
-### [P2] Geldzeile (Privat/Selbstzahler): fatura kesildikten sonra „Rechnungsbetrag —" + „Beträge im Editor eintragen" (2026-10-10, T33)
+### ~~[P2] Geldzeile (Privat/Selbstzahler): fatura kesildikten sonra „Rechnungsbetrag —" + „Beträge im Editor eintragen" (2026-10-10, T33)~~ — KAPANDI (`67402613`, regresyon 2026-10-10 ~19:58: 65,21 € / „INV-2026-0004 öffnen")
 
 **Nerede:** `calendar` → Termin → Termin-Aktionen → kart (faturası olan Selbstzahler a616f476) → `#bkRxGeldZeile`
 **Yeniden üretme:** INV-2026-0004 (65,21 €, draft) varken Termin 20.10 → kart a616f476
@@ -1050,7 +1076,7 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 **Katman:** 4
 **Etki:** aynı tutar iki yerde farklı; podolog faturanın kesilmediğini sanabilir (tık yine mevcut faturayı açtığı için çift fatura riski yok)
 
-### [P3] Rechnungseditor: Selbstzahler faturasında rozet „PRIVATRECHNUNG"; mevcut faturada düğme „Rechnung erstellen" (2026-10-10, T33)
+### ~~[P3] Rechnungseditor: Selbstzahler faturasında rozet „PRIVATRECHNUNG"; mevcut faturada düğme „Rechnung erstellen" (2026-10-10, T33)~~ — KAPANDI (`67402613`, regresyon 2026-10-10 ~19:58: rozet „SELBSTZAHLER-RECHNUNG"; düğme etiketi değişmedi)
 
 **Nerede:** `rechnungen` editörü (`#invTypeBadge`, `#invSaveBtn`), INV-2026-0004
 → Beklenen: listedeki etiketle aynı („Selbstzahler"); mevcut faturada „speichern"

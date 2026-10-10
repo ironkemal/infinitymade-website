@@ -27,6 +27,8 @@ export function wendeArtAn(wrap, art) {
   const zu = !brauchtGkvAngaben(a) && wrap.dataset.gkvOffen !== '1';
   wrap.classList.toggle(GKV_ZU_KLASSE, zu);
   wrap.classList.toggle('m13-art-bg', istBg(a));
+  // Wer von der Art abhängt (Arzt-Banner), zeichnet neu — ohne dass dieses Modul ihn kennen muss.
+  if (typeof CustomEvent === 'function' && typeof wrap.dispatchEvent === 'function') wrap.dispatchEvent(new CustomEvent('rezeptart:geaendert', { bubbles: true }));
   return a;
 }
 

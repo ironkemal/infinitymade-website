@@ -113,6 +113,7 @@ export function installiereArztSperreBanner() {
   if (typeof document.addEventListener === 'function') {
     document.addEventListener('input', handler);
     document.addEventListener('change', handler);
+    document.addEventListener('rezeptart:geaendert', () => aktualisiereArztSperreBanner());   // Wechsel Kasse ↔ Selbstzahler/Privat/BG
 
     document.addEventListener('click', (event) => {
       const target = event?.target;
