@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
  "dateien": 433,
- "funktionen": 3469,
+ "funktionen": 3477,
  "module": [
   "abrechnung",
   "anamnese",
@@ -2474,8 +2474,10 @@
     "createAiRouter",
     "createFakeOwnerDecisionStore",
     "createOwnerDecisionStore",
+    "eine",
     "executeKiTask",
-    "getBrowserOptInStatus"
+    "getBrowserOptInStatus",
+    "statusDateienLesen"
    ],
    "modules": [
     "abrechnung",
@@ -15270,9 +15272,12 @@
    "calledBy": [
     "(datei) module/abrechnung-status.js",
     "(datei) ops/vendor/supabase-js.js",
+    "backupBewerten",
     "buildAuftragsdatei",
     "empfaengerSnapshot",
     "getRadio",
+    "istEpoch",
+    "istV1",
     "physioSpalten",
     "renderOverviewMonthly",
     "t"
@@ -28410,9 +28415,12 @@
    "calledBy": [
     "(datei) module/abrechnung-status.js",
     "(datei) ops/vendor/supabase-js.js",
+    "backupBewerten",
     "buildAuftragsdatei",
     "empfaengerSnapshot",
     "getRadio",
+    "istEpoch",
+    "istV1",
     "physioSpalten",
     "renderOverviewMonthly",
     "t"
@@ -29193,8 +29201,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 26,
-   "end": 32,
+   "start": 36,
+   "end": 42,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -29204,7 +29212,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "laufen"
+    "lauf",
+    "laufen",
+    "statusSammeln"
    ],
    "modules": [
     "abrechnung",
@@ -29253,8 +29263,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 34,
-   "end": 43,
+   "start": 44,
+   "end": 53,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -29313,8 +29323,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 47,
-   "end": 56,
+   "start": 57,
+   "end": 66,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -29382,8 +29392,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 60,
-   "end": 67,
+   "start": 70,
+   "end": 77,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -29404,9 +29414,9 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 73,
-   "end": 105,
-   "lines": 33,
+   "start": 83,
+   "end": 120,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -29415,13 +29425,19 @@
    "storage": [],
    "calls": [
     "all",
+    "backupBewerten",
+    "dataKeyVergleichen",
+    "digestAus",
     "diskBewerten",
     "gesamtStatus",
     "lauf",
     "laufen",
+    "log",
+    "mitTimeout",
     "resolve",
     "schemaBewerten",
-    "schlechter"
+    "schlechter",
+    "zeitBewerten"
    ],
    "calledBy": [
     "(datei) api-backend/routes/status.js",
@@ -29436,9 +29452,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 74,
-   "end": 83,
-   "lines": 10,
+   "start": 84,
+   "end": 94,
+   "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -29448,6 +29464,8 @@
    "calls": [
     "all",
     "laufen",
+    "log",
+    "mitTimeout",
     "resolve"
    ],
    "calledBy": [
@@ -29503,8 +29521,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 107,
-   "end": 107,
+   "start": 122,
+   "end": 122,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -29525,8 +29543,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 109,
-   "end": 116,
+   "start": 124,
+   "end": 131,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -29547,8 +29565,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 118,
-   "end": 127,
+   "start": 133,
+   "end": 142,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -29567,13 +29585,227 @@
    "uiPfad": []
   },
   {
+   "name": "istEpoch",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 144,
+   "end": 172,
+   "lines": 29,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "backupBewerten",
+    "istV1",
+    "n",
+    "round"
+   ],
+   "calledBy": [
+    "backupBewerten",
+    "istV1",
+    "zeitBewerten"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istV1",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 145,
+   "end": 172,
+   "lines": 28,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "backupBewerten",
+    "istEpoch",
+    "n",
+    "round"
+   ],
+   "calledBy": [
+    "backupBewerten",
+    "dataKeyVergleichen",
+    "digestAus",
+    "istEpoch",
+    "zeitBewerten"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "backupBewerten",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 154,
+   "end": 172,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istEpoch",
+    "istV1",
+    "n",
+    "round"
+   ],
+   "calledBy": [
+    "istEpoch",
+    "istV1",
+    "statusSammeln"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zeitBewerten",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 179,
+   "end": 186,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istEpoch",
+    "istV1"
+   ],
+   "calledBy": [
+    "statusSammeln"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "dataKeyVergleichen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 196,
+   "end": 208,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istV1"
+   ],
+   "calledBy": [
+    "statusSammeln"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "digestAus",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 210,
+   "end": 212,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istV1"
+   ],
+   "calledBy": [
+    "statusSammeln"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "statusDateienLesen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 220,
+   "end": 242,
+   "lines": 23,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "all",
+    "close",
+    "eine",
+    "read"
+   ],
+   "calledBy": [
+    "standardPruefungen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "eine",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/status.js",
+   "start": 224,
+   "end": 239,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "close",
+    "read"
+   ],
+   "calledBy": [
+    "statusDateienLesen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "standardPruefungen",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/lib/status.js",
-   "start": 133,
-   "end": 196,
-   "lines": 64,
+   "start": 248,
+   "end": 313,
+   "lines": 66,
    "spiegelHinweis": null,
    "tables": [
     "profiles"
@@ -29587,7 +29819,8 @@
    "storage": [],
    "calls": [
     "on",
-    "rundlaufTest"
+    "rundlaufTest",
+    "statusDateienLesen"
    ],
    "calledBy": [
     "(datei) api-backend/lib/status.js",
@@ -34293,6 +34526,7 @@
     "initAnamnese",
     "initCalendar",
     "ipAbgleichSchritt",
+    "lauf",
     "laufen",
     "main",
     "mountCalendar",
@@ -34309,6 +34543,7 @@
     "starte",
     "starteDevServer",
     "starteFristen",
+    "statusSammeln",
     "stoppe",
     "tick",
     "zaehlerLaufen"
@@ -35774,6 +36009,7 @@
     "W",
     "_resizeVorlagenIframe",
     "auswahlStand",
+    "backupBewerten",
     "baueGruppen",
     "baueZuBelegZeile",
     "cent",
@@ -35797,6 +36033,8 @@
     "hslToHex",
     "isSnapshotContentValid",
     "isValidTwoDecimalPrecision",
+    "istEpoch",
+    "istV1",
     "k",
     "kalendertage",
     "karteHtml",
@@ -59444,6 +59682,7 @@
     "druckeAusfall",
     "druckeBehandlungsbestaetigung",
     "druckeTerminzettel",
+    "eine",
     "entpackeXml",
     "fmt",
     "get",
@@ -59456,7 +59695,8 @@
     "offerAusfallrechnung",
     "pick",
     "run",
-    "starte"
+    "starte",
+    "statusDateienLesen"
    ],
    "modules": [
     "abrechnung",
@@ -74320,6 +74560,7 @@
     "showApp",
     "snapshotsMitGrund",
     "stammdatenLaden",
+    "statusDateienLesen",
     "statusSammeln",
     "tag",
     "vergebeNummern",
@@ -92155,9 +92396,12 @@
    "calledBy": [
     "(datei) module/abrechnung-status.js",
     "(datei) ops/vendor/supabase-js.js",
+    "backupBewerten",
     "buildAuftragsdatei",
     "empfaengerSnapshot",
     "getRadio",
+    "istEpoch",
+    "istV1",
     "physioSpalten",
     "renderOverviewMonthly",
     "t"
@@ -182736,6 +182980,7 @@
     "druckeAusfall",
     "druckeBehandlungsbestaetigung",
     "druckeTerminzettel",
+    "eine",
     "entpackeXml",
     "fmt",
     "get",
@@ -182748,7 +182993,8 @@
     "offerAusfallrechnung",
     "pick",
     "run",
-    "starte"
+    "starte",
+    "statusDateienLesen"
    ],
    "modules": [
     "abrechnung",
@@ -189181,7 +189427,7 @@
   {
    "name": "lauf",
    "orte": [
-    "api-backend/lib/status.js:74",
+    "api-backend/lib/status.js:84",
     "module/verordnung-detail.js:920",
     "module/verordnung-podo.js:1146"
    ],

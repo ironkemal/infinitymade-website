@@ -6,14 +6,16 @@
 // Regeln (onprem 11.10.2026, guvenlik S-60):
 //  - Status je Feld: ok · warnung · fehler · unbekannt · nicht_implementiert.
 //    Nur fehler/warnung färben `gesamt`; unbekannt heißt „hier nicht messbar",
-//    nicht „kaputt" (backup/zeit/digest brauchen die Box-Dateien aus O-191).
+//    nicht „kaputt" (backup/zeit/digest lesen die Host-Dateien aus O-191;
+//    fehlt das Verzeichnis — altes compose —, bleiben sie unbekannt).
 //  - Nie err.message, Pfad, Host:Port oder Schlüssel-Fingerabdruck in der
 //    Antwort — nur ein Code aus FEHLER_CODES. Details gehen ins Log.
 //  - db getrennt messen: postgres (direkt) und rest (über Kong/PostgREST).
 //    10.10.2026 21:51 war api grün, während Container→db/rest tot war (O-190).
 
 import fs from 'node:fs/promises';
-import { rundlaufTest as echterRundlauf } from './phi-encrypt.js';
+import { constants as FS } from 'node:fs';
+import { rundlaufTest as echterRundlauf, keyFingerprint as echterFingerprint } from './phi-encrypt.js';
 
 export const FEHLER_CODES = Object.freeze(['timeout', 'refused', 'http_5xx', 'auth', 'unbekannt']);
 
@@ -22,6 +24,14 @@ const DB_GRUEN_MS = 500;
 // Disk: §6.5 / §6.6 — ab 85 % belegt Warnung, ab 92 % Fehler.
 const DISK_WARN_FREI = 0.15;
 const DISK_FEHLER_FREI = 0.08;
+// O-191 — Host-Zustandsdateien (./volumes/status → /var/lib/praxura/status:ro).
+const DATEI_MAX_BYTES = 8192;
+const BACKUP_MAX_STUNDEN = 36;          // §6.5: letzte erfolgreiche Sicherung < 36 h
+const ZEIT_FRISCH_MS = 10 * 60 * 1000;  // Host-Timer läuft alle 2 Min; älter = Timer tot
+const ZUKUNFT_TOLERANZ_MS = 5 * 60 * 1000;
+const SEBEP = ['nightly', 'vor-migration', 'manuel'];
+const RE_FP = /^[0-9a-f]{16}$/;
+const RE_DIGEST = /^sha256:[0-9a-f]{64}$/;
 
 export function mitTimeout(promise, ms = STANDARD_TIMEOUT_MS) {
   let t;
@@ -72,11 +82,16 @@ export function gesamtStatus(felder) {
  */
 export async function statusSammeln(p, { log = console.warn, jetzt = () => new Date() } = {}) {
   const lauf = (name, fn) => (fn ? laufen(name, fn, log) : Promise.resolve({ status: 'unbekannt' }));
-  const [postgres, rest, auth, storage, disk, dataKey, realtime] = await Promise.all([
+  const [postgres, rest, auth, storage, disk, dataKey, realtime, dateien] = await Promise.all([
     lauf('postgres', p.postgres), lauf('rest', p.rest), lauf('auth', p.auth),
     lauf('storage', p.storage), lauf('disk', p.disk), lauf('data_key', p.dataKey),
     lauf('realtime', p.realtime),
+    // Host-Dateien (O-191): jeder Lesefehler heißt „nicht messbar", nie „kaputt".
+    Promise.resolve().then(() => (p.dateien ? mitTimeout(p.dateien()) : null))
+      .catch((err) => { log(`[status] dateien: ${err?.message || err}`); return null; }),
   ]);
+  const jetztMs = jetzt().getTime();
+  const d = dateien || { verzeichnis: false };
 
   // postgres liefert nebenbei die Ledger-Höchstnummer und die Größen für die
   // Disk-Regel „frei > 2× (db + storage)" — nicht an den Client weiterreichen.
@@ -94,12 +109,12 @@ export async function statusSammeln(p, { log = console.warn, jetzt = () => new D
     auth,
     storage,
     disk: diskFeld,
-    backup: { status: 'unbekannt' },
-    data_key: dataKey,
+    backup: backupBewerten(d.sicherung, { verzeichnis: !!d.verzeichnis, jetztMs }),
+    data_key: dataKeyVergleichen(dataKey, d.sicherung, p.eigenerFingerprint),
     license: { status: 'nicht_implementiert' },
-    zeit: { status: 'unbekannt' },
+    zeit: zeitBewerten(d.zeit, jetztMs),
     realtime,
-    version: { status: 'info', version: p.version?.version || 'dev', digest: null, schema: buchMax },
+    version: { status: 'info', version: p.version?.version || 'dev', digest: digestAus(d.stand), schema: buchMax },
   };
   return { gesamt: gesamtStatus(felder), gemessen_am: jetzt().toISOString(), felder };
 }
@@ -126,13 +141,115 @@ export function diskBewerten(disk, belegtBytes) {
   return { status: 'ok', ...out };
 }
 
+const istEpoch = (n) => Number.isSafeInteger(n) && n > 0;
+const istV1 = (o) => !!o && typeof o === 'object' && !Array.isArray(o) && o.v === 1;
+
+/**
+ * backup (§6.5/§6.6). Verzeichnis fehlt → unbekannt (altes compose + neues Image, J7).
+ * Verzeichnis da, aber keine Sicherungsdatei → warnung `keine`: eine Box, die nie
+ * gesichert hat, darf `gesamt` nicht grün lassen (praxura-backup.timer ist bis zur
+ * Schlüsselbestätigung aus). Das Alter rechnet DIESER Prozess aus dem Epoch —
+ * nie einem Feld „alter" aus der Datei glauben (guvenlik B3).
+ */
+export function backupBewerten(roh, { verzeichnis = false, jetztMs = Date.now() } = {}) {
+  if (!verzeichnis) return { status: 'unbekannt' };
+  if (roh === undefined) return { status: 'warnung', code: 'keine' };
+  if (!istV1(roh) || !istEpoch(roh.letzte_ok_epoch)) return { status: 'unbekannt' };
+  const ms = roh.letzte_ok_epoch * 1000;
+  if (ms - jetztMs > ZUKUNFT_TOLERANZ_MS) return { status: 'unbekannt' };
+  const alter = Math.max(0, Math.round(((jetztMs - ms) / 3_600_000) * 10) / 10);
+  const ausserhalb = typeof roh.ziel_ausserhalb === 'boolean' ? roh.ziel_ausserhalb : null;
+  const out = {
+    letzte_ok: new Date(ms).toISOString(),
+    alter_stunden: alter,
+    anlass: SEBEP.includes(roh.sebep) ? roh.sebep : null,
+    ziel_ausserhalb: ausserhalb,
+  };
+  if (alter > BACKUP_MAX_STUNDEN) return { status: 'fehler', code: 'alt', ...out };
+  // Lokales Ziel ist nie grün (§6.6, O-154): Sicherung stirbt mit der Platte.
+  if (ausserhalb === false) return { status: 'warnung', code: 'lokal', ...out };
+  return { status: 'ok', ...out };
+}
+
+/**
+ * zeit: Container teilt die Host-Uhr, „Abweichung < 60 s" ist von hier nicht
+ * messbar — bewertet wird das NTPSynchronized-Flag des Hosts. null (kein
+ * timedatectl, z. B. WSL) und veraltete Datei (Timer tot) = unbekannt.
+ */
+export function zeitBewerten(roh, jetztMs = Date.now()) {
+  if (!istV1(roh) || !istEpoch(roh.gemessen_epoch)) return { status: 'unbekannt' };
+  const ms = roh.gemessen_epoch * 1000;
+  if (ms - jetztMs > ZUKUNFT_TOLERANZ_MS || jetztMs - ms > ZEIT_FRISCH_MS) return { status: 'unbekannt' };
+  if (roh.ntp_synchron === true) return { status: 'ok' };
+  if (roh.ntp_synchron === false) return { status: 'warnung', code: 'ntp' };
+  return { status: 'unbekannt' };
+}
+
+/**
+ * data_key.vergleich: laufender Schlüssel gegen den der Sicherung. Zwei Felder:
+ * `data_key_fingerprint` (letzte Sicherung) und `data_key_fingerprint_erst`
+ * (erste je gesehene) — backup.sh rechnet den Abdruck jede Nacht aus dem dann
+ * gültigen Schlüssel, ohne `_erst` würde eine Abweichung nach 24 h von selbst
+ * verschwinden (onprem 11.10.2026). null in der Künye (api war aus) = unbekannt,
+ * nicht Abweichung. Der Abdruck selbst geht NIE in die Antwort (S-60 f).
+ */
+export function dataKeyVergleichen(feld, sicherung, eigenerFingerprint) {
+  const basis = { ...feld };
+  let eigen = null;
+  try { eigen = eigenerFingerprint ? eigenerFingerprint() : null; } catch { eigen = null; }
+  const kandidaten = istV1(sicherung)
+    ? [sicherung.data_key_fingerprint, sicherung.data_key_fingerprint_erst].filter((x) => typeof x === 'string' && RE_FP.test(x))
+    : [];
+  if (!eigen || !RE_FP.test(eigen) || !kandidaten.length) return { ...basis, vergleich: 'unbekannt' };
+  if (kandidaten.every((x) => x === eigen)) return { ...basis, vergleich: 'gleich' };
+  return basis.status === 'fehler'
+    ? { ...basis, vergleich: 'abweichung' }
+    : { ...basis, status: 'fehler', code: 'schluessel_abweichung', vergleich: 'abweichung' };
+}
+
+export function digestAus(stand) {
+  return istV1(stand) && typeof stand.api_digest === 'string' && RE_DIGEST.test(stand.api_digest) ? stand.api_digest : null;
+}
+
+/**
+ * Liest die drei Host-Zustandsdateien. Feste Namen, kein Verzeichnis-Listing.
+ * O_NOFOLLOW + fstat auf dem Deskriptor (guvenlik B1): ein Symlink auf
+ * /proc/self/environ oder ein FIFO darf weder gelesen werden noch blockieren.
+ * Rückgabe je Datei: Objekt · null (da, aber unlesbar/kaputt) · undefined (fehlt).
+ */
+export async function statusDateienLesen(verzeichnis) {
+  try {
+    if (!(await fs.stat(verzeichnis)).isDirectory()) return { verzeichnis: false };
+  } catch { return { verzeichnis: false }; }
+  const eine = async (name) => {
+    let fh;
+    try {
+      fh = await fs.open(`${verzeichnis}/${name}`, FS.O_RDONLY | (FS.O_NOFOLLOW || 0) | (FS.O_NONBLOCK || 0));
+      const st = await fh.stat();
+      if (!st.isFile() || st.size > DATEI_MAX_BYTES) return null;
+      const buf = Buffer.alloc(DATEI_MAX_BYTES);
+      const { bytesRead } = await fh.read(buf, 0, DATEI_MAX_BYTES, 0);
+      const o = JSON.parse(buf.subarray(0, bytesRead).toString('utf8'));
+      return o && typeof o === 'object' && !Array.isArray(o) ? o : null;
+    } catch (err) {
+      return err?.code === 'ENOENT' ? undefined : null;
+    } finally {
+      await fh?.close().catch(() => {});
+    }
+  };
+  const [sicherung, stand, zeit] = await Promise.all([eine('sicherung.json'), eine('stand.json'), eine('zeit.json')]);
+  return { verzeichnis: true, sicherung, stand, zeit };
+}
+
 /**
  * Die echten Prüfungen. Nur Box (Route ist auf SaaS 404). Keine neue env:
  * DATABASE_URL, SUPABASE_URL (http://kong:8000), SUPABASE_ANON_KEY, DATA_ENCRYPTION_KEY.
  */
-export function standardPruefungen({ supabase, env = process.env, diskPfad = '/var/lib/praxura/ip', rundlaufTest = echterRundlauf }) {
+export function standardPruefungen({ supabase, env = process.env, diskPfad = '/var/lib/praxura/ip', statusPfad = '/var/lib/praxura/status', rundlaufTest = echterRundlauf, fingerprint = echterFingerprint }) {
   const kong = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   return {
+    dateien: () => statusDateienLesen(statusPfad),
+    eigenerFingerprint: fingerprint,
     postgres: env.DATABASE_URL ? async () => {
       const { default: pg } = await import('pg');
       // query_timeout schützt vor hängendem Socket (statement_timeout nur serverseitig);
