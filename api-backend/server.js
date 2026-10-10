@@ -468,7 +468,7 @@ app.get('/api/config', (req, res) => {
     // Box standardmaessig AUS (G4 — kein Telemetrie-Opt-out noetig, weil es
     // nie an ist). Setup-Wizard-Opt-in kommt in Faz 2.6, noch nicht gebaut —
     // bis dahin ist "aus" der sichere Default.
-    telemetryEnabled: !process.env.SUPABASE_PUBLIC_URL
+    telemetryEnabled: !istKutu()
   });
 });
 
