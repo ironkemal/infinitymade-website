@@ -43,6 +43,7 @@ import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { baueZuBelegZeile, zuDruckDaten, zuBelegVeraltet, baueGegenbeleg, ladeAktivenZuBeleg } from '../zuzahlung/zu-beleg.js';
 import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
+import { ladeErbrachteSitzungen } from '../zuzahlung/erbrachte-sitzungen.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import {
   istEinreichbar, einreichbarFilterAbrechnungStatus,
@@ -2711,21 +2712,23 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     // datum aufgeloest und der eine Einheitspreis auf alle Sitzungen angewandt
     // — bei einem Fensterwechsel waehrend einer laufenden Serie widersprach das
     // der DTA, die schon immer pro Sitzung auflöst (gkv-302, O-97).
-    const storedPos = rx.heilmittel_position || '';
     // Sortiert: `behandlungsende` unten braucht die chronologisch LETZTE
     // Sitzung, nicht nur die zuletzt aus der DB gelesene (fonksiyon-ustasi-Fund,
     // O-101, 14.09.2026).
-    const doneSessions = (rx.prescription_sessions || [])
-      .filter(s => s.status === 'done')
-      .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+    // Podologie: podologie_behandlungen × HPNR (canli-test T31, 10.10.2026) — siehe erbrachte-sitzungen.js.
+    let erbracht;
+    try { erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId }); }
+    catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
+    const doneSessions = erbracht.sitzungen;
+    const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
 
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
       const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
-        bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: storedPos,
+        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
+        code: s.code,
         datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(tenantSector),
+        abrechnungscode: abrechnungscodeFuer(preisBereich),
       });
       return { session: s, preis_eur, zuzahlung_eur, position_frei };
     });
@@ -2765,7 +2768,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei }) => ({
       session_id: s.id,
       datum: s.done_at,
-      position: storedPos,
+      position: s.code,
       bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
       brutto: preis_eur,
       zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
@@ -3077,18 +3080,20 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     // Gleicher zentraler Auflöser wie Zuzahlungsrechnung und §302-Weg, JE
     // Sitzung an ihrem eigenen Leistungsdatum (O-97, 13.09.2026 — siehe
     // Zuzahlungsrechnung oben für die volle Begründung).
-    const storedPos = rx.heilmittel_position || '';
     // Sortiert — siehe Zuzahlungsrechnung oben (O-101, fonksiyon-ustasi-Fund).
-    const doneSessions = (rx.prescription_sessions || [])
-      .filter(s => s.status === 'done')
-      .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+    // Podologie: podologie_behandlungen × HPNR (canli-test T31, 10.10.2026) — siehe erbrachte-sitzungen.js.
+    let erbracht;
+    try { erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId }); }
+    catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
+    const doneSessions = erbracht.sitzungen;
+    const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
       const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
-        bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: storedPos,
+        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
+        code: s.code,
         datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(tenantSector),
+        abrechnungscode: abrechnungscodeFuer(preisBereich),
       });
       return { session: s, preis_eur, zuzahlung_eur, position_frei };
     });
@@ -3164,7 +3169,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       });
       const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur, position_frei }) => ({
         datum: s.done_at,
-        position: storedPos,
+        position: s.code,
         bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
         zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
       }));

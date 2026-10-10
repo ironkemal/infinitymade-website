@@ -46,7 +46,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261006n';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010g';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
@@ -77,16 +77,16 @@ import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
 import { rechnungMenueEintrag, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010b';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261006b';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006r';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010g';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261010g';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010d';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010g';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010f';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010g';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261004m113';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -18201,9 +18201,9 @@ async function rechnungAusVerordnung(vordId) {
     verordnung: getPodVerordnung(vordId),
     services: ownerServices, katalogPodo: GKV_LEISTUNGSKATALOG?.podologie || [],
     switchPanel, openInvEditor, toast: showToast,
-    setzeEntwurf: ({ patientId, zeilen, verordnungId, behandlungIds, zahlertyp }) => {
-      const sel = document.getElementById('invPatientSelect');
-      if (sel) { sel.value = patientId; sel.dispatchEvent(new Event('change')); }
+    setzeEntwurf: async ({ patientId, zeilen, verordnungId, behandlungIds, zahlertyp }) => {
+      const sel = document.getElementById('invPatientSelect'); // Handler abwarten, er leert invLines am Ende (canli-test T29, 10.10.)
+      if (sel) { sel.value = patientId; await sel.onchange?.({ target: sel }); }
       invLines = zeilen; invVerordnungId = verordnungId;
       invBehandlungIds = behandlungIds; invPatientInsuranceType = zahlertyp;
       renderInvLines(); updateInvForInsuranceType(); calcInvTotals();

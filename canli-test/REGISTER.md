@@ -743,7 +743,35 @@ gezildi, "Absenden" bilerek BASILMADI (mail tetikler) → owner onayı sınanmad
 **Bağımlı:** `supabase-config.js` `IST_KUTU` · `module/hausbesuch-route.js` · `module/lead-suche.js` · `dashboard.js` ~19236 · `api-backend/lib/dagitim.js` · `api-backend/routes/mitarbeiter-zugang.js:192`.
 **Son test:** 2026-10-02 13:41–13:50 Berlin (`3684ef8`; canlı `dashboard.js?v=20261002k16` / `login.js?v=20261003o` = yerel, `git log origin/main..HEAD` boş; backend: 11:41:29Z ve 11:42:35Z `/api/*` n8n HTML'i döndü (Watchtower yenilemesi, 3684ef8 push 11:39Z), 11:43Z'den beri `/api/krankenkassen` JSON; çalışan image sürümü dışarıdan okunamıyor — `/health` Traefik arkasında değil; QA test2 `c4fbded4`, `-s=praxura-qa`) — **GEÇTİ.** (1) Login: bkz. Login kaydı ✓. (2) Dashboard: tenant „TEST-Podologie QA“, `module/hausbesuch-route.js?v=20261002` 200, konsol 0 hata / 2 uyarı (gürültü 4, 6) ✓. (3) `anfragen`: `#bookingRequestLinkInput` = `https://app.praxura.de/booking-request.html?business=c4fbded4…` (tam UUID biçimi) ✓. (4) `IST_KUTU=false`; Neuer Termin modalı → Hausbesuch işaretlendi → `#bkHbBerechnenBtn` „Entfernung berechnen“ görünür 438×30, kutu ipucu metni yok; modal kaydedilmeden kapatıldı ✓. (5) B2B: `#b2bMainContent .ai-chat-card` „KI Mail-Assistent“ ve `.apify-bar` DOM'da ✓ — görünür değil çünkü QA'da B2B kurulumu yapılmamış (`checkB2bSetup`, `dashboard.js:11094` `#b2bMainContent.hidden = !setupDone`; K2'den bağımsız, eski davranış). (6) Mitarbeiter YARATILMADI (Auth kullanıcısı kalıcı — silme yerine ban modeli, QA'da iz bırakırdı); aynı `appBaseUrl()` yan etkisiz ölçüldü: `GET /api/calendar/google-callback?code=x&state=invalid` → 302 `https://app.praxura.de/dashboard.html?error=oauth_state_invalid` ✓ (K2.8 öncesi bu satır sabit aynı adresti — çıktı birebir, değişmezlik kanıtı; image'ın 56cb6a7'yi içerdiğinin kanıtı DEĞİL). QA'ya yazma yok.
 
+### Rezeptkarte „Drucken ▾" + Rechnung aus Verordnung (T29) — nav etiketi: Patientenakte → Verordnungen (`#pdRezContent`) · `rechnungen`
+
+**Beklenen:** GKV (`rezeptart` kassen/NULL): menüde yalnız Zuzahlungsrechnung · RZG-Quittung · Rezeptvorderseite, fatura öğesi yok. Privat/Selbstzahler/BG: ek tek öğe „Rechnung (…)" → mevcut (iptal edilmemiş) fatura editörde açılır / yoksa podoloji ön doldurma (`rechnungAusVerordnung`) / yoksa boş editör + hasta seçili + toast. Eski RE linki `/billing/prescription/<id>/rechnung?type=rechnung_privat|selbstzahler|bg|sonder` → 410 metni. BG: Träger/Anschrift/Unfalltag eksikse ön doldurma toast ile durur, `saveInvoice` da reddeder (`bgSperreBeimSpeichern`); tamsa kaydedilir, `empfaenger_snapshot` UV-Träger'ı taşır.
+**Bağımlı ekranlar:** `rechnungen` (editör, `invPatientSelect.onchange`), `podologie-billing` (`_podState` önbelleği), Termin-Aktionen Geldzeile (aynı `rechnungAusVerordnung`)
+**Son test:** 2026-10-10 ~11:40–12:10 Berlin (`c0c0231b`, canlı `dashboard.js?v=20261010f` = yerel; QA test2, `-s=praxura-qa`, gerçek yazma) — **KALDI.** ⚠ Podoloji tenant'ında `#pdRezContent` `display:none !important` (`module/akte-podo.js:98`) → menü ekranda yok, öğeler DOM'dan okunup programatik tıklandı. GEÇTİ: GKV menüsü (8 reçete), Privat/BG öğesi, 410 (4 tür, token'lı/token'sız), vorhandene Rechnung → editör, BG eksik → toast, BG tam → INV-2026-0002 (bg, draft), `bgSperreBeimSpeichern` canlı veriyle (eksik/Privat/ohne rx/zuzahlung → ret). KALDI: podoloji ön doldurma satırları ~1 sn sonra siliniyor (devir P1). Eski BG kayıtları QA'da yok → denenemedi. Uygulama konsolu temiz.
+
+### Ausfallrechnung — Snapshot + Festschreibung (T30, 0076/0077) — nav etiketi: Termin-Aktionen „Ausfallrechnung erstellen" · `mahnwesen` (Ausfallrechnungen listesi)
+
+**Beklenen:** Ausfall açık + Termin no_show/cancelled → „Ausfallrechnung erstellen" → AF-n, iki snapshot dolu (IBAN yalnız Aussteller'da, hasta tarafında yok), oluşturulunca yazdırma penceresi açılır. Praxis adresi sonradan değişse `/billing/ausfall/<id>/print` eski adresi basar. „Bezahlt" → zahlart diyaloğu → `belegliste` type ausfall. Ausgestellt AF'de `amount_eur` / status→offen PATCH → 23514 (check_violation); `notes` serbest.
+**Bağımlı ekranlar:** `settings` (Ausfallgebühr, Praxisadresse, Rechnungsdaten), `belegliste`, `statistik`
+**Son test:** 2026-10-10 ~12:00–12:08 Berlin (QA test2) — **GEÇTİ** (snapshot'sız eski AF QA'da yok → o adım denenemedi). AF-0001 25 €; adres değişince baskı eski adres; PATCH amount → 400/23514 „ist ausgestellt …", status→offen → 23514. Not: oluşturma `window.print()` tetikliyor — headed Playwright'ta yazdırma diyaloğu oturumu kilitliyor (OS düzeyinde Esc gerekti). „Bezahlt" diyaloğunun başlığı „Zuzahlung kassieren" (anomali).
+
+### Zuzahlungsbeleg ZU (T31, 0078) — nav etiketi: Rezeptkarte „Drucken ▾" → Zuzahlungsrechnung · Termin-Aktionen Geldzeile → Beleg
+
+**Beklenen:** Dokümante seanslı GKV reçetesinde ilk açılış → `ZU-JJJJ-nnnn` + bugünkü tarih, tekrar açılış aynı numara/tarih; seanssız → „Vorschau — noch nicht ausgestellt", DB'de satır yok; yeni seans → negatif Gegenbeleg + eski `cancelled` + yeni numara; kassieren → ZU `paid`, belegliste tek kayıt; Rechnungen'de „Zuzahlung" etiketi, „Zahlung" düğmesi yok; editörde ZU kaydedilemez.
+**Bağımlı ekranlar:** `rechnungen`, `belegliste`, Termin-Aktionen Geldzeile, §302 (VKZ-03)
+**Son test:** 2026-10-10 ~12:08 Berlin (QA test2) — **KALDI.** Podoloji reçetelerinde route yalnız `prescription_sessions` okuyor, podoloji `podologie_behandlungen` kullanıyor → Behandlung dokümante (50d1a8da) ve 15,92 € zuzahlung'lu gönderilmiş (796aae21) reçetede belge „Vorschau", pozisyonsuz, „Zu zahlen 0,00 €"; `invoices` ZU satırı 0 (devir P1). Numara/Gegenbeleg/kassieren/liste adımları podoloji tenant'ında yürütülemedi. Ön koşul: Steuernummer/USt-Id boşsa route 400 „Angaben unvollständig".
+
+### Einstellungen → Rechnungsdaten (Bank/IBAN) — owner (T24 kısa) — nav etiketi: `settings`
+
+**Beklenen:** Owner kendi Bank/IBAN/BIC/Steuernummer alanlarını görür, „Rechnungsdaten speichern" kalıcı yazar (0072 sonrası authenticated hakları değişmedi).
+**Bağımlı ekranlar:** Rechnungs-/ZU-/Ausfall-Druck (`bankverbindung`, Pflichtangaben)
+**Son test:** 2026-10-10 ~11:57 Berlin (QA test2) — **GEÇTİ.** Test-IBAN + Bank kaydedildi, F5 sonrası alanlarda duruyor, sonra boşaltıldı (DB null). Çalışan girişi bu turda test edilmedi.
+
 ## Bildirilen anomaliler
+- 2026-10-10 · canli-test · `mahnwesen` Ausfallrechnungen → „Bezahlt": diyalog başlığı „Zuzahlung kassieren" (`openKassierenDialog`, `dashboard.js:16757`, metin `kass_title` `dashboard.js:319`) — Ausfallrechnung için yanlış etiket; „Quittung drucken" varsayılan işaretli.
+- 2026-10-10 · canli-test · Rezeptkarte „Drucken ▾" (Privat/BG reçete): Zuzahlungsrechnung + RZG-Quittung öğeleri de duruyor (`dashboard.js:7636-7637` koşulsuz) — Privat/BG'de Zuzahlung mantıklı mı? → `podoloji`/`gkv-302`'ye sorulacak. Etiket „Rechnung (Privat (PKV/Beihilfe))" çift parantez.
+- 2026-10-10 · canli-test · Behandlung'u olmayan Privat/BG reçetede „Rechnung (…)" → toast „Alle Behandlungen dieser Verordnung sind bereits abgerechnet." (hiç Behandlung yokken yanıltıcı, `module/rechnung-bruecke.js:274`); `podologie-billing` önbelleği soğuksa aynı tık boş editör + farklı toast veriyor (`getPodVerordnung` → `_podState`).
+- 2026-10-10 · canli-test · Podoloji Patientenakte'de „Drucken ▾" menüsü hiç görünmüyor (`#pdRezContent` gizli, `module/akte-podo.js:98`) — podolog „Rechnung (Privat/BG)"a Akte'den nereden ulaşmalı? → `podoloji`'ye sorulacak.
 
 Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta verisi yok)`
 
@@ -979,6 +1007,28 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 ## builder'a devredilenler
 
 **Açık devir: 3** (2026-10-01 ~12:05 Berlin, `60c5ecd` regresyonu: [P2] Fahrt bearbeiten saniye kaybı KAPANDI. Önceki: `0641c1a` Fahrtenbuch-Export turu: GEÇTİ, yeni [P2] Fahrt bearbeiten saniye kaybı → hayalet protokol satırları — aşağıda. Önceki: 2026-10-01 ~11:30 Berlin, `96afd7d`+`e510310` turu: [P1] Permissions-Policy geolocation SaaS'ta KAPANDI (on-prem `Caddyfile:44` kalıntısı not edildi); Empfänger-Prüfung GEÇTİ; yeni [P2] imzada yanlış dosya → ham forge İngilizce metni — aşağıda; açık: [P1] Rechnungsdatum/UNB UTC, [P2] Demo-Modus. Önceki: §302 Erstellen gerçek testi 2026-10-01 01:37 Berlin: [P2] übersteuerbar-değil alt metni KAPANDI (`4979370`); yeni [P1] Rechnungsdatum/UNB UTC — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (`7fbf1e7` canlıya inmedi, regresyon yapılamadı). Önceki: S7 P1 regresyonu 2026-10-01 00:48–00:55 Berlin, `3069dcc`: [P1] S:01013 ön-izleme KAPANDI; yeni [P2] übersteuerbar-değil alt metni sabit — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus. Önceki: S7 kapanış turu 2026-10-01 00:14–00:40 Berlin, `e38bcbe`: [P1] Ausfall/„Nicht erschienen“ KAPANDI; yeni [P1] §302 ön-izlemesi S:01013'ü göstermiyor — aşağıda; açık kalanlar: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (bu turda da sidebar'da görünür).)
+
+### [P1] Podologie: Zuzahlungsrechnung/ZU-Beleg hiç düzenlenmiyor, „Zu zahlen 0,00 €" — route yalnız `prescription_sessions` okuyor (2026-10-10, T31)
+
+**Nerede:** `GET /api/billing/prescription/:id/zuzahlungsrechnung` (Rezeptkarte Drucken → Zuzahlungsrechnung, Termin-Aktionen Geldzeile → Beleg)
+**Yeniden üretme:** QA test2, Steuernummer dolu → Behandlung'u dokümante podoloji reçetesi (50d1a8da) veya `zuzahlung_eur`=15,92 gönderilmiş reçete (796aae21) için belgeyi aç
+→ Beklenen: `ZU-2026-nnnn`, pozisyonlar, Zuzahlung tutarı; `invoices`'a ZU satırı
+→ Gerçekleşen: HTTP 200 „Vorschau — noch nicht ausgestellt", pozisyon yok, „Zu zahlen 0,00 €"; `invoices?invoice_type=eq.zuzahlung` → []
+**Kanıt:** QA'da `prescription_sessions` 0 satır; podoloji seansları `podologie_behandlungen`'da (ör. e046d4e6)
+**Şüpheli:** `api-backend/billing/api/abrechnung.routes.js:2718-2720` (`doneSessions` = `rx.prescription_sessions` done) + `:2795` (`doneSessions.length === 0` → Vorschau)
+**Katman:** 4 Belege/Geld → K4
+**Etki:** Podolog hastaya doğru Zuzahlungsbeleg veremiyor; 0078 ZU zinciri podolojide hiç çalışmıyor
+
+### [P1] Rechnung aus Verordnung: ön doldurulan satırlar ~1 sn sonra siliniyor (2026-10-10, T29)
+
+**Nerede:** `rechnungen` editörü; giriş: Rezeptkarte „Rechnung (BG/Privat)" veya Termin-Aktionen Geldzeile (ikisi de `rechnungAusVerordnung`)
+**Yeniden üretme:** BG reçete (b06494c8, 1 Behandlung) → „Rechnung (BG / Unfallkasse)"
+→ Beklenen: 3 satır, Verordnung işaretli, 65,21 €
+→ Gerçekleşen: `#invLineBody` +270 ms'de 3 satır, +1375 ms'de 0 satır; başlık „BG-RECHNUNG", 0,00 €, Verordnung işaretsiz (elle işaretleyince düzeliyor)
+**Kanıt:** MutationObserver ölçümü; konsol temiz
+**Şüpheli:** `dashboard.js:13765-13766` — `invPatientSelect.onchange` (async) sonunda `invLines = []; renderInvLines()`; `setzeEntwurf` (`dashboard.js:18204-18210`) aynı change'i tetikleyip satırları önce yazıyor
+**Katman:** 4 Belege/Geld → K4
+**Etki:** Privat/BG faturası ön doldurmayla oluşturulamıyor; `invVerordnungId`/`invBehandlungIds` set kalırken satır boş
 
 ### ~~[P2] „Fahrt bearbeiten" → Speichern saniyeleri siliyor — Änderungsprotokoll'e kullanıcının dokunmadığı „Beginn"/„Ende" satırları düşüyor (eski değer = yeni değer) (2026-10-01, `0641c1a` turu, eski kök)~~ — KAPANDI (`60c5ecd`, canlı `dashboard.js?v=20261003i` + `module/datum.js?v=20261001a` 200, regresyon 2026-10-01 ~12:00–12:05 Berlin, QA test2: `f726ab5e` yalnız End-KM 30014→30015 → reload sonrası `22:36:19.548Z`/`22:37:45.899Z` korunmuş, protokolde yalnız „Km-Stand Ende" + „gefahrene km"; `5e917904` Fahrtende elle 21:55→21:56 → DB `19:56:00Z`, başlangıç `19:54:10.633Z` korunmuş, protokolde tek „Ende" satırı; konsol 0 hata. `2ec11d8f`'nin 11:54 hayalet satırları append-only protokolde kalıcı — beklenen, test verisi)
 

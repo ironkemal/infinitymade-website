@@ -282,7 +282,7 @@ export async function starteRechnungAusVerordnung(ctx) {
 
   switchPanel('rechnungen');
   await openInvEditor(null);
-  setzeEntwurf({
+  await setzeEntwurf({
     patientId: verordnung.lead_id || verordnung.patient_id || '',
     zeilen,
     verordnungId: verordnung.id,
