@@ -8,7 +8,9 @@
 // Anmeldung und Datenbank, der Fehler sass aber in der Liste selbst.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TERMIN_SELECT } from './termin-laden.js';
+import { TERMIN_SELECT, RX_FELDER, RX_JOIN } from './termin-laden.js';
+import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 /** Die Feldnamen der obersten Ebene — verschachtelte Beziehungen ausgeklammert. */
 function oberflaeche(select) {
@@ -45,4 +47,34 @@ test('no_show_session_links wird mitgeladen — sonst verschwindet die Rezeptinf
 
 test('verordnung_id wird mitgeladen — sonst findet die Podologie-Verordnung im Termin-Aktionen-Panel keinen Anschluss', () => {
   assert.ok(oberflaeche(TERMIN_SELECT).includes('verordnung_id'));
+});
+
+// Die Verordnungsspalten am Termin standen an fuenf Stellen von Hand; `rezeptart`
+// fehlte in allen (canli-test P1, 10.10.2026). Seitdem gibt es RX_FELDER/RX_JOIN.
+test('RX_FELDER traegt die Spalten, an denen Geldzeile und Rezeptinfo haengen', () => {
+  const felder = RX_FELDER.replace(/\w+\([^()]*\)/g, '').split(',').filter(Boolean);
+  for (const f of ['rezeptart', 'gueltig_bis', 'zuzahlung_befreit', 'patient_id', 'arzt_id']) {
+    assert.ok(felder.includes(f), `${f} fehlt in RX_FELDER`);
+  }
+  assert.ok(TERMIN_SELECT.includes(RX_JOIN));
+});
+
+test('RX_FELDER nennt nur Spalten, die es in prescriptions gibt', () => {
+  const schema = readFileSync(fileURLToPath(new URL('../db/SCHEMA.sql', import.meta.url)), 'utf8');
+  const start = schema.indexOf('CREATE TABLE public.prescriptions (');
+  assert.ok(start >= 0, 'prescriptions nicht im Schema-Auszug gefunden');
+  const block = schema.slice(start, schema.indexOf(');', start));
+  const felder = RX_FELDER.replace(/\w+\([^()]*\)/g, '').split(',').filter(Boolean);
+  for (const f of felder) assert.match(block, new RegExp(`\\n\\s+"?${f}"? `), `${f} steht nicht im Schema`);
+});
+
+test('der Termin-Join zur Verordnung wird nirgends mehr von Hand geschrieben', () => {
+  const wurzel = fileURLToPath(new URL('..', import.meta.url));
+  const dateien = ['dashboard.js', ...readdirSync(wurzel + 'module')
+    .filter(n => n.endsWith('.js') && !n.endsWith('.test.js') && n !== 'termin-laden.js')
+    .map(n => 'module/' + n)];
+  for (const d of dateien) {
+    const text = readFileSync(wurzel + d, 'utf8');
+    assert.ok(!text.includes('prescription_sessions(id,session_number,prescriptions('), `${d}: Join von Hand — RX_JOIN benutzen`);
+  }
 });

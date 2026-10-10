@@ -34,6 +34,7 @@
 // Beide Werte gehören zusammen; wird einer geändert, muss der andere mit.
 export const BK_PANEL_OFFSET = '456px';
 
+import { RX_FELDER, RX_JOIN } from './termin-laden.js?v=20261010za';
 import { fuelleMuster13 } from './verordnung-maske.js?v=20261010z';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261004m113';
@@ -117,7 +118,7 @@ export function verdrahteAktionsPatientensuche(deps) {
       // gebuchter Termin sich als „nächster Termin" des Patienten. Dieselbe
       // Statusliste wie beim Terminzettel (dashboard.js).
       const { data: naechster, error } = await supabase.from('bookings')
-        .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+        .select(`*, services(title,color,code), ${RX_JOIN}`)
         .eq('lead_id', lead.id)
         .gte('start_time', new Date(Date.now() - 3600000).toISOString())
         .in('status', ['confirmed', 'pending'])
@@ -201,17 +202,7 @@ export function setzePatientenKarte({ lead, booking, oeffneAkte }) {
 
 // ── Verordnungen: blättern und übernehmen ──────────────────────────────────
 
-// Dieselben Felder, die der Termin-Join mitbringt — sonst fehlten der
-// Rezeptinfo nach dem Blättern Angaben, die vorher da waren.
-const RX_FELDER = 'id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
-  + 'anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,'
-  + 'zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
-  + 'abrechnung_status,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'
-  // Zusätzlich für „übernehmen": alles, was in einer Folgeverordnung wieder
-  // gleich lautet und sonst abgetippt werden müsste.
-  + 'leitsymptomatik,diagnose_freitext,icd10_2,ergaenzendes_heilmittel,ergaenzend_einheiten,'
-  + 'vorrangig_einheiten,therapie_bereich,hausbesuch,doctor_lanr,doctor_bsnr,heilmittel_items,'
-  + 'heilmittel_typ_blanko,bericht_angefordert,pat_leitsymptomatik';
+// Die Spaltenliste steht in termin-laden.js (RX_FELDER) — dieselbe wie im Termin-Join.
 
 /**
  * Bestimmt, welche Verordnung der Seitenbereich zeigt — und welche es sonst

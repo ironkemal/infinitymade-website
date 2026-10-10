@@ -47,7 +47,27 @@
  * Rückfahrkarte (`no_show_session_links`) trägt die `prescription_id` noch,
  * wenn die Live-Zeile schon weg ist — Fallback in `openBookingActionModal()`.
  */
-export const TERMIN_SELECT = 'id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,rezeptart,payment_method,no_show_session_links,verordnung_id,services(title,code,color,is_internal),prescription_sessions(id,session_number,prescriptions(id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))';
+/**
+ * Die Spalten einer Verordnung, wie sie am Termin gebraucht werden — EINE Liste.
+ *
+ * Bis 10.10.2026 stand sie an fuenf Stellen von Hand (zweimal dashboard.js,
+ * zweimal termin-aktionen.js, einmal hier). `rezeptart` fehlte in allen
+ * Termin-Joins, und die Geldzeile bot bei Privat/BG eine GKV-Zuzahlung an
+ * (canli-test P1, 4eb00e47). Der zweite Teil ist fuer das Uebernehmen in eine
+ * Folgeverordnung: alles, was dort wieder gleich lautet.
+ */
+export const RX_FELDER = 'id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
+  + 'anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,'
+  + 'zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
+  + 'abrechnung_status,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'
+  + 'leitsymptomatik,diagnose_freitext,icd10_2,ergaenzendes_heilmittel,ergaenzend_einheiten,'
+  + 'vorrangig_einheiten,therapie_bereich,hausbesuch,doctor_lanr,doctor_bsnr,heilmittel_items,'
+  + 'heilmittel_typ_blanko,bericht_angefordert,pat_leitsymptomatik';
+
+/** Der Join vom Termin ueber die Sitzung zur Verordnung — in jede Terminabfrage einzusetzen. */
+export const RX_JOIN = `prescription_sessions(id,session_number,prescriptions(${RX_FELDER}))`;
+
+export const TERMIN_SELECT = 'id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,rezeptart,payment_method,no_show_session_links,verordnung_id,services(title,code,color,is_internal),' + RX_JOIN;
 
 /**
  * Lädt den Termin vollständig nach.
