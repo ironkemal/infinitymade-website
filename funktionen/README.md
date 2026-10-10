@@ -116,6 +116,29 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 10.10.2026 · Verordnungsspalten am Termin aus einer Konstante — `RX_FELDER` / `RX_JOIN` (011deb4a)
+- **Niye:** termine bağlı Verordnung kolonları beş yerde elle yazılıydı; `rezeptart` beşinde de eksikti ve
+  Geldzeile Privat/BG reçetede GKV-Zuzahlung teklif ediyordu (canli-test P1, 4eb00e47). Kemal 10.10.2026 kararı:
+  tek sabit, **yalnız Verordnung kolonları** — termin kolonlarına dokunulmaz.
+- `module/termin-laden.js` `RX_FELDER` (39 kolon, birleşim kümesi; önce `termin-aktionen.js` içinde yerel `const`
+  idi, oradan taşındı ve silindi) + `RX_JOIN` (`prescription_sessions(id,session_number,prescriptions(…))`).
+  `TERMIN_SELECT` `RX_JOIN`'i gömer. Kullanım: dashboard.js `loadScheduleBookings` (takvim gün görünümü) ·
+  dashboard.js `on('verordnungen:changed')` (yan panel yenileme) · `verdrahteAktionsPatientensuche` (panel hasta
+  araması) · `ladeTerminVollstaendig` (termin tam yükleme) · `waehleVerordnungFuerPanel` (Verordnung sayfa
+  çevirme / übernehmen). **Yeni bir termin→Verordnung okuması `RX_JOIN`'i import eder, dizgi yazmaz.**
+- Niye birleşim, ortak küme değil: ortak küme `gueltig_bis`/`hinweise`'yi panelden düşürür ve „übernehmen"i
+  bozardı. Ölçüldü (10.10.2026): 39 kolonun hepsi `prescriptions`'ta var, tabloda kolon bazlı GRANT yok, anon
+  sayfaların hiçbiri bu tabloyu okumuyor. Bilinen bedel: gün görünümü termin başına 16 kolon fazla çeker
+  (`heilmittel_items` jsonb dahil).
+- Davranış farkı: panelde `gueltig_bis` ve `hinweise` artık ilk açılışta da dolu (önce yalnız sayfa çevirince).
+- Koruma: `module/termin-laden.test.js` — içerik kilidi · kolonlar `db/SCHEMA.sql`'de var mı · elle yazılmış
+  join yasak.
+- Bilerek dışarıda (dar join, sabite bağlanmaz): dashboard.js Fahrtenbuch ve fatura listesi join'leri (2–5 kolon).
+- **Açık aday — karar verilmedi:** `module/termin-verordnung.js` `zeigeVerordnungenFuerTermin` (termin maskesindeki
+  Verordnung kartları) kendi 11 kolonluk listesini elle yazıyor ve **`rezeptart` yok**. Şekli farklı (doğrudan
+  `prescriptions`, ters yönde `prescription_sessions`), bu yüzden bu turun kapsamına alınmadı. Kırık olduğu
+  gösterilmedi; P1 ile aynı sınıftan. Kartlar ödeme türüne göre bir şey gösterecekse önce buraya bakılır.
+
 ### 10.10.2026 · Akte: Drucken-Menü an der Verordnungskarte, Verordnung-Häkchen im vorbefüllten Entwurf (cd4219f7)
 - `module/rechnung-zur-verordnung.js` `druckenMenueHtml` + `verdrahteDruckenMenue` — „Drucken ▾" menüsünün **tek
   kaynağı** (HTML + aç/kapa/dış tıklama/öğe tıklaması). Önce `loadPatientDetailRezepte` içinde inline idi; o liste
