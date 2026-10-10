@@ -315,3 +315,46 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
     try { await client.end(); } catch { /* egal */ }
   }
 }
+
+// ── O-194: Startrennen Box-Neustart ─────────────────────────────────────────
+// Nach einem Host-Neustart startet Docker die Container OHNE `depends_on`
+// (das gilt nur für `compose up`). Kommt `api` vor Postgres hoch, scheitert
+// der einzige Verbindungsversuch, der Aufrufer setzt den Wartungsmodus — und
+// der wird nie zurückgesetzt: gesundes Schema, Box dauerhaft in Wartung, bis
+// jemand `docker compose restart api` tippt (K10: wir kommen nicht rein).
+//
+// Wiederholt wird NUR, wenn die DB nachweislich gar nicht erreicht wurde
+// (Netz-/Startcode) und noch keine Migration lief. Jeder andere Fehler
+// (Prüfsumme, SQL, Downgrade, Lock) geht sofort zurück — den heilt Warten nicht.
+const VERBINDUNG_NOCH_NICHT_DA = new Set([
+  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH',
+  '57P03', // cannot_connect_now — Postgres fährt noch hoch
+]);
+// Summe 59 s — bleibt unter der start_period (120 s) des Box-Healthchecks.
+export const VERBINDUNG_PAUSEN_MS = Object.freeze([2000, 4000, 8000, 15000, 15000, 15000]);
+
+export function istStartrennen(ergebnis) {
+  return ergebnis?.status === 'fehler'
+    && ergebnis.fehler?.art === 'verbindung'
+    && VERBINDUNG_NOCH_NICHT_DA.has(ergebnis.fehler.code)
+    && (ergebnis.angewandt?.length ?? 0) === 0;
+}
+
+/**
+ * runMigrations mit Geduld für das Startrennen. Gleiche Rückgabe wie runMigrations.
+ * @param {object}   opt                wie runMigrations
+ * @param {object}   [o]
+ * @param {number[]} [o.pausenMs]       Wartezeiten zwischen den Versuchen
+ * @param {function} [o.lauf]           (Test) Ersatz für runMigrations
+ * @param {function} [o.warte]          (Test) Ersatz für das Warten
+ */
+export async function runMigrationsMitGeduld(opt, { pausenMs = VERBINDUNG_PAUSEN_MS, lauf = runMigrations, warte = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  const log = opt?.log || console.log;
+  let ergebnis = await lauf(opt);
+  for (let i = 0; i < pausenMs.length && istStartrennen(ergebnis); i++) {
+    log(`[migrate] Datenbank noch nicht erreichbar (${ergebnis.fehler.code}) — Versuch ${i + 2}/${pausenMs.length + 1} in ${pausenMs[i] / 1000} s.`);
+    await warte(pausenMs[i]);
+    ergebnis = await lauf(opt);
+  }
+  return ergebnis;
+}

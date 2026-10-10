@@ -10,7 +10,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { migrationenLesen, pruefeVersionen, planErstellen, runMigrations } from './migrate.js';
+import { migrationenLesen, pruefeVersionen, planErstellen, runMigrations, runMigrationsMitGeduld, istStartrennen } from './migrate.js';
 
 function verzeichnisMit(dateien) {
   const dir = mkdtempSync(join(tmpdir(), 'praxura-migrate-'));
@@ -169,4 +169,58 @@ test('runMigrations: leeres Verzeichnis ist ok, kein Fehler', async () => {
     const r = await runMigrations({ databaseUrl: 'postgres://x/y', verzeichnis: dir, log: () => {} });
     assert.equal(r.status, 'ok');
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ── O-194: Startrennen nach Host-Neustart ───────────────────────────────────
+const verbindung = (code, angewandt = []) => ({ status: 'fehler', angewandt, fehler: { art: 'verbindung', code, text: 'x' } });
+
+test('istStartrennen: nur Netz-/Startcodes ohne gelaufene Migration', () => {
+  assert.equal(istStartrennen(verbindung('ECONNREFUSED')), true);
+  assert.equal(istStartrennen(verbindung('57P03')), true);
+  assert.equal(istStartrennen(verbindung('28P01')), false); // falsches Passwort heilt nicht durch Warten
+  assert.equal(istStartrennen(verbindung(null)), false);
+  assert.equal(istStartrennen(verbindung('ECONNRESET', [{ version: '0001' }])), false);
+  assert.equal(istStartrennen({ status: 'fehler', angewandt: [], fehler: { art: 'pruefsumme' } }), false);
+  assert.equal(istStartrennen({ status: 'ok', angewandt: [] }), false);
+  assert.equal(istStartrennen({ status: 'uebersprungen', angewandt: [] }), false);
+});
+
+test('MitGeduld: DB kommt beim dritten Versuch → ok, zwei Pausen', async () => {
+  const antworten = [verbindung('ECONNREFUSED'), verbindung('57P03'), { status: 'ok', angewandt: [] }];
+  const pausen = [];
+  let aufrufe = 0;
+  const r = await runMigrationsMitGeduld({ log: () => {} }, {
+    pausenMs: [10, 20, 30], lauf: async () => antworten[aufrufe++], warte: async (ms) => { pausen.push(ms); },
+  });
+  assert.equal(r.status, 'ok');
+  assert.equal(aufrufe, 3);
+  assert.deepEqual(pausen, [10, 20]);
+});
+
+test('MitGeduld: DB bleibt weg → nach allen Versuchen der Fehler, kein Wurf', async () => {
+  let aufrufe = 0;
+  const r = await runMigrationsMitGeduld({ log: () => {} }, {
+    pausenMs: [1, 1], lauf: async () => { aufrufe++; return verbindung('ECONNREFUSED'); }, warte: async () => {},
+  });
+  assert.equal(r.fehler.art, 'verbindung');
+  assert.equal(aufrufe, 3);
+});
+
+test('MitGeduld: echter Fehler und SaaS-Pfad werden NICHT wiederholt', async () => {
+  for (const erst of [
+    { status: 'fehler', angewandt: [], fehler: { art: 'pruefsumme' } },
+    verbindung('28P01'),
+    { status: 'uebersprungen', angewandt: [] },
+    { status: 'ok', angewandt: [] },
+  ]) {
+    let aufrufe = 0;
+    const r = await runMigrationsMitGeduld({ log: () => {} }, { pausenMs: [1, 1], lauf: async () => { aufrufe++; return erst; }, warte: async () => { throw new Error('darf nicht warten'); } });
+    assert.equal(aufrufe, 1);
+    assert.equal(r, erst);
+  }
+});
+
+test('MitGeduld: Pausen bleiben unter der start_period des Box-Healthchecks (120 s)', async () => {
+  const { VERBINDUNG_PAUSEN_MS } = await import('./migrate.js');
+  assert.ok(VERBINDUNG_PAUSEN_MS.reduce((a, b) => a + b, 0) <= 90_000);
 });

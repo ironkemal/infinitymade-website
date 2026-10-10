@@ -38,7 +38,7 @@ import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest, safeAiError } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
-import { runMigrations, migrationenLesen } from './db/migrate.js';
+import { runMigrationsMitGeduld, migrationenLesen } from './db/migrate.js';
 import { schemaZaehlerSetzen, schemaZaehlerLesen } from './setup/selbstpruefung.js';
 import { createStatusRouter } from './routes/status.js';
 import { standardPruefungen } from './lib/status.js';
@@ -4580,7 +4580,9 @@ const PORT = process.env.PORT || 3000;
 // der Prozess bleibt oben, beantwortet /health und die Fehlerseite, und liefert
 // sonst 503. So bleibt die Box diagnostizierbar.
 {
-  const ergebnis = await runMigrations({
+  // MitGeduld (O-194): nach einem Host-Neustart kann Postgres ein paar Sekunden
+  // später kommen als wir — ohne Wiederholung bliebe die Box dauerhaft in Wartung.
+  const ergebnis = await runMigrationsMitGeduld({
     databaseUrl: process.env.DATABASE_URL,
     verzeichnis: pfadJoin(dirname(fileURLToPath(import.meta.url)), 'db', 'migrations'),
     appVersion: process.env.IMAGE_VERSION || null

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
  "dateien": 433,
- "funktionen": 3477,
+ "funktionen": 3479,
  "module": [
   "abrechnung",
   "anamnese",
@@ -7017,6 +7017,7 @@
     "init",
     "isEnterprise",
     "istBehandlungseinheit",
+    "istStartrennen",
     "kassenToken",
     "kontoLoeschenIntern",
     "kostentraegerEndzieleAufloesen",
@@ -7629,6 +7630,7 @@
     "init",
     "isEnterprise",
     "istBehandlungseinheit",
+    "istStartrennen",
     "kassenToken",
     "kontoLoeschenIntern",
     "kostentraegerEndzieleAufloesen",
@@ -26378,7 +26380,6 @@
     "zaehlerPruefen"
    ],
    "calledBy": [
-    "(datei) api-backend/server.js",
     "(datei) api-backend/setup/selbstpruefung.js"
    ],
    "modules": [],
@@ -26406,6 +26407,56 @@
    ],
    "calledBy": [
     "runMigrations"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istStartrennen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/db/migrate.js",
+   "start": 336,
+   "end": 341,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "has"
+   ],
+   "calledBy": [
+    "runMigrationsMitGeduld"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "runMigrationsMitGeduld",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/db/migrate.js",
+   "start": 351,
+   "end": 360,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istStartrennen",
+    "lauf",
+    "log"
+   ],
+   "calledBy": [
+    "(datei) api-backend/server.js"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -29472,6 +29523,7 @@
     "_verdrahteTermine",
     "leitsymptomatikAusDropdownWaehlen",
     "mountVerordnungPodo",
+    "runMigrationsMitGeduld",
     "statusSammeln"
    ],
    "modules": [
@@ -34537,6 +34589,7 @@
     "renderCalEmpList",
     "renderSidebar",
     "runMigrations",
+    "runMigrationsMitGeduld",
     "schliesse",
     "selectDate",
     "showToast",
@@ -157517,6 +157570,7 @@
     "_verdrahteTermine",
     "leitsymptomatikAusDropdownWaehlen",
     "mountVerordnungPodo",
+    "runMigrationsMitGeduld",
     "statusSammeln"
    ],
    "modules": [
@@ -163807,6 +163861,7 @@
     "_verdrahteTermine",
     "leitsymptomatikAusDropdownWaehlen",
     "mountVerordnungPodo",
+    "runMigrationsMitGeduld",
     "statusSammeln"
    ],
    "modules": [
