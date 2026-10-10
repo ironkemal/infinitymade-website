@@ -272,6 +272,7 @@ kaydetmeden önce taze `abrechnung_status` ile tekrar bakılır. Eski metin: for
 "Neue Behandlungen können weiterhin dokumentiert werden."
 **Bağımlı ekranlar:** `abrechnung`, hasta dosyası zaman çizelgesi (`patientenkarte.js`
 → `verordnung-uebersicht.js`, aynı `PODO_ABGERECHNET_OR` filtresini paylaşır)
+**Son test:** 2026-10-10 23:10–23:20 Berlin (`7a0d60c7`, PE-007 Dokumentationssperre) — **TEST EDİLEMEDİ, deploy inmedi.** Yerel `dashboard.js?v=20261010zf`, canlı hâlâ `…ze`; `module/podo-dokumentations-sperre.js` canlıda 404, canlı `podologie-abrechnung.js` md5 ≠ yerel (`podDokuLage` 0 eşleşme). Sebep GitHub commit status'ta: `Vercel – infinitymade-website` → failure „Deployment rate limited — retry in 24 hours.“ (`7a0d60c7`, sonraki `b119ceae`/`ffe771cd`/`8b4bf73f` de aynı; `095bcfa2` son başarılı app deploy'u). Backend kapısı 200 (JSON). Tarayıcıda hiçbir şey sınanmadı — 4 madde (Abgerechnet formsuz kutu · bereit sarı kutu/Trotzdem · aktiv kutusuz · Termin penceresi gesendet VO) Vercel kotası açılınca yeniden koşulacak.
 **Son test:** 2026-09-20 (`1d549f6`) — GEÇTİ (kısmi). Grup kapalı geliyor, "▸/▾" ile
 açılıp kapanıyor, 3 Verordnung doğru göründü. Seçilince Tagesbehandlung formu **açık**
 kaldı (kapanmadı), bilgi şeridi göründü, "Status" düğmesi bu grupta **yok**
