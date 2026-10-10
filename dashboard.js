@@ -86,7 +86,7 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010x';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010x';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010v';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010z';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -2907,7 +2907,7 @@ async function openBookingActionModal(booking, opts = {}) {
       rx, booking, erbracht: current,
       deps: {
         sb: supabase, ownerId, sector: getSector(), patientName,
-        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [],
+        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], services: ownerServices,
         ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),
         kassieren: kassiereZuzahlung,
         belegOeffnen: openZuzahlungsrechnung,

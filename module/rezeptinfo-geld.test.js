@@ -268,3 +268,27 @@ test('Podologie ohne Behandlung: keine Podo-Summe, Schätzung bleibt', async () 
   const q = { select: () => q, eq: () => q, is: () => Promise.resolve({ data: [], error: null }) };
   assert.equal(await ladePodoZuzahlung({ sb: { from: () => q }, ownerId: 'o', rx: { id: 'r' }, ladePodoPositionen: async () => null }), null);
 });
+
+// canli-test 10.10.2026 P1: Podologie Privat/BG — Betrag aus podologie_behandlungen, €-Knopf nie gesperrt.
+test('ladePodoPrivatSumme: rechnet mit den Zeilen des Rechnungseditors; BG ohne Preise → 0 + offenePreise', async () => {
+  const { ladePodoPrivatSumme } = await import('./rezeptinfo-geld.js');
+  const beh = [{ id: 'b1', behandlungsdatum: '2026-10-01', hpnr_codes: ['78020'] }, { id: 'b2', behandlungsdatum: '2026-10-08', hpnr_codes: ['78020'] }];
+  const k = { select: () => k, eq: () => k, is: () => k, order: async () => ({ data: beh, error: null }) };
+  const sb = { from: (t) => { assert.equal(t, 'podologie_behandlungen'); return k; } };
+  const services = [{ code: '78020', title: 'Podologische Behandlung', price: 32.5, is_active: true }];
+  const privat = await ladePodoPrivatSumme({ sb, ownerId: 'o', rx: { id: 'v', rezeptart: 'privat' }, services });
+  assert.equal(privat.positionen, 2);
+  assert.equal(privat.summe + privat.offenePreise * 32.5, 65); // jede Zeile: Preis ODER als Lücke gezählt, nie still 0
+  const bg = await ladePodoPrivatSumme({ sb, ownerId: 'o', rx: { id: 'v', rezeptart: 'bg' }, services });
+  assert.deepEqual(bg, { summe: 0, positionen: 2, offenePreise: 2 });
+  assert.deepEqual(await ladePodoPrivatSumme({ sb, ownerId: 'o', rx: null }), { summe: 0, positionen: 0, offenePreise: 0 });
+});
+
+test('euroZustand: Podologie privat ohne Betrag → Rechnung bleibt erreichbar; sonst weiter „keine"', () => {
+  const rx = { id: 'v', rezeptart: 'bg' };
+  const st = ermittleGeldstand({ rx, zahler: 'privat', privat: { summe: 0, positionen: 2, offenePreise: 2 } });
+  assert.equal(euroZustand(rx, { ...st }).aktion, 'keine');
+  const z = euroZustand(rx, { ...st, rechnungOhneBetrag: true });
+  assert.equal(z.aktion, 'rechnung');
+  assert.equal(z.text, '—');
+});

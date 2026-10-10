@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
  "dateien": 430,
- "funktionen": 3450,
+ "funktionen": 3451,
  "module": [
   "abrechnung",
   "anamnese",
@@ -35332,6 +35332,7 @@
     "karteHtml",
     "kassenanteil",
     "kb",
+    "ladePodoPrivatSumme",
     "ladeRxKontext",
     "loadCalRpRezeptInfo",
     "loadDbHealth",
@@ -133029,6 +133030,7 @@
     "error"
    ],
    "calledBy": [
+    "ladePodoPrivatSumme",
     "starteRechnungAusVerordnung"
    ],
    "modules": [
@@ -133219,6 +133221,7 @@
     "zeilenSteuerVon"
    ],
    "calledBy": [
+    "ladePodoPrivatSumme",
     "starteRechnungAusVerordnung"
    ],
    "modules": [
@@ -142438,12 +142441,76 @@
    ]
   },
   {
+   "name": "ladePodoPrivatSumme",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rezeptinfo-geld.js",
+   "start": 180,
+   "end": 187,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "offeneBehandlungen",
+    "round",
+    "zeilenAusBehandlungen"
+   ],
+   "calledBy": [
+    "verdrahteGeldzeile"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "ermittleGeldstand",
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 183,
-   "end": 213,
+   "start": 201,
+   "end": 231,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -142508,8 +142575,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 221,
-   "end": 232,
+   "start": 239,
+   "end": 250,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [
@@ -142577,8 +142644,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 226,
-   "end": 231,
+   "start": 244,
+   "end": 249,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -142645,9 +142712,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 244,
-   "end": 287,
-   "lines": 44,
+   "start": 262,
+   "end": 311,
+   "lines": 50,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -142707,8 +142774,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 306,
-   "end": 349,
+   "start": 330,
+   "end": 373,
    "lines": 44,
    "spiegelHinweis": null,
    "tables": [],
@@ -142775,8 +142842,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 317,
-   "end": 348,
+   "start": 341,
+   "end": 372,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -142840,9 +142907,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 374,
-   "end": 453,
-   "lines": 80,
+   "start": 398,
+   "end": 480,
+   "lines": 83,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -142859,6 +142926,7 @@
     "findePosition",
     "frage",
     "ladePodoPositionen",
+    "ladePodoPrivatSumme",
     "ladePodoZuzahlung",
     "ladePrivatSumme",
     "rechnungAusVerordnung",
@@ -142916,9 +142984,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 384,
-   "end": 395,
-   "lines": 12,
+   "start": 408,
+   "end": 420,
+   "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -142992,8 +143060,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 397,
-   "end": 437,
+   "start": 422,
+   "end": 462,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [
@@ -187899,7 +187967,7 @@
     "module/einrichtung-ring.js:27",
     "module/patienten-einwilligung.js:524",
     "module/praxis-standort.js:115",
-    "module/rezeptinfo-geld.js:384"
+    "module/rezeptinfo-geld.js:408"
    ],
    "aynalar": []
   },
@@ -188130,7 +188198,7 @@
    "orte": [
     "module/abrechnung-auswahl.js:983",
     "module/fussbefund.js:289",
-    "module/rezeptinfo-geld.js:317"
+    "module/rezeptinfo-geld.js:341"
    ],
    "aynalar": []
   },
@@ -189135,7 +189203,7 @@
    "name": "tag",
    "orte": [
     "module/rechnung-dmrz.js:38",
-    "module/rezeptinfo-geld.js:226"
+    "module/rezeptinfo-geld.js:244"
    ],
    "aynalar": []
   },
