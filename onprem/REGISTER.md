@@ -5058,12 +5058,14 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) · **O-174** |
+| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) · **O-174** · **O-190** (10.10.2026) |
 | `geplant` | 20 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-159** · **O-169** (K-20) |
 | 🟡 `kısmen gelöst` | 38 | **O-189** (`e5778089` a+c, kalan b) · **O-187** (`40491962` + `ac1504d0`, kalan promote 13.10) · O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** · **O-155** (T13) · **O-157** + **O-176** (T17) · **O-161** (izleme + T7/T8/T15) · **O-162** (T16) · **O-163** (T17 b) · **O-172** (`6aac145c`, kalan şart i) · **O-177** (`45268912`, kalan T19) · **O-178** (K2b.16 kodu, 08.10 gece; kalan T21 + K2b.15) · **O-181** (S-56/S-57, kalan businesses sayaçları + T25 kutu ölçümü) · **O-183** (`01c99769`, deploy bekliyor) |
 | `gelöst` | 95 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** · **O-171** (`004fc537`) · **O-173** (`1736768f`) · **O-164** (`293ac5be`) · **O-165** (K2b.10, 08.10) · **O-180** (08.10) · **O-179** (`d1a0bf70`, 09.10) · **O-146** + **O-182** (`b1ce69bb`, 09.10) · **O-175** (`63abe5f1`, T14 09.10) · **O-185** (`045b70cb`, 09.10) · **O-186** (`11c539e5`, 10.10) |
 | `unkritisch` | 15 | **O-188** (10.10.2026) · O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 · **O-184** |
 | `widerlegt` | 3 | **O-134** · **O-137** · **O-167** (05.10.2026, K-20) |
+
+> ✅ **10.10.2026 gece (WSL soak kutusu ağ kesintisi bildirimi, §7AO):** yeni O-190 `offen`. 19 + 20 + 38 + 95 + 15 + 3 = **190**, en yüksek **O-190**. Uyuşuyor.
 
 > ✅ **10.10.2026 18:00 (`05214644` (v)(vi) bildirimi + O-189 düzeltmesi, §7AN (6)):** O-189 `offen`→`kısmen gelöst` — (a)+(c) `e5778089`'da zaten kapanmıştı, sicil geride kalmıştı. 18 + 20 + 38 + 95 + 15 + 3 = **189**, en yüksek **O-189**. Uyuşuyor.
 
@@ -6000,3 +6002,26 @@ Commit'liler: `9c8280dd` (O-181 (a) kapı) · `b7064f87` (O-181 (b) sayaçlar) �
 **Kapı önerisi (yeni madde açılmadı, `builder`'a):** `tools/check-onprem.sh` staged `.github/workflows/*.yml` için bir YAML ayrıştırma kontrolü koşsun (`node -e` + mevcut bir yaml paketi ya da `python -c 'import yaml'`; 10.10'da ikisi de kurulu değil, ölçüldü: bağımlılık eklemek ya da CI'da `actionlint` gerekir). `e5778089`'daki hata mekanik, sayılabilir türden: yargı değil kapı işi.
 
 Son tarih değişmedi: ilk ücretli kutu `:stable`'a bağlanmadan önce. 13.10 promote'unu (b) durdurmaz (iki `:stable` de yok, kutu `:stable`'da değil).
+
+---
+
+## 7AO — WSL soak kutusunda ağ kesintisi: ikinci dağıtımın dockerd'si (10.10.2026 gece, bildirim + soru)
+
+**Olay (çağıranın ölçümü, onprem ajanı doğrulamadı).** Soak kutusu (WSL dağıtımı `Praxura`, `.env` iki image `:0.5.2`'ye sabit, `soak_baslangic` `2026-10-10T13:36:44+02:00`). 20:03'teki ölçümde aynı WSL'deki `Ubuntu-24.04` dağıtımı da başlatıldı. Onun dockerd'si iptables'ı kendi köprüsüne (`br-59ecd274a5f6`) göre yazdı; Praxura köprüsü `br-c7f962197432` için DOCKER-FORWARD kuralı kalmadı. 21:51'den beri konteyner→db TCP timeout, `praxura-rest` + `realtime` unhealthy; api/caddy health yeşil, restart 0. Image ve env değişmedi. Önerilen onarım: `wsl --terminate Ubuntu-24.04` + Praxura'da `systemctl restart docker` (Kemal onayında).
+
+**(1) Soak saati — HÜKÜM: `soak_baslangic` aynen kalır, kesinti süresi 72 saate sayılmaz.**
+- `soak_baslangic` tanım gereği "kutunun bu sürüme geçtiği an"dır ve promote girdisi olarak başta kaydedilen değerdir (RELEASE-STANDARD §B, :842/:850). Digest'ler değişmedi; değeri sonradan oynatmak "başta kaydedilen" disiplinini bozar.
+- Ama adım 10'un ölçütü "`/status` sürekli yeşil"dir. 21:51 → onarım arası PostgREST yolu kapalıydı: image o saatlerde gerçek iş görmedi, o saatler soak kanıtı değildir. Kural: **promote en erken = 13.10 13:36 + (onarım anı − 21:51).** Workflow'un kendi kapısı 13:36'yı ölçer; bu ek süre elle tutulur.
+- **Şart:** onarımdan sonra rest + realtime image/env değişmeden ve konteyner yeniden yaratılmadan (yalnız dockerd restart) yeşile dönmeli. Dönmezse teşhis kanıtlanmamış sayılır, sebep image olabilir: yeni `soak_baslangic` ile 72 saat baştan.
+- `soak_kanit` metnine: "Praxura WSL kutusu; 10.10 21:51 – <onarım> arası WSL kaynaklı ağ kesintisi (ikinci dağıtımın dockerd'si iptables'ı ezdi), image/env değişmedi, kesinti süresi soak'a sayılmadı; dockerd restart sonrası tüm servisler yeşil." Onarım anı ve ilk yeşil ölçüm saati buraya da yazılır.
+
+### O-190 — Windows kutusu: aynı WSL'de Docker çalıştıran ikinci dağıtım Praxura ağını kesiyor 🟠 **offen**
+
+| Alan | Değer |
+|---|---|
+| **Ne** | WSL2 dağıtımları tek ağ ad alanını paylaşır; ikinci bir dağıtımdaki dockerd başlayınca iptables'ı kendi köprüsüne göre yazar ve Praxura köprüsünün forward kuralları kaybolur |
+| **Nerede** | Kurulum ortamı, kod değil. `onprem/KURULUM.md:71-72` müşteriye "Praxura, mevcut bir Ubuntu'dan ayrı" diyor ama birlikte çalıştırma riskini söylemiyor. Olay: soak kutusu 10.10.2026 21:51 (§7AO) |
+| **Tip** | G (kutu tarafı, kurulum/işletim ortamı) |
+| **Kutuda ne olur** | Müşteri PC'sinde Docker kuran başka bir WSL dağıtımı açıldığında (geliştirici ya da IT servis sağlayıcı) konteyner→db bağlantısı düşer: PostgREST/realtime unhealthy, uygulama veri yükleyemez, ama `api`/`caddy` health yeşil kaldığı için durum basit bir health bakışında görünmez. Restart sayacı 0, yani crash-loop alarmı da tetiklenmez. Linux sunucu kutusunu etkilemez |
+| **Çözüm** | Sahibi Windows kurulum hattı (O-163 ile aynı hat, `install.ps1`). Üç parça, `builder`: (a) `KURULUM.md` §Windows'a tek satır: aynı PC'de Docker'lı ikinci bir WSL dağıtımı çalıştırmayın, gerekirse `wsl --terminate <ad>` + kutu yeniden başlatma; (b) `install.ps1` ön kontrolü: Praxura dışında çalışan/kurulu ve dockerd'li dağıtım varsa uyar; (c) kutunun kendi durum ekranı (`/status`, O-40) konteyner→db erişimini de ölçsün; bu olayı yeşil gösteren tek health katmanı api'ninkiydi. Önce teşhis onarımla doğrulanır (§7AO şartı) |
+| **Durum** | `offen` — faz numarası yok; ilk Windows ücretli kutusundan önce (a) kapanmalı |
