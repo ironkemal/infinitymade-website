@@ -84,7 +84,8 @@ import { ausTopf, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR } from './verordnung
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261006n';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { on } from './signal.js?v=20260813';
-import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010m';
+import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010n';
+import { istKasse, rezeptartLabel } from './rezeptart.js?v=20261006a';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -562,18 +563,24 @@ function karteHtml(v, mitMenue = false) {
     v.frequenz ? `<span>${esc(v.frequenz)}</span>` : '',
   ].filter(Boolean).join(' · ');
 
-  // Das Menü steht NEBEN der Karte (Geschwister), nicht darin: die Karte ist
-  // selbst ein <button>, ein Knopf im Knopf wäre ungültig und würde den Sprung auslösen.
+  // Mit Menü trägt der Rahmen die äußere Hülle, Sprungknopf und Menü liegen
+  // beide darin (Knopf im Knopf wäre ungültig). podoloji 10.10.2026: zwischen
+  // den Karten wurde der Knopf der falschen Verordnung zugeordnet — Risiko,
+  // den Beleg an die falsche Verordnung zu hängen. Text nach Kostenträger.
+  const rahmen = `border-radius:10px;border:1px solid var(--border);border-left:3px solid ${farbe};background:var(--bg-card);`;
   const menue = mitMenue
-    ? `<div style="display:flex;justify-content:flex-end;">${druckenMenueHtml({ id: v.id, rezeptart: v.rezeptart, touch: true })}</div>`
+    ? `<div style="display:flex;justify-content:flex-end;padding:0 10px 8px;">${druckenMenueHtml({ id: v.id, rezeptart: v.rezeptart, touch: true, label: istKasse(v.rezeptart) ? 'Zuzahlung' : 'Rechnung' })}</div>`
+    : '';
+  const artBadge = mitMenue
+    ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);">${esc(istKasse(v.rezeptart) ? 'GKV' : (rezeptartLabel(v.rezeptart) || '').split(' ')[0])}</span>`
     : '';
   const karte = `<button type="button" class="vu-karte" data-ziel="${esc(v.ziel)}" data-id="${esc(v.id)}"
     title="${bittePruefen ? esc(pruefTitel(v.pruefung)) : 'Öffnen'}"
-    style="text-align:left;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
-           border-left:3px solid ${farbe};background:var(--bg-card);color:var(--text-main);
+    style="text-align:left;width:100%;padding:12px 14px;${mitMenue ? 'border:none;background:transparent;border-radius:10px;' : rahmen}color:var(--text-main);
            cursor:pointer;display:flex;flex-direction:column;gap:7px;">
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
       ${bereichBadge(v.quelle)}
+      ${artBadge}
       ${v.nummer || ''}
       <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">${DE(v.datum)}</span>
     </div>
@@ -592,7 +599,7 @@ function karteHtml(v, mitMenue = false) {
 
     ${marker ? `<div style="font-size:11px;color:var(--text-muted);display:flex;gap:5px;flex-wrap:wrap;">${marker}</div>` : ''}
   </button>`;
-  return mitMenue ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:0;">${karte}${menue}</div>` : karte;
+  return mitMenue ? `<div style="display:flex;flex-direction:column;min-width:0;${rahmen}">${karte}${menue}</div>` : karte;
 }
 
 /** Zähler gegen veraltete Antworten — siehe zeigeVerordnungsUebersicht. */

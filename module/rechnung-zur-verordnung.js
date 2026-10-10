@@ -53,17 +53,18 @@ export function zuzahlungMenueEintraege(rezeptart) {
  * in dashboard.js und war in der Podologie unsichtbar, weil die Rezeptliste
  * dort ausgeblendet ist (podoloji 10.10.2026: 4 statt 2 Tippen bis zum Beleg).
  *
- * @param {{ id: string, rezeptart?: string|null, icon?: string, touch?: boolean }} param0
+ * @param {{ id: string, rezeptart?: string|null, icon?: string, touch?: boolean, label?: string }} param0
+ *   `label` = Knopftext (Akte-Karte: „Zuzahlung"/„Rechnung" je Kostenträger, podoloji 10.10.2026).
  *   `touch` = Knopf mit 44 px Mindesthöhe (Karte in der Akte, Telefon).
  * @returns {string} HTML-String
  */
-export function druckenMenueHtml({ id, rezeptart, icon = '', touch = false } = {}) {
+export function druckenMenueHtml({ id, rezeptart, icon = '', touch = false, label = 'Drucken' } = {}) {
   const rxId = String(id ?? '').replace(/[^0-9a-zA-Z-]/g, '');
   const stil = 'padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;';
   return `<div class="rx-drucken-wrap" style="position:relative;display:inline-block;" data-id="${rxId}">
             <button type="button" class="btn-ghost btn-sm rx-drucken-toggle" data-id="${rxId}" style="display:flex;align-items:center;gap:4px;${touch ? 'min-height:44px;' : ''}">
               ${icon ? `<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;">${icon}</span>` : ''}
-              Drucken ▾
+              ${label} ▾
             </button>
             <div class="rx-drucken-menu" style="display:none;position:absolute;right:0;top:100%;z-index:1000;background:var(--bg-card-solid,#1e2a3a);border:1px solid var(--border,#2d3a4a);border-radius:8px;min-width:190px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;">
               ${zuzahlungMenueEintraege(rezeptart)}
