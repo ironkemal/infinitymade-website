@@ -764,3 +764,46 @@
 - **Verworfen:** neue Spalte `patient_waehlbar` (Schema + 13 Seed-Zeilen je Praxis von Hand).
 - **Offen:** passende Standard-Dauer für Anfragen ohne Leistung (35/50/60 min?) — Beta-1 fragen.
   Quelle: podoloji 09.10.2026; canli-test P3-Beobachtung (wiederholt).
+
+## PE-006 Nachtrag 2 (10.10.2026) — Selbstzahler/Privat/BG: keine Arzt-Sperre, Behandlung ohne Positionsnummer
+
+> Quelle: canli-test T33 (10.10.2026, QA), Einschätzung `podoloji`; Entscheidung in der Orchestrator-Sitzung
+> vom 10.10.2026. Umgesetzt in `efbb2dd0`. **Annahme — nicht mit einer Podologin validiert.**
+
+- **Karar 1 — Arzt-Sperre nur bei Kasse:** `behandlungGesperrt` (`module/podo-arztangaben.js`), das Banner in
+  der Maske (`module/arztangaben-banner.js`) und die Rosette „Unterschrift fehlt" (`module/verordnung-detail.js`)
+  greifen nur noch bei Rezeptart Kasse (NULL gilt als Kasse). Selbstzahler/Privat/BG: weder Sperre noch Warnung.
+- **Karar 2 — Behandlung ohne Positionsnummer:** Nicht-Kasse **und** keine Diagnosegruppe → Tagesbehandlung
+  darf ohne HPNR gespeichert werden (`module/podologie-abrechnung.js`); statt der leeren Liste steht „Keine
+  Positionsnummer nötig — der Preis wird in der Rechnung festgelegt."; `podologie_behandlungen.diagnosegruppe`
+  wird `NULL` (nie `''`). Kasse und jede Verordnung mit Diagnosegruppe: unverändert, HPNR bleibt Pflicht.
+- **Neden:** Die Sperre ist eine Regel des Podologie-Vertrags (Anlage 3) und gilt außerhalb der GKV nicht — die
+  Maske hatte das schon so entschieden (`podoArztHinweise` nur bei `maskeIstKasse()`), die Behandlung nicht.
+  HPNR ist ein Vertragskode; bei Selbstzahler gibt es keine Diagnosegruppe, also keine Liste — der einzige Weg
+  war eine erfundene LANR, ein gesetztes Unterschrift-Häkchen und eine erfundene Diagnosegruppe im
+  eingeklappten GKV-Block (≈ 8 Klicks und falsche Daten; genau die „falsch befüllte Annahme" der Entscheidung
+  vom 10.08.2026). Jetzt: Datum + Speichern. Die Rechnungsbrücke konnte den Fall bereits
+  (`zeilenAusBehandlungen`: Zeile mit dem Behandlungsanlass, 0,00 €, als offen markiert; Preis über
+  Preisstufen / „zuletzt berechnet").
+- **Etkilenen:** `module/podo-arztangaben.js`, `module/arztangaben-banner.js`, `module/verordnung-detail.js`,
+  `module/podologie-abrechnung.js`. **Server-Spiegel `api-backend/billing/utils/arztangaben.js` unverändert**
+  (sperrt nur „Bereit", das Nicht-Kasse ohnehin nicht erreicht).
+- **Reddedilen alternatif:** (1) HPNR-Liste ohne Diagnosegruppe für Selbstzahler laden — Vertragskodes
+  außerhalb des Vertrags. (2) `services.code` in `hpnr_codes` schreiben — eine Zeile mit Kodes ohne
+  78010/78020/78610 zählt nicht als Einheit (`istBehandlungseinheit`), der Zähler bräche. (3) Sperre bei
+  Privat/BG als Warnung behalten — bei BG trägt die Kostenzusage-Warnung das Geldrisiko bereits; ein
+  Privatarzt hat u. U. keine LANR (**nicht verifiziert**).
+- **Offen:**
+  - **(4) → `gkv-302`:** Termin-Karte zählt gebundene Termine („0/2", `module/termin-verordnung.js`), die Akte
+    dokumentierte Einheiten („1 / 2", `podoZaehler`) — gleiches Format, zwei Fragen. Dazu zieht `einheitenPlan`
+    (`module/podo-einheiten.js`) eine dokumentierte Behandlung ohne Termin nicht von „offen" ab → bei Kasse
+    Gefahr der Überplanung über die verordnete Menge.
+  - **(5) → `legal-de`:** `empfaenger_snapshot` trägt bei Selbstzahler/Privat `krankenkasse` und
+    `versichertennummer` (`empfaengerSnapshot`, `module/bg-angaben.js`) — praktisch nicht nötig; Entscheidung
+    zur Datenminimierung steht aus.
+  - **(3):** Woher die Rosette „Bitte prüfen" und die Speichern-Warnung bei Selbstzahler kommen, wurde nicht
+    zurückverfolgt.
+  - **Später → `db-ustasi`:** eigene Leistung der Praxis direkt in der Behandlung wählen (heute steht bei einer
+    Zeile ohne Kode das „Was wurde gemacht" nur in den Notizen).
+  - **→ `legal-de`:** medizinische Behandlung ohne ärztliche Verordnung bei Selbstzahlern — nicht Sache der
+    Software-Sperre, nicht bewertet.

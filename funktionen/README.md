@@ -116,6 +116,30 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 10.10.2026 · Selbstzahler/Privat/BG: Behandlung ohne Arzt-Riegel und ohne Positionsnummer (efbb2dd0)
+- **Yeni fonksiyon yok — davranış değişti.** Niye: canli-test T33 P1 + podoloji hükmü 10.10.2026 — kilit bir GKV
+  sözleşme kuralıdır; Selbstzahler'de hekim ve HPNR yoktur, o yüzden kilit orada anlamsızdı.
+- `module/podo-arztangaben.js` `behandlungGesperrt` + `module/arztangaben-banner.js` `sperreBannerText` (yeni
+  parametre `rezeptart`) + `module/verordnung-detail.js` „Unterschrift fehlt" rozeti: **yalnız Kasse**. İkisi de
+  hâlâ aynı metin kaynağını çağırır (`sperreTextAusLage`) — ikinci bir kilit metni yazılmadı.
+- `module/podologie-abrechnung.js` kaydet yolu: Kasse değil + Diagnosegruppe yoksa kodsuz Behandlung serbest;
+  `diagnosegruppe` boşsa boş dizgi değil **NULL** yazılır.
+- **Sunucu aynası DEĞİŞMEDİ:** `api-backend/billing/utils/arztangaben.js` `fehlendeArztangaben` yalnız
+  „Bereit"/§302 yolunda çalışır. Ayna notu artık „Kasse için aynı" anlamındadır — ön yüz Selbstzahler'de
+  serbest bırakıyor, sunucu Kasse yolunda eskisi gibi kilitliyor. Bu bir sapma değil, bilinçli ayrım; aynayı
+  „eşitlemek" için sunucuya `rezeptart` istisnası eklenmez.
+
+### 10.10.2026 · Geldzeile zeigt den Betrag der vorhandenen Rechnung — `ladeRechnungZurVerordnung` (67402613)
+- `module/rechnung-zur-verordnung.js` `ladeRechnungZurVerordnung(supabase, rxId)` — bir Verordnung'un en yeni,
+  iptal edilmemiş, ZU olmayan faturasını id + numara + tutarla döndürür (okur: `invoices`). Niye: canli-test T33
+  P2 — fatura kaydedilince Behandlung'lar „offen" olmaktan çıkıyor, Termin-Aktionen Geldzeile tekrar „—"
+  gösteriyordu. Kullanım: `module/rezeptinfo-geld.js` `verdrahteGeldzeile` (podoloji) → `euroZustand`
+  `stand.rechnung` dalı.
+- `sucheRechnungZurVerordnung` artık bunun **ince sarmalayıcısı** (tek sorgu, iki çağıran). „Bu Verordnung'un
+  faturası hangisi" sorusunu soran üçüncü bir sorgu yazılmaz — bu çağrılır.
+- dashboard.js `updateInvForInsuranceType`: editör rozeti Selbstzahler'de „Selbstzahler-Rechnung" (satır sayısı
+  aynı).
+
 ### 10.10.2026 · Verordnungsspalten am Termin aus einer Konstante — `RX_FELDER` / `RX_JOIN` (011deb4a)
 - **Niye:** termine bağlı Verordnung kolonları beş yerde elle yazılıydı; `rezeptart` beşinde de eksikti ve
   Geldzeile Privat/BG reçetede GKV-Zuzahlung teklif ediyordu (canli-test P1, 4eb00e47). Kemal 10.10.2026 kararı:
