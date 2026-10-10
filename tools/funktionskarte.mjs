@@ -250,6 +250,31 @@ for (const fn of functions) {
     callers.get(c).add(fn.name);
   }
 }
+// Datei-Ebene (10.10.2026, fonksiyon-ustasi-Fund): Aufrufe in anonymen Handlern
+// (`router.post('/x', async (req, res) => { … })`, Event-Listener auf oberster
+// Ebene) gehören zu keiner benannten Funktion und fehlten bisher — ein so
+// benutzter Helfer erschien als „ohne Aufrufer". Gezählt wird der Dateitext
+// OHNE die Zeilen benannter Funktionen; Aufrufer heisst dann „(datei) <pfad>".
+{
+  const fnsByFile = new Map();
+  for (const fn of functions) {
+    if (fn.lang !== 'js') continue;
+    if (!fnsByFile.has(fn.file)) fnsByFile.set(fn.file, []);
+    fnsByFile.get(fn.file).push(fn);
+  }
+  for (const f of files) {
+    const r = rel(f);
+    const lines = readFileSync(f, 'utf8').split('\n');
+    for (const fn of fnsByFile.get(r) || []) for (let i = fn.start - 1; i < fn.end && i < lines.length; i++) lines[i] = '';
+    const rest = lines.join('\n').replace(/^\s*import\s[^;]*;/gm, '');
+    for (const m of rest.matchAll(/\b([A-Za-z_$][\w$]*)\s*\(/g)) {
+      const n = m[1];
+      if (!knownNames.has(n)) continue;
+      if (!callers.has(n)) callers.set(n, new Set());
+      callers.get(n).add(`(datei) ${r}`);
+    }
+  }
+}
 for (const fn of functions) fn.calledBy = [...(callers.get(fn.name) || [])].sort();
 
 // ── Modül haritası: sidebar id → giriş fonksiyonu → erişilebilen her şey ────
