@@ -86,7 +86,7 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010x';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010v';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010u';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010z';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -2907,7 +2907,7 @@ async function openBookingActionModal(booking, opts = {}) {
       rx, booking, erbracht: current,
       deps: {
         sb: supabase, ownerId, sector: getSector(), patientName,
-        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], services: ownerServices,
+        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], services: () => ensureLeistungskatalog(),
         ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),
         kassieren: kassiereZuzahlung,
         belegOeffnen: openZuzahlungsrechnung,
@@ -13470,8 +13470,8 @@ async function openInvEditor(invoiceId) {
   await Promise.all([loadInvPatients(), ensureLeistungskatalog()]);
   resetInvEditor();
   if (invoiceId) {
-    const inv = invListCache.find(i => i.id === invoiceId);
-    if (!inv) return;
+    let inv = invListCache.find(i => i.id === invoiceId); // Liste evtl. nie geladen (Geldzeile/Akte direkt nach F5, canli-test 10.10.)
+    if (!inv) { await loadRechnungen(); inv = invListCache.find(i => i.id === invoiceId); if (!inv) { showToast('Rechnung konnte nicht geladen werden.', 'error'); return; } }
     invPatientId = inv.patient_id;
     invPrescriptionId = inv.prescription_id || null;
     invVerordnungId = inv.verordnung_id || null;

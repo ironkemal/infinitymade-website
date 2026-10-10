@@ -466,7 +466,8 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
 
   (async () => {
     privat = sector === 'podologie'
-      ? await ladePodoPrivatSumme({ sb, ownerId, rx, services, katalogPodo: katalog })
+      // services darf eine Funktion sein: direkt nach dem Laden sind die Leistungen der Praxis noch nicht da (canli-test P2).
+      ? await ladePodoPrivatSumme({ sb, ownerId, rx, services: typeof services === 'function' ? await services() : services, katalogPodo: katalog })
       : await ladePrivatSumme(sb, rx.id);
     if (sector === 'podologie' && ladePodoPositionen) {
       const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
