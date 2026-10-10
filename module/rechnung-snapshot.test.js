@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ausstellerSnapshot } from './branding.js';
 import { empfaengerSnapshot } from './bg-angaben.js';
-import { rechnungSnapshots, EMPFAENGER_PATIENT_SPALTEN } from './rechnung-snapshot.js';
+import { rechnungSnapshots, rechnungSnapshotsGeprueft, EMPFAENGER_PATIENT_SPALTEN } from './rechnung-snapshot.js';
 import * as server from '../api-backend/lib/rechnung-snapshot.js';
 
 const PROFIL = {
@@ -93,6 +93,34 @@ test('rechnungSnapshots: liest Patient + Verordnung, Lesefehler → Empfänger n
     const r2 = await rechnungSnapshots(supa(true), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' });
     assert.equal(r2.empfaenger_snapshot, null);
     assert.equal(r2.aussteller_snapshot.ik, '123456789');
+  } finally { console.error = err; }
+});
+
+test('rechnungSnapshotsGeprueft: ohne Empfänger wird VOR dem Speichern gefragt (KHS §6 2 (v))', async () => {
+  const supa = (patient, fehler = false) => ({
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => (fehler ? { data: null, error: { message: 'x' } } : { data: patient, error: null }) }) }) }),
+  });
+  const fragen = [];
+  const ja = async (o) => { fragen.push(o); return true; };
+  const nein = async (o) => { fragen.push(o); return false; };
+  // Empfänger vorhanden → keine Frage
+  const ok = await rechnungSnapshotsGeprueft(supa(PATIENT), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' }, { bestaetige: nein });
+  assert.equal(ok.empfaenger_snapshot.art, 'patient');
+  assert.equal(fragen.length, 0);
+  // Patient ohne Namen → Frage; Abbrechen → null (nicht speichern)
+  const namenlos = { ...PATIENT, first_name: '', last_name: '', title: '' };
+  assert.equal(await rechnungSnapshotsGeprueft(supa(namenlos), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' }, { bestaetige: nein }), null);
+  assert.match(fragen[0].message, /kein Name/);
+  // Bestätigt → Snapshot ohne Empfänger
+  const r = await rechnungSnapshotsGeprueft(supa(namenlos), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' }, { bestaetige: ja });
+  assert.equal(r.empfaenger_snapshot, null);
+  assert.equal(r.aussteller_snapshot.ik, '123456789');
+  // Lesefehler → eigener Grund; ohne bestaetige → nicht speichern
+  const err = console.error; console.error = () => {};
+  try {
+    await rechnungSnapshotsGeprueft(supa(null, true), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' }, { bestaetige: nein });
+    assert.match(fragen.at(-1).message, /nicht gelesen/);
+    assert.equal(await rechnungSnapshotsGeprueft(supa(null, true), { profil: PROFIL, patientId: 'p1', rezeptId: null, invoiceType: 'privat' }), null);
   } finally { console.error = err; }
 });
 

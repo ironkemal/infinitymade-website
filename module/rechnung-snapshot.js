@@ -24,16 +24,40 @@ export const EMPFAENGER_REZEPT_SPALTEN = 'rezeptart,bg_traeger_name,bg_traeger_a
  *   profil = Profilzeile der PRAXIS (`ownerProfile || currentProfile`), rezeptId = prescription_id ODER verordnung_id
  * @returns {Promise<{aussteller_snapshot: object, empfaenger_snapshot: ?object}>}
  */
-export async function rechnungSnapshots(supabase, { profil, patientId, rezeptId, invoiceType }) {
+export async function rechnungSnapshots(supabase, q) {
+  return (await snapshotsMitGrund(supabase, q)).snap;
+}
+
+async function snapshotsMitGrund(supabase, { profil, patientId, rezeptId, invoiceType }) {
   const [patientRes, rezeptRes] = await Promise.all([
     patientId ? supabase.from('leads').select(EMPFAENGER_PATIENT_SPALTEN).eq('id', patientId).maybeSingle() : { data: null },
     rezeptId ? supabase.from('prescriptions').select(EMPFAENGER_REZEPT_SPALTEN).eq('id', rezeptId).maybeSingle() : { data: null },
   ]);
-  // Lesefehler: lieber Entwurf ohne Empfänger-Snapshot (Ansicht fällt auf live zurück) als gar nicht speichern.
+  // Lesefehler: Empfänger bleibt null; `rechnungSnapshotsGeprueft` fragt dann, ob trotzdem als Entwurf gespeichert wird.
   if (patientRes?.error) console.error('[rechnung-snapshot] Patient', patientRes.error.message);
   if (rezeptRes?.error) console.error('[rechnung-snapshot] Verordnung', rezeptRes.error.message);
-  return {
+  const snap = {
     aussteller_snapshot: ausstellerSnapshot(profil),
     empfaenger_snapshot: empfaengerSnapshot({ patient: patientRes?.data || null, rx: rezeptRes?.data || null, invoiceType }),
   };
+  const grund = snap.empfaenger_snapshot ? null
+    : (patientRes?.error || rezeptRes?.error) ? 'Die Patientendaten konnten gerade nicht gelesen werden.'
+    : 'Beim Patienten ist kein Name hinterlegt.';
+  return { snap, grund };
+}
+
+/**
+ * Wie `rechnungSnapshots`, aber ohne Empfänger wird VOR dem Speichern gefragt (KHS §6 KALAN İŞ 2 (v), onprem §7AN):
+ * ein Entwurf ohne Empfänger-Snapshot kann ab 0080 nicht ausgestellt/bezahlt werden. Abbrechen → `null`, der Aufrufer
+ * speichert nicht. `bestaetige` = showConfirmModal (dashboard.js) → Promise<boolean>.
+ */
+export async function rechnungSnapshotsGeprueft(supabase, q, { bestaetige } = {}) {
+  const { snap, grund } = await snapshotsMitGrund(supabase, q);
+  if (!grund) return snap;
+  const ok = typeof bestaetige === 'function' && await bestaetige({
+    title: 'Empfänger fehlt',
+    message: grund + ' Ohne Empfängerangaben bleibt die Rechnung ein Entwurf: sie kann erst bezahlt oder ausgestellt werden, wenn Sie sie mit vollständigen Patientendaten erneut speichern.',
+    confirmText: 'Als Entwurf speichern', cancelText: 'Abbrechen', variant: 'warning',
+  });
+  return ok ? snap : null;
 }

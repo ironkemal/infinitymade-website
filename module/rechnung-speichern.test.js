@@ -229,7 +229,8 @@ function createTestEnvironment(customMocks = {}) {
     payloadFuerUpdate: (payload) => payload,
     // 0075: Aussteller/Empfänger-Snapshot (module/rechnung-snapshot.js) — hier nur die Verdrahtung
     ownerProfile: null,
-    rechnungSnapshots: async (_sb, q) => ({ aussteller_snapshot: { v: 1, quelle: q.profil === null ? 'leer' : 'profil' }, empfaenger_snapshot: { v: 1, art: 'patient', patientId: q.patientId } }),
+    rechnungSnapshotsGeprueft: customMocks.rechnungSnapshotsGeprueft || (async (_sb, q) => ({ aussteller_snapshot: { v: 1, quelle: q.profil === null ? 'leer' : 'profil' }, empfaenger_snapshot: { v: 1, art: 'patient', patientId: q.patientId } })),
+    showConfirmModal: async () => true,
     rechnungsSummen,
     invListCache: [],
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
@@ -324,6 +325,13 @@ describe('saveInvoice & createPendingGuard module suite', () => {
     env.domElements.invPatientSelect.value = 'patient-synthetic-1';
     await env.saveInvoice();
     assert.strictEqual(env.supabaseMock.insertCalls.length, 1, 'Subsequent save must succeed');
+  });
+
+  it('Empfänger fehlt und Nutzer bricht ab → kein INSERT, Knopf wieder frei (KHS §6 2 (v))', async () => {
+    const env = createTestEnvironment({ rechnungSnapshotsGeprueft: async () => null });
+    await env.saveInvoice();
+    assert.strictEqual(env.supabaseMock.insertCalls.length, 0);
+    assert.strictEqual(env.domElements.invSaveBtn.disabled, false);
   });
 
   it('validation error (empty invoice lines) releases pending guard and restores button state', async () => {

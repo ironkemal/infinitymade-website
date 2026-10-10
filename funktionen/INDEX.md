@@ -3,7 +3,7 @@
 > Üretim: 2026-10-10 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3446 fonksiyon** (3358 JS · 80 bash · 8 ps1) · 430 dosya · 41 sidebar modülü
+**3450 fonksiyon** (3362 JS · 80 bash · 8 ps1) · 430 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -325,8 +325,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveInvoice()` — [dashboard.js:13501](dashboard.js#L13501-L13589) · 89 satır · invoices:update, invoices:insert
 
 **Yol 2 — `frageZahlungsstatus()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
-- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:70](module/rechnung-zahlung.js#L70-L82) · 13 satır · invoices:update
-- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:136](module/rechnung-zahlung.js#L136-L204) · 69 satır · invoices:update
+- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:72](module/rechnung-zahlung.js#L72-L84) · 13 satır · invoices:update
+- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:159](module/rechnung-zahlung.js#L159-L228) · 70 satır · invoices:update
 
 ### `module_visibility` — 2 bağımsız yazma yolu
 

@@ -67,6 +67,8 @@ export function paymentMethodFuerZahlart(zahlart) {
 
 // onprem §7AI (iii): Fehler nicht verschlucken — seit 0075 friert `paid` die Rechnung ein;
 // ein stiller Fehlschlag liesse eine kassierte Zuzahlung neben einem offenen Entwurf stehen.
+// KHS §6 KALAN İŞ 2 (vi): Rückgabe { ok, meldung } — `meldung` ist der Datenbanktext (z. B. der Trigger
+// `invoice_snapshot_pflicht`, 0080), damit der Aufrufer ihn anzeigen kann statt eines Sammeltexts.
 export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
   try {
     const { error } = await supabase.from('invoices').update({
@@ -75,9 +77,30 @@ export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
       paid_at: new Date().toISOString(),
       status: 'paid',
     }).eq('id', invoiceId);
-    return !error;
+    return error ? { ok: false, meldung: error.message || null } : { ok: true, meldung: null };
+  } catch (err) {
+    return { ok: false, meldung: err?.message || null };
+  }
+}
+
+/**
+ * Darf dieser Entwurf bezahlt werden? Ab 0080 verlässt eine Rechnung den Entwurf nur mit beiden Snapshots.
+ * VOR dem Kassieren prüfen — sonst entsteht ein Kassenbeleg, und die Rechnung bleibt danach Entwurf.
+ * Altbelege (status ≠ draft) sind frei (0080 prüft nur den Übergang). Lesefehler → nicht blockieren:
+ * die Datenbank prüft beim Markieren ohnehin, und deren Meldung wird angezeigt.
+ * @returns {Promise<?string>} Hinweistext, wenn blockiert; sonst null
+ */
+export async function snapshotSperreVorZahlung(supabase, invoiceId) {
+  try {
+    const { data, error } = await supabase.from('invoices')
+      .select('status, aussteller_snapshot, empfaenger_snapshot').eq('id', invoiceId).maybeSingle();
+    if (error || !data) return null;
+    if ((data.status || 'draft') !== 'draft') return null;
+    const obj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    if (obj(data.aussteller_snapshot) && obj(data.empfaenger_snapshot)) return null;
+    return 'Die Rechnung kann noch nicht bezahlt werden: Praxis- oder Empfängerangaben sind nicht eingefroren. Bitte die Rechnung öffnen und erneut speichern.';
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -114,7 +137,7 @@ export async function markiereZuBelegBezahlt(supabase, rxId, zahlart) {
     if (zu.status === 'paid' && zu.payment_status === 'paid') return true;
 
     // Eine Schreibstelle für „bezahlt“ (fonksiyon-ustasi 10.10.2026): künftige Regeln greifen hier mit.
-    return await markiereRechnungBezahlt(supabase, zu.id, paymentMethodFuerZahlart(zahlart));
+    return (await markiereRechnungBezahlt(supabase, zu.id, paymentMethodFuerZahlart(zahlart))).ok;
   } catch (err) {
     console.error('[markiereZuBelegBezahlt] Unerwarteter Fehler:', err);
     return false;
@@ -143,6 +166,10 @@ export async function frageZahlungsstatus(invoiceId, {
 } = {}) {
   if (!invoiceId) return;
 
+  // (vi): vor jedem Kassieren/Markieren — kein Kassenbeleg neben einem Entwurf, der nicht ausgestellt werden darf.
+  const sperre = await snapshotSperreVorZahlung(supabase, invoiceId);
+  if (sperre) { toast(sperre, 'error'); return; }
+
   let rx = null;
   if (prescriptionId) {
     const { data } = await supabase
@@ -155,10 +182,8 @@ export async function frageZahlungsstatus(invoiceId, {
 
   // Fall 1: schon kassiert. Die Frage wäre die zweite zur selben Zahlung.
   if (rx?.zuzahlung_kassiert_am) {
-    if (!await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(rx.zuzahlung_zahlart))) {
-      toast(BEZAHLT_FEHLER, 'error');
-      return;
-    }
+    const m = await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(rx.zuzahlung_zahlart));
+    if (!m.ok) { toast(m.meldung || BEZAHLT_FEHLER, 'error'); return; }
     toast('Zuzahlung war bereits kassiert — Rechnung als bezahlt übernommen ✓');
     return;
   }
@@ -183,9 +208,8 @@ export async function frageZahlungsstatus(invoiceId, {
         .select('zuzahlung_zahlart')
         .eq('id', rx.id)
         .maybeSingle();
-      if (!await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(nach?.zuzahlung_zahlart))) {
-        toast(BEZAHLT_FEHLER, 'error');
-      }
+      const m = await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(nach?.zuzahlung_zahlart));
+      if (!m.ok) toast(m.meldung || BEZAHLT_FEHLER, 'error');
     } else {
       // Abgebrochen oder fehlgeschlagen: die Rechnung bleibt offen. Kein
       // stiller „bezahlt"-Vermerk ohne Beleg — genau daraus entstand das

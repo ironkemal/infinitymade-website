@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
  "dateien": 430,
- "funktionen": 3446,
+ "funktionen": 3450,
  "module": [
   "abrechnung",
   "anamnese",
@@ -28430,7 +28430,7 @@
     "n",
     "openInvView",
     "praxisKopf",
-    "rechnungSnapshots",
+    "snapshotsMitGrund",
     "t"
    ],
    "modules": [
@@ -28585,7 +28585,7 @@
     "n"
    ],
    "calledBy": [
-    "rechnungSnapshots"
+    "snapshotsMitGrund"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -49185,6 +49185,7 @@
     "(datei) module/fussbefund.js",
     "(datei) module/offene-einheiten.js",
     "(datei) module/podo-behandlungen-oeffnen.js",
+    "(datei) module/rechnung-snapshot.js",
     "_speichereAusnahme",
     "_speichereBetriebsart",
     "checkPlanActive",
@@ -62118,7 +62119,7 @@
     "loadRechnungen",
     "openInvView",
     "payloadFuerUpdate",
-    "rechnungSnapshots",
+    "rechnungSnapshotsGeprueft",
     "rechnungsSummen",
     "renderInvLines",
     "showToast",
@@ -73940,7 +73941,6 @@
     "podoPositionsFinder",
     "pruefeEmpfaenger",
     "pruefeVerordnungsfortschritt",
-    "rechnungSnapshots",
     "renderBookingCalendar",
     "renderHoursGrid",
     "renderHoursMiniCal",
@@ -73948,6 +73948,7 @@
     "sendConfirmationEmails",
     "sendRescheduleEmails",
     "showApp",
+    "snapshotsMitGrund",
     "stammdatenLaden",
     "tag",
     "vergebeNummern",
@@ -87965,7 +87966,8 @@
     "speichereNeu"
    ],
    "calledBy": [
-    "bestaetigeUnveraendert"
+    "bestaetigeUnveraendert",
+    "rechnungSnapshotsGeprueft"
    ],
    "modules": [
     "abrechnung",
@@ -97306,7 +97308,7 @@
     "t"
    ],
    "calledBy": [
-    "rechnungSnapshots"
+    "snapshotsMitGrund"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -98713,7 +98715,7 @@
     "n",
     "openInvView",
     "praxisKopf",
-    "rechnungSnapshots",
+    "snapshotsMitGrund",
     "t"
    ],
    "modules": [
@@ -101007,6 +101009,7 @@
     "darf78040"
    ],
    "calledBy": [
+    "(datei) module/rechnung-zahlung.js",
     "(datei) module/sitzung-aktiv.js",
     "(datei) module/sitzungsfortschritt.js",
     "darfErstbefundungNagel",
@@ -134751,8 +134754,30 @@
    "lang": "js",
    "file": "module/rechnung-snapshot.js",
    "start": 27,
-   "end": 39,
-   "lines": 13,
+   "end": 29,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "snapshotsMitGrund"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "snapshotsMitGrund",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-snapshot.js",
+   "start": 31,
+   "end": 47,
+   "lines": 17,
    "spiegelHinweis": null,
    "tables": [
     "leads",
@@ -134767,6 +134792,32 @@
     "ausstellerSnapshot",
     "empfaengerSnapshot",
     "error"
+   ],
+   "calledBy": [
+    "rechnungSnapshots",
+    "rechnungSnapshotsGeprueft"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "rechnungSnapshotsGeprueft",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-snapshot.js",
+   "start": 54,
+   "end": 63,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "bestaetige",
+    "snapshotsMitGrund"
    ],
    "calledBy": [
     "saveInvoice"
@@ -136132,8 +136183,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 70,
-   "end": 82,
+   "start": 72,
+   "end": 84,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [
@@ -136193,12 +136244,136 @@
    ]
   },
   {
+   "name": "snapshotSperreVorZahlung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-zahlung.js",
+   "start": 93,
+   "end": 105,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [
+    "invoices"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "obj"
+   ],
+   "calledBy": [
+    "frageZahlungsstatus"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "obj",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/rechnung-zahlung.js",
+   "start": 99,
+   "end": 102,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "snapshotSperreVorZahlung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "markiereZuBelegBezahlt",
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 96,
-   "end": 122,
+   "start": 119,
+   "end": 145,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -136263,9 +136438,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 136,
-   "end": 204,
-   "lines": 69,
+   "start": 159,
+   "end": 228,
+   "lines": 70,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions",
@@ -136280,6 +136455,7 @@
    "calls": [
     "markiereRechnungBezahlt",
     "paymentMethodFuerZahlart",
+    "snapshotSperreVorZahlung",
     "toast"
    ],
    "calledBy": [
@@ -138919,7 +139095,6 @@
     "proceedToRechnungForPhysio",
     "pruefeRelation",
     "rebindeNoShowSitzungen",
-    "rechnungSnapshots",
     "registerWaechter",
     "registriereVeroeffentlicht",
     "renderEmpStandortList",
@@ -138950,6 +139125,7 @@
     "seedMissingVorlagen",
     "selectDate",
     "showApp",
+    "snapshotsMitGrund",
     "speichereAuftragsdatei",
     "speichereEinheiten",
     "speichereKonten",
@@ -186493,8 +186669,8 @@
       {
        "name": "markiereRechnungBezahlt",
        "file": "module/rechnung-zahlung.js",
-       "start": 70,
-       "end": 82,
+       "start": 72,
+       "end": 84,
        "lines": 13,
        "writes": [
         "invoices:update"
@@ -186543,9 +186719,9 @@
       {
        "name": "frageZahlungsstatus",
        "file": "module/rechnung-zahlung.js",
-       "start": 136,
-       "end": 204,
-       "lines": 69,
+       "start": 159,
+       "end": 228,
+       "lines": 70,
        "writes": [
         "invoices:update"
        ],

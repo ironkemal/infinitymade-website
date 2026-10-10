@@ -46,7 +46,7 @@ import {
   aktiveKonten, kontoAnzeige, istZahlungskategorie,
   AUSBUCHUNGSKONTO_STANDARD,
 } from './buchungskonten.js?v=20260909';
-import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20261010e';
+import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20261010s';
 import { alsISODatum } from './datum.js?v=20261001a';
 
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */

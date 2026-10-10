@@ -30,10 +30,42 @@ test('unbekannte/fehlende Zahlart -> null, nicht undefined', () => {
 test('markiereRechnungBezahlt: meldet UPDATE-Fehler statt ihn zu verschlucken (onprem §7AI iii)', async () => {
   const { markiereRechnungBezahlt } = await import('./rechnung-zahlung.js');
   const sb = (antwort) => ({ from: () => ({ update: () => ({ eq: async () => antwort }) }) });
-  assert.equal(await markiereRechnungBezahlt(sb({ error: null }), 'inv-1', 'bar'), true);
-  assert.equal(await markiereRechnungBezahlt(sb({ error: { message: 'festgeschrieben' } }), 'inv-1', 'bar'), false);
+  assert.deepEqual(await markiereRechnungBezahlt(sb({ error: null }), 'inv-1', 'bar'), { ok: true, meldung: null });
+  // KHS §6 2 (vi): der Datenbanktext (Trigger 0080) kommt beim Aufrufer an
+  assert.deepEqual(await markiereRechnungBezahlt(sb({ error: { message: 'Rechnung RE-1 kann nicht ausgestellt werden' } }), 'inv-1', 'bar'), { ok: false, meldung: 'Rechnung RE-1 kann nicht ausgestellt werden' });
   const wirft = { from: () => ({ update: () => ({ eq: async () => { throw new Error('netz'); } }) }) };
-  assert.equal(await markiereRechnungBezahlt(wirft, 'inv-1', 'bar'), false);
+  assert.deepEqual(await markiereRechnungBezahlt(wirft, 'inv-1', 'bar'), { ok: false, meldung: 'netz' });
+});
+
+// KHS §6 2 (vi): Fake-Supabase für frageZahlungsstatus — invoices (Snapshot-Prüfung + Update) und prescriptions.
+function zahlungsSb({ rechnung, rx = null, updateFehler = null }) {
+  const updates = [];
+  const sb = {
+    from: (tab) => ({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: tab === 'invoices' ? rechnung : rx, error: null }) }) }),
+      update: (werte) => ({ eq: async () => { updates.push({ tab, werte }); return { error: tab === 'invoices' ? updateFehler : null }; } }),
+    }),
+  };
+  return { sb, updates };
+}
+
+test('frageZahlungsstatus: Entwurf ohne Snapshot → kein Kassieren, Hinweis (vi)', async () => {
+  const { frageZahlungsstatus } = await import('./rechnung-zahlung.js');
+  const { sb, updates } = zahlungsSb({ rechnung: { status: 'draft', aussteller_snapshot: { v: 1 }, empfaenger_snapshot: null }, rx: { id: 'rx', zuzahlung_eur: 10 } });
+  let kassiert = false; const toasts = [];
+  await frageZahlungsstatus('inv-1', { supabase: sb, prescriptionId: 'rx', kassiere: async () => { kassiert = true; return true; }, toast: (m, t) => toasts.push({ m, t }) });
+  assert.equal(kassiert, false);
+  assert.equal(updates.length, 0);
+  assert.equal(toasts[0].t, 'error');
+  assert.match(toasts[0].m, /erneut speichern/);
+});
+
+test('frageZahlungsstatus: Altbeleg (sent) ohne Snapshot bleibt zahlbar; DB-Meldung wird angezeigt (vi)', async () => {
+  const { frageZahlungsstatus } = await import('./rechnung-zahlung.js');
+  const { sb } = zahlungsSb({ rechnung: { status: 'sent', aussteller_snapshot: null, empfaenger_snapshot: null }, rx: { id: 'rx', zuzahlung_kassiert_am: '2026-10-10', zuzahlung_zahlart: 'bar' }, updateFehler: { message: 'Trigger sagt nein' } });
+  const toasts = [];
+  await frageZahlungsstatus('inv-1', { supabase: sb, prescriptionId: 'rx', toast: (m, t) => toasts.push({ m, t }) });
+  assert.deepEqual(toasts, [{ m: 'Trigger sagt nein', t: 'error' }]);
 });
 
 test('markiereZuBelegBezahlt: ohne supabase oder rxId -> true (no-op)', async () => {

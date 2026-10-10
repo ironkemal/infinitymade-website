@@ -70,8 +70,8 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261010o
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010o';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010i'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshots } from './module/rechnung-snapshot.js?v=20261009rs'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
-import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261010b'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010e';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010i'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010s'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
+import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261010s'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010s';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
@@ -13516,7 +13516,7 @@ async function saveInvoice() {
     const steuerStatus = steuerStatusVon(currentProfile);
     const st = berechneSteuer(invLines, steuerStatus);
     const zeitraum = leistungszeitraum(invLines);
-    const payload = {
+    const snaps = await rechnungSnapshotsGeprueft(supabase, { profil: ownerProfile || currentProfile, patientId, rezeptId: invPrescriptionId || verordnungAuswahl().prescriptionId || invVerordnungId || null, invoiceType: invPatientInsuranceType || null }, { bestaetige: showConfirmModal }); if (!snaps) return; const payload = {
       owner_id: ownerId,
       patient_id: patientId,
       patient_name: patientName,
@@ -13541,7 +13541,7 @@ async function saveInvoice() {
       brutto_gesamt: st.brutto,
       steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
       steuernummer_snapshot: currentProfile.steuernummer || null,
-      ust_id_snapshot: currentProfile.ust_id || null, ...(await rechnungSnapshots(supabase, { profil: ownerProfile || currentProfile, patientId, rezeptId: invPrescriptionId || verordnungAuswahl().prescriptionId || invVerordnungId || null, invoiceType: invPatientInsuranceType || null })), // 0075: Aussteller/Empfänger wie gedruckt (module/rechnung-snapshot.js)
+      ust_id_snapshot: currentProfile.ust_id || null, ...snaps, // 0075: Aussteller/Empfänger wie gedruckt (module/rechnung-snapshot.js)
       leistung_von: zeitraum.von,
       leistung_bis: zeitraum.bis,
     };
