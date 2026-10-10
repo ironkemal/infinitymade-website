@@ -35,3 +35,121 @@ test('markiereRechnungBezahlt: meldet UPDATE-Fehler statt ihn zu verschlucken (o
   const wirft = { from: () => ({ update: () => ({ eq: async () => { throw new Error('netz'); } }) }) };
   assert.equal(await markiereRechnungBezahlt(wirft, 'inv-1', 'bar'), false);
 });
+
+test('markiereZuBelegBezahlt: ohne supabase oder rxId -> true (no-op)', async () => {
+  const { markiereZuBelegBezahlt } = await import('./rechnung-zahlung.js');
+  assert.equal(await markiereZuBelegBezahlt(null, 'rx-1', 'bar'), true);
+  assert.equal(await markiereZuBelegBezahlt({}, '', 'bar'), true);
+});
+
+test('markiereZuBelegBezahlt: kein ZU-Beleg vorhanden -> true', async () => {
+  const { markiereZuBelegBezahlt } = await import('./rechnung-zahlung.js');
+  const fakeSb = {
+    from(table) {
+      assert.equal(table, 'invoices');
+      return {
+        select() { return this; },
+        eq() { return this; },
+        is() { return this; },
+        neq() { return this; },
+        async maybeSingle() {
+          return { data: null, error: null };
+        },
+      };
+    },
+  };
+  assert.equal(await markiereZuBelegBezahlt(fakeSb, 'rx-none', 'bar'), true);
+});
+
+test('markiereZuBelegBezahlt: bereits bezahlt -> true ohne Update', async () => {
+  const { markiereZuBelegBezahlt } = await import('./rechnung-zahlung.js');
+  let updateCalled = false;
+  const fakeSb = {
+    from() {
+      return {
+        select() { return this; },
+        eq() { return this; },
+        is() { return this; },
+        neq() { return this; },
+        async maybeSingle() {
+          return { data: { id: 'zu-1', status: 'paid', payment_status: 'paid' }, error: null };
+        },
+        update() {
+          updateCalled = true;
+          return { eq: async () => ({ error: null }) };
+        },
+      };
+    },
+  };
+  assert.equal(await markiereZuBelegBezahlt(fakeSb, 'rx-paid', 'bar'), true);
+  assert.equal(updateCalled, false);
+});
+
+test('markiereZuBelegBezahlt: offener ZU-Beleg -> setzt paid und mapped Zahlart', async () => {
+  const { markiereZuBelegBezahlt } = await import('./rechnung-zahlung.js');
+  let updatePayload = null;
+  let updatedId = null;
+  const fakeSb = {
+    from() {
+      return {
+        select() { return this; },
+        eq(col, val) {
+          if (col === 'id') updatedId = val;
+          return this;
+        },
+        is() { return this; },
+        neq() { return this; },
+        async maybeSingle() {
+          return { data: { id: 'zu-42', status: 'sent', payment_status: 'pending' }, error: null };
+        },
+        update(payload) {
+          updatePayload = payload;
+          return this;
+        },
+      };
+    },
+  };
+  const res = await markiereZuBelegBezahlt(fakeSb, 'rx-42', 'ec');
+  assert.equal(res, true);
+  assert.equal(updatedId, 'zu-42');
+  assert.equal(updatePayload.status, 'paid');
+  assert.equal(updatePayload.payment_status, 'paid');
+  assert.equal(updatePayload.payment_method, 'karte');
+  assert.ok(typeof updatePayload.paid_at === 'string');
+});
+
+test('markiereZuBelegBezahlt: DB-Fehler meldet false', async () => {
+  const { markiereZuBelegBezahlt } = await import('./rechnung-zahlung.js');
+  const fakeSbSelectErr = {
+    from() {
+      return {
+        select() { return this; },
+        eq() { return this; },
+        is() { return this; },
+        neq() { return this; },
+        async maybeSingle() {
+          return { data: null, error: { message: 'DB down' } };
+        },
+      };
+    },
+  };
+  assert.equal(await markiereZuBelegBezahlt(fakeSbSelectErr, 'rx-err', 'bar'), false);
+
+  const fakeSbUpdateErr = {
+    from() {
+      return {
+        select() { return this; },
+        eq() { return this; },
+        is() { return this; },
+        neq() { return this; },
+        async maybeSingle() {
+          return { data: { id: 'zu-1', status: 'sent', payment_status: 'pending' }, error: null };
+        },
+        update() {
+          return { eq: async () => ({ error: { message: 'update failed' } }) };
+        },
+      };
+    },
+  };
+  assert.equal(await markiereZuBelegBezahlt(fakeSbUpdateErr, 'rx-err2', 'bar'), false);
+});

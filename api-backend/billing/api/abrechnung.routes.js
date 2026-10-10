@@ -40,6 +40,7 @@ import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
+import { baueZuBelegZeile, zuDruckDaten, zuBelegVeraltet, baueGegenbeleg } from '../zuzahlung/zu-beleg.js';
 import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
@@ -2762,6 +2763,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     });
 
     const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei }) => ({
+      session_id: s.id,
       datum: s.done_at,
       position: storedPos,
       bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
@@ -2769,40 +2771,216 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
     }));
 
-    // ---- Render PDF/HTML Template ----
-    const html = renderZuzahlungsrechnung({
-      praxis: {
-        // Nie die BSNR des Arztes als Praxis-IK drucken (gkv-302, 09.10.2026): fehlt die IK, bleibt das Feld leer.
-        ...praxisKopf(praxisProfil, { ersatzEmail: tenantId === user.id ? user.email : '' }),
-        steuernummer: praxisProfil.steuernummer || '',
-        ust_id: praxisProfil.ust_id || '',
-      },
-      patient: {
-        nachname: rx.leads?.last_name || '',
-        vorname: rx.leads?.first_name || '',
-        strasse: rx.leads?.street || '',
-        plz: rx.leads?.plz || '',
-        ort: rx.leads?.city || '',
-        geburtsdatum: rx.leads?.geburtsdatum || '',
-        kvnr: rx.leads?.versichertennummer || ''
-      },
-      verordnung: {
-        ausstellungsdatum: rx.ausstellungsdatum,
-        krankenkasse: rx.leads?.krankenkasse,
-        arzt: rx.aerzte?.arzt_name || 'Hausarzt'
-      },
-      rechnung: {
-        nummer: `ZU-${rx.id.slice(0, 8).toUpperCase()}`,
-        datum: new Date(),
-        faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000)
-      },
-      sessions: printSessions,
-      totals,
-      bankverbindung: buildBankverbindung(praxisProfil),
-      logoUrl: praxisProfil.praxis_logo_url || '',
-      invoiceFooterText: customFusszeile || praxisProfil.invoice_footer_text || '',
-      hinweisText: customHinweis
-    });
+    const praxisDruck = {
+      // Nie die BSNR des Arztes als Praxis-IK drucken (gkv-302, 09.10.2026): fehlt die IK, bleibt das Feld leer.
+      ...praxisKopf(praxisProfil, { ersatzEmail: tenantId === user.id ? user.email : '' }),
+      steuernummer: praxisProfil.steuernummer || '',
+      ust_id: praxisProfil.ust_id || '',
+    };
+    const patientDruck = {
+      nachname: rx.leads?.last_name || '',
+      vorname: rx.leads?.first_name || '',
+      strasse: rx.leads?.street || '',
+      plz: rx.leads?.plz || '',
+      ort: rx.leads?.city || '',
+      geburtsdatum: rx.leads?.geburtsdatum || '',
+      kvnr: rx.leads?.versichertennummer || ''
+    };
+    const verordnungDruck = {
+      ausstellungsdatum: rx.ausstellungsdatum,
+      krankenkasse: rx.leads?.krankenkasse,
+      arzt: rx.aerzte?.arzt_name || 'Hausarzt'
+    };
+
+    // 0078: ZU ist ein festgeschriebener invoices-Beleg (GoBD § 147 Abs. 1 Nr. 4 AO, legal-de 10.10.2026,
+    // wissensbank/SPEC-RULES.md „Zuzahlungsaufforderung (ZU) = VKZ-03-Urbeleg" für § 43c SGB V).
+    // Wenn noch keine 'done'-Sitzungen vorliegen -> Vorschau wie bisher, aber Nummer "Vorschau — noch nicht ausgestellt", NICHTS speichern.
+    if (doneSessions.length === 0) {
+      const html = renderZuzahlungsrechnung({
+        praxis: praxisDruck,
+        patient: patientDruck,
+        verordnung: verordnungDruck,
+        rechnung: {
+          nummer: 'Vorschau — noch nicht ausgestellt',
+          datum: new Date(),
+          faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000)
+        },
+        sessions: printSessions,
+        totals,
+        bankverbindung: buildBankverbindung(praxisProfil),
+        logoUrl: praxisProfil.praxis_logo_url || '',
+        invoiceFooterText: customFusszeile || praxisProfil.invoice_footer_text || '',
+        hinweisText: customHinweis
+      });
+
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      if (req.query.print === '1') {
+        return res.send(html.replace(
+          '</body>',
+          '<script>window.addEventListener("load",function(){window.print();});<\/script></body>'
+        ));
+      }
+      return res.send(html);
+    }
+
+    // Sonst aktive ZU suchen:
+    // invoices mit prescription_id = rx.id, invoice_type = 'zuzahlung', storno_von IS NULL, status <> 'cancelled', owner_id = tenantId (maybeSingle).
+    let { data: aktiveZu, error: zuErr } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('prescription_id', rx.id)
+      .eq('invoice_type', 'zuzahlung')
+      .is('storno_von', null)
+      .neq('status', 'cancelled')
+      .eq('owner_id', tenantId)
+      .maybeSingle();
+
+    if (zuErr) {
+      console.error('[zuzahlungsrechnung/aktiveZu]', zuErr);
+      return res.status(500).send('Fehler beim Laden des Zuzahlungsbelegs: ' + zuErr.message);
+    }
+
+    if (!aktiveZu) {
+      // Keine vorhanden -> baueZuBelegZeile INSERT .select('*').single()
+      const zeile = baueZuBelegZeile({
+        tenantId,
+        rx,
+        praxisDruck,
+        patientDruck,
+        verordnungDruck,
+        printSessions,
+        totals,
+        zahlungszielTage,
+        hinweisText: customHinweis,
+        invoiceFooterText: customFusszeile || praxisProfil.invoice_footer_text || '',
+        logoUrl: praxisProfil.praxis_logo_url || '',
+        bankverbindung: buildBankverbindung(praxisProfil),
+      });
+
+      const { data: inserted, error: insErr } = await supabase
+        .from('invoices')
+        .insert(zeile)
+        .select('*')
+        .single();
+
+      if (insErr) {
+        if (insErr.code === '23505') {
+          // Gleichzeitiger Druck -> aktive Zeile erneut lesen
+          const { data: retry, error: retryErr } = await supabase
+            .from('invoices')
+            .select('*')
+            .eq('prescription_id', rx.id)
+            .eq('invoice_type', 'zuzahlung')
+            .is('storno_von', null)
+            .neq('status', 'cancelled')
+            .eq('owner_id', tenantId)
+            .single();
+          if (retryErr || !retry) {
+            console.error('[zuzahlungsrechnung/retry23505]', retryErr);
+            return res.status(500).send('Fehler beim Laden des Zuzahlungsbelegs nach Konflikt: ' + (retryErr?.message || 'Nicht gefunden'));
+          }
+          aktiveZu = retry;
+        } else {
+          console.error('[zuzahlungsrechnung/insert]', insErr);
+          return res.status(500).send('Fehler beim Erstellen des Zuzahlungsbelegs: ' + insErr.message);
+        }
+      } else {
+        aktiveZu = inserted;
+      }
+    } else {
+      // Vorhanden: prüfen ob veraltet und nicht bezahlt
+      const veraltet = zuBelegVeraltet(aktiveZu, { printSessions, totals });
+      const istBezahlt = aktiveZu.payment_status === 'paid' || aktiveZu.status === 'paid';
+
+      if (veraltet && !istBezahlt) {
+        // Vorhanden und veraltet und NICHT bezahlt -> Gegenbeleg INSERT, Original stornieren, neue Zeile INSERT
+        const { data: existingGegen, error: egErr } = await supabase
+          .from('invoices')
+          .select('id')
+          .eq('storno_von', aktiveZu.id)
+          .maybeSingle();
+
+        if (egErr) {
+          console.error('[zuzahlungsrechnung/checkGegenbeleg]', egErr);
+          return res.status(500).send('Fehler bei Prüfung des Gegenbelegs: ' + egErr.message);
+        }
+
+        if (!existingGegen) {
+          const gegenZeile = baueGegenbeleg(aktiveZu);
+          const { error: gbErr } = await supabase
+            .from('invoices')
+            .insert(gegenZeile);
+          if (gbErr && gbErr.code !== '23505') {
+            console.error('[zuzahlungsrechnung/insertGegenbeleg]', gbErr);
+            return res.status(500).send('Fehler beim Erstellen des Storno-Gegenbelegs: ' + gbErr.message);
+          }
+        }
+
+        const { error: cancelErr } = await supabase
+          .from('invoices')
+          .update({
+            status: 'cancelled',
+            storno_grund: 'Sitzungen/Betrag geändert — ersetzt',
+            storno_am: berlinHeute(),
+          })
+          .eq('id', aktiveZu.id);
+
+        if (cancelErr) {
+          console.error('[zuzahlungsrechnung/cancelOriginal]', cancelErr);
+          return res.status(500).send('Fehler beim Stornieren des alten Zuzahlungsbelegs: ' + cancelErr.message);
+        }
+
+        const neueZeile = baueZuBelegZeile({
+          tenantId,
+          rx,
+          praxisDruck,
+          patientDruck,
+          verordnungDruck,
+          printSessions,
+          totals,
+          zahlungszielTage,
+          hinweisText: customHinweis,
+          invoiceFooterText: customFusszeile || praxisProfil.invoice_footer_text || '',
+          logoUrl: praxisProfil.praxis_logo_url || '',
+          bankverbindung: buildBankverbindung(praxisProfil),
+        });
+
+        const { data: neuInserted, error: neuErr } = await supabase
+          .from('invoices')
+          .insert(neueZeile)
+          .select('*')
+          .single();
+
+        if (neuErr) {
+          console.error('[zuzahlungsrechnung/insertNeu]', neuErr);
+          return res.status(500).send('Fehler beim Erstellen des neuen Zuzahlungsbelegs: ' + neuErr.message);
+        }
+
+        aktiveZu = neuInserted;
+      }
+      // Vorhanden und veraltet aber bezahlt -> gespeicherte Zeile drucken (nicht ersetzen)
+    }
+
+    // Kassiert, Beleg steht aber noch offen (Nachziehen nach dem Kassieren schlug fehl) -> jetzt bezahlt.
+    // Nur Status/Zahlung — Inhalt bleibt festgeschrieben; keine Belegliste-Buchung (die hat das Kassieren).
+    if (rx.zuzahlung_kassiert_am && aktiveZu.status === 'sent' && aktiveZu.payment_status !== 'paid') {
+      const nachgezogen = { ...baueZuBelegZeile({ tenantId, rx, printSessions: [], totals: {} }) };
+      const { data: bezahlt, error: payErr } = await supabase
+        .from('invoices')
+        .update({ status: 'paid', payment_status: 'paid', paid_at: nachgezogen.paid_at, payment_method: nachgezogen.payment_method })
+        .eq('id', aktiveZu.id)
+        .select('*')
+        .single();
+      if (payErr) {
+        console.error('[zuzahlungsrechnung/nachziehenBezahlt]', payErr);
+      } else if (bezahlt) {
+        aktiveZu = bezahlt;
+      }
+    }
+
+    // Gedruckt wird IMMER aus der gespeicherten Zeile über zuDruckDaten(row) -> renderZuzahlungsrechnung
+    const druckDaten = zuDruckDaten(aktiveZu);
+    const html = renderZuzahlungsrechnung(druckDaten);
 
     res.set('Content-Type', 'text/html; charset=utf-8');
     // ?print=1 → der Druckdialog geht von selbst auf. Aus dem Seitenbereich des

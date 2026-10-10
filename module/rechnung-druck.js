@@ -25,7 +25,7 @@
  * die Sache tatsächlich hängt.
  */
 
-import { summenAnzeige } from './rechnung-summen.js?v=20261006n';
+import { summenAnzeige } from './rechnung-summen.js?v=20261010b';
 
 /** Sichtbarkeit über style.display, nicht über das hidden-Attribut:
  *  `.invoice-print-total-row` setzt `display:flex` und würde `hidden`

@@ -44,6 +44,7 @@ export async function sucheRechnungZurVerordnung(supabase, rxId) {
       .from('invoices')
       .select('id')
       .or(`prescription_id.eq.${rxId},verordnung_id.eq.${rxId}`)
+      .or('invoice_type.is.null,invoice_type.neq.zuzahlung')
       .neq('status', 'cancelled')
       .order('created_at', { ascending: false })
       .limit(1);
@@ -108,6 +109,9 @@ export async function oeffneRechnungZurVerordnung({ rxId, leadId }, deps = {}) {
  * @returns {Promise<string|null>} Fehlermeldung oder null wenn erlaubt
  */
 export async function bgSperreBeimSpeichern({ supabase, invoiceType, prescriptionId }) {
+  if (invoiceType === 'zuzahlung') {
+    return 'Zuzahlungsbelege werden über den Druck am Rezept ausgestellt und sind nicht bearbeitbar.';
+  }
   if (invoiceType !== 'bg') return null;
   if (!prescriptionId) {
     return 'Eine BG-Rechnung braucht eine BG-Verordnung (UV-Träger, Anschrift, Unfalltag). Bitte im Editor die Verordnung auswählen.';

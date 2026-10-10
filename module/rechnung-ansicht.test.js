@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { rechnungsModus, zeigeRechnungsModus, renderRezeptBadges, mountRechnungsansicht } from './rechnung-ansicht.js';
+import { rechnungsModus, zeigeRechnungsModus, renderRezeptBadges, mountRechnungsansicht, renderInvList } from './rechnung-ansicht.js';
 
 // Regressionstest für Bug 1 (Ops-Meldung, 09.09.2026): "Rechnung speichern
 // schliesst den Editor nicht — es wirkt, als wäre nichts passiert." Die Regel
@@ -67,3 +67,26 @@ test('renderRezeptBadges: DMRZ exportiert -> "DMRZ ✓"-Badge', () => {
   const html = renderRezeptBadges({ prescriptions: { rezept_typ: 'blanko', dmrz_exported_at: '2026-09-01T10:00:00Z' } });
   assert.match(html, /DMRZ ✓/);
 });
+
+test('renderInvList: blendet fuer ZU den Zahlungsknopf aus', () => {
+  let innerHTML = '';
+  global.document = {
+    getElementById: (id) => {
+      if (id === 'invListBody') return { set innerHTML(val) { innerHTML = val; }, get innerHTML() { return innerHTML; }, querySelectorAll: () => [] };
+      if (id === 'invListEmpty') return { hidden: true };
+      return null;
+    }
+  };
+  mountRechnungsansicht({
+    escapeHtml: (s) => s,
+    formatEur: (n) => `${n} €`,
+    liste: () => [
+      { id: 'zu-1', invoice_number: 'ZU-2026-0001', invoice_type: 'zuzahlung', status: 'sent', payment_status: 'pending', total_patient: 10 },
+      { id: 'gkv-1', invoice_number: 'INV-2026-0001', invoice_type: 'gkv', status: 'sent', payment_status: 'pending', total_patient: 20 },
+    ],
+  });
+  renderInvList();
+  assert.ok(!innerHTML.includes('data-id="zu-1" title="Zahlungseingang verbuchen"'), 'ZU darf keinen Zahlungsknopf haben');
+  assert.ok(innerHTML.includes('data-id="gkv-1" title="Zahlungseingang verbuchen"'), 'GKV muss Zahlungsknopf haben');
+});
+

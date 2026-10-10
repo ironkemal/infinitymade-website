@@ -34,5 +34,5 @@ export function summenAnzeige(inv) {
 
 /** Kurzbezeichnung für die Rechnungsliste. */
 export function typKennzeichen(invoiceType) {
-  return { gkv: 'GKV', bg: 'BG', selbstzahler: 'Selbstzahler' }[invoiceType] || 'Privat';
+  return { gkv: 'GKV', bg: 'BG', selbstzahler: 'Selbstzahler', zuzahlung: 'Zuzahlung' }[invoiceType] || 'Privat';
 }

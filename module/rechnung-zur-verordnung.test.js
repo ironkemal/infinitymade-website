@@ -53,7 +53,7 @@ test('sucheRechnung: ungültige ID ruft Supabase gar nicht auf', async () => {
 test('sucheRechnung: Treffer liefert ID der jüngsten Rechnung', async () => {
   const validUuid = '11111111-2222-3333-4444-555555555555';
   let capturedTable = '';
-  let capturedOr = '';
+  const capturedOrs = [];
   let capturedOrder = null;
 
   const fakeSb = {
@@ -61,7 +61,7 @@ test('sucheRechnung: Treffer liefert ID der jüngsten Rechnung', async () => {
       capturedTable = table;
       return {
         select() { return this; },
-        or(filter) { capturedOr = filter; return this; },
+        or(filter) { capturedOrs.push(filter); return this; },
         neq() { return this; },
         order(field, opts) { capturedOrder = { field, opts }; return this; },
         limit() {
@@ -74,7 +74,8 @@ test('sucheRechnung: Treffer liefert ID der jüngsten Rechnung', async () => {
   const id = await sucheRechnungZurVerordnung(fakeSb, validUuid);
   assert.equal(id, 'inv-42');
   assert.equal(capturedTable, 'invoices');
-  assert.equal(capturedOr, `prescription_id.eq.${validUuid},verordnung_id.eq.${validUuid}`);
+  assert.equal(capturedOrs[0], `prescription_id.eq.${validUuid},verordnung_id.eq.${validUuid}`);
+  assert.equal(capturedOrs[1], 'invoice_type.is.null,invoice_type.neq.zuzahlung');
   assert.deepEqual(capturedOrder, { field: 'created_at', opts: { ascending: false } });
 });
 
@@ -324,3 +325,13 @@ test('bgSperre: alles vorhanden liefert null', async () => {
   });
   assert.equal(res, null);
 });
+
+test('bgSperre: invoice_type zuzahlung sperrt das Speichern im Editor', async () => {
+  const res = await bgSperreBeimSpeichern({
+    supabase: null,
+    invoiceType: 'zuzahlung',
+    prescriptionId: '11111111-2222-3333-4444-555555555555',
+  });
+  assert.equal(res, 'Zuzahlungsbelege werden über den Druck am Rezept ausgestellt und sind nicht bearbeitbar.');
+});
+

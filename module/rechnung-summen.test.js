@@ -51,6 +51,7 @@ test('Kennzeichen der Rechnungsliste', () => {
   assert.equal(typKennzeichen('gkv'), 'GKV');
   assert.equal(typKennzeichen('bg'), 'BG');
   assert.equal(typKennzeichen('selbstzahler'), 'Selbstzahler');
+  assert.equal(typKennzeichen('zuzahlung'), 'Zuzahlung');
   assert.equal(typKennzeichen('privat'), 'Privat');
   assert.equal(typKennzeichen('irgendwas'), 'Privat');
 });

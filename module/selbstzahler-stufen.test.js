@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  STUFEN_MAX, normalisiereStufen, stufenAusProfil, letztePreiseAusRechnungen,
+  STUFEN_MAX, normalisiereStufen, stufenAusProfil, letztePreiseAusRechnungen, ladeLetztePreise,
 } from './selbstzahler-stufen.js';
 
 test('normalisiereStufen: leere und kaputte Eingaben ergeben eine leere Liste', () => {
@@ -88,3 +88,43 @@ test('letztePreiseAusRechnungen: kaputte line_items werfen nicht', () => {
   assert.deepEqual(letztePreiseAusRechnungen([{ created_at: 'x', line_items: null }]), []);
   assert.deepEqual(letztePreiseAusRechnungen(null), []);
 });
+
+test('ladeLetztePreise: filtert ZU-Zeilen über or-Filter aus', async () => {
+  let capturedTable = '';
+  let capturedEq = '';
+  let capturedNeq = '';
+  let capturedOr = '';
+  const fakeSb = {
+    from(t) {
+      capturedTable = t;
+      return {
+        select() { return this; },
+        eq(col, val) { capturedEq = `${col}=${val}`; return this; },
+        neq(col, val) { capturedNeq = `${col}=${val}`; return this; },
+        or(filter) { capturedOr = filter; return this; },
+        order() { return this; },
+        limit() {
+          return Promise.resolve({
+            data: [
+              {
+                issued_at: '2026-10-01',
+                line_items: [{ title: 'Privatbehandlung', unit_price: 60 }],
+              },
+            ],
+            error: null,
+          });
+        },
+      };
+    },
+  };
+
+  const res = await ladeLetztePreise(fakeSb, 'pat-123');
+  assert.equal(capturedTable, 'invoices');
+  assert.equal(capturedEq, 'patient_id=pat-123');
+  assert.equal(capturedNeq, 'status=draft');
+  assert.equal(capturedOr, 'invoice_type.is.null,invoice_type.neq.zuzahlung');
+  assert.equal(res.length, 1);
+  assert.equal(res[0].title, 'Privatbehandlung');
+  assert.equal(res[0].betrag_eur, 60);
+});
+

@@ -25,8 +25,9 @@
 
 import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261009rs';
 import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261009rs';
-import { typKennzeichen } from './rechnung-summen.js?v=20261006n';
+import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
+import { belegDruckUrl } from './beleg-druck.js?v=20261010';
 
 let d = null;
 
@@ -101,13 +102,26 @@ export function renderInvList() {
       <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span>${payBadge}</td>
       <td>${renderRezeptBadges(inv)}</td>
       <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button>${
-        (st !== 'cancelled' && st !== 'draft' && inv.payment_status !== 'paid')
+        (inv.invoice_type !== 'zuzahlung' && st !== 'cancelled' && st !== 'draft' && inv.payment_status !== 'paid')
           ? `<button class="btn-ghost-sm inv-pay-btn" data-id="${inv.id}" title="Zahlungseingang verbuchen">Zahlung</button>`
           : ''}</td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
-    btn.onclick = () => openInvView(btn.dataset.id);
+    btn.onclick = async () => {
+      const inv = (d.liste?.() || []).find(i => i.id === btn.dataset.id);
+      if (inv?.invoice_type === 'zuzahlung' && inv?.prescription_id && d.apiBasis) {
+        try {
+          const tk = typeof d.token === 'function' ? await d.token() : (d.token || '');
+          const url = belegDruckUrl({ api: d.apiBasis, rxId: inv.prescription_id, typ: 'quittung_zuzahlung', token: tk });
+          window.open(url, '_blank');
+          return;
+        } catch (e) {
+          console.error('[rechnung-ansicht/zu-druck]', e);
+        }
+      }
+      openInvView(btn.dataset.id);
+    };
   });
   tbody.querySelectorAll('.inv-pay-btn').forEach(btn => {
     btn.onclick = async () => {

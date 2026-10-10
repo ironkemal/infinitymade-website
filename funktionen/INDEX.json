@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-10",
- "dateien": 428,
- "funktionen": 3427,
+ "dateien": 429,
+ "funktionen": 3434,
  "module": [
   "abrechnung",
   "anamnese",
@@ -7110,7 +7110,8 @@
     "wire",
     "wireBusinessModal",
     "withTimeout",
-    "zeilenMinuten"
+    "zeilenMinuten",
+    "zuBelegVeraltet"
    ],
    "modules": [
     "abrechnung",
@@ -7713,7 +7714,8 @@
     "wire",
     "wireBusinessModal",
     "withTimeout",
-    "zeilenMinuten"
+    "zeilenMinuten",
+    "zuBelegVeraltet"
    ],
    "modules": [
     "abrechnung",
@@ -9255,7 +9257,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -10300,7 +10303,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -10497,7 +10501,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -10933,8 +10938,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 93,
-   "end": 95,
+   "start": 94,
+   "end": 96,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -11001,8 +11006,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 116,
-   "end": 127,
+   "start": 117,
+   "end": 128,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -11024,8 +11029,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 137,
-   "end": 152,
+   "start": 138,
+   "end": 153,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -11055,8 +11060,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 163,
-   "end": 180,
+   "start": 164,
+   "end": 181,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -11085,8 +11090,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 182,
-   "end": 189,
+   "start": 183,
+   "end": 190,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -11108,8 +11113,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 191,
-   "end": 193,
+   "start": 192,
+   "end": 194,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -11131,8 +11136,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 195,
-   "end": 197,
+   "start": 196,
+   "end": 198,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -11155,8 +11160,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 208,
-   "end": 222,
+   "start": 209,
+   "end": 223,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -11178,8 +11183,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 247,
-   "end": 250,
+   "start": 248,
+   "end": 251,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -11204,8 +11209,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 255,
-   "end": 257,
+   "start": 256,
+   "end": 258,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -11231,8 +11236,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 274,
-   "end": 325,
+   "start": 275,
+   "end": 326,
    "lines": 52,
    "spiegelHinweis": null,
    "tables": [
@@ -11260,8 +11265,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 339,
-   "end": 412,
+   "start": 340,
+   "end": 413,
    "lines": 74,
    "spiegelHinweis": null,
    "tables": [
@@ -11294,8 +11299,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 359,
-   "end": 383,
+   "start": 360,
+   "end": 384,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -11322,8 +11327,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 421,
-   "end": 423,
+   "start": 422,
+   "end": 424,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -11344,8 +11349,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 427,
-   "end": 434,
+   "start": 428,
+   "end": 435,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -11366,8 +11371,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 438,
-   "end": 443,
+   "start": 439,
+   "end": 444,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -11430,8 +11435,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 458,
-   "end": 483,
+   "start": 459,
+   "end": 484,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -11452,8 +11457,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 499,
-   "end": 505,
+   "start": 500,
+   "end": 506,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -11476,8 +11481,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 511,
-   "end": 683,
+   "start": 512,
+   "end": 684,
    "lines": 173,
    "spiegelHinweis": null,
    "tables": [],
@@ -11516,8 +11521,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1259,
-   "end": 1278,
+   "start": 1260,
+   "end": 1279,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -11542,8 +11547,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1414,
-   "end": 1543,
+   "start": 1415,
+   "end": 1544,
    "lines": 130,
    "spiegelHinweis": null,
    "tables": [
@@ -11571,8 +11576,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1557,
-   "end": 1645,
+   "start": 1558,
+   "end": 1646,
    "lines": 89,
    "spiegelHinweis": null,
    "tables": [
@@ -11602,8 +11607,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1912,
-   "end": 2114,
+   "start": 1913,
+   "end": 2115,
    "lines": 203,
    "spiegelHinweis": null,
    "tables": [
@@ -11628,8 +11633,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2116,
-   "end": 2182,
+   "start": 2117,
+   "end": 2183,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [
@@ -11658,8 +11663,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2300,
-   "end": 2320,
+   "start": 2301,
+   "end": 2321,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -11685,8 +11690,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2331,
-   "end": 2352,
+   "start": 2332,
+   "end": 2353,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -11710,8 +11715,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2332,
-   "end": 2351,
+   "start": 2333,
+   "end": 2352,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -11797,8 +11802,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3436,
-   "end": 3580,
+   "start": 3614,
+   "end": 3758,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -13055,7 +13060,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -23443,7 +23449,8 @@
     "fmtEur"
    ],
    "calledBy": [
-    "(datei) api-backend/billing/api/abrechnung.routes.js"
+    "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "(datei) api-backend/billing/zuzahlung/zu-beleg.js"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -25562,6 +25569,192 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/zuzahlung.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "addDays",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 15,
+   "end": 26,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/billing/api/mahnwesen.routes.js",
+    "(datei) api-backend/server.js",
+    "generateRecurringDates",
+    "validateBlanko",
+    "validateLhbBvb",
+    "validateStandard",
+    "zuDruckDaten"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "baueZuBelegZeile",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 35,
+   "end": 164,
+   "lines": 130,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausstellerSnapshot",
+    "round"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zuDruckDaten",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 174,
+   "end": 224,
+   "lines": 51,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "addDays"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zuBelegVeraltet",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 231,
+   "end": 280,
+   "lines": 50,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "has",
+    "round"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "baueGegenbeleg",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 287,
+   "end": 331,
+   "lines": 45,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "neg"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "neg",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/billing/zuzahlung/zu-beleg.js",
+   "start": 290,
+   "end": 319,
+   "lines": 30,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "baueGegenbeleg"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -28123,6 +28316,7 @@
    ],
    "calledBy": [
     "ausfallAusstellerSnapshot",
+    "baueZuBelegZeile",
     "n",
     "openInvView",
     "praxisKopf",
@@ -32092,7 +32286,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -32274,7 +32469,8 @@
     "generateRecurringDates",
     "validateBlanko",
     "validateLhbBvb",
-    "validateStandard"
+    "validateStandard",
+    "zuDruckDaten"
    ],
    "modules": [
     "abrechnung",
@@ -35000,6 +35196,7 @@
     "_resizeVorlagenIframe",
     "auswahlStand",
     "baueGruppen",
+    "baueZuBelegZeile",
     "cent",
     "computeRxDeadlineAlerts",
     "createZuzahlungsforderungRouter",
@@ -35071,7 +35268,8 @@
     "zeichneRezeptFortschritt",
     "zeichneTerminkarte",
     "zeigeScanBeleg",
-    "zielGroesse"
+    "zielGroesse",
+    "zuBelegVeraltet"
    ],
    "modules": [
     "abrechnung",
@@ -49513,6 +49711,7 @@
    "storage": [],
    "calls": [
     "json",
+    "markiereZuBelegBezahlt",
     "openKassierenDialog",
     "openZuzahlungsrechnung",
     "showToast",
@@ -76416,6 +76615,7 @@
     "lade",
     "ladeListe",
     "oeffneZahlungseingang",
+    "renderInvList",
     "starteZahlungseingang"
    ],
    "modules": [
@@ -95531,7 +95731,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "oeffneBelegDruck"
+    "oeffneBelegDruck",
+    "renderInvList"
    ],
    "modules": [
     "abrechnung",
@@ -98297,6 +98498,7 @@
    ],
    "calledBy": [
     "ausfallAusstellerSnapshot",
+    "baueZuBelegZeile",
     "n",
     "openInvView",
     "praxisKopf",
@@ -131856,8 +132058,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 34,
-   "end": 36,
+   "start": 35,
+   "end": 37,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -131878,8 +132080,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 43,
-   "end": 50,
+   "start": 44,
+   "end": 51,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -131939,8 +132141,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 53,
-   "end": 59,
+   "start": 54,
+   "end": 60,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -132006,8 +132208,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 61,
-   "end": 71,
+   "start": 62,
+   "end": 72,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -132069,9 +132271,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 73,
-   "end": 121,
-   "lines": 49,
+   "start": 74,
+   "end": 135,
+   "lines": 62,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -132079,11 +132281,14 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "belegDruckUrl",
+    "error",
     "escapeHtml",
     "formatEur",
     "openInvView",
     "renderRezeptBadges",
     "starteZahlungseingang",
+    "token",
     "typKennzeichen"
    ],
    "calledBy": [
@@ -132137,8 +132342,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 123,
-   "end": 331,
+   "start": 137,
+   "end": 345,
    "lines": 209,
    "spiegelHinweis": null,
    "tables": [
@@ -132218,8 +132423,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 203,
-   "end": 208,
+   "start": 217,
+   "end": 222,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -132292,8 +132497,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-ansicht.js",
-   "start": 333,
-   "end": 335,
+   "start": 347,
+   "end": 349,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -135451,7 +135656,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "frageZahlungsstatus"
+    "frageZahlungsstatus",
+    "markiereZuBelegBezahlt"
    ],
    "modules": [
     "abrechnung",
@@ -135560,12 +135766,79 @@
    ]
   },
   {
-   "name": "frageZahlungsstatus",
+   "name": "markiereZuBelegBezahlt",
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
    "start": 96,
-   "end": 164,
+   "end": 137,
+   "lines": 42,
+   "spiegelHinweis": null,
+   "tables": [
+    "invoices"
+   ],
+   "rpcs": [],
+   "writes": [
+    "invoices:update"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "error",
+    "paymentMethodFuerZahlart"
+   ],
+   "calledBy": [
+    "kassiereZuzahlung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "frageZahlungsstatus",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rechnung-zahlung.js",
+   "start": 151,
+   "end": 219,
    "lines": 69,
    "spiegelHinweis": null,
    "tables": [
@@ -136763,8 +137036,8 @@
    "lang": "js",
    "file": "module/rechnung-zur-verordnung.js",
    "start": 40,
-   "end": 55,
-   "lines": 16,
+   "end": 56,
+   "lines": 17,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -136824,8 +137097,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zur-verordnung.js",
-   "start": 68,
-   "end": 101,
+   "start": 69,
+   "end": 102,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
@@ -136890,9 +137163,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zur-verordnung.js",
-   "start": 110,
-   "end": 139,
-   "lines": 30,
+   "start": 111,
+   "end": 143,
+   "lines": 33,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -137949,6 +138222,7 @@
     "logCall",
     "main",
     "markiereNichtErschienen",
+    "markiereZuBelegBezahlt",
     "mountCalendar",
     "mountFussbefund",
     "noopMiddleware",
@@ -137973,6 +138247,7 @@
     "renderFussbefundArchiv",
     "renderGaps",
     "renderGapsForDate",
+    "renderInvList",
     "renderLegendeSettings",
     "renderOtherStandortEmps",
     "renderSidebar",
@@ -141863,8 +142138,8 @@
    "lang": "js",
    "file": "module/selbstzahler-stufen.js",
    "start": 115,
-   "end": 130,
-   "lines": 16,
+   "end": 131,
+   "lines": 17,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -141889,8 +142164,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/selbstzahler-stufen.js",
-   "start": 136,
-   "end": 151,
+   "start": 137,
+   "end": 152,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -141914,8 +142189,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/selbstzahler-stufen.js",
-   "start": 165,
-   "end": 201,
+   "start": 166,
+   "end": 202,
    "lines": 37,
    "spiegelHinweis": null,
    "tables": [
@@ -141946,8 +142221,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/selbstzahler-stufen.js",
-   "start": 203,
-   "end": 257,
+   "start": 204,
+   "end": 258,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [],
@@ -141969,8 +142244,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/selbstzahler-stufen.js",
-   "start": 259,
-   "end": 289,
+   "start": 260,
+   "end": 290,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [
@@ -171893,6 +172168,7 @@
     "inline"
    ],
    "calledBy": [
+    "(datei) api-backend/billing/zuzahlung/zu-beleg.js",
     "boardNotice",
     "cardHTML",
     "diabetesBeantwortetNichtNein",
@@ -182835,8 +183111,8 @@
       {
        "name": "speichereStufen",
        "file": "module/selbstzahler-stufen.js",
-       "start": 259,
-       "end": 289,
+       "start": 260,
+       "end": 290,
        "lines": 31,
        "writes": [
         "profiles:update"
@@ -184385,6 +184661,190 @@
    ]
   },
   {
+   "tabelle": "invoices",
+   "anzahl": 3,
+   "pfade": [
+    {
+     "leitfunktion": "saveInvoice",
+     "funktionen": [
+      {
+       "name": "saveInvoice",
+       "file": "dashboard.js",
+       "start": 13541,
+       "end": 13629,
+       "lines": 89,
+       "writes": [
+        "invoices:update",
+        "invoices:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "frageZahlungsstatus",
+     "funktionen": [
+      {
+       "name": "markiereRechnungBezahlt",
+       "file": "module/rechnung-zahlung.js",
+       "start": 70,
+       "end": 82,
+       "lines": 13,
+       "writes": [
+        "invoices:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
+      },
+      {
+       "name": "frageZahlungsstatus",
+       "file": "module/rechnung-zahlung.js",
+       "start": 151,
+       "end": 219,
+       "lines": 69,
+       "writes": [
+        "invoices:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "markiereZuBelegBezahlt",
+     "funktionen": [
+      {
+       "name": "markiereZuBelegBezahlt",
+       "file": "module/rechnung-zahlung.js",
+       "start": 96,
+       "end": 137,
+       "lines": 42,
+       "writes": [
+        "invoices:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "anamnese",
    "anzahl": 2,
    "pfade": [
@@ -185314,135 +185774,6 @@
    ]
   },
   {
-   "tabelle": "invoices",
-   "anzahl": 2,
-   "pfade": [
-    {
-     "leitfunktion": "saveInvoice",
-     "funktionen": [
-      {
-       "name": "saveInvoice",
-       "file": "dashboard.js",
-       "start": 13541,
-       "end": 13629,
-       "lines": 89,
-       "writes": [
-        "invoices:update",
-        "invoices:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "frageZahlungsstatus",
-     "funktionen": [
-      {
-       "name": "markiereRechnungBezahlt",
-       "file": "module/rechnung-zahlung.js",
-       "start": 70,
-       "end": 82,
-       "lines": 13,
-       "writes": [
-        "invoices:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      },
-      {
-       "name": "frageZahlungsstatus",
-       "file": "module/rechnung-zahlung.js",
-       "start": 96,
-       "end": 164,
-       "lines": 69,
-       "writes": [
-        "invoices:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      }
-     ]
-    }
-   ]
-  },
-  {
    "tabelle": "module_visibility",
    "anzahl": 2,
    "pfade": [
@@ -186330,7 +186661,7 @@
     "dashboard.js:18088",
     "dashboard.js:18148",
     "module/kalender-raster.js:71",
-    "module/rechnung-ansicht.js:203",
+    "module/rechnung-ansicht.js:217",
     "module/rezeptinfo-geld.js:69"
    ],
    "aynalar": []
@@ -186338,7 +186669,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2332",
+    "api-backend/billing/api/abrechnung.routes.js:2333",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",
@@ -186474,6 +186805,19 @@
    "aynalar": []
   },
   {
+   "name": "addDays",
+   "orte": [
+    "api-backend/ai/validators/blankoRules.js:29",
+    "api-backend/ai/validators/lhbBvbRules.js:24",
+    "api-backend/ai/validators/standardRules.js:42",
+    "api-backend/billing/api/mahnwesen.routes.js:46",
+    "api-backend/billing/zuzahlung/zu-beleg.js:15",
+    "api-backend/server.js:332",
+    "api-backend/server.js:1480"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "fmtEur",
    "orte": [
     "api-backend/billing/pdf/ausfallrechnung.template.js:15",
@@ -186515,18 +186859,6 @@
    "aynalar": []
   },
   {
-   "name": "addDays",
-   "orte": [
-    "api-backend/ai/validators/blankoRules.js:29",
-    "api-backend/ai/validators/lhbBvbRules.js:24",
-    "api-backend/ai/validators/standardRules.js:42",
-    "api-backend/billing/api/mahnwesen.routes.js:46",
-    "api-backend/server.js:332",
-    "api-backend/server.js:1480"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "cleanup",
    "orte": [
     "dashboard.js:6353",
@@ -186541,7 +186873,7 @@
   {
    "name": "sha256Hex",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:93",
+    "api-backend/billing/api/abrechnung.routes.js:94",
     "api-backend/billing/api/artefakt-registry.js:23",
     "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
     "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
@@ -187247,7 +187579,7 @@
   {
    "name": "fehlendePflichtangaben",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:438",
+    "api-backend/billing/api/abrechnung.routes.js:439",
     "module/beleg-druck.js:52"
    ],
    "aynalar": [

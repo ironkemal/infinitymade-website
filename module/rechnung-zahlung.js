@@ -81,6 +81,61 @@ export async function markiereRechnungBezahlt(supabase, invoiceId, method) {
   }
 }
 
+/**
+ * Markiert die aktive ZU-Zeile eines Rezepts nach dem Kassieren als bezahlt
+ * (status: 'paid', payment_status: 'paid', paid_at, payment_method).
+ *
+ * Wenn keine ZU-Zeile existiert -> true (nichts zu tun).
+ * Fehler werden nicht verschluckt (gibt false zurück).
+ *
+ * @param {object} supabase
+ * @param {string} rxId
+ * @param {string} zahlart  bar|ec|ueberweisung|paypal|sonstiges
+ * @returns {Promise<boolean>}
+ */
+export async function markiereZuBelegBezahlt(supabase, rxId, zahlart) {
+  if (!supabase || !rxId) return true;
+  try {
+    const { data: zu, error: findErr } = await supabase
+      .from('invoices')
+      .select('id, status, payment_status')
+      .eq('prescription_id', rxId)
+      .eq('invoice_type', 'zuzahlung')
+      .is('storno_von', null)
+      .neq('status', 'cancelled')
+      .maybeSingle();
+
+    if (findErr) {
+      console.error('[markiereZuBelegBezahlt] Suche fehlgeschlagen:', findErr);
+      return false;
+    }
+
+    if (!zu) return true;
+    if (zu.status === 'paid' && zu.payment_status === 'paid') return true;
+
+    const method = paymentMethodFuerZahlart(zahlart);
+    const { error: upErr } = await supabase
+      .from('invoices')
+      .update({
+        status: 'paid',
+        payment_status: 'paid',
+        paid_at: new Date().toISOString(),
+        payment_method: method || null,
+      })
+      .eq('id', zu.id);
+
+    if (upErr) {
+      console.error('[markiereZuBelegBezahlt] Update fehlgeschlagen:', upErr);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[markiereZuBelegBezahlt] Unerwarteter Fehler:', err);
+    return false;
+  }
+}
+
 const BEZAHLT_FEHLER = 'Rechnung konnte nicht als bezahlt markiert werden — bitte in der Rechnung erneut versuchen.';
 
 /**

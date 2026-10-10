@@ -120,6 +120,7 @@ export async function ladeLetztePreise(supabase, patientId, opts = {}) {
     .select('line_items, issued_at, created_at, status')
     .eq('patient_id', patientId)
     .neq('status', 'draft')
+    .or('invoice_type.is.null,invoice_type.neq.zuzahlung')
     .order('created_at', { ascending: false })
     .limit(10);
   if (error) {
