@@ -68424,7 +68424,7 @@
     "calcInvTotals",
     "ensureLeistungskatalog",
     "getOwnerId",
-    "getPodVerordnung",
+    "ladePodVerordnung",
     "renderInvLines",
     "starteRechnungAusVerordnung",
     "updateInvForInsuranceType",
@@ -130349,8 +130349,7 @@
    "calledBy": [
     "(datei) dashboard.js",
     "(datei) module/podologie-abrechnung.js",
-    "belegOeffnen",
-    "rechnungAusVerordnung"
+    "belegOeffnen"
    ],
    "modules": [
     "abrechnung",
@@ -130415,7 +130414,8 @@
    ],
    "calledBy": [
     "belegOeffnen",
-    "oeffneRechnungZurVerordnung"
+    "oeffneRechnungZurVerordnung",
+    "rechnungAusVerordnung"
    ],
    "modules": [
     "abrechnung",

@@ -116,6 +116,33 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 10.10.2026 · Akte: Drucken-Menü an der Verordnungskarte, Verordnung-Häkchen im vorbefüllten Entwurf (cd4219f7)
+- `module/rechnung-zur-verordnung.js` `druckenMenueHtml` + `verdrahteDruckenMenue` — „Drucken ▾" menüsünün **tek
+  kaynağı** (HTML + aç/kapa/dış tıklama/öğe tıklaması). Önce `loadPatientDetailRezepte` içinde inline idi; o liste
+  podolojide `display:none !important` ile gizli olduğundan menü podolojide ekranda yoktu. İkinci kopya yerine
+  çıkarıldı. Kullanım: dashboard.js Rezeptliste + `module/verordnung-uebersicht.js` `karteHtml` (yalnız
+  `deps.onBeleg` verilince). **Üçüncü bir Drucken menüsü yazılmaz** — bu ikisi çağrılır.
+- dashboard.js `belegOeffnen(rxId, typ, leadId)` — menü öğesinin `oeffneRechnungZurVerordnung` / `oeffneBelegDruck`
+  dağıtımı; deps dashboard.js değişkenlerine bağlı olduğu için orada. Çağıranlar: Rezeptliste +
+  `renderPatientenkarte` deps `onBeleg`.
+- `module/podologie-abrechnung.js` `ladePodVerordnung(sb, id)` + `_podState.nachgeladen` (Map), `findVord` üçüncü
+  kaynak. Niye: `_podState` yalnız Podologie-Abrechnung paneli açılınca doluyordu; Akte'den „Rechnung" boş editöre
+  düşüyordu. İlk kullanım: `oeffneRechnungZurVerordnung` opsiyonel dep, `podVerordnungVorhanden`'dan önce.
+  ✅ (aynı gün, sonraki commit) Geldzeile yolu: `rechnungAusVerordnung` artık `await ladePodVerordnung` kullanıyor. Eski not: Geldzeile yolu nachladen yapmıyordu; panel hiç
+  açılmadıysa `starteRechnungAusVerordnung` `if (!verordnung) return` ile **sessizce** döner. Tek yerde kapanır:
+  dashboard.js `rechnungAusVerordnung` içinde `getPodVerordnung` yerine `await ladePodVerordnung(supabase, …)`.
+  **Açık (küçük):** `nachgeladen` oturum boyu geçersizlenmez — Verordnung sonradan değişirse (rezeptart → BG) bayat
+  kopya zahlertyp/BG kontrolüne girer.
+- `module/rechnung-verordnung.js` `verordnungVormerken(vordId, behandlungIds)` — `verordnungAuswahlLeeren`'in
+  karşılığı: `onAuswahl` tetiklemeden kutucuk durumunu kurar (canli-test P3: ön doldurulan taslakta Verordnung
+  işaretsizdi). Tek çağıran: dashboard.js `rechnungAusVerordnung` → `setzeEntwurf`.
+- `verordnungAuswahl()` artık `podoBehandlungIds` döndürür; dashboard.js `onAuswahl`: `invVerordnungId` doluysa
+  `invBehandlungIds` kutucuk seçimini izler (faturada olmayan Behandlung abgerechnet bağlanmasın). Elle yolda
+  değişmedi. ✅ (1) kapandı: dönüş artık `podoBehandlungIdsJe` (Verordnung başına), `onAuswahl` yalnız `invVerordnungId`'ninkini alır. Eski not: `podoBehandlungIds` **tüm** işaretli podo Verordnung'ları toplar, `invVerordnungId`'ye
+  süzülmez — ikinci Verordnung işaretlenirse `invoices.verordnung_id` A, bağlanan Behandlung'lar A+B. (2) Satır
+  tablodan elle silinirse `invBehandlungIds` izlemez. (3) Elle yolda podo Behandlung hiç bağlanmaz (eski davranış).
+- `ladeAktiveVerordnungen` dönen nesnelere `rezeptart` eklendi (eklemeli; `druckenMenueHtml` için).
+
 ### 09.10.2026 · 3b.4 Merkez KI jeton ucu (`POST /v1/ki/jeton`)
 - `api-backend/merkez-istemci/ki-bericht-schema.js` (yeni): `pruefeKiBericht`, `kiBerichtHash`, `KI_TASKS`,
   `RE_REPORT_ID`, `RE_UTC_DAY` — kutu↔merkez KI kullanım raporu sözleşmesinin (M4-VERTRAG §2.2) **TEK şeması**,

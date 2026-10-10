@@ -40,7 +40,7 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
-import { terminLeistungen } from './rechnung-editor.js?v=20261010k';
+import { terminLeistungen } from './rechnung-editor.js?v=20261010l';
 import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
 import { privatpreisFuer } from './rechnung-bruecke.js?v=20261010i';
 
@@ -649,14 +649,14 @@ export function verordnungVormerken(vordId, behandlungIds) {
  *   prescriptionId: string|null,  // nur wenn genau eine Physio-Verordnung aktiv
  *   notizZeile: string|null,      // Podologie-Bezug für invoices.notes
  *   anzahl: number,               // Anzahl gewählter Behandlungen
- *   podoBehandlungIds: string[]   // gewählte podologie_behandlungen — für die Verknüpfung invoice_id
+ *   podoBehandlungIdsJe: Object<string, string[]>  // gewählte podologie_behandlungen je Verordnung — für invoice_id
  * }}
  */
 export function verordnungAuswahl() {
   const zeilen = [];
   const physioIds = [];
   const notizTeile = [];
-  const podoBehandlungIds = [];
+  const podoBehandlungIdsJe = {};
 
   for (let vi = 0; vi < _liste.length; vi++) {
     const vord = _liste[vi];
@@ -669,7 +669,7 @@ export function verordnungAuswahl() {
     for (const beh of vord.behandlungen) {
       if (!zst.behandlungIds.has(beh.id)) continue;
       zeilen.push(...beh.zeilen);
-      if (vord.quelle === 'podologie') podoBehandlungIds.push(beh.id);
+      if (vord.quelle === 'podologie') (podoBehandlungIdsJe[vord.id] ||= []).push(beh.id);
     }
 
     if (vord.quelle === 'physio') {
@@ -682,5 +682,5 @@ export function verordnungAuswahl() {
   const prescriptionId = physioIds.length === 1 ? physioIds[0] : null;
   const notizZeile = notizTeile.length ? notizTeile.join(' · ') : null;
 
-  return { zeilen, prescriptionId, notizZeile, anzahl: zeilen.length, podoBehandlungIds };
+  return { zeilen, prescriptionId, notizZeile, anzahl: zeilen.length, podoBehandlungIdsJe };
 }

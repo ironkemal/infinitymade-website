@@ -77,8 +77,8 @@ import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010k';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010k';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010k';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010l';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010l';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
@@ -13671,7 +13671,7 @@ function bindInvEvents() {
         onAuswahl: () => {
           // Verordnung gewählt → Termine abräumen
           checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-          const wahl = verordnungAuswahl(); invLines = wahl.zeilen; if (invVerordnungId) invBehandlungIds = wahl.podoBehandlungIds;
+          const wahl = verordnungAuswahl(); invLines = wahl.zeilen; if (invVerordnungId) invBehandlungIds = wahl.podoBehandlungIdsJe[invVerordnungId] || [];
           renderInvLines(); calcInvTotals();
         },
       });
@@ -18158,7 +18158,7 @@ async function rechnungAusVerordnung(vordId) {
   await ensureLeistungskatalog();
   return starteRechnungAusVerordnung({
     sb: supabase, ownerId: getOwnerId(),
-    verordnung: getPodVerordnung(vordId),
+    verordnung: await ladePodVerordnung(supabase, vordId), // Panel evtl. nie offen (Geldzeile/Akte)
     services: ownerServices, katalogPodo: GKV_LEISTUNGSKATALOG?.podologie || [],
     switchPanel, openInvEditor, toast: showToast,
     setzeEntwurf: async ({ patientId, zeilen, verordnungId, behandlungIds, zahlertyp }) => {
