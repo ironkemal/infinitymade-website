@@ -222,5 +222,21 @@ test('MitGeduld: echter Fehler und SaaS-Pfad werden NICHT wiederholt', async () 
 
 test('MitGeduld: Pausen bleiben unter der start_period des Box-Healthchecks (120 s)', async () => {
   const { VERBINDUNG_PAUSEN_MS } = await import('./migrate.js');
-  assert.ok(VERBINDUNG_PAUSEN_MS.reduce((a, b) => a + b, 0) <= 90_000);
+  const schlimmstenfalls = VERBINDUNG_PAUSEN_MS.reduce((a, b) => a + b, 0) + (VERBINDUNG_PAUSEN_MS.length + 1) * 5000;
+  assert.ok(schlimmstenfalls < 120_000, `${schlimmstenfalls} ms`);
+});
+
+test('runMigrations: DB verschluckt Pakete → nach ~5 s verbindung/ETIMEDOUT, kein Minuten-Haenger', async () => {
+  // 10.255.255.1 ist nicht routbar: SYN ohne Antwort — der O-190-Fall.
+  const dir = verzeichnisMit({ '0001_a.sql': 'select 1;' });
+  try {
+    const start = Date.now();
+    const r = await runMigrations({ databaseUrl: 'postgres://u:p@10.255.255.1:5432/x', verzeichnis: dir, log: () => {} });
+    assert.equal(r.status, 'fehler');
+    assert.equal(r.fehler.art, 'verbindung');
+    assert.ok(Date.now() - start < 9000, `dauerte ${Date.now() - start} ms`);
+    assert.equal(istStartrennen(r), true, `code ${r.fehler.code}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

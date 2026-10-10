@@ -171,6 +171,8 @@ REVOKE ALL ON public.praxura_migrations FROM anon, authenticated;
  * @param {string}   [opt.appVersion]   Image-Version, kommt ins Buch
  * @param {function} [opt.log]
  */
+const VERBINDUNG_TIMEOUT_MS = 5000;
+
 export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log = console.log }) {
   if (!databaseUrl) {
     log('[migrate] DATABASE_URL nicht gesetzt — Migrationen werden übersprungen.');
@@ -190,7 +192,10 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
   // pg wird absichtlich erst hier geladen: ist DATABASE_URL nicht gesetzt, muss das
   // Paket nicht einmal vorhanden sein. Hält den SaaS-Pfad unverändert.
   const { default: pg } = await import('pg');
-  const client = new pg.Client({ connectionString: databaseUrl });
+  // connectionTimeoutMillis (O-194, onprem 11.10.2026): ohne sie wartet ein
+  // Versuch gegen eine DB, die Pakete verschluckt (O-190), auf das TCP-Timeout
+  // des Kerns (~2 Min) — mal sieben Versuche kaeme app.listen erst nach ~15 Min.
+  const client = new pg.Client({ connectionString: databaseUrl, connectionTimeoutMillis: VERBINDUNG_TIMEOUT_MS });
 
   const angewandt = [];
   let gesperrt = false;
@@ -306,7 +311,9 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
     return {
       status: 'fehler',
       angewandt,
-      fehler: { art: 'verbindung', code: err.code || null, text: err.message }
+      // pg meldet sein eigenes Verbindungs-Timeout als Error('timeout expired')
+      // OHNE code — ohne diese Zuordnung fiele es aus der Wiederholungsliste.
+      fehler: { art: 'verbindung', code: err.code || (/timeout expired/i.test(err.message || '') ? 'ETIMEDOUT' : null), text: err.message }
     };
   } finally {
     try {
@@ -327,10 +334,11 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
 // (Netz-/Startcode) und noch keine Migration lief. Jeder andere Fehler
 // (Prüfsumme, SQL, Downgrade, Lock) geht sofort zurück — den heilt Warten nicht.
 const VERBINDUNG_NOCH_NICHT_DA = new Set([
-  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH',
+  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH', 'ENETUNREACH',
   '57P03', // cannot_connect_now — Postgres fährt noch hoch
 ]);
-// Summe 59 s — bleibt unter der start_period (120 s) des Box-Healthchecks.
+// Pausen 59 s + 7 Versuche × 5 s Verbindungs-Timeout = hoechstens 94 s —
+// bleibt unter der start_period (120 s) des Box-Healthchecks.
 export const VERBINDUNG_PAUSEN_MS = Object.freeze([2000, 4000, 8000, 15000, 15000, 15000]);
 
 export function istStartrennen(ergebnis) {
