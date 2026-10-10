@@ -50,7 +50,7 @@ import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261010zd';
-import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010z';
+import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010zc';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.

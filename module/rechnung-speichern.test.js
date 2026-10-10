@@ -3,7 +3,7 @@ import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { createPendingGuard } from './rechnung-speichern.js';
+import { createPendingGuard, setzeSpeichernText } from './rechnung-speichern.js';
 
 const dashboardUrl = new URL('../dashboard.js', import.meta.url);
 const dashboardContent = fs.readFileSync(dashboardUrl, 'utf8');
@@ -188,7 +188,7 @@ function createTestEnvironment(customMocks = {}) {
   };
 
   const sandbox = {
-    createPendingGuard,
+    createPendingGuard, setzeSpeichernText,
     document: documentMock,
     window: windowObj,
     supabase: supabaseMock,
@@ -430,4 +430,12 @@ describe('saveInvoice & createPendingGuard module suite', () => {
     );
     assert.strictEqual(mockBtn.disabled, false, 'Button restored after thrown error');
   });
+});
+
+test('setzeSpeichernText: neuer Entwurf vs. vorhandene Rechnung, ohne Knopf kein Fehler', async () => {
+  const { setzeSpeichernText } = await import('./rechnung-speichern.js');
+  const btn = { textContent: '' };
+  setzeSpeichernText(btn, true); assert.strictEqual(btn.textContent, 'Änderungen speichern');
+  setzeSpeichernText(btn, false); assert.strictEqual(btn.textContent, 'Rechnung erstellen');
+  setzeSpeichernText(null, true);
 });

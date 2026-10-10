@@ -68,6 +68,7 @@ export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = nu
     v: 1, art: 'patient', name,
     strasse: n(patient.street), plzOrt: [n(patient.plz), n(patient.city)].filter(Boolean).join(' ') || null,
     geburtsdatum: patient.geburtsdatum ? String(patient.geburtsdatum).slice(0, 10) : null,
-    krankenkasse: n(patient.krankenkasse), versichertennummer: n(patient.versichertennummer),
+    // Nur auf Kassenbelegen (gkv/zuzahlung) — Spiegel von mitKassenfeldern() in module/bg-angaben.js (legal-de 10.10.2026)
+    ...(invoiceType === 'gkv' || invoiceType === 'zuzahlung' ? { krankenkasse: n(patient.krankenkasse), versichertennummer: n(patient.versichertennummer) } : {}),
   };
 }

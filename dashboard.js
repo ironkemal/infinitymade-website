@@ -1,4 +1,4 @@
-import { createPendingGuard } from './module/rechnung-speichern.js?v=20261004m111';
+import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261008m4b';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261008m4b';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261008m4b';
@@ -26,7 +26,7 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261010zb';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261010zc';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
@@ -59,49 +59,49 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261010zd'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261010zc'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261010zd';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010zd';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261010zc';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010zc';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010z'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010z'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010zc'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261010w'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
-import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zb';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010x';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010x';
+import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010zc';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010x';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010zb';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010zc';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010zb';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010zc';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261010zc';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
-import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zd';
-import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zd';
+import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zc';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261004m113';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261010zb';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261010zc';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261010zc';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261004m113';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261010zc';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -118,7 +118,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
+import { TERMIN_SELECT, RX_JOIN, RX_FELDER, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -127,8 +127,8 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261010zd';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261004m113'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+} from './module/termin-aktionen.js?v=20261010zc';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261010zc'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -3113,7 +3113,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       supabase.from('prescriptions')
-        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
+        .select(`${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`)
         .eq('patient_id', leadId)
         .not('status', 'in', '("completed","billed","cancelled")')
         .order('created_at', { ascending: false })
@@ -13461,7 +13461,7 @@ function resetInvEditor() {
   document.getElementById('invPrintBtn').disabled = true;
   const dmrzBtn = document.getElementById('invDmrzBtn');
   if (dmrzBtn) dmrzBtn.disabled = true;
-  window._currentInvoiceId = null;
+  window._currentInvoiceId = null; setzeSpeichernText(document.getElementById('invSaveBtn'), false);
   calcInvTotals();
 }
 
@@ -13483,7 +13483,7 @@ async function openInvEditor(invoiceId) {
     document.getElementById('invPrintBtn').disabled = false;
     const dmrzBtn = document.getElementById('invDmrzBtn');
     if (dmrzBtn) dmrzBtn.disabled = false;
-    window._currentInvoiceId = inv.id;
+    window._currentInvoiceId = inv.id; setzeSpeichernText(document.getElementById('invSaveBtn'), true);
     invPatientInsuranceType = inv.invoice_type || null;
     renderInvLines();
     updateInvForInsuranceType();
@@ -13559,7 +13559,7 @@ async function saveInvoice() {
     document.getElementById('invPrintBtn').disabled = false;
     const dmrzBtn = document.getElementById('invDmrzBtn');
     if (dmrzBtn) dmrzBtn.disabled = false;
-    window._currentInvoiceId = inserted?.id || null;
+    window._currentInvoiceId = inserted?.id || null; setzeSpeichernText(document.getElementById('invSaveBtn'), !!inserted?.id);
     // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
     // darf keine Sitzung als abgerechnet gelten.
     if (inserted?.id && invBehandlungIds.length) {

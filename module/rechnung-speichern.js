@@ -31,3 +31,15 @@ export function createPendingGuard(getButton, onError) {
     }
   };
 }
+
+/**
+ * Text des Speichern-Knopfs im Rechnungseditor: neuer Entwurf „Rechnung erstellen",
+ * vorhandene Rechnung „Änderungen speichern" (canli-test T33, 10.10.2026 — der Knopf
+ * versprach an einer offenen Rechnung eine neue). Aufrufer: openInvEditor, resetInvEditor,
+ * saveInvoice in dashboard.js.
+ * @param {?HTMLElement} btn
+ * @param {boolean} vorhanden
+ */
+export function setzeSpeichernText(btn, vorhanden) {
+  if (btn) btn.textContent = vorhanden ? 'Änderungen speichern' : 'Rechnung erstellen';
+}

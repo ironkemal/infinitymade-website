@@ -63,14 +63,14 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
-import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261010x';
-import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261010z';
+import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261010zc';
+import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261010zc';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20261001a';
-import { positionVon } from './podo-geplant.js?v=20261004m113';
+import { positionVon } from './podo-geplant.js?v=20261010zc';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
 import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20261001e';
 import { renderEmpfangsnachweisHost, mountEmpfangsnachweise } from './podo-empfangsnachweis.js?v=20261003m19';
@@ -116,7 +116,7 @@ import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit,
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261003m16';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261004m113';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261010zc';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 

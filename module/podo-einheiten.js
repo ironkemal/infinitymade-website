@@ -46,9 +46,9 @@
  */
 
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
-import { positionVon } from './podo-geplant.js?v=20261004m113';
-import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
-import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261010zb';
+import { positionVon } from './podo-geplant.js?v=20261010zc';
+import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
+import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261010zc';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
 
@@ -89,13 +89,15 @@ export function einheitBeschriftung(befund) {
  * @param {Array}   [opt.behandlungen]    `podologie_behandlungen` des Patienten
  * @param {string}  opt.datum             `YYYY-MM-DD`, heute
  * @param {?boolean} [opt.podologieVor2023]
+ * @param {?string} [opt.vordId]  gesetzt: dokumentierte Einheiten DIESER Verordnung ohne Termin zaehlen
+ *        mit (`podoBelegung`, gkv-302 10.10.2026) — sie sind verbraucht, auch wenn kein Termin dranhaengt
  * @returns {{anwendbar:boolean, einheiten:Array<{nr:number, termin:?object,
  *           befund:?string}>, offen:?number, hinweis:string, rueckfrage:?string}}
  *   `offen` ist `null`, wenn die Einheitenzahl nicht erfasst ist — dann gibt es
  *   keine Restmenge, die man behaupten kann (`terminZaehler()`, Regel 1).
  */
 export function einheitenPlan({
-  diagnosegruppe, anzahl, termine = [], behandlungen = [], datum, podologieVor2023 = null,
+  diagnosegruppe, anzahl, termine = [], behandlungen = [], datum, podologieVor2023 = null, vordId = null,
 } = {}) {
   const n = Number.parseInt(anzahl, 10);
   const gebucht = (termine || [])
@@ -112,16 +114,20 @@ export function einheitenPlan({
 
   // Mehr Termine als verordnete Einheiten kommen vor (Nachtrag, Fehlzuordnung) —
   // sie bleiben sichtbar, statt zu verschwinden.
-  const anzahlZeilen = Math.max(n, gebucht.length);
+  // Dokumentierte Einheiten ohne Termin (nur mit vordId): belegen eine Zeile als `erbracht`.
+  const bel = vordId ? podoBelegung(n, termine, (behandlungen || []).filter(b => b.verordnung_id === vordId), alsBerlinDatum) : null;
+  const ohneTermin = bel ? Math.max(0, bel.erbracht - (gebucht.length - bel.undokumentiert.length)) : 0;
+  const anzahlZeilen = Math.max(n, gebucht.length + ohneTermin);
   const einheiten = [];
   for (let nr = 1; nr <= anzahlZeilen; nr++) {
-    einheiten.push({ nr, termin: gebucht[nr - 1] || null, befund: befundVon(nr) });
+    const termin = gebucht[nr - 1] || null;
+    einheiten.push({ nr, termin, befund: befundVon(nr), ...(!termin && nr <= gebucht.length + ohneTermin ? { erbracht: true } : {}) });
   }
 
   return {
     anwendbar: true,
     einheiten,
-    offen: Math.max(0, n - gebucht.length),
+    offen: bel ? bel.offen : Math.max(0, n - gebucht.length),
     hinweis: plan.hinweis || '',
     rueckfrage: plan.rueckfrage || null,
   };
@@ -419,7 +425,7 @@ async function ladeBehandlungen(sb, { ownerId, leadId }) {
     .eq('owner_id', ownerId).eq('patient_id', leadId).eq('therapie_bereich', 'podo');
   if (!vords?.length) return [];
   const { data } = await sb.from('podologie_behandlungen')
-    .select('behandlungsdatum, hpnr_codes')
+    .select('behandlungsdatum, hpnr_codes, verordnung_id')
     // Stornierte Behandlungen verbrauchen keine Einheit (Migration 0026).
     .is('storniert_am', null)
     .eq('owner_id', ownerId).in('verordnung_id', vords.map(v => v.id));
@@ -480,12 +486,13 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
     behandlungen,
     datum: heute(),
     podologieVor2023: altbestand,
+    vordId: vord.id,
   });
 
   zeigeSitzungenArbeit();
 
   const badge = document.getElementById('bkRxSessionsBadge');
-  const offene = plan.einheiten.filter(e => !e.termin);
+  const offene = plan.einheiten.filter(e => !e.termin && !e.erbracht);
   const belegte = plan.einheiten.filter(e => e.termin);
 
   if (badge) {

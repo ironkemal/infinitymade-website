@@ -92,6 +92,14 @@ export function bgEmpfaengerBlock(bg = {}, { patientName = '', geburtsdatum = nu
  * @param {{patient?: ?object, rx?: ?object, invoiceType?: ?string}} q  patient = `leads`-Zeile, rx = `prescriptions`-Zeile
  * @returns {?object}  null, wenn kein Patient verknüpft ist
  */
+/**
+ * Krankenkasse/Versichertennummer stehen nur auf Belegen zu einem Kassenrezept (gkv, zuzahlung).
+ * Selbstzahler/Privat/BG brauchen sie nicht (§ 14 Abs. 4 Nr. 1 UStG: Name + Anschrift), bei Privat
+ * stuende oft eine GKV-Kasse aus der Akte drauf — legal-de 10.10.2026, Art. 5 Abs. 1 lit. c DSGVO.
+ * Spiegel: `api-backend/lib/rechnung-snapshot.js`.
+ */
+export function mitKassenfeldern(invoiceType) { return invoiceType === 'gkv' || invoiceType === 'zuzahlung'; }
+
 export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = null } = {}) {
   const name = patient ? ([t(patient.first_name), t(patient.last_name)].filter(Boolean).join(' ') || t(patient.title) || '') : '';
   if (invoiceType === 'bg' && rx?.rezeptart === 'bg' && t(rx.bg_traeger_name)) {
@@ -103,7 +111,7 @@ export function empfaengerSnapshot({ patient = null, rx = null, invoiceType = nu
     v: 1, art: 'patient', name,
     strasse: t(patient.street), plzOrt: [t(patient.plz), t(patient.city)].filter(Boolean).join(' ') || null,
     geburtsdatum: patient.geburtsdatum ? String(patient.geburtsdatum).slice(0, 10) : null,
-    krankenkasse: t(patient.krankenkasse), versichertennummer: t(patient.versichertennummer),
+    ...(mitKassenfeldern(invoiceType) ? { krankenkasse: t(patient.krankenkasse), versichertennummer: t(patient.versichertennummer) } : {}),
   };
 }
 

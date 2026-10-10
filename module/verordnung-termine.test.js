@@ -104,3 +104,26 @@ test('der Owner-Riegel der Datenbank wird im Klartext durchgereicht', async () =
   assert.equal(res.ok, false);
   assert.match(res.fehler, /anderen Praxis/);
 });
+
+// gkv-302, 10.10.2026 (canli-test T33: Karte 0/2, Akte 1/2): verbraucht = dokumentierte Einheit.
+test('podoBelegung: dokumentierte Einheit ohne Termin zaehlt, Termin am selben Tag nicht doppelt, Befund/No-show/Storno nicht', async () => {
+  const { podoBelegung } = await import('./verordnung-termine.js');
+  const tag = (t) => String(t).slice(0, 10);
+  const behs = [
+    { behandlungsdatum: '2026-10-01', hpnr_codes: ['78010'] },            // ohne Termin
+    { behandlungsdatum: '2026-10-05', hpnr_codes: ['78020'] },            // mit Termin am selben Tag
+    { behandlungsdatum: '2026-10-06', hpnr_codes: ['78030'] },            // Befund: keine Einheit
+    { behandlungsdatum: '2026-10-07', hpnr_codes: ['78010'], storniert_am: '2026-10-08' },
+  ];
+  const termine = [
+    { start_time: '2026-10-05T09:00:00Z', status: 'confirmed' },
+    { start_time: '2026-10-12T09:00:00Z', status: 'confirmed' },          // geplant, noch nicht dokumentiert
+    { start_time: '2026-10-13T09:00:00Z', status: 'no_show' },
+  ];
+  const b = podoBelegung(6, termine, behs, tag);
+  assert.equal(b.erbracht, 2);
+  assert.equal(b.undokumentiert.length, 1);
+  assert.equal(b.offen, 3);
+  assert.equal(podoBelegung(null, termine, behs, tag).offen, null);
+  assert.equal(podoBelegung(2, [], [{ behandlungsdatum: '2026-10-01', hpnr_codes: ['78010'] }], tag).erbracht, 1);
+});

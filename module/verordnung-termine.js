@@ -114,6 +114,78 @@ export function terminZaehler(vord, vergeben) {
   return { verordnet, belegt, offen: Math.max(0, verordnet - belegt) };
 }
 
+// 78010/78020 podologische Behandlung, 78610 Nagelspangenbehandlung. Befundung
+// (78030/78040/78100/78110), Kontrolle (78510), Abschluss (78520), Bericht
+// (78530), Zuschlag (78620) und Hausbesuch (79933/79934) sind KEINE Einheiten.
+const POD_BEHANDLUNGSPOSITIONEN = new Set(['78010', '78020', '78610']);
+
+/**
+ * Zaehlt diese Zeile gegen die verordnete Menge?
+ *
+ * Nicht jede Zeile in `podologie_behandlungen` ist eine Behandlungseinheit.
+ * Anlage 1a i.d.F. 17.06.2024, Teil 2 Ziffer 4.1 sagt ausdruecklich:
+ * "Die Eingangsbefundung ist: - keine Behandlungseinheit im Sinne der
+ * Heilmittel-Richtlinie". Dasselbe gilt fuer Befundung, Kontrolle und
+ * Abschluss — bezahlt werden sie, verbraucht wird durch sie nichts.
+ *
+ * Sichtbar wird das nur, wenn so eine Position ALLEIN auf einem Tag steht:
+ * eine Erstbefundung ohne anschliessende Therapie etwa ist ausdruecklich
+ * zulaessig (ZFD-FAK Podologie, Stand Juli 2024). Vorher zaehlte diese Zeile
+ * als verbrauchte Einheit, die Verordnung galt eine Sitzung zu frueh als
+ * ausgeschoepft — verschenkte Leistung statt Absetzung, aber ebenso Geld.
+ * Im Normalfall (78040 zusammen mit 78010 am selben Tag, eine Zeile) aendert
+ * sich nichts.
+ *
+ * Gezaehlt wird positiv: eine Zeile ist eine Einheit, wenn eine echte
+ * Behandlungsposition drin steht. Zeilen ohne HPNR-Codes (Altbestand, bevor
+ * die Codes gepflegt wurden) zaehlen weiterhin mit — sonst schrumpfte
+ * rueckwirkend jeder alte Zaehler.
+ *
+ * @param {object} beh  Zeile aus `podologie_behandlungen`
+ * @returns {boolean}
+ */
+export function istBehandlungseinheit(beh) {
+  const codes = beh?.hpnr_codes;
+  if (!Array.isArray(codes) || codes.length === 0) return true;
+  return codes.some(c => POD_BEHANDLUNGSPOSITIONEN.has(String(c)));
+}
+
+/**
+ * Belegung einer podologischen Verordnung — dieselbe Zahl in Termin-Karte, Terminauswahl und Akte.
+ *
+ * gkv-302, 10.10.2026 (canli-test T33: Karte „0/2", Akte „1/2"): verbraucht ist eine dokumentierte,
+ * per Unterschrift bestaetigte Behandlungseinheit — nicht der Termin (Podologie-Vertrag § 5 Abs. 1 i.d.F.
+ * 17.06.2025; Anlage 3 Lesefassung 16.06.2025, Feld f/o). Ausfall/No-show verbraucht nichts (`istVergeben`).
+ * Fuer die Planung („noch offen") zaehlen zusaetzlich die vergebenen, noch nicht dokumentierten Termine.
+ * Abgleich ueber den Kalendertag (Europe/Berlin): `podologie_behandlungen` hat keine booking_id —
+ * ein Termin am Tag einer dokumentierten Einheit gilt als dokumentiert.
+ *
+ * @param {*}     verordnet     `prescriptions.anzahl_einheiten` (leer = unbekannt)
+ * @param {Array} termine       `bookings` dieser Verordnung
+ * @param {Array} behandlungen  `podologie_behandlungen` DIESER Verordnung, ohne stornierte
+ * @param {(t:string)=>string} alsTag  Zeitpunkt -> YYYY-MM-DD (Berlin)
+ * @returns {{verordnet:?number, erbracht:number, undokumentiert:Array, offen:?number}}
+ */
+export function podoBelegung(verordnet, termine, behandlungen, alsTag) {
+  const einheiten = (behandlungen || []).filter(b => !b?.storniert_am && istBehandlungseinheit(b));
+  const tage = new Set(einheiten.map(b => String(b.behandlungsdatum || '').slice(0, 10)));
+  const undokumentiert = (termine || []).filter(istVergeben).filter(t => !tage.has(alsTag(t.start_time)));
+  const roh = verordnet;
+  if (roh === null || roh === undefined || roh === '') return { verordnet: null, erbracht: einheiten.length, undokumentiert, offen: null };
+  const n = Number(roh) || 0;
+  return { verordnet: n, erbracht: einheiten.length, undokumentiert, offen: Math.max(0, n - einheiten.length - undokumentiert.length) };
+}
+
+/** Behandlungen einer Verordnung fuer `podoBelegung` (stornierte verbrauchen nichts, Migration 0026). */
+export async function ladeVerordnungsBehandlungen(sb, { ownerId, vordId } = {}) {
+  if (!sb || !ownerId || !vordId) return [];
+  const { data, error } = await sb.from('podologie_behandlungen')
+    .select('behandlungsdatum, hpnr_codes')
+    .eq('owner_id', ownerId).eq('verordnung_id', vordId).is('storniert_am', null);
+  if (error) console.error('[verordnung-termine] behandlungen:', error.message);
+  return data || [];
+}
+
 /**
  * Einen einzelnen Termin dieser Verordnung zuordnen.
  *

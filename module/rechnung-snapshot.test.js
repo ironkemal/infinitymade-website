@@ -38,9 +38,15 @@ test('empfaengerSnapshot: Patient ohne IBAN/Telefon/E-Mail; ohne Patient null', 
   const e = empfaengerSnapshot({ patient: PATIENT, rx: null, invoiceType: 'privat' });
   assert.deepEqual(e, {
     v: 1, art: 'patient', name: 'Max Beispiel', strasse: 'Weg 1', plzOrt: '53721 Siegburg',
-    geburtsdatum: '1950-03-04', krankenkasse: 'AOK', versichertennummer: 'A123456789',
+    geburtsdatum: '1950-03-04',
   });
   assert.ok(!/DE89|0170|max@/.test(JSON.stringify(e)));
+  // Kasse/VersNr nur auf Kassenbelegen (legal-de 10.10.2026) — Selbstzahler/Privat/BG ohne Traeger nicht
+  for (const typ of ['selbstzahler', 'bg', null]) assert.ok(!('krankenkasse' in empfaengerSnapshot({ patient: PATIENT, invoiceType: typ })), String(typ));
+  for (const typ of ['gkv', 'zuzahlung']) {
+    const k = empfaengerSnapshot({ patient: PATIENT, invoiceType: typ });
+    assert.equal(k.krankenkasse, 'AOK'); assert.equal(k.versichertennummer, 'A123456789');
+  }
   assert.equal(empfaengerSnapshot({ patient: null }), null);
 });
 
@@ -59,6 +65,9 @@ test('Parität: Server-Spiegel liefert dieselben Snapshots', () => {
   }
   const faelle = [
     { patient: PATIENT, rx: null, invoiceType: 'privat' },
+    { patient: PATIENT, rx: null, invoiceType: 'zuzahlung' },
+    { patient: PATIENT, rx: null, invoiceType: 'gkv' },
+    { patient: PATIENT, rx: { rezeptart: 'gkv' }, invoiceType: 'bg' },
     { patient: PATIENT, rx: BG_RX, invoiceType: 'bg' },
     { patient: { ...PATIENT, geburtsdatum: null, first_name: '', last_name: '' }, rx: BG_RX, invoiceType: 'bg' },
     { patient: { title: 'Nur Titel' }, rx: null, invoiceType: null },

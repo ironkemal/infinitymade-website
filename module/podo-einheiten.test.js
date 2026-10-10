@@ -521,3 +521,13 @@ test('zeichnePodoEinheiten: Einheitenzahl nicht erfasst (offen=null) -> Knopf ve
   await zeichnePodoEinheiten({ sb, ownerId: 'owner-1', booking: { lead_id: 'pat-1' }, vordId: 'rx-1', aufSerie });
   assert.equal(els.bkRxSerieBtn.hidden, true);
 });
+
+test('einheitenPlan mit vordId: dokumentierte Einheit ohne Termin ist erbracht, nicht offen (gkv-302 10.10.2026)', async () => {
+  const { einheitenPlan } = await import('./podo-einheiten.js');
+  const p = einheitenPlan({ diagnosegruppe: 'NF', anzahl: 2, termine: [], datum: '2026-10-10', vordId: 'v1',
+    behandlungen: [{ verordnung_id: 'v1', behandlungsdatum: '2026-10-01', hpnr_codes: ['78010'] }, { verordnung_id: 'v2', behandlungsdatum: '2026-10-02', hpnr_codes: ['78010'] }] });
+  assert.equal(p.offen, 1);
+  assert.equal(p.einheiten.filter(e => e.erbracht).length, 1);
+  assert.equal(einheitenPlan({ diagnosegruppe: 'NF', anzahl: 2, termine: [], datum: '2026-10-10',
+    behandlungen: [{ verordnung_id: 'v1', behandlungsdatum: '2026-10-01', hpnr_codes: ['78010'] }] }).offen, 2);
+});

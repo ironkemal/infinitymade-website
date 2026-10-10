@@ -23,7 +23,7 @@
  * Erste Verwendung: dashboard.js, Rechnungen-Panel (`#panel-rechnungen`).
  */
 
-import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261010z';
+import { bgEmpfaengerBlock, bgAusZeile, mitKassenfeldern } from './bg-angaben.js?v=20261010zc';
 import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261009rs';
 import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
@@ -246,8 +246,8 @@ export async function openInvView(invoiceId) {
     const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
     if (pc) patientLines.push(escapeHtml(pc));
     if (patient.geburtsdatum) patientLines.push('Geboren: ' + new Date(patient.geburtsdatum).toLocaleDateString('de-DE'));
-    if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
-    if (patient.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
+    if (patient.krankenkasse && mitKassenfeldern(inv.invoice_type)) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
+    if (patient.versichertennummer && mitKassenfeldern(inv.invoice_type)) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
   } else {
     // Kein verknuepfter Patient → lieber sichtbar unvollstaendig als mit einem
     // veralteten Namen gedruckt.

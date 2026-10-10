@@ -23,8 +23,10 @@
  * wächst nicht mehr.
  */
 
-import { ladePodoTermine, terminZaehler, loeseTermin } from './verordnung-termine.js?v=20260908';
+import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261010zc';
+import { alsBerlinDatum } from './berlin-datum.js';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
+import { RX_FELDER } from './termin-laden.js?v=20261010za';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 
@@ -82,7 +84,7 @@ function anlegenKnopf(onAnlegen, leer) {
  * Karte „0/3" neben dem Hinweis „keine aktive Verordnung hinterlegt"). Die
  * echte Zahl steht in `bookings.verordnung_id` und wird hier — wie in
  * `verordnung-detail.js` (_terminePodo) — über `ladePodoTermine()` +
- * `terminZaehler()` nachgezählt. Physio/Ergo/Logo bleiben unverändert: ohne
+ * `podoBelegung()` nachgezählt (seit 10.10.2026 dokumentierte Einheiten, gkv-302). Physio/Ergo/Logo bleiben unverändert: ohne
  * `sb`/`ownerId` (Aufrufer reicht sie nicht) läuft nur der bisherige,
  * synchrone Zweig.
  */
@@ -129,10 +131,11 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
     container.appendChild(card);
 
     if (istPodo && sb && ownerId && rx.id) {
-      ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId }).then(({ vergeben }) => {
-        const { verordnet, belegt } = terminZaehler(ausTopf(rx), vergeben);
+      // Erbrachte (dokumentierte) Einheiten wie die Akte — nicht vergebene Termine (gkv-302, 10.10.2026).
+      Promise.all([ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId }), ladeVerordnungsBehandlungen(sb, { ownerId, vordId: rx.id })]).then(([{ vergeben }, behs]) => {
+        const { verordnet, erbracht } = podoBelegung(ausTopf(rx).behandlungseinheiten, vergeben, behs, alsBerlinDatum);
         const badge = card.querySelector('[data-vero-zaehler]');
-        if (badge) badge.textContent = `${belegt}/${verordnet ?? total}`;
+        if (badge) badge.textContent = `${erbracht}/${verordnet ?? total}`;
       }).catch(e => console.error('[rendereVeroKarten] Podo-Zaehler:', e));
     }
   });
@@ -203,8 +206,8 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
 
     if (sb && ownerId) {
       try {
-        const { vergeben } = await ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId });
-        const z = terminZaehler(ausTopf(rx), vergeben);
+        const [{ vergeben }, behs] = await Promise.all([ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId }), ladeVerordnungsBehandlungen(sb, { ownerId, vordId: rx.id })]);
+        const z = podoBelegung(ausTopf(rx).behandlungseinheiten, vergeben, behs, alsBerlinDatum);
         if (z.offen === 0) {
           if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
           window._pendingRxSession = null;
@@ -350,7 +353,7 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
 
   const { data: rxs } = await sb
     .from('prescriptions')
-    .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
+    .select(`${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`)
     .eq('patient_id', leadId)
     .not('status', 'in', '("completed","billed","cancelled")')
     .order('created_at', { ascending: false })

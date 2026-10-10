@@ -35,9 +35,9 @@
 export const BK_PANEL_OFFSET = '456px';
 
 import { RX_FELDER, RX_JOIN } from './termin-laden.js?v=20261010za';
-import { fuelleMuster13 } from './verordnung-maske.js?v=20261010zd';
+import { fuelleMuster13 } from './verordnung-maske.js?v=20261010zc';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
-import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261004m113';
+import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261010zc';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',

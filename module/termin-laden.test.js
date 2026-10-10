@@ -78,3 +78,14 @@ test('der Termin-Join zur Verordnung wird nirgends mehr von Hand geschrieben', (
     assert.ok(!text.includes('prescription_sessions(id,session_number,prescriptions('), `${d}: Join von Hand — RX_JOIN benutzen`);
   }
 });
+
+// 10.10.2026 (9. Runde, c): dieselbe Liste ohne `rezeptart` stand noch in termin-verordnung.js,
+// termin-folge.js und dashboard.js (aktive Verordnungen am Termin) — jetzt RX_FELDER.
+test('die alte Verordnungs-Spaltenliste am Termin kommt nicht zurueck', () => {
+  const wurzel = fileURLToPath(new URL('..', import.meta.url));
+  for (const d of ['dashboard.js', 'module/termin-verordnung.js', 'module/termin-folge.js']) {
+    const text = readFileSync(wurzel + d, 'utf8');
+    assert.ok(!text.includes("'id,heilmittel,heilmittel_position,icd10,anzahl_einheiten"), `${d}: Spaltenliste von Hand — RX_FELDER benutzen`);
+    assert.ok(text.includes('${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)'), `${d}: RX_FELDER fehlt`);
+  }
+});

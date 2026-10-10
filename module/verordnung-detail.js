@@ -76,11 +76,11 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261006n';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261010zb';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261010zc';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
-import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20260908';
+import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20261010zc';
 import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
@@ -89,7 +89,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261010zd';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261010zc';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261006a';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 

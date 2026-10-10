@@ -25,10 +25,11 @@
  */
 
 import { alsDatetimeLocal } from './datum.js?v=20261001a';
-import { sollAbstand } from './frequenz-pruefung.js?v=20261004m113';
+import { sollAbstand } from './frequenz-pruefung.js?v=20261010zc';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261003a';
-import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261004m113';
+import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261010zc';
+import { RX_FELDER } from './termin-laden.js?v=20261010za';
 
 /** Ohne lesbare Frequenz: eine Woche — die Zeile, die die Serienplanung auch nimmt. */
 export const STANDARD_ABSTAND_TAGE = 7;
@@ -131,7 +132,7 @@ export async function oeffneFolgetermin(booking, deps) {
       : Promise.resolve({ data: [] }),
     booking.verordnung_id
       ? supabase.from('prescriptions')
-        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
+        .select(`${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`)
         .eq('id', booking.verordnung_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
