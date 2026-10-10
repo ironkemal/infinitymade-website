@@ -36,9 +36,9 @@ test('Leerstrings zählen nicht als Angabe', () => {
 
 // --- istRechnungsartig -------------------------------------------------------
 
-test('die vier Rechnungsarten des Servers sind rechnungsartig', () => {
+test('alte RE-Rechnungsarten sind nicht mehr rechnungsartig (abgelöst durch Rechnungs-Editor)', () => {
   for (const t of ['rechnung_privat', 'rechnung_selbstzahler', 'rechnung_sonder', 'rechnung_bg']) {
-    assert.equal(istRechnungsartig(t), true, t);
+    assert.equal(istRechnungsartig(t), false, t);
   }
 });
 

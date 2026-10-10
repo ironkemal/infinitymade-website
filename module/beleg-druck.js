@@ -36,15 +36,12 @@
  * Server ihn zulässt (der lädt sie über `owner_id` nach).
  */
 
-/** Belegarten, die der Server als Rechnung behandelt (RECHNUNGS_TYPEN in
- *  `abrechnung.routes.js`). Für alles andere — Quittungen ohne
- *  Rechnungscharakter — gelten die Pflichtangaben nicht. */
-const RECHNUNGS_TYPEN = ['rechnung_privat', 'rechnung_selbstzahler', 'rechnung_sonder', 'rechnung_bg'];
-
-/** Die Zuzahlungsrechnung heisst „Quittung", ist aber eine Rechnung
- *  (Fälligkeit + Bankzeile) — der Server prüft sie deshalb immer. */
+/**
+ * Nur noch die Zuzahlungsrechnung (quittung_zuzahlung) unterliegt der Vorprüfung;
+ * die alten RE-<uuid>-Rechnungsarten (rechnung_*) wurden stillgelegt (gkv-302, 09.10.2026).
+ */
 export function istRechnungsartig(typ) {
-  return typ === 'quittung_zuzahlung' || RECHNUNGS_TYPEN.includes(typ);
+  return typ === 'quittung_zuzahlung';
 }
 
 /**

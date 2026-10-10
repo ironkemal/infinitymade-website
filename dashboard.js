@@ -75,7 +75,8 @@ import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261006n';
-import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
+import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
+import { rechnungMenueEintrag, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261006b';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006r';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
@@ -7419,7 +7420,7 @@ async function loadPatientDetailRezepte(leadId) {
     supabase
       .from('prescriptions')
       .select(`
-        id, rezept_typ, is_blanko, status, icd10, diagnosegruppe, heilmittel,
+        id, rezept_typ, rezeptart, is_blanko, status, icd10, diagnosegruppe, heilmittel,
         heilmittel_position, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
         behandlungsbeginn, deadline_reminders,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
@@ -7634,11 +7635,7 @@ async function loadPatientDetailRezepte(leadId) {
             <div class="rx-drucken-menu" style="display:none;position:absolute;right:0;top:100%;z-index:1000;background:var(--bg-card-solid,#1e2a3a);border:1px solid var(--border,#2d3a4a);border-radius:8px;min-width:190px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;">
               <div class="rx-drucken-item" data-type="quittung_zuzahlung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">💶 Zuzahlungsrechnung</div>
               <div class="rx-drucken-item" data-type="rzg_quittung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">🧾 RZG-Quittung</div>
-              <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
-              <div class="rx-drucken-item" data-type="rechnung_privat" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Privat</div>
-              <div class="rx-drucken-item" data-type="rechnung_selbstzahler" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Selbstzahler</div>
-              <div class="rx-drucken-item" data-type="rechnung_sonder" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Sonder</div>
-              <div class="rx-drucken-item" data-type="rechnung_bg" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung BG</div>
+              ${rechnungMenueEintrag(rx.rezeptart)}
               <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
               <div class="rx-drucken-item" data-type="rezeptvorderseite" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">🗒 Rezeptvorderseite</div>
             </div>
@@ -7710,7 +7707,7 @@ async function loadPatientDetailRezepte(leadId) {
       const rxId = wrap.dataset.id;
       const type = item.dataset.type;
       wrap.querySelector('.rx-drucken-menu').style.display = 'none';
-      await oeffneBelegDruck({ rxId, typ: type }, belegDruckDeps());
+      if (type === 'rechnung') await oeffneRechnungZurVerordnung({ rxId, leadId }, { supabase, switchPanel, openInvEditor, rechnungAusVerordnung, podVerordnungVorhanden: (id) => !!getPodVerordnung(id), toast: showToast }); else await oeffneBelegDruck({ rxId, typ: type }, belegDruckDeps());
     });
     // hover effect
     item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-hover,rgba(255,255,255,0.07))'; });
@@ -13546,7 +13543,7 @@ async function saveInvoice() {
     const patientSel = document.getElementById('invPatientSelect');
     const patientId = patientSel.value;
     if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
-    if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; }
+    if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; } { const bgSperre = await bgSperreBeimSpeichern({ supabase, invoiceType: invPatientInsuranceType || null, prescriptionId: invPrescriptionId || invVerordnungId || verordnungAuswahl().prescriptionId || null }); if (bgSperre) { showToast(bgSperre, 'error'); return; } }
     // Collapse duplicates so the printed invoice and the DB row stay tidy
     invLines = aggregateInvLines(invLines);
     renderInvLines(); calcInvTotals();

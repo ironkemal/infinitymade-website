@@ -29,7 +29,7 @@ import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_pos
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
-import { bgFehltFuerRechnung, nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
+import { nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
@@ -38,7 +38,6 @@ import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
-import { renderRechnung } from '../pdf/rechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
@@ -2823,8 +2822,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 });
 
 // GET /api/billing/prescription/:id/rechnung?type=TYPE
-// Renders print-ready document for rechnung_privat|selbstzahler|eigenanteil|sonder|bg,
-// rzg_quittung, or rezeptvorderseite — applies owner's default vorlage settings.
+// Renders print-ready document for rzg_quittung or rezeptvorderseite.
+// Rechnungsarten (rechnung_privat|selbstzahler|sonder|bg) werden mit 410 abgewiesen
+// (Rechnungen entstehen ausschließlich im Rechnungs-Editor, gkv-302 09.10.2026).
 router.get('/prescription/:id/rechnung', async (req, res) => {
   // rechnung_eigenanteil ist bewusst NICHT dabei: die Vorlage rechnete den
   // vollen Positionspreis ab statt des Eigenanteils, also eine Überforderung
@@ -2838,6 +2838,14 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
   const type = req.query.type;
   if (!type || !VALID_TYPES.includes(type)) {
     return res.status(400).send('Ungültiger Dokumenttyp');
+  }
+
+  // Doppelabrechnung GKV verhindern (gkv-302 09.10.2026, KHS §4):
+  // Verordnungsbezogene RE-<uuid>-Rechnungen sind stillgelegt. Rechnungen entstehen
+  // nur noch GoBD-konform im Rechnungs-Editor (invoices, Nummernkreis, Festschreibung).
+  if (RECHNUNGS_TYPEN.includes(type)) {
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send('<p style="font-family:sans-serif">Rechnungen werden nur noch im Rechnungs-Editor erstellt (fortlaufende Nummer, festgeschrieben). Bitte unter „Rechnungen" öffnen.</p>');
   }
 
   try {
@@ -2867,15 +2875,6 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       if (op) praxisProfil = { ...profile, ...op };
     }
     const tenantSector = praxisProfil.sector || 'physiotherapy';
-
-    // Pflichtangaben nur für rechnungsartige Belege prüfen (§ 14 Abs. 4 UStG).
-    if (RECHNUNGS_TYPEN.includes(type)) {
-      const fehlend = fehlendePflichtangaben(praxisProfil);
-      if (fehlend.length > 0) {
-        res.set('Content-Type', 'text/html; charset=utf-8');
-        return res.status(400).send(pflichtangabenHinweisHtml(fehlend));
-      }
-    }
 
     // ---- Owner's default vorlage for this type ----
     const { data: vorlage } = await supabase
@@ -3013,49 +3012,6 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         invoiceFooterText,
         unterschriftLabel: cj.unterschrift_label || null,
         fusszeile: cj.fusszeile || null
-      });
-
-    } else {
-      // rechnung_privat | rechnung_selbstzahler | rechnung_eigenanteil | rechnung_sonder | rechnung_bg
-      const zahlungszielTage = parseInt(cj.zahlungsziel_tage, 10) || 14;
-      const bruttoSum = resolvedSessions.reduce((sum, { preis_eur }) => sum + preis_eur, 0);
-      const printSessions = resolvedSessions.map(({ session: s, preis_eur }) => ({
-        datum: s.done_at,
-        position: storedPos,
-        bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
-        brutto: preis_eur
-      }));
-      // BG (KHS M2.2): Rechnungsempfänger ist der UV-Träger. Pflicht: Träger + Anschrift + Unfalltag.
-      let bgBlock = null;
-      if (type === 'rechnung_bg' && rx.rezeptart === 'bg') {
-        const bgFehlt = bgFehltFuerRechnung(rx);
-        if (bgFehlt.length) {
-          res.set('Content-Type', 'text/html; charset=utf-8');
-          return res.status(400).send(`<p style="font-family:sans-serif">Für die BG-Rechnung fehlen Angaben in der Verordnung: <strong>${bgFehlt.join(', ')}</strong>. Bitte in der Verordnung ergänzen.</p>`);
-        }
-        bgBlock = { traeger_name: rx.bg_traeger_name, traeger_anschrift: rx.bg_traeger_anschrift,
-                    unfalltag: rx.bg_unfalltag, aktenzeichen: rx.bg_aktenzeichen };
-      }
-      html = renderRechnung({
-        type,
-        praxis: praxisData,
-        patient: patientData,
-        verordnung: verordnungData,
-        rechnung: {
-          nummer: `RE-${rx.id.slice(0, 8).toUpperCase()}`,
-          datum: new Date(),
-          faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000),
-          kvnr: rx.leads?.versichertennummer || '',
-          bg_aktenzeichen: rx.bg_aktenzeichen || '',
-          bg: bgBlock
-        },
-        sessions: printSessions,
-        totals: { brutto: bruttoSum, netto: bruttoSum, mwst: 0, gesamt: bruttoSum },
-        bankverbindung: buildBankverbindung(praxisProfil),
-        logoUrl,
-        invoiceFooterText,
-        betreff: cj.betreff || null,
-        bereichTitel: bereichTexte(tenantSector).titel
       });
     }
 
