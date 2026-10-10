@@ -93,6 +93,8 @@ export function verdrahteDruckenMenue(root, { onEintrag } = {}) {
       const warOffen = menu.style.display === 'block';
       alleZu();
       menu.style.display = warOffen ? 'none' : 'block';
+      // Karte unten am Bildrand: Menü ins Bild rollen statt unsichtbar aufklappen (canli-test 10.10.2026, P2).
+      if (!warOffen) menu.scrollIntoView?.({ block: 'nearest' });
     });
   });
   root.querySelectorAll('.rx-drucken-item').forEach(item => {

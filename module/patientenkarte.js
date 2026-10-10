@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20261010k';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20261010m';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260930x';
 import { leadGeburtsdatum, leadHausbesuch } from './lead-felder.js?v=20260929a';
 
