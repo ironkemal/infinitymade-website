@@ -113,23 +113,8 @@ export async function markiereZuBelegBezahlt(supabase, rxId, zahlart) {
     if (!zu) return true;
     if (zu.status === 'paid' && zu.payment_status === 'paid') return true;
 
-    const method = paymentMethodFuerZahlart(zahlart);
-    const { error: upErr } = await supabase
-      .from('invoices')
-      .update({
-        status: 'paid',
-        payment_status: 'paid',
-        paid_at: new Date().toISOString(),
-        payment_method: method || null,
-      })
-      .eq('id', zu.id);
-
-    if (upErr) {
-      console.error('[markiereZuBelegBezahlt] Update fehlgeschlagen:', upErr);
-      return false;
-    }
-
-    return true;
+    // Eine Schreibstelle für „bezahlt“ (fonksiyon-ustasi 10.10.2026): künftige Regeln greifen hier mit.
+    return await markiereRechnungBezahlt(supabase, zu.id, paymentMethodFuerZahlart(zahlart));
   } catch (err) {
     console.error('[markiereZuBelegBezahlt] Unerwarteter Fehler:', err);
     return false;

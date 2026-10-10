@@ -257,18 +257,6 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `normName()` — [onboarding.js:599](onboarding.js#L599-L728) · 130 satır · employee_services:insert
 - `syncServices()` — [onboarding.js:618](onboarding.js#L618-L728) · 111 satır · employee_services:insert
 
-### `invoices` — 3 bağımsız yazma yolu
-
-**Yol 1 — `saveInvoice()`** · Ekran: _UI yolu çözülemedi_
-- `saveInvoice()` — [dashboard.js:13541](dashboard.js#L13541-L13629) · 89 satır · invoices:update, invoices:insert
-
-**Yol 2 — `frageZahlungsstatus()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
-- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:70](module/rechnung-zahlung.js#L70-L82) · 13 satır · invoices:update
-- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:151](module/rechnung-zahlung.js#L151-L219) · 69 satır · invoices:update
-
-**Yol 3 — `markiereZuBelegBezahlt()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
-- `markiereZuBelegBezahlt()` — [module/rechnung-zahlung.js:96](module/rechnung-zahlung.js#L96-L137) · 42 satır · invoices:update
-
 ### `anamnese` — 2 bağımsız yazma yolu
 
 **Yol 1 — `speichereNeu()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
@@ -331,6 +319,15 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 2 — `saveFahrtEndHandler()`** · Ekran: _UI yolu çözülemedi_
 - `saveFahrtEndHandler()` — [dashboard.js:3766](dashboard.js#L3766-L3851) · 86 satır · fahrten:upsert
 
+### `invoices` — 2 bağımsız yazma yolu
+
+**Yol 1 — `saveInvoice()`** · Ekran: _UI yolu çözülemedi_
+- `saveInvoice()` — [dashboard.js:13541](dashboard.js#L13541-L13629) · 89 satır · invoices:update, invoices:insert
+
+**Yol 2 — `frageZahlungsstatus()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
+- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:70](module/rechnung-zahlung.js#L70-L82) · 13 satır · invoices:update
+- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:136](module/rechnung-zahlung.js#L136-L204) · 69 satır · invoices:update
+
 ### `module_visibility` — 2 bağımsız yazma yolu
 
 **Yol 1 — `loadVisibility()`** · Ekran: _UI yolu çözülemedi_
@@ -354,7 +351,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadPodologieBilling()` — [module/podologie-abrechnung.js:489](module/podologie-abrechnung.js#L489-L1224) · 736 satır · podologie_behandlungen:insert
 
 **Yol 2 — `behandlungenVerknuepfen()`** · Ekran: _UI yolu çözülemedi_
-- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:189](module/rechnung-bruecke.js#L189-L218) · 30 satır · podologie_behandlungen:update
+- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:191](module/rechnung-bruecke.js#L191-L220) · 30 satır · podologie_behandlungen:update
 
 ### `prescription_documents` — 2 bağımsız yazma yolu
 
@@ -408,13 +405,13 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `employee_services` — 5 ayrı fonksiyon yazıyor
 - `employee_business_assignments` — 5 ayrı fonksiyon yazıyor
 - `abrechnung` — 4 ayrı fonksiyon yazıyor
-- `invoices` — 4 ayrı fonksiyon yazıyor
 - `ops_finance_expenses` — 4 ayrı fonksiyon yazıyor
 - `employee_scope_overrides` — 3 ayrı fonksiyon yazıyor
 - `aerzte` — 3 ayrı fonksiyon yazıyor
 - `breaks` — 3 ayrı fonksiyon yazıyor
 - `working_hours` — 3 ayrı fonksiyon yazıyor
 - `calendar_integrations` — 3 ayrı fonksiyon yazıyor
+- `invoices` — 3 ayrı fonksiyon yazıyor
 
 ## Bilinçli aynalar — kod içinde beyan edilmiş (kopya DEĞiL)
 

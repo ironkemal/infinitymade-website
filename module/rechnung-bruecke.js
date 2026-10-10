@@ -46,17 +46,19 @@
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
 import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261009rs';
 import { rechnungsTitel } from './rechnung-anzeige.js?v=20261006q';
+import { normalisiereRezeptart, istKasse } from './rezeptart.js?v=20261006a';
 
-/** Rezeptarten, die nicht über die Kasse laufen. */
-const PRIVATE_ARTEN = ['privat', 'selbstzahler', 'bg'];
+// Einordnung der Rezeptart nur über module/rezeptart.js (eine Quelle, 10.10.2026, fonksiyon-ustasi-Fund):
+// vorher eigener Rohwert-Vergleich — der Alias „pkv" galt hier als Kasse, in rezeptart.js als privat.
 
 /** Wer zahlt? selbstzahler/bg eigene Typen (bg: Rechnung an den UV-Träger), alles andere Nicht-Kasse = privat. */
 export function zahlertypAusRezeptart(rezeptart) {
-  return rezeptart === 'selbstzahler' ? 'selbstzahler' : rezeptart === 'bg' ? 'bg' : 'privat';
+  const art = normalisiereRezeptart(rezeptart);
+  return art === 'selbstzahler' ? 'selbstzahler' : art === 'bg' ? 'bg' : 'privat';
 }
 
 export function istPrivatRezeptart(rezeptart) {
-  return PRIVATE_ARTEN.includes(String(rezeptart || 'kassen'));
+  return !istKasse(rezeptart);
 }
 
 /**

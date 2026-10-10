@@ -127,3 +127,10 @@ test('Standardleistung der Praxis mit unverändertem Katalogtitel „(groß)“:
   assert.equal(zeilen[0].unit_price, 51.92);
   assert.ok(zeilen.every(z => !/groß|klein|Komplex/.test(z.title)));
 });
+
+test('Rezeptart-Alias „pkv" gilt wie in rezeptart.js als privat (eine Quelle)', () => {
+  assert.equal(istPrivatRezeptart('pkv'), true);
+  assert.equal(zahlertypAusRezeptart('pkv'), 'privat');
+  assert.equal(istPrivatRezeptart('gkv'), false);
+  assert.equal(zahlertypAusRezeptart('BG'), 'bg');
+});

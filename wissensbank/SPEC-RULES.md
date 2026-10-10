@@ -1892,15 +1892,18 @@
     Privat und AF; Buchungsbeleg § 147 Abs. 1 Nr. 4 AO, 8 J.
 - **Geçerlilik:** V21 / Korrekturverfahren-Empfehlungen Stand 13.02.2025 — 01.10.2025'ten beri;
   V22 (01.02.2027) geçişinde Kap. 7.4.2.1 yeniden kontrol
-- **Kodda:**
-  - Bugün: `api-backend/billing/api/abrechnung.routes.js:2638` `GET /prescription/:id/zuzahlungsrechnung`
-    → `:2796` `nummer: ZU-${rx.id.slice(0,8)}` (Verordnung-ID'den türetilmiş, Nummernkreis değil) ·
-    `:2797` `datum: new Date()` (**her basımda yeni tarih** — Urbeleg reprodüzierbar değil) ·
-    belge kalıcı olarak kaydedilmiyor. ❌ kurala aykırı.
-  - Hedef: `invoices` tipi `zuzahlung` + Nummernkreis `ZU-JJJJ-nnnn` + ilk basımda tek seferlik
-    numara/tarih + Storno-Gegenbeleg — **offen, henüz yazılmadı** (KUTU_HAZIRLIK_SPRINT.md §4 „ZU").
-  - VKZ 03 tarafı DB'de mevcut: `db/SCHEMA.sql:218/221` `abrechnung_zuzahlungsforderung_daten_check`
-    / `_ursprung_check` (VKZ 03 ⇔ daten + ursprung_id). ZU belgesine bağ (Urbeleg referansı) yok.
+- **Kodda:** ✅ **umgesetzt 7bfc04ea / 0078** (10.10.2026)
+  - `api-backend/billing/api/abrechnung.routes.js:2638` `GET /prescription/:id/zuzahlungsrechnung`:
+    ilk basım (≥1 `done` seans) → `invoices` satırı `invoice_type='zuzahlung'`, `ZU-JJJJ-nnnn` +
+    `issued_at` trigger'da (migration `0078_zuzahlungsbeleg_invoices.sql`), basılan veri snapshot'ta;
+    sonraki basımlar aynı satırı basar. `done` seans yoksa `:2797-2804` numarasız „Vorschau".
+    Değişmiş + ödenmemiş → `:2896-2922` negatif Gegenbeleg + orijinal `cancelled` + yeni ZU;
+    ödenmiş → değiştirilmez. Saf çekirdek `api-backend/billing/zuzahlung/zu-beleg.js`
+    (`baueZuBelegZeile:35`, `zuDruckDaten:174`, `zuBelegVeraltet:231`, `baueGegenbeleg:287`).
+  - VKZ 03 tarafı: `db/SCHEMA.sql:218/221` `abrechnung_zuzahlungsforderung_daten_check` /
+    `_ursprung_check`. ⚠️ **Açık bağ:** `api-backend/billing/dta/zuzahlungsforderung-ursprung.js:1438`
+    KZ2 için `nachweisPruefung.art='zahlungsaufforderung43c'` istiyor ama `referenz` (`:1176-1186`)
+    serbest metin — aktif (cancelled olmayan) bir ZU `invoices` satırına doğrulanmıyor.
 - **Kapsam:** tüm Fachbereiche (Physio/Ergo/Logo/Podo) · tüm Verordnungsarten · yalnız
   zuzahlungspflichtige hasta (befreit → Urbeleg gerekmez, Kennzeichen „1")
 

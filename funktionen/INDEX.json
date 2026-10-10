@@ -132606,16 +132606,18 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 54,
-   "end": 56,
-   "lines": 3,
+   "start": 55,
+   "end": 58,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "normalisiereRezeptart"
+   ],
    "calledBy": [
     "starteRechnungAusVerordnung"
    ],
@@ -132666,8 +132668,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 58,
-   "end": 60,
+   "start": 60,
+   "end": 62,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -132675,7 +132677,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "istKasse"
+   ],
    "calledBy": [
     "rechnungButtonHtml"
    ],
@@ -132726,8 +132730,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 70,
-   "end": 83,
+   "start": 72,
+   "end": 85,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [
@@ -132790,8 +132794,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 96,
-   "end": 105,
+   "start": 98,
+   "end": 107,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -132851,8 +132855,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 116,
-   "end": 124,
+   "start": 118,
+   "end": 126,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -132914,8 +132918,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 141,
-   "end": 181,
+   "start": 143,
+   "end": 183,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
@@ -132979,8 +132983,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 189,
-   "end": 218,
+   "start": 191,
+   "end": 220,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [
@@ -133007,8 +133011,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 226,
-   "end": 238,
+   "start": 228,
+   "end": 240,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [
@@ -133031,8 +133035,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 253,
-   "end": 298,
+   "start": 255,
+   "end": 300,
    "lines": 46,
    "spiegelHinweis": null,
    "tables": [],
@@ -133101,8 +133105,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-bruecke.js",
-   "start": 307,
-   "end": 314,
+   "start": 309,
+   "end": 316,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -135721,7 +135725,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "frageZahlungsstatus"
+    "frageZahlungsstatus",
+    "markiereZuBelegBezahlt"
    ],
    "modules": [
     "abrechnung",
@@ -135771,20 +135776,19 @@
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
    "start": 96,
-   "end": 137,
-   "lines": 42,
+   "end": 122,
+   "lines": 27,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
    ],
    "rpcs": [],
-   "writes": [
-    "invoices:update"
-   ],
+   "writes": [],
    "endpoints": [],
    "storage": [],
    "calls": [
     "error",
+    "markiereRechnungBezahlt",
     "paymentMethodFuerZahlart"
    ],
    "calledBy": [
@@ -135837,8 +135841,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 151,
-   "end": 219,
+   "start": 136,
+   "end": 204,
    "lines": 69,
    "spiegelHinweis": null,
    "tables": [
@@ -140615,7 +140619,8 @@
     "lesenMuster13",
     "rezeptartFuerSpeichern",
     "rezeptartLabel",
-    "wendeArtAn"
+    "wendeArtAn",
+    "zahlertypAusRezeptart"
    ],
    "modules": [
     "abrechnung",
@@ -140740,6 +140745,7 @@
    ],
    "calledBy": [
     "brauchtGkvAngaben",
+    "istPrivatRezeptart",
     "maskeIstKasse",
     "rechnungMenueEintrag"
    ],
@@ -184661,190 +184667,6 @@
    ]
   },
   {
-   "tabelle": "invoices",
-   "anzahl": 3,
-   "pfade": [
-    {
-     "leitfunktion": "saveInvoice",
-     "funktionen": [
-      {
-       "name": "saveInvoice",
-       "file": "dashboard.js",
-       "start": 13541,
-       "end": 13629,
-       "lines": 89,
-       "writes": [
-        "invoices:update",
-        "invoices:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "frageZahlungsstatus",
-     "funktionen": [
-      {
-       "name": "markiereRechnungBezahlt",
-       "file": "module/rechnung-zahlung.js",
-       "start": 70,
-       "end": 82,
-       "lines": 13,
-       "writes": [
-        "invoices:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      },
-      {
-       "name": "frageZahlungsstatus",
-       "file": "module/rechnung-zahlung.js",
-       "start": 151,
-       "end": 219,
-       "lines": 69,
-       "writes": [
-        "invoices:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "markiereZuBelegBezahlt",
-     "funktionen": [
-      {
-       "name": "markiereZuBelegBezahlt",
-       "file": "module/rechnung-zahlung.js",
-       "start": 96,
-       "end": 137,
-       "lines": 42,
-       "writes": [
-        "invoices:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "belegliste",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "podologie-billing",
-        "rechnungen",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 35 modülden çağrılıyor"
-       ]
-      }
-     ]
-    }
-   ]
-  },
-  {
    "tabelle": "anamnese",
    "anzahl": 2,
    "pfade": [
@@ -185774,6 +185596,135 @@
    ]
   },
   {
+   "tabelle": "invoices",
+   "anzahl": 2,
+   "pfade": [
+    {
+     "leitfunktion": "saveInvoice",
+     "funktionen": [
+      {
+       "name": "saveInvoice",
+       "file": "dashboard.js",
+       "start": 13541,
+       "end": 13629,
+       "lines": 89,
+       "writes": [
+        "invoices:update",
+        "invoices:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "frageZahlungsstatus",
+     "funktionen": [
+      {
+       "name": "markiereRechnungBezahlt",
+       "file": "module/rechnung-zahlung.js",
+       "start": 70,
+       "end": 82,
+       "lines": 13,
+       "writes": [
+        "invoices:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
+      },
+      {
+       "name": "frageZahlungsstatus",
+       "file": "module/rechnung-zahlung.js",
+       "start": 136,
+       "end": 204,
+       "lines": 69,
+       "writes": [
+        "invoices:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "belegliste",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 35 modülden çağrılıyor"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "module_visibility",
    "anzahl": 2,
    "pfade": [
@@ -186044,8 +185995,8 @@
       {
        "name": "behandlungenVerknuepfen",
        "file": "module/rechnung-bruecke.js",
-       "start": 189,
-       "end": 218,
+       "start": 191,
+       "end": 220,
        "lines": 30,
        "writes": [
         "podologie_behandlungen:update"
