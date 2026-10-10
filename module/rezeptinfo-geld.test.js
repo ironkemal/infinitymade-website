@@ -246,3 +246,25 @@ test('zahlerTyp: Rezeptart-Alias pkv zählt als privat (wie rezeptart.js, 10.10.
   const { zahlerTyp } = await import('./rezeptinfo-geld.js');
   assert.equal(zahlerTyp({ insurance_type: 'gkv' }, { rezeptart: 'pkv' }), 'privat');
 });
+
+// ── Podologie: Zuzahlung aus dokumentierten Behandlungen (gkv-302 10.10.2026) ──
+
+test('Podologie: Geldstand folgt den dokumentierten Behandlungen, nicht den verordneten Einheiten', async () => {
+  const { ladePodoZuzahlung } = await import('./rezeptinfo-geld.js');
+  const karte = new Map([['78010', { preis: 36.1, zuzahlung: 3.61 }], ['78040', { preis: 23.11, zuzahlung: 2.31 }]]);
+  const q = { select: () => q, eq: () => q, is: () => Promise.resolve({ data: [
+    { behandlungsdatum: '2026-10-10', hpnr_codes: ['78010', '78040'], storniert_am: null },
+  ], error: null }) };
+  const podo = await ladePodoZuzahlung({ sb: { from: () => q }, ownerId: 'o', rx: { id: 'r' }, ladePodoPositionen: async () => karte });
+  assert.equal(podo.behandlungen, 1);
+  const st = ermittleGeldstand({ rx: { anzahl_einheiten: 3 }, erbracht: 0, zahler: 'gkv', position: { preis: 36.1, zuzahlung: 3.61 }, podo });
+  assert.equal(st.gesamt, 15.92);      // 3,61 + 2,31 + 10 € — nicht 3 × 3,61 + 10 = 20,83
+  assert.equal(st.ausBehandlungen, true);
+  assert.equal(st.unbekannt, false);
+});
+
+test('Podologie ohne Behandlung: keine Podo-Summe, Schätzung bleibt', async () => {
+  const { ladePodoZuzahlung } = await import('./rezeptinfo-geld.js');
+  const q = { select: () => q, eq: () => q, is: () => Promise.resolve({ data: [], error: null }) };
+  assert.equal(await ladePodoZuzahlung({ sb: { from: () => q }, ownerId: 'o', rx: { id: 'r' }, ladePodoPositionen: async () => null }), null);
+});

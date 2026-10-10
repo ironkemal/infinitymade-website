@@ -62,7 +62,7 @@
  * Betrag, den die gedruckte Quittung ausweist.
  */
 
-import { berechneZuzahlung, wirksameEinheiten } from './zuzahlung-rechnen.js?v=20260920s';
+import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
 import { preisAusService } from './rechnung-bruecke.js?v=20261010i';
 
@@ -180,7 +180,7 @@ export async function ladePrivatSumme(sb, prescriptionId) {
  * @returns {{zahler:string, brutto:number, gesamt:number, befreit:boolean,
  *           einheiten:number, unbekannt:boolean, offenePreise:number}}
  */
-export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', position = null, privat = null }) {
+export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', position = null, privat = null, podo = null }) {
   const einheiten = wirksameEinheiten({ verordnet: rx?.anzahl_einheiten, erbracht });
 
   if (zahler === 'privat') {
@@ -194,6 +194,14 @@ export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', posi
     };
   }
 
+  // Podologie: Zuzahlung aus den DOKUMENTIERTEN Behandlungen × HPNR — derselbe Weg wie
+  // ZU-Beleg und §302 (§ 61 S. 3 SGB V: 10 % der Kosten der erbrachten Leistung; gkv-302
+  // 10.10.2026). Die Einheiten-Schätzung zeigte 20,83 € neben einem ZU-Beleg über 15,92 €.
+  if (podo) {
+    return { ...podo, zahler, einheiten: podo.behandlungen, unbekannt: (podo.unbekannt || []).length > 0,
+             offenePreise: 0, ausBehandlungen: true };
+  }
+
   const betrag = berechneZuzahlung({
     einheiten,
     preisProEinheit: position?.preis || 0,
@@ -202,6 +210,25 @@ export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', posi
     befreit: !!rx?.zuzahlung_befreit,
   });
   return { ...betrag, zahler, einheiten, unbekannt: !position, offenePreise: 0 };
+}
+
+/**
+ * Zuzahlung einer Podologie-Verordnung aus ihren dokumentierten Behandlungen.
+ * `null`, solange keine (nicht stornierte) Behandlung existiert — dann bleibt die Schätzung.
+ *
+ * @returns {Promise<object|null>} Ergebnis von zuzahlungFuerPodoVerordnung + `behandlungen`
+ */
+export async function ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen }) {
+  const { data: behs, error } = await sb.from('podologie_behandlungen')
+    .select('behandlungsdatum,hpnr_codes,storniert_am')
+    .eq('owner_id', ownerId).eq('verordnung_id', rx.id).is('storniert_am', null);
+  if (error || !behs?.length) return null;
+  const tag = (d) => String(d || '').slice(0, 10);
+  const karten = new Map();
+  await Promise.all([...new Set(behs.map(b => tag(b.behandlungsdatum)))]
+    .map(async t => karten.set(t, await ladePodoPositionen(t).catch(() => null))));
+  const summe = zuzahlungFuerPodoVerordnung(rx, behs, (code, datum) => karten.get(tag(datum))?.get?.(String(code)) || null);
+  return { ...summe, behandlungen: behs.length };
 }
 
 /**
@@ -299,9 +326,11 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
     + (zeigeSumme
         ? feld('Summe', escapeHtml(summeText), 'var(--text-main)',
                stand?.unbekannt ? 'Position steht nicht im Katalog'
-                                : `${stand.einheiten} Einheit(en) — Grundlage der Zuzahlung`)
+                                : stand.ausBehandlungen
+                                  ? `${stand.einheiten} dokumentierte Behandlung(en) — Grundlage der Zuzahlung`
+                                  : `${stand.einheiten} Einheit(en) — Grundlage der Zuzahlung`)
         : '')
-    + feld(zz.label, escapeHtml(zz.text), TON_FARBE[zz.ton], zz.titel)
+    + feld(zz.label + (stand?.geschaetzt ? ' (voraussichtlich)' : ''), escapeHtml(zz.text), TON_FARBE[zz.ton], zz.titel)
     + (st ? feld('Status', escapeHtml(st.label), st.farbe, st.hilfe) : '')
     + '<button type="button" id="bkRxEuroBtn" title="' + escapeHtml(zz.titel) + '"'
     + ' style="margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:9px;'
@@ -349,13 +378,15 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
   } = deps;
 
-  let lead = null, position = null, privat = null;
+  let lead = null, position = null, privat = null, podo = null;
   let standGkv = null, standPrivat = null;
 
   const zeichne = () => {
     if (!el || !el.isConnected) return;
     const zahler = zahlerTyp(lead, rx);
-    standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position });
+    standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo });
+    // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
+    standGkv.geschaetzt = sector === 'podologie' && !podo;
     standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
     const stand = zahler === 'privat' ? { ...standPrivat, zahler }
                 : zahler === 'gkv'    ? { ...standGkv, zahler }
@@ -410,6 +441,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     if (sector === 'podologie' && ladePodoPositionen) {
       const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
       position = findePosition(rx, { podoKarte: karte, katalog }) || position;
+      podo = await ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen }).catch(() => null);
     }
     zeichne();
   })().catch(e => console.error('[verdrahteGeldzeile]', e));
