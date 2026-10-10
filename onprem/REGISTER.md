@@ -6015,6 +6015,15 @@ Son tarih değişmedi: ilk ücretli kutu `:stable`'a bağlanmadan önce. 13.10 p
 - **Şart:** onarımdan sonra rest + realtime image/env değişmeden ve konteyner yeniden yaratılmadan (yalnız dockerd restart) yeşile dönmeli. Dönmezse teşhis kanıtlanmamış sayılır, sebep image olabilir: yeni `soak_baslangic` ile 72 saat baştan.
 - `soak_kanit` metnine: "Praxura WSL kutusu; 10.10 21:51 – <onarım> arası WSL kaynaklı ağ kesintisi (ikinci dağıtımın dockerd'si iptables'ı ezdi), image/env değişmedi, kesinti süresi soak'a sayılmadı; dockerd restart sonrası tüm servisler yeşil." Onarım anı ve ilk yeşil ölçüm saati buraya da yazılır.
 
+**(2) Onarım — 10.10.2026, şart karşılandı, hüküm değişmedi (çağıranın ölçümü).**
+- Onarım ~22:51:50, Kemal elle: `wsl.exe --terminate Ubuntu-24.04` + Praxura'da `systemctl restart docker`. Image, `.env`, konteyner yeniden yaratma yok; konteynerler restart policy ile dockerd'le birlikte kalktı ("Up 4 seconds"). Bu §(1) şartındaki "yalnız dockerd restart" tanımına girer: konteyner yeniden yaratılmadı, yalnız süreç yeniden başladı.
+- İlk yeşil ölçüm 22:52:39: 8/8 healthy (rest + realtime dahil), api içinden `db:5432` TCP ok, api → `kong:8000/rest/v1/` 401 (erişilebilir, anahtarsız beklenen).
+- Digest'ler değişmedi: praxura-api `sha256:641f43921abea5f2bae1ee8222c02962a3aa34cdb327910a8ea31f193a4dbeac`, praxura-caddy `sha256:7509159ddff23b27b3f062b79fe250436ff3fb0b8022c5eb904b794fa563e37f`.
+- Sonuç: teşhis onarımla doğrulandı (sebep image değil, WSL ağı). `soak_baslangic` 2026-10-10T13:36:44+02:00 aynen kalır, soak sıfırlanmaz.
+- Sayılmayan süre muhafazakâr uçtan alındı — onarım komutuna değil ilk yeşil ölçüme kadar (yeşil ölçülmeden geçen dakika kanıt değildir): 21:51 → 22:52:39 = 61 dk 39 sn. **Promote en erken: 13.10.2026 14:38:23** (13:36:44 + 61:39). Elle tutulan pratik eşik: **14:40.** Workflow'un kendi kapısı yalnız 13:36'yı ölçer; 14:40'tan önce tetiklenmez.
+- `soak_kanit` metni (tırnak, ters tırnak, dolar işareti yok): Praxura WSL kutusu, image 0.5.2. 10.10.2026 21:51 ile 22:52 arasi WSL kaynakli ag kesintisi: ayni WSL icindeki ikinci dagitimin (Ubuntu-24.04) dockerd si iptables kurallarini ezdi, konteyner-db TCP zaman asimi, rest ve realtime unhealthy. Image, env ve digest degismedi. Onarim 22:51:50 (ikinci dagitim durduruldu, Praxura dockerd yeniden baslatildi, konteyner yeniden yaratilmadi). Ilk yesil olcum 22:52:39: 8/8 healthy, api-db TCP ok, api-kong rest 401. Kesinti suresi (61 dk) soaka sayilmadi; promote en erken 13.10.2026 14:40.
+- O-190 `offen` kalır: olay kapandı, müşteri kutusundaki risk ((a)/(b)/(c)) kapanmadı.
+
 ### O-190 — Windows kutusu: aynı WSL'de Docker çalıştıran ikinci dağıtım Praxura ağını kesiyor 🟠 **offen**
 
 | Alan | Değer |
@@ -6024,4 +6033,4 @@ Son tarih değişmedi: ilk ücretli kutu `:stable`'a bağlanmadan önce. 13.10 p
 | **Tip** | G (kutu tarafı, kurulum/işletim ortamı) |
 | **Kutuda ne olur** | Müşteri PC'sinde Docker kuran başka bir WSL dağıtımı açıldığında (geliştirici ya da IT servis sağlayıcı) konteyner→db bağlantısı düşer: PostgREST/realtime unhealthy, uygulama veri yükleyemez, ama `api`/`caddy` health yeşil kaldığı için durum basit bir health bakışında görünmez. Restart sayacı 0, yani crash-loop alarmı da tetiklenmez. Linux sunucu kutusunu etkilemez |
 | **Çözüm** | Sahibi Windows kurulum hattı (O-163 ile aynı hat, `install.ps1`). Üç parça, `builder`: (a) `KURULUM.md` §Windows'a tek satır: aynı PC'de Docker'lı ikinci bir WSL dağıtımı çalıştırmayın, gerekirse `wsl --terminate <ad>` + kutu yeniden başlatma; (b) `install.ps1` ön kontrolü: Praxura dışında çalışan/kurulu ve dockerd'li dağıtım varsa uyar; (c) kutunun kendi durum ekranı (`/status`, O-40) konteyner→db erişimini de ölçsün; bu olayı yeşil gösteren tek health katmanı api'ninkiydi. Önce teşhis onarımla doğrulanır (§7AO şartı) |
-| **Durum** | `offen` — faz numarası yok; ilk Windows ücretli kutusundan önce (a) kapanmalı |
+| **Durum** | `offen` — teşhis 10.10 22:52 onarımla doğrulandı (§7AO (2)); faz numarası yok; ilk Windows ücretli kutusundan önce (a) kapanmalı |
