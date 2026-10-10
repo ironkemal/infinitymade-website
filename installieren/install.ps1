@@ -239,6 +239,21 @@ if ($vorhanden -match 'networkingMode\s*=\s*mirrored' -and $vorhanden -match 'vm
   Start-Sleep -Seconds 8   # WSL braucht einige Sekunden, bis die VM wirklich weg ist
 }
 
+# O-190: alle WSL-Distributionen teilen eine Netzschicht. Startet eine ZWEITE
+# Distribution ihren eigenen dockerd, schreibt der iptables fuer sein Netz neu
+# und die Box verliert die Verbindung zur eigenen Datenbank (10.10.2026 auf der
+# Test-Box gemessen) — api/caddy bleiben dabei gruen, kein Alarm.
+# Nur LAUFENDE Distributionen pruefen: eine gestoppte zu starten waere genau der Fehler.
+$env:WSL_UTF8 = '1'
+$laufend = (& wsl.exe -l --running -q 2>$null) -replace "`0", '' |
+  ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $Distro }
+foreach ($d in $laufend) {
+  & wsl.exe -d $d --exec pgrep -x dockerd 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) {
+    Warn "WARNUNG: In der Linux-Umgebung `"$d`" laeuft ein eigener Docker-Dienst. Laufen beide gleichzeitig, kann die Praxura-Box die Verbindung zu ihrer Datenbank verlieren. Bitte `"$d`" beenden (wsl --terminate $d) und nicht parallel zur Box betreiben."
+  }
+}
+
 # ── 3  Linux-Umgebung "Praxura" ─────────────────────────────────────────────
 Log "[3/11] Linux-Umgebung '$Distro' ($DistroBasis)"
 if (DistroVorhanden) {
