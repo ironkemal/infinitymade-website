@@ -3,7 +3,10 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-10-08 · **40 belge kayıtlı** (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel; W-07 ham PDF/TXT bu checkout/commit içinde değildir)
+> Son güncelleme: 2026-10-10 · **43 belge kayıtlı** (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
+> (10.10.2026: **DGUV / gesetzliche Unfallversicherung** — Handlungsanleitung Heilmittel (Januar 2026) +
+>  Gebührenverzeichnis Physiotherapie (ab 01.01.2026) + Ergotherapie (ab 01.09.2026). Yeni klasör
+>  `gemeinsam/unfallversicherung-dguv/`. BG fatura dalının (PE-006 B) kaynağı; Podologie üçünde de **geçmiyor**.)
 > (28.09.2026: **Microsoft C5 raporu (Azure, 01.04.2025–31.03.2026)** — ilk depo-dışı kayıt.
 >  Dağıtım kısıtlı olduğu için PDF de `.txt` de depoya girmez; aşağıda en sondaki
 >  „Depo dışı belgeler“ bölümünde yalnız bölüm haritası var. Sicil: REGISTER W-06.)
@@ -102,6 +105,7 @@ gemeinsam/kostentraeger/          Kostenträgerdatei (EDIFACT KOTR) — IK numar
 gemeinsam/heilmittel-richtlinie/  HeilM-RL, KBV Diagnoseliste, praxiswissen
 gemeinsam/positionsnummern/       Heilmittelpositionsnummernverzeichnis (tüm bereich'lar)
 gemeinsam/icd-10-gm/              BfArM ICD-10-GM veri paketi
+gemeinsam/unfallversicherung-dguv/ DGUV (BG/Unfallkasse): Handlungsanleitung, Gebührenverzeichnisse — yalnız yerel
 podologie/                        Podologie Leistungsbeschreibungen 1a–3, FAK, HPNR (filtre)
 physiotherapie/                   Vertrag §125 Anlage 2, Blanko-Leitfaden
 ergotherapie/ · logopaedie/       ilgili Anlage 2 Vergütungsvereinbarungen
@@ -700,6 +704,51 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Feld 26: Schlüsselnummer mit Inhalt belegt? (J=Ja, N=Nein)
   - Feld 27: IfSG-Meldung (Arzt-Meldepflicht nach Infektionsschutzgesetz: J=Ja, N=Nein)
   - Feld 28: IfSG-Labor (Laborausschlussziffer EBM 32006: J=Ja, N=Nein)
+
+---
+
+## Gesetzliche Unfallversicherung (DGUV) — BG / Unfallkasse, §302 DIŞI
+
+> Üç dosyanın PDF'i de `.txt`'si de **yalnız yerel** (git dışında — REGISTER W-08…W-10, W-A13). Dosya bu makinede
+> yoksa REGISTER'daki Herkunft URL'inden indirilir, `pdftotext -enc UTF-8 -layout` ile üretilir.
+> BG vakası §302/DTA'dan **geçmez**; bu belgeler GKV belgeleriyle karıştırılmaz.
+
+### gemeinsam/unfallversicherung-dguv/DGUV_Handlungsanleitung_Heilmittel_Rehaverfahren_p022302_2026-01.txt
+- **Ne:** „Handlungsanleitung — Heilmittel und Rehabilitationsverfahren in der gesetzlichen Unfallversicherung" (DGUV). 54 sayfa, 2629 satır, ~37k token.
+- **Kapsam:** UV'de kim Heilmittel verordnet, hangi Vordruck'la, hangi süre/Frist'le; Therapeut'un ve UV-Träger'in görevleri; ne zaman Kostenzusage/Genehmigung gerekir; tüm Verordnung ve Bericht formlarının Muster'i. **Podologie yok, Logopädie yalnız BGSW/form içinde anılıyor** (`grep -i podolog` → 0).
+- **Sürüm:** Ausgabe Januar 2026 · Webcode p022302 (künye, satır 5-22).
+- **Anzuwenden ab:** belirtilmemiş.
+- **Ne zaman lazım:** BG reçetesi/faturası alanları (Unfalltag, Aktenzeichen, UV-Träger); „BG'de Kostenzusage ne zaman şart"; Physio/Ergo BG Verordnung süre ve Frist kuralları; F 2400 / F 2402 alan adları.
+- **Anahtar bölümler** (satır no = `.txt`):
+  - satır 5-22 — **künye**: Ausgabe, telif/çoğaltma kaydı
+  - satır 23-175 — içindekiler · satır 176-181 — Verordnung Vordruck'ları yalnız elektronik, Landesverband'dan
+  - **Teil A Physiotherapie** satır 183-331: §2 Ausstellen der Verordnung — *wer verordnet* (D-Arzt, Handchirurg § 37 Abs. 3, hinzugezogener Arzt § 12; diğerleri yalnız UV-Träger onayıyla) · F 2400 · **max. 4 Wochen** · Behandlungsbeginn **14 Tage** (dringend 7) · Gültigkeit **2 Monate** · Unterbrechung ≤ 14 Tage · **Langzeitverordnung 6 Monate → schriftliche Kostenzusage vorab** (satır 254-260) · §3 Therapeut (satır 274-286: F 2400 kabulü = Vereinbarung + vereinbarte Gebühren kabulü) · §4 UV-Träger (Bezahlung nach Rahmenvertrag) · Hinweise (Zeitintervall = **10 Min.**, Behandlungseinheit tanımı, § 7 Abs. 3/4/6/7 der Vereinbarung)
+  - **Teil B Ergotherapie** satır 332-470: aynı yapı, F 2402, Zeitintervall = **15 Min.** (satır 1707)
+  - **Teil C EAP/MTT** satır 471-676: **§5 Kostenzusage satır 619-630** (Einrichtung holt ein, UV-Träger 3 Arbeitstage; isolierte MTT ohne Kostenzusage) · §6 Abrechnung gemäß EAP-Gebührenverzeichnis · §7 Rechnungsbegleichung spätestens 4 Wochen
+  - Teil D BGSW satır 677-899 (§6 Genehmigung 826) · Teil E ABMR 900-1070 · Teil F ITT 1071-1321 (Folgeverordnung → Kostenzusage, 1274) · **Teil G Rehasport/Funktionstraining 1322-1473 (§3 Kostenzusage 1432)**
+  - **Anlage 1 — F 2400 Verordnung Physiotherapie** satır 1474-1609: başlık alanları **„Unfallversicherungsträger"**, „Name, Vorname der versicherten Person", „Vollständige Anschrift", „Beschäftigt als", **„Unfalltag und ggf. Aktenzeichen des Unfallversicherungsträgers"** (1479-1488) · kabul şartı metni „Fehlen festgelegte Voraussetzungen, besteht kein Vergütungsanspruch" (1479-1484) · dipnot 2: 8xxx = Vereinbarung, 9xxx = BG-Nebenkostentarif (1598)
+  - Anlage 2 — F 2402 Ergotherapie 1610-1716 · Anlage 3 — F 2410 EAP/MTT + F 2414 1717-1835 · Anlage 4 — BGSW F 2150/2152/2156/2160/2158 1836-2229 (Bericht formlarında „Rechnungsnummer · Institutionskennzeichen (IK) · Falls kein IK – Bankverbindung (IBAN)", ör. 2165-2167) · Anlage 5 ABMR 2230-2470 · Anlage 6 F 2408 ITT 2471-2535 · Anlage 7 F 2406 Rehasport 2536-2620
+- ⚠️ Form sayfalarında `-layout` sütunları iç içe geçiriyor (ör. 1515, 1624) — alan **adını** ararken yeter, form **düzenini** okurken PDF sayfasına bak. Rückseite'deki Leistungsziffer listesi türevden alınmaz.
+- ⚠️ Belgenin verdiği `…/reha_leistung/verguetung/index.jsp` adresi ölü (404, 10.10.2026) — güncel adres REGISTER W-08'de.
+- **Sicil kaydı:** REGISTER **W-08**, zincir **Z-19**.
+
+### gemeinsam/unfallversicherung-dguv/DGUV_Gebuehrenverzeichnis_Physiotherapie_ab_2026-01-01.txt
+- **Ne:** DGUV Leistungs- und Gebührenverzeichnis Physiotherapie, A- und B-Positionen mit UV-GOÄ-Nrn. 3 sayfa, 204 satır.
+- **Kapsam:** Ziffer (8xxx / 9xxx) · Art der Behandlung · Behandlungszeit in Zeitintervallen · Preis pro Zeitintervall. Gruppen: Krankengymnastik, Massage/Wärme/Elektro u. a., Hausbesuch (8602). **Podologie yok.**
+- **Sürüm:** „gültig ab 01.01.2026".
+- **Anzuwenden ab:** 01.01.2026 — ilk tedavi günü ölçüt (satır 202-204); „bis zum Abschluss einer neuen Vereinbarung" (satır 199-200).
+- **Ne zaman lazım:** Physio BG faturası fiyatı (bugün kodda yok — vertikal sıralama).
+- **Anahtar bölümler:** satır 1-9 başlık · 10+ Gruppe 1 Krankengymnastik · 192 Hausbesuch · 195-196 A/B açıklaması · 199-204 geçerlilik kuralı.
+- ⚠️ Fiyat **PDF'ten** okunur (kural 2). **Sicil:** REGISTER **W-09**.
+
+### gemeinsam/unfallversicherung-dguv/DGUV_Gebuehrenverzeichnis_Ergotherapie_ab_2026-09-01.txt
+- **Ne:** „Leistungs- und Gebührenverzeichnis für Leistungen der Ergotherapie in der gesetzlichen Unfallversicherung", Anlage zu § 8 der Vereinbarungen DGUV/SVLFG – DVE/BED. 2 sayfa, 78 satır.
+- **Kapsam:** Leistungs-Nr. 11.x–12.x + UV-GOÄ-Nrn. 965x–966x · Regelzeitintervalle à 15 Min. · Preis. **Podologie yok.**
+- **Sürüm:** „gültig ab 1. September 2026".
+- **Anzuwenden ab:** 01.09.2026 — ilk tedavi günü ölçüt (satır 74-78).
+- **Ne zaman lazım:** Ergo BG faturası fiyatı (bugün kodda yok).
+- **Anahtar bölümler:** satır 1-8 başlık · 74-78 geçerlilik kuralı.
+- ⛔ **Bu `.txt`'de sütunlar kaymış — Nr./Bezeichnung/Preis eşlemesi YANLIŞ okunur.** Yalnız PDF. **Sicil:** REGISTER **W-10**.
 
 ---
 

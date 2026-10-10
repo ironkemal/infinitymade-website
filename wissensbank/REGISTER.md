@@ -5,7 +5,13 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 08.10.2026 (**W-07: KBV BFB V4.80 metadaten devri + yerel M3 kod zinciri**; ham PDF/TXT entegrasyon checkout/commit içine alınmadı).
+> İlk kurulum: 05.09.2026 · Son güncelleme: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
+> **W-08** Handlungsanleitung Heilmittel (Ausgabe Januar 2026) · **W-09** Gebührenverzeichnis Physiotherapie
+> (ab 01.01.2026) · **W-10** Gebührenverzeichnis Ergotherapie (ab 01.09.2026); zincir **Z-19** (BG fatura dalı,
+> PE-006 B); açık madde **W-A13**. Yeni klasör `gemeinsam/unfallversicherung-dguv/`. Ham PDF/TXT **yalnız yerel**:
+> Handlungsanleitung'un künyesi çoğaltmayı açıkça izne bağlıyor → `.gitignore` satırı aynı turda yazıldı.
+> Podologie için DGUV sözleşmesi/tarifesi **bulunmadı** — üç belge + yayıncının Vergütung sayfası tarandı.)
+> Önceki: 08.10.2026 (**W-07: KBV BFB V4.80 metadaten devri + yerel M3 kod zinciri**; ham PDF/TXT entegrasyon checkout/commit içine alınmadı).
 > Önceki: 30.09.2026 (**W-01: Q4/2026 Kostenträgerdateien indirildi** —
 > 4 dosya `curl` ile yayıncıdan byte-exact, sha256 kayıtlı, parser sayımı + öncül farkı ölçüldü;
 > düşenlerin bitiş tarihi 30.09.2026. DB'ye YÜKLENMEDİ. Yeni açık maddeler W-01 #9-#12.)
@@ -52,13 +58,13 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 40 (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok) |
-| Arşivdeki PDF | 49 (mevcut arşiv sayımı; W-07 PDF yalnız kaynak checkout’ta, bu checkout’a eklenmedi; 16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
+| Kayıtlı kaynak belge (INDEX'te) | 43 (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
+| Arşivdeki PDF | 52 (49 + 3 DGUV, 10.10.2026; önceki sayım: W-07 PDF yalnız kaynak checkout’ta, bu checkout’a eklenmedi; 16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 18 (Z-01…Z-18) |
-| Tam kimlik kartı yazılmış kaynak | 7 (**W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
-| Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 2 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta) |
-| **Herkunft (indirme URL'i) kayıtlı** | **7 / 40 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
+| Kaynak→kod zinciri kayıtlı | 19 (Z-01…Z-19) |
+| Tam kimlik kartı yazılmış kaynak | 10 (**W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 5 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta; W-08/W-09/W-10 — `gemeinsam/unfallversicherung-dguv/`, PDF `*.pdf` ile, TXT `.gitignore:119` ile dışarıda) |
+| **Herkunft (indirme URL'i) kayıtlı** | **10 / 43 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -71,7 +77,7 @@ ilgilendiriyor?* Kararsız kalınca `gemeinsam/`. Detay: `README.md`.
 wissensbank/
 ├── README.md · REGISTER.md · INDEX.md · SPEC-RULES.md     ← yönetim dosyaları
 ├── gemeinsam/          302-tp5/ · kostentraeger/ · heilmittel-richtlinie/
-│                       positionsnummern/ · icd-10-gm/
+│                       positionsnummern/ · icd-10-gm/ · unfallversicherung-dguv/
 ├── podologie/          Anlage 1a–3, FAK, filtrelenmiş HPNR
 ├── physiotherapie/     Vertrag §125 Anlage 2, Blanko-Leitfaden
 ├── ergotherapie/       Anlage 2 Vergütungsvereinbarung
@@ -108,6 +114,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer: `AO05Q426_KE0` · `BK05Q426_KE0` · `IK05Q426_KE0` · `EK05Q426_KE1` GEÇERLİ olur; `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` · `EK05Q426_KE0` DÜŞER (son gün 30.09.2026). `BN050526` + `LK05Q226` geçerli kalır. ✅ 4 dosya **30.09.2026'da indirildi** (byte-exact). ⛔ DB yüklemesi yapılmadı — `db-ustasi`; önce W-01 #9 (kodlama) | Z-09 → W-01 → `kostentraeger` + `kostentraeger_annahmestellen` | ⏳ dosyalar hazır, **DB yüklemesi açık** (madde 6, 9, 10) |
 | **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
+| **01.01.2027** (kontrol günü; HPNR turuyla birlikte) | DGUV yayınları **elle** kontrol edilir: Handlungsanleitung yeni Ausgabe (son: Januar 2026) · Physio-Gebührenverzeichnis (son üç sürüm 01.05.2025 / 01.08.2025 / 01.01.2026) · Ergo-Gebührenverzeichnis (01.09.2025 / 01.09.2026). İkisi de „gilt bis zum Abschluss einer neuen Vereinbarung" — bitiş tarihi **yok**, yenisi habersiz gelir | **Z-19** → W-08 · W-09 · W-10 (bugün koda sayı beslemiyor) | 🔁 **elle**, sahibi `wissensbank` — W-A13 |
 | **01.02.2027 öncesi** | Geçiş paketinin tam kapsamı **bilinmiyor**: Anlage 1 TP5 **V22** (21.05.2026) arşivde yok, `Anzuwenden ab` tarihi bizde yazılı değil. Aynı tarihteyse Anlage 3 V22 + Anhang 03 V10 ile **tek pakettir** | Z-01 · Z-02 · Z-09 | ⏳ **W-A09**, indirilmedi |
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
@@ -601,6 +608,62 @@ T/N-Status der E1x.7-/E1x.4-Kodes neu prüfen (Z-08). **Bei TA-Nachfolger:** ZHE
 ---
 
 
+### Z-19 · BG / gesetzliche Unfallversicherung — fatura dalı (PE-006 B, KHS M2.2) → kartlar **W-08 · W-09 · W-10**
+
+```
+DGUV Handlungsanleitung Heilmittel (Ausgabe Januar 2026)            [W-08]
+  Anlage 1 „Verordnung Physiotherapie (F 2400)" — Kopffelder
+  „Unfallversicherungsträger" · „Unfalltag und ggf. Aktenzeichen des Unfallversicherungsträgers"
+        │  (Physio/Ergo için yazılmış; Podologie'ye **analoji** ile taşındı — SPEC-RULES „BG / Arbeitsunfall")
+        ▼
+Podoloji/PRODUKT-ENTSCHEIDUNGEN.md  PE-006 B (+ Nachtrag 06.10.2026)
+        ▼
+prescriptions.bg_traeger_name · bg_traeger_anschrift · bg_unfalltag · bg_aktenzeichen ·
+              bg_kostenzusage_datum · bg_kostenzusage_zeichen · bg_einverstaendnis_am
+        ▼
+module/rezeptart.js           istBg()
+module/bg-angaben.js          bgFehltFuerRechnung() · bgHinweiseBeiRechnung() · bgKostenzusageHinweis  (+ bg-angaben.test.js)
+module/rechnung-bruecke.js    zeilenAusBehandlungen() — BG: fiyat ön doldurulmaz („Preis manuell", commit 46350155)
+                              starteRechnungAusVerordnung() — Träger/Anschrift/Unfalltag yoksa fatura yok
+```
+
+**Bu zincirin özelliği: kaynak belge kodu sayıyla beslemiyor — tam tersine, „sayı yok" kararının dayanağı.**
+Podologie için fiyat ön doldurulmamasının belgesel temeli bir **negatif bulgudur** ve üç ayrı yerde ölçüldü
+(10.10.2026, hepsi yayıncının kendi dosyası/sayfası):
+
+| Nerede bakıldı | Sonuç |
+|---|---|
+| W-08 Handlungsanleitung, tam metin (2629 satır) | `podolog` / `Fußpflege` → **0 isabet**. Teil A–G: Physiotherapie, Ergotherapie, EAP/MTT, BGSW, ABMR, ITT, Rehasport/Funktionstraining |
+| W-09 + W-10 Gebührenverzeichnisse | `podolog` → 0 isabet (yalnız 8xxx/9xxx Physio- ve 11.x–12.x/965x–966x Ergo-Ziffern) |
+| Yayıncının „Vergütung der Leistungserbringer" sayfası (HTML, 104 KB) | Meslek başlıkları: Ärzte · Zahnärzte · Pathologen · Physiotherapeuten · Ergotherapeuten · Psychotherapeuten · EAP-Einrichtungen · ITT · ABMR-Einrichtungen · Apotheken. **Podologie yok, Logopädie yok** |
+
+Sözleşmesiz meslekler için yayıncının tek genel cümlesi DGUV-FAQ „Vertragswesen/Rechtsangelegenheiten"dedir
+(web sayfası, Stand belirtilmemiş, erişim 10.10.2026): *„Soweit mit Leistungserbringern keine Verträge bestehen,
+wird in der Regel empfohlen, eine Vergütung auf der Grundlage entsprechender Verträge des Verbandes der
+Ersatzkassen (vdek) anzubieten. Dies ist jedoch für die Leistungserbringer nicht verbindlich."* — muhatabı
+UV-Träger'dir (ona ne **önerildiği**), Leistungserbringer için bağlayıcı bir fiyat değildir.
+
+⚠️ **Negatif bulgunun sınırı:** „DGUV'nin merkezî yayınlarında Podologie yok" ölçüldü; „hiçbir UV-Träger'in
+Podologie ile sözleşmesi yok" **ölçülmedi** (tek tek BG/Unfallkasse veya Landesverband düzeyi taranmadı).
+Hüküm `gkv-302`'nindir; sicil yalnız neye bakıldığını tutar.
+
+**Kostenzusage uyarısının dayanağı bu belge DEĞİLDİR.** W-08 Kostenzusage'yi yalnız şu hallerde ister: Physio/Ergo
+**Langzeitverordnung** (Teil A/B §2), **EAP** (Teil C §5), ITT-Folgeverordnung (Teil F), Rehasport (Teil G §3);
+Physio/Ergo Regelverordnung için Kostenzusage **istemez**. Podologie'deki „Kostenzusage fehlt" uyarısı PE-006
+Nachtrag'da ZFD-Merkblatt'a ve sözleşmesizlik bulgusuna bağlanmıştır — o Merkblatt **arşivde yok** (W-A13 #3).
+
+**Physio/Ergo için durum farklı (vertikal sıralama gereği bugün iş değil):** bağlayıcı Gebührenverzeichnis var
+(W-09, W-10) ve F 2400/F 2402 kabulü „vereinbarte Gebühren akzeptieren" şartına bağlı. `zeilenAusBehandlungen()`
+yalnız podoloji Behandlungen'ini işliyor; Physio/Ergo BG faturası yazıldığında „Preis manuell" o alanlarda
+belgeyle uyumlu **olmaz** — W-09/W-10 o gün fiyat kaynağıdır (kural 2: deterministik + ikinci kaynak).
+
+**Bei neuer Handlungsanleitung:** F 2400/F 2402 Kopffelder (Anlage 1/2) ve Teil A/B §2–§3 yeniden okunur;
+Podologie aranır (`grep -i podolog`). **Bei neuem Gebührenverzeichnis:** bugün yürünecek kod yok; kart güncellenir.
+**Podologie için bir DGUV/UV-Träger sözleşmesi ortaya çıkarsa:** PE-006 B „Preis manuell" + `rechnung-bruecke.js`
+BG dalı + SPEC-RULES „BG / Arbeitsunfall" üçü birden yeniden açılır.
+
+---
+
 ## 3. Kaynak envanteri
 
 `wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
@@ -669,6 +732,14 @@ yeniden araştırılıyor demektir.
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
 | `wissensbank/_archiv/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
+
+### Gesetzliche Unfallversicherung (DGUV) — ⚠️ yalnız yerel (PDF + TXT git dışında)
+
+| Dosya (`wissensbank/gemeinsam/unfallversicherung-dguv/`) | Sürüm / Stand | Ab | Durum | Besler | Herkunft |
+|---|---|---|---|---|---|
+| `DGUV_Handlungsanleitung_Heilmittel_Rehaverfahren_p022302_2026-01` | Ausgabe Januar 2026 (Webcode p022302) | belirtilmemiş | ✅ GEÇERLİ | **Z-19** | **✅ kart W-08** |
+| `DGUV_Gebuehrenverzeichnis_Physiotherapie_ab_2026-01-01` | gültig ab 01.01.2026 | 01.01.2026 | 📎 REFERANS (yayıncıda güncel; koda girmedi) | Z-19 (yalnız not) | **✅ kart W-09** |
+| `DGUV_Gebuehrenverzeichnis_Ergotherapie_ab_2026-09-01` | gültig ab 1. September 2026 | 01.09.2026 | 📎 REFERANS (yayıncıda güncel; koda girmedi) | Z-19 (yalnız not) | **✅ kart W-10** |
 
 ### Bulut sağlayıcı testatları — ⛔ depo dışı (dağıtım kısıtlı)
 
@@ -1290,6 +1361,54 @@ sayıyı düzeltir.
 - **Kontrol (07.10.2026 kaydından devralındı; bu devirde tekrar çalıştırılmadı):** kaynak 143 PDF sayfası; 33 Muster13 alanı deterministik regex ile sayıldı. Örnekleme alan 03/06/16/22/32 aynı orijinalin s.59–60'ından ayrı `pdftotext -f 59 -l 60` çıkarımıyla karşılaştırıldı.
 - **Açık:** legal-de yeniden dağıtım incelemesi (sahip legal-de, TXT yayınından önce); bu karttaki implementasyon zinciri 08.10.2026 yerel dosyalara bağlandı; gerçek Box/DB işletim kanıtı sahip Kemal/Hat K, ilgili sprint kapıları kapanmadan açık kalır.
 
+### W-08 · DGUV Handlungsanleitung — Heilmittel und Rehabilitationsverfahren in der gesetzlichen Unfallversicherung
+- **Dosya (yalnız yerel; PDF ve TXT git dışında):** `wissensbank/gemeinsam/unfallversicherung-dguv/DGUV_Handlungsanleitung_Heilmittel_Rehaverfahren_p022302_2026-01.pdf` + `.txt`. Yayıncının dosya adı `22302.pdf`.
+- **Herkunft:** https://publikationen.dguv.de/widgets/pdf/download/article/4657 (yayın sayfası: https://publikationen.dguv.de/versicherungleistungen/rehabilitation/4657/… — „Ausschließlich als PDF zum Download erhältlich") · **İndirme:** 10.10.2026 · **İndiren:** `wissensbank` ajanı (`curl`, byte-exact).
+- **Yayıncı:** Deutsche Gesetzliche Unfallversicherung e. V. (DGUV), Hauptabteilung Versicherung und Leistungen, Landesverbände.
+- **Sürüm / Stand:** **Ausgabe Januar 2026** (künye, s.2) · Webcode **p022302**. Sürüm numarası yok. Yayın sayfası „Ausgabedatum 2026.01, 54 Seiten" diyor; `pdftotext` 54 sayfa verdi (basılı son sayfa 53 + arka kapak). İçindeki formların kendi Stand'ı ayrıdır: F 2400 **0423** · F 2410 **1025** · F 2408 **1025** · F 2406 **0125** · F 2152 **0417**.
+- **Anzuwenden ab:** belirtilmemiş (künyede yalnız Ausgabe) · **Düşer:** açık uçlu — yeni Ausgabe çıkınca.
+- **Durum:** GEÇERLİ — 10.10.2026'da yayıncının sunduğu tek sürüm.
+- **Neyi besler:** **Z-19.** Anlage 1 (F 2400) başlık alanları → PE-006 B → `prescriptions.bg_*` → `module/bg-angaben.js` → `module/rechnung-bruecke.js` (BG dalı). Sayı beslemez; Podologie için „Preis manuell" kararının negatif dayanağıdır (belgede Podologie **geçmiyor**).
+- **Tazelik kontrolü:** yayın sayfasında „Ausgabedatum" ≠ `2026.01` mi → elle, `wissensbank`, sonraki kontrol **01.01.2027** (§1 takvimi). Otomatik değil.
+- **Yeniden dağıtım:** **yasak** — künye (s.2): „Diese Publikation ist urheberrechtlich geschützt. Die Vervielfältigung, auch auszugsweise, ist nur mit ausdrücklicher Genehmigung gestattet." Depo public → TXT `.gitignore:119` (`wissensbank/gemeinsam/unfallversicherung-dguv/*.txt`) ile, PDF `.gitignore:1` (`*.pdf`) ile dışarıda; `git check-ignore` 10.10.2026 doğrulandı. `.vercelignore:95` `wissensbank/` bütününü yayından dışlar. Sicilde ve INDEX'te yalnız kimlik, bölüm haritası ve kısa alıntı durur.
+- **Yedek:** hayır — PDF de TXT de yalnız bu makinede (W-A05). Yeniden üretim: yukarıdaki URL + `pdftotext -enc UTF-8 -layout`. PDF SHA256 `b58b621e3bb16c6e51da9acdcdb61520218197d4e56fad701fc5a378ac83646f` (1.277.452 bayt).
+- **Format kararı:** PDF → `.txt` (deterministik), 2629 satır / ~37k token. md'ye çevrilmedi (uzun düzyazı + form metni; atıf satır/Teil numarasıyla yapılıyor, kazanç yok). Form sayfaları (Anlage 1–7) `-layout` çıkarımında sütunları **iç içe geçiyor** (ör. satır 1515, 1624) — form alan adını okurken PDF'in o sayfasına bakılır; F 2400 arka yüzündeki Leistungsziffer listesi türevden **alınmaz** (kural 2).
+- **Anahtar bölümler:** INDEX kaydında (Teil A–G + Anlage 1–7, satır numaralarıyla).
+- **Kontrol (10.10.2026):** kapak/künye elle okundu. Örnekleme: Teil C §5 „Kostenzusage" (s.14) ayrı `pdftotext -f 14 -l 14` çıkarımıyla satır satır karşılaştırıldı — aynı. İçindekiler ↔ form feed sayısı (54) tutarlı.
+- **⚠️ Belgenin kendi içindeki ölü atıf:** Teil A §2 ve s.5 „Vereinbarungen und Frage-Antwort-Katalog" için `https://www.dguv.de/de/reha_leistung/verguetung/index.jsp` veriyor — 10.10.2026'da **HTTP 404**. Güncel adres: `https://www.dguv.de/de/reha_leistung/informationen_leistungserbringende/verguetung/index.jsp` (W-09/W-10'un Herkunft sayfası).
+- **Yan kaynak (web, arşivlenmedi — tek seferlik okuma):** DGUV-FAQ „Vertragswesen/Rechtsangelegenheiten", https://www.dguv.de/de/reha_leistung/med-versorgung/faq_vertragswesen/index.jsp, Stand belirtilmemiş, erişim 10.10.2026. vdek cümlesi ve „Heilmittelerbringer … muss für die Behandlung von UV-Patienten zugelassen sein" cümlesi buradadır (alıntı: Z-19).
+- **Açık:** W-A13.
+
+### W-09 · DGUV Gebührenverzeichnis Physiotherapie (A- und B-Positionen mit UV-GOÄ-Nrn.) — gültig ab 01.01.2026
+- **Dosya (yalnız yerel):** `wissensbank/gemeinsam/unfallversicherung-dguv/DGUV_Gebuehrenverzeichnis_Physiotherapie_ab_2026-01-01.pdf` + `.txt`. Yayıncının dosya adı `physio-a-u-b-positionen-01-01-2026_mit-uv-goae-nrn.pdf`.
+- **Herkunft:** https://www.dguv.de/medien/inhalt/reha_leistung/verguetung/physio-a-u-b-positionen-01-01-2026_mit-uv-goae-nrn.pdf · liste sayfası https://www.dguv.de/de/reha_leistung/informationen_leistungserbringende/verguetung/index.jsp → „Physiotherapeuten → Gebührenverzeichnis, Stand: 01.01.2026" · **İndirme:** 10.10.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** DGUV (Vereinbarung mit den Verbänden der physiotherapeutischen Berufe; Rahmenvereinbarung „Wirksamkeit ab 01.04.2023").
+- **Sürüm / Stand:** belgenin başlığı „gültig ab 01.01.2026". Sürüm numarası yok.
+- **Anzuwenden ab:** 01.01.2026 — ölçüt **Verordnung'un ilk tedavi günü** („erste Behandlung nach dem 31.12.2025", belge sonu, txt satır 202-204) · **Düşer:** açık uçlu („gilt bis zum Abschluss einer neuen Vereinbarung").
+- **Durum:** REFERANS — yayıncıda en güncel sürüm (liste başı), ama **hiçbir kod dosyasını beslemiyor**. Öncülleri yayıncıda duruyor (01.08.2025, 01.05.2025, 01.01.2024 …), indirilmedi.
+- **Neyi besler:** bugün hiçbir şeyi. Z-19 notu: Physio BG faturası yazıldığında fiyat kaynağı budur.
+- **Tazelik kontrolü:** liste sayfasında „Physiotherapeuten" altındaki ilk „Gebührenverzeichnis" satırının Stand'ı ≠ 01.01.2026 mı → elle, `wissensbank`, **01.01.2027** ve Physio BG işi başlamadan önce.
+- **Yeniden dağıtım:** şüpheli — belgede lisans/telif notu yok; herkese açık indirme yeniden dağıtım izni değildir. TXT `.gitignore:119` ile dışarıda.
+- **Yedek:** hayır (W-A05). PDF SHA256 `2b7f754e71dced491ff79f6fb09c7f450a74ff0648a4e607f51451a44e490dd1` (374.571 bayt, 3 sayfa).
+- **Format kararı:** PDF → `.txt` (204 satır). **Başka türev üretilmedi** — okuyan kod yok; csv/js bugün yalnız eskiyecek bir kopya olurdu. Fiyat tablosu YZ ile çevrilmedi.
+- **Kontrol (10.10.2026):** 33 adet 8xxx-Ziffer satırı sayıldı; 5 satır (8101 · 8104 · 8202 · 8303 · 8602) `-layout` ve `-raw` çıkarımları arasında karşılaştırıldı — Ziffer'ler iki çıkarımda da var; `-layout`'ta fiyat Ziffer'le **aynı satırda**. ⚠️ Bu yalnız arama kolaylığıdır; fiyat her zaman PDF'ten okunur.
+- **Okuma notu:** „A" = eigene UV-Position, „B" = „Kann verordnet werden auf der Grundlage der GKV-Leistungsbeschreibungen" (txt satır 196). 8xxx = Vereinbarung Ziffer'i, (9xxx) = BG-Nebenkostentarif (ambulant, Krankenhaus) — W-08 F 2400 dipnot 2. Podologie pozisyonu **yok**.
+
+### W-10 · DGUV Leistungs- und Gebührenverzeichnis Ergotherapie — gültig ab 01.09.2026
+- **Dosya (yalnız yerel):** `wissensbank/gemeinsam/unfallversicherung-dguv/DGUV_Gebuehrenverzeichnis_Ergotherapie_ab_2026-09-01.pdf` + `.txt`. Yayıncının dosya adı `gebuehrenverzeichnis_ergotherapie_01-09-2026.pdf`.
+- **Herkunft:** https://www.dguv.de/medien/inhalt/reha_leistung/verguetung/gebuehrenverzeichnis_ergotherapie_01-09-2026.pdf · liste sayfası W-09 ile aynı → „Ergotherapeuten → Gebührenverzeichnis, Stand: 01.09.2026" · **İndirme:** 10.10.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** DGUV · SVLFG (als LBG) · DVE · BED — „Anlage zu § 8 der Vereinbarungen" (Rahmenvertrag ab 01.04.2024).
+- **Sürüm / Stand:** başlık „gültig ab 1. September 2026 (Preise in €)". Sürüm numarası yok.
+- **Anzuwenden ab:** 01.09.2026 — ölçüt Verordnung'un ilk tedavi günü (txt satır 74-78) · **Düşer:** açık uçlu („bis zum Abschluss einer neuen Vereinbarung").
+- **Durum:** REFERANS — yayıncıda en güncel; hiçbir kod dosyasını beslemiyor. Öncülü 01.09.2025 yayıncıda, indirilmedi.
+- **Neyi besler:** bugün hiçbir şeyi. Z-19 notu: Ergo BG faturası yazıldığında fiyat kaynağı budur.
+- **Tazelik kontrolü:** liste sayfası „Ergotherapeuten" ilk satır Stand ≠ 01.09.2026 mı → elle, `wissensbank`, **01.01.2027** ve Ergo BG işi başlamadan önce (son iki sürüm ikisi de 01.09 — Eylül 2027 beklenir).
+- **Yeniden dağıtım:** şüpheli — W-09 ile aynı gerekçe. TXT `.gitignore:119` ile dışarıda.
+- **Yedek:** hayır (W-A05). PDF SHA256 `d6b48f4d46ed107a995b15af977dc075b5f5dfd06ee17c5dae44c77f9b465994` (474.037 bayt, 2 sayfa).
+- **Format kararı:** PDF → `.txt` (78 satır). Başka türev yok.
+- **⛔ Bu `.txt` fiyat okumak için KULLANILMAZ.** `-layout` çıkarımında Bezeichnung, Leistungs-Nr. ve Preis sütunları **birbirine göre kaymış** (ör. txt'de „11.1" satırında „sensomotorischen/perzeptiven" yazıyor; orijinalde 11.1 = motorisch-funktionell). `-raw` çıkarımı sırayı doğru veriyor ama o da türevdir. Kural 2'nin canlı örneği — fiyat/Ziffer eşlemesi **yalnız PDF'ten**. TXT yalnız „bu belgede X geçiyor mu" araması için.
+- **Kontrol (10.10.2026):** başlık + geçerlilik paragrafı PDF'e karşı okundu; kayma `-raw` ile karşılaştırılarak tespit edildi. Podologie pozisyonu **yok**.
+
 ---
 
 ## 4. Açık maddeler
@@ -1563,6 +1682,27 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
    — Azure OpenAI'nin 01.01.2026 sonrası C5 kapsamı ve Sweden Central eşlemesi. Sicilin işi
    yalnız cevap geldiğinde kaynağını W-06'ya eklemek; cevabın hukuki değeri `legal-de`'nin.
    Microsoft'tan gelen teyit (ör. bridge letter) **ayrı bir belgedir** → ayrı kart açılır.
+
+---
+
+### W-A13 · DGUV kaynakları (W-08/W-09/W-10): yayın koruması, tazelik, Podologie boşluğu — `offen`
+1. **Yayın koruması** (sahibi: commit'i atan — **Kemal**) — `.gitignore:117-119` bu turda eklendi ama **commit edilmedi**.
+   Aynı commit'te gitmezse `wissensbank/gemeinsam/unfallversicherung-dguv/*.txt` public depoya çıkar; W-08'in
+   künyesi çoğaltmayı açıkça izne bağlıyor. Kontrol: `git status` üç `.txt`'yi **göstermemeli**.
+   Yayınlamak istenirse önce `legal-de`; istenmiyorsa bu hâliyle `unkritisch`.
+2. **Tazelik** (tarih: **01.01.2027**, §1 takvimi; sahibi `wissensbank`) — üç belgenin hiçbirinde bitiş tarihi yok,
+   yenisi yayıncı sayfasında sessizce belirir. Otomatik kontrol yok (W-A06). Bugün koda sayı beslemedikleri için
+   kaçırılan bir sürüm faturayı bozmaz → o güne kadar `unkritisch`; Physio/Ergo BG faturası yazıldığı gün kritikleşir.
+3. **Podologie'nin UV dayanağı hâlâ belgesiz** (sahibi: `gkv-302`; ürün tarafı PE-006 „Offen für Beta-1") —
+   Z-19'daki negatif bulgu yalnız DGUV'nin merkezî yayınlarını kapsıyor. PE-006 Nachtrag'ın dayandığı
+   **ZFD-Merkblatt** („ohne Genehmigung keine Vergütung") arşivde **yok** ve yayıncısı bir meslek birliği
+   (resmî yayıncı değil — en fazla „bak" işareti). Bağlayıcı cevap ancak UV-Träger/DGUV-Landesverband'dan yazılı
+   gelir; gelirse **ayrı kart** açılır. Beta-1'e sorulacak soru zaten PE-006'da: BG vakası hiç oluyor mu.
+4. **İndirilmeyenler — bilinçli** (`unkritisch`, kayıt „bir daha arama" için): Physio Rahmenvereinbarung
+   (`…/verguetung/rahmenvereinbarung_teilw.-unterschrieben.pdf`, 1,5 MB — **taranmış görüntü**, `pdftotext` boş döner,
+   OCR gerekir) · Physio FAK Stand 24.03.2023 (`…/fak-_physiotherapie_stand-24.03.2023.pdf`, 14 s.) · Ergo
+   Rahmenverträge DVE/BED ab 01.04.2024 · Ergo FAK Stand 10.07.2024 · EAP/ITT/ABMR Gebührenverzeichnisse · UV-GOÄ.
+   Dördü de Physio/Ergo ince ayarına aittir (vertikal sıralama) ve Podologie içermez (ikisi `grep` ile ölçüldü).
 
 ---
 

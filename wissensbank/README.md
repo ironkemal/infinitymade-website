@@ -42,6 +42,8 @@ gemeinsam/kostentraeger/          Kostenträgerdatei (EDIFACT KOTR) — IK numar
 gemeinsam/heilmittel-richtlinie/  HeilM-RL, KBV Diagnoseliste, praxiswissen
 gemeinsam/positionsnummern/       Heilmittelpositionsnummernverzeichnis (tüm bereich'lar)
 gemeinsam/icd-10-gm/              BfArM ICD-10-GM veri paketi
+gemeinsam/unfallversicherung-dguv/ DGUV (BG/Unfallkasse) — Handlungsanleitung, Gebührenverzeichnisse.
+                                  §302 DIŞI. PDF + TXT yalnız yerel (.gitignore), bkz. REGISTER W-08
 ```
 
 **Kararsız kaldığında `gemeinsam/`.** Bir alanın belgesini ortak klasöre koymak ucuz bir

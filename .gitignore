@@ -113,3 +113,7 @@ merkez/*.sqlite-*
 
 # W-07: redistribution rights unresolved; metadata only, source remains local.
 wissensbank/gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BFB_V4_80_20260513.txt
+
+# W-08/W-09/W-10 (DGUV): Handlungsanleitung traegt ausdruecklichen Vervielfaeltigungsvorbehalt
+# (Impressum), Gebuehrenverzeichnisse ohne Lizenz. Nur Metadaten im Repo, Quelle bleibt lokal.
+wissensbank/gemeinsam/unfallversicherung-dguv/*.txt
