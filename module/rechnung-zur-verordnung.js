@@ -27,7 +27,7 @@ const UUID_REGEX = /^[0-9a-f-]{36}$/i;
 export function rechnungMenueEintrag(rezeptart) {
   if (istKasse(rezeptart)) return '';
   const label = rezeptartLabel(rezeptart);
-  return `<div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div><div class="rx-drucken-item" data-type="rechnung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung (${label})</div>`;
+  return `<div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div><div class="rx-drucken-item" data-type="rechnung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung · ${label}</div>`;
 }
 
 /**

@@ -84,7 +84,7 @@ import { ausTopf, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR } from './verordnung
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261006n';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { on } from './signal.js?v=20260813';
-import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010n';
+import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010o';
 import { istKasse, rezeptartLabel } from './rezeptart.js?v=20261006a';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
