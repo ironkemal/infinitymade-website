@@ -26,7 +26,7 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261004m113';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261010k';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
@@ -46,7 +46,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010i';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010k';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
@@ -66,8 +66,8 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261007m3';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261007m3';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261010k';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010k';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010i'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshots } from './module/rechnung-snapshot.js?v=20261009rs'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
@@ -76,9 +76,9 @@ import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
-import { rechnungMenueEintrag, zuzahlungMenueEintraege, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010h';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010i';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261010i';
+import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010k';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010k';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010k';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
@@ -88,7 +88,7 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010j';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261004m113';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010k';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
@@ -98,7 +98,7 @@ import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261007m3'
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261007m3';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261004m113';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261004m113';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261010k';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261004m113';
@@ -7318,7 +7318,7 @@ async function openPatientDetailModal(lead) {
   pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
   renderPatientenkarte(lead, {
-    sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu,
+    sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu, onBeleg: (rxId, typ, leadId) => { if (typ === 'rechnung') closeModal('patientDetailModal'); return belegOeffnen(rxId, typ, leadId); },
     praxis: terminzettelPraxis().praxis, logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '',
   });
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'verlauf'));
@@ -7627,18 +7627,7 @@ async function loadPatientDetailRezepte(leadId) {
           ${flags}
           ${abrBadge}
           ${abrButton}
-          <div class="rx-drucken-wrap" style="position:relative;display:inline-block;" data-id="${rx.id}">
-            <button class="btn-ghost btn-sm rx-drucken-toggle" data-id="${rx.id}" style="display:flex;align-items:center;gap:4px;">
-              <span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;">${ICON.invoice}</span>
-              Drucken ▾
-            </button>
-            <div class="rx-drucken-menu" style="display:none;position:absolute;right:0;top:100%;z-index:1000;background:var(--bg-card-solid,#1e2a3a);border:1px solid var(--border,#2d3a4a);border-radius:8px;min-width:190px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;">
-              ${zuzahlungMenueEintraege(rx.rezeptart)}
-              ${rechnungMenueEintrag(rx.rezeptart)}
-              <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
-              <div class="rx-drucken-item" data-type="rezeptvorderseite" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">🗒 Rezeptvorderseite</div>
-            </div>
-          </div>
+          ${druckenMenueHtml({ id: rx.id, rezeptart: rx.rezeptart, icon: ICON.invoice })}
           ${paidButton}
         </div>
       </div>
@@ -7685,41 +7674,13 @@ async function loadPatientDetailRezepte(leadId) {
   content.querySelectorAll('.rx-open-rechnung').forEach(btn => {
     btn.addEventListener('click', () => openZuzahlungsrechnung(btn.dataset.id));
   });
-  // Drucken dropdown: toggle open/close
-  content.querySelectorAll('.rx-drucken-toggle').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const wrap = btn.closest('.rx-drucken-wrap');
-      const menu = wrap.querySelector('.rx-drucken-menu');
-      const isOpen = menu.style.display === 'block';
-      // Close all other open menus first
-      content.querySelectorAll('.rx-drucken-menu').forEach(m => { m.style.display = 'none'; });
-      menu.style.display = isOpen ? 'none' : 'block';
-    });
-  });
+  verdrahteDruckenMenue(content, { onEintrag: (rxId, typ) => belegOeffnen(rxId, typ, leadId) });
+}
 
-  // Drucken dropdown: item click → open print window
-  content.querySelectorAll('.rx-drucken-item').forEach(item => {
-    item.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const wrap = item.closest('.rx-drucken-wrap');
-      const rxId = wrap.dataset.id;
-      const type = item.dataset.type;
-      wrap.querySelector('.rx-drucken-menu').style.display = 'none';
-      if (type === 'rechnung') await oeffneRechnungZurVerordnung({ rxId, leadId }, { supabase, switchPanel, openInvEditor, rechnungAusVerordnung, podVerordnungVorhanden: (id) => !!getPodVerordnung(id), toast: showToast }); else await oeffneBelegDruck({ rxId, typ: type }, belegDruckDeps());
-    });
-    // hover effect
-    item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-hover,rgba(255,255,255,0.07))'; });
-    item.addEventListener('mouseleave', () => { item.style.background = ''; });
-  });
-
-  // Close dropdown on outside click (cleanup-safe)
-  const _druckenOutsideHandler = () => {
-    content.querySelectorAll('.rx-drucken-menu').forEach(m => { m.style.display = 'none'; });
-  };
-  document.removeEventListener('click', content._druckenOutsideHandler);
-  content._druckenOutsideHandler = _druckenOutsideHandler;
-  document.addEventListener('click', content._druckenOutsideHandler);
+/** Ein Eintrag aus „Drucken ▾" — Rezeptliste und Verordnungskarte der Akte (module/rechnung-zur-verordnung.js). */
+async function belegOeffnen(rxId, typ, leadId) {
+  if (typ !== 'rechnung') return oeffneBelegDruck({ rxId, typ }, belegDruckDeps());
+  return oeffneRechnungZurVerordnung({ rxId, leadId }, { supabase, switchPanel, openInvEditor, rechnungAusVerordnung, ladePodVerordnung: (id) => ladePodVerordnung(supabase, id), podVerordnungVorhanden: (id) => !!getPodVerordnung(id), toast: showToast });
 }
 
 async function flipAbrechnungStatus(rxId, newStatus, leadId) {
@@ -13710,7 +13671,7 @@ function bindInvEvents() {
         onAuswahl: () => {
           // Verordnung gewählt → Termine abräumen
           checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-          invLines = verordnungAuswahl().zeilen;
+          const wahl = verordnungAuswahl(); invLines = wahl.zeilen; if (invVerordnungId) invBehandlungIds = wahl.podoBehandlungIds;
           renderInvLines(); calcInvTotals();
         },
       });
@@ -18203,7 +18164,7 @@ async function rechnungAusVerordnung(vordId) {
     setzeEntwurf: async ({ patientId, zeilen, verordnungId, behandlungIds, zahlertyp }) => {
       const sel = document.getElementById('invPatientSelect'); // Handler abwarten, er leert invLines am Ende (canli-test T29, 10.10.)
       if (sel) { sel.value = patientId; await sel.onchange?.({ target: sel }); }
-      invLines = zeilen; invVerordnungId = verordnungId;
+      invLines = zeilen; invVerordnungId = verordnungId; verordnungVormerken(verordnungId, behandlungIds);
       invBehandlungIds = behandlungIds; invPatientInsuranceType = zahlertyp;
       renderInvLines(); updateInvForInsuranceType(); calcInvTotals();
     },

@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20261004m113';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20261010k';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260930x';
 import { leadGeburtsdatum, leadHausbesuch } from './lead-felder.js?v=20260929a';
 
@@ -296,7 +296,7 @@ export async function renderPatientenkarte(lead, deps = {}) {
   // wachsen darf (Konsey 2026-08-13). Sie laufen parallel zum Verlauf — der
   // Verlauf soll nicht darauf warten.
   const uebersicht = zeigeVerordnungsUebersicht(document.getElementById('pdVeroUebersicht'), {
-    sb: deps.sb, ownerId: deps.ownerId, leadId: lead.id, onSprung: deps.onSprung,
+    sb: deps.sb, ownerId: deps.ownerId, leadId: lead.id, onSprung: deps.onSprung, onBeleg: deps.onBeleg,
   });
 
   // Behandlungsbestätigung (Ops-Kart #272): eigener Container über dem

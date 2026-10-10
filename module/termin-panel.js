@@ -29,7 +29,7 @@
  * derselben Ereignisse.
  */
 
-import { ladeVerlauf, renderVerlauf } from './patientenkarte.js?v=20261004m113';
+import { ladeVerlauf, renderVerlauf } from './patientenkarte.js?v=20261010k';
 
 function escapeHtml(x) {
   return String(x ?? '').replace(/[&<>"']/g, c =>

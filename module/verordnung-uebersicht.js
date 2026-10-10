@@ -84,6 +84,7 @@ import { ausTopf, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR } from './verordnung
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261006n';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { on } from './signal.js?v=20260813';
+import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010k';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -391,6 +392,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       leadId: rx.patient_id || null,
       erbracht, verordnet,
       status: rx.status,
+      rezeptart: rx.rezeptart || null,
       dringend: !!rx.is_dringend,
       hausbesuch: !!rx.hausbesuch,
       pruefung: PHYSIO_ABGESCHLOSSEN.includes(rx.status) ? null : pruefeZeile(rx, rx.therapie_bereich),
@@ -421,6 +423,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       leadId: v.lead_id || null,
       erbracht, verordnet,
       status: v.status,
+      rezeptart: v.rezeptart || null,
       dringend: !!v.dringend,
       hausbesuch: !!v.hausbesuch,
       pruefung: PODO_AKTIV.includes(v.status) ? pruefeZeile(v, 'podologie') : null,
@@ -497,6 +500,9 @@ const PODO_DG_TEXT = {
  * @param {object} [deps]
  * @param {Function} [deps.onSprung]  (ziel, id, extra) — Klick auf eine Karte
  * @param {string}   [deps.leadId]    wandert im Sprung mit
+ * @param {Function} [deps.onBeleg]   (rxId, typ, leadId) — nur wenn gesetzt, bekommt jede
+ *   Karte das „Drucken ▾"-Menü (Zuzahlungsrechnung/RZG-Quittung bei Kasse,
+ *   Rechnung sonst). Die Akte setzt es; andere Aufrufer bleiben ohne Menü.
  */
 export function rendereVerordnungsUebersicht(el, liste, deps = {}) {
   if (!el) return;
@@ -514,12 +520,13 @@ export function rendereVerordnungsUebersicht(el, liste, deps = {}) {
   // auto-fit statt fester Spaltenzahl: bei zwei Verordnungen stehen sie
   // nebeneinander, auf dem Telefon untereinander — ohne eigenen Breakpoint.
   el.innerHTML = kopf + `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;">`
-    + liste.map(karteHtml).join('')
+    + liste.map(v => karteHtml(v, !!deps.onBeleg)).join('')
     + `</div>`;
 
   el.querySelectorAll('.vu-karte').forEach(b => {
     b.addEventListener('click', () => deps.onSprung?.(b.dataset.ziel, b.dataset.id, { leadId: deps.leadId }));
   });
+  if (deps.onBeleg) verdrahteDruckenMenue(el, { onEintrag: (rxId, typ) => deps.onBeleg(rxId, typ, deps.leadId) });
 }
 
 /**
@@ -538,7 +545,7 @@ function pruefTitel(pruefung) {
   return ['Bitte prüfen:', ...zeilen, '', 'Zum Öffnen und Korrigieren klicken.'].join('\n');
 }
 
-function karteHtml(v) {
+function karteHtml(v, mitMenue = false) {
   const bittePruefen = !!v.pruefung?.bittePruefen;
   const farbe = bittePruefen ? BITTE_PRUEFEN_FARBE : bereichFarbe(v.quelle);
   const offen = Math.max(0, (v.verordnet || 0) - (v.erbracht || 0));
@@ -555,7 +562,12 @@ function karteHtml(v) {
     v.frequenz ? `<span>${esc(v.frequenz)}</span>` : '',
   ].filter(Boolean).join(' · ');
 
-  return `<button type="button" class="vu-karte" data-ziel="${esc(v.ziel)}" data-id="${esc(v.id)}"
+  // Das Menü steht NEBEN der Karte (Geschwister), nicht darin: die Karte ist
+  // selbst ein <button>, ein Knopf im Knopf wäre ungültig und würde den Sprung auslösen.
+  const menue = mitMenue
+    ? `<div style="display:flex;justify-content:flex-end;">${druckenMenueHtml({ id: v.id, rezeptart: v.rezeptart, touch: true })}</div>`
+    : '';
+  const karte = `<button type="button" class="vu-karte" data-ziel="${esc(v.ziel)}" data-id="${esc(v.id)}"
     title="${bittePruefen ? esc(pruefTitel(v.pruefung)) : 'Öffnen'}"
     style="text-align:left;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
            border-left:3px solid ${farbe};background:var(--bg-card);color:var(--text-main);
@@ -580,6 +592,7 @@ function karteHtml(v) {
 
     ${marker ? `<div style="font-size:11px;color:var(--text-muted);display:flex;gap:5px;flex-wrap:wrap;">${marker}</div>` : ''}
   </button>`;
+  return mitMenue ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:0;">${karte}${menue}</div>` : karte;
 }
 
 /** Zähler gegen veraltete Antworten — siehe zeigeVerordnungsUebersicht. */

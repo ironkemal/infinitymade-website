@@ -428,11 +428,12 @@ function podVordBehandlungsposition(vord) {
 // (s. dort), damit ein späteres Neuladen (Speichern, Toggle) nicht am alten
 // Termin-Datum kleben bleibt. Eine neue Verordnungsauswahl per Klick löscht
 // es ebenfalls sofort (Klick-Handler unten).
-let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null, fahrtBookingId: null, folgeOffen: null };
+let _podState = { nachgeladen: new Map(), selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null, fahrtBookingId: null, folgeOffen: null };
 
 function findVord(id) {
   return _podState.verordnungen.find(v => v.id === id)
-      || _podState.verordnungenAbgerechnet.find(v => v.id === id);
+      || _podState.verordnungenAbgerechnet.find(v => v.id === id)
+      || _podState.nachgeladen.get(id);
 }
 
 // Nur 'kassen' ist eine GKV-Verordnung. Für alles andere gibt es weder eine
@@ -1322,6 +1323,29 @@ export function setPodVorwahl(id, { datum, bookingId } = {}) {
  */
 export function getPodVerordnung(id) {
   return findVord(id);
+}
+
+/**
+ * Eine podologische Verordnung nachladen, wenn sie (noch) nicht im Zustand
+ * steht — das Panel füllt `_podState` erst beim Öffnen, der Weg „Rechnung aus
+ * Verordnung" aus der Akte kommt aber ohne Panel aus (10.10.2026).
+ * Gleiche Spaltenliste und gleiche Übersetzung (`ausTopf`) wie die Liste;
+ * die RLS begrenzt auf die eigene Praxis. Nicht-podologische Kennungen
+ * liefern nichts — dann greift beim Aufrufer der leere Editor.
+ *
+ * @param {object} sb  Supabase-Client
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function ladePodVerordnung(sb, id) {
+  const da = findVord(id);
+  if (da || !sb || !id) return da || null;
+  const { data, error } = await sb.from(TOPF).select(PODO_SELECT)
+    .eq('id', id).eq('therapie_bereich', 'podo').maybeSingle();
+  if (error || !data) return null;
+  const v = ausTopf(data);
+  _podState.nachgeladen.set(id, v);
+  return v;
 }
 
 /**

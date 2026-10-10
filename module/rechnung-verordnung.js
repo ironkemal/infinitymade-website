@@ -40,7 +40,7 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
-import { terminLeistungen } from './rechnung-editor.js?v=20261010i';
+import { terminLeistungen } from './rechnung-editor.js?v=20261010k';
 import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
 import { privatpreisFuer } from './rechnung-bruecke.js?v=20261010i';
 
@@ -612,19 +612,51 @@ export function verordnungAuswahlLeeren() {
 }
 
 /**
+ * Gegenstück zu `verordnungAuswahlLeeren`: eine Verordnung als gewählt
+ * vormerken, OHNE `onAuswahl` auszulösen.
+ *
+ * Für „Rechnung aus Verordnung" (module/rechnung-bruecke.js): die Zeilen sind
+ * dort schon vorbefüllt, das Häkchen stand aber leer daneben (canli-test
+ * 10.10.2026, P3). `onAuswahl` darf hier nicht laufen — es würde die
+ * vorbefüllten Zeilen durch die aus den Positionskodes ersetzen.
+ *
+ * @param {string} vordId
+ * @param {string[]} [behandlungIds]  leer/fehlend = alle verfügbaren
+ * @returns {boolean} ob die Verordnung in der Liste stand und vorgemerkt wurde
+ */
+export function verordnungVormerken(vordId, behandlungIds) {
+  const zst = _zustand.find(z => z.vordId === vordId);
+  if (!zst) return false;
+  const verfuegbar = zst.subCbs.filter(sc => !sc.disabled).map(sc => sc.dataset.behId);
+  const wunsch = Array.isArray(behandlungIds) && behandlungIds.length ? new Set(behandlungIds) : null;
+  const gewaehlt = wunsch ? verfuegbar.filter(id => wunsch.has(id)) : verfuegbar;
+  if (!gewaehlt.length) return false;
+  zst.behandlungIds = new Set(gewaehlt);
+  zst.aktiv = true;
+  for (const sc of zst.subCbs) sc.checked = !sc.disabled && zst.behandlungIds.has(sc.dataset.behId);
+  if (zst.vordCb) {
+    zst.vordCb.checked = true;
+    zst.vordCb.indeterminate = gewaehlt.length < verfuegbar.length;
+  }
+  return true;
+}
+
+/**
  * Gibt den aktuellen Auswahlstand zurück.
  *
  * @returns {{
  *   zeilen: Array,                // {title, quantity, unit_price} — für invLines
  *   prescriptionId: string|null,  // nur wenn genau eine Physio-Verordnung aktiv
  *   notizZeile: string|null,      // Podologie-Bezug für invoices.notes
- *   anzahl: number                // Anzahl gewählter Behandlungen
+ *   anzahl: number,               // Anzahl gewählter Behandlungen
+ *   podoBehandlungIds: string[]   // gewählte podologie_behandlungen — für die Verknüpfung invoice_id
  * }}
  */
 export function verordnungAuswahl() {
   const zeilen = [];
   const physioIds = [];
   const notizTeile = [];
+  const podoBehandlungIds = [];
 
   for (let vi = 0; vi < _liste.length; vi++) {
     const vord = _liste[vi];
@@ -637,6 +669,7 @@ export function verordnungAuswahl() {
     for (const beh of vord.behandlungen) {
       if (!zst.behandlungIds.has(beh.id)) continue;
       zeilen.push(...beh.zeilen);
+      if (vord.quelle === 'podologie') podoBehandlungIds.push(beh.id);
     }
 
     if (vord.quelle === 'physio') {
@@ -649,5 +682,5 @@ export function verordnungAuswahl() {
   const prescriptionId = physioIds.length === 1 ? physioIds[0] : null;
   const notizZeile = notizTeile.length ? notizTeile.join(' · ') : null;
 
-  return { zeilen, prescriptionId, notizZeile, anzahl: zeilen.length };
+  return { zeilen, prescriptionId, notizZeile, anzahl: zeilen.length, podoBehandlungIds };
 }

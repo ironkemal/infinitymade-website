@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   rechnungMenueEintrag,
   zuzahlungMenueEintraege,
+  druckenMenueHtml,
   sucheRechnungZurVerordnung,
   oeffneRechnungZurVerordnung,
   bgSperreBeimSpeichern,
@@ -346,4 +347,48 @@ test('Zuzahlungseinträge nur bei Kasse, nie bei Privat/Selbstzahler/BG', () => 
     assert.match(h, /data-type="rzg_quittung"/);
   }
   for (const k of ['privat', 'selbstzahler', 'bg']) assert.equal(zuzahlungMenueEintraege(k), '');
+});
+
+
+// --- druckenMenueHtml / Nachladen (Akte-Verordnungskarte, 10.10.2026) --------
+
+test('druckenMenueHtml: Kasse zeigt ZU + RZG, keine Rechnung; Privat umgekehrt', () => {
+  const id = '11111111-2222-3333-4444-555555555555';
+  const kasse = druckenMenueHtml({ id, rezeptart: 'kassen' });
+  assert.match(kasse, new RegExp(`class="rx-drucken-wrap"[^>]*data-id="${id}"`));
+  assert.match(kasse, /data-type="quittung_zuzahlung"/);
+  assert.match(kasse, /data-type="rzg_quittung"/);
+  assert.match(kasse, /data-type="rezeptvorderseite"/);
+  assert.doesNotMatch(kasse, /data-type="rechnung"/);
+
+  const privat = druckenMenueHtml({ id, rezeptart: 'privat' });
+  assert.match(privat, /data-type="rechnung"/);
+  assert.doesNotMatch(privat, /data-type="quittung_zuzahlung"/);
+});
+
+test('druckenMenueHtml: Kennung wird bereinigt, touch setzt 44 px', () => {
+  const h = druckenMenueHtml({ id: 'ab"><script>', rezeptart: 'kassen', touch: true });
+  assert.doesNotMatch(h, /<script>/);
+  assert.match(h, /data-id="abscript"/);
+  assert.match(h, /min-height:44px/);
+  assert.doesNotMatch(druckenMenueHtml({ id: 'a', rezeptart: 'kassen' }), /min-height:44px/);
+});
+
+test('oeffneRechnung: lädt die Podo-Verordnung nach, bevor „vorhanden?" gefragt wird', async () => {
+  const rxId = '11111111-2222-3333-4444-555555555555';
+  const cache = new Set();
+  const reihenfolge = [];
+  const fakeSb = { from() { return { select() { return this; }, or() { return this; }, neq() { return this; }, order() { return this; }, limit() { return Promise.resolve({ data: [], error: null }); } }; } };
+
+  const res = await oeffneRechnungZurVerordnung({ rxId, leadId: 'lead-1' }, {
+    supabase: fakeSb,
+    switchPanel() { reihenfolge.push('switchPanel'); },
+    async openInvEditor() { reihenfolge.push('openInvEditor'); },
+    async ladePodVerordnung(id) { reihenfolge.push('laden'); cache.add(id); },
+    podVerordnungVorhanden(id) { reihenfolge.push('vorhanden'); return cache.has(id); },
+    async rechnungAusVerordnung() { reihenfolge.push('vorbefuellen'); },
+  });
+
+  assert.equal(res, 'neu');
+  assert.deepEqual(reihenfolge, ['laden', 'vorhanden', 'vorbefuellen']);
 });

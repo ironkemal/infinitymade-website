@@ -47,6 +47,70 @@ export function zuzahlungMenueEintraege(rezeptart) {
 }
 
 /**
+ * Das ganze „Drucken ▾"-Menü einer Verordnung als HTML — eine Quelle für die
+ * Rezeptliste der Akte (dashboard.js `loadPatientDetailRezepte`) und für die
+ * Verordnungskarte (module/verordnung-uebersicht.js). Vorher stand es inline
+ * in dashboard.js und war in der Podologie unsichtbar, weil die Rezeptliste
+ * dort ausgeblendet ist (podoloji 10.10.2026: 4 statt 2 Tippen bis zum Beleg).
+ *
+ * @param {{ id: string, rezeptart?: string|null, icon?: string, touch?: boolean }} param0
+ *   `touch` = Knopf mit 44 px Mindesthöhe (Karte in der Akte, Telefon).
+ * @returns {string} HTML-String
+ */
+export function druckenMenueHtml({ id, rezeptart, icon = '', touch = false } = {}) {
+  const rxId = String(id ?? '').replace(/[^0-9a-zA-Z-]/g, '');
+  const stil = 'padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;';
+  return `<div class="rx-drucken-wrap" style="position:relative;display:inline-block;" data-id="${rxId}">
+            <button type="button" class="btn-ghost btn-sm rx-drucken-toggle" data-id="${rxId}" style="display:flex;align-items:center;gap:4px;${touch ? 'min-height:44px;' : ''}">
+              ${icon ? `<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;">${icon}</span>` : ''}
+              Drucken ▾
+            </button>
+            <div class="rx-drucken-menu" style="display:none;position:absolute;right:0;top:100%;z-index:1000;background:var(--bg-card-solid,#1e2a3a);border:1px solid var(--border,#2d3a4a);border-radius:8px;min-width:190px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;">
+              ${zuzahlungMenueEintraege(rezeptart)}
+              ${rechnungMenueEintrag(rezeptart)}
+              <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
+              <div class="rx-drucken-item" data-type="rezeptvorderseite" style="${stil}">🗒 Rezeptvorderseite</div>
+            </div>
+          </div>`;
+}
+
+/**
+ * Verdrahtet alle „Drucken ▾"-Menüs unterhalb von `root`: auf/zu, Außenklick
+ * schließt, Klick auf einen Eintrag → `onEintrag(rxId, typ)`.
+ * Mehrfach aufrufbar (nach jedem Neuzeichnen): der Außenklick-Zuhörer hängt
+ * am Dokument und wird je `root` ersetzt, nicht gestapelt.
+ *
+ * @param {HTMLElement} root
+ * @param {{ onEintrag?: (rxId: string, typ: string) => any }} [deps]
+ */
+export function verdrahteDruckenMenue(root, { onEintrag } = {}) {
+  if (!root || typeof document === 'undefined') return;
+  const alleZu = () => root.querySelectorAll('.rx-drucken-menu').forEach(m => { m.style.display = 'none'; });
+  root.querySelectorAll('.rx-drucken-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.closest('.rx-drucken-wrap').querySelector('.rx-drucken-menu');
+      const warOffen = menu.style.display === 'block';
+      alleZu();
+      menu.style.display = warOffen ? 'none' : 'block';
+    });
+  });
+  root.querySelectorAll('.rx-drucken-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const wrap = item.closest('.rx-drucken-wrap');
+      wrap.querySelector('.rx-drucken-menu').style.display = 'none';
+      await onEintrag?.(wrap.dataset.id, item.dataset.type);
+    });
+    item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-hover,rgba(255,255,255,0.07))'; });
+    item.addEventListener('mouseleave', () => { item.style.background = ''; });
+  });
+  document.removeEventListener('click', root._druckenOutsideHandler);
+  root._druckenOutsideHandler = alleZu;
+  document.addEventListener('click', alleZu);
+}
+
+/**
  * Sucht die ID der jüngsten nicht stornierten Rechnung zu einer Verordnung.
  *
  * @param {object} supabase
@@ -89,6 +153,7 @@ export async function oeffneRechnungZurVerordnung({ rxId, leadId }, deps = {}) {
     openInvEditor,
     rechnungAusVerordnung,
     podVerordnungVorhanden,
+    ladePodVerordnung,
     toast,
   } = deps;
 
@@ -99,6 +164,10 @@ export async function oeffneRechnungZurVerordnung({ rxId, leadId }, deps = {}) {
     return 'vorhanden';
   }
 
+  // Die Podologie-Abrechnung hält ihre Verordnungen nur, wenn das Panel in
+  // dieser Sitzung schon offen war. Aus der Akte heraus ist das nicht sicher —
+  // ohne Nachladen landete der Weg im leeren Editor (fonksiyon-ustasi 10.10.2026).
+  if (ladePodVerordnung) await ladePodVerordnung(rxId);
   if (podVerordnungVorhanden && podVerordnungVorhanden(rxId)) {
     if (rechnungAusVerordnung) await rechnungAusVerordnung(rxId);
     return 'neu';
