@@ -6,7 +6,7 @@
 // jemand auch nur die Notiz aenderte. Diese Tests halten beide Richtungen fest.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, resetVerordnungFelder, aktualisiereBindungBeimSpeichern } from './termin-verordnung.js';
+import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, ladeTerminVerordnungen, resetVerordnungFelder, aktualisiereBindungBeimSpeichern } from './termin-verordnung.js';
 
 /** Minimales DOM: nur das eine versteckte Feld, an dem alles haengt. */
 function mitFeld(startwert = '') {
@@ -193,7 +193,7 @@ test('waehleVerordnung: Physio meldet Alle vergeben wenn sessions leer sind', as
 
 // ── zeigeVerordnungenFuerTermin & resetVerordnungFelder ────────────────────
 
-function erstelleSbMock({ bookingVerordnungId = null, rxs = [] } = {}) {
+function erstelleSbMock({ bookingVerordnungId = null, rxs = [], gebundeneRx = null } = {}) {
   let bookingAbfrage = 0;
   let rxAbfrage = 0;
 
@@ -221,6 +221,13 @@ function erstelleSbMock({ bookingVerordnungId = null, rxs = [] } = {}) {
             return {
               eq() {
                 return {
+                  eq() {
+                    return {
+                      async maybeSingle() {
+                        return { data: gebundeneRx, error: null };
+                      },
+                    };
+                  },
                   not() {
                     return {
                       order() {
@@ -371,6 +378,25 @@ test('zeigeVerordnungenFuerTermin: unbekannte oder archivierte Verordnungs-ID wi
   assert.equal(selectAufgerufen, false, 'Nicht mehr vorhandene Verordnung darf kein onSelect ausloesen');
 });
 
+
+// 10.10.2026 (KHS 10. Runde): die gebundene Verordnung fiel aus `.limit(5)` / dem Statusfilter.
+test('ladeTerminVerordnungen: gebundene VO ausserhalb der 5 aktiven wird nachgeladen und steht vorn', async () => {
+  const sb = erstelleSbMock({ rxs: [{ id: 'rx-a' }, { id: 'rx-b' }], gebundeneRx: { id: 'rx-alt', status: 'billed' } });
+  const rxs = await ladeTerminVerordnungen(sb, { leadId: 'lead-1', vordId: 'rx-alt' });
+  assert.deepEqual(rxs.map(r => r.id), ['rx-alt', 'rx-a', 'rx-b']);
+});
+
+test('ladeTerminVerordnungen: gebundene VO unter den aktiven wird nach vorn geschoben, nichts doppelt', async () => {
+  const sb = erstelleSbMock({ rxs: [{ id: 'rx-a' }, { id: 'rx-b' }] });
+  const rxs = await ladeTerminVerordnungen(sb, { leadId: 'lead-1', vordId: 'rx-b' });
+  assert.deepEqual(rxs.map(r => r.id), ['rx-b', 'rx-a']);
+});
+
+test('ladeTerminVerordnungen: ohne Patient leer, ohne Bindung unveraendert', async () => {
+  const sb = erstelleSbMock({ rxs: [{ id: 'rx-a' }] });
+  assert.deepEqual(await ladeTerminVerordnungen(sb, { leadId: null }), []);
+  assert.deepEqual((await ladeTerminVerordnungen(sb, { leadId: 'l' })).map(r => r.id), ['rx-a']);
+});
 
 // ── aktualisiereBindungBeimSpeichern (S1.2) ────────────────────────────────
 

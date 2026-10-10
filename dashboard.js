@@ -91,7 +91,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010zc';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261010zc';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261010ze';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc';
@@ -118,7 +118,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, RX_JOIN, RX_FELDER, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
+import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -3112,12 +3112,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
       supabase.from('leads')
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
-      supabase.from('prescriptions')
-        .select(`${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`)
-        .eq('patient_id', leadId)
-        .not('status', 'in', '("completed","billed","cancelled")')
-        .order('created_at', { ascending: false })
-        .limit(5),
+      ladeTerminVerordnungen(supabase, { leadId, vordId: rx?.id || booking?.verordnung_id || null }).then(data => ({ data })),
       supabase.from('anamnese')
         .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,created_at')
         .eq('patient_id', leadId)
