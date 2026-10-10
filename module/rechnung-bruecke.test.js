@@ -91,6 +91,17 @@ test('Eigene Leistung der Praxis hat Vorrang vor dem Klartext', () => {
   assert.equal(zeilen[0].title, 'Meine große Behandlung');
 });
 
+test('BG: kein Preis aus Praxis-/GKV-Leistung, Position zählt als offen (PE-006 B, gkv-302 10.10.2026)', () => {
+  const beh = [{ behandlungsdatum: '2026-10-10', hpnr_codes: ['78020', '78030'] }];
+  const services = [{ gkv_position_nr: '78020', title: 'Behandlung', price: 45 }];
+  const bg = zeilenAusBehandlungen(beh, { verordnung: { rezeptart: 'bg' }, services, katalogPodo: [] });
+  assert.deepEqual(bg.zeilen.map(z => z.unit_price), [0, 0]);
+  assert.equal(bg.offenePreise, 2);
+  assert.equal(bg.zeilen[0].title, 'Behandlung');
+  const privat = zeilenAusBehandlungen(beh, { verordnung: { rezeptart: 'privat' }, services, katalogPodo: [] });
+  assert.equal(privat.zeilen[0].unit_price, 45);
+});
+
 test('Andere Kodes behalten den Katalogtitel', () => {
   const beh = [{ behandlungsdatum: '2026-09-20', hpnr_codes: ['78030'] }];
   const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: {}, services: [], katalogPodo: [{ code: '78030', title: 'Podologische Befundung' }] });

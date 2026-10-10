@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   rechnungMenueEintrag,
+  zuzahlungMenueEintraege,
   sucheRechnungZurVerordnung,
   oeffneRechnungZurVerordnung,
   bgSperreBeimSpeichern,
@@ -335,3 +336,14 @@ test('bgSperre: invoice_type zuzahlung sperrt das Speichern im Editor', async ()
   assert.equal(res, 'Zuzahlungsbelege werden über den Druck am Rezept ausgestellt und sind nicht bearbeitbar.');
 });
 
+
+// --- zuzahlungMenueEintraege (gkv-302 10.10.2026, canli-test T29) ------------
+
+test('Zuzahlungseinträge nur bei Kasse, nie bei Privat/Selbstzahler/BG', () => {
+  for (const k of ['kassen', null, undefined]) {
+    const h = zuzahlungMenueEintraege(k);
+    assert.match(h, /data-type="quittung_zuzahlung"/);
+    assert.match(h, /data-type="rzg_quittung"/);
+  }
+  for (const k of ['privat', 'selbstzahler', 'bg']) assert.equal(zuzahlungMenueEintraege(k), '');
+});

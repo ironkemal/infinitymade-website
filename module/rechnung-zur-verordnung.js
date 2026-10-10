@@ -31,6 +31,22 @@ export function rechnungMenueEintrag(rezeptart) {
 }
 
 /**
+ * Zuzahlungsrechnung + RZG-Quittung im Drucken-Menü — NUR bei Kassenverordnungen.
+ * Zuzahlung gibt es nur in der GKV (§ 61 SGB V); bei Privat/Selbstzahler/BG wäre
+ * eine Zuzahlungsquittung neben der Rechnung irreführend (gkv-302, 10.10.2026,
+ * PE-006 B „Keine Zuzahlung" für BG; canli-test T29).
+ *
+ * @param {string|null|undefined} rezeptart
+ * @returns {string} HTML-String
+ */
+export function zuzahlungMenueEintraege(rezeptart) {
+  if (!istKasse(rezeptart)) return '';
+  const stil = 'padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;';
+  return `<div class="rx-drucken-item" data-type="quittung_zuzahlung" style="${stil}">💶 Zuzahlungsrechnung</div>`
+    + `<div class="rx-drucken-item" data-type="rzg_quittung" style="${stil}">🧾 RZG-Quittung</div>`;
+}
+
+/**
  * Sucht die ID der jüngsten nicht stornierten Rechnung zu einer Verordnung.
  *
  * @param {object} supabase

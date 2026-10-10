@@ -63,7 +63,7 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
-import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261010g';
+import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261010h';
 import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261009rs';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';

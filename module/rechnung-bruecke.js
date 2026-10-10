@@ -46,7 +46,7 @@
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
 import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261009rs';
 import { rechnungsTitel } from './rechnung-anzeige.js?v=20261006q';
-import { normalisiereRezeptart, istKasse } from './rezeptart.js?v=20261006a';
+import { normalisiereRezeptart, istKasse, istBg } from './rezeptart.js?v=20261006a';
 
 // Einordnung der Rezeptart nur über module/rezeptart.js (eine Quelle, 10.10.2026, fonksiyon-ustasi-Fund):
 // vorher eigener Rohwert-Vergleich — der Alias „pkv" galt hier als Kasse, in rezeptart.js als privat.
@@ -143,6 +143,9 @@ export function privatpreisFuer(code, services) {
 export function zeilenAusBehandlungen(behandlungen, { verordnung, services, katalogPodo } = {}) {
   const zeilen = [];
   let offenePreise = 0;
+  // BG: keine festen UV-Preise für Podologie (PE-006 B „Preis manuell"); der Praxis-
+  // bzw. GKV-Satz würde sonst unbemerkt Endbetrag (gkv-302, 10.10.2026, canli-test T29).
+  const bg = istBg(verordnung?.rezeptart);
 
   for (const beh of (behandlungen || [])) {
     const art = leistungsartVorschlag({ verordnung, behandlung: beh });
@@ -166,7 +169,7 @@ export function zeilenAusBehandlungen(behandlungen, { verordnung, services, kata
       const eigen = privatpreisFuer(code, services);
       const katalogEintrag = (katalogPodo || []).find(k => k.code === String(code));
       const titel = rechnungsTitel(code, eigen?.title, katalogEintrag?.title);
-      const preis = eigen?.preis || 0;
+      const preis = bg ? 0 : (eigen?.preis || 0);
       if (!preis) offenePreise++;
       zeilen.push({
         title: titel, quantity: 1, unit_price: preis,
@@ -295,7 +298,9 @@ export async function starteRechnungAusVerordnung(ctx) {
   if (offenePreise > 0) {
     // Lieber eine sichtbare Lücke als eine unsichtbar falsche Zahl: der
     // GKV-Preis gilt privat nicht, und wer ihn übernimmt, rechnet unter Wert ab.
-    toast?.(`${offenePreise} Position(en) ohne Privatpreis — bitte Betrag eintragen.`, 'warning');
+    toast?.(istBg(verordnung.rezeptart)
+      ? `BG-Rechnung: ${offenePreise} Position(en) ohne Preis — Betrag mit dem UV-Träger abstimmen (Kostenzusage) und eintragen.`
+      : `${offenePreise} Position(en) ohne Privatpreis — bitte Betrag eintragen.`, 'warning');
   }
 }
 

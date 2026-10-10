@@ -40,9 +40,9 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
-import { terminLeistungen } from './rechnung-editor.js?v=20261010g';
+import { terminLeistungen } from './rechnung-editor.js?v=20261010h';
 import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
-import { privatpreisFuer } from './rechnung-bruecke.js?v=20261010g';
+import { privatpreisFuer } from './rechnung-bruecke.js?v=20261010h';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
