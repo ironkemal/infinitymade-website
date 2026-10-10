@@ -1899,11 +1899,20 @@
     sonraki basımlar aynı satırı basar. `done` seans yoksa `:2797-2804` numarasız „Vorschau".
     Değişmiş + ödenmemiş → `:2896-2922` negatif Gegenbeleg + orijinal `cancelled` + yeni ZU;
     ödenmiş → değiştirilmez. Saf çekirdek `api-backend/billing/zuzahlung/zu-beleg.js`
-    (`baueZuBelegZeile:35`, `zuDruckDaten:174`, `zuBelegVeraltet:231`, `baueGegenbeleg:287`).
+    (`baueZuBelegZeile:35`, `zuDruckDaten:174`, `zuBelegVeraltet:231`, `baueGegenbeleg:317`).
   - VKZ 03 tarafı: `db/SCHEMA.sql:218/221` `abrechnung_zuzahlungsforderung_daten_check` /
-    `_ursprung_check`. ⚠️ **Açık bağ:** `api-backend/billing/dta/zuzahlungsforderung-ursprung.js:1438`
-    KZ2 için `nachweisPruefung.art='zahlungsaufforderung43c'` istiyor ama `referenz` (`:1176-1186`)
-    serbest metin — aktif (cancelled olmayan) bir ZU `invoices` satırına doğrulanmıyor.
+    `_ursprung_check`. KZ2 bağı ✅ **kısmen umgesetzt c233e373** (10.10.2026, gkv-302 kararı):
+    `nachweisPruefung.referenz` bir `ZU-\d{4}-\d+` içeriyorsa bu numara Verordnung'un **aktif** ZU-Beleg'i
+    olmalı (`storno_von IS NULL`, `status <> cancelled`, `total_patient > 0`); stornierte/fremde numara →
+    422 `ZU_REFERENZ_MISMATCH` (`api-backend/billing/api/zuzahlungsforderung.routes.js:698-711`, Mahnung
+    kontrolünden sonra; çekirdek `zu-beleg.js` `ladeAktivenZuBeleg:286`, `fremdeZuNummern:304`).
+    ZU deseni yoksa veya ZU-Beleg yoksa kontrol yok — doğru: Frage 11'e göre Urbeleg ZU olmak zorunda
+    değil (Formular „Zuzahlung verweigert" veya Mahnung da yeter); 0078 öncesi Verordnung'lar etkilenmez.
+    ⚠️ **Açık:** (a) aktif ZU'nun numara/tarih/tutarını sunucu tarafında dondurulmuş Intent'e
+    (`zuBeleg`) yazmak — `db/SCHEMA-RLS.sql:3992-4003` trigger'ı Intent anahtarlarını allowlist'liyor,
+    migration gerekir (Kemal kararı); (b) Forderung tutarı ≠ aktif ZU tutarı → yalnız uyarı
+    (Forderung > ZU ise onay zorunlu), ret değil — UI gerekir, uygulanmadı. §43c üst sınır
+    hükmü doğrulanmadı.
 - **Kapsam:** tüm Fachbereiche (Physio/Ergo/Logo/Podo) · tüm Verordnungsarten · yalnız
   zuzahlungspflichtige hasta (befreit → Urbeleg gerekmez, Kennzeichen „1")
 
