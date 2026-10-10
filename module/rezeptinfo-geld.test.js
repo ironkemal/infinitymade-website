@@ -241,3 +241,8 @@ test('rendereGeldzeile: fehlender klinischer Status wird nicht aus Abrechnung er
   assert.ok(!el.innerHTML.includes('>Status<'), 'Status-Feld bleibt leer bzw. wird nicht gerendert');
   assert.equal(stand.gesamt, 28);
 });
+
+test('zahlerTyp: Rezeptart-Alias pkv zählt als privat (wie rezeptart.js, 10.10.2026)', async () => {
+  const { zahlerTyp } = await import('./rezeptinfo-geld.js');
+  assert.equal(zahlerTyp({ insurance_type: 'gkv' }, { rezeptart: 'pkv' }), 'privat');
+});

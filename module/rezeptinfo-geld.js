@@ -85,7 +85,7 @@ function escapeHtml(s) {
  */
 export function zahlerTyp(lead, rx) {
   const art = String(rx?.rezeptart || '').toLowerCase();
-  if (art === 'privat' || art === 'selbstzahler' || art === 'bg') return 'privat';
+  if (art === 'privat' || art === 'pkv' || art === 'selbstzahler' || art === 'bg') return 'privat'; // pkv = Alias wie rezeptart.js
   if (art === 'kassen') return 'gkv';
 
   const vers = String(lead?.insurance_type || '').toLowerCase();
