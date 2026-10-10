@@ -1866,6 +1866,46 @@
 
 ---
 
+### Zuzahlungsaufforderung (ZU) = VKZ-03-Urbeleg — kalıcı, numaralı, tekrar basılabilir olmalı
+- **Kural:** Hastaya gönderilen Zuzahlungsaufforderung (Erinnerung/Mahnung), hasta ödemeyi
+  reddettiğinde kasaya gidecek **VKZ 03 Zuzahlungsforderung (§ 43c SGB V)** için Urbeleg'dir;
+  bu yüzden ZU kalıcı bir belge olarak saklanmalı, numarası ve tarihi **ilk basımda bir kez**
+  verilmeli, her yeniden basımda aynı kalmalı; iptal yalnız Gegenbeleg (Storno) ile.
+  VKZ 03 faturası Erstrechnung (01/02/04/10) içeriğini tekrarlar, fark: Zuzahlung absetzilmez
+  (Schlüssel 8.1.3 = '2').
+- **Kaynak:**
+  - Anlage 1 TP5 V21 (Version 21, anzuwenden ab 01.10.2025 — kapak `:17-18`) Kap. 7.4.2.1
+    (`Anlage_1_TP5_V21_20260115.txt:8165-8168`): „Der Versicherte hat im Nachgang – trotz
+    Aufforderung – die Zuzahlung an den Leistungserbringer verweigert. Aus diesem Grund fordert
+    der Leistungserbringer die Zuzahlung gemäß §43c SGB V nun vom Kostenträger zurück." ·
+    `:8170-8177` VKZ '03', Zuzahlung nicht abgesetzt, „Schlüssel 8.1.3 ‚Zuzahlung' hat den Wert '2'" ·
+    `:8181-8183` „Parallel zum Datensatz ist ein Nachweis über den erfolglosen Einzugversuch …
+    zu übermitteln."
+  - Gemeinsame Umsetzungsempfehlungen Korrekturverfahren Heilmittel (Stand 13.02.2025, in Kraft
+    01.10.2025) **Frage 11** (`…Korrekturverfahren_Heilmittel_20250213.txt:276-289`): Fall 1
+    (verweigert trotz schriftlicher Aufforderung) → „muss dem DTA als Urbeleg entweder das
+    Formular „Zuzahlung verweigert" oder das Schreiben an den Versicherten bezgl. der
+    Zuzahlungsforderung (Erinnerung/ Mahnung) beigelegt werden." Fall 2 (zuzahlungsfrei) →
+    Urbeleg nicht zwingend, Zuzahlungskennzeichen „1".
+  - Nummernkreis/Festschreibung (AO-Seite, nicht §302): legal-de 10.10.2026,
+    `compliance/LEGAL_DECISIONS.md:871-875` — eigener Nummernkreis `ZU-JJJJ-nnnn`, getrennt von
+    Privat und AF; Buchungsbeleg § 147 Abs. 1 Nr. 4 AO, 8 J.
+- **Geçerlilik:** V21 / Korrekturverfahren-Empfehlungen Stand 13.02.2025 — 01.10.2025'ten beri;
+  V22 (01.02.2027) geçişinde Kap. 7.4.2.1 yeniden kontrol
+- **Kodda:**
+  - Bugün: `api-backend/billing/api/abrechnung.routes.js:2638` `GET /prescription/:id/zuzahlungsrechnung`
+    → `:2796` `nummer: ZU-${rx.id.slice(0,8)}` (Verordnung-ID'den türetilmiş, Nummernkreis değil) ·
+    `:2797` `datum: new Date()` (**her basımda yeni tarih** — Urbeleg reprodüzierbar değil) ·
+    belge kalıcı olarak kaydedilmiyor. ❌ kurala aykırı.
+  - Hedef: `invoices` tipi `zuzahlung` + Nummernkreis `ZU-JJJJ-nnnn` + ilk basımda tek seferlik
+    numara/tarih + Storno-Gegenbeleg — **offen, henüz yazılmadı** (KUTU_HAZIRLIK_SPRINT.md §4 „ZU").
+  - VKZ 03 tarafı DB'de mevcut: `db/SCHEMA.sql:218/221` `abrechnung_zuzahlungsforderung_daten_check`
+    / `_ursprung_check` (VKZ 03 ⇔ daten + ursprung_id). ZU belgesine bağ (Urbeleg referansı) yok.
+- **Kapsam:** tüm Fachbereiche (Physio/Ergo/Logo/Podo) · tüm Verordnungsarten · yalnız
+  zuzahlungspflichtige hasta (befreit → Urbeleg gerekmez, Kennzeichen „1")
+
+---
+
 ## Doğrulama kuyruğu
 
 `gkv-302` ajanının ilk turlarında kapatılacak açık noktalar:
