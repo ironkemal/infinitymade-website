@@ -28,6 +28,8 @@ const DEFAULT_REFRESH_SKEW_MS = 300_000; // 5 minutes before expiry
 const MIN_REFRESH_SKEW_MS = 5_000;
 const MAX_REFRESH_SKEW_MS = 600_000;
 const INTERNAL_CENTRE_TIMEOUT_MS = 15_000;
+const TAG_MS = 86_400_000;
+const utcTagStart = (ms) => Math.floor(ms / TAG_MS) * TAG_MS;
 
 const RE_SAFE_SEGMENT = /^[a-zA-Z0-9_-]{1,64}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
@@ -136,6 +138,10 @@ export function createJetonClient(options = {}) {
   let disabledReason = null;
   let pendingReport = null; // Staged cumulative snapshot
   let aggregateDiagnostic = null;
+  // O-186: UTC-Tagesbeginn (ms) des zuletzt quittierten/abgelehnten Berichts. Nur RAM — nach einem
+  // Neustart kann der Rest des Vortags fehlen (bekannter Rest, onprem O-186).
+  let sonBildirterTagMs = null;
+  let abschlussLaeuft = false; // der gestagte Bericht ist ein Abschlussbericht
 
   function invalidate(rejectedToken) {
     if (!rejectedToken || (currentToken && currentToken.token === rejectedToken)) {
@@ -164,12 +170,15 @@ export function createJetonClient(options = {}) {
   // Report acknowledgement / permanent rejection from the centre (M4.11 γ). Only the ID is logged.
   function handleReportOutcome(json) {
     if (!pendingReport || !json || typeof json !== 'object') return;
-    if (json.acknowledgedReportId === pendingReport.reportId) {
-      pendingReport = null;
-    } else if (json.rejectedReportId === pendingReport.reportId) {
-      console.warn(`[ki-jeton] Aggregatmeldung vom Zentrum abgelehnt und verworfen: ${pendingReport.reportId}`);
-      pendingReport = null;
-    }
+    const quittiert = json.acknowledgedReportId === pendingReport.reportId;
+    const abgelehnt = !quittiert && json.rejectedReportId === pendingReport.reportId;
+    if (!quittiert && !abgelehnt) return;
+    if (abgelehnt) console.warn(`[ki-jeton] Aggregatmeldung vom Zentrum abgelehnt und verworfen: ${pendingReport.reportId}`);
+    // O-186: Nach einem Abschlussbericht (auch abgelehnt) gilt heute als Ausgangspunkt — kein zweiter Abschluss.
+    const tag = abschlussLaeuft ? utcTagStart(nowFn()) : Date.parse(pendingReport.windowStart);
+    if (Number.isFinite(tag)) sonBildirterTagMs = utcTagStart(tag);
+    abschlussLaeuft = false;
+    pendingReport = null;
   }
 
   function validateTokenPayload(payload, allowedHosts) {
@@ -279,13 +288,23 @@ export function createJetonClient(options = {}) {
     try {
       if (!pendingReport && typeof options.aggregateSupplier === 'function') {
         try {
-          const supplierPromise = Promise.resolve(options.aggregateSupplier());
+          // O-186: Ist der zuletzt gemeldete Tag vorbei, zuerst dessen Abschlussbericht (gleiche
+          // reportId, Zähler wachsen → Zentrum „aktualisiert"); nur solange das Zentrum ihn annimmt (< 2 Tage).
+          const jetztMs = nowFn();
+          abschlussLaeuft = sonBildirterTagMs !== null && sonBildirterTagMs < utcTagStart(jetztMs)
+            && jetztMs - sonBildirterTagMs < 2 * TAG_MS;
+          const supplierPromise = Promise.resolve(abschlussLaeuft
+            ? options.aggregateSupplier(sonBildirterTagMs)
+            : options.aggregateSupplier());
           const report = await raceSignal(supplierPromise, AbortSignal.timeout(Math.max(1, Math.min(1000, Math.floor(centreTimeoutMs / 2)))), 'Aggregat nicht verfügbar');
           if (report && typeof report === 'object') {
             pendingReport = validateReportSnapshot(report);
             aggregateDiagnostic = 'OK';
+          } else {
+            abschlussLaeuft = false;
           }
         } catch (err) {
+          abschlussLaeuft = false;
           aggregateDiagnostic = 'AI_AGGREGATE_UNAVAILABLE';
         }
       }

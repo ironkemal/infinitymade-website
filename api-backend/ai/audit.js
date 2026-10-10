@@ -99,9 +99,12 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
     knownTasks = KNOWN_AI_TASKS
   } = options;
 
-  return async function usageAggregateSupplier() {
+  // `at` (optional, ms/Date): Tag des Abschlussberichts (O-186) — gleiches Fenster, gleiche reportId.
+  return async function usageAggregateSupplier(at) {
     let currentDate;
-    if (typeof now === 'function') {
+    if (at != null) {
+      currentDate = new Date(at);
+    } else if (typeof now === 'function') {
       currentDate = new Date(now());
     } else if (now != null) {
       currentDate = new Date(now);
@@ -242,5 +245,5 @@ export function makeUsageAggregateSupplier(supabase, tenantId, options = {}) {
 // Lazy reuse of the existing audit client; no second counter or content store.
 export function getAiSupabaseClient() { return getSupabaseClient(); }
 export function makeDefaultUsageAggregateSupplier(tenantId) {
-  return () => makeUsageAggregateSupplier(getSupabaseClient(), tenantId)();
+  return (at) => makeUsageAggregateSupplier(getSupabaseClient(), tenantId)(at);
 }

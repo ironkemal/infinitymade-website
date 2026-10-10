@@ -265,6 +265,30 @@ test('makeUsageAggregateSupplier: handles multi-page pagination', async () => {
   assert.equal(report.taskTotals['b2c-draft'].total_tokens, 60);
 });
 
+test('makeUsageAggregateSupplier: at-Argument liefert Fenster und reportId des Vortags (O-186)', async () => {
+  const fenster = [];
+  const mockSupabase = {
+    from() {
+      const b = {
+        select: () => b, eq: () => b, order: () => b,
+        gte: (_c, v) => { fenster.push(v); return b; },
+        lt: (_c, v) => { fenster.push(v); return b; },
+        async range() { return { data: [], error: null }; }
+      };
+      return b;
+    }
+  };
+  const supplier = makeUsageAggregateSupplier(mockSupabase, 'tenant-abc', { now: Date.UTC(2026, 9, 9, 0, 10) });
+  const heute = await supplier();
+  const vortagAbschluss = await supplier(Date.UTC(2026, 9, 8));
+  const vortagTagsueber = await makeUsageAggregateSupplier(mockSupabase, 'tenant-abc', { now: Date.UTC(2026, 9, 8, 23, 30) })();
+  assert.equal(vortagAbschluss.windowStart, '2026-10-08T00:00:00.000Z');
+  assert.equal(vortagAbschluss.windowEnd, '2026-10-09T00:00:00.000Z');
+  assert.equal(vortagAbschluss.reportId, vortagTagsueber.reportId);
+  assert.notEqual(heute.reportId, vortagAbschluss.reportId);
+  assert.deepEqual(fenster.slice(2, 4), ['2026-10-08T00:00:00.000Z', '2026-10-09T00:00:00.000Z']);
+});
+
 test('makeUsageAggregateSupplier: fails explicitly on pagination overflow', async () => {
   const fullPage = [
     { task: 'b2c-draft', prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }
