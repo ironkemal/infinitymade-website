@@ -866,3 +866,13 @@ Rolle: Praxis = Verantwortliche/Rechnungsausstellerin; Praxura AV (SaaS) bzw. He
 - Altbelege ohne Snapshot: Fallback live + Kennzeichnung „Altbeleg ohne Snapshot" = Risikoakzeptanz (keine Live-Kunden).
 - Folgeschritt (niedrig): Layout-Version im Snapshot oder PDF beim Ausstellen einfrieren („bildlich"). Steuerberater-Durchsicht (≈0,5 h) um dieses Thema ergänzen.
 - **Nachtrag 09.10.2026 (Kemal):** Umsetzung Variante (a) — Snapshot bei jedem Speichern des Entwurfs, gesperrt sobald die Rechnung den Entwurf verlässt (heute: bezahlt). Ein eigener Schritt „Rechnung ausstellen" (Variante b, rechtlich sauberer: Sperre ab Übergabe) kommt vorerst nicht. Restrisiko akzeptiert: zwischen Druck/Übergabe und Zahlung ist die Rechnung noch änderbar.
+
+## 2026-10-10 · Zuzahlungsbeleg (ZU), Privat- und Ausfallrechnung — Nummer, Aufbewahrung, Storno
+Rolle: Praxis = Ausstellerin/Verantwortliche; Praxura AV (SaaS) bzw. Hersteller (Box). 0 €, kein Veto. (legal-de 10.10.2026, Frage aus KHS §4)
+- ZU, Privat-/Selbstzahlerrechnung, Ausfallrechnung = Buchungsbelege (§ 147 Abs. 1 Nr. 4 AO), 8 J. (Abs. 3 S. 1, Wortlaut geprüft 10.10.2026), bildlich reproduzierbar (Abs. 2 Nr. 1; § 146 Abs. 4 AO).
+- ZU heute GoBD-widrig (`ZU-<uuid8>` + `new Date()` bei jedem Öffnen). Plan „ZU in `invoices`, Typ `zuzahlung`, Nummernkreis + Snapshot + Sperre" ist erforderlich und ausreichend — Nummer/Datum einmalig bei erster Ausgabe vergeben und sperren (nicht erst „bezahlt").
+- Lückenlosigkeit nicht zwingend (UStAE 14.5 Abs. 10; BFH X B 79/16), Einmaligkeit je Nummernkreis zwingend. Nummer erst bei Ausstellung, nicht im Entwurf.
+- Eigener Nummernkreis `ZU-JJJJ-nnnn`; Privat und AF-n bleiben getrennt (AF = nicht steuerbarer Schadensersatz, aber Beleg; 0076 genügt).
+- Storno: kein Löschen/Ändern; Gegenbeleg mit eigener Nummer + Verweis, Original „storniert"; technische Lücken protokollieren.
+- Steuerberater-Durchsicht (≈0,5 h) um die ZU-Frage ergänzen.
+- Grenzen: UStAE-Text nur aus Sekundärquellen (Stand 2010) geprüft; § 14 Abs. 2-Fundstelle zur fehlenden Rechnungspflicht bei § 4 Nr. 14 nicht verifiziert.
