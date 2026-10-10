@@ -45239,6 +45239,7 @@
    "calls": [
     "all",
     "ausfallBizForBooking",
+    "belegOeffnen",
     "closeBkActionPanel",
     "ermittleGeldstand",
     "error",
@@ -51191,6 +51192,7 @@
    "calledBy": [
     "aufEuro",
     "loadPatientDetailRezepte",
+    "openBookingActionModal",
     "openPatientDetailModal",
     "verdrahteGeldzeile"
    ],

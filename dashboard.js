@@ -2911,7 +2911,7 @@ async function openBookingActionModal(booking, opts = {}) {
         ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),
         kassieren: kassiereZuzahlung,
         belegOeffnen: openZuzahlungsrechnung,
-        rechnungAusVerordnung,
+        rechnungAusVerordnung: (id) => belegOeffnen(id, 'rechnung', rx.patient_id || booking.lead_id), // wie die Akte: vorhandene Rechnung zuerst (fonksiyon-ustasi 10.10.)
         panelSchliessen: closeBkActionPanel,
         rechnungsEditorFuerPatient: async (pid) => {
           switchPanel('rechnungen');
