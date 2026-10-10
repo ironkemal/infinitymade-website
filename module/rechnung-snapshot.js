@@ -24,6 +24,8 @@ export const EMPFAENGER_REZEPT_SPALTEN = 'rezeptart,bg_traeger_name,bg_traeger_a
  *   profil = Profilzeile der PRAXIS (`ownerProfile || currentProfile`), rezeptId = prescription_id ODER verordnung_id
  * @returns {Promise<{aussteller_snapshot: object, empfaenger_snapshot: ?object}>}
  */
+// Ohne Rückfrage — nur für Tests/Lesezwecke. Neue Aufrufer, die SPEICHERN, nehmen `rechnungSnapshotsGeprueft`
+// (sonst kommt der stille Entwurf ohne Empfänger zurück, KHS §6 2 (v); fonksiyon-ustasi 10.10.2026).
 export async function rechnungSnapshots(supabase, q) {
   return (await snapshotsMitGrund(supabase, q)).snap;
 }

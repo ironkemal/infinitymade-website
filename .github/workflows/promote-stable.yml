@@ -143,17 +143,37 @@ jobs:
         run: |
           set -e
           REPO="${{ env.REGISTRY }}/${{ github.repository }}"
+          # O-189 (b): registry iki etiketi tek işlemde taşıyamaz. Önce iki
+          # :stable'ın ESKİ digest'i okunur (ilk promote'ta yok = boş); bir
+          # taşıma düşerse o ana kadar taşınanlar eskiye geri alınır — kanalda
+          # yarım çift (yeni api + eski frontend) kalmaz.
+          ESKI_API="$(docker buildx imagetools inspect "${REPO}/calendar-api:stable" --format '{{.Manifest.Digest}}' 2>/dev/null || true)"
+          ESKI_FRONTEND="$(docker buildx imagetools inspect "${REPO}/frontend:stable" --format '{{.Manifest.Digest}}' 2>/dev/null || true)"
+          echo "önceki :stable — calendar-api=${ESKI_API:-yok} frontend=${ESKI_FRONTEND:-yok}"
+          TASINAN=""
+          geri_al() {
+            for G in $TASINAN; do
+              IMAGE="${G%%=*}"; ESKI="${G#*=}"
+              if [ -n "$ESKI" ] && docker buildx imagetools create --tag "${REPO}/${IMAGE}:stable" "${REPO}/${IMAGE}@${ESKI}"; then
+                echo "↩ ${IMAGE}:stable eskiye geri alındı (${ESKI})"
+              else
+                echo "✗ YARIM ÇİFT: ${IMAGE}:stable geri alınamadı (önceki: ${ESKI:-yok}) — aynı girdilerle iş akışını YENİDEN ÇALIŞTIR, kutular :stable'ı çekmeden önce"
+              fi
+            done
+          }
           # Kaynak digest ile verilir: doğrulama ile retag arasında etiket
           # oynasa bile taşınan, doğrulanan artefakttır.
-          for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
-            IMAGE="${CIFT%%=*}"; DIGEST="${CIFT#*=}"
+          for CIFT in "calendar-api=$API_DIGEST=$ESKI_API" "frontend=$FRONTEND_DIGEST=$ESKI_FRONTEND"; do
+            IMAGE="${CIFT%%=*}"; REST="${CIFT#*=}"; DIGEST="${REST%%=*}"; ESKI="${REST#*=}"
             HEDEF="${REPO}/${IMAGE}:stable"
             echo "→ ${HEDEF} = ${IMAGE}@${DIGEST} (retag, build yok)"
-            docker buildx imagetools create --tag "$HEDEF" "${REPO}/${IMAGE}@${DIGEST}"
-            SONUC="$(docker buildx imagetools inspect "$HEDEF" --format '{{.Manifest.Digest}}')"
+            TASINAN="$TASINAN ${IMAGE}=${ESKI}"
+            if ! docker buildx imagetools create --tag "$HEDEF" "${REPO}/${IMAGE}@${DIGEST}"; then
+              echo "✗ ${HEDEF} taşınamadı"; geri_al; exit 1
+            fi
+            SONUC="$(docker buildx imagetools inspect "$HEDEF" --format '{{.Manifest.Digest}}' || true)"
             if [ "$SONUC" != "$DIGEST" ]; then
-              echo "✗ ${HEDEF} = ${SONUC}, beklenen ${DIGEST}"
-              exit 1
+              echo "✗ ${HEDEF} = ${SONUC}, beklenen ${DIGEST}"; geri_al; exit 1
             fi
           done
           echo "✓ iki image de :stable'a taşındı"
@@ -174,6 +194,5 @@ jobs:
             echo ""
             echo "**Soak kanıtı:**"
             echo ""
-            printf '%s
-' "$SOAK_KANIT"
+            printf '%s\n' "$SOAK_KANIT"
           } >> "$GITHUB_STEP_SUMMARY"
