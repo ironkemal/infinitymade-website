@@ -27,6 +27,10 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  # O-189 (a): Girdiler kabuğa yalnız env üzerinden girer, asla ${{ }} ile
+  # satır içine yazılmaz (tırnak/$( içeren kanıt metni adımı düşürürdü).
+  SURUM: ${{ github.event.inputs.surum }}
+  SOAK_KANIT: ${{ github.event.inputs.soak_kanit }}
   SOAK_BASLANGIC: ${{ github.event.inputs.soak_baslangic }}
   API_DIGEST: ${{ github.event.inputs.api_digest }}
   FRONTEND_DIGEST: ${{ github.event.inputs.frontend_digest }}
@@ -49,12 +53,11 @@ jobs:
       - name: Girdi doğrulama
         run: |
           set -e
-          SURUM="${{ github.event.inputs.surum }}"
           if ! printf '%s' "$SURUM" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "✗ surum X.Y.Z biçiminde değil: $SURUM"
             exit 1
           fi
-          if [ -z "${{ github.event.inputs.soak_kanit }}" ]; then
+          if [ -z "$SOAK_KANIT" ]; then
             echo "✗ soak_kanit boş olamaz — RELEASE-STANDARD.md §9: kanıt olmadan taşıma yok"
             exit 1
           fi
@@ -70,6 +73,38 @@ jobs:
           fi
           echo "✓ girdiler geçerli"
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # O-189 (c): salt-okur doğrulama saat kapısından ÖNCE koşar — iş akışı
+      # 72 saat dolmadan da gerçek girdilerle denenebilir (giriş + iki
+      # inspect çalışır, kapıda durur, hiçbir şey taşınmaz).
+      - name: İki kaynağı doğrula (salt-okur)
+        run: |
+          set -e
+          REPO="${{ env.REGISTRY }}/${{ github.repository }}"
+          # O-187/O-188: ÖNCE iki kaynağı da doğrula, SONRA taşı. Etiket
+          # değişmez değildir (yayın koşusu yeniden çalıştırılırsa üzerine
+          # yazılır) — registry'deki digest soak edilenle aynı değilse dur.
+          # Biri eksikse hiçbiri taşınmaz: yarım çift kanala çıkmaz, döngü
+          # sırasına güvenilmez.
+          for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
+            IMAGE="${CIFT%%=*}"; BEKLENEN="${CIFT#*=}"
+            GERCEK="$(docker buildx imagetools inspect "${REPO}/${IMAGE}:${SURUM}" --format '{{.Manifest.Digest}}')" || {
+              echo "✗ ${IMAGE}:${SURUM} registry'de yok — hiçbir şey taşınmadı"
+              exit 1
+            }
+            if [ "$GERCEK" != "$BEKLENEN" ]; then
+              echo "✗ ${IMAGE}:${SURUM} = ${GERCEK}, soak edilen ${BEKLENEN} — artefakt değişmiş, hiçbir şey taşınmadı"
+              exit 1
+            fi
+            echo "✓ ${IMAGE}:${SURUM} = ${GERCEK}"
+          done
+
       # R8: 72 saatlik saat kapısı. Tag'in kendi oluşturulma anı ayrıca
       # tutulmuyor (lightweight tag) — işaret ettiği commit'in tarihi kullanılır,
       # bu commit yayın anıyla (publish-*.yml'in "Git tag" adımı) aynı akıştan
@@ -77,7 +112,7 @@ jobs:
       - name: 72 saatlik soak kapısı
         run: |
           set -e
-          TAG="v${{ github.event.inputs.surum }}"
+          TAG="v${SURUM}"
           if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
             echo "✗ ${TAG} diye bir git tag yok — bu sürüm hiç yayınlanmamış (publish-*.yml çalışmadı mı?)"
             exit 1
@@ -97,13 +132,6 @@ jobs:
           fi
           echo "✓ 72 saatlik saat kapısı geçti"
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       # R8: RETAG — yeniden build YASAK. Yeni bir build farklı bir digest
       # üretir; soak edilen artefakt ile yayınlanan artefakt o zaman ayrışır
       # ve 72 saatlik bekleme hiçbir şey kanıtlamamış olur.
@@ -114,25 +142,7 @@ jobs:
       - name: ":stable → ${{ github.event.inputs.surum }} (retag, iki image)"
         run: |
           set -e
-          SURUM="${{ github.event.inputs.surum }}"
           REPO="${{ env.REGISTRY }}/${{ github.repository }}"
-          # O-187/O-188: ÖNCE iki kaynağı da doğrula, SONRA taşı. Etiket
-          # değişmez değildir (yayın koşusu yeniden çalıştırılırsa üzerine
-          # yazılır) — registry'deki digest soak edilenle aynı değilse dur.
-          # Biri eksikse hiçbiri taşınmaz: yarım çift kanala çıkmaz, döngü
-          # sırasına güvenilmez.
-          for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
-            IMAGE="${CIFT%%=*}"; BEKLENEN="${CIFT#*=}"
-            GERCEK="$(docker buildx imagetools inspect "${REPO}/${IMAGE}:${SURUM}" --format '{{.Manifest.Digest}}')" || {
-              echo "✗ ${IMAGE}:${SURUM} registry'de yok — hiçbir şey taşınmadı"
-              exit 1
-            }
-            if [ "$GERCEK" != "$BEKLENEN" ]; then
-              echo "✗ ${IMAGE}:${SURUM} = ${GERCEK}, soak edilen ${BEKLENEN} — artefakt değişmiş, hiçbir şey taşınmadı"
-              exit 1
-            fi
-            echo "✓ ${IMAGE}:${SURUM} = ${GERCEK}"
-          done
           # Kaynak digest ile verilir: doğrulama ile retag arasında etiket
           # oynasa bile taşınan, doğrulanan artefakttır.
           for CIFT in "calendar-api=$API_DIGEST" "frontend=$FRONTEND_DIGEST"; do
@@ -151,7 +161,7 @@ jobs:
       - name: Kayıt
         run: |
           {
-            echo "## \`:stable\` → ${{ github.event.inputs.surum }}"
+            echo "## \`:stable\` → ${SURUM}"
             echo ""
             echo "**Tetikleyen:** ${{ github.actor }}"
             echo ""
@@ -164,5 +174,6 @@ jobs:
             echo ""
             echo "**Soak kanıtı:**"
             echo ""
-            echo "${{ github.event.inputs.soak_kanit }}"
+            printf '%s
+' "$SOAK_KANIT"
           } >> "$GITHUB_STEP_SUMMARY"

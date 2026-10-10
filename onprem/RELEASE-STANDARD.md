@@ -819,6 +819,8 @@ kaydedilir. Bu belge tahmin yürütmüyor, kalemi işaretliyor.
 
 → Yeşilse: `X.Y.Z` etiketi basılır, `:beta` taşınır, `releases.json`'a satır eklenir
 (durak mı, sürüm notu URL'i, elle adım var mı — normalde yok).
+Soak kutusu `X.Y.Z`'ye sabitlenir; geçiş anı ve iki image'ın digest'i **o an** not edilir
+(adım B'nin sonundaki taşıma bu üç değeri girdi olarak ister).
 
 ### B — `:stable` etiketini taşımadan önce (72 saat sonra)
 
@@ -831,6 +833,29 @@ kaydedilir. Bu belge tahmin yürütmüyor, kalemi işaretliyor.
 | 14 | **Yayın penceresi** | Cuma öğleden sonra ve resmî tatil arifesi **değil**. Praxis'ler sabah 07:00'de açılır; sorun çıkarsa müdahale edebileceğimiz bir gün olmalı |
 
 → Yeşilse: `:stable` yeni digest'e taşınır. Kutular bir saat içinde çeker (§6.4).
+
+**Taşıma nasıl yapılır (`promote-stable.yml`, elle tetiklenir, beş girdi):**
+
+| Girdi | Ne | Nereden |
+|---|---|---|
+| `surum` | `X.Y.Z` | `VERSION` |
+| `soak_baslangic` | Kutunun bu sürüme geçtiği an, ISO + saat dilimi (`2026-10-10T13:36:44+02:00`) | soak başında not edilir |
+| `api_digest` · `frontend_digest` | Soak edilen iki image'ın digest'i (`sha256:…`) | soak **başında** kutuda `docker image inspect … RepoDigests`, `onprem/REGISTER.md`'ye yazılır |
+| `soak_kanit` | Hangi kutu, ne gözlendi, kaç kutu / ne tür kullanım (olduğu gibi) | adım 10-11 |
+
+İş akışı üç şeyi kendi zorlar: 72 saat `soak_baslangic`'tan sayılır (tag zamanından erken olamaz) ·
+registry'deki `X.Y.Z` iki image'da da verilen digest ile aynı değilse **hiçbiri** taşınmaz ·
+taşınan kaynak etiket değil digest'tir, sonuç yeniden ölçülüp özete yazılır.
+
+⚠️ **Digest'ler soak başında kaydedilen değerlerdir; taşıma günü kutudan yeniden okunmaz.**
+`X.Y.Z` etiketi teknik olarak üzerine yazılabilir (yayın koşusu yeniden çalıştırılırsa). O zaman
+kutu yeni artefakta geçer, taşıma günü kutudan okunan digest registry ile yine uyuşur ve kapı
+geçer: 72 saat çalışmamış bir image yayınlanır. Kapı "registry = girdi"yi ölçer; "girdi = 72 saat
+önceki" eşitliğini yalnız soak başındaki kayıt taşır. Soak sürerken o sürümün yayın koşusu
+yeniden çalıştırılmaz. Soak kutusu `X.Y.Z` etiketine sabitlenir (`.env`, `:beta` değil); yoksa her
+main push'u kutuyu taşır ve saat anlamsızlaşır (O-187).
+
+`soak_kanit` metninde `"`, ters tırnak ve `$` kullanılmaz (O-189 a kapanana kadar).
 
 ### C — Taşıdıktan sonra (ilk 24 saat)
 
