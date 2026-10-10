@@ -126558,9 +126558,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 68,
-   "end": 75,
-   "lines": 8,
+   "start": 70,
+   "end": 82,
+   "lines": 13,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -126622,9 +126622,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rechnung-zahlung.js",
-   "start": 87,
-   "end": 150,
-   "lines": 64,
+   "start": 96,
+   "end": 164,
+   "lines": 69,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions",
@@ -175683,9 +175683,9 @@
       {
        "name": "markiereRechnungBezahlt",
        "file": "module/rechnung-zahlung.js",
-       "start": 68,
-       "end": 75,
-       "lines": 8,
+       "start": 70,
+       "end": 82,
+       "lines": 13,
        "writes": [
         "invoices:update"
        ],
@@ -175733,9 +175733,9 @@
       {
        "name": "frageZahlungsstatus",
        "file": "module/rechnung-zahlung.js",
-       "start": 87,
-       "end": 150,
-       "lines": 64,
+       "start": 96,
+       "end": 164,
+       "lines": 69,
        "writes": [
         "invoices:update"
        ],

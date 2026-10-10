@@ -13,7 +13,7 @@
 //   node admin.js ki-stand [name]          KI-Status, Monatszähler und Berichte anzeigen
 //   node admin.js ki-abgleich <JJJJ-MM-TT> <azure_tokens> [--abschalten] [--toleranz-prozent=N] [--toleranz-tokens=N]
 //                                          Azure-Tagessumme (UTC-Tag) ↔ Box-Berichte (O-169 Bed. 7). Exit 0 = im Rahmen,
-//                                          2 = über der Toleranz; mit --abschalten dann ki-global aus (erst nach O-186)
+//                                          2 = über der Toleranz; mit --abschalten dann ki-global aus
 //
 // Klartext-Codes erscheinen EINMAL auf der Konsole; gespeichert wird nur der SHA-256.
 // Jede Aktion landet im nur anhängbaren adminlog (ohne Codes).

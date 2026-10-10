@@ -325,8 +325,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveInvoice()` — [dashboard.js:13544](dashboard.js#L13544-L13632) · 89 satır · invoices:update, invoices:insert
 
 **Yol 2 — `frageZahlungsstatus()`** · Ekran: ortak yardımcı — 35 modülden çağrılıyor
-- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:68](module/rechnung-zahlung.js#L68-L75) · 8 satır · invoices:update
-- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:87](module/rechnung-zahlung.js#L87-L150) · 64 satır · invoices:update
+- `markiereRechnungBezahlt()` — [module/rechnung-zahlung.js:70](module/rechnung-zahlung.js#L70-L82) · 13 satır · invoices:update
+- `frageZahlungsstatus()` — [module/rechnung-zahlung.js:96](module/rechnung-zahlung.js#L96-L164) · 69 satır · invoices:update
 
 ### `module_visibility` — 2 bağımsız yazma yolu
 

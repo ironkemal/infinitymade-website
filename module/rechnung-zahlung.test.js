@@ -26,3 +26,12 @@ test('unbekannte/fehlende Zahlart -> null, nicht undefined', () => {
   assert.equal(paymentMethodFuerZahlart(undefined), null);
   assert.equal(paymentMethodFuerZahlart(null), null);
 });
+
+test('markiereRechnungBezahlt: meldet UPDATE-Fehler statt ihn zu verschlucken (onprem §7AI iii)', async () => {
+  const { markiereRechnungBezahlt } = await import('./rechnung-zahlung.js');
+  const sb = (antwort) => ({ from: () => ({ update: () => ({ eq: async () => antwort }) }) });
+  assert.equal(await markiereRechnungBezahlt(sb({ error: null }), 'inv-1', 'bar'), true);
+  assert.equal(await markiereRechnungBezahlt(sb({ error: { message: 'festgeschrieben' } }), 'inv-1', 'bar'), false);
+  const wirft = { from: () => ({ update: () => ({ eq: async () => { throw new Error('netz'); } }) }) };
+  assert.equal(await markiereRechnungBezahlt(wirft, 'inv-1', 'bar'), false);
+});
