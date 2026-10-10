@@ -22,16 +22,16 @@ test('Menüeintrag leer für Kasse (kassen, gkv, null, undefined)', () => {
 test('Menüeintrag mit data-type="rechnung" für privat/selbstzahler/bg', () => {
   const p = rechnungMenueEintrag('privat');
   assert.match(p, /data-type="rechnung"/);
-  assert.match(p, /📄 Rechnung \(Privat \(PKV\/Beihilfe\)\)/);
+  assert.match(p, /📄 Rechnung · Privat \(PKV\/Beihilfe\)/);
   assert.match(p, /border-top/);
 
   const s = rechnungMenueEintrag('selbstzahler');
   assert.match(s, /data-type="rechnung"/);
-  assert.match(s, /📄 Rechnung \(Selbstzahler\)/);
+  assert.match(s, /📄 Rechnung · Selbstzahler/);
 
   const b = rechnungMenueEintrag('bg');
   assert.match(b, /data-type="rechnung"/);
-  assert.match(b, /📄 Rechnung \(BG \/ Unfallkasse\)/);
+  assert.match(b, /📄 Rechnung · BG \/ Unfallkasse/);
 });
 
 // --- sucheRechnungZurVerordnung ---------------------------------------------
