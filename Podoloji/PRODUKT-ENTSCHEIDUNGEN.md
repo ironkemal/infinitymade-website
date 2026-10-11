@@ -824,3 +824,13 @@
 - **Nicht gebaut, bewusst:** VKZ 02 Nachforderung (selten, Auslöser = erster echter Fall); „VO folgt" (Behandlung ohne Verordnung, VO später zuordnen — eigener Punkt); Sperre „nach Behandlungsabbruch" (kein Abbruch-Datum im Schema).
 - Termin-Fenster: eingereichte Podo-VO trug `status='confirmed'` und war deshalb wählbar — jetzt zählt auch `abrechnung_status` (`rxGeschlossen`, termin-verordnung.js).
 - Code: `module/podo-dokumentations-sperre.js` (+ Test), Speichern prüft frisch gelesen.
+
+### PE-007 Nachtrag (11.10.2026) — Termin-Fenster und Folgetermin bei geschlossener VO
+
+**podoloji** (UX, Annahme — mit keiner Podologin geprüft) + **gkv-302** (Umhängen). Code `dd6b208e`, live-Regression canli-test GEÇTİ (A–C im Browser, D im Code).
+
+1. **Überschrift und Sperrsatz:** Bei abgerechnet/storniert heißt der Block „Verordnung" statt „Aktive Verordnung" (gelesen wird zuerst die Überschrift, sie widersprach dem Abzeichen). Der Satz „Verordnung … — keine weiteren Termine planbar." steht sichtbar an der Stelle der Serie (`setzeSitzungenKopf`, termin-panel.js), nicht mehr in der Liste „Unvergebene", die bei 0 offenen nie gezeigt wird.
+2. **„Leistungen des Tages dokumentieren"** öffnet die am Termin **gebundene** VO mit dem Termin-Datum — bei abgerechneter VO also die PE-007-Sperre. Vorher öffnete der Knopf die neueste laufende VO des Patienten: die Behandlung landete still auf einer anderen VO als der Termin zeigt. Ausblenden abgelehnt (der Patient wurde behandelt, es braucht einen Weg).
+3. **„Folgetermin?"** nur bei laufender VO (`abrechnung_status` NULL), nicht bei bereit/abgerechnet/storniert: mit „bereit" hat die Praxis die Serie selbst abgeschlossen.
+
+**Nicht gebaut, bewusst:** Knopf „Stattdessen auf Verordnung vom TT.MM. dokumentieren" (Termin auf eine andere laufende VO umhängen). gkv-302: zulässig, aber nur wenn **alle** gelten — Behandlungsbeginn-Frist der Ziel-VO (28 Tage, dringlich 14; HeilM-RL § 15 Abs. 1+2), Verordnungsdatum ≤ Behandlungsdatum (abgeleitet, nicht wörtlich), Ziel-VO nicht abgerechnet/abgebrochen, Heilmittel/HPNR passt zur Diagnosegruppe (§ 16 Abs. 1), Menge nicht überschritten (Anlage 3 f), Frequenz (§ 16 Abs. 3), Quittung auf der Ziel-VO (Anlage 3 o1), Tag nicht schon in der abgerechneten VO/DTA (sonst Korrekturverfahren). Auslöser zum Bauen: erster echter Fall. Ungebundener Folgetermin ohne VO hängt an „VO folgt".

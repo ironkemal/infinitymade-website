@@ -117,6 +117,14 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 11.10.2026 · PE-007 Nachtrag — geschlossene VO im Termin-Fenster (dd6b208e)
+- `setzeSitzungenKopf(geschlossen)` (`module/termin-panel.js`). Niye: başlık „Aktive Verordnung" abgerechnet/storniert
+  VO'da rozetle çelişiyordu; kilit cümlesi hiç gösterilmeyen bir listede duruyordu (podoloji PE-007 Nachtrag).
+  Nerede: `zeichnePodoEinheiten` (`module/podo-einheiten.js`) `rxGeschlossen(vord)` ile çağırır; `zeigeSitzungenArbeit` /
+  `zeichneSitzungenLeer` sıfırlar.
+- Değişti: `frageFolgetermin({alleVerbraucht, abrechnungStatus})` (`podo-tag-zusatz.js`) — yalnız laufende VO'da sorar.
+  Einheitenblock'taki Leistungen düğmesi `aufBehandlungen(patientId, {vordId, datum})` — bağlı VO'yu açar (yalnız patientId değil).
+
 ### 10.10.2026 · KHS 10. tur a–d — Zähler = dokumentierte Einheit, Kasse/VersNr nur auf Kassenbelegen, RX_FELDER überall, Speichern-Text (c6afd9ae)
 - `module/verordnung-termine.js` `podoBelegung(verordnet, termine, behandlungen, alsTag)` + `ladeVerordnungsBehandlungen`.
   Niye: gkv-302 hükmü — **verbraucht = dokümante Einheit, termin değil** (T33: kart 0/2, Akte 1/2 gösteriyordu).
