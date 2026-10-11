@@ -113,11 +113,11 @@ test('install.sh: setup.html# nur in reveal_once, nie in log; PRAXURA_BROWSER_OE
   );
 });
 
-test('praxura-installieren.ps1: UTF-8 BOM vorhanden', () => {
+// Früher: „UTF-8 BOM vorhanden". Das BOM brach den Startbefehl (irm | scriptblock,
+// 11.10.2026) — die Datei ist jetzt reines ASCII, siehe tools/install-ps1-ascii.test.js.
+test('praxura-installieren.ps1: kein UTF-8 BOM', () => {
   const puffer = fs.readFileSync(ps1Pfad);
-  assert.equal(puffer[0], 0xEF, 'BOM Byte 0 muss 0xEF sein');
-  assert.equal(puffer[1], 0xBB, 'BOM Byte 1 muss 0xBB sein');
-  assert.equal(puffer[2], 0xBF, 'BOM Byte 2 muss 0xBF sein');
+  assert.notEqual(puffer[0], 0xEF, 'install.ps1 darf nicht mit einem BOM beginnen');
 });
 
 test('praxura-installieren.ps1: PRAXURA_BROWSER_OEFFNEN=1 im wsl-Aufruf und Start-Process mit setup.html#', () => {

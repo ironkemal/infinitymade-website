@@ -156,13 +156,11 @@ test('install.sh: set_env CADDY_TLS_MODUS acmedns nur nach acmedns-Prüfung, CAD
   assert.ok(posSetEnvAcmedns < matchComposeUp, 'Erstes set_env CADDY_TLS_MODUS acmedns muss textlich VOR dem ersten echten docker compose up -d stehen');
 });
 
-test('praxura-installieren.ps1: beginnt mit UTF-8-BOM und Import-Certificate-Zweig hängt an CADDY_TLS_MODUS', () => {
+test('praxura-installieren.ps1: beginnt ohne BOM und Import-Certificate-Zweig hängt an CADDY_TLS_MODUS', () => {
   const buffer = fs.readFileSync(ps1Pfad);
 
-  // UTF-8-BOM: 0xEF, 0xBB, 0xBF
-  assert.equal(buffer[0], 0xEF, 'praxura-installieren.ps1 muss mit UTF-8-BOM beginnen (Byte 0)');
-  assert.equal(buffer[1], 0xBB, 'praxura-installieren.ps1 muss mit UTF-8-BOM beginnen (Byte 1)');
-  assert.equal(buffer[2], 0xBF, 'praxura-installieren.ps1 muss mit UTF-8-BOM beginnen (Byte 2)');
+  // Kein BOM mehr (irm | scriptblock scheitert daran) — tools/install-ps1-ascii.test.js
+  assert.notEqual(buffer[0], 0xEF, 'install.ps1 darf nicht mit einem BOM beginnen');
 
   const text = buffer.toString('utf8');
   const importCertPos = text.indexOf('Import-Certificate');
