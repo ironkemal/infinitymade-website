@@ -1,21 +1,21 @@
-﻿<#
-════════════════════════════════════════════════════════════════════════════
- Praxura Praxis-Box — Einrichtung auf einem Windows-PC  (KHS K2.11, K-7)
-════════════════════════════════════════════════════════════════════════════
+<#
+============================================================================
+ Praxura Praxis-Box - Einrichtung auf einem Windows-PC  (KHS K2.11, K-7)
+============================================================================
 
  Was passiert hier: Die Praxis-Box ist ein Linux-Programmpaket (Docker). Auf
  einem Windows-PC laeuft sie in einer eigenen, kleinen Linux-Umgebung (WSL2),
  die dieses Skript einrichtet. Danach startet es die normale Einrichtung
- (install.sh) — dieselbe wie auf einem Linux-Server.
+ (install.sh) - dieselbe wie auf einem Linux-Server.
 
- Aufruf (PowerShell, am besten ALS ADMINISTRATOR — sonst fragt Windows nach):
+ Aufruf (PowerShell, am besten ALS ADMINISTRATOR - sonst fragt Windows nach):
    & ([scriptblock]::Create((irm https://praxura.de/install.ps1)))
    # oder heruntergeladen: powershell -ExecutionPolicy Bypass -File .\install.ps1
    # Wenn die Einrichtung noch offen, der 14-Tage-Link aber abgelaufen ist:
    powershell -ExecutionPolicy Bypass -File "$env:ProgramData\Praxura\install.ps1" -NeuerJeton
 
  K2b.14 (O-157/O-176, guvenlik S-52): Die Programmdateien kommen NICHT mehr
- aus git, sondern aus dem Container-Image des gewaehlten Kanals (Schritt 5) —
+ aus git, sondern aus dem Container-Image des gewaehlten Kanals (Schritt 5) -
  Dateien und Image sind damit immer dieselbe Version. Das Skript legt sich
  selbst unter %ProgramData%\Praxura\install.ps1 ab (Neustart-Fortsetzung,
  -NeuerJeton) und startet sich ohne Administratorrechte als Administrator neu.
@@ -26,10 +26,10 @@
       Desktop (eigener Docker-Socket wuerde mit dem der Box kollidieren)
    2  WSL-Einstellungen (%UserProfile%\.wslconfig): gespiegeltes Netzwerk
       (LAN-Zugriff ohne Portweiterleitung) + keine Leerlauf-Abschaltung
-   3  Eigene Linux-Umgebung "Praxura" (Ubuntu 24.04) — getrennt von einem
+   3  Eigene Linux-Umgebung "Praxura" (Ubuntu 24.04) - getrennt von einem
       evtl. schon vorhandenen Ubuntu; Neustart-Fortsetzung per Aufgabe
    4  systemd an, Docker Engine IN der Linux-Umgebung (nicht Docker Desktop)
-   5  Programmdateien nach /opt/praxura (Linux-Dateisystem — NICHT /mnt/c:
+   5  Programmdateien nach /opt/praxura (Linux-Dateisystem - NICHT /mnt/c:
       die Datenbank braucht Linux-Dateirechte und waere dort langsam)
    6  install.sh (fragt Einrichtungscode/Adresse, TLS, Kanal, Sicherungsziel)
    7  Autostart: geplante Aufgabe "beim Systemstart", auch ohne Anmeldung
@@ -42,7 +42,7 @@
 #>
 [CmdletBinding()]
 param(
-  # Nach dem Neustart (WSL-Erstinstallation) — von der Fortsetzungsaufgabe gesetzt.
+  # Nach dem Neustart (WSL-Erstinstallation) - von der Fortsetzungsaufgabe gesetzt.
   [switch]$Fortsetzen,
   # Nur Schritte 1-5 (Test/Fehlersuche): install.sh danach von Hand.
   [switch]$NurVorbereiten,
@@ -63,20 +63,20 @@ $BoxPfad     = '/opt/praxura/onprem'
 $AufgabeStart     = 'Praxura Box (Autostart)'
 $AufgabeFortsetzen = 'Praxura Box (Einrichtung fortsetzen)'
 # Microsoft-Kennung der WSL-VM fuer die Hyper-V-Firewall (fest, von Microsoft
-# dokumentiert) — ohne Regel dort erreicht im gespiegelten Netz nichts aus
+# dokumentiert) - ohne Regel dort erreicht im gespiegelten Netz nichts aus
 # dem LAN die Box, egal was die Windows-Firewall sagt.
 $WslVmCreatorId = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
 $ApiImageBasis = 'ghcr.io/ironkemal/infinitymade-website/calendar-api'  # = onprem/.env.template (check-onprem)
 $SkriptKopie   = Join-Path $DatenOrt 'install.ps1'
 
-# K2b.14: eigener Text — aus der Datei oder (irm | scriptblock) aus dem Speicher.
+# K2b.14: eigener Text - aus der Datei oder (irm | scriptblock) aus dem Speicher.
 # Nur auf oberster Ebene gueltig ($MyInvocation in einer Funktion waere die Funktion).
 $eigenerText = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPath) } else { $MyInvocation.MyCommand.ScriptBlock.ToString() }
 # guvenlik S-52 Nr. 1: ein an einem Zeilenende abgerissener Download parst sauber und liefe bis
 # zur Abrissstelle. Deshalb VOR jedem Schritt: endet der eigene Text mit der Endmarke? (Die Marke
-# wird hier zusammengesetzt, damit diese Zeile sie nicht selbst enthält.)
+# wird hier zusammengesetzt, damit diese Zeile sie nicht selbst enthaelt.)
 if (-not $eigenerText.TrimEnd().EndsWith('# PRAXURA-' + 'SKRIPT-ENDE')) {
-  Write-Host 'Das Skript wurde nicht vollstaendig geladen (Verbindung abgebrochen?). Es wurde nichts veraendert — bitte erneut starten.'
+  Write-Host 'Das Skript wurde nicht vollstaendig geladen (Verbindung abgebrochen?). Es wurde nichts veraendert - bitte erneut starten.'
   exit 1
 }
 $utf8Bom = New-Object System.Text.UTF8Encoding $true   # PS 5.1 liest Umlaute nur mit BOM richtig
@@ -89,7 +89,7 @@ if (-not $istAdmin) {
     if ($p.Value -is [System.Management.Automation.SwitchParameter]) { if ($p.Value) { $argListe += "-$($p.Key)" } }
     else { $argListe += "-$($p.Key)"; $argListe += [string]$p.Value }
   }
-  Write-Host 'Die Einrichtung braucht Administratorrechte — Windows fragt gleich nach.'
+  Write-Host 'Die Einrichtung braucht Administratorrechte - Windows fragt gleich nach.'
   try { Start-Process powershell.exe -Verb RunAs -ArgumentList $argListe | Out-Null }
   catch { Write-Host 'Abgebrochen: ohne Administratorrechte geht es nicht. PowerShell als Administrator oeffnen und erneut starten.'; exit 1 }
   exit 0
@@ -119,7 +119,7 @@ function Frage([string]$text, [bool]$standardJa = $true) {
   return ($a -match '^[jJyY]')
 }
 # Befehl in der Praxura-Umgebung als root; Ausgabe UTF-8 (wsl.exe schreibt sonst UTF-16).
-#  Ausgabe geht an den Bildschirm (Out-Host), NICHT in den Rueckgabewert — sonst
+#  Ausgabe geht an den Bildschirm (Out-Host), NICHT in den Rueckgabewert - sonst
 #  waere das Ergebnis ein Array aus Textzeilen + Code und jeder "-ne 0"-Test falsch.
 #  Befehl als Base64: PowerShell 5.1 maskiert innere "..." fuer wsl.exe nicht, und
 #  "wsl --" schickt alles zusaetzlich durch eine Shell, die $ ersetzt (04.10.2026).
@@ -145,7 +145,7 @@ function DistroVorhanden {
 }
 
 Log ''
-Log "Praxura Praxis-Box — Windows-Einrichtung $(Get-Date -Format 'dd.MM.yyyy HH:mm')"
+Log "Praxura Praxis-Box - Windows-Einrichtung $(Get-Date -Format 'dd.MM.yyyy HH:mm')"
 if ($Fortsetzen) {
   Log '  (Fortsetzung nach Neustart)'
   Unregister-ScheduledTask -TaskName $AufgabeFortsetzen -Confirm:$false -ErrorAction SilentlyContinue
@@ -161,12 +161,12 @@ if ($NeuerJeton) {
   try {
     Start-Process "$siteUrl/setup.html#$jeton"
   } catch {
-    Warn "Browser liess sich nicht oeffnen — Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+    Warn "Browser liess sich nicht oeffnen - Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
   }
   exit 0
 }
 
-# ── 1  Vorpruefung ───────────────────────────────────────────────────────────
+# -- 1  Vorpruefung -----------------------------------------------------------
 Log '[1/11] Vorpruefung'
 # O-174: Images nur fuer x86 (amd64). Auf einem ARM-Laptop wuerden sonst erst
 # WSL und Docker installiert und install.sh bricht danach ab. PROCESSOR_ARCHITEW6432
@@ -177,7 +177,7 @@ if ($arch -ne 'AMD64') {
 }
 $build = [int](Get-CimInstance Win32_OperatingSystem).BuildNumber
 if ($build -lt 22621) {
-  Fehler 'Windows-Version zu alt' "Build $build" 'Windows 11 ab Version 22H2 (Build 22621) wird benoetigt — das gespiegelte WSL-Netzwerk gibt es erst dort. Windows aktualisieren oder einen Linux-Server verwenden.'
+  Fehler 'Windows-Version zu alt' "Build $build" 'Windows 11 ab Version 22H2 (Build 22621) wird benoetigt - das gespiegelte WSL-Netzwerk gibt es erst dort. Windows aktualisieren oder einen Linux-Server verwenden.'
 }
 $cs  = Get-CimInstance Win32_ComputerSystem
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
@@ -186,15 +186,15 @@ if (-not ($cs.HypervisorPresent -or $cpu.VirtualizationFirmwareEnabled)) {
 }
 $ramGb = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
 if ($ramGb -lt 7.5) {
-  Fehler 'Zu wenig Arbeitsspeicher' "$ramGb GB" 'Mindestens 8 GB RAM. WSL gibt der Box die Haelfte — darunter reicht es nicht fuer Datenbank + Dienste.'
+  Fehler 'Zu wenig Arbeitsspeicher' "$ramGb GB" 'Mindestens 8 GB RAM. WSL gibt der Box die Haelfte - darunter reicht es nicht fuer Datenbank + Dienste.'
 }
 $frei = [math]::Round((Get-PSDrive C).Free / 1GB)
 if ($frei -lt 50) {
-  Fehler 'Zu wenig freier Speicher auf C:' "$frei GB frei" 'Mindestens 50 GB auf C: freimachen. (install.sh kann das in WSL nicht pruefen — es sieht nur die virtuelle Platte.)'
+  Fehler 'Zu wenig freier Speicher auf C:' "$frei GB frei" 'Mindestens 50 GB auf C: freimachen. (install.sh kann das in WSL nicht pruefen - es sieht nur die virtuelle Platte.)'
 }
 $dd = Get-Process -Name 'Docker Desktop', 'com.docker.backend' -ErrorAction SilentlyContinue
 if ($dd) {
-  Fehler 'Docker Desktop laeuft' 'Docker Desktop ist gestartet' 'Docker Desktop beenden und in seinen Einstellungen "Start Docker Desktop when you sign in" ausschalten (besser: deinstallieren). Die Box bringt ihren eigenen Docker mit — zwei Docker auf einem PC stoeren sich.'
+  Fehler 'Docker Desktop laeuft' 'Docker Desktop ist gestartet' 'Docker Desktop beenden und in seinen Einstellungen "Start Docker Desktop when you sign in" ausschalten (besser: deinstallieren). Die Box bringt ihren eigenen Docker mit - zwei Docker auf einem PC stoeren sich.'
 }
 if (Test-Path "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe") {
   Warn 'Docker Desktop ist installiert (laeuft aber nicht). Nicht gleichzeitig mit der Box starten.'
@@ -203,22 +203,22 @@ if (-not $Fortsetzen -or -not (DistroVorhanden)) {
   $belegt = Get-NetTCPConnection -State Listen -LocalPort 80, 443 -ErrorAction SilentlyContinue
   if ($belegt) {
     $p = ($belegt | ForEach-Object { (Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName } | Sort-Object -Unique) -join ', '
-    Fehler 'Port 80 oder 443 ist belegt' "Programm: $p" 'Dieses Programm beenden/deinstallieren (z. B. IIS, Skype, ein anderer Webserver). Die Box braucht beide Ports. (install.sh sieht Windows-Programme nicht — deshalb hier.)'
+    Fehler 'Port 80 oder 443 ist belegt' "Programm: $p" 'Dieses Programm beenden/deinstallieren (z. B. IIS, Skype, ein anderer Webserver). Die Box braucht beide Ports. (install.sh sieht Windows-Programme nicht - deshalb hier.)'
   }
 }
-Ok "Windows Build $build · $ramGb GB RAM · $frei GB frei auf C: · Virtualisierung an"
+Ok "Windows Build $build - $ramGb GB RAM - $frei GB frei auf C: - Virtualisierung an"
 
-# ── 2  .wslconfig ────────────────────────────────────────────────────────────
+# -- 2  .wslconfig ------------------------------------------------------------
 Log '[2/11] WSL-Einstellungen'
 $wslconfig = Join-Path $env:USERPROFILE '.wslconfig'
 $soll = @"
-# Praxura Praxis-Box (praxura-installieren.ps1) — bitte nicht entfernen.
+# Praxura Praxis-Box (praxura-installieren.ps1) - bitte nicht entfernen.
 [wsl2]
 # Gespiegeltes Netzwerk: die Box ist unter der IP dieses PCs im Praxisnetz
 # erreichbar (Tablet, zweiter PC), ohne Portweiterleitung.
 networkingMode=mirrored
-# Nie wegen Leerlauf abschalten — die Box soll auch nachts erreichbar sein
-# (nächtliche Sicherung 01:00, Update 02:00).
+# Nie wegen Leerlauf abschalten - die Box soll auch nachts erreichbar sein
+# (naechtliche Sicherung 01:00, Update 02:00).
 vmIdleTimeout=-1
 
 [general]
@@ -242,7 +242,7 @@ if ($vorhanden -match 'networkingMode\s*=\s*mirrored' -and $vorhanden -match 'vm
 # O-190: alle WSL-Distributionen teilen eine Netzschicht. Startet eine ZWEITE
 # Distribution ihren eigenen dockerd, schreibt der iptables fuer sein Netz neu
 # und die Box verliert die Verbindung zur eigenen Datenbank (10.10.2026 auf der
-# Test-Box gemessen) — api/caddy bleiben dabei gruen, kein Alarm.
+# Test-Box gemessen) - api/caddy bleiben dabei gruen, kein Alarm.
 # Nur LAUFENDE Distributionen pruefen: eine gestoppte zu starten waere genau der Fehler.
 $env:WSL_UTF8 = '1'
 $laufend = (& wsl.exe -l --running -q 2>$null) -replace "`0", '' |
@@ -254,7 +254,7 @@ foreach ($d in $laufend) {
   }
 }
 
-# ── 3  Linux-Umgebung "Praxura" ─────────────────────────────────────────────
+# -- 3  Linux-Umgebung "Praxura" ---------------------------------------------
 Log "[3/11] Linux-Umgebung '$Distro' ($DistroBasis)"
 if (DistroVorhanden) {
   Ok "'$Distro' ist schon eingerichtet"
@@ -289,7 +289,7 @@ if ((InWsl 'true') -ne 0) {
   Fehler "'$Distro' startet nicht" 'wsl -d Praxura liefert einen Fehler' '"wsl --update" ausfuehren, PC neu starten, Skript erneut starten.'
 }
 
-# ── 4  systemd + Docker Engine ───────────────────────────────────────────────
+# -- 4  systemd + Docker Engine -----------------------------------------------
 Log '[4/11] systemd + Docker Engine (in der Linux-Umgebung)'
 if ((InWsl 'grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null') -ne 0) {
   InWsl 'printf "[boot]\nsystemd=true\n\n[user]\ndefault=root\n" > /etc/wsl.conf' | Out-Null
@@ -316,11 +316,11 @@ if ((InWsl 'docker info >/dev/null 2>&1') -ne 0) {
 }
 Ok 'systemd aktiv, Docker Engine laeuft'
 
-# ── 5  Programmdateien ───────────────────────────────────────────────────────
+# -- 5  Programmdateien -------------------------------------------------------
 Log '[5/11] Programmdateien nach /opt/praxura'
 if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
-  # Eingerichtete Box: Dateien gehoeren update.sh (manifest/.praxura-stand, J3) — nicht ueberschreiben.
-  Ok 'Box schon eingerichtet — Programmdateien bleiben (Aktualisierung macht update.sh)'
+  # Eingerichtete Box: Dateien gehoeren update.sh (manifest/.praxura-stand, J3) - nicht ueberschreiben.
+  Ok 'Box schon eingerichtet - Programmdateien bleiben (Aktualisierung macht update.sh)'
 } else {
   # K2b.14 (O-157/O-176): Dateien aus DEMSELBEN Image wie spaeter der Betrieb, per Digest.
   if ((InWsl "docker manifest inspect ${ApiImageBasis}:$Kanal >/dev/null 2>&1") -ne 0) {
@@ -353,18 +353,18 @@ if ($NurVorbereiten) {
   exit 0
 }
 
-# ── 6  install.sh ────────────────────────────────────────────────────────────
+# -- 6  install.sh ------------------------------------------------------------
 Log '[6/11] Einrichtung der Box (install.sh)'
 $installiertJetzt = $false
 if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
-  Ok 'Box ist schon eingerichtet (.env vorhanden) — install.sh wird NICHT erneut ausgefuehrt'
+  Ok 'Box ist schon eingerichtet (.env vorhanden) - install.sh wird NICHT erneut ausgefuehrt'
 } else {
   Log ''
   Log '  Gleich stellt die Einrichtung Fragen. Empfehlungen fuer diesen PC:'
-  Log '    Einrichtungscode:    Einrichtungscode (von Praxura erhalten) eingeben — Enter ohne Code = eigene Adresse (Ausnahmefall)'
+  Log '    Einrichtungscode:    Einrichtungscode (von Praxura erhalten) eingeben - Enter ohne Code = eigene Adresse (Ausnahmefall)'
   Log "    Eigene Adresse:      (nur im Ausnahmefall): https://praxis.home.arpa  (oder: https://$($env:COMPUTERNAME.ToLower()).fritz.box)"
   Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar; entfaellt bei Einrichtungscode)'
-  Log '    Sicherungsziel:      siehe Schritt 11 unten — fuer den Anfang leer lassen geht auch'
+  Log '    Sicherungsziel:      siehe Schritt 11 unten - fuer den Anfang leer lassen geht auch'
   Log ''
   & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" "--kanal=$Kanal"
   if ($LASTEXITCODE -ne 0) {
@@ -377,9 +377,9 @@ $hostName = ($siteUrl -replace '^https://', '').Trim().TrimEnd('/')
 if (-not $hostName) { Fehler 'SITE_URL nicht gefunden' "$BoxPfad/.env" 'install.sh erneut ausfuehren.' }
 Ok "Box eingerichtet: $siteUrl"
 
-# ── 7  Autostart ─────────────────────────────────────────────────────────────
+# -- 7  Autostart -------------------------------------------------------------
 Log '[7/11] Autostart beim Einschalten des PCs'
-# Eine WSL-Umgebung gehoert einem BENUTZER (nicht SYSTEM) — die Aufgabe laeuft
+# Eine WSL-Umgebung gehoert einem BENUTZER (nicht SYSTEM) - die Aufgabe laeuft
 # deshalb als der einrichtende Benutzer, "auch wenn niemand angemeldet ist".
 # sleep infinity haelt die Umgebung offen; Docker startet die Container selbst
 # (restart: unless-stopped). Aendert sich das Windows-Passwort, muss die
@@ -387,7 +387,7 @@ Log '[7/11] Autostart beim Einschalten des PCs'
 #
 # O-197/O-198 (11.10.2026, Testbox): der Start-Ausloeser allein reicht nicht.
 # Nach dem Aufwachen aus dem Standby beendet Windows die Umgebung, und beim
-# Hochfahren endete die Aufgabe einmal sofort mit 0xC000013A — beide Male blieb
+# Hochfahren endete die Aufgabe einmal sofort mit 0xC000013A - beide Male blieb
 # die Box aus, bis jemand von Hand nachsah (RestartCount half nicht). Deshalb
 # zusaetzlich alle 5 Minuten ausloesen; laeuft die Aufgabe noch, verwirft
 # "IgnoreNew" den neuen Start, sonst ist die Box spaetestens dann wieder da.
@@ -398,7 +398,7 @@ if ($vorh -and ($vorh.Triggers | Where-Object { $_.Repetition.Interval })) {
   Ok 'Autostart-Aufgabe ist schon eingerichtet'
 } elseif ($vorh) {
   # Aufgabe aus einer aelteren Einrichtung: Wiederholung nachtragen. Mit
-  # gespeichertem Passwort verlangt Windows es dafuer erneut — dann nur warnen.
+  # gespeichertem Passwort verlangt Windows es dafuer erneut - dann nur warnen.
   try {
     Set-ScheduledTask -TaskName $AufgabeStart -Trigger (@($vorh.Triggers) + $wdh) -Settings $set -ErrorAction Stop | Out-Null
     Ok 'Autostart-Aufgabe ergaenzt (startet die Box nach Standby/Absturz innerhalb von 5 Minuten neu)'
@@ -415,14 +415,14 @@ if ($vorh -and ($vorh.Triggers | Where-Object { $_.Repetition.Interval })) {
     Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg -Settings $set -User $cred.UserName -Password $cred.GetNetworkCredential().Password -RunLevel Highest -Force | Out-Null
     Ok 'Autostart eingerichtet (beim Systemstart, auch ohne Anmeldung)'
   } catch {
-    Warn "Autostart ohne Anmeldung nicht moeglich ($($_.Exception.Message)) — richte Start bei Anmeldung ein."
+    Warn "Autostart ohne Anmeldung nicht moeglich ($($_.Exception.Message)) - richte Start bei Anmeldung ein."
     $trg2 = @((New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"), $wdh)
     Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg2 -Settings $set -User "$env:USERDOMAIN\$env:USERNAME" -RunLevel Highest -Force | Out-Null
     Warn 'Die Box startet jetzt erst, wenn sich jemand an diesem PC anmeldet (automatische Anmeldung waere eine Alternative).'
   }
 }
 
-# ── 8  Firewall ──────────────────────────────────────────────────────────────
+# -- 8  Firewall --------------------------------------------------------------
 Log '[8/11] Firewall: Box im Praxisnetz erreichbar (nur privates Netz)'
 if (Get-Command New-NetFirewallHyperVRule -ErrorAction SilentlyContinue) {
   if (-not (Get-NetFirewallHyperVRule -Name 'Praxura-Box-HTTPS' -ErrorAction SilentlyContinue)) {
@@ -430,7 +430,7 @@ if (Get-Command New-NetFirewallHyperVRule -ErrorAction SilentlyContinue) {
   }
   Ok 'Hyper-V-Firewall: 80/443 eingehend erlaubt'
 } else {
-  Warn 'Hyper-V-Firewall-Befehle fehlen (Windows zu alt?) — Zugriff aus dem LAN evtl. blockiert.'
+  Warn 'Hyper-V-Firewall-Befehle fehlen (Windows zu alt?) - Zugriff aus dem LAN evtl. blockiert.'
 }
 if (-not (Get-NetFirewallRule -Name 'Praxura-Box-HTTPS' -ErrorAction SilentlyContinue)) {
   New-NetFirewallRule -Name 'Praxura-Box-HTTPS' -DisplayName 'Praxura Box (80/443)' -Direction Inbound -Protocol TCP -LocalPort 80, 443 -Action Allow -Profile Private | Out-Null
@@ -438,15 +438,15 @@ if (-not (Get-NetFirewallRule -Name 'Praxura-Box-HTTPS' -ErrorAction SilentlyCon
 Ok 'Windows-Firewall: 80/443 eingehend, nur Profil "Privat"'
 $profile = Get-NetConnectionProfile | Where-Object { $_.IPv4Connectivity -ne 'NoTraffic' } | Select-Object -First 1
 if ($profile -and $profile.NetworkCategory -ne 'Private') {
-  Warn "Das Netzwerk '$($profile.Name)' ist als '$($profile.NetworkCategory)' eingestuft — andere Geraete erreichen die Box erst, wenn es in Windows auf 'Privat' gestellt wird (Einstellungen > Netzwerk > Eigenschaften)."
+  Warn "Das Netzwerk '$($profile.Name)' ist als '$($profile.NetworkCategory)' eingestuft - andere Geraete erreichen die Box erst, wenn es in Windows auf 'Privat' gestellt wird (Einstellungen > Netzwerk > Eigenschaften)."
 }
 
-# ── 9  Wurzelzertifikat + hosts ──────────────────────────────────────────────
+# -- 9  Wurzelzertifikat + hosts ----------------------------------------------
 Log '[9/11] Wurzelzertifikat der Box + Adresse auf diesem PC'
 $tlsModus = BoxEnv 'CADDY_TLS_MODUS'
 $tls = BoxEnv 'CADDY_TLS_ARG'
 if ($tlsModus -eq 'acmedns') {
-  Ok "echtes Zertifikat (Let's Encrypt ueber den Praxura-Namensdienst) — kein Import noetig"
+  Ok "echtes Zertifikat (Let's Encrypt ueber den Praxura-Namensdienst) - kein Import noetig"
 } elseif ($tls -eq 'internal') {
   $crt = Join-Path $DatenOrt 'praxura-wurzelzertifikat.crt'
   $crtWsl = '/mnt/' + $crt.Substring(0, 1).ToLower() + ($crt.Substring(2) -replace '\\', '/')
@@ -457,18 +457,18 @@ if ($tlsModus -eq 'acmedns') {
     # Fingerabdruck aus der DATEI (Import-Certificate liefert bei schon vorhandenem Zertifikat ggf. nichts).
     $neuThumb = (New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 $crt).Thumbprint
     Import-Certificate -FilePath $crt -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
-    # Frueher importierte Roots GENAU dieser Box (anderer Fingerabdruck) entfernen (S-53 Nr. 5) —
+    # Frueher importierte Roots GENAU dieser Box (anderer Fingerabdruck) entfernen (S-53 Nr. 5) -
     # nur dieser Name, damit eine zweite Praxura-Box im selben Netz ihren Root behaelt.
     if ($neuThumb) {
       Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -eq "CN=Praxura Box CA $hostName" -and $_.Thumbprint -ne $neuThumb } |
         ForEach-Object { Remove-Item -Path $_.PSPath -Force; Ok "alten Praxura-Root entfernt ($($_.Thumbprint))" }
     }
-    Ok "Zertifikat in Windows als vertrauenswuerdig eingetragen ($crt — diese Datei auch auf Tablets/anderen PCs importieren)"
+    Ok "Zertifikat in Windows als vertrauenswuerdig eingetragen ($crt - diese Datei auch auf Tablets/anderen PCs importieren)"
   } else {
-    Warn 'Zertifikat noch nicht vorhanden (caddy startet evtl. noch) — Skript spaeter erneut ausfuehren.'
+    Warn 'Zertifikat noch nicht vorhanden (caddy startet evtl. noch) - Skript spaeter erneut ausfuehren.'
   }
 } else {
-  Ok "echtes Zertifikat (Let's Encrypt) — kein Import noetig"
+  Ok "echtes Zertifikat (Let's Encrypt) - kein Import noetig"
 }
 # O-163: Mirrored WSL leitet eigene LAN-IP nicht an WSL weiter -> 127.0.0.1 in hosts erforderlich.
 # Bei Neueinrichtung (anderer Name): ALLE alten '# Praxura Box'-Zeilen entfernen und genau
@@ -488,7 +488,7 @@ if ($box.Count -eq 1 -and $box[0] -eq $zeile) {
   else { Ok "hosts-Eintrag: $hostName -> 127.0.0.1 (nur fuer diesen PC)" }
 }
 
-# ── 10 Energie ───────────────────────────────────────────────────────────────
+# -- 10 Energie ---------------------------------------------------------------
 Log '[10/11] Energieoptionen'
 Log '  Schlaeft oder ruht der PC, ist die Box fuer alle anderen Geraete weg.'
 if (Frage 'Am Netzteil Standby + Ruhezustand ausschalten und "Deckel zuklappen = nichts tun"?' $true) {
@@ -498,20 +498,20 @@ if (Frage 'Am Netzteil Standby + Ruhezustand ausschalten und "Deckel zuklappen =
   powercfg /setactive SCHEME_CURRENT | Out-Null
   Ok 'Energie: am Netzteil kein Standby/Ruhezustand, Deckel zu = nichts tun'
 } else {
-  Warn 'Energieoptionen unveraendert — die Box ist nur erreichbar, solange der PC wach ist.'
+  Warn 'Energieoptionen unveraendert - die Box ist nur erreichbar, solange der PC wach ist.'
 }
 if ((Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)) {
   Warn 'Laptop erkannt: am Akku greifen die Windows-Energiesparregeln trotzdem. Fuer den Praxisbetrieb dauerhaft am Netzteil lassen.'
 }
 
-# ── 11 Sicherungsziel ────────────────────────────────────────────────────────
+# -- 11 Sicherungsziel --------------------------------------------------------
 Log '[11/11] Sicherungsziel'
 $ziel = BoxEnv 'BACKUP_ZIEL'
 if ($ziel) {
   Ok "Sicherungen gehen nach $ziel"
 } else {
-  Warn 'Sicherungen liegen auf DIESEM PC — bei einem Plattendefekt sind Daten und Sicherung zugleich weg.'
-  Log  '  Externe USB-Platte (z. B. Laufwerk E:) dauerhaft einbinden — in der Linux-Umgebung:'
+  Warn 'Sicherungen liegen auf DIESEM PC - bei einem Plattendefekt sind Daten und Sicherung zugleich weg.'
+  Log  '  Externe USB-Platte (z. B. Laufwerk E:) dauerhaft einbinden - in der Linux-Umgebung:'
   Log  "    wsl -d $Distro -- bash -c ""mkdir -p /mnt/praxura-sicherung && echo 'E: /mnt/praxura-sicherung drvfs defaults,nofail 0 0' >> /etc/fstab && mount -a"""
   Log  "    dann in $BoxPfad/.env: BACKUP_ZIEL=/mnt/praxura-sicherung/praxura  und einmal:"
   Log  "    wsl -d $Distro -- bash -c 'mkdir -p /mnt/praxura-sicherung/praxura && touch /mnt/praxura-sicherung/praxura/.praxura-backup-ziel'"
@@ -519,12 +519,12 @@ if ($ziel) {
   Log  '  Empfehlung: die Sicherungsplatte mit BitLocker verschluesseln.'
 }
 
-# ── Ende ─────────────────────────────────────────────────────────────────────
+# -- Ende ---------------------------------------------------------------------
 # Adapter MIT Standard-Gateway = echtes Praxisnetz. Ohne diesen Filter kam beim
 # Test (02.10.2026) eine Hyper-V-Adresse (vEthernet, 192.168.176.1) heraus.
 $lanIp = (Get-NetIPConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq 'Up' } | Select-Object -First 1).IPv4Address.IPAddress
 Log ''
-Log '  ════════════════════════════════════════════════════════════════'
+Log '  ================================================================'
 Log "  Fertig. Auf diesem PC im Browser:  $siteUrl/login.html"
 if ($lanIp) {
   Log "  Andere Geraete (Tablet, zweiter PC) brauchen die Adresse $hostName -> $lanIp"
@@ -532,7 +532,7 @@ if ($lanIp) {
   Log "   Heimnetz > Netzwerk > Netzwerkeinstellungen > DNS-Rebind-Schutz: $hostName)"
   Log '  und das Wurzelzertifikat (siehe Schritt 9). Dem PC im Router eine feste IP geben.'
 }
-Log '  ════════════════════════════════════════════════════════════════'
+Log '  ================================================================'
 Log "  Protokoll: $LogDatei"
 
 # hosts-Eintrag (Schritt 9) ist dann schon gesetzt, deshalb erst am Ende.
@@ -553,13 +553,13 @@ if ($installiertJetzt) {
       Start-Sleep -Seconds 5
     }
     if (-not $bereit) {
-      Warn 'Die Seite ist evtl. noch nicht bereit — in 1-2 Minuten im Browser neu laden (F5).'
+      Warn 'Die Seite ist evtl. noch nicht bereit - in 1-2 Minuten im Browser neu laden (F5).'
     }
     Log '  Die Einrichtung oeffnet sich jetzt im Browser.'
     try {
       Start-Process "$siteUrl/setup.html#$jeton"
     } catch {
-      Warn "Browser liess sich nicht oeffnen — Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+      Warn "Browser liess sich nicht oeffnen - Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
     }
   }
 }
