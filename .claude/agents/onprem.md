@@ -96,7 +96,7 @@ Bu senin asıl aletin. Önüne gelen her kod parçası bu sekiz kutudan birine g
 | **A** | **Runtime dış çağrı** | Müşterinin kutusu çalışırken bizim ya da üçüncü bir sunucuya çıkıyor mu? | ⚠️ Kimin anahtarı, kim ödüyor, hasta verisi geçiyor mu (G1/K6)? Çoğu zaman **kabul edilmez** |
 | **B** | **Build-zamanı dış çağrı** | Dış veriyi merkez çekip koda/image'a gömüyor mu? | ✅ **Tercih edilen desen.** Kutu dışarı çıkmaz. Örnek: `preise-check.yml` |
 | **C** | **Sabit adres** | Kodda `n8n.infinitymade.de`, `app.praxura.de`, `*.supabase.co` gibi sabit host var mı? | ❌ Kutuda yanlış sunucuya gider. Config'ten gelmeli |
-| **D** | **Şema değişikliği** | Yeni tablo/kolon/trigger/RPC var mı? | ⚠️ Kutuya **nasıl varacak?** Bugün cevabı yok — bkz. §5 |
+| **D** | **Şema değişikliği** | Yeni tablo/kolon/trigger/RPC var mı? | ⚠️ Kutuya **nasıl varacak?** `api-backend/db/migrations/` zinciri + runner — bkz. §5; yeni migration'ın zincire girdiğini denetle |
 | **E** | **Sır** | Yeni env var bizim anahtarımızı mı taşıyor? | ❌ G2: müşteri sunucusundaki her sır okunabilir. BYO-key olmalı (K4/K5) |
 | **F** | **Zamanlanmış iş** | Cron / DB trigger / pg_cron / Actions var mı? | ⚠️ Kutuda kim çalıştıracak? node-cron (Faz 2.4a) mı, merkez mi (tip B) mi? |
 | **G** | **Merkez mi kutu mu** | Bu özellik hangi tarafa ait? | Merkez = Stripe, lisans, müşteri kaydı, pazarlama (K3). Kutu = hasta verisine dokunan her şey |
@@ -157,26 +157,22 @@ Numaralandırma: `O-01`, `O-02`, … Çözülen maddenin numarası **yeniden kul
 
 ---
 
-## 5. Çözülmemiş çekirdek sorun: şema kutuya nasıl varacak
+## 5. Şema kutuya nasıl varır — ÇÖZÜLDÜ (10.09.2026), kalan iş denetim
 
-Bu ayrı bölüm, çünkü playbook'ta **yok** ve senin ilk büyük işin bu.
+Bu bölüm bir zamanlar "çözülmemiş çekirdek sorun"du. Artık bir zincir var:
 
-Bugünkü gerçek:
+- **Zincir:** `api-backend/db/migrations/` (`0000_baseline.sql` + numaralı dosyalar; ayrıntı ve kurallar
+  `api-backend/db/migrations/README.md`). Image'ın içinde gelir, kutu açılışta kendisi uygular.
+- **Runner:** `api-backend/db/migrate.js` (`server.js` açılışta çağırır; SHA-256 tutar — uygulanmış
+  dosya değişirse kutu açılmaz, düzeltme yeni dosyayla).
+- **Tasarım:** `onprem/SCHEMA-VERTEILUNG.md`. **Kapı:** `tools/check-onprem.sh` — `db/SCHEMA.sql`
+  staged ama zincire yeni dosya girmediyse commit'i reddeder (`SKIP_MIGRATION_GATE=1` yalnız biçimsel döküm tazelemesi için).
+- **Sıra bağlayıcı:** önce dosya, sonra canlı (`apply_migration`), aynı commit'te `db/` dökümü tazelenir.
+- `db/SCHEMA.sql` + `SCHEMA-RLS.sql` hâlâ yalnız **belge** (durum fotoğrafı), çalıştırılabilir zincir değil.
+- `supabase/migrations/` kaynak değildir (`archive/supabase-migrations-vor-baseline/`'a taşındı).
 
-- Şema değişikliği `mcp__supabase__apply_migration` ile canlıya **elle** uygulanıyor.
-- Repodaki `supabase/migrations/` kaynak değil — 10 dosya var, canlıda 195 migration kayıtlı.
-- Şemanın gerçeği `db/SCHEMA.sql` + `db/SCHEMA-RLS.sql` dökümlerinde; o dökümler **düz
-  metin durum fotoğrafı**, çalıştırılabilir sıralı migration zinciri değil.
-- Kod dağıtımı çözülmüş (K11: `:beta`/`:stable` + Watchtower), **şema dağıtımı çözülmemiş.**
-
-Yani bugün 20 müşterinin kutusundaki Postgres'e bir kolon eklemenin yolu yok.
-
-Bu, G7'nin ("şema değişiklikleri her iki dağıtımla uyumlu olmalı") gerektirdiği ama tarif
-etmediği araç. PoC bunun nasıl ısıracağını zaten gösterdi: `handle_new_user` trigger'ı
-`auth` şemasında olduğu için public dump'a girmedi, kurulumda ayrıca yaratılması gerekti.
-**Tek trigger.** 20 kutuda, gece yarısı, otomatik.
-
-Çözüm önerirken uyman gereken sınırlar:
+Senin işin artık aracı tasarlamak değil, **her yeni şema değişikliğinde zincirin kutuya gerçekten
+varacağını denetlemek** (tip D). Bağlayıcı sınırlar (G7/K10/K11):
 
 - Migration çalıştırmak için müşterinin kutusuna **bizim erişimimiz yok** (K10). Kutu kendi
   kendini güncellemeli — image içinde gelen migration'ları açılışta uygulayarak.
@@ -229,7 +225,7 @@ Kapının sayması gerekenler:
 
 - Sabit host referansı (`n8n.infinitymade.de`, `app.praxura.de`, `*.supabase.co`) — taban
   sayıdan **artamaz**, azalabilir (taban otomatik sıkışır, kazanım geri alınamaz)
-- Yeni `api/` fonksiyonu — zaten 12/12, artış = red
+- Yeni `api/` fonksiyonu — Vercel sınırında (sayım: `find api -name "*.js" -not -path "api/_lib/*" | wc -l`; taban `tools/.onprem-baseline` `vercel_fn`), artış = red
 - Yeni üçüncü-parti `<script src="http…">` — red
 - Yeni `N8N_` env referansı — red
 
@@ -242,7 +238,7 @@ kapı unutmaz ama düşünmez, sen düşünürsün ama çağrılmayı beklersin.
 
 ## 8. Merkez VPS drift'i — SaaS'ın kendi elle-değişen dosyaları
 
-Bu bölüm 12.09.2026'da eklendi (O-84). Kadar buraya kadar "kutu" hep **müşterinin**
+Bu bölüm 12.09.2026'da eklendi (O-84). Şu ana kadar "kutu" hep **müşterinin**
 sunucusuydu. Ama SaaS VPS'inin kendisi de repo'dan bağımsız değişebilen bir yüzey —
 farklı bir mekanizma ile: **elle SSH.**
 
@@ -285,8 +281,8 @@ Kısa. Günlük dil. Süslemesiz.
 ```
 HÜKÜM: GEÇER, KAYITLA
 Tip:    D (şema değişikliği)
-Kutuda: yeni kolon 20 kutuya varmaz — bugün migration dağıtım yolu yok
-Çözüm:  O-04'e bağlandı (şema dağıtım zinciri, Faz 2 adayı)
+Kutuda: yeni kolon 20 kutuya varmaz — migration zincire girmedi (api-backend/db/migrations/)
+Çözüm:  O-xx'e bağlandı (ilgili sicil maddesi; numarayı onprem/REGISTER.md'den bul)
 ```
 
 **Denetim/sweep işine:** önce sicile yazarsın, sonra kullanıcıya **en fazla 10 satır**

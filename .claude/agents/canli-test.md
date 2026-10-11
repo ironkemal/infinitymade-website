@@ -44,7 +44,7 @@ curl -s -o /dev/null -w "%{http_code}" https://n8n.infinitymade.de/api/krankenka
 > (19.09.2026'da tam olarak bu yaşandı: calendar-api tamamen çökükken bile `/health` 200
 > döndü). Sebep: Traefik yalnız `n8n.infinitymade.de/api/*`'i calendar-api'ye yönlendiriyor,
 > kök yol (`/health` dahil) **n8n'in kendisine** düşüyor — dönen 200, calendar-api'nin route'u
-> [server.js:284](api-backend/server.js#L284) değil, **n8n'in SPA HTML'i**
+> `/health` route'u (`api-backend/server.js`, `app.get('/health'`; `/health/ready` de var) değil, **n8n'in SPA HTML'i**
 > (`<title>n8n.io - Workflow Automation</title>`). `/api/health` de ayrı bir tuzak: böyle bir
 > uç yok, sağlıklı sistemde bile 404 döner (2026-08-11).
 >
@@ -124,25 +124,26 @@ Her komut şunları döndürür: sayfa URL'i, başlık, **konsol hata/uyarı say
 
 ### Panel gezintisi
 
-Dashboard tek sayfa; paneller arası geçiş global fonksiyonla ([dashboard.js:21704](dashboard.js#L21704)):
+Dashboard tek sayfa; paneller arası geçiş global fonksiyonla (`window.switchPanel`, `dashboard.js` içinde `async function switchPanel`):
 
 ```bash
 playwright-cli -s=praxura eval "() => window.switchPanel('podologie-billing')"
 ```
 
-Geçerli panel kimlikleri (2026-08-11 canlı sidebar, 23 modül):
+Geçerli panel kimlikleri (`nav-registry.js`, 27 benzersiz id; güncel sayım için dosyayı grep'le):
 
 ```
 overview · ueberblick · calendar · anfragen · kunden · notizen · warteliste
 services · hours · team · verordnungen · podologie-billing · rechnungen
 fussstatus · belegliste · mahnwesen · statistik · b2b · b2c · beispielmodus
-feedback · vorlagen · settings
+feedback · vorlagen · settings · abrechnung · anamnese · doctors · fahrtenbuch
 ```
 
 ### ⛔ localhost'ta TEST ETME
 
-[server.js:41-50](api-backend/server.js#L41-L50) CORS listesinde localhost **yok**, ayrıca
-[dashboard.js:11](dashboard.js#L11) localhost'ta `http://localhost:3000/api`'ye düşer.
+`api-backend/server.js` `ALLOWED_ORIGINS` (CORS) listesinde localhost **yok**; backend adresi
+`supabase-config.js` `API_BASE`'ten (`/api/config` ile) gelir, lokal sayfadan canlı backend'e çağrı
+CORS'a takılır.
 Sonuç: her backend çağrısı "failed to fetch" verir — **sahte hata üretirsin.**
 
 Tek istisna: hiçbir backend çağrısı içermeyen saf CSS/düzen işleri. Onlar da zaten
@@ -332,9 +333,10 @@ kullanıcı ona güvenip canlıya devam eder.
 
 ## 10. Bu ajanın hafızası — iki katman
 
-**Katman 1 — §3 gürültü tablosu (bu dosyanın içinde, gitignore'lu).** `.claude/` klasörü
-`.gitignore`'da, bu tablo Melih'e Git üzerinden gitmez ve gitmesi de gerekmiyor: içeriği
-"bu hatayı biliyoruz, tekrar rapor etme" tipi işletme detayı, kalıcı ürün bilgisi değil.
+**Katman 1 — §3 gürültü tablosu (bu dosyanın içinde; ajan dosyaları git'te izlenir ve depo PUBLIC).**
+`.claude/agents/` ve `.claude/skills/konsey/` `.gitignore` istisnasıyla git'tedir (`git ls-files .claude`):
+tablo Melih'e Git üzerinden gider. İçeriği "bu hatayı biliyoruz, tekrar rapor etme" tipi işletme
+detayı olduğundan hasta verisi, host/yol ve hesap bilgisi buraya YAZILMAZ.
 Her koşuda güncellenir, yoksa ajan her seferinde aynı hataları yeniden keşfeder ve
 raporu gürültüye boğar.
 

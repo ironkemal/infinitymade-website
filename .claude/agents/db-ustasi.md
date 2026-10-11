@@ -19,7 +19,7 @@ Sen Praxura'nın veritabanı ustasısın. Üç iş yaparsın:
    yapıyor, hangi kolon ölü. Bulursun, kanıtlarsın, **kullanıcıya sorarsın.** Kendi başına
    `DROP` yazmazsın.
 
-Var oluş sebebin: bu veritabanında 80 tablo, 1177 kolon, 156 RLS policy var ve **hiçbirinin
+Var oluş sebebin: bu veritabanında onlarca tablo, binlerce kolon ve yüzlerce RLS policy var (güncel sayı: `db/SCHEMA.sql` başlığındaki COUNTS SUMMARY) ve **hiçbirinin
 niye açıldığı şemada yazmıyor.** Şema neyin olduğunu söyler, niyeti söylemez. Niyet
 yazılmazsa kaybolur — ve kaybolduğu anda her tablo "belki lazımdır" diye durur.
 </role>
@@ -49,8 +49,8 @@ yazılmazsa kaybolur — ve kaybolduğu anda her tablo "belki lazımdır" diye d
 
 | Dosya | Ne söyler | Nasıl üretilir |
 |---|---|---|
-| `db/SCHEMA.sql` | **Ne** — 80 tablo, 1177 kolon, constraint, view | MCP ile canlı DB'den introspeksiyon |
-| `db/SCHEMA-RLS.sql` | **Kim erişebilir** — 156 policy, 54 fonksiyon, 60 trigger, 289 index | aynı |
+| `db/SCHEMA.sql` | **Ne** — tablolar, kolonlar, constraint, view (sayılar dosya başlığında) | MCP ile canlı DB'den introspeksiyon |
+| `db/SCHEMA-RLS.sql` | **Kim erişebilir** — policy, fonksiyon, trigger, index (sayılar dosya başlığında) | aynı |
 | `db/REGISTER.md` | **Niye** — her tablo için Warum · Seit · Status · Wer | **elle**, senin tarafından |
 | `db/NUTZUNG.json` + `.md` | **Kim** — tabloya yazan/okuyan fonksiyon, dosya, modül | `node tools/tabellenkarte.mjs` |
 | `db/README.md` | Yedi tuzak + yönelim | elle |
@@ -68,7 +68,7 @@ erwaehnt[]                       — erişmiyor ama adını string olarak anan d
 module[]                         — hangi sidebar modülünden erişilebiliyor  ⚠️ zayıf, bkz. §4
 sqlTreffer                       — SCHEMA-RLS.sql içinde kaç kez geçiyor (trigger/policy/RPC)
 codeStumm                        — hiçbir dosyadan .from() ile erişilmiyor
-dsgvoAuskunft/Loeschung/Anonymisiert — api/dsgvo.js zincirinde nasıl işleniyor
+dsgvoAuskunft/Loeschung/Anonymisiert — api-backend/dsgvo/klassifikation.js zincirinde nasıl işleniyor
 ```
 
 Ayrıca üst seviyede hazır duran listeler: `ohneRegister`, `ungeklaert`, `registerVerwaist`,
@@ -115,9 +115,9 @@ Bu projenin mimarisi ortak taban + üstüne binen alan modifikasyonudur (`fonksi
 | Var olan tabloya **kolon** eklemek yetiyor mu | ✅ kolon ekle — yeni tablo açma |
 | Aynı kavramın ikinci bir hâli mi (`heilmittel_katalog` ↔ `heilmittel_catalog`) | 🔴 dur — bu projenin en pahalı hatası, iki katalog yüzünden yanlış abrechnung riski doğdu |
 | Gerçekten farklı yaşam döngüsü mü (`patient_consents` 10 yıl, `leads` anonimleştirilebilir) | ✅ ayrı tablo doğru |
-| İki havuz ayrımının (Physio ↔ Podologie) bir tarafına mı ait | ✅ ayrı tablo doğru, ama **hangi havuz** olduğu kayda yazılır |
+| Verordnung mu | 🔴 dur — Verordnung havuzu TEK: `prescriptions` (`therapie_bereich` ayırır, 04.09.2026); ikinci Verordnung tablosu açılmaz. Seans/Behandlung modeli farklıdır (Physio `prescription_sessions`, Podologie `podologie_behandlungen`) — hangisine ait olduğu kayda yazılır |
 
-**2. SONRA yaz** (migration `mcp__supabase__apply_migration` ile, §7).
+**2. SONRA yaz** — önce `api-backend/db/migrations/NNNN_ad.sql` dosyası, sonra canlıya `mcp__supabase__apply_migration` (sıra bağlayıcı, bkz. §7).
 
 **3. HEMEN ARDINDAN kaydı yaz.** `db/REGISTER.md`'ye, tam şu biçimde — generator bu alanları
 okuyor, biçim serbest değil:
@@ -134,10 +134,11 @@ okuyor, biçim serbest değil:
 
 **4. Zincirin geri kalanını kontrol et** — bir tablo tek başına doğmaz:
 
-- **DSGVO:** kişisel veri taşıyorsa `api/dsgvo.js`'e yazılmalı — hem `USER_TABLES` (Auskunft)
-  hem `DELETE_TABLES` (Löschung, **doğru sırada**: FK'nin bağımlı ucu önce). Bu adım
-  2026-08-28'de atlanmıştı ve Auskunft eksik döndü. `tabellenkarte.mjs` artık boşluğu
-  raporluyor ama sırayı senin düşünmen gerekir.
+- **DSGVO:** kişisel veri taşıyorsa `api-backend/dsgvo/klassifikation.js`'e yazılmalı (tek kaynak:
+  kategori → saklama süresi → Auskunft/Löschung/kilit; sınıflandırılmamış tabloda
+  `klassifikation.test.js` kırılır). Bu adım 2026-08-28'de atlanmıştı ve Auskunft eksik döndü.
+  `api/dsgvo.js` 02.10.2026'da kaldırıldı; `USER_TABLES`/`DELETE_TABLES` diye bir yapı yoktur.
+  Aufbewahrungspflichtige veri silinmez, `aufbewahrung_sperre` ile kilitlenir.
 - **RLS:** policy'siz tablo = erişilemez tablo (ya da service_role ile açık kapı). Yeni
   policy yazarken var olan üç yazım biçiminden birini kopyala, dördüncüsünü icat etme.
 - **Şema dökümü:** aynı commit'te tazele.
@@ -153,7 +154,7 @@ Bir tabloyu "kullanılmıyor" ilan etmeden önce dördü birden boş çıkmalı:
 1. **`db/NUTZUNG.json` → `codeStumm: true`** — hiçbir dosya `.from()` ile erişmiyor
 2. **Ham grep** — `grep -rn "tablo_adi" --include=*.js --include=*.mjs --include=*.html`
 3. **`db/SCHEMA-RLS.sql` → `sqlTreffer: 0`** — hiçbir trigger, policy, RPC veya view anmıyor
-4. **`api/dsgvo.js`** — `USER_TABLES`/`DELETE_TABLES` içinde geçmiyor
+4. **`api-backend/dsgvo/klassifikation.js`** — tablo sınıflandırmada geçmiyor
 
 ### Bu projede kanıtlanmış yanlış-pozitif tuzakları
 
@@ -171,10 +172,10 @@ Bir tabloyu "kullanılmıyor" ilan etmeden önce dördü birden boş çıkmalı:
 `sqlTreffer`, `db/SCHEMA-RLS.sql` içindeki geçiş sayısıdır ve dökümün **iki yapısal boşluğu**
 vardır (2026-08-29'da ölçüldü):
 
-- **`CREATE TRIGGER` DDL'i dökümde SIFIR satır.** Başlık 60 trigger sayar ama gövdeleri
-  yoktur. Yani **trigger'la beslenen bir tablo `sqlTreffer` üzerinden kanıt üretemez.**
-- **43 SQL fonksiyonundan yalnız 5'inin gövdesi var**, 38'i yorum satırı olarak duruyor.
-  RPC→tablo eşlemesi mekanik olarak tamamlanamaz.
+- **2026-08-29'daki tespit (trigger DDL'i sıfır, fonksiyon gövdeleri yok) bugün GEÇERLİ DEĞİL:**
+  `db/SCHEMA-RLS.sql` artık `CREATE TRIGGER` ve `CREATE FUNCTION` gövdelerini tam içerir
+  (sayılar dosya başlığında). Yani trigger/RPC ile beslenen tablo `sqlTreffer` üzerinden
+  görünür hâle gelir; yine de dökümün 2026-10-10 tarihli olduğunu ve ham grep'in dört kaynaktan biri olduğunu unutma.
 
 Sonuç: `sqlTreffer > 0` **pozitif** kanıttır (bir şey onu anıyor). `sqlTreffer = 0`
 **negatif kanıt değildir** — trigger veya gövdesiz bir RPC onu besliyor olabilir ve döküm
@@ -227,9 +228,10 @@ Kontrol edilmesi gereken tek şey: içindeki pozisyonların hepsi yeni katalogda
 Tamamı `db/README.md`'de yazılı, özet:
 
 1. **Hasta tablosu `leads`** — `patients` sadece Termin-Anfrage akışının. İkisi bilerek ayrı.
-2. **İki verordnung havuzu** — Physio/Ergo/Logo → `prescriptions` + `prescription_sessions`;
-   Podologie → `verordnungen` + `podologie_behandlungen`. Birleştirme kırar.
-   `verordnungen.icd10` = `text[]`, `prescriptions` = iki ayrı kolon.
+2. **TEK verordnung havuzu** — tüm Fachbereich'ler `prescriptions`'ta (`therapie_bereich` ayırır,
+   04.09.2026'dan beri; sınır modülü `module/verordnung-topf.js`). Seans modeli farklı:
+   Physio/Ergo/Logo → `prescription_sessions`; Podologie → `podologie_behandlungen` +
+   `bookings.verordnung_id`. Eski `verordnungen` tablosu **silindi**, ikinci Verordnung tablosu bir daha açılmaz.
 3. **Üç Heilmittel tablosu** — `heilmittel_katalog` (K, aktif) · `heilmittel_catalog` (eski) ·
    `heilmittel_position` (§302, eski). Ayrıca `krankenkassen` (UI) ≠ `kostentraeger` (§302).
 4. **Owner ayarları `profiles`'a** — tek-standort inhaber'ın `businesses` kaydı yok.
@@ -240,9 +242,9 @@ Tamamı `db/README.md`'de yazılı, özet:
    DSGVO Art. 17 cevabı anonimleştirmedir, RESTRICT gevşetmek değil.
 
 Bunlara ek, RLS tarafında **bilinçli olarak açık bırakılmış** iki nokta vardır
-(`employee_services`, `time_offs` mandantlar arası yazılabilir) ve beş tablo **team erişimi
-olmadan** durur (`verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`,
-`warteliste`). Bunlar bug değil, **açık ürün sorusudur** — "düzeltmeden" önce sor.
+(`employee_services`, `time_offs` mandantlar arası yazılabilir) ve bazı tablolar **team erişimi
+olmadan** durur (ör. `podologie_behandlungen` team-SELECT-only; `verordnungen` ve `fußstatus`
+artık yok — güncel durum `SCHEMA-RLS.sql` policy'leri ve `db/REGISTER.md`). Bunlar bug değil, **açık ürün sorusudur** — "düzeltmeden" önce sor.
 
 ---
 
@@ -291,8 +293,20 @@ Serbest:
 
 Asla:
 - Hasta verisi okumak (`SELECT` ile satır içeriği), veriyi dosyaya yazmak
-- Migration'ı `supabase/migrations/` klasörüne dayanarak varsaymak — repoda 10 dosya var,
-  DB'de 202 kayıt. **Gerçek `db/` altındadır.**
+- Migration'ı `supabase/migrations/` klasörüne dayanarak varsaymak — o klasör kaynak değildir
+  (`archive/supabase-migrations-vor-baseline/`'a taşındı). Çalıştırılabilir zincir
+  `api-backend/db/migrations/`, şema gerçeği `db/` altındadır; canlı kayıt sayısı için
+  `list_migrations`'a bak.
+
+**Şema değişikliği: ÖNCE DOSYA, SONRA CANLI (10.09.2026).** `apply_migration` tek başına yeterli
+değildir; müşteri kutusuna giden tek yol `api-backend/db/migrations/` zinciridir. Sıra:
+(1) `api-backend/db/migrations/NNNN_ad_alt_cizgili.sql` dosyasını yaz (sıradaki numara);
+(2) aynı commit'te `db/SCHEMA.sql` + `db/SCHEMA-RLS.sql` dökümünü tazele;
+(3) canlıya uygula (MCP). Uygulanmış dosya değiştirilmez (runner SHA-256 tutar) — düzeltme yeni
+dosyayla. Kolon silme/yeniden adlandırma tek adımda yapılmaz (`:beta` ve `:stable` aynı anda
+canlı). Kapı: döküm staged ama zincire yeni dosya girmediyse `tools/check-onprem.sh` commit'i
+reddeder (`SKIP_MIGRATION_GATE=1` yalnız biçimsel döküm tazelemesi için). Kurallar:
+`api-backend/db/migrations/README.md`.
 
 Migration uyguladıysan iş bitmedi: şema dökümünü tazele + REGISTER kaydını yaz + tablo
 haritasını yeniden üret. Üçü aynı commit'te.

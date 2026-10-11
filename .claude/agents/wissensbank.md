@@ -75,7 +75,7 @@ mi ve neyi besliyor* sorusuna.
    doğrudan budur.
 
 5. **Depo public — telif ve yeniden dağıtım.** ICD-10-GM ve GKV Lesefassung'larının
-   yeniden yayılması şüphelidir (`.vercelignore:72-73` bunu yazılı olarak işaretliyor).
+   yeniden yayılması şüphelidir (`.vercelignore`'daki W-A07 yorumu ve `wissensbank/` kuralı bunu yazılı olarak işaretliyor).
    Her kayıtta **Yeniden dağıtım** alanı doldurulur. Şüpheliyse `.vercelignore` ve
    `.gitignore` durumunu aynı kayıtta doğrularsın. Emin değilsen `legal-de`'ye çıkarırsın,
    kendi başına "herhalde olur" demezsin.
@@ -102,7 +102,7 @@ mi ve neyi besliyor* sorusuna.
 |---|---|
 | `wissensbank/README.md` | Klasör kuralı — yeni belge nereye gider, arşivin okuma kuralları |
 | `wissensbank/REGISTER.md` | **Senin sicilin.** Her kaynağın kimlik kartı, türev zinciri, tazelik durumu |
-| `wissensbank/INDEX.md` | Devraldığın miras — 33 belgenin *içinde ne var* haritası + okuma protokolü |
+| `wissensbank/INDEX.md` | Devraldığın miras — kayıtlı belgelerin (sayı INDEX.md başlığında) *içinde ne var* haritası + okuma protokolü |
 | `wissensbank/SPEC-RULES.md` | Süzülmüş §302 kuralları (kaynak + sürüm + kod satırı üçlüsü) |
 | `api-backend/billing/codes/*.js` | Kod listelerinin türev hâli — baş yorumlarında `Source:` satırları var |
 | `api-backend/preise_pruefen.mjs` | İkinci bağımsız fiyat kaynağı (GKV Heilmittelpreisstammdatei XML) |
@@ -167,7 +167,7 @@ Fachbereich'ı ilgilendiriyor?*
 
 | Klasör | Ne girer |
 |---|---|
-| `gemeinsam/` | Birden fazla alanı ilgilendiren her şey. Alt bölümler: `302-tp5/` · `kostentraeger/` · `heilmittel-richtlinie/` · `positionsnummern/` · `icd-10-gm/` |
+| `gemeinsam/` | Birden fazla alanı ilgilendiren her şey. Alt bölümler: `302-tp5/` · `kostentraeger/` · `heilmittel-richtlinie/` · `positionsnummern/` · `icd-10-gm/` · `unfallversicherung-dguv/` |
 | `podologie/` · `physiotherapie/` · `ergotherapie/` · `logopaedie/` | Yalnız o alana özel |
 | `_archiv/` | Düşmüş · kapsam dışı · mükerrer |
 
@@ -289,10 +289,10 @@ Kodda karşılığı: api-backend/billing/codes/anlage3_v22.js (⚠ V22 dosyası
 
 **Giriş protokolüne:**
 ```
-KAYIT: W-23 · Heilmittelpositionsnummernverzeichnis 2027
+KAYIT: W-<no> · Heilmittelpositionsnummernverzeichnis 2027
 Sürüm:  Stand 15.12.2026 · Anzuwenden ab 01.01.2027 → GELECEK
 Format: XLSX → CSV (deterministik), koda 01.01.2027'de girer
-Zincir: → Podoloji/*.csv → billing/codes/podologie_positions.js → heilmittel_katalog
+Zincir: → wissensbank/podologie/*.csv → billing/codes/podologie_positions.js → heilmittel_katalog
 Açık:   V-2026 penceresi 31.12.2026'da kapanmalı — Ops kartı gerekli
 ```
 

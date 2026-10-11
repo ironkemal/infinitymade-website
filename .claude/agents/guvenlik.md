@@ -53,7 +53,7 @@ bir hasta kaydı sızdığında geri çağrılamaz.
 
 | Katman | Nerede | Sınırı ne tutuyor |
 |---|---|---|
-| **Depo** | GitHub, **PUBLIC** | `.gitignore` · `tools/check-namen.sh` · sır taraması **yok** (S-05) |
+| **Depo** | GitHub, **PUBLIC** | `.gitignore` · `tools/check-namen.sh` · `tools/check-secrets.sh` (pre-commit; S-05 behoben 02.10.2026) |
 | **Yayın yüzeyi** | `praxura.de` (Vercel) | `.vercelignore`, 27.08.2026'dan beri **klasör bazlı** |
 | **Uygulama** | `app.praxura.de` | Supabase Auth |
 | **Veri** | Supabase `njvuclullotbksskpwgk` | **RLS** — mandant sınırının kendisi |
@@ -107,12 +107,12 @@ Yeni bir şey aramadan önce bunlara bak — hepsi burada gerçekten oldu:
 
 | Sınıf | Somut örnek | Nasıl yakalanır |
 |---|---|---|
-| **`SECURITY DEFINER` + argümanla erişim** | `get_gmail_token(uuid)` — gövdede `auth.uid()` kontrolü yok, `anon`'a açık (S-01) | Gövdeyi oku: **çağıranı mı okuyor, argümanı mı?** Argümanı okuyan her DEFINER fonksiyon şüphelidir |
-| **Yetki rückfall'ı** | `delete_expired_accounts()` — 11.06.2026'da revoke edilmiş, bugün yine açık (S-03/S-04) | `DROP`+`CREATE` yetkileri `PUBLIC`'e sıfırlar. Migration sonrası yetki tablosunu karşılaştır |
+| **`SECURITY DEFINER` + argümanla erişim** | `get_gmail_token(uuid)` — gövdede `auth.uid()` kontrolü yok, `anon`'a açık (S-01, behoben 11.09.2026) | Gövdeyi oku: **çağıranı mı okuyor, argümanı mı?** Argümanı okuyan her DEFINER fonksiyon şüphelidir |
+| **Yetki rückfall'ı** | `delete_expired_accounts()` — 11.06.2026'da revoke edilmiş, sonra yeniden açılmıştı (S-03 behoben 17.09.2026, Migration 0024; Rückfall-Klasse S-04 bleibt) | `DROP`+`CREATE` yetkileri `PUBLIC`'e sıfırlar. Migration sonrası yetki tablosunu karşılaştır |
 | **Yayın yüzeyi kayması** | `funktionen/INDEX.json` canlıda HTTP 200 (27.08.2026) | Yeni klasör → `.vercelignore` kararı **aynı commit'te** |
-| **Sır sızıntısı** | Fal AI anahtarı + test şifresi public repoda (05.08.2026) | Kapı yok (S-05) — bugün elle |
-| **Mandant sınırı** | `employee_services`, `time_offs` — `auth.role()='authenticated'` ile mandantlar arası yazma (S-07) | Policy metnini oku: **owner_id'ye mi bakıyor, sadece giriş yapmış mı diye mi?** |
-| **Silme zincirinin sessiz eksiği** | DSGVO Auskunft 28.08.2026'da eksik döndü | Yeni tablo → `api/dsgvo.js` |
+| **Sır sızıntısı** | Fal AI anahtarı + test şifresi public repoda (05.08.2026) | Kapı: `tools/check-secrets.sh` (S-05 behoben 02.10.2026, `6141be8`) |
+| **Mandant sınırı** | `employee_services`, `time_offs` — `auth.role()='authenticated'` ile mandantlar arası yazma (S-07, behoben 02.10.2026, Migration 0054) | Policy metnini oku: **owner_id'ye mi bakıyor, sadece giriş yapmış mı diye mi?** |
+| **Silme zincirinin sessiz eksiği** | DSGVO Auskunft 28.08.2026'da eksik döndü | Yeni tablo → `api-backend/dsgvo/klassifikation.js` |
 
 ### Bilinen yanlış-pozitifler — bunları bulgu diye getirme
 
@@ -142,7 +142,7 @@ Bulguları **riske göre** sırala, sayıya göre değil. On orta bulgu bir krit
 **Kullanıcıya sunum:** dosya adıyla değil **sonucuyla**.
 
 ```
-KRİTİK — Gmail token'ı dışarıdan okunabiliyor
+KRİTİK — Gmail token'ı dışarıdan okunabiliyor   (ÖRNEK, tarihsel: S-01, 11.09.2026'da kapandı)
 
 Ne: get_gmail_token(uuid) SECURITY DEFINER, gövdede auth.uid() kontrolü yok,
     anon'a EXECUTE açık. Supabase public şema fonksiyonlarını /rest/v1/rpc altında yayınlar.

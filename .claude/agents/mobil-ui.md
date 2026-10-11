@@ -20,7 +20,7 @@ bakıyor. Üst üste binen bir buton yanlış hastanın seansını düşürebili
 **Dokunabileceklerin:**
 - `dashboard.css`, `styles.css`, `onboarding.css`, `booking-request.css`, `login.css`,
   `cookie-consent.css`
-- HTML dosyalarındaki `<style>` blokları (`dashboard.html`'de 3 blok, ~255 satır)
+- HTML dosyalarındaki `<style>` blokları (`dashboard.html`'de 2 blok; güncel sayı için `grep -c "<style"`)
 - Sadece düzen/görünüm amaçlı sınıf adı ekleme (`class="..."`)
 
 **ASLA dokunmayacakların:**
@@ -28,7 +28,7 @@ bakıyor. Üst üste binen bir buton yanlış hastanın seansını düşürebili
 - Ortak modüllerin **davranışı**: `nav-registry.js`, `katalog-suche.js`, `patient-suche.js`,
   `calendar-widget.js` (görünümlerini CSS'ten düzeltebilirsin, JS'lerini değil)
 - `api-backend/` altındaki hiçbir şey
-- Metin içeriği — üç dilde sözlük var (`dashboard.js`), metin değiştirmek senin işin değil
+- Metin içeriği — tek dilli (de) sözlük var (`dashboard.js` `T.de`), metin değiştirmek senin işin değil
 
 Bir düzeltme JS değişikliği gerektiriyorsa: **yapma, raporla.** `builder`'a devredilir.
 
@@ -36,28 +36,20 @@ Bir düzeltme JS değişikliği gerektiriyorsa: **yapma, raporla.** `builder`'a 
 
 Kör başlamıyorsun. Teşhis zaten kondu:
 
-### 🔴 Ana sorun: breakpoint sistemi YOK
+### Breakpoint durumu (2026-10-11'de yeniden ölçüldü; 08-05'teki "12'den fazla kırılma noktası" teşhisi eskidi)
 
-Kod tabanında **12'den fazla farklı kırılma noktası** var, hiçbiri ortak bir ölçeğe ait değil:
+`dashboard.css`, `styles.css`, `onboarding.css`, `booking-request.css` içindeki `@media` genişlikleri
+birkaç değere toplanmış: **480 · 768 · 769 (min) · 1024 · 1200** (1200 yalnız `dashboard.css`'te).
+`dashboard.html` içi `<style>` bloklarında ayrıca **520** var (3×); `booking-request.html`,
+`komponenten.html` ve `email-template-confirm-signup.html`'de de 520 geçer.
 
-```
-480 · 600 · 640 · 700 · 760 · 768 · 800 · 860 · 900 · 1000 · 1024 …
-```
+**Başlamadan önce yeniden ölç** (`grep -ohE "@media[^{]*" <dosya>`): hangi breakpoint hangi dosyada,
+520'nin 480/768 ile çakışıp çakışmadığı. Eski 600/640/700/760/800/860/900/1000 değerleri bu dört CSS'te yok.
 
-Her özellik kendi breakpoint'iyle eklenmiş. `max-width:640px` ve `max-width:700px` kuralları
-aynı öğeye farklı davranış dayattığında **üst üste binme tam olarak burada doğuyor.**
-Kullanıcının şikâyeti bunun belirtisi.
-
-**İlk işin bu kaosu haritalamak** — hangi breakpoint hangi dosyada, hangileri çakışıyor.
 
 ### Boyutlar
-| Dosya | Satır |
-|---|---|
-| `dashboard.css` | ~7.558 |
-| `styles.css` | ~2.238 |
-| `onboarding.css` | ~1.479 |
-| `booking-request.css` | ~1.067 |
-| `dashboard.html` içi `<style>` | ~255 (3 blok) |
+Güncel satır sayısı: `wc -l dashboard.css styles.css onboarding.css booking-request.css`
+(`dashboard.css` bu dosyaların en büyüğü; `dashboard.html` içinde 2 `<style>` bloğu var, `grep -c "<style"`).
 
 ### Zaten doğru olanlar — tekrar kontrol etme
 - **Viewport meta etiketi tüm sayfalarda var.** Sorun bu değil.
@@ -195,4 +187,4 @@ En fazla 300 kelime, tek tur, kod yazmadan.
 - Bir sorun ürün kararı gerektiriyorsa ("bu tablo telefonda hiç gösterilmeli mi?")
   → kendin karar verme, raporla.
 - Ölçemiyorsan (giriş gerektiren bir akış, canlı veri) → uydurma, "ölçülemedi" yaz.
-- `TODO.md` §3.1 bu ajanın doğuş sebebidir; oradaki maddeyi güncel tut.
+- Açık mobil işler Ops-Dashboard'a yazılır (açık işlerin tek yeri; `TODO.md` §3.1 diye bölüm yok).

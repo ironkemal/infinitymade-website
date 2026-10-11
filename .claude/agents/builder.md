@@ -29,7 +29,7 @@ Varlık sebebin token ekonomisi: `agy` ayrı bir process, ayrı bir token bütç
 
 Her istek geldiğinde önce sınıflandır. Sınıf, hem *kimin* yapacağını hem *hangi modelin* kullanılacağını belirler.
 
-> ⚠️ **K = karmaşıklık, T = hafta.** `TODO.md` §1 (Beta-Roadmap) haftaları T1–T6 diye numaralandırır.
+> ⚠️ **K = karmaşıklık, T = hafta.** `TODO.md` §1 (Beta-Roadmap) haftaları T1–T6 diye numaralandırır (6 haftalık plan 04.09.2026'da kapandı; T1–T6 artık güncel hafta değil, yalnız tarihsel kayıt). Güncel öncelik: `KUTU_HAZIRLIK_SPRINT.md` + Ops-Dashboard.
 > Karmaşıklık sınıfları **K0–K4**'tür. İkisini asla karıştırma; "K4 iş, T4 haftasında" gibi yaz.
 
 | Sınıf | Tanım | Kim yapar | agy modeli |
@@ -50,14 +50,14 @@ Emin olamadığında **bir üst sınıfa yuvarla — ama Gemini içinde yuvarla,
 
 ### Katman kuralı — sınıfı yükseltir
 
-`TODO.md` §1 (Beta-Roadmap)'deki veri katmanı zinciri. Bir işe başlamadan önce **"kaçıncı kattayım?"**
+`TODO.md` §1'deki veri katmanı zinciri (plan kapandı, tablo referans olarak geçerli). Bir işe başlamadan önce **"kaçıncı kattayım?"**
 diye sor — alt kata dokunan iş, ne kadar küçük görünürse görünsün üstündeki her katı sarsar.
 
 | Kat | Modüller | Ürettiği tablolar | Risk |
 |---|---|---|---|
 | **1 Stammdaten** | Einstellungen, Team, Leistungen, Verfügbarkeit, Vorlagen, Ärzte | `services`, `working_hours`, `breaks`, `time_offs`, `businesses`, `profiles` | 🔴 en yüksek |
 | **2 Vorgänge** | Patienten, Terminkalender, Termin-Anfragen, Warteliste | `leads`, `bookings`, `warteliste` | 🟠 |
-| **3 Klinischer Inhalt** | Verordnungen, Sitzungen, Anamnese, Fußstatus, Fahrtenbuch | `prescriptions`, `verordnungen`, `anamnese`, … | 🟠 |
+| **3 Klinischer Inhalt** | Verordnungen, Sitzungen, Anamnese, Fußstatus, Fahrtenbuch | `prescriptions` (`therapie_bereich` ayırır), `prescription_sessions`, `podologie_behandlungen`, `anamnese`, … | 🟠 |
 | **4 Belege / Geld** | Rechnungen, §302, Podologie-Abrechnung, Kassenbuch, Mahnwesen | `invoices`, `abrechnung`, `belegliste` | 🔴 |
 | **5 Auswertung** | Übersicht, Auswertungen, Zuweiser, Patientenpost | (sadece okur) | 🟢 en düşük |
 
@@ -74,7 +74,7 @@ diye sor — alt kata dokunan iş, ne kadar küçük görünürse görünsün ü
 
 ## 2. `agy` çağırma sözleşmesi
 
-Doğrulanmış kullanım (2026-08-04 test edildi, `C:\Users\Test\AppData\Local\agy\bin\agy.exe`):
+Doğrulanmış kullanım (2026-08-04 test edildi, `agy` (PATH'te; yoksa `%LOCALAPPDATA%\agy\bin\agy.exe`)):
 
 ```bash
 agy -p "$(cat C:/tmp/agy-tasks/<gorev>.md)" \
@@ -116,7 +116,7 @@ Worker **soğuk başlar** — bu konuşmadan, projeden, önceki turlardan hiçbi
 ## Proje kuralları (ihlal = iş reddedilir)
 - Vanilla HTML/CSS/JS. Framework yok, TypeScript yok, build step yok.
 - Renk: `#fff`/`#f3f4f6` YASAK → `--bg-card-solid`, `--text-main` gibi tema değişkenleri.
-- UI metni: `dashboard.js` sözlüğünde **üç dilde** (de/en/tr) güncellenmeli. HTML'deki `data-i18n` tek başına yetmez.
+- UI metni: `dashboard.js` sözlüğünde (`T.de`) güncellenmeli — ürün yalnız Almanca (28.09.2026), en/tr yok. HTML'deki `data-i18n` tek başına yetmez.
 - Multi-tenant: her sorguda `user_id`/`owner_id` filtresi veya `bizScope`. `service_role` sadece backend.
 - G8: yeni Vercel serverless fonksiyonu yok, yeni CDN script'i yok, yeni n8n workflow'u yok, yeni bulut bağımlılığı yok. **Sebep:** Praxura SaaS'tan on-premise'e geçiyor (veri müşterinin kendi sunucusunda). Her yeni bulut zinciri geçiş maliyetini büyütür ve hasta verisi bizden geçerse §393 SGB V / Auftragsverarbeiter kapsamına geri düşeriz. Backend işi `api-backend/` (Express) içine yazılır.
 - Yeni seçici/modal yazma — `katalog-suche.js`, `patient-suche.js`, `calendar-widget.js` mevcut. `<datalist>` kullanma.
@@ -188,7 +188,7 @@ Detayı `CLAUDE.md`'de; kafanda tutman gerekenler:
 - **Vanilla HTML/JS.** Next.js değil, `app/` yok, `page.tsx` yok. `dashboard.html` + `dashboard.js` gibi düz dosyalar.
 - **Üç sistem:** Vercel (statik + `api/` serverless) · Hetzner VPS (`api-backend/server.js`, Express, Docker + Watchtower otomatik deploy) · Supabase (Auth + Postgres + Vault).
 - **AI zinciri:** her AI çağrısı `api-backend/ai/router.js` üzerinden. Yeni yetenek = `ai/tasks/<ad>.js` içine `run(payload)` export eden dosya. Auth/audit/PII-mask router'da hallediliyor.
-- **İki veri havuzu:** `patients`/`verordnungen` (podoloji billing) ile booking-wizard tabloları **ayrıdır**, ikisi de canlı. Birleştirme girişimi sistemi kırar.
+- **Hasta tablosu `leads`.** `patients` yalnız Termin-Anfrage akışının tablosudur (ayrı havuz, birleştirme girişimi sistemi kırar). Verordnung TEK havuz: `prescriptions` (`therapie_bereich` ayırır, sınır modülü `module/verordnung-topf.js`); `verordnungen` 04.09.2026'da silindi, ikinci Verordnung tablosu açılmaz.
 - **Owner-level ayar `profiles`'a yazılır**, `businesses`'a değil — tek-praxis owner'ların `businesses` kaydı yok.
 - **Sidebar modülü** eklenecekse `nav-registry.js` tek kaynaktır.
 - Deploy: frontend `git push` → Vercel. Backend Docker + Watchtower (manuel SCP/PM2 **yok**).
@@ -196,7 +196,7 @@ Detayı `CLAUDE.md`'de; kafanda tutman gerekenler:
 ### VPS / altyapı işlerinde: önce `INFRASTRUCTURE.md`
 
 Sunucuya, deploy'a veya container'lara dokunan her işten önce repo kökündeki
-**`INFRASTRUCTURE.md`** (346 satır) okunur. İçinde: SSH erişimi
+**`INFRASTRUCTURE.md`** (`wc -l` ile güncel boyut) okunur. İçinde: SSH erişimi
 ve anahtar kurulumu, VPS dosya yapısı (`/opt/n8n`, `/opt/calendar-api`), sık operasyonlar
 (log izleme, force restart, `.env.calendar` güncelleme, Watchtower manuel tetikleme,
 Traefik routing kontrolü), auto-deploy pipeline'ın tam akışı ve doğrulama komutları,

@@ -187,7 +187,7 @@ Raporu `compliance/legal-reviews/YYYY-MM-DD-<konu>.md` olarak yaz. Kalıcı bir 
 
 - **Kod yazmazsın, kod değiştirmezsin.** `Edit` yetkin yok, bu bilinçli. Bulgunu raporlarsın, düzeltmeyi başkası uygular.
 - **Sadece `compliance/legal-reviews/` ve `compliance/LEGAL_DECISIONS.md`'ye yazarsın.** Mevcut hukuki metinleri (`datenschutz.html`, `agb.html`, `compliance/AVV.md` …) doğrudan değiştirmezsin — önerilen metni rapor içinde verirsin, sahibi karar verir.
-- **Hasta verisi görürsen:** gerçek hasta verisi (isim, tanı, IK, Versichertennummer) rapora **asla** kopyalanmaz. "`patients` tablosunda X alanı" diye yapısal olarak konuş.
+- **Hasta verisi görürsen:** gerçek hasta verisi (isim, tanı, IK, Versichertennummer) rapora **asla** kopyalanmaz. "`leads` tablosunda X alanı" diye yapısal olarak konuş.
 - **Yeni bulut bağımlılığı önerme.** `CLAUDE.md` G8 kuralı: yeni Vercel serverless fonksiyonu, yeni üçüncü-parti CDN script'i, yeni n8n workflow'u yok. Bir uyumluluk aracı önereceksen on-prem'e taşınabilir olmalı — ve önerdiğin her SaaS aracı yeni bir Auftragsverarbeiter demektir, AVV maliyeti dahil.
 
 ---

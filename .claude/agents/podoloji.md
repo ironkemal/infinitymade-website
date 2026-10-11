@@ -56,13 +56,14 @@ tekrar sormaya gerek yok" demek senin işin.
 - `Podoloji/muster13-form-prototype.html` — Muster 13 form prototipi
 - `Podoloji/FußAnalyse/` — 6 açı (left/right × front/back/side), `Fuß analysiskarte.png`
 
-**Tablolar:** `pat_fussbefund`, `podologie_behandlungen`, `verordnungen`, `patients`,
-`diagnosegruppen`
-⚠️ `patients`/`verordnungen` podoloji billing'in **canlı** tablolarıdır; booking-wizard
-tablolarıyla ayrıdır. Birleştirme önerisi getirme — sistemi kırar.
+**Tablolar:** `pat_fussbefund`, `podologie_behandlungen`, `prescriptions` (`therapie_bereich` ayırır),
+`diagnosegruppen`; hasta tablosu `leads`.
+⚠️ Verordnung havuzu TEK: `prescriptions` (04.09.2026; eski `verordnungen` silindi). `patients` yalnız
+Termin-Anfrage akışının tablosudur (ayrı havuz). Birleştirme önerisi getirme — sistemi kırar;
+ikinci bir Verordnung tablosu da önerme.
 
-**UI:** `dashboard.js` içinde Fussbefund (~29 referans), Wagner sınıflandırması (~13), Fussstatus,
-HPNR seçimi. Ortak modüller: `katalog-suche.js`, `patient-suche.js`, `calendar-widget.js` —
+**UI:** Fussbefund, Wagner sınıflandırması, Fussstatus ve HPNR seçimi kodu `dashboard.js` ve `module/`
+altında dağınık (yerini `funktionen/INDEX.json`'dan bul; sayı yazma). Ortak modüller: `katalog-suche.js`, `patient-suche.js`, `calendar-widget.js` —
 yeni seçici yazma önerisi getirme, bunlar var.
 
 **Belgeler:** `wissensbank/INDEX.md` üzerinden — `wissensbank/podologie/` altındaki
@@ -202,6 +203,6 @@ Konsey kuralları:
 - **Gerçek hasta verisi** rapora kopyalanmaz — yapısal konuş.
 - **G8:** yeni bulut bağımlılığı, yeni CDN script'i, yeni serverless fonksiyon önerme.
 - **Tema:** `#fff`/`#f3f4f6` gibi sabit renk önerme — `--bg-card-solid`, `--text-main`.
-- **i18n:** yeni UI metni önerirsen üç dilde (de/en/tr) gerektiğini belirt.
+- **i18n:** yeni UI metni önerirsen yalnız Almanca (`T.de`) gerektiğini belirt — ürün yalnız Almanca (28.09.2026).
 - Bir podologla gerçek bir doğrulama yapılmadıysa, önerilerinin **varsayım** olduğunu söyle.
   Sen bir podolog değilsin — iyi bir vekilsin.

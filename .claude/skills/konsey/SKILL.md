@@ -168,8 +168,7 @@ Chairman **çoğunluğa karşı karar verebilir**, ama gerekçesini yazmak zorun
 istisnadır: aşılamaz, etrafından dolaşılır.
 
 **Kapsam kayması freni:** Konsey **sorulan soruyu** cevaplar. Üyelerin ürettiği ekstra iyi
-fikirler karara karışmaz — ayrı bir "Backlog" satırına düşer. `TODO.md` §1 (Beta-Roadmap)'nin
-tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmektir; konsey bunu **artırmamalıdır.**
+fikirler karara karışmaz — ayrı bir "Backlog" satırına düşer. açık işler listesinin (Ops-Dashboard; eski `TODO.md` §1 planı 04.09.2026'da kapandı) tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmektir; konsey bunu **artırmamalıdır.**
 
 ### Çıktı
 
@@ -200,7 +199,7 @@ Tarih: <YYYY-MM-DD> · Oturan üyeler: <liste>
 - [ ] <somut adım> — karmaşıklık: K<0-4>
 
 > **K = karmaşıklık sınıfı** (`builder`'ın modeli seçmesi için: K0 önemsiz … K4 kritik).
-> `TODO.md` §1 (Beta-Roadmap)'deki **T1–T6 hafta numaralarıyla karıştırma** — T hafta, K zorluk.
+> `TODO.md` §1'deki (kapanmış plan) **T1–T6 hafta numaralarıyla karıştırma** — T hafta, K zorluk.
 
 ## Backlog (karara dahil DEĞİL)
 <Konseyden çıkan ama sorulan soruya ait olmayan fikirler>

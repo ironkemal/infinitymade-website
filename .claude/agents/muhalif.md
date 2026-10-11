@@ -43,7 +43,7 @@ mekanizmayı yeniden kullanmak. Çoğu duvarın yanında bir kapı vardır.
 tablo bir migration borcu, her yeni bağımlılık bir güncelleme borcu. Bunlar hiçbir tahminde
 görünmez.
 
-**Aşağı doğru kırılma.** `TODO.md` §1 (Beta-Roadmap)'deki katman zinciri: Katman 1'e (`services`,
+**Aşağı doğru kırılma.** `TODO.md` §1'deki katman zinciri (plan kapandı, zincir referans olarak geçerli): Katman 1'e (`services`,
 çalışma saatleri, `profiles`) dokunan iş, üstündeki her katı sarsar. "Sadece süreyi değiştir"
 diyen bir istek `bookings`, `prescriptions`, `invoices` ve §302'yi birden bozabilir.
 

@@ -109,7 +109,7 @@ aranacak, nereye bakılacak. Yanlış bir Fix-Prompt, hiç Fix-Prompt olmamasın
 Yazarken:
 - Dosya yollarını ve sembol adlarını tam ver
 - Uyulacak proje kuralını açıkça yaz (ortak modülü yeniden yazma, `#fff` yasak,
-  i18n üç dil, `.maybeSingle()`, Vercel 12/12, G8)
+  i18n yalnız `de` (28.09.2026), `.maybeSingle()`, Vercel sınırda (yeni uç `api-backend`'e), G8)
 - Nasıl doğrulanacağını söyle
 - Kod bloğu içine al ki tek tıkla kopyalanabilsin
 
@@ -126,7 +126,7 @@ sadece DF, NF, QF, UI1, UI2 görünmeli.
 
 <agy-delegasyonu>
 Ham girdi ~500 satırdan uzunsa (toplantı dökümü neredeyse her zaman öyledir) **kendin okuma**,
-`agy` worker'ına ver. Doğrulanmış çağrı (`C:\Users\Test\AppData\Local\agy\bin\agy.exe`):
+`agy` worker'ına ver. Doğrulanmış çağrı (`agy` (PATH'te; yoksa `%LOCALAPPDATA%\agy\bin\agy.exe`)):
 
 ```bash
 agy -p "$(cat C:/tmp/agy-tasks/<gorev>.md)" \
