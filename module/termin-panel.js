@@ -371,6 +371,7 @@ const SITZUNGEN_ARBEIT_AUF = ['bkRxSessionsBadge', 'bkRxSitzungTabs',
 export function zeichneSitzungenLeer(art, { t, aufBehandlungen } = {}) {
   const panel = el('bkRxSessionsPanel');
   if (panel) panel.hidden = false;
+  setzeSitzungenKopf(null);
   for (const id of SITZUNGEN_ARBEIT_ZU) { const n = el(id); if (n) n.hidden = true; }
 
   const text = el('bkRxSessionsLeerText');
@@ -397,7 +398,24 @@ export function zeichneSitzungenLeer(art, { t, aufBehandlungen } = {}) {
 }
 
 /** Zurück in den Arbeitszustand — der Leerkasten geht zu, die Listen auf. */
+/**
+ * Überschrift und Sperrhinweis des Blocks. `geschlossen` = Grund aus
+ * `rxGeschlossen()` (abgerechnet/storniert/…) oder null. Bei geschlossener
+ * Verordnung hieße „Aktive Verordnung" das Gegenteil des Abzeichens daneben —
+ * gelesen wird zuerst die Überschrift (podoloji, PE-007 Nachtrag 11.10.2026).
+ */
+export function setzeSitzungenKopf(geschlossen) {
+  const titel = el('bkRxSessionsTitel');
+  if (titel) titel.textContent = geschlossen ? 'Verordnung' : 'Aktive Verordnung';
+  const hinweis = el('bkRxGeschlossenHinweis');
+  if (hinweis) {
+    hinweis.hidden = !geschlossen;
+    hinweis.textContent = geschlossen ? `Verordnung ${geschlossen} — keine weiteren Termine planbar.` : '';
+  }
+}
+
 export function zeigeSitzungenArbeit() {
+  setzeSitzungenKopf(null);
   const kasten = el('bkRxSessionsLeer');
   if (kasten) kasten.hidden = true;
   const btn = el('bkRxSessionsLeerBtn');

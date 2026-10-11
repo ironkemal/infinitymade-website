@@ -48,7 +48,7 @@
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
-import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261010zc';
+import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261011c';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
 import { rxGeschlossen } from './termin-verordnung.js?v=20261010zf';
@@ -496,6 +496,7 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   // weder Serie noch Ziehen anbieten (canli-test 11.10.2026; gkv-302-Urteil PE-007:
   // abgerechnet/storniert = keine weitere Behandlung). `bereit` bleibt planbar.
   const geschlossen = rxGeschlossen(vord);
+  setzeSitzungenKopf(geschlossen);
 
   const badge = document.getElementById('bkRxSessionsBadge');
   const offene = geschlossen ? [] : plan.einheiten.filter(e => !e.termin && !e.erbracht);
@@ -535,7 +536,9 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
              + 'border:1px solid var(--border);border-radius:8px;font-size:12px;';
 
   if (geschlossen) {
-    unvList.innerHTML = `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Verordnung ${esc(geschlossen)} — keine weiteren Termine planbar.</span>`;
+    // Der Grund steht sichtbar über den Listen (`setzeSitzungenKopf`); die Liste
+    // „Unvergebene" ist bei 0 offenen nie die gezeigte Seite.
+    unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine offen</span>';
   } else if (plan.offen === null) {
     // `anzahl_einheiten` fehlt: keine Restmenge behaupten (terminZaehler, Regel 1).
     unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">'
@@ -580,7 +583,12 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   const leistBtn = document.getElementById('bkRxLeistungenBtn');
   if (leistBtn) {
     leistBtn.hidden = !patientId || typeof aufBehandlungen !== 'function';
-    leistBtn.onclick = aufBehandlungen ? () => aufBehandlungen(patientId) : null;
+    // Die gezeigte Verordnung öffnen, nicht „die neueste laufende" des Patienten:
+    // bei einem Termin an einer abgerechneten VO landete die Behandlung sonst
+    // still auf einer anderen VO (podoloji, PE-007 Nachtrag 11.10.2026). Ist sie
+    // geschlossen, zeigt die Tagesbehandlung dort die PE-007-Sperre.
+    const datum = booking?.start_time ? (alsBerlinDatum(booking.start_time) || undefined) : undefined;
+    leistBtn.onclick = aufBehandlungen ? () => aufBehandlungen(patientId, { vordId: vord.id, datum }) : null;
   }
 
   panel.hidden = false;

@@ -97,3 +97,9 @@ test('Rückfrage 78040: nur bei 78040 UND bestätigt fehlender Anamnese; Texte l
   assert.equal(ANAMNESE_78040_FRAGE.confirmText, 'Anamnese erhoben — speichern');
   assert.equal(ANAMNESE_78040_FRAGE.cancelText, 'Zurück');
 });
+
+test('frageFolgetermin: nur bei laufender Verordnung (PE-007 Nachtrag)', () => {
+  assert.equal(frageFolgetermin({ alleVerbraucht: false, abrechnungStatus: null }), true);
+  assert.equal(frageFolgetermin({ alleVerbraucht: false, abrechnungStatus: 'bereit' }), false);
+  assert.equal(frageFolgetermin({ alleVerbraucht: false, abrechnungStatus: 'abgerechnet' }), false);
+});

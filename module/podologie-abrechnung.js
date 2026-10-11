@@ -108,7 +108,7 @@ import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fr
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
-  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001r';
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261011c';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
 // Konsey S0 2a/2b (30.09.2026): Wagner-Rozet (salt-okunur) + Therapiezeit bei c) Komplexbehandlung.
@@ -1255,7 +1255,9 @@ async function loadPodologieBilling() {
     const fahrtOffen = await zeigeFahrtHinweis();
     // Folgetermin-Frage (Konsey S0, 1b). Hausbesuch: ERST die Fahrt beenden, dann fragen —
     // die Frage wartet dann auf `onFertig` in fahrtBeendenKlick.
-    if (!frageFolgetermin({ alleVerbraucht })) return;
+    // Frisch gelesener Status von oben; ohne ihn der Stand der Anzeige (podologischer Wortschatz).
+    const abrStatus = frischRx ? frischRx.abrechnung_status : (vord?.status && vord.status !== 'aktiv' ? vord.status : null);
+    if (!frageFolgetermin({ alleVerbraucht, abrechnungStatus: abrStatus })) return;
     if (fahrtOffen) _podState.folgeOffen = { vord, datum, bookingId: bookingIdVorLaden };
     else await fragFolgetermin({ vord, datum, bookingId: bookingIdVorLaden });
   });
