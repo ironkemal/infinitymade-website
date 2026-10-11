@@ -211,8 +211,8 @@ Taşımaların gerekçesi: `archive/rapor/CLAUDE_MD_TARIHCE_2026-10-11.md`.
 - **İki ayrı Docker stack, aynı `web` network'ünde:**
   - `/opt/n8n/` → Traefik (HTTPS/Let's Encrypt) + n8n
   - `/opt/calendar-api/` → `calendar-api` container + **Watchtower**
-- `calendar-api` container'ının **içinde** PM2 çalışır (`pm2-runtime`, 2 instance).
-  Host'ta PM2 **yok**.
+- `calendar-api` container'ı `node start.mjs` ile açılır (2 worker, `node:cluster`; pm2
+  08.10.2026'da çıktı, O-179). Host'ta da container'da da PM2 **yok**.
 - Traefik: `n8n.infinitymade.de/api/*` → calendar-api
 
 > ⚠️ **"Calendar API" adı yanıltıcı — artık takvim servisi değil.** İsim eskiden kaldı;
