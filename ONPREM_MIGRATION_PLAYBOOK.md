@@ -4,7 +4,7 @@
 >
 > **Hazırlayan:** Claude Fable 5, 2026-07-06 (tam bağlamla: kod envanteri + regülasyon araştırması + kullanıcıyla karar tartışması sonrası)
 > **Arka plan analizi:** `ON_PREMISE_ANALYSE.md` (regülasyon detayı), `REGULATORY_AUDIT.md` (SaaS landmine audit'i)
-> **Durum:** ⬜ BAŞLAMADI — aşağıdaki DURUM TAKİBİ bölümünü güncelleyerek ilerle.
+> **Durum:** 🟡 sürüyor — güncel durum `onprem/REGISTER.md` + `KUTU_HAZIRLIK_SPRINT.md` (aşağıdaki DURUM TAKİBİ tablosu kısmen bayat, bkz. onun altındaki ⚠️ notu).
 
 ---
 

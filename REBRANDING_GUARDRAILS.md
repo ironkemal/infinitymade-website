@@ -26,7 +26,7 @@
 
 1. **`n8n.infinitymade.de` backend URL'leri** (~15 yer: dashboard.js, booking.js, kalender.js, employee-signup.js, server.js). Bunlar CANLI API endpoint'leri. `infinitymade.de`→`praxura.de` genel replace yaparsan **tüm booking/slot/OAuth/AI çağrıları patlar.** Backend taşınmadı.
 
-2. **`storageKey: 'infinitymade-auth'`** (lib/supabase.js + sentry-init.js okur + admin izolasyonu). Origin-scoped, kullanıcı görmez. Adını değiştirirsen herkes logout olur + Sentry user attach kırılır. **BIRAK.** (admin: `sb-admin-auth` — o da kalsın.)
+2. **`storageKey: 'infinitymade-auth'`** (`lib/supabase.js` 28.08.2026'da `archive/lib-orphan/`'a taşındı; 11.10.2026 taramasında bu anahtarı kuran bir `storageKey` ataması bulunamadı, yalnız `sentry-init.js` okuyor — canlıda doğrula; sentry-init.js okur + admin izolasyonu). Origin-scoped, kullanıcı görmez. Adını değiştirirsen herkes logout olur + Sentry user attach kırılır. **BIRAK.** (admin: `sb-admin-auth` — o da kalsın.)
 
 3. ~~**E-posta adresleri:** praxura.de'de SADECE `info@` ve `support@` var…~~
    **⚠️ GEÇERSİZ — 2026-08-06'da değişti.** `@infinitymade.de` kutuları **artık yok.**
@@ -46,7 +46,7 @@
 ## 🔁 DEĞİŞTİR (ürün markası)
 
 - App sayfa başlıkları, `manifest.json`, onboarding "Willkommen bei …", dashboard ürün metinleri → **Praxura** (çoğu app-facing zaten yapıldı, commit geçmişine bak: `rebrand(product)…`).
-- `dashboard.js` i18n sözlüğü: marka stringleri **de/en/tr ÜÇÜNDE de** güncellenmeli (HTML'deki `data-i18n` JS sözlüğü tarafından ezilir).
+- `dashboard.js` i18n sözlüğü: marka stringleri sözlükte güncellenmeli (HTML'deki `data-i18n` JS sözlüğü tarafından ezilir). Ürün 28.09.2026'dan beri yalnız Almanca — yalnız `de` anahtarı.
 
 ---
 

@@ -12,7 +12,7 @@ in Bonn nur bis 14 Uhr arbeitet, kann das nicht abbilden.
 ## Der Befund ist besser als gedacht
 
 Die Liste sagte „vermutlich größerer Umbau mit Schema-Änderung". Beim Nachsehen im
-Live-Schema (`onprem/schema/live_schema_2026-07-06.sql`):
+Live-Schema (Stand 2026-07, aus `onprem/schema/live_schema_2026-07-06.sql`; heute maßgeblich: `db/SCHEMA.sql`, Tabelle `working_hours`):
 
 ```sql
 CREATE TABLE public.working_hours (
@@ -36,7 +36,7 @@ ALTER TABLE working_hours
 
 **Eine Zeile pro Person und Wochentag.** Ein zweiter Standort passt physisch nicht hinein.
 Genau darauf setzen auch die beiden Speicher-Stellen auf:
-`kalender.js:604` und `dashboard.js:10925` machen `upsert(..., { onConflict: 'user_id, day_of_week' })`.
+`kalender.js` und zwei Stellen in `dashboard.js` machen `upsert(..., { onConflict: 'user_id, day_of_week' })` (Fundstellen: `grep -n "onConflict: 'user_id" kalender.js dashboard.js`).
 
 ## Vorgeschlagenes Vorgehen
 
@@ -69,10 +69,10 @@ Buchungsweg. Diese Stellen müssen den Standort berücksichtigen:
 
 | Datei | Stelle | Was passiert dort |
 |---|---|---|
-| `api-backend/server.js` | ~593 und ~603 | `getAvailableSlots` — Zeiten des Mitarbeiters, sonst die des Inhabers. **Wichtigste Stelle:** hier entstehen alle buchbaren Slots. `businessId` liegt der Funktion schon als Parameter vor. |
-| `api-backend/server.js` | ~1481 | Team-Wochenübersicht (`.in('user_id', allowedIds)`) — lädt alle Zeiten auf einmal, muss nach Standort gruppieren |
-| `api-backend/server.js` | ~1484 | `custom_days` wird nur nach `owner_id` geladen — Feiertage eines einzelnen Standorts fehlen analog |
-| `dashboard.js` | 1344, 1430, 2244/2248, 6084, 10842, 10937 | Anzeige und Bearbeitung im Dashboard |
+| `api-backend/server.js` | `getAvailableSlots` | `getAvailableSlots` — Zeiten des Mitarbeiters, sonst die des Inhabers. **Wichtigste Stelle:** hier entstehen alle buchbaren Slots. `businessId` liegt der Funktion schon als Parameter vor. |
+| `api-backend/server.js` | Team-Übersicht (`working_hours … .in('user_id', allowedIds)`) | Team-Wochenübersicht (`.in('user_id', allowedIds)`) — lädt alle Zeiten auf einmal, muss nach Standort gruppieren |
+| `api-backend/server.js` | `custom_days`-Abfrage | `custom_days` wird nur nach `owner_id` geladen — Feiertage eines einzelnen Standorts fehlen analog |
+| `dashboard.js` | Fundstellen per `grep -n working_hours dashboard.js` | Anzeige und Bearbeitung im Dashboard |
 | `kalender.js` | 575 | Owner-Ansicht |
 | `booking.js` | 400, 411 | Öffentlicher Buchungsweg |
 | `onboarding.js`, `employee-signup.js`, `confirm.html` | mehrfach | Anlegen beim ersten Einrichten — dort reicht weiter `business_id = NULL` |
@@ -87,7 +87,7 @@ zwölf Stellen einzeln ausprogrammieren — genau so entstehen Abweichungen.
 Im Arbeitszeiten-Bildschirm eine Standort-Auswahl über den Wochentagen:
 „Gilt für alle Standorte" (= NULL) oder ein konkreter Standort. Die Standorte stehen in
 `businesses`, die Zuordnung der Mitarbeiter in `employee_business_assignments` — beides
-existiert und wird schon benutzt (z. B. `api-backend/server.js:552`).
+existiert und wird schon benutzt (z. B. in `api-backend/server.js`, Suche `employee_business_assignments`).
 
 ## Warum das nicht nebenbei gemacht wird
 

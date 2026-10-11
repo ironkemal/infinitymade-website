@@ -1,3 +1,5 @@
+> ⚠️ Tarihsel analiz (2026-07). Güncel kilitli kararlar: ONPREM_MIGRATION_PLAYBOOK.md K1–K14 — özellikle K1 (04.10.2026: SaaS satılmaz) ve K4 (05.10.2026: tek Praxura Azure + jeton) bu belgedeki §5 ile çelişir; playbook geçerlidir.
+
 # Praxura — On-Premise / Self-Hosted Model Analizi
 
 **Tarih: 2026-07-06 | Soru: SaaS yerine müşterinin kendi sunucusunda çalışan paket satarsak regülasyon yükümüz ne kadar azalır, teknik olarak mümkün mü?**

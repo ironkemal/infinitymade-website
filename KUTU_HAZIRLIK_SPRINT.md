@@ -401,6 +401,7 @@ kutusunda betikle) hemen yapar, buraya yazmaz. Yapılan satır ✅ + tarih alır
 ### Prompt'lar (yeni oturuma aynen yapıştırılır)
 
 **K1 başlat:**
+> ⚠️ KAPANDI — yeni oturuma yapıştırma (K1 ✅ 02.10.2026 (§0)).
 ```
 KUTU_HAZIRLIK_SPRINT.md'yi baştan sona oku (özellikle §1 kararlar, §2 çakışma kuralları, §6 aşama sonu protokolü).
 Hat K, aşama K1'i uygula: K1.1'den K1.8'e sırayla. Önce git pull --rebase.
@@ -411,6 +412,7 @@ Aşama bitince §6 adımlarını uygula ve bana K2 prompt'unu ver.
 ```
 
 **K1 devam (02.10.2026 devri — kaldığın yer: K1.4):**
+> ⚠️ KAPANDI — yeni oturuma yapıştırma (K1 ✅ 02.10.2026, §0).
 ```
 KUTU_HAZIRLIK_SPRINT.md'yi oku (§1, §2, §6). Hat K, aşama K1 devam: kaldığın yer K1.4, sonra K1.8'in kod kısmı. Önce git pull --rebase.
 K1.1-K1.3, K1.5-K1.7 bitti (fortschritte/2026-10-02.md, §0). K1.4 için önce compliance/LEGAL_DECISIONS.md'nin 2026-10-02 bölümünü oku — legal-de silme yerine kilit modelini verdi (Behandlungsdoku 10 J., fatura 8 J., leads minimize, Storage satır kuralına göre, "teilweise gelöscht" yanıtı, data_access_log Auskunft'ta, SaaS'ta AVV maddesi + zorunlu export).
@@ -422,6 +424,7 @@ Aşama bitince §6 adımlarını uygula ve bana K2 prompt'unu ver.
 ```
 
 **K2 başlat:**
+> ⚠️ KAPANDI — yeni oturuma yapıştırma (K2 ✅ 02.10.2026 (§0)).
 ```
 KUTU_HAZIRLIK_SPRINT.md'yi oku (§1, §2, §6). Hat K, aşama K2'yi uygula (K2.1 → K2.12).
 Önce git pull --rebase. onprem ajanı bu aşamanın bekçisi: her adımdan önce sor, sonra bildir; sicilde Y1–Y7'yi O-143'ten itibaren numaralat.

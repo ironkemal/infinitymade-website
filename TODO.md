@@ -12,6 +12,12 @@
 > |---|---|
 > | [1](#1) | Haftalık beta roadmap — plan metni: katman zinciri, DoD, toplantı formatı |
 > | [5](#5) | Kapanmış maddelerin kaydı — bir madde buradaysa yeniden açma |
+>
+> ⚠️ **Tarihsel uyarı (2026-10-11):** Aşağıdaki T1–T6 tarihleri (24.07–04.09.2026) geçmişte kaldı ve
+> §1.1–1.8'deki "bilinen açıklar" cümleleri **güncel değildir** — açık iş sayılmaz, doğrulamadan
+> alıntılanmaz. Açık işlerin tek yeri Ops-Dashboard'dır. Katman zincirindeki `verordnungen` tablosu
+> **04.09.2026'da silindi** (tek havuz `prescriptions`; bkz. `db/REGISTER.md`). Bu dosyadan §2 / §3
+> diye bir bölüm yoktur (boş ayraçlar).
 
 Son güncelleme: 2026-08-08
 
