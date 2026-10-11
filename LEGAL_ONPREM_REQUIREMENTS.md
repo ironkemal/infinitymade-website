@@ -27,7 +27,7 @@ Alman hukukunda yazılım sözleşmesinin BGB tipi, yükümlülüklerimizi belir
 | E1 | **AGB / Softwaremietvertrag "Praxura Lokal"** (B2B) | YENİ — içerik iskeleti §3'te | 🔴 go-live blocker |
 | E2 | **Sperrklausel** (lisans/salt-okunur mod maddesi) | YENİ — E1'in içinde, hukuken en hassas madde, §4'te | 🔴 go-live blocker |
 | E3 | **Fernwartungs-AVV şablonu** (opsiyonel destek erişimi için) | YENİ — §5'te | 🟠 hazır dursun |
-| E4 | **Mevcut SaaS-AVV** | on-prem müşterileri için GEÇERSİZ — SaaS'ta kalanlar için sürer | 🟢 dokunma |
+| E4 | **Mevcut SaaS-AVV** | Bestehender SaaS-AVV (`dpa.html`) — gilt nur für die Beta-SaaS; mit Schließung von `app.praxura.de` Beendigung + Rückgabe/Löschung nach Art. 28 Abs. 3 lit. g (K1.4 Fall B). Für die Box an seine Stelle: KI-AVV (K-20) + Portal-AVV (Y3), jeweils mit § 203 Abs. 3/4 StGB-Klausel *(legal-de 11.10.2026)* | 🟠 neu schreiben |
 | E5 | **Datenschutzerklärung (praxura.de)** | GÜNCELLE: on-prem müşterisi için işlenen veri = yalnızca B2B hesap/fatura/lisans verisi; hasta verisi işlemediğimiz açıkça yazılmalı (satış argümanı da) | 🟠 |
 | E6 | **Muster-Datenschutzhinweise** (praxis'in kendi hastalarına vereceği örnek metin) | GÜNCELLE: "Verarbeitung erfolgt lokal auf praxiseigenem Server; kein Cloud-Dienstleister" varyantı — müşteriye değer katan ek | 🟢 |
 | E7 | **Lizenzbedingungen içinde açık-kaynak bileşen listesi** (Supabase Apache-2.0, PostgreSQL, Caddy vb. lisans bildirimleri) | YENİ — pakete NOTICE dosyası + AGB'de atıf | 🟠 |
@@ -42,19 +42,19 @@ Mevcut hukuki açık maddeler (2026-06-02 audit: Google Fonts CDN, USt tutarsız
 
 ## 3. E1 — AGB "Praxura Lokal" İÇERİK İSKELETİ
 
-1. **Vertragsgegenstand:** Süreli yazılım kullanım hakkı (Softwaremiete); yazılım müşterinin kendi altyapısında çalışır; Praxura hasta/işletme verilerine erişmez ve bunları işlemez (kein Auftragsverarbeitungsverhältnis — açıkça yaz).
+1. **Vertragsgegenstand:** Süreli yazılım kullanım hakkı (Softwaremiete); yazılım müşterinin kendi altyapısında çalışır; Praxura hasta/işletme verilerine erişmez ve bunları işlemez (kein Auftragsverarbeitungsverhältnis — açıkça yaz — ausgenommen die optionalen Funktionen KI und Online-Terminanfrage (Opt-in, jeweils gesonderte AVV)) *(legal-de 11.10.2026)*.
 2. **Nutzungsrechte:** Basit, devredilemez, süreli lisans; Standort/kullanıcı kapsamı plan bazlı; alt-lisans/yeniden satış yasağı YOK yazılamaz ama süreli mietmodell'de devir doğal olarak sınırlı (avukat formüle etsin — "Weiterverkaufsverbot" AGB'de kaufmodell için geçersizdi, miet'te farklı).
 3. **Updates & Softwarepflege:** Güncellemelerin kapsamı (bug-fix, güvenlik, yasal uyumluluk — özellikle §302/Kostenträger sürümleri); müşterinin update'leri makul sürede kurma YÜKÜMLÜLÜĞÜ (otomatik kanal açık tutma); eski sürüm destek penceresi (örn. son 2 minor); update kurulmazsa Gewährleistung sınırlaması.
 4. **Mitwirkungspflichten des Kunden (kritik bölüm):**
    - Asgari sistem gereksinimleri (2 vCPU/4GB/40GB, AB lokasyonu, internet erişimi)
    - **Yedekleme:** paket otomatik yedek aracı sunar; yedeklerin çalıştığını düzenli doğrulamak ve saklamak MÜŞTERİNİN sorumluluğu; veri kaybında Praxura sorumluluğunun sınırı
    - Sunucu/OS güvenliği, erişim yönetimi, kendi DSGVO yükümlülükleri (Verantwortlicher sıfatıyla)
-   - Üçüncü-taraf hesapları (Hetzner, IONOS AI, SMTP) müşterinin kendi sözleşmeleri
+   - Drittkonten (Hosting, SMTP) schließt die Praxis selbst ab. Die optionale KI-Funktion läuft über Praxuras Azure-Konto mit kurzlebigen Tokens direkt aus der Box; Praxura = Auftragsverarbeiter, Microsoft = Unterauftragsverarbeiter (K-20, 05.10.2026). *(legal-de 11.10.2026)*
 5. **Verfügbarkeit:** SaaS-tipi uptime taahhüdü YOK (yazılım müşterinin altyapısında) — sadece yazılımın kararlılığı için Gewährleistung; lisans/update sunucumuz için makul erişilebilirlik.
 6. **Gewährleistung & Haftung:** B2B standart sınırlamalar; kasıt/ağır ihmal + Kardinalpflichten istisnaları (AGB'de tamamen dışlanamaz); veri kaybı için sorumluluk "müşteri düzgün yedek alsaydı oluşmayacak zararla" sınırlı (yaygın ve geçerli formül); §302 içerik sorumluluğu: "Tool, kein Abrechnungsdienstleister" konumlandırması (mevcut AGB'deki Haftungsausschluss taşınır).
 7. **Sperrklausel:** bkz. §4 — ayrı, şeffaf, vurgulu.
-8. **Vertragsende:** Salt-okunur mod süresiz mü / ne kadar; **veri ihracı her durumda mümkün** (DSGVO + BGH'nin veri-rehin içtihatlarına uyum); yazılımı silme yükümlülüğü; hasta dokümantasyonu saklama süreleri müşterinin sorumluluğunda (10 yıl §§ 84-85 SGB X — yazılım salt-okunur modda buna erişim vermeye devam eder).
-9. **Preise/Zahlung:** Stripe; fiyat değişikliği bildirimi; USt %19.
+8. **Vertragsende:** Salt-okunur mod süresiz mü / ne kadar; **veri ihracı her durumda mümkün** (DSGVO + BGH'nin veri-rehin içtihatlarına uyum); yazılımı silme yükümlülüğü; hasta dokümantasyonu saklama süreleri müşterinin sorumluluğunda (Behandlungsdokumentation 10 J. (§ 630f Abs. 3 BGB), Rechnungen 8 J., Grundaufzeichnungen 10 J. (§ 147 AO) — yazılım salt-okunur modda buna erişim vermeye devam eder). *(legal-de 11.10.2026)*
+9. **Preise/Zahlung:** Die Preise sind Endpreise; gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Entfällt die Kleinunternehmerregelung, verstehen sich die Preise ab diesem Zeitpunkt zzgl. der gesetzlichen Umsatzsteuer; wir teilen dies vorab in Textform mit. *(legal-de 11.10.2026; AGB seti avukata gider)*
 10. **Schlussbestimmungen:** Almanya hukuku, Gerichtsstand, salvatorische Klausel.
 
 ---

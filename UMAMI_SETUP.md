@@ -24,7 +24,7 @@ Cloudflare/Hetzner DNS panelinde:
 A record: analytics.infinitymade.de → <VPS_IP>  (proxy: off → Traefik LE için)
 ```
 
-### 2. Env vars (`/var/www/calendar-api/.env` veya stack root)
+### 2. Env vars (`/opt/calendar-api/.env` veya stack root)
 
 ```bash
 UMAMI_DB_PASSWORD=$(openssl rand -hex 24)
@@ -36,7 +36,7 @@ UMAMI_APP_SECRET=$(openssl rand -hex 32)
 ### 3. Deploy
 
 ```bash
-cd /var/www/calendar-api
+cd /opt/calendar-api
 docker compose pull umami umami-db
 docker compose up -d umami umami-db
 docker compose logs -f umami   # "Listening on port 3000" gör
@@ -68,7 +68,9 @@ docker compose logs -f umami   # "Listening on port 3000" gör
 
 ## Notlar
 
-- Umami cookie kullanmaz → **cookie banner gerekmez** (TTDSG/DSGVO uyumlu)
-- IP adresleri anonimleştirilir (hash + günlük rotation)
-- Veri **bizim VPS'imizde** → US'e gitmiyor, AVV ile gerekmiyor (own-controller)
-- Datenschutzerklärung'a kısa not ekle: "Wir nutzen Umami (self-hosted) für anonyme Reichweitenmessung. Keine Cookies, keine personenbezogenen Daten."
+*(legal-de 11.10.2026)*
+
+- Umami setzt keine Cookies, greift aber auf das Endgerät zu (screen, language, referrer) → § 25 Abs. 1 TDDDG, **einwilligungspflichtig**; Skript lädt nur nach Zustimmung über `cookie-consent.js` (Entscheidung 29.08.2026).
+- IP wird mit Tages-Salt gehasht → **pseudonym, nicht anonym** (ErwG 26 DSGVO).
+- Daten auf eigenem Hetzner-VPS (Verantwortlicher: Yavuz Kemal Demir); Hetzner ist Auftragsverarbeiter — durch den bestehenden Hetzner-AVV abgedeckt, kein eigener Umami-AVV.
+- Datenschutztext: maßgeblich ist `datenschutz.html` (legal-de-Fassung 29.08.2026).
