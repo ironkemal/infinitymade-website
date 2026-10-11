@@ -57,7 +57,7 @@ Kurzliste.
 |---|---|
 | `fortschritte/` | Was an einem bestimmten Tag passiert ist — Verlauf |
 | Ops-Dashboard → Aufgaben | Was noch zu tun ist — die offene Liste |
-| `konsey/KARARLAR.md` | Getroffene Entscheidungen — kapanmış karar yeniden açılmaz |
+| `konsey/KARARLAR.md` | Getroffene Entscheidungen — abgeschlossene Entscheidung wird nicht neu aufgemacht |
 | `compliance/LEGAL_DECISIONS.md` | Abgeschlossene rechtliche Klärungen |
 
 Der Fortschrittsordner ersetzt das Ops-Dashboard **nicht**. Neue offene Aufgaben

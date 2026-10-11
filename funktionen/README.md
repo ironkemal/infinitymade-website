@@ -5,7 +5,7 @@ var, nerede kullanılıyor, neyle besleniyor"**u tutar.
 
 ## Neden var
 
-`dashboard.js` 24.000+ satır; projede 1700'den fazla fonksiyon var. "Böyle bir şey zaten var
+`dashboard.js` ~19.000 satır; projede 3400'ü aşkın fonksiyon var (güncel sayı: `node tools/funktionskarte.mjs --check`). "Böyle bir şey zaten var
 mı" sorusu okuyarak cevaplanamaz — hiçbir model bu hacmi tek seferde kapsayamaz, okur ve
 **makul ama eksik** bir cevap üretir. Bu klasör o soruyu okumaya değil **saymaya** çevirir.
 
@@ -19,6 +19,8 @@ Bunlar tek tek bug değil, **bir kalıp**. Kalıbı görmek için envanter gerek
 |---|---|
 | `INDEX.json` | Makine okuru. Her fonksiyon: dosya/satır, dokunduğu tablolar, yazma işlemleri, çağırdıkları, **onu çağıranlar**, hangi sidebar modülünden erişilebildiği, tıklama yolu. |
 | `INDEX.md` | İnsan okuru. Kopya adayları, en çok yazılan tablolar, çift isimler. |
+| `GKV-SORULAR-2026-08-12.md` | 12.08.2026 tarihli gkv-302 soru listesi (`db/REGISTER.md` ve `ABRECHNUNG_BILDSCHIRM_PLAN.md` atıf veriyor). Üretilmez, elle. |
+| `FAZ2-BEFUND.md` | 12.08.2026 tek seferlik eleme/karar kartı — **tarihsel**; içindeki `verordnungen` ayrımı 04.09.2026'da geçersiz oldu. Üretilmez, elle. |
 
 İkisi de **üretilir, elle düzenlenmez.** Yanlış varsa düzeltilecek yer
 `tools/funktionskarte.mjs`, çıktı değil.
@@ -44,14 +46,12 @@ Bu projede bilinçli bir katmanlama var ve script onu ayırt edemez:
 
 - ✅ **Doğru:** ortak taban + üstüne binen alan bloğu (podolojide ayak şeması), ya da tek
   uygulamanın parametreyle daraltılması (`attachDiagnoseSearch(..., { strict: true })`)
-- ⚠️ **ARTIK GEÇERSİZ (04.09.2026):** "iki veri havuzu kasıtlıdır, birleştirme kırar"
-  maddesi kalktı. Kemal'in kararıyla podoloji `verordnungen`'den `prescriptions`'a taşındı
-  (hedef: 9 kolon / 7 satır / 72 kod noktası — 47 / 242 / 168 yerine). Podolojinin kendi
-  kelime dağarcığı (`lead_id`, `behandlungseinheiten`, `therapiefrequenz`, `dringend`,
-  `icd10` dizisi, aktiv/abrechenbar/abgesetzt durum ekseni) sıfırdan yeniden yazılmadı;
-  arada **`module/verordnung-topf.js`** sınır modülü duruyor (`ausTopf`/`inTopf`,
-  `statusAusTopf`/`statusInTopf`, `fuehrtSitzungsbuch`). Yani `prescriptions`'a iki farklı
-  kelimeyle yazan yolları görürsen bu kopya değil, **çeviri katmanıdır.**
+- ✅ **Doğru — çeviri katmanı (kopya değil):** `prescriptions`'a iki farklı kelime
+  dağarcığıyla yazan yollar. Tek Verordnung havuzu `prescriptions`'tır (04.09.2026'dan beri;
+  eski `verordnungen` tablosu silindi). Podolojinin kendi kelime dağarcığı (`lead_id`,
+  `behandlungseinheiten`, `therapiefrequenz`, `dringend`, `icd10` dizisi, aktiv/abrechenbar/
+  abgesetzt durum ekseni) arada **`module/verordnung-topf.js`** sınır modülüyle çevrilir
+  (`ausTopf`/`inTopf`, `statusAusTopf`/`statusInTopf`, `fuehrtSitzungsbuch`).
   ⚠️ `api-backend/billing/utils/einreichbar.js` içindeki `statusAusAbrechnungStatus` /
   `abrechnungStatusAusStatus` bu modülün **bilinçli aynasıdır** (`SPIEGEL` yorumlu):
   Docker imajı `module/`'ü içermediği için paylaşılamıyor. Biri değişirse ikisi değişir.
@@ -99,11 +99,12 @@ delete yolu) çıkarır. Bu yüzden **salt-okunur iki render yolu asla kuyruğa 
 DOM'u iki ayrı şablonla doldursalar bile.
 
 Ölçülen olay — Ops #308, sağdaki Termin-Panel'i (`#bkActionModal`) iki giriş doldurur:
-`openBookingActionModal` (dashboard.js:3223, 477 satır) ve `zeigePatientOhneTermin`
-(module/termin-panel-patient.js:135, 54 satır). İkisi de hiçbir tabloya yazmaz; harita
-ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci yolun bloklarının
-çoğunu hiç çizmeden yaşadı. Aynı denetimde `bkVerordnungSection`'ın panelden değil
-`#bookingModal`'dan geldiği de yalnız DOM id'lerini elle sayarak bulundu.
+`openBookingActionModal` (`dashboard.js`) ve eskiden `zeigePatientOhneTermin`. İkisi de hiçbir
+tabloya yazmaz; harita ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci
+yolun bloklarının çoğunu hiç çizmeden yaşadı. Düzeltme sonrası tek kural `module/termin-panel.js`'te
+(`PANEL_BLOECKE`); `zeigePatientOhneTermin` artık yalnız o dosyanın yorumunda anılır. Aynı denetimde
+`bkVerordnungSection`'ın panelden değil `#bookingModal`'dan geldiği de yalnız DOM id'lerini elle
+sayarak bulundu.
 
 **Kural:** "aynı ekranı kaç yol çiziyor" sorusu `kopieKandidaten`'dan cevaplanmaz. Aynı
 `getElementById('…')` kimliğine dokunan fonksiyonları say — bugün elle, `INDEX.json`'daki
