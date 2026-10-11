@@ -347,7 +347,7 @@ aynı statüde — kalıcı kurumsal bilgi, Melih de görür, silinmez.
 
 Neden ayrı dosya, aynı `.md` içinde değil: gürültü tablosu tek kişinin (bu ajanın)
 işletme notu, register ise **çok yazarlı** — `fonksiyon-ustasi`, `db-ustasi`, `builder`,
-`podoloji`, `mobil-ui` de oraya yazar. Karıştırılırsa kurumsal bilgi gitignore'lu dosyada
+`podoloji`, `mobil-ui` de oraya yazar. Karıştırılırsa kurumsal bilgi ajan tanım dosyasında
 kaybolur veya işletme gürültüsü public repoya sızar.
 
 **Bu ajan otomatik/periyodik çalışmaz** (2026-09-19 kararı, `/konsey` yerine kullanıcıyla
