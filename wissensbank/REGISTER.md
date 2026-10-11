@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
+> İlk kurulum: 05.09.2026 · Son güncelleme: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
+> Önceki: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
 > **W-08** Handlungsanleitung Heilmittel (Ausgabe Januar 2026) · **W-09** Gebührenverzeichnis Physiotherapie
 > (ab 01.01.2026) · **W-10** Gebührenverzeichnis Ergotherapie (ab 01.09.2026); zincir **Z-19** (BG fatura dalı,
 > PE-006 B); açık madde **W-A13**. Yeni klasör `gemeinsam/unfallversicherung-dguv/`. Ham PDF/TXT **yalnız yerel**:
@@ -59,7 +60,7 @@
 | | Sayı |
 |---|---|
 | Kayıtlı kaynak belge (INDEX'te) | 43 (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
-| Arşivdeki PDF | 52 (49 + 3 DGUV, 10.10.2026; önceki sayım: W-07 PDF yalnız kaynak checkout’ta, bu checkout’a eklenmedi; 16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
+| Arşivdeki PDF | **57** (11.10.2026 `find` ile sayıldı; W-07 PDF bu checkout'ta yok). 41'inin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 19 (Z-01…Z-19) |
 | Tam kimlik kartı yazılmış kaynak | 10 (**W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
@@ -82,7 +83,8 @@ wissensbank/
 ├── physiotherapie/     Vertrag §125 Anlage 2, Blanko-Leitfaden
 ├── ergotherapie/       Anlage 2 Vergütungsvereinbarung
 ├── logopaedie/         sssst Anlage 2
-└── _archiv/            düşmüş · kapsam dışı · mükerrer
+├── _archiv/            düşmüş · kapsam dışı · mükerrer
+└── sitzungen/          ⚠️ belge DEĞİL — kendi oturum notlarımız (README „Tek, sınırlı istisna"); sicile/INDEX'e kayıt açılmaz
 ```
 
 **05.09.2026 taşıması:** `Handbücher/` ve `verordnung rezept/` kaldırıldı, içerikleri
@@ -111,9 +113,10 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 
 | Tarih | Ne olur | Etkilenen zincir | Durum |
 |---|---|---|---|
-| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer: `AO05Q426_KE0` · `BK05Q426_KE0` · `IK05Q426_KE0` · `EK05Q426_KE1` GEÇERLİ olur; `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` · `EK05Q426_KE0` DÜŞER (son gün 30.09.2026). `BN050526` + `LK05Q226` geçerli kalır. ✅ 4 dosya **30.09.2026'da indirildi** (byte-exact). ⛔ DB yüklemesi yapılmadı — `db-ustasi`; önce W-01 #9 (kodlama) | Z-09 → W-01 → `kostentraeger` + `kostentraeger_annahmestellen` | ⏳ dosyalar hazır, **DB yüklemesi açık** (madde 6, 9, 10) |
+| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer: `AO05Q426_KE0` · `BK05Q426_KE0` · `IK05Q426_KE0` · `EK05Q426_KE1` GEÇERLİ olur; `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` · `EK05Q426_KE0` DÜŞER (son gün 30.09.2026). `BN050526` + `LK05Q226` geçerli kalır. ✅ 4 dosya **30.09.2026'da indirildi** (byte-exact). ~~⛔ DB yüklemesi yapılmadı~~ → 01.10.2026 ~01:10 yüklendi | Z-09 → W-01 → `kostentraeger` + `kostentraeger_annahmestellen` | ✅ **KAPANDI** — 01.10.2026 ~01:10 yüklendi (W-01 madde 9-11); madde 6 de kapandı (11.10.2026 işlendi, kanıt `db/REGISTER.md` → `kostentraeger_annahmestellen` „Abschluss ZEITFEHLER") |
 | **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
+| **01.01.2027** | ICD-10-GM **2027** yürürlüğe girer, 2026 Klassifikation düşer | **Z-08** → canlı `icd10_titles` (`search_diagnosen()`) → kutu için **yeni** seed migration (`tools/seed-generieren.mjs`; `0013` değiştirilmez) · **Z-18** (E1x.7-/E1x.4- T/N durumu) | ⏳ ham DIMDI dosyasını 7 sütuna çeviren adım tekrarlanabilir değil — **W-A02**. (11.10.2026 eklendi: Z-08 ve W-A02 „§1-Kalender: 01.01.2027" diyordu, satır yoktu) |
 | **01.01.2027** (kontrol günü; HPNR turuyla birlikte) | DGUV yayınları **elle** kontrol edilir: Handlungsanleitung yeni Ausgabe (son: Januar 2026) · Physio-Gebührenverzeichnis (son üç sürüm 01.05.2025 / 01.08.2025 / 01.01.2026) · Ergo-Gebührenverzeichnis (01.09.2025 / 01.09.2026). İkisi de „gilt bis zum Abschluss einer neuen Vereinbarung" — bitiş tarihi **yok**, yenisi habersiz gelir | **Z-19** → W-08 · W-09 · W-10 (bugün koda sayı beslemiyor) | 🔁 **elle**, sahibi `wissensbank` — W-A13 |
 | **01.02.2027 öncesi** | Geçiş paketinin tam kapsamı **bilinmiyor**: Anlage 1 TP5 **V22** (21.05.2026) arşivde yok, `Anzuwenden ab` tarihi bizde yazılı değil. Aynı tarihteyse Anlage 3 V22 + Anhang 03 V10 ile **tek pakettir** | Z-01 · Z-02 · Z-09 | ⏳ **W-A09**, indirilmedi |
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
@@ -148,7 +151,7 @@ Durum: ✅ geçerli. `legs.js` belgeye satır düzeyinde atıf yapıyor — **is
 Anlage 1 V21 Kap. 5.5.3.3 (s. 70, SLLA-B ZHE alan listesi) ve s. 72-73 (SKZ segmenti)
 → `SPEC-RULES.md` § „Muster 13 Kopfteil → ZHE alan 7/8/9" · „Arbeitsunfall … girmez" ·
 „LHB Genehmigungskennzeichen (SKZ) …". Üçünün de **yazıcı tarafı hazır**
-(`billing/dta/builder.js:192-194` ve `:210-216` → `segments.js:267-269,318-328`),
+(`billing/dta/builder.js` ZHE/SKZ alanları → `segments.js` `buildSLLA_ZHE()` / `buildSLLA_SKZ()`; 11.10.2026 satır no → sembol),
 **besleyen tarafı yok** — ne DB kolonu ne maske, yani alanlar bugün her dosyada boş
 gidiyor. Bu bir hata değil **durum tespiti**: uygulama Podoloji bitene kadar bilinçli
 ertelendi (Ops #290). Kaynak atıfları `wissensbank` tarafından orijinal `.txt`'lere karşı
@@ -159,10 +162,11 @@ satır satır doğrulandı (17.09.2026), `gkv-302`'nin raporu olduğu gibi devra
 wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831   (ab 01.09.2017)  → W-02
 wissensbank/gemeinsam/302-tp5/Anhang_02_…_Kapitel_9_Pruefverfahren_20031110       (Stand 10.11.2003) → W-03
   → wissensbank/SPEC-RULES.md § „Datenübermittlung · Test- / Erprobungsverfahren · Verschlüsselung"  (8 kural)
-  → api-backend/billing/dta/filename.js      ⛔ ÇELİŞKİ: 16 haneli, Anhang 1 §4.2 11 hane diyor
-  → api-backend/billing/dta/builder.js:375   ✅ testIndikator eşlemesi doğru
-  → api-backend/billing/api/abrechnung.routes.js  (kind:'test' ×3 · SignedData OID · cert_valid_to)
-  → Auftragsdatei üreten kod                 ⛔ YOK — zincirin eksik halkası
+  → api-backend/billing/dta/filename.js      ✅ buildLogischerDateiname() 11 hane (§4.2) · buildPhysikalischerDateiname() 8 hane (§4.3) — 20.09.2026'dan beri (W-A09)
+  → api-backend/billing/dta/builder.js       ✅ buildDtaFile() → testIndikator (echt '2' / erprobung '1' / test '0')
+  → api-backend/billing/api/abrechnung.routes.js  (Betriebsart praxis başına, terapeut_zertifikat.betriebsart — „nicht mehr hart 'test'" · SignedData OID · cert_valid_to)
+  → api-backend/billing/dta/auftragsdatei.js ✅ buildAuftragsdatei() — GGT Anlage 2, 17.09.2026'dan beri
+    (11.10.2026: bu halkalarda hâlâ „ÇELİŞKİ" / „YOK" yazıyordu — kod okundu, düzeltildi)
 ```
 ⚠️ Bu iki dal bugün ağırlıkla **„uygulanmamış"** raporluyor. Bu bir hata değil bir **durum
 tespiti**: canlı gönderim henüz yapılmıyor, kod yalnız Testdatei üretiyor. Ama zincir artık
@@ -340,8 +344,9 @@ wissensbank/gemeinsam/kostentraeger/{AO05Q426_KE0, BK05Q426_KE0, IK05Q426_KE0,
   → api-backend/billing/kostentraeger/parser.js       ✅ gerçek dosyalara karşı koşuyor
   → api-backend/billing/kostentraeger/parser.test.js  ✅ 1.329 / 1.043 regresyon testi
   → tools/kostentraeger-annahmestellen-laden.mjs      (tekrarlanabilir yükleyici, --write)
-  → DB kostentraeger                  1.052 satır (1.043 gerçek IK + 9 mock_unbestaetigt)
-  → DB kostentraeger_annahmestellen  11.409 satır (6 dosyanın VKG'si — EK Q2 hariç)
+  → DB kostentraeger                  01.10.2026 Q4 yüklemesi: 1.043 `echt` (18'i valid_to 2026-09-30) — W-01 madde 10
+  → DB kostentraeger_annahmestellen  11.411 satır (01.10.2026, geçerli küme; valid_from/valid_to `0046`)
+    (11.10.2026: burada 06.09 sayıları — 1.052 / 11.409, „EK Q2 hariç" — duruyordu)
   ↔ DB krankenkassen.ik_number (94 kasadan 76'sı dolu) — Ops kartı #264
   → kutu (on-prem) seed zinciri, tools/seed-generieren.mjs ile üretilmiş (30.09.2026'da sicile eklendi):
       api-backend/db/migrations/0006_seed_kostentraeger.sql
@@ -357,7 +362,7 @@ sanılıyordu, gerçekte "verknüpfungsart"), hiç gerçek veriye karşı koşma
 fark edilmemişti. Bütünlük iddiası artık `parser.test.js` içinde **regresyon testi**:
 7 dosya okunur, 1.329 kayıt / 1.043 tekil IK sayılır — dosyalar değişirse test düşer.
 
-⛔ **AMA: DB'de bugün YANLIŞ SÜRÜM yüklü.** `kostentraeger_annahmestellen` 6 dosyanın
+✅ **Kapandı — tarihsel kayıt (11.10.2026 işaretlendi):** 20.09.2026'da `EK05Q226_KE0` yüklendi, 01.10.2026'da Q4 (`EK05Q426_KE1`) tarih güdümlü yükleyiciyle girdi — `db/REGISTER.md` → `kostentraeger_annahmestellen` „ZEITFEHLER — ERLEDIGT" + „Abschluss ZEITFEHLER". Aşağısı 07.09.2026 durumu: ~~DB'de bugün YANLIŞ SÜRÜM yüklü.~~ `kostentraeger_annahmestellen` 6 dosyanın
 VKG'sini taşır (12.133 − 724 = 11.409), ama Ersatzkassen tarafında yüklü olan
 **`EK05Q426_KE0`** — yani **01.10.2026'da yürürlüğe girecek olan**. Bugün geçerli olan
 `EK05Q226_KE0` yüklenmedi. Gerekçe olarak *"Q4, Q2'nin halefi"* yazılmıştı — bu,
@@ -392,20 +397,21 @@ wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.pd
     (iK 05.08.2025 — Heilmittelkatalog II. Podologische Therapie s. 73-77; § 7 Abs. 2/5)
 wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.pdf/.txt
     (i.d.F. 16.06.2025, Ziffer 3 f) — Höchstmenge aşılırsa ne olur)
-  → module/verordnung-regeln.js:91   POD_HOECHSTMENGE {DF:6,NF:6,QF:6,UI1:8,UI2:4}  [Q1/Q2 etiketli]
-                             :97   POD_ORIENTIEREND {UI1:8, UI2:8}
-                             :189-204  regelnFuerBereich() — DB kazanır, bunlar Rückfall
-                             :250-257  REGELSTAND — yeni Richtlinie geldiğinde gözden geçirme listesi
-    → module/verordnung-pruefung.js:220-234  UEBER_HOECHSTMENGE (uyarı, blok değil)
-    → module/verordnung-podo.js:72/:75 → :365-395 einheitenPruefen()   ⚠ kendi kopyası (W-A10)
-    → api-backend/ai/validators/diagnosegruppen.json:162-279           (backend kopyası)
-  → DB diagnosegruppen.hoechstmenge (db/SCHEMA.sql:1240) — physio'da dolu, **podolojide boş**
+  → module/verordnung-regeln.js   POD_HOECHSTMENGE {DF:6,NF:6,QF:6,UI1:8,UI2:4}  [Q1/Q2 etiketli]
+                                 POD_ORIENTIEREND {UI1:8, UI2:8}
+                                 regelnFuerBereich() — DB kazanır, bunlar Rückfall
+                                 REGELSTAND — yeni Richtlinie geldiğinde gözden geçirme listesi
+    → module/verordnung-pruefung.js  UEBER_HOECHSTMENGE (uyarı, blok değil)
+    → module/verordnung-podo.js  einheitenPruefen()  ✅ sabitleri verordnung-regeln.js'ten IMPORT ediyor (11.10.2026 ölçüldü — W-A10 kısmen kapandı)
+    → api-backend/ai/validators/diagnosegruppen.json  `podologie` bloğu  (backend kopyası — kalan tek ikinci adres)
+  → DB diagnosegruppen.hoechstmenge (db/SCHEMA.sql, tablo diagnosegruppen) — physio'da dolu, **podolojide boş**
+  (11.10.2026: satır numaraları sembol adına çevrildi — dosyalar kaymıştı)
 ```
 📌 Runtime sırası tersinden okunur: DB doluysa **DB kazanır**, koddaki değerler yalnız
-boşluğu doldurur (`verordnung-regeln.js:198-204`). Yani podolojide bugün geçerli olan sayı
+boşluğu doldurur (`verordnung-regeln.js` `regelnFuerBereich()`). Yani podolojide bugün geçerli olan sayı
 kodun içindedir; `diagnosegruppen.hoechstmenge` podoloji için doldurulduğu gün Rückfall
 kendiliğinden devre dışı kalır — **o gün DB'deki değerin bu kaynağa uyduğu doğrulanmalıdır.**
-⚠️ Aynı sayı üç dosyada duruyor (18.09.2026'da üçü de sayıldı, tutarlı). HeilM-RL veya
+⚠️ Aynı sayı 18.09.2026'da üç dosyada duruyordu (üçü de tutarlı); 11.10.2026 ölçümünde **iki** adreste — `verordnung-regeln.js` + `diagnosegruppen.json`, `verordnung-podo.js` artık import ediyor. HeilM-RL veya
 Anlage 3 güncellenirse üçü birden yürünür; biri unutulursa sistem *kısmen* güncel olur.
 Kural metni, alıntılar ve satır numaraları: `SPEC-RULES.md` → „Podologie Höchstmenge je
 Verordnung — UI2 dörttür, sekiz değil".
@@ -420,8 +426,8 @@ Quellenkette seit 21.09.2026: `gemeinsam/302-tp5/GGT.txt` (Fassung ab 01.09.2026
 
 - **Primärquelle:** `gemeinsam/302-tp5/Anhang_01_Anlage_1_TP5_Kapitel_4_Datenuebermittlung_20170831.txt`, §4.3, Z.140–151, Stand 31.08.2017 / gültig ab 01.09.2017: achtstelliger physikalischer Name `ESOL0nnn` bzw. `TSOL0nnn`.
 - **Primärquelle:** `gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.txt`, §3.2.3, Z.1245–1252, Stand 02.09.2025 / gültig ab 01.01.2026: verschlüsselte Nutzdaten werden ohne Dateisuffix versendet. GKV-Spezialist vor Abschluss konsultiert; Root las beide Originaltextstellen.
-- **Code:** `api-backend/billing/dta/filename.js:80–100`, `buildEncryptedFilename()`, erzeugt bewusst `*.dta.enc.p7m` als internen Storage-Pfad. Dieser unterscheidet sich von der unverschlüsselten Signatur und verhindert deren Überschreibung; er ist nicht der Transportdateiname.
-- **Download:** `module/abrechnung-detail.js:770–810`, `downloadAbrechnungFile()` / `dasGuideVersandKlick()`, übergibt `ab.dateiname` als Storage-Downloadoption, etwa `ESOL0001` ohne Endung. Die verschlüsselte Datei wird verwendet; eine nur signierte Datei ist kein Ersatz.
+- **Code:** `api-backend/billing/dta/filename.js` `buildEncryptedFilename()`, erzeugt bewusst `*.dta.enc.p7m` als internen Storage-Pfad. Dieser unterscheidet sich von der unverschlüsselten Signatur und verhindert deren Überschreibung; er ist nicht der Transportdateiname.
+- **Download:** `module/abrechnung-detail.js` `downloadAbrechnungFile()` / `dasGuideVersandKlick()`, übergibt `ab.dateiname` als Storage-Downloadoption, etwa `ESOL0001` ohne Endung. Die verschlüsselte Datei wird verwendet; eine nur signierte Datei ist kein Ersatz.
 - **Lokaler Nachweis:** `/tmp/praxura-m115-download-probe.mjs` führt tatsächlichen DAS-Handler und installierten Storage-SDK 2.112.3 aus. Die erzeugten Download-URLs enthalten `download=ESOL0001` bzw. `TSOL0001`; synthetische Antworten, kein Netzwerk-/DB-Zugriff. Kein tatsächlicher Live-HTTP-Content-Disposition-Nachweis.
 - **Grenze:** Nur der Dateinamen-Teilbefund ist geschlossen. Daraus folgen weder vollständige SECON-Konformität, Echtversandfreigabe noch verifizierte DAS-Annahme. Historische Aussagen „EnvelopedData/Empfängerschlüssel fehlen“ aus dem Eröffnungsstand 21.09. sind keine aktuelle Codeprüfung; aktueller Implementierungsstand ist gesondert zu verifizieren.
 
@@ -469,9 +475,9 @@ wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.tx
 wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt   (Feld g2, Z.465-473)
       = Podologie: Aufteilung entfällt komplett (§ 12 Abs. 2 zählt Podologie nicht)
   → SPEC-RULES.md „Muster 13 en fazla 3 vorrangiges + 1 ergänzendes …" (Kural-Text)
-  → Kodda: ⛔ UYGULANMAMIŞ — dashboard.html:3621/3625 tek rzHm + tek rzHmErg alanı,
-    prescriptions.heilmittel_items (db/SCHEMA.sql:2256) liste taşır ama sayı kapısı yok
-  → module/verordnung-maske.js:~525-533, module/verordnung-podo.js  (Code-Kommentare,
+  → Kodda: ⛔ UYGULANMAMIŞ — dashboard.html tek #rzHm + tek #rzHmErg alanı,
+    prescriptions.heilmittel_items (db/SCHEMA.sql, jsonb) liste taşır ama sayı kapısı yok
+  → module/verordnung-maske.js (heilmittel_items yorumu), module/verordnung-podo.js  (Code-Kommentare,
     korrigiert Commit 3c0f04e — nur Kommentartext, kein Verhalten)
 ```
 📌 **Ops #202/#303 zinciri:** #202 önce yanlış Podoloji kategorisindeydi ve `.pod-hm-row`/
@@ -520,22 +526,25 @@ wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt  lit. e (Z.390
     = 14/28 wiederholt; Ungültigkeit dort explizit nur für dringlich
 wissensbank/podologie/20230524_Podologie_FAK_bf.txt  Nr. 11 (Z.92-110) · Nr. 34 (Z.295-303)
     = Auslegung, kein Norm — "<12 Wochen bleibt gültig", Nagelspange ">12 Wochen: Nein"
-  → module/heilmittel-fristen.js:41 BEHANDLUNGSBEGINN_TAGE · :52 behandlungsbeginnFrist
-      → prescriptions.gueltig_bis (dashboard.js:15834)
-      · :80 pruefeBehandlungsbeginn
-  → module/frequenz-pruefung.js:361 pruefeErsttermin  (nur podo, erster Termin → BLOCK)
-      ← dashboard.js:5805 (Termin-Fenster) · :6776 (KI-Serienbestätigung)
-  → module/frequenz-pruefung.js:263 pruefeFrequenz → :325 bewerteAbstand(…, !istPodo)
+  → module/heilmittel-fristen.js BEHANDLUNGSBEGINN_TAGE · behandlungsbeginnFrist()
+      → prescriptions.gueltig_bis (dashboard.js: `behandlungsbeginnFrist(ausstDate, isDringend)`)
+      · pruefeBehandlungsbeginn()
+  → module/frequenz-pruefung.js pruefeErsttermin()  (nur podo, erster Termin → BLOCK)
+      ← dashboard.js: zwei `pruefeErsttermin({…})`-Aufrufe (Termin-Fenster · KI-Serienbestätigung)
+  → module/frequenz-pruefung.js pruefeFrequenz() → bewerteAbstand(…, !istPodo)
+  (11.10.2026: dashboard.js-Zeilennummern 15834/5805/6776 stimmten nicht mehr → Symbolnamen)
       (podo: keine Unterbrechungsprüfung)
-  → Tests: module/heilmittel-fristen.test.js · module/frequenz-pruefung.test.js:317-419
+  → Tests: module/heilmittel-fristen.test.js · module/frequenz-pruefung.test.js
   → SPEC-RULES.md „Podologie: Behandlungsunterbrechung …" + „Behandlungsbeginn-Frist …"
 ```
 📌 Commit `dbd79f0` (29.09.2026). Vorher: FAK Nr. 11 falsch herum gelesen → 84-Tage-Ungültigkeit
 auch für Podologie; und keine Beginn-Frist-Prüfung beim Verplanen.
-⚠️ **offen — Sahip `builder` (Physio-Feinabstimmung, Ops → Teknik):** `module/frequenz-pruefung.js:66`
-`UNTERBRECHUNG_TAGE = 12 * 7` trägt die Quellenangabe „§ 16 Abs. 4 Satz 5" — Satz 5 enthält keine
+⚠️ **offen — Sahip `builder` (Physio-Feinabstimmung, Ops → Teknik):** `module/frequenz-pruefung.js`
+`UNTERBRECHUNG_TAGE = 12 * 7` trug die Quellenangabe „§ 16 Abs. 4 Satz 5" — Satz 5 enthält keine
 Frist; für Physio/Ergo/Logo gilt Satz 1 (14 Kalendertage ohne Begründung). Die 84 Tage sind
 unbelegt. Podologie unberührt.
+✅ **11.10.2026 gemessen:** die falsche Quellenangabe ist korrigiert — der Kommentar lautet jetzt „keine Quelle —
+Physio-Grenze laut HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16)". **Der Wert ist weiterhin 84** — offen bleibt nur er.
 **Bei neuer HeilM-RL-Fassung:** § 15 und § 16 Abs. 4 neu lesen → `BEHANDLUNGSBEGINN_TAGE` und
 den `!istPodo`-Schalter prüfen. Bei neuer Anlage 3 Podologie: lit. e. Neuer FAK: Nr. 11/34.
 
@@ -666,7 +675,7 @@ BG dalı + SPEC-RULES „BG / Arbeitsunfall" üçü birden yeniden açılır.
 
 ## 3. Kaynak envanteri
 
-`wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
+`wissensbank/INDEX.md`'deki kayıtlar (sayı INDEX başlığında — 11.10.2026: **43**; burada „33" yazıyordu), sicil gözüyle. **Herkunft sütunu neredeyse tamamen
 boş** — bu bir kayıt eksikliği, belgelerin şüpheli olduğu anlamına gelmez (hepsi resmî
 yayıncıdan indirildi), ama bir sürüm düştüğünde yenisinin nereden alınacağı her seferinde
 yeniden araştırılıyor demektir.
@@ -683,7 +692,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831` | — (Stand 31.08.2017) | 01.09.2017 | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-02** |
 | `wissensbank/gemeinsam/302-tp5/Anhang_02_…_Kapitel_9_Pruefverfahren_20031110` | — (Stand 10.11.2003) | belirtilmemiş | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-03** |
 | `wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
-| `wissensbank/gemeinsam/kostentraeger/*.txt` (7 dosya) — **veri, spec değil** | 7 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ + ⏳ 1 GELECEK | Z-09 | **✅ kart W-01** |
+| `wissensbank/gemeinsam/kostentraeger/*.txt` (11 dosya) — **veri, spec değil** | 11 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ (4 Q4 + `BN050526` + `LK05Q226`) · 🚫 5 DÜŞMÜŞ (son gün 30.09.2026, arşivde kalır) | Z-09 | **✅ kart W-01** |
 | `wissensbank/gemeinsam/302-tp5/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
 
 ### §302 — yan belgeler
@@ -719,7 +728,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei` | Auftragssatz V1.0 (Stand 10.10.2024), ab 01.01.2025 | ✅ GEÇERLİ | `dta/auftragsdatei.js` · ⬜ Herkunft yok |
 | `wissensbank/gemeinsam/302-tp5/GGT_Anlage_04_Verfahrenskennungen` | Feldbeschreibung V1.1 (Stand 06.11.2025), ab 01.01.2026 | ✅ GEÇERLİ | `dta/auftragsdatei.js` · ⬜ Herkunft yok |
 | `wissensbank/physiotherapie/anlage2.txt` | — | 01.01.2026 | ⬜ hangi Fachbereich, netleştirilmeli |
-| `Podoloji/…HPNR…_2026.xlsx` + 2 CSV | Stand 15.12.2025, ab 01.01.2026 | ✅ GEÇERLİ | Z-05 |
+| `wissensbank/gemeinsam/positionsnummern/20251215_…_gueltig_ab_01.01.2026.xlsx` + `…/Positionsnummernverzeichnis_2026_Full.csv` + `wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv` (11.10.2026: burada eski `Podoloji/` yolu duruyordu) | Stand 15.12.2025, ab 01.01.2026 | ✅ GEÇERLİ · halefi 01.01.2027 (§1) | Z-05 |
 
 ### Heilmittel-Richtlinie, Diagnoseliste, ICD
 
@@ -727,6 +736,7 @@ yeniden araştırılıyor demektir.
 |---|---|---|---|
 | `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) · **Z-14** (Heilmittel-Limit) · **Z-16** (§ 15 Beginn-Frist, § 16 Abs. 4 Unterbrechung) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BFB_V4_80_20260513` — ⚠️ yalnız yerel, bu checkout'ta yok | 4.80 / 13.05.2026, IN KRAFT | ✅ GEÇERLİ | **kart W-07** (Muster 13 PDF417) — 11.10.2026: kart vardı, envanter satırı yoktu |
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
@@ -779,7 +789,7 @@ yeniden araştırılıyor demektir.
   ✅ **01.10.2026 ~01:10 Berlin: Q4 SaaS DB'ye yüklendi** (madde 9-11), kutu seed'i `0045`.
 - **Neyi besler:** Z-09 → `parser.js` (+ `parser.test.js`) → `tools/kostentraeger-annahmestellen-laden.mjs`
   → DB `kostentraeger` (1.052 satır) + DB `kostentraeger_annahmestellen` (11.409 satır
-    — ⛔ Ersatzkassen tarafında **yanlış sürüm**, bkz. açık madde 6)
+    — ~~⛔ Ersatzkassen tarafında yanlış sürüm~~ ✅ madde 6 kapandı, 11.10.2026)
   ↔ DB `krankenkassen.ik_number` 76/94 (Ops #264). **06.09.2026'dan beri zincirin tamamı gerçek veriyle besleniyor.**
   **01.10.2026'dan (Q4 yüklemesi):** #8 · #9 · #10 · #11 + #4 · #5 → `datei-lesen.js` (Latin-1/UTF-8 okuyucu)
   → `parser.js` → `lade-plan.js` (Stichtag'a göre dosya seçimi; + `lade-plan.test.js`)
@@ -998,7 +1008,10 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
    sahibi — sicil tarafı kapandı, veri kalitesi takibi orada sürüyor).
    ↳ **Kalan (`offen`, db-ustasi'de):** 18 kasanın IK'ı hâlâ boş — dosyada isim eşleşmesi
    bulunamayanlar. **Tahmin yazılmadı**, boş bırakıldı (doğru davranış).
-6. ⛔ **`offen` — SÜRÜM ZAMANLAMA HATASI: DB'ye gelecek sürüm yüklendi** (06.09.2026'da
+6. ✅ **KAPANDI (11.10.2026'da işlendi; olay 20.09 + 01.10.2026).** Kapanış şartı „`db-ustasi`'nin ZEITFEHLER
+   kaydının kapanışı" idi — `db/REGISTER.md` → `kostentraeger_annahmestellen`: „ZEITFEHLER — ✅ ERLEDIGT am
+   20.09.2026" + „✅ Abschluss ZEITFEHLER (01.10.2026)" + `0046` valid_from/valid_to. Orijinal metin:
+   ~~SÜRÜM ZAMANLAMA HATASI: DB'ye gelecek sürüm yüklendi~~ (06.09.2026'da
    oluştu, 07.09.2026'da `db-ustasi` ölçtü). `kostentraeger_annahmestellen` Ersatzkassen
    satırlarını **`EK05Q426_KE0`**'dan alıyor — o dosya **01.10.2026'da** yürürlüğe giriyor.
    Bugün geçerli olan `EK05Q226_KE0` yüklenmedi.
@@ -1093,8 +1106,8 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
 - **Neyi besler:** Z-01 dalı → `wissensbank/SPEC-RULES.md` § „Datenübermittlung · Test- /
   Erprobungsverfahren · Verschlüsselung" (§4.2 → *Logischer Dateiname*, §4.3 → *Physikalischer
   Dateiname*, §3.1'le birlikte *Nutzdatendatei + Auftragsdatei çift gider*)
-  → `api-backend/billing/dta/filename.js` ⛔ **çelişki, aşağıya bak**
-  → Auftragsdatei üreten kod: **yok**
+  → `api-backend/billing/dta/filename.js` ✅ `buildLogischerDateiname()` / `buildPhysikalischerDateiname()` (çelişki 20.09.2026'da kapandı — aşağıdaki bulgu tarihsel)
+  → `api-backend/billing/dta/auftragsdatei.js` ✅ `buildAuftragsdatei()` (17.09.2026; 11.10.2026'ya kadar burada „yok" yazıyordu)
 - **Tazelik kontrolü:** ⛔ otomatik yok. Elle:
   https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/sonstige_leistungserbringer.jsp
   → „Technische Anlagen (aktuell)" listesinde `Anhang_1_Anlage_1_TP5_*.pdf` satırının tarihi
@@ -1113,7 +1126,7 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
   §0.2 yasağı bu belgede devreye girmiyor, yine de dönüşüm `pdftotext -enc UTF-8 -layout` ile
   deterministik yapıldı ve kapak + §4.2 + §4.3 orijinale karşı elle örneklendi.
 
-⛔ **Bu kartın taşıdığı asıl bulgu — çözülmeden koda dokunulmaz.**
+✅ **Kapandı — tarihsel kayıt (11.10.2026 işaretlendi; kapanış W-A09'da):** `filename.js` artık 11 haneli logischer + 8 haneli physikalischer ad üretiyor ve kaynak olarak Anhang 1 §4.2/§4.3'ü gösteriyor. Aşağısı 10.09.2026 durumu: ~~Bu kartın taşıdığı asıl bulgu — çözülmeden koda dokunulmaz.~~
 `api-backend/billing/dta/filename.js` **16 haneli** `EHK…`/`EHM…` üretiyor
 (`E` + `HK`/`HM` + IK'nın son 5 hanesi + 8 haneli laufende Nummer). Anhang 1 §4.2 ise
 **11 haneli** `SL` + IK 3.–8. + `S`/`A` + ay istiyor. İki ad birbirine benzemiyor bile.
@@ -1141,9 +1154,9 @@ Kart yazılırken kod okundu ve ölçüldü (10.09.2026), tahmin edilmedi.
 - **Neyi besler:** Z-01 dalı → `wissensbank/SPEC-RULES.md` § „Datenübermittlung · Test- /
   Erprobungsverfahren · Verschlüsselung" (§5 → *Testdatei ödeme tetiklemez*, §3.1/§4/§6 →
   *Echt'e geçiş kasadan Zulassung gerektirir*, §3.1 → *Nutzdatendatei + Auftragsdatei çift gider*)
-  → `api-backend/billing/api/abrechnung.routes.js:700 · :2810 · :3242` (`kind:'test'`)
-  → `api-backend/billing/dta/builder.js:375` (`testIndikator` `'2'`/`'1'`/`'0'`) ✅ eşleme doğru
-  → Erprobung/Echt sürecinin **durumunu tutan DB alanı: yok** ⛔
+  → `api-backend/billing/api/abrechnung.routes.js` — Betriebsart artık praxis başına (eski `kind:'test'` ×3 atfı geçersiz; kod yorumu „nicht mehr hart 'test'")
+  → `api-backend/billing/dta/builder.js` `buildDtaFile()` (`testIndikator`: echt `'2'` / erprobung `'1'` / test `'0'`) ✅ eşleme doğru
+  → Erprobung/Echt durumu: DB `terapeut_zertifikat.betriebsart` (+ `zulassung_referenz`, `zulassung_datum`) ve `abrechnung.betriebsart` (`db/SCHEMA.sql`) — 11.10.2026'ya kadar burada „DB alanı yok" yazıyordu
 - **Tazelik kontrolü:** ⛔ otomatik yok. Elle: W-02 ile **aynı sayfa ve aynı bakışta** —
   „Technische Anlagen (aktuell)" listesinde `ANHANG2_TAV5.pdf` satırı. Dosya adı sürüm/tarih
   taşımadığı için sayfadaki „Stand" sütununa bakılır; PDF adı değişmeden içerik değişebilir,
@@ -1184,8 +1197,10 @@ Kart yazılırken kod okundu ve ölçüldü (10.09.2026), tahmin edilmedi.
 - **Anzuwenden ab:** **01.01.2026** (altbilgi `Gültig ab:01.01.2026`, 94 sayfanın hepsinde —
   deterministik sayıldı, 94/94) · **Düşer:** açık uçlu
 - **Durum:** ✅ **GEÇERLİ**
-- **Neyi besler:** **Z-12** → bugün yalnız `filename.js` + `abrechnung.routes.js` (imza tarafı) ·
-  EnvelopedData üreten kod **henüz yok**, plan Adım 1.3'ün girdisi. DB tarafında
+- **Neyi besler:** **Z-12** → `filename.js` + `abrechnung.routes.js` (imza tarafı) ·
+  EnvelopedData: `api-backend/billing/dta/verschluesselung.js` `verschluesseleFuerEmpfaenger()` (Adım 1.3 D,
+  `abrechnung.routes.js` import ediyor; 11.10.2026'ya kadar burada „henüz yok" yazıyordu — SECON profiline
+  uygunluk bu turda doğrulanmadı, Z-12 sınırı geçerli). DB tarafında
   `terapeut_zertifikat` (yalnız metadata — özel anahtar sisteme hiç girmiyor, `guvenlik` K2)
 - **Tazelik kontrolü:** ⛔ otomatik yok. Elle: yukarıdaki liste sayfası açılır, „Anlage 16 -
   Security Schnittstelle (SECON)" satırının dosya boyutu (bugün **5,2 MB**) ve indirilen PDF'in
@@ -1416,12 +1431,12 @@ sayıyı düzeltir.
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
 yoksa `offen` kalır ve her raporda tekrar görünür.
 
-### W-A01 · Herkunft (indirme URL'i) 35 kaydın 31'inde yok — `offen`
+### W-A01 · Herkunft (indirme URL'i) 43 kaydın 33'ünde yok — `offen`
 Belgelerin nereden indirildiği hiçbir yerde yazılı değil. Bir sürüm düştüğünde yenisinin
 nereden alınacağı her seferinde yeniden araştırılıyor. Tek istisna Z-06 (fiyat XML'i,
 URL script başlığında).
 10.09.2026'da 2 kayıt daha kapandı (W-02, W-03 — tam indirme URL'i kartlarında).
-Kalan: 31.
+Kalan: 31 (10.09.2026). **11.10.2026:** „Bir bakışta" ile hizalandı — 10/43 yazılı, **33 eksik** (35/31 sayımı INDEX 43'e çıkmadan önceydi).
 **Yapılacak:** her kayda Herkunft eklenir. Bilinen yayıncı kökleri:
 `gkv-datenaustausch.de` (§302 teknik anlagenler) · `gkv-heilmittel.de` (fiyat) ·
 `gkv-spitzenverband.de` (§125 Verträge, HPNR) · `bfarm.de` (ICD-10-GM) · `kbv.de`
@@ -1465,9 +1480,9 @@ yazılı değil (Z-05). 2027 sürümü geldiğinde tekrarlanabilir değil.
 alanları.
 
 ### W-A05 · Resmî belge arşivi yedeksiz — `offen`
-`.gitignore` ilk satırı → `*.pdf`. **49** PDF (~44 MB) yalnızca bu makinede
+`.gitignore` ilk satırı → `*.pdf`. **57** PDF (11.10.2026 sayımı, W-07 hariç; önceki sayım 49) yalnızca bu makinede
 (10.09.2026'da 2 yeni PDF eklendi: Anhang 1 Kap. 4, Anhang 2 Kap. 9 — ikisi de izlenmiyor). `.txt` karşılıkları git'te
-(70 dosya izleniyor), yani metin kayıp değil — ama **imzalı/orijinal PDF** kayıp olur.
+(11.10.2026: 61 `.txt` izleniyor — DGUV ve KBV `.txt`'leri bilinçli olarak ignore'da), yani metin kayıp değil — ama **imzalı/orijinal PDF** kayıp olur.
 Absetzung itirazında orijinaline başvurulan belge budur.
 **Yapılacak:** `I:\My Drive\Ops Praxura gitnogo\` altına bir kopya (kod değil belge, kural
 uygun). Karar kullanıcınındır — depoyu şişirmemek bilinçli bir tercihti.
@@ -1587,7 +1602,11 @@ indirilmeli — `Anzuwenden ab` tarihi bizde yazılı olmadığı için geçişi
 ayrı ayrı mı olduğu bugün bilinmiyor. **Ölçüt:** V22’nin kapak sayfası okunduğunda §1
 takvimine ya yeni bir satır girer ya da mevcut 01.02.2027 satırına eklenir.
 
-### W-A10 · Podologie Höchstmenge sayısı üç dosyada ayrı ayrı duruyor — `offen`, bugün `unkritisch`
+### W-A10 · Podologie Höchstmenge sayısı üç dosyada ayrı ayrı duruyor — **kısmen kapandı**, JSON kopyası `offen`, bugün `unkritisch`
+**11.10.2026 ölçümü:** `module/verordnung-podo.js` artık `POD_HOECHSTMENGE`/`POD_ORIENTIEREND`'i
+`verordnung-regeln.js`'ten **import ediyor** (dosya başındaki import satırı; `einheitenPruefen()` `POD_HOECHSTMENGE[root]`
+okuyor). Kalan tek ikinci adres `api-backend/ai/validators/diagnosegruppen.json` (`podologie` bloğu) — madde yalnız
+onun için açık. Aşağısı 18.09.2026 metni.
 `module/verordnung-regeln.js` kendini „eine Zahl, ein Ort" diye tarif ediyor ve baş yorumunda
 *„`verordnung-podo.js` liest sie von hier"* yazıyor — **ama okumuyor**:
 `module/verordnung-podo.js:72/:75` `POD_HOECHSTMENGE`/`POD_ORIENTIEREND` sabitlerini import
@@ -1631,11 +1650,13 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
   ⚠️ **"Kapandı" demiyoruz:** zincir bağlı ama iki maddesi açık — bugün geçerli Anhang 03
   sürümü arşivde yok (madde 3) ve DB'ye **gelecek sürüm** yüklendi (madde 6). İkincisi
   bu sicilin kendi kuralının ihlali: kural yazılıydı, ama yalnız sicilde duruyordu.
+  ✅ **11.10.2026:** ikisi de kapandı — madde 3 (V09 01.10.2026'da indirildi), madde 6 (ZEITFEHLER 20.09 +
+  01.10.2026, `db/REGISTER.md`). W-01'de açık kalan yalnız #8 (otomatik tazelik).
 
 - **Yayın yüzeyi temiz.** Eski üç klasör 27.08.2026'da `.vercelignore`'a alınmıştı; taşımadan
   sonra yerlerini `wissensbank/` tek satırı aldı (05.09.2026). `Podoloji/` de listede kalmaya
   devam ediyor. Runtime kontrolü yapıldı: hiçbir belge tarayıcıya yüklenmiyor.
-- **PDF→TXT zinciri tam.** 47 PDF'in 31'inin `.txt`'si var; eksik 16'nın tamamı bilinçli:
+- **PDF→TXT zinciri tam.** 57 PDF'in 41'inin `.txt`'si var (11.10.2026 sayımı; önce „47/31"); eksik 16'nın tamamı bilinçli:
   5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri
   (INDEX'te kapsam dışı yazılı). **Boşluk yok.**
 - **Fiyat verisi çift kaynaklı.** Anlage 2 (maßgeblich) + GKV XML (bağımsız doğrulama).

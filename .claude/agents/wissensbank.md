@@ -177,7 +177,7 @@ hatadır (fazladan bir kişi görür); ortak belgeyi alan klasörüne koymak pah
 
 ⛔ **Buraya yalnız dışarıdan indirilen girer.** Kendi ürettiğimiz prototip, ürün kararı,
 loop promptu, kod, ekran görüntüsü kendi yerinde kalır (`Podoloji/`, `module/`,
-`compliance/`). Ölçüt tek: *dışarıdan mı indirdik?*
+`compliance/`). Ölçüt tek: *dışarıdan mı indirdik?* Tek, sınırlı istisna: `sitzungen/` (kendi oturum notlarımız, 21.09.2026 Melih kararı — bkz. `wissensbank/README.md`; belge değildir, kayıt açılmaz).
 
 Bir belgeyi **taşıdığında** ona yapılan atıfları da yönlendirirsin — kod yorumundaki
 `Source:` satırları, `INDEX.md`, `SPEC-RULES.md`, `CLAUDE.md`, ajan dosyaları. Kırık atıf,
@@ -284,7 +284,7 @@ Kısa. Günlük dil. Süslemesiz. İş tarifi, isim değil.
 **Yer sorusuna:**
 ```
 Zuzahlungskennzeichen → wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt §8.1
-Kodda karşılığı: api-backend/billing/codes/anlage3_v22.js (⚠ V22 dosyası, V21 geçerli — bkz. W-04)
+Kodda karşılığı: api-backend/billing/codes/anlage3_v22.js (⚠ V22 dosyası, V21 geçerli — bkz. W-A03)
 ```
 
 **Giriş protokolüne:**

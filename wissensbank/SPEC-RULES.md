@@ -8,7 +8,12 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-29 (Reform S1.12 + S2 — `gkv-302` bulguları, `wissensbank` orijinallere
+> Son güncelleme: 2026-10-11 (`wissensbank` temizlik turu — **2 yeni kural:** „Leistungsbereich yalnız UNB S005'te" ·
+> „SUM diye segment yok" (silinen bir hafıza kaydının „yaygın yanılgılar" listesindeydi; kaynak + kod okundu).
+> Bayat `Kodda:` satırları koda karşı güncellendi: Logischer/Physikalischer Dateiname, Auftragsdatei, EnvelopedData,
+> Höchstmenge kopyası (artık import), GES, `heilmittel_position`, Behandlungsbeginn, `UNTERBRECHUNG_TAGE` atfı.
+> Kayan satır numaraları sembol adına çevrildi; eski iddialar üstü çizili duruyor.)
+> Önceki: 2026-09-29 (Reform S1.12 + S2 — `gkv-302` bulguları, `wissensbank` orijinallere
 > karşı okudu. 3 yeni kural: Hausbesuch yalnız „Ja" ile (S2.6) · Abrechnung Verordnung bitince,
 > VKZ 02 sonradan yapılan seans için DEĞİL (S2.3) · Datenaustausch durum terimleri (S2.1) ·
 > IK des Leistungserbringers Muss (S2.7). **1 kayıt düzeltildi:** „Teilabrechnung normaldir;
@@ -137,8 +142,8 @@
   anılmıştı — bu belge `wissensbank`'ta YOK (21.09.2026 aranmış, bulunamamış), doğrulanmamış
   sayılır, üstteki HeilM-RL alıntısı tek bağlayıcı kaynaktır.
 - **Geçerlilik:** 05.08.2025
-- **Kodda:** uygulanmamış — `dashboard.html:3621/3625` tek `rzHm` + tek `rzHmErg` alanı;
-  `prescriptions.heilmittel_items` (`db/SCHEMA.sql:2256`) liste taşıyabilir ama sayı kapısı yok.
+- **Kodda:** uygulanmamış — `dashboard.html` tek `#rzHm` + tek `#rzHmErg` alanı;
+  `prescriptions.heilmittel_items` (`db/SCHEMA.sql`, jsonb) liste taşıyabilir ama sayı kapısı yok.
   Ops #202 (Kategorie Physiotherapie — önceki "Podoloji" etiketi yanlıştı, bu kural onu düzeltti).
 - **Kapsam:** Physiotherapie, Ergotherapie — vorrangige+ergänzende Heilmittel, Muster 13.
   Logopädie — yalnız Behandlungszeit/Einzel-Gruppe kombinasyonu (S. 2), ergänzendes Heilmittel
@@ -248,9 +253,10 @@
   değişiklikten bağımsız — a/b artık 78010 dolu geldiği için onlarda düzeliyor, c'de hâlâ 0 €).
 - **Kaynak:** Kod gerçeği (spec değil) — Anlage 1 TP5 V21 § 5.5.3.3 EHE-Segment
 - **Geçerlilik:** 18.09.2026
-- **Kodda:** `api-backend/billing/api/abrechnung.routes.js:2411-2434`
-  (`mapVerordnungToDtaShape`) · `api-backend/billing/utils/abrechnung-zeilen.js:138-140` ·
-  `api-backend/billing/api/zuzahlung.routes.js:106-113` (hatalı okuyucu — düzeltme Ops-Dashboard
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js`
+  (`mapVerordnungToDtaShape()` — EHE'yi `beh.hpnr_codes`'tan kuruyor) · `api-backend/billing/utils/abrechnung-zeilen.js`
+  (11.10.2026: `hpnr_codes` bu dosyada artık geçmiyor — atıf doğrulanamadı) ·
+  `api-backend/billing/api/zuzahlung.routes.js` (`code: rx.heilmittel_position`) (hatalı okuyucu — düzeltme Ops-Dashboard
   → Teknik, bu değişikliğin kapsamı dışında)
 - **Kapsam:** Podologie, tüm Verordnungsart'lar
 
@@ -287,23 +293,23 @@
 - **Geçerlilik:** 05.08.2025
 - **Kodda:** ✅ uygulanmış, **kasten uyarı seviyesinde** (blok değil). Sayı bugün **üç
   dosyada** duruyor, üçü de tutarlı (18.09.2026'da satır satır sayıldı):
-  1. `module/verordnung-regeln.js:91` (`POD_HOECHSTMENGE`) + `:97` (`POD_ORIENTIEREND`) —
+  1. `module/verordnung-regeln.js` (`POD_HOECHSTMENGE` + `POD_ORIENTIEREND`) —
      **niyet edilen tek adres**, `[Q1]` (HeilM-RL) / `[Q2]` (Anlage 3) kaynak etiketleriyle;
-     `REGELSTAND` listesi (`:250-257`) yeni bir Richtlinie geldiğinde gözden geçirilecek
-     satırları sayıyor. Runtime önceliği `regelnFuerBereich()` (`:189-204`): **DB kazanır**,
+     `REGELSTAND` listesi yeni bir Richtlinie geldiğinde gözden geçirilecek
+     satırları sayıyor. Runtime önceliği `regelnFuerBereich()`: **DB kazanır**,
      bu değerler yalnız `diagnosegruppen.hoechstmenge` boşken devreye girer — podolojide
      dosyanın kendi 03.09.2026 notuna göre boş (canlı DB'ye karşı doğrulanmadı).
-  2. `module/verordnung-podo.js:72` / `:75` + `:365-395` (`einheitenPruefen()` — `max`/`min`
-     attribute + uyarı metni). ⚠️ **Kendi kopyası**: `verordnung-regeln.js`'in baş yorumu
-     „`verordnung-podo.js` liest sie von hier — eine Zahl, ein Ort" diyor ama dosya onu
-     **import etmiyor**, sabitleri yeniden tanımlıyor → `REGISTER.md` W-A10.
-  3. `api-backend/ai/validators/diagnosegruppen.json:162-279` — backend kopyası; DF `:164` ·
-     NF `:187` · QF `:215` · UI1 `:248` · UI2 `:265`, her birinde `hoechstmenge` +
+  2. `module/verordnung-podo.js` `einheitenPruefen()` (`max`/`min` attribute + uyarı metni).
+     ✅ **11.10.2026 ölçüldü:** dosya `POD_HOECHSTMENGE`/`POD_ORIENTIEREND`'i artık
+     `verordnung-regeln.js`'ten **import ediyor** — 18.09.2026'daki ~~kendi kopyası~~ bulgusu
+     geçersiz; `REGISTER.md` W-A10 yalnız aşağıdaki JSON kopyası için açık.
+  3. `api-backend/ai/validators/diagnosegruppen.json` `podologie` bloğu — backend kopyası; DF ·
+     NF · QF · UI1 · UI2, her birinde `hoechstmenge` +
      `orientierende_menge`.
 
-  Uyarı yolu: `module/verordnung-pruefung.js:220-234` (`UEBER_HOECHSTMENGE`,
+  Uyarı yolu: `module/verordnung-pruefung.js` (`UEBER_HOECHSTMENGE`,
   `SCHWERE.warnung`). DB tarafı: `diagnosegruppen.hoechstmenge` kolonu **var**
-  (`db/SCHEMA.sql:1240`) — physio'da dolu, podolojide boş; dolduğu gün 1. maddedeki
+  (`db/SCHEMA.sql`, tablo `diagnosegruppen`) — physio'da dolu, podolojide boş; dolduğu gün 1. maddedeki
   değerler kendiliğinden devre dışı kalır. Zincirin tamamı: `REGISTER.md` → **Z-11**.
 - **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF/UI1/UI2, standart Verordnung.
   § 7 Abs. 6 HeilM-RL (besonderer Verordnungsbedarf / langfristiger Heilmittelbedarf) başka
@@ -312,7 +318,8 @@
 - ⚠️ **Karıştırma tuzağı — „Nagelspange sekiz gider" doğru değil.** 8 yalnız **UI1**'in
   Höchstmenge'sidir; UI2'de 8 **orientierende Menge**'dir ve birden çok Verordnung'a yayılır.
   UI2'ye pauschal 8 einheit yazmak Absetzung üretir. Kod yorumu
-  `module/verordnung-podo.js:66-71` bu ayrımı zaten kayda geçirmiş — silme.
+  `module/verordnung-podo.js:66-71` bu ayrımı zaten kayda geçirmiş — silme. (11.10.2026: o satırlarda artık
+  bu yorum yok — sabitler `verordnung-regeln.js`'e taşınınca yorum da taşınmış/kısalmış olabilir, doğrulanmadı.)
 - 📌 **Bezugsgröße farkı:** Höchstmenge **Verordnung** başına, orientierende Menge
   **Verordnungsfall** başınadır (§ 7 Abs. 3: *„Der Verordnungsfall und die orientierende
   Behandlungsmenge beziehen sich auf die jeweilige Verordnerin oder den jeweiligen
@@ -351,8 +358,9 @@
   `:325` `bewerteAbstand(kt, wt, soll, !istPodo)`; `bewerteAbstand` `:230-231`
   (`pruefeUnterbrechung=false` iken `'unterbrechung'` hükmü hiç verilmez). Commit `dbd79f0`
   (Reform S1.9, 29.09.2026). Test: `module/frequenz-pruefung.test.js`.
-  - ⚠️ **Yanlış atıf kaldı (`offen`, sahip `builder` — Physio ince ayarı, Ops → Teknik):**
-    `module/frequenz-pruefung.js:66` `UNTERBRECHUNG_TAGE = 12 * 7; // § 16 Abs. 4 Satz 5 HeilM-RL`
+  - ✅ **Atıf düzeltildi (11.10.2026 ölçüldü) — değer hâlâ `offen` (sahip `builder`, Physio ince ayarı, Ops → Teknik):**
+    `module/frequenz-pruefung.js` `UNTERBRECHUNG_TAGE = 12 * 7` — yorum artık *„keine Quelle — Physio-Grenze laut
+    HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16)"*. Eski metin: ~~`// § 16 Abs. 4 Satz 5 HeilM-RL`~~
     — Satz 5 süre içermez (podoloji istisnasıdır), 84 gün **hiçbir** HeilM-RL satırında yok.
     Sabit bugün yalnız Physio/Ergo/Logo dalında çalışıyor; oranın dayanağı Satz 1 =
     **14 Kalendertage ohne angemessene Begründung**'dur (`:698-699`), 12 hafta değil. Kod
@@ -391,13 +399,13 @@
 - **Geçerlilik:** 05.08.2025 (HeilM-RL) · 16.06.2025 (Anlage 3 Podologie)
 - **Kodda:** ✅ `module/heilmittel-fristen.js:41` `BEHANDLUNGSBEGINN_TAGE = { dringend: 14,
   normal: 28 }` · `:52` `behandlungsbeginnFrist(ausstellungsdatum, istDringend)` (→
-  `prescriptions.gueltig_bis`, `dashboard.js:15834`) · `:80` `pruefeBehandlungsbeginn` (saf,
+  `prescriptions.gueltig_bis`, `dashboard.js` `behandlungsbeginnFrist(ausstDate, isDringend)`) · `:80` `pruefeBehandlungsbeginn` (saf,
   Europe/Berlin gün sayımı) · `module/frequenz-pruefung.js:361-374` `pruefeErsttermin` —
   **yalnız podo, yalnız ilk vergeben Termin'de, `behandlungsbeginn` boşken** → blok
-  (`dashboard.js:5805-5808` Termin-Fenster, `:6776` KI-Serienbestätigung). Commit `dbd79f0`
+  (`dashboard.js` iki `pruefeErsttermin({…})` çağrısı: Termin-Fenster, KI-Serienbestätigung). Commit `dbd79f0`
   (Reform S1.9). Diğer okuyucular (uyarı/gösterim): `module/verordnung-podo.js:615`,
   `module/verordnung-pruefung.js:304`, `module/podologie-abrechnung.js:574,1036`,
-  `dashboard.js:7973,19659`. Test: `module/heilmittel-fristen.test.js`,
+  `dashboard.js` (iki `behandlungsbeginnFrist(rx.ausstellungsdatum, rx.is_dringend)` çağrısı). Test: `module/heilmittel-fristen.test.js`,
   `module/frequenz-pruefung.test.js:317-419`.
   - 📌 `pruefeErsttermin` `ownerId` yoksa (`:367`) sessizce `ok:true` döner — iki çağıran da
     `getOwnerId()` veriyor, bugün zararsız (`unkritisch`); yeni çağıran eklenirse bakılmalı.
@@ -1094,10 +1102,54 @@
   `0,00` verilir. Brutto her zaman Zuzahlung **dahil** BES toplamıdır.
 - **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt` §5.5.2, GES segmenti (Z.1660-1690)
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
-- **Kodda:** `api-backend/billing/dta/segments.js:73-85` alanları taşıyor; hesaplama
-  `abrechnung.routes.js:600-615` (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
+- **Kodda:** `api-backend/billing/dta/segments.js` `buildSLGA_GES()` alanları taşıyor; hesaplama
+  `abrechnung.routes.js` (11.10.2026: eski `:600-615` atfı kaymış, hesaplayan sembol bu turda doğrulanmadı) (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
   (Brutto = 0,00) **doğrulanmadı**.
 - **Kapsam:** tüm Leistungserbringergruppen
+
+### Leistungsbereich yalnız UNB S005'te durur — SLGA/SLLA'da ayrı alanı yok
+- **Kural:** Leistungsbereich (Leistungserbringer-Sammelgruppenschlüssel; Heilmittel = `B`) dosyada
+  **tek bir yerde** taşınır: Service-Segment **UNB**, veri elemanı **S005** (1 hane, AN, Muss).
+  SLGA ve SLLA segment tablolarında bu adla bir alan **yoktur**, mesaj içinde tekrarlanmaz. SLGA
+  yapısı bütün Sammelgruppenschlüssel'ler için aynıdır; SLLA yapısı Leistungsbereich'e göre seçilir
+  (Heilmittel → §5.5.3.3 „SLLA: B"). Abrechnungscode (`71`/`72`) Leistungsbereich **değildir**
+  (yukarıdaki „Abrechnungscode 71" kuralı).
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026) §5.4 Dateiaufbau, UNB tablosu, S. 21 —
+  *„S005 Leistungsbereich … 1 AN M Einzutragen ist der Leistungserbringer-Sammelgruppenschlüssel,
+  siehe Schlüssel Anlage 3 Abschnitt 8.1.14."*
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:895-899`) · §5.5.2, S. 31 —
+  *„Der Nachrichtentyp SLGA ist für alle Leistungserbringer-Sammelgruppenschlüssel (Anlage 3,
+  Schlüssel 8.1.14) gleich."* (`:1418-1419`); SLGA FKT alanları Verarbeitungskennzeichen ·
+  Sammelrechnung · IK'lardır (`:1424-1440`). Değer listesi: Anlage 3 TP5 V21 §8.1.14 **gövde**
+  (`Anlage_3_TP5_V21_20250919.txt:1107`; içindekiler 8.1.13 diyor — REGISTER Z-02 atıf tuzağı).
+  Ölçüm (11.10.2026, deterministik `grep`): V21 `.txt`'te „Leistungsbereich" yalnız S005 satırında
+  (`:895`), §5.3.1 Gesamtaufstellung cümlesinde (`:569`, alan değil) ve §7.1 Korrekturverfahren
+  yürürlük tablosunda (`:8015-8077`, alan değil) geçiyor.
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ✅ `api-backend/billing/dta/envelope.js` `buildUNB()` (`leistungsbereich = 'B'`, S005 yorumu)
+  ← `api-backend/billing/dta/builder.js` `buildDtaFile()` (`leistungsbereich: 'B'`; Heilmittel olmayan
+  Abrechnungscode'u „is not a Heilmittel code (Leistungsbereich B)" ile reddediyor)
+- **Kapsam:** tüm DTA üretimi (Heilmittel = `B`)
+- ⚠️ **Yaygın yanılgı:** „Leistungsbereich SLGA FKT/REC'te ya da SLLA'da da yazılır" — yazılmaz.
+
+### SUM diye bir segment yok — Rechnungssummen SLGA `GES`'tedir
+- **Kural:** Anlage 1 TP5 V21'in segment tablolarında `SUM` (ve genel EDIFACT'teki `MOA`/`CNT`)
+  adında segment **yoktur**. Rechnungssummen SLGA'da **`GES`** segmentindedir: Muss, mesaj başına
+  **min 2, max 9**; önce Summenstatus `00` (toplam), ardından Versichertenstatus başına birer GES.
+  Abrechnungsfall tutarları SLLA tarafında ayrı segmentlerdedir (kodda `BES`, VKZ 03'te `GZF`).
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026) §5.5.2 SLGA segment özeti (`:1387-1395`, S. 30) ve
+  GES alan tablosu (`:1618-1641`, S. 35) — *„Das Segment muss je Nachricht mindestens zweimal und kann
+  höchstens neunmal vorkommen. Es ist stets ein GES-Segment für den Summenstatus 00 zuerst zu
+  übermitteln."* · Summenstatus değerleri: Anlage 3 TP5 V21 §8.1.6. Ölçüm (11.10.2026, deterministik):
+  `grep -cw` Anlage 1 V21 `.txt` → `SUM` 0 · `MOA` 0 · `CNT` 0; Anlage 3 V21 `.txt` → `SUM` 0.
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ✅ `api-backend/billing/dta/segments.js` `buildSLGA_GES()` (Summenstatus `SUMMENSTATUS`
+  listesine karşı sert kontrol, Anlage 3 §8.1.6) · SLLA: `buildSLLA_BES()` / `buildSLLA_GZF()`.
+  `dta/` altında `SUM` segmenti üreten kod yok (11.10.2026 grep).
+- **Kapsam:** tüm DTA üretimi
+- ⚠️ **Yaygın yanılgı:** genel EDIFACT alışkanlığıyla „toplam = SUM/MOA/CNT segmenti" sanılır;
+  §302 Anlage 1 bunları kullanmaz — toplam `GES`'tir. GES hesap kuralı: yukarıdaki „GES:
+  Gesamtrechnungsbetrag = Gesamtbruttobetrag − Zuzahlung".
 
 ### Heilmittel fiyatı Leistungsdatum'a göre çözülür, Ausstellungsdatum'a göre değil
 - **Kural:** Bir pozisyonun fiyatı ve Zuzahlung'u, tedavinin **yapıldığı** tarihin
@@ -1466,9 +1518,10 @@
   Auftragsdatei'nin „Dateiname" alanına birebir aynı yazılır, tüm aktarım ortamları için aynıdır.
 - **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.2 (Stand 31.08.2017)
 - **Geçerlilik:** 01.09.2017 — hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — `api-backend/billing/dta/filename.js` → `buildDtaFilename()`,
-  dönüş satırı ``return `E${anwendung}${ikSuffix}${seq}` `` **16 haneli `EHK…`/`EHM…`** üretiyor.
-- ⚠️ **Çelişki, çözülmeden koda dokunulmamalı:** `filename.js` baş yorumu kendi kaynağı olarak
+- **Kodda:** ✅ `api-backend/billing/dta/filename.js` `buildLogischerDateiname()` — `SL` + IK 3.–8. + `S`/`A` +
+  2 haneli ay (20.09.2026'dan beri; 11.10.2026 dosya başlığı ve dönüş satırı okundu). Eski `buildDtaFilename()`
+  ve 16 haneli `EHK…`/`EHM…` **artık yok**.
+- ~~⚠️ Çelişki, çözülmeden koda dokunulmamalı~~ ✅ kapandı (REGISTER W-A09) — tarihsel metin: `filename.js` baş yorumu kendi kaynağı olarak
   „GKV-DA Anlage 17 (Nutzdatendateien)" gösteriyor — yani §302 Anhang 1 §4.2'ye değil **başka bir
   spesifikasyona** dayanıyor. Anlage 17 arşivde **yok**. Hangisinin geçerli olduğuna `gkv-302`
   karar verir; „16 haneyi 11 haneye çevir" işi o karardan önce yapılmaz.
@@ -1479,7 +1532,9 @@
   `0` (Versionsangabe) + 3 haneli laufende Nummer (Transfernummer). Auftragsdatei'de belirtilir.
 - **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.3 (Stand 31.08.2017)
 - **Geçerlilik:** 01.09.2017 — hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — Auftragsdatei üreten kod yok (aşağıdaki kurala bak)
+- **Kodda:** ✅ `api-backend/billing/dta/filename.js` `buildPhysikalischerDateiname()` (`E`/`T` + `SOL` + `0` +
+  3 haneli Transfernummer); Auftragsdatei'yi `api-backend/billing/dta/auftragsdatei.js` `buildAuftragsdatei()`
+  yazıyor (11.10.2026'ya kadar burada „uygulanmamış" yazıyordu)
 - **Kapsam:** tüm gruplar
 
 ### Transfernummer 0..999 arasında döner ve 999'dan sonra 0'a atlar
@@ -1610,11 +1665,12 @@
   d.h. Auftragsdatei und zugehörige Nutzdatei übermittelt"* · Auftragsdatei yapısı için
   Anhang 1 zur Anlage 1 TP5 § 4.3 → Anlage A (GGT) · GGT § 2.3 (Fassung 01.01.2026)
 - **Geçerlilik:** hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — projede `Auftragsdatei` üreten hiçbir kod yok
-  (`grep -rn "Auftragsdatei" --include=*.js --include=*.mjs` → sıfır sonuç, 10.09.2026'da ölçüldü)
+- **Kodda:** ✅ `api-backend/billing/dta/auftragsdatei.js` `buildAuftragsdatei()` (348 bayt, ISO 8859-1, GGT
+  Anlage 2; 17.09.2026) — `abrechnung.routes.js` Nutzdatei'nin yanında saklıyor (`auftragsdatei_path`).
+  ~~Projede Auftragsdatei üreten kod yok~~ (10.09.2026 ölçümü, artık geçersiz — 11.10.2026)
 - **Kapsam:** tüm gruplar; DFÜ'de zorunlu, portal yüklemesinde bilateral
-- ⚠️ **Auftragsdatei'nin tam alan yapısı arşivde YOK** — GGT Anlage 2 indirilmeli
-  (`wissensbank/REGISTER.md` → W-A09).
+- ✅ ~~Auftragsdatei'nin tam alan yapısı arşivde YOK~~ — GGT Anlage 2 17.09.2026'da indirildi:
+  `wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei.txt` (`wissensbank/REGISTER.md` → W-A09).
 
 ### Önce imzala, sonra alıcının açık anahtarıyla şifrele
 - **Kural:** Nutzdaten önce **göndericinin özel anahtarıyla imzalanır**, ardından **ALICININ
@@ -1623,8 +1679,10 @@
   (Anhang 04c) istenir.
 - **Kaynak:** GGT § 5.1 · § 2.3 (Fassung 01.01.2026) · Anhang 04c § 4 (qeS kapsamı)
 - **Geçerlilik:** 01.01.2026
-- **Kodda:** ⚠️ **yarı uygulanmış** — `dashboard.js:18085` (`forge.pkcs7.createSignedData()`)
-  CMS SignedData üretiyor, **EnvelopedData yok**; `api-backend/billing/api/abrechnung.routes.js`
+- **Kodda:** ⚠️ **11.10.2026:** EnvelopedData artık var — `api-backend/billing/dta/verschluesselung.js`
+  `verschluesseleFuerEmpfaenger()`, `abrechnung.routes.js` import ediyor (Adım 1.3 D). SECON profiline uygunluk
+  bu turda doğrulanmadı (REGISTER Z-12 sınırı). Aşağısı 10.09.2026 metni: ~~yarı uygulanmış~~ —
+  `dashboard.js` (`forge.pkcs7.createSignedData()`) CMS SignedData üretiyor, ~~EnvelopedData yok~~; `api-backend/billing/api/abrechnung.routes.js`
   yalnız SignedData OID'ini doğruluyor (satır **977** yorum `contentType OID 1.2.840.113549.1.7.2`
   + satır **983** ret mesajı „Ungültige PKCS#7-Struktur — Datei ist kein gültiges CMS SignedData").
   Yani bugün üretilen dosya **imzalı ama şifresiz**.
