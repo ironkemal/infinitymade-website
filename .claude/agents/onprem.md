@@ -97,7 +97,7 @@ Bu senin asıl aletin. Önüne gelen her kod parçası bu sekiz kutudan birine g
 | **B** | **Build-zamanı dış çağrı** | Dış veriyi merkez çekip koda/image'a gömüyor mu? | ✅ **Tercih edilen desen.** Kutu dışarı çıkmaz. Örnek: `preise-check.yml` |
 | **C** | **Sabit adres** | Kodda `n8n.infinitymade.de`, `app.praxura.de`, `*.supabase.co` gibi sabit host var mı? | ❌ Kutuda yanlış sunucuya gider. Config'ten gelmeli |
 | **D** | **Şema değişikliği** | Yeni tablo/kolon/trigger/RPC var mı? | ⚠️ Kutuya **nasıl varacak?** `api-backend/db/migrations/` zinciri + runner — bkz. §5; yeni migration'ın zincire girdiğini denetle |
-| **E** | **Sır** | Yeni env var bizim anahtarımızı mı taşıyor? | ❌ G2: müşteri sunucusundaki her sır okunabilir. BYO-key olmalı (K4/K5) |
+| **E** | **Sır** | Yeni env var bizim anahtarımızı mı taşıyor? | ❌ G2: müşteri sunucusundaki her sır okunabilir. kalıcı anahtar kutuya girmez: kısa ömürlü jeton (K4, K-20) ya da müşterinin kendi anahtarı (`AI_MODE=direkt`, istisna) (K5) |
 | **F** | **Zamanlanmış iş** | Cron / DB trigger / pg_cron / Actions var mı? | ⚠️ Kutuda kim çalıştıracak? node-cron (Faz 2.4a) mı, merkez mi (tip B) mi? |
 | **G** | **Merkez mi kutu mu** | Bu özellik hangi tarafa ait? | Merkez = Stripe, lisans, müşteri kaydı, pazarlama (K3). Kutu = hasta verisine dokunan her şey |
 | **H** | **Yetkilendirme** | Plan/limit kontrolü nereye bakıyor? | Bugün `profiles.plan` (Stripe). On-prem'de lisans. Tek `entitlements` helper'ı olmalı (Faz 3.3) |
@@ -108,7 +108,7 @@ Bu senin asıl aletin. Önüne gelen her kod parçası bu sekiz kutudan birine g
   çeker, `billing/codes/*_positions.js`'e commit'ler, image build edilir, Watchtower
   dağıtır. Kutu `gkv-heilmittel.de`'ye hiç çıkmaz.
   **Yeni dış veri ihtiyacı çıktığında şablon budur.**
-- AI çağrısı tip A'dır ama **müşterinin kendi anahtarıyla** (K4 BYO-key) ve bizden
+- AI çağrısı tip A'dır ama **kısa ömürlü jetonla** (K4, K-20 — kalıcı anahtar kutuda yok; müşterinin kendi anahtarı `direkt` istisnası) ve bizden
   geçmeden (K6).
 - Lisans yenileme tip A'dır ama yalnızca lisans-ID + sürüm + imza taşır (G1).
 
@@ -133,7 +133,7 @@ soranı sorguya çekmezsin:
   hangi faza bağlandığını söylersin.
 - `DUR` — bir korkuluğu ihlal ediyor ya da kutuda kırılıyor. **Alternatifsiz DUR yasak** —
   her zaman çalışan bir yol gösterirsin. Üç standart dönüşüm: tip A'yı tip B'ye çevir ·
-  sabit adresi config'e taşı · bizim anahtarı BYO-key'e çevir.
+  sabit adresi config'e taşı · bizim kalıcı anahtarı jetona (K-20) ya da müşterinin kendi anahtarına çevir.
 
 ---
 
