@@ -668,6 +668,10 @@ log "[7c] IP-Abgleich der Box (K2b.6, L10)"
 # shellcheck source=./lib-ip.sh
 source "$SCRIPT_DIR/lib-ip.sh"
 
+# O-191: Statusverzeichnis VOR pull+up anlegen — sonst legt Docker die
+# Bind-Mount-Quelle selbst an (root, aber mit seinen Rechten, nicht unseren).
+mkdir -p "$SCRIPT_DIR/volumes/status" 2>/dev/null && chmod 0755 "$SCRIPT_DIR/volumes/status" 2>/dev/null || true
+
 # Zweistufiges Tor (onprem-Bedingung 5 — Reihenfolge so beibehalten):
 # 1. MERKEZ_URL in .env gesetzt?
 merkez_url="$(env_wert MERKEZ_URL)"
@@ -743,8 +747,15 @@ if [ -d "$MIGRATIONS_DIZIN" ]; then
   log "  (bundle: $(printf '%s' "$BUNDLE_DOSYALAR" | wc -l) dosya · uygulanan: $(printf '%s' "$UYGULANAN_VERSIYONLAR" | wc -l) satır · eksik: ${EKSIK:-yok})"
 fi
 
+# O-193 (onprem 11.10.2026): önceki koşu schema_fehler ile bittiyse migration
+# hâlâ "bekliyor" görünür ve her gece yarım göç etmiş durumdan yeni bir
+# vor-migration yedeği alınırdı — backup.sh yalnız son 3'ü tuttuğu için üç gece
+# sonra son TEMİZ yedek silinirdi. O yüzden bu durumda yedek atlanır.
+onceki_sonuc="$(bildirim_alani_oku son_sonuc)"
 if [ "$BEKLEYEN_VAR" -eq 0 ]; then
   ok "Bekleyen migration yok — bu gece yedek atlandı (RELEASE-STANDARD.md §4.3)."
+elif [ "$onceki_sonuc" = "schema_fehler" ]; then
+  warn "Önceki güncelleme schema_fehler ile bitti — yedek ATLANDI, son temiz 'vor-migration' yedeği korunuyor (destek gerekli)."
 else
   log "  Bekleyen migration var (ya da belirsiz) — yedek alınıyor."
   # O-175 (K2b.18 d, onprem + guvenlik 07.10.2026): şifrelemeden önce kurulmuş
@@ -825,13 +836,45 @@ docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || ilk_up_basarili=0
 
 # ── Schritt 10 — Sağlık ──────────────────────────────────────────────────────
 log "[10/11] Sağlık kontrolü (lib-health.sh)"
+# O-193 (0.6.0): sağlıklı ≠ hazır. O-190 (c)'den beri bakım modu (migration
+# düştü) healthcheck'te "healthy" sayılır — bu yüzden sağlığın ardından
+# /health/ready okunur (lib-health.sh: bereitschaft_pruefen). schema_fehler
+# kesindir: geri alma YOK (J6; eski image yeni şemayı `downgrade` diye reddeder,
+# uygulanmış migration'lar defterde) → Schritt 8'in vor-migration yedeği + destek.
+# "nicht_bereit" (okunamadı / datenbank / verbindung) eski geri-alma yoluna düşer.
+# UEBERGANG-LIB-HEALTH-ANFANG
+# Frische lib-health.sh erst hier sourcen (wurde in Schritt 7 geschrieben): oben
+# lädt dieses Skript die Bibliothek, die VOR dem Update auf der Platte lag. Beim
+# Sprung von 0.5.2 kennt die bereitschaft_pruefen noch nicht — unter `set -e`
+# stürbe das Skript hier mit 127, ohne Schritt 11 (onprem §7AS). Fehlt die
+# Funktion trotzdem, gilt die Box als nicht bereit (Rückroll-Zweig).
+# shellcheck source=./lib-health.sh
+[ -r "$SCRIPT_DIR/lib-health.sh" ] && source "$SCRIPT_DIR/lib-health.sh"
+declare -F bereitschaft_pruefen >/dev/null || bereitschaft_pruefen() { echo "nicht_bereit"; }
+# UEBERGANG-LIB-HEALTH-ENDE
+sonuc=""
+migration_art=""
 if [ "$ilk_up_basarili" -eq 1 ] && warte_auf_gesundheit 180; then
-  sonuc="ok"
-else
-  warn "Sağlıklı olmadı — dosyalar geri alınıyor ve yeniden deneniyor"
+  hazir="$(bereitschaft_pruefen 60)"
+  case "$hazir" in
+    ok) sonuc="ok" ;;
+    schema_fehler*)
+      sonuc="schema_fehler"
+      migration_art="${hazir#schema_fehler }"
+      fehler "Güncelleme yüklendi ama veritabanı güncellemesi başarısız" "/health/ready 503, art=$migration_art (bakım modu)" "/health/ready 200" \
+        "Geri alma YAPILMAZ (eski sürüm yeni şemayla açılmaz). Destek: Schritt 8'deki 'vor-migration' yedeği + 'docker compose logs api' + $LOG_FILE."
+      ;;
+    *) warn "Container'lar sağlıklı ama /health/ready hazır değil ($hazir)" ;;
+  esac
+fi
+if [ -z "$sonuc" ]; then
+  warn "Sağlıklı/hazır olmadı — dosyalar geri alınıyor ve yeniden deneniyor"
   geri_yukle
   docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || true
-  if warte_auf_gesundheit 120; then
+  # Geri alındıktan sonra da hazır olmalı: eski image yarım uygulanmış yeni
+  # şemayı `downgrade` diye reddederse kutu yine bakımdadır — bu "geri_alindi"
+  # değil (lieber Fehlalarm als falsches Grün).
+  if warte_auf_gesundheit 120 && [ "$(bereitschaft_pruefen 60)" = "ok" ]; then
     sonuc="geri_alindi"
     warn "Geri alındıktan sonra kutu tekrar sağlıklı"
   else
@@ -846,7 +889,11 @@ fi
 # YALNIZ burada, gerçek bir "ok" sonrasında güncellenir — "geri_alindi" ve
 # "bakim_modu" ikisini de OLDUĞU GİBİ bırakır (dosyalar zaten eskiye döndü,
 # taban da eski kalmalı).
-if [ "$sonuc" = "ok" ]; then
+# O-193 (onprem 11.10.2026): schema_fehler'de de taban tazelenir — dosyalar
+# geri ALINMADI, yeni paket yerinde. Taban eski kalsaydı ertesi gece sapma
+# kontrolü yeni dosyaları "eigene Änderung" sanıp `konflikt` derdi ve onaran
+# sürüm bile kutuya giremezdi. Owner önbelleği ve kurtarma kopyası yalnız `ok`.
+if [ "$sonuc" = "ok" ] || [ "$sonuc" = "schema_fehler" ]; then
   {
     printf '{'
     ilk=1
@@ -865,6 +912,8 @@ if [ "$sonuc" = "ok" ]; then
   } > "$DATEIEN_SHA_FILE.tmp"
   mv "$DATEIEN_SHA_FILE.tmp" "$DATEIEN_SHA_FILE"
   cp "$BIZIM_ENV" "$TABAN_ENV"
+fi
+if [ "$sonuc" = "ok" ]; then
   # O-82: owner e-postası önbelleği yalnız burada tazelenir — DB'nin
   # erişilebilir olduğu kanıtlanmış tek an. `|| true`: önbellek tazeleme
   # başarısız olsa bile "ok" sonucu bundan etkilenmemeli.
@@ -873,10 +922,16 @@ if [ "$sonuc" = "ok" ]; then
   rm -f "$SCRIPT_DIR/install-sicherungsschluessel.sh"
 fi
 
-if [ -n "$catisan_anahtarlar" ]; then
-  durumu_yaz "$sonuc" "\"env_catismalari\": \"$catisan_anahtarlar\","
-else
-  durumu_yaz "$sonuc"
+ekstra_durum=""
+[ -n "$catisan_anahtarlar" ] && ekstra_durum="\"env_catismalari\": \"$catisan_anahtarlar\","
+# O-193: yalnız beyaz listedeki `art` (lib-health.sh), hiçbir hata metni yok.
+[ -n "$migration_art" ] && ekstra_durum="${ekstra_durum}\"migration_art\": \"$migration_art\","
+durumu_yaz "$sonuc" "$ekstra_durum"
+
+# O-191: sırsız durum özeti /api/status için (version + çalışan image digest'i).
+# En sonda ve `|| true`: yazılamaması güncelleme sonucunu etkilemez.
+if declare -F status_stand_yaz >/dev/null 2>&1; then
+  status_stand_yaz "$SCRIPT_DIR" "$sonuc" || true
 fi
 
 log "[11/11] Bitti — sonuç: $sonuc"

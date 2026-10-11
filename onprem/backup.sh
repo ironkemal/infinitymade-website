@@ -523,6 +523,34 @@ if [ "$DEK_FP" != null ]; then
   warn "DATA_ENCRYPTION_KEY olmadan bu yedekteki şifreli hasta verisi geri gelmez (O-29) — künyedeki parmak izi ${DEK_FP}, .env'i ayrı ve güvenli sakla."
 fi
 
+# ── 5b) Durum dosyası — /api/status `backup` + `data_key.vergleich` (O-191) ─
+# Atomik geçişten SONRA ve rotasyondan ÖNCE: yedek gerçekten yerinde, rotasyon
+# ya da kota düşse bile "son başarılı yedek" doğru kalır. Üç sebep de yazar.
+# Yazılamaması yedeği DÜŞÜRMEZ (vor-migration update.sh Schritt 8'in içinden
+# çağrılır — durum dosyası yüzünden güncelleme durmamalı).
+# `data_key_fingerprint_erst`: parmak izi her gece o anki anahtardan hesaplanır;
+# anahtar değişirse `data_key_fingerprint` ertesi gece kendiliğinden yeni değere
+# döner ve uyarı sönerdi. `_erst` ilk görülen değeri AYNEN taşır (onprem 11.10.2026).
+# İçerik sırsız: hedefin yolu/host'u YOK, yalnız "kutu dışı mı" (guvenlik B7).
+durum_dosyasi_yaz() {
+  local dir="$SCRIPT_DIR/volumes/status" fp=null erst=null eski tmp
+  [ "$DEK_FP" = null ] || fp="\"$DEK_FP\""
+  if [ -f "$dir/sicherung.json" ] && [ ! -L "$dir/sicherung.json" ]; then
+    eski="$(grep -oE '"data_key_fingerprint_erst"[[:space:]]*:[[:space:]]*"[0-9a-f]{16}"' "$dir/sicherung.json" 2>/dev/null \
+      | grep -oE '[0-9a-f]{16}' | head -n 1 || true)"
+    [ -z "$eski" ] || erst="\"$eski\""
+  fi
+  [ "$erst" != null ] || erst="$fp"
+  mkdir -p "$dir" || return 1
+  chmod 0755 "$dir" || return 1
+  tmp="$dir/.sicherung.json.tmp.$$"
+  printf '{"v":1,"letzte_ok_epoch":%s,"sebep":"%s","data_key_fingerprint":%s,"data_key_fingerprint_erst":%s,"ziel_ausserhalb":%s}\n' \
+    "$(date -u +%s)" "$SEBEP" "$fp" "$erst" "$ZIEL_DISI" > "$tmp" || { rm -f "$tmp"; return 1; }
+  chmod 0644 "$tmp" || { rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$dir/sicherung.json" || { rm -f "$tmp"; return 1; }
+}
+durum_dosyasi_yaz || warn "Durum dosyası (volumes/status/sicherung.json) yazılamadı — yedek GEÇERLİ, yalnız paneldeki yedek rozeti güncellenmedi."
+
 # ── 6) Rotasyon — ad uzayı SEBEBE göre ayrı, kota §6.6 ─────────────────────
 # vor-migration: yalnız son 3 (RELEASE-STANDARD §4.3 "en az son 3").
 # nightly/manuel: son 14 GÜN'ün hepsi + her geçmiş takvim ayının EN ESKİ

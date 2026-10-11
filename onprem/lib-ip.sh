@@ -132,3 +132,54 @@ EOF
 
   return 0
 }
+
+# ── Host-Zustandsdateien für /api/status (O-191, 0.6.0) ─────────────────────
+# ./volumes/status ist in `api` als /var/lib/praxura/status:ro gemountet
+# (Verzeichnis-Mount wie volumes/ip: atomarer mv wechselt die Inode).
+# Inhalt: NUR abgeleiteter, geheimnisfreier Zustand — kein Log, kein Pfad des
+# Sicherungsziels, nichts aus .praxura-stand/ (dort liegen .env-Schnappschüsse,
+# O-100). Rechte ausdrücklich gesetzt, nicht der umask überlassen: `api` läuft
+# nicht als root (guvenlik S-60 Nachtrag B5/B7).
+#
+# $1 = Statusverzeichnis  $2 = Dateiname  $3 = Inhalt (eine JSON-Zeile)
+status_datei_yaz() {
+  local dir="${1:-}" name="${2:-}" inhalt="${3:-}" tmp
+  [ -n "$dir" ] && [ -n "$name" ] && [ -n "$inhalt" ] || return 1
+  mkdir -p "$dir" || return 4
+  chmod 0755 "$dir" || return 4
+  tmp="$dir/.$name.tmp.$$"
+  printf '%s\n' "$inhalt" > "$tmp" || { rm -f "$tmp"; return 4; }
+  chmod 0644 "$tmp" || { rm -f "$tmp"; return 4; }
+  mv -f "$tmp" "$dir/$name" || { rm -f "$tmp"; return 4; }
+}
+
+# Registry-Digest (sha256:…) des Images, mit dem ein Container LÄUFT — nicht
+# das Manifest-Ziel (nach `geri_alindi` wäre das falsch) und nicht die lokale
+# Image-ID (`{{.Image}}`, sieht gleich aus, ist aber ein anderer Wert; onprem
+# 11.10.2026). Von Hand gebautes Image → leer.
+status_container_digest() {
+  local cname="${1:-}" imgid repo
+  imgid="$(docker inspect --format '{{.Image}}' "$cname" 2>/dev/null || true)"
+  [ -n "$imgid" ] || return 0
+  repo="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$imgid" 2>/dev/null | head -n 1 || true)"
+  printf '%s' "$repo" | grep -oE 'sha256:[0-9a-f]{64}$' || true
+}
+
+# stand.json — Positivliste aus festen Variablen, KEINE gefilterte Kopie von
+# praxura-stand.json (ein dort neu hinzugefügtes Feld käme sonst von selbst mit;
+# guvenlik B6). $1 = Skriptverzeichnis  $2 = Ergebnis (ok|geri_alindi|bakim_modu|installiert)
+status_stand_yaz() {
+  local sdir="${1:-}" sonuc="${2:-}" version api_d fe_d j_ver j_api j_fe
+  [ -n "$sdir" ] || return 1
+  case "$sonuc" in ok|geri_alindi|bakim_modu|schema_fehler|installiert) ;; *) sonuc="unbekannt" ;; esac
+  version="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' praxura-api 2>/dev/null \
+    | sed -n 's/^IMAGE_VERSION=//p' | head -n 1 || true)"
+  printf '%s' "$version" | grep -qE '^[0-9A-Za-z.+-]{1,64}$' || version=""
+  api_d="$(status_container_digest praxura-api)"
+  fe_d="$(status_container_digest praxura-caddy)"
+  j_ver=null; [ -z "$version" ] || j_ver="\"$version\""
+  j_api=null; [ -z "$api_d" ] || j_api="\"$api_d\""
+  j_fe=null;  [ -z "$fe_d" ]  || j_fe="\"$fe_d\""
+  status_datei_yaz "$sdir/volumes/status" stand.json \
+    "{\"v\":1,\"sonuc\":\"$sonuc\",\"version\":$j_ver,\"api_digest\":$j_api,\"frontend_digest\":$j_fe,\"zaman_epoch\":$(date -u +%s)}"
+}

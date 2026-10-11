@@ -899,4 +899,12 @@ log "Eski veritabanı SİLİNMEDİ — '${ESKI_DB_ADI}' adıyla duruyor. Yeni h�
 log "memnun olduktan sonra elle temizleyebilirsin:"
 log "  docker compose exec -T db psql -U supabase_admin -d template1 -c 'DROP DATABASE \"${ESKI_DB_ADI}\";'"
 log ""
+# O-191: Der Schlüssel wurde oben gegen die Künye dieses Backups geprüft
+# (kein --force). Eine sicherung.json aus der Zeit VOR dem Restore kann den
+# Abdruck eines anderen Schlüssels als `_erst` tragen (neue Platte → Erst-
+# sicherung mit Übergangsschlüssel → alter Schlüssel zurück in .env → Restore)
+# und hielte die Box dauerhaft rot. Weg damit: das Panel zeigt „noch keine
+# Sicherung" (gelb), die nächste Nacht macht es grün.
+rm -f "$SCRIPT_DIR/volumes/status/sicherung.json" 2>/dev/null || true
+
 log "Bitti — kaynak: $(basename "$YEDEK_DIR"), sonuç: ok"

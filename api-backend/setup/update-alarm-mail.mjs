@@ -27,6 +27,8 @@ const METINLER = {
   konflikt: 'Automatisches Update angehalten: eigene Änderungen an Systemdateien gefunden.',
   geri_alindi: 'Update fehlgeschlagen und automatisch zurückgerollt — die Box läuft wieder auf dem vorherigen Stand.',
   bakim_modu: 'Update fehlgeschlagen, Rückrollen ebenfalls nicht erfolgreich — die Box benötigt manuelle Hilfe.',
+  // O-193 (0.6.0): Container laufen, aber die Datenbank-Migration ist gescheitert — kein Rückrollen möglich.
+  schema_fehler: 'Update eingespielt, aber die Datenbank-Aktualisierung ist fehlgeschlagen — die Box ist im Wartungsmodus und braucht Support.',
   yedek_basarisiz: 'Update NICHT durchgeführt: die Sicherung vor dem Update ist fehlgeschlagen.',
   // O-175 (07.10.2026) — von backup.sh (nächtliche Sicherung), nicht von update.sh.
   // guvenlik: nur fester Text, kein Log-Auszug, kein Pfad, kein Schlüssel.

@@ -594,6 +594,11 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
     fi
   done
   rm -rf "$SCRIPT_DIR/volumes/db/data" "$SCRIPT_DIR/volumes/storage"
+  # O-191: --neu erzeugt einen NEUEN Datenschlüssel. Bliebe die alte
+  # sicherung.json liegen, trüge sie den Abdruck des alten Schlüssels als
+  # `_erst` weiter — die gesunde, frische Box zeigte nach der ersten Sicherung
+  # dauerhaft „Schlüssel weicht ab" (onprem 11.10.2026).
+  rm -f "$SCRIPT_DIR/volumes/status/sicherung.json"
   ok "Alte Datenbank entfernt"
 fi
 
@@ -1058,6 +1063,9 @@ fi
 # Verzeichnis für IP-Mount vor erstem Start immer anlegen (L5, Adress-Weg ohne Dateien)
 mkdir -p "$SCRIPT_DIR/volumes/ip"
 chmod 0755 "$SCRIPT_DIR/volumes/ip"
+# O-191: Host-Zustandsdateien für /api/status (in `api` :ro gemountet).
+mkdir -p "$SCRIPT_DIR/volumes/status"
+chmod 0755 "$SCRIPT_DIR/volumes/status"
 
 # Im Weg 'vorhanden' (falls Datei fehlt): Modus ebenfalls festlegen (L1, L10)
 if [ "$KAYIT_MODUS" = "vorhanden" ] && [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; then
@@ -1125,6 +1133,12 @@ log "[14/17] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
 source "$SCRIPT_DIR/lib-health.sh"
 warte_auf_gesundheit 180 || fail "Nicht alle Container wurden gesund" "nicht alle Container 'running'+'healthy' nach 3 Minuten" "8 Container, alle 'running' + 'healthy'" \
   "'docker compose ps --all' und 'docker compose logs' auf dem Server prüfen — wir kommen nicht in die Box (K10)."
+# O-193 (0.6.0): gesund ≠ bereit — der Wartungsmodus (Baseline-Migration
+# gescheitert) zählt im api-Healthcheck als gesund. Ohne diese Prüfung stünde
+# unten „Installation fertig", während die Box nur die Wartungsmeldung zeigt.
+install_bereit="$(bereitschaft_pruefen 60)"
+[ "$install_bereit" = "ok" ] || fail "Die Datenbank ist nicht bereit" "/health/ready: $install_bereit" "/health/ready 200" \
+  "'docker compose logs api' auf dem Server prüfen (Zeile [migrate]) und den Support kontaktieren — wir kommen nicht in die Box (K10)."
 
 # ── Schritt 15 — Schlüsselbeweis (O-60) ──────────────────────────────────────
 log "[15/17] Abgeleiteten Schlüssel wirklich testen"
@@ -1210,6 +1224,12 @@ ok "SERVICE_ROLE_KEY akzeptiert (200)"
 # ersetzt diesen Weg NICHT, das ist eine offene, spätere Entscheidung).
 log "[16/17] Automatische Aktualisierung + Yedekleme einrichten (nächtlich)"
 chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh" "$SCRIPT_DIR/lib-ip.sh" "$SCRIPT_DIR/ip-melden.sh"
+
+# O-191: stand.json schon jetzt schreiben — sonst zeigt /api/status bis zum
+# ersten nächtlichen Update keinen Image-Digest. Fehler → egal.
+if declare -F status_stand_yaz >/dev/null 2>&1; then
+  status_stand_yaz "$SCRIPT_DIR" installiert || true
+fi
 
 # Taban für update.sh's erste .env-Zusammenführung (§7J J4): ohne diese Kopie
 # hätte der allererste Lauf nichts, wogegen er "was haben WIR geändert"

@@ -3,7 +3,7 @@
 > Üretim: 2026-10-11 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3480 fonksiyon** (3392 JS · 80 bash · 8 ps1) · 433 dosya · 41 sidebar modülü
+**3487 fonksiyon** (3392 JS · 87 bash · 8 ps1) · 433 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -518,8 +518,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `kanonischer_meta_text()` — Zeile 447 · calledBy: onprem/backup.sh
 - `meta_hmac_berechnen()` — Zeile 454 · calledBy: onprem/backup.sh
 - `json_deger()` — Zeile 487 · calledBy: onprem/backup.sh
-- `rotasyon_vor_migration()` — Zeile 531 · calledBy: onprem/backup.sh
-- `rotasyon_nightly()` — Zeile 534 · calledBy: onprem/backup.sh
+- `durum_dosyasi_yaz()` — Zeile 535 · calledBy: onprem/backup.sh
+- `rotasyon_vor_migration()` — Zeile 559 · calledBy: onprem/backup.sh
+- `rotasyon_nightly()` — Zeile 562 · calledBy: onprem/backup.sh
 
 ### `onprem/install.sh`
 - sources: `lib-ip.sh`, `lib-setup-jeton.sh`, `||`, `lib-health.sh`
@@ -530,23 +531,29 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 73 · calledBy: lokale_ca_vorbereiten, lokaler_name_pruefen, onprem/install.sh
 - `env_get()` — Zeile 93 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 678 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 679 · calledBy: onprem/install.sh
-- `lokaler_name_pruefen()` — Zeile 733 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
-- `lokale_ca_vorbereiten()` — Zeile 753 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 683 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 684 · calledBy: onprem/install.sh
+- `lokaler_name_pruefen()` — Zeile 738 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
+- `lokale_ca_vorbereiten()` — Zeile 758 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`, `||`
 - `le_konto_melden()` — Zeile 31 · calledBy: onprem/ip-melden.sh
+- `zeit_melden()` — Zeile 59 · calledBy: onprem/ip-melden.sh
 
 ### `onprem/lib-health.sh`
 - `warte_auf_gesundheit()` — Zeile 21 · calledBy: onprem/install.sh, onprem/update.sh
+- `bereitschaft_einordnen()` — Zeile 78 · calledBy: bereitschaft_pruefen
+- `bereitschaft_pruefen()` — Zeile 94 · calledBy: onprem/install.sh, onprem/update.sh
 
 ### `onprem/lib-ip.sh`
 - `lan_ip_ermitteln()` — Zeile 22 · calledBy: onprem/install.sh, onprem/ip-melden.sh, onprem/update.sh
 - `ist_rfc1918()` — Zeile 34 · calledBy: ip_modus_yaz, onprem/install.sh, onprem/ip-melden.sh
 - `ip_modus_yaz()` — Zeile 50 · calledBy: onprem/install.sh, onprem/update.sh
 - `ip_timer_kur()` — Zeile 97 · calledBy: onprem/install.sh, onprem/update.sh
+- `status_datei_yaz()` — Zeile 145 · calledBy: status_stand_yaz, zeit_melden
+- `status_container_digest()` — Zeile 160 · calledBy: status_stand_yaz
+- `status_stand_yaz()` — Zeile 171 · calledBy: onprem/install.sh, onprem/update.sh
 
 ### `onprem/lib-setup-jeton.sh`
 - `_sj_env_lesen()` — Zeile 18 · calledBy: setup_abgeschlossen_lesen, setup_jeton_aufraeumen
@@ -588,7 +595,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `onceki_sha()` — Zeile 309 · calledBy: onprem/update.sh
 - `durumu_yaz()` — Zeile 315 · calledBy: onprem/update.sh
 - `owner_bilgisini_guncelle()` — Zeile 343 · calledBy: onprem/update.sh
-- `bildirim_alani_oku()` — Zeile 359 · calledBy: bildirim_degerlendir
+- `bildirim_alani_oku()` — Zeile 359 · calledBy: bildirim_degerlendir, onprem/update.sh
 - `bildirim_kaydet()` — Zeile 371 · calledBy: bildirim_degerlendir
 - `bildirim_degerlendir()` — Zeile 388 · calledBy: durumu_yaz
 - `geri_yukle()` — Zeile 541 · calledBy: onprem/update.sh
