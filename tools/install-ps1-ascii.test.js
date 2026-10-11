@@ -22,3 +22,13 @@ test('install.ps1 ist reines ASCII', () => {
   const zeile = stelle < 0 ? 0 : bytes.subarray(0, stelle).toString('latin1').split('\n').length;
   assert.equal(stelle, -1, `Nicht-ASCII-Byte in Zeile ${zeile}`);
 });
+
+// Unter $ErrorActionPreference='Stop' bricht PowerShell 5.1 bei der ersten Fehlerzeile
+// eines Programms ab, sobald dessen Fehlerausgabe umgeleitet ist (2>$null / 2>&1).
+// wsl.exe darf deshalb nur ueber WslLeise / WslMitFehlertext so aufgerufen werden.
+test('install.ps1 leitet die Fehlerausgabe von wsl.exe nur in den zwei Helfern um', () => {
+  const zeilen = bytes.toString('latin1').split('\n')
+    .filter((z) => /&\s*wsl\.exe\b.*2>/.test(z) && !z.trim().startsWith('#'));
+  assert.equal(zeilen.length, 2, zeilen.join('\n'));
+  assert.ok(zeilen.every((z) => z.includes('@args')), 'nur die Helfer (mit @args)');
+});

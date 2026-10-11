@@ -133,14 +133,34 @@ function InWsl([string]$befehl) {
 #  Einen Wert aus der .env der Box lesen (Text-Rueckgabe, kein Exit-Code).
 #  --exec statt --: sonst laeuft der Aufruf durch die Linux-Shell, die das awk-$1
 #  als leere Variable ersetzt (Admin-Lauf 04.10.2026: Abbruch nach Schritt 6).
+#  wsl.exe mit verworfener bzw. eingesammelter Fehlerausgabe. NIE "& wsl.exe ... 2>$null"
+#  direkt schreiben: unter $ErrorActionPreference='Stop' macht PowerShell 5.1 aus der
+#  ersten Fehlerzeile eines Programms einen Abbruch (NativeCommandError). Auf einem
+#  sauberen Windows 11 endete die Einrichtung so in Schritt 2 (11.10.2026).
+function WslLeise {
+  $alt = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+  try { & wsl.exe @args 2>$null } finally { $ErrorActionPreference = $alt }
+}
+function WslMitFehlertext {
+  $alt = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+  try { & wsl.exe @args 2>&1 | ForEach-Object { "$_" } } finally { $ErrorActionPreference = $alt }
+}
+#  Gibt es fuer diesen Benutzer ueberhaupt eine Linux-Umgebung? Aus der Registrierung,
+#  NICHT ueber wsl.exe: ohne installiertes WSL ist wsl.exe nur ein Platzhalter, der bei
+#  jedem Aufruf "Press any key to install" zeigt und WSL an install.ps1 vorbei einrichtet.
+function WslInBenutzung {
+  $k = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss'
+  return [bool]((Test-Path $k) -and @(Get-ChildItem $k -ErrorAction SilentlyContinue).Count -gt 0)
+}
 function BoxEnv([string]$schluessel) {
   $env:WSL_UTF8 = '1'
-  $w = & wsl.exe -d $Distro -u root --exec awk -F= -v k=$schluessel '$1==k{sub(/^[^=]*=/,x); print; exit}' "$BoxPfad/.env" 2>$null
+  $w = WslLeise -d $Distro -u root --exec awk -F= -v k=$schluessel '$1==k{sub(/^[^=]*=/,x); print; exit}' "$BoxPfad/.env"
   return ([string]($w | Select-Object -First 1)).Trim()
 }
 function DistroVorhanden {
+  if (-not (WslInBenutzung)) { return $false }
   $env:WSL_UTF8 = '1'
-  $liste = (& wsl.exe -l -q 2>$null) -join "`n"
+  $liste = (WslLeise -l -q) -join "`n"
   return ($liste -split "`n" | ForEach-Object { $_.Trim() }) -contains $Distro
 }
 
@@ -235,8 +255,11 @@ if ($vorhanden -match 'networkingMode\s*=\s*mirrored' -and $vorhanden -match 'vm
   Set-Content -Path $wslconfig -Value $soll -Encoding UTF8
   Ok '.wslconfig geschrieben (gespiegeltes Netzwerk, kein Leerlauf-Stopp)'
   # Wirkt erst nach Neustart der WSL-VM. Laufende Distros werden dabei beendet.
-  & wsl.exe --shutdown 2>$null
-  Start-Sleep -Seconds 8   # WSL braucht einige Sekunden, bis die VM wirklich weg ist
+  # Ohne vorhandene Linux-Umgebung laeuft nichts - dann nicht aufrufen (Platzhalter, s. o.).
+  if (WslInBenutzung) {
+    WslLeise --shutdown | Out-Null
+    Start-Sleep -Seconds 8   # WSL braucht einige Sekunden, bis die VM wirklich weg ist
+  }
 }
 
 # O-190: alle WSL-Distributionen teilen eine Netzschicht. Startet eine ZWEITE
@@ -245,10 +268,13 @@ if ($vorhanden -match 'networkingMode\s*=\s*mirrored' -and $vorhanden -match 'vm
 # Test-Box gemessen) - api/caddy bleiben dabei gruen, kein Alarm.
 # Nur LAUFENDE Distributionen pruefen: eine gestoppte zu starten waere genau der Fehler.
 $env:WSL_UTF8 = '1'
-$laufend = (& wsl.exe -l --running -q 2>$null) -replace "`0", '' |
-  ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $Distro }
+$laufend = @()
+if (WslInBenutzung) {
+  $laufend = (WslLeise -l --running -q) -replace "`0", '' |
+    ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $Distro }
+}
 foreach ($d in $laufend) {
-  & wsl.exe -d $d --exec pgrep -x dockerd 2>$null | Out-Null
+  WslLeise -d $d --exec pgrep -x dockerd | Out-Null
   if ($LASTEXITCODE -eq 0) {
     Warn "WARNUNG: In der Linux-Umgebung `"$d`" laeuft ein eigener Docker-Dienst. Laufen beide gleichzeitig, kann die Praxura-Box die Verbindung zu ihrer Datenbank verlieren. Bitte `"$d`" beenden (wsl --terminate $d) und nicht parallel zur Box betreiben."
   }
@@ -261,7 +287,7 @@ if (DistroVorhanden) {
 } else {
   New-Item -ItemType Directory -Force -Path $WslOrt | Out-Null
   $env:WSL_UTF8 = '1'
-  $out = & wsl.exe --install $DistroBasis --name $Distro --location $WslOrt --no-launch 2>&1
+  $out = WslMitFehlertext --install $DistroBasis --name $Distro --location $WslOrt --no-launch
   $code = $LASTEXITCODE
   ($out | Out-String).Trim() -split "`n" | ForEach-Object { Log "    $_" }
   if (-not (DistroVorhanden)) {
@@ -293,7 +319,7 @@ if ((InWsl 'true') -ne 0) {
 Log '[4/11] systemd + Docker Engine (in der Linux-Umgebung)'
 if ((InWsl 'grep -q "^systemd=true" /etc/wsl.conf 2>/dev/null') -ne 0) {
   InWsl 'printf "[boot]\nsystemd=true\n\n[user]\ndefault=root\n" > /etc/wsl.conf' | Out-Null
-  & wsl.exe --terminate $Distro 2>$null
+  WslLeise --terminate $Distro | Out-Null
   Start-Sleep -Seconds 8   # wsl.conf wird nur bei einem echten Neustart der Umgebung gelesen
 }
 if ((InWsl '[ "$(ps -p 1 -o comm=)" = systemd ]') -ne 0) {
@@ -494,7 +520,8 @@ Log '  Schlaeft oder ruht der PC, ist die Box fuer alle anderen Geraete weg.'
 if (Frage 'Am Netzteil Standby + Ruhezustand ausschalten und "Deckel zuklappen = nichts tun"?' $true) {
   powercfg /change standby-timeout-ac 0   | Out-Null
   powercfg /change hibernate-timeout-ac 0 | Out-Null
-  powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0 2>$null | Out-Null
+  $eapAlt = $ErrorActionPreference; $ErrorActionPreference = 'Continue'   # Desktop-PC ohne Deckel: Fehlerzeile, kein Abbruch
+  try { powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0 2>$null | Out-Null } finally { $ErrorActionPreference = $eapAlt }
   powercfg /setactive SCHEME_CURRENT | Out-Null
   Ok 'Energie: am Netzteil kein Standby/Ruhezustand, Deckel zu = nichts tun'
 } else {

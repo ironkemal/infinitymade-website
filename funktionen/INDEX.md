@@ -3,7 +3,7 @@
 > Üretim: 2026-10-11 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3487 fonksiyon** (3392 JS · 87 bash · 8 ps1) · 433 dosya · 41 sidebar modülü
+**3490 fonksiyon** (3392 JS · 87 bash · 11 ps1) · 433 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -488,8 +488,11 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `Fehler()` — Zeile 106 · calledBy: installieren/install.ps1
 - `Frage()` — Zeile 115 · calledBy: installieren/install.ps1
 - `InWsl()` — Zeile 127 · calledBy: installieren/install.ps1
-- `BoxEnv()` — Zeile 136 · calledBy: installieren/install.ps1
-- `DistroVorhanden()` — Zeile 141
+- `WslLeise()` — Zeile 140 · calledBy: BoxEnv, DistroVorhanden, installieren/install.ps1
+- `WslMitFehlertext()` — Zeile 144 · calledBy: installieren/install.ps1
+- `WslInBenutzung()` — Zeile 151
+- `BoxEnv()` — Zeile 155 · calledBy: installieren/install.ps1
+- `DistroVorhanden()` — Zeile 160
 
 ### `installieren/install.sh`
 - sources: `os-release`

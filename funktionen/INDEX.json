@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-11",
  "dateien": 433,
- "funktionen": 3487,
+ "funktionen": 3490,
  "module": [
   "abrechnung",
   "anamnese",
@@ -70827,13 +70827,38 @@
    ]
   },
   {
-   "name": "BoxEnv",
+   "name": "WslLeise",
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 136,
-   "end": 140,
-   "lines": 5,
+   "start": 140,
+   "end": 143,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "BoxEnv",
+    "DistroVorhanden",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "WslMitFehlertext",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 144,
+   "end": 147,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70850,13 +70875,13 @@
    ]
   },
   {
-   "name": "DistroVorhanden",
+   "name": "WslInBenutzung",
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 141,
-   "end": 145,
-   "lines": 5,
+   "start": 151,
+   "end": 154,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70868,6 +70893,54 @@
    "gemeinsam": false,
    "sources": [],
    "calls": [],
+   "calledBy": []
+  },
+  {
+   "name": "BoxEnv",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 155,
+   "end": 159,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "WslLeise"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "DistroVorhanden",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 160,
+   "end": 165,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "WslLeise"
+   ],
    "calledBy": []
   },
   {
