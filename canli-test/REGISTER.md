@@ -1497,7 +1497,7 @@ olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
 
 **Nerede:** sidebar, grup „Einstellungen“, `beispielmodus`
 **Yeniden üretme:** 1. QA tenant (sector podologie) taze yükle → 2. sidebar’a bak
-→ Beklenen: Demo-Modus yok (Konsey 30.09, `nav-registry.js` podologie `beispielmodus` `roles: []` — ⚠ 03.10.2026 `699d6c76` ile `['owner','employee']`'a geri alındı, bkz. Sidebar kaydı; devir askıda, karar Kemal'de) · → Gerçekleşen: Einstellungen altında „Demo-Modus“ görünür ve açılıyor
+→ Beklenen: Demo-Modus yok (Konsey 30.09, `nav-registry.js` podologie `beispielmodus` `roles: []` — ⚠ 03.10.2026 `699d6c76` ile `['owner','employee']`'a geri alındı, bkz. Sidebar kaydı; KARAR 11.10.2026: sonraki karar geçerli — Demo-Modus podolojide owner+employee için GÖRÜNÜR, bu devir KAPANDI) · → Gerçekleşen: Einstellungen altında „Demo-Modus“ görünür ve açılıyor
 **Kanıt:** `module_visibility` (sector=podologie, module_id=beispielmodus) owner+employee `enabled=true` satırları var; `dashboard.js:1037-1039` öncelik: toggle > registry roles → `roles: []` yalnız toggle YOKSA etkili
 **Şüpheli:** `module_visibility` verisi (podologie satırları silinmeli/false) veya `dashboard.js:1037-1039` mantığı; registry değişikliği tek başına yetmiyor
 **Katman:** 5 (görünüm) · **Etki:** podolog kaldırılması kararlaştırılmış bir modülü görüyor; admin panelinden de düzeltilebilir

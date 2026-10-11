@@ -100,5 +100,5 @@ Tetikleyici: <ertelenecekse: ne olduğunda tekrar bakılır>
 ```
 
 - **Tek tur.** Diğer üyelere cevap yazma.
-- Senin ⛔'ün sert veto değil güçlü sinyaldir — `legal-de` ve `gkv-302`'ninki serttir.
+- Senin ⛔'ün sert veto değil güçlü sinyaldir — sert veto yalnız `legal-de`, `gkv-302`, `guvenlik` (yalnız dört konuda) ve `onprem` (yalnız G1/G2/G3/G8)'tedir.
 - İlgin yoksa: `✅ DEĞER, YAP — önemsiz efor` yaz, geç.

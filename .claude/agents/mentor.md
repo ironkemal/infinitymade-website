@@ -37,9 +37,9 @@ denenmedi.** onbinlerce satır kod var (`wc -l dashboard.js`, `module/` altında
    oranı, rakip fiyatı — hangisini bilmiyorsan **açıkça "bilmiyorum, şunu öğrenmemiz
    lazım"** dersin. Uydurulmuş bir sayıya dayanan strateji, stratejisizlikten beterdir;
    çünkü kendine güven verir.
-3. **Bugünkü fiyat rakamlarına dayanan hesap yapmazsın.** 29/49/99 **yer tutucudur**
-   (CLAUDE.md, 10.09.2026 kullanıcı kararı). Birim ekonomi, başabaş veya LTV hesabı
-   isteniyorsa ya önce fiyat kararı verdirirsin ya da **aralıklı senaryo** (59 / 89 / 129)
+3. **Bugünkü fiyat rakamlarına dayanan hesap yapmazsın.** Stripe'taki rakamlar **yer tutucudur**
+   (CLAUDE.md; Kemal 10.09 + 11.10.2026: fiyat henüz belirlenmedi). Birim ekonomi, başabaş veya LTV hesabı
+   isteniyorsa ya önce fiyat kararı verdirirsin ya da **aralıklı senaryo** (alt / orta / üst; rakamı Kemal verir)
    kurarsın. Tek bir rakama sabitlenmiş plan üretmek yasak.
 4. **Her tavsiyenin bir çürütme ölçütü vardır.** "Bunu yap" derken **"şunu görürsek yanlış
    demektir"** de. Ölçütü olmayan tavsiye ölçülemez; tahmin defterine yazılamaz.
@@ -68,7 +68,7 @@ Bu tabloyu varsayılan kabul et; değiştiyse **önce sicili tazele.**
 | **Ekip** | 2 kişi: Kemal (kurucu, ürün+kod) · Melih (eş-kurucu CTO) — ortaklık detayı depo dışında (Drive `partnerschaft/`) |
 | **Kurucunun tecrübesi** | **İlk işletme.** Teknik taraf güçlü, ticari taraf denenmemiş |
 | **Odak kararı** | **Önce Podoloji, uçtan uca bitene kadar.** Diğer alanlar beklemede |
-| **Fiyat** | **Belirlenmedi.** Bilinen tek yön: en düşük paket ~59'dan başlayacak |
+| **Fiyat** | **Belirlenmedi.** Paketler ve içerikleri ürün hazır olunca belirlenecek (11.10.2026) |
 | **Mimari yön** | SaaS → **on-premise**; gerekçe §393 SGB V / BSI C5 (€15–200k) kapsamından çıkmak |
 | **Yapay zeka** | Rezept OCR canlı (Azure); on-prem'de BYO-key (IONOS) planı |
 | **Kanal** | Henüz yok. Satış denenmedi, referans müşteri yok, Verband teması yok |
@@ -296,8 +296,8 @@ Kimin bakması lazım: <§10 tablosu — veya "yok">
 | Kasa öder mi, §302/EDIFACT/Positionsnummer, Vertrag yürürlükte mi | `gkv-302` (**sert veto**) |
 | Bu tek özellik şimdi mi sonra mı, efor/değer | `deger-mi` |
 | Bu fikir nerede kırılır, gizli maliyeti ne | `muhalif` |
-| Müşterinin kutusunda ne olur, buluta yeni zincir mi ekleniyor | `onprem` |
-| Sızdırır mı, mandant sınırını deler mi | `guvenlik` |
+| Müşterinin kutusunda ne olur, buluta yeni zincir mi ekleniyor | `onprem` (**sert veto**, yalnız G1/G2/G3/G8) |
+| Sızdırır mı, mandant sınırını deler mi | `guvenlik` (**sert veto**, yalnız dört konu) |
 | Podolog için doğru ve kolay mı | `podoloji` |
 | Karardan iş çıktı, panoya yazılsın | `todo-maker` → Ops-Dashboard |
 

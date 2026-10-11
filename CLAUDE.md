@@ -26,13 +26,16 @@ dışı sektörler.
 |---|---|
 | **Ürün** (pazarlama sitesi) | `praxura.de` |
 | **Uygulama** | `app.praxura.de` |
-| **Tüzel kişi / üretici** (Impressum, sözleşmeler) | InfinityMade, Siegburg NRW — `infinitymade.de` ayrı kurumsal repo |
+| **İşleten / sözleşme tarafı** (Impressum, sözleşmeler) | **Yavuz Kemal Demir** (Kleingewerbe, Siegburg NRW). "InfinityMade" yalnız adının yanında iş adı olarak yazılabilir ("Yavuz Kemal Demir – InfinityMade"), tek başına tüzel kişi gibi yazılmaz. `infinitymade.de` ayrı kurumsal repo |
 | **Backend + n8n + analytics + status** | `n8n.infinitymade.de` (Hetzner) — **kasten taşınmadı** |
 
-Yani `infinitymade.de` görmek her zaman "eskimiş" demek değildir: altyapı ve tüzel kişi
+Yani `infinitymade.de` görmek her zaman "eskimiş" demek değildir: altyapı ve iş adı
 hâlâ orada. Eskimiş olan, **ürünün** InfinityMade diye anılması.
 
-**Status (2026-08-05):** Beta, ilk müşteriler test ediyor 🟡
+**Status:** Beta 🟡 — beta test hesapları var, ödeme yapan canlı müşteri yok.
+**Satış modeli:** tek ürün = kutu ("Praxura Lokal"); SaaS satılmaz, `app.praxura.de` depo
+bölme günü kapanır (playbook **K1**, kurucu kararı 04.10.2026). Aşağıdaki Vercel/Stripe/
+Supabase-cloud anlatımı **bugün çalışan** sistemi tarif eder, satılan ürünü değil.
 
 ---
 
@@ -259,15 +262,11 @@ rate limit (`express-rate-limit`, public route'larda).
 
 ## 💳 Stripe (LIVE — 2026-06-11'den beri gerçek ödeme alınıyor)
 
-- **Plans — ⚠️ FİYATLAR GEÇİCİ, YENİDEN BELİRLENECEK (kullanıcı kararı, 10.09.2026).**
-  Bugün Stripe'ta ve `index.html`'de duran set: Starter **29 €**/ay (25 € yıllık) ·
-  Professional **49 €**/ay (42 €) · Klinik **99 €**/ay (84 €) · Enterprise bireysel.
-  **Bu set kesin değildir** — ürün "hazır" sayıldığında oturup yeniden konuşulacak.
-  Bilinen tek yön: **en düşük paket 29 olmayacak, ~59'dan başlayacak.**
-  Yani fiyat üzerine hesap yapan hiçbir analiz (birim ekonomi, on-prem destek maliyeti,
-  başabaş noktası) bugünkü rakamlara dayandırılmaz; "fiyat henüz belirlenmedi" denir.
-  ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri de geçersizdir —
-  onlar başka bir dönemin artığı, yukarıdaki karar onlara dönüş anlamına gelmez.
+- **Plans — ⚠️ FİYAT HENÜZ BELİRLENMEDİ (Kemal, 10.09 + 11.10.2026).** Paketler ve
+  içerikleri ürün "hazır" sayıldığında belirlenecek. Stripe'ta ve `pricing.js`'te duran
+  rakamlar **yer tutucudur**; belgelere, metinlere ve analizlere fiyat rakamı **yazılmaz**,
+  "fiyat henüz belirlenmedi" denir. Fiyata dayanan hesap (birim ekonomi, destek maliyeti,
+  başabaş) yapılmaz. Eski dosyalarda dolaşan hiçbir fiyat seti geçerli değildir.
 - **Trial:** 14 gün · **Customer Portal:** aktif · **Checkout domain:** `pay.praxura.de`
 - **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.cjs`'te geçmiyor (Ops-Dashboard → **Launch**)
 - **Webhook:** `https://app.praxura.de/api/stripe/webhook`. Kodun fallback'i de aynı

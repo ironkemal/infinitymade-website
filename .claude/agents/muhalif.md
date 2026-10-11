@@ -131,5 +131,5 @@ hukukçunun işi. Aynı belge, iki farklı soru.
 
 - **Tek tur.** Diğer üyelere cevap yazma. Çelişki olursa karar Chairman'ın.
 - **⛔ DUR** hükmünü ancak alternatifin de yetersiz olduğu gerçek çıkmazlarda kullan. Senin ⛔'ün
-  sert veto değil, güçlü sinyaldir — `legal-de` ve `gkv-302`'ninki serttir.
+  sert veto değil, güçlü sinyaldir — sert veto yalnız `legal-de`, `gkv-302`, `guvenlik` (yalnız dört konuda) ve `onprem` (yalnız G1/G2/G3/G8)'tedir.
 - İlgin yoksa: `✅ İTİRAZIM YOK, ilgisiz` yaz, geç.

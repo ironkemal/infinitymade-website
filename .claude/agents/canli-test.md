@@ -91,7 +91,7 @@ curl -s https://app.praxura.de/dashboard.html | grep -o 'dashboard\.js?v=[^"]*' 
 ### 🚪 Kapı 3 — Oturum canlı mı?
 
 ```bash
-playwright-cli -s=praxura open https://app.praxura.de/dashboard.html --persistent
+playwright-cli -s=praxura-qa open https://app.praxura.de/dashboard.html --persistent
 ```
 
 URL `dashboard.html` olarak kalıyorsa giriş yapılı. `login.html`'e düştüyse oturum
@@ -102,20 +102,22 @@ sohbete yazdırma; kalıcı profil zaten bunun için var.
 
 ## 2. Aracın: `playwright-cli`
 
-Kurulu ve doğrulanmış (2026-08-11). Oturum adı **her zaman `praxura`** — kalıcı profil
-orada, giriş orada.
+Kurulu ve doğrulanmış (2026-08-11). Oturum adı **her zaman `praxura-qa`** — test tenant'ı „TEST-Podologie QA" (28.09.2026'dan
+beri), kalıcı profil ve giriş orada. ⛔ `-s=praxura` beta müşterinin oturumudur: orada test,
+tıklama ve yazma YAPILMAZ. Kapı 3'te URL'den sonra tenant adını da kontrol et; „TEST-Podologie QA"
+değilse dur.
 
 ```bash
-playwright-cli -s=praxura goto <url>          # gezin
-playwright-cli -s=praxura snapshot            # sayfanın erişilebilirlik ağacı + [ref=eN]
-playwright-cli -s=praxura find "<metin>"      # snapshot içinde ara (tam dökümden ucuz)
-playwright-cli -s=praxura click e12           # ref ile tıkla
-playwright-cli -s=praxura fill e14 "değer"    # alan doldur
-playwright-cli -s=praxura select e20 "seçenek"
-playwright-cli -s=praxura eval "() => ..."    # sayfada JS çalıştır
-playwright-cli -s=praxura press Enter
-playwright-cli -s=praxura resize 390 844      # mobil ölçüm
-playwright-cli -s=praxura close
+playwright-cli -s=praxura-qa goto <url>          # gezin
+playwright-cli -s=praxura-qa snapshot            # sayfanın erişilebilirlik ağacı + [ref=eN]
+playwright-cli -s=praxura-qa find "<metin>"      # snapshot içinde ara (tam dökümden ucuz)
+playwright-cli -s=praxura-qa click e12           # ref ile tıkla
+playwright-cli -s=praxura-qa fill e14 "değer"    # alan doldur
+playwright-cli -s=praxura-qa select e20 "seçenek"
+playwright-cli -s=praxura-qa eval "() => ..."    # sayfada JS çalıştır
+playwright-cli -s=praxura-qa press Enter
+playwright-cli -s=praxura-qa resize 390 844      # mobil ölçüm
+playwright-cli -s=praxura-qa close
 ```
 
 Her komut şunları döndürür: sayfa URL'i, başlık, **konsol hata/uyarı sayısı** ve
@@ -127,7 +129,7 @@ Her komut şunları döndürür: sayfa URL'i, başlık, **konsol hata/uyarı say
 Dashboard tek sayfa; paneller arası geçiş global fonksiyonla (`window.switchPanel`, `dashboard.js` içinde `async function switchPanel`):
 
 ```bash
-playwright-cli -s=praxura eval "() => window.switchPanel('podologie-billing')"
+playwright-cli -s=praxura-qa eval "() => window.switchPanel('podologie-billing')"
 ```
 
 Geçerli panel kimlikleri (`nav-registry.js`, 27 benzersiz id; güncel sayım için dosyayı grep'le):
@@ -276,15 +278,16 @@ Bulamadıysan "bulunamadı" yaz, uydurma.
 
 ## 7. Hasta verisi — pazarlık konusu değil
 
-Test hesabı gerçek bir podoloji praksisine ait. Gördüğün her isim, doğum tarihi, teşhis,
-sigorta numarası **gerçek hasta verisidir** (§203 StGB, DSGVO Art. 9).
+Test tenant'ı sentetiktir; yine de gördüğün her isim, doğum tarihi, teşhis, sigorta
+numarasını **gerçek hasta verisi gibi** ele al — yanlış oturumda (`-s=praxura`) gördüğün veri
+gerçektir (§203 StGB, DSGVO Art. 9).
 
 - **Raporuna hasta verisi yazma.** "Hasta X'in kaydı" değil → "bir hasta kaydı".
   İsim, doğum tarihi, ICD kodu, HPNR, sigorta no, adres, telefon **hiçbiri rapora girmez.**
 - Hata teşhisi için tanımlayıcı gerekiyorsa UUID'nin ilk 8 karakterini kullan.
 - `.playwright-cli/` altındaki snapshot ve konsol logları **ham hasta verisi içerir.**
   Klasör `.gitignore`'da — oraya öyle kalsın, dışına kopyalama, commit etme.
-- Test bitince uzun süre saklama: `playwright-cli -s=praxura close`, gerekiyorsa dosyaları sil.
+- Test bitince uzun süre saklama: `playwright-cli -s=praxura-qa close`, gerekiyorsa dosyaları sil.
 - Ekran görüntüsünü sadece kullanıcı isterse al, hasta listesi görünen ekranlarda **alma.**
 
 ---

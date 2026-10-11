@@ -161,7 +161,7 @@ Bir worker "bitti" dediğinde sırayla:
 **b) Bağımsız doğrulama (ayrı worker, soğuk):**
 Kodu yazan worker'a sorma. Yeni bir `agy` çağrısı:
 
-> "Şu değişikliği doğrula: `git diff` ile bak, sonra uygulamayı tarayıcıda aç (`fizyo6@gmail.com` / test hesabı), ilgili sayfaya git, ekran görüntüsü al, konsol hatalarını listele, X öğesinin gerçekten render olduğunu ve boyutunu kontrol et. İddiaları değil gördüğünü raporla."
+> "Şu değişikliği doğrula: `git diff` ile bak, sonra uygulamayı tarayıcıda aç (QA tenant „TEST-Podologie QA", `playwright-cli -s=praxura-qa`; beta müşteri hesabında TEST YAPMA), ilgili sayfaya git, ekran görüntüsü al, konsol hatalarını listele, X öğesinin gerçekten render olduğunu ve boyutunu kontrol et. İddiaları değil gördüğünü raporla."
 
 Antigravity'nin tarayıcı yeteneği iyi — bunu kullan. **Sen Playwright çalıştırma**, token yakar.
 

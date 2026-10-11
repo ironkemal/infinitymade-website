@@ -51,7 +51,7 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 | K10 | **Destek modeli: veriye uzak erişim YOK** — "Tanılama paketi indir → bize gönder" butonu; opsiyonel ekran-paylaşımlı seans (müşteri başında, veri erişimi yok) | Veriye erişimli Fernwartung = Auftragsverarbeiter rolü geri gelir |
 | K11 | **Kanal sistemi:** `:beta` (her push otomatik, beta müşterileri) / `:stable` (yalnızca release'te, ücretli müşteriler). Tek codebase, fork yok | Beta feedback döngüsü (bugünkü "push = anında görürler") korunur; ücretliler denemelerden izole |
 | K12 | **05.10.2026 (KHS K-19 (k), Kemal) — DEĞİŞTİ: beta kutuları baştan praksisin KENDİ yerinde:** kendi PC'si ya da kendi Hetzner hesabı (`:beta` kanalı). **Bizim Hetzner hesabımızda sponsorlu instance yok** — orada hasta verisi bizim bulut sözleşmemizde durur, Auftragsverarbeiter rolü + §393 bize geri gelir (K6'nın kapattığı kapı, O-165). Sunucu maliyetini üstlenmek istersek iade/indirimle yaparız, sözleşme praksiste kalır (legal-de 07.10). Beta sırası: SaaS'taki beta hesapları kutu hazır olunca kutuya geçer, sonra `app.praxura.de` kapanır. Hetzner'de §393 praksis için geçerlidir; C5 Typ 2 Cloud Server + Storage Box'ı kapsıyor (Hetzner kaynağı, KURULUM §9, K2b.9). <br>~~**Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir~~ *(2026-07-06 metni)* | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
-| K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "€49/ay + ~€10 sunucu (kendi hesabınızda), veriniz %100 sizde". AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
+| K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "<lisans fiyatı> + sunucu (kendi hesabınızda), veriniz %100 sizde" (fiyat henüz belirlenmedi — Kemal 11.10.2026; rakam yazma). AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
 | K14 | **Geçiş takvimi:** PoC şimdi → normal geliştirme "buluta yeni zincir ekleme" kuralıyla devam → paketleme sprinti ürün olgunlaşınca (para almadan önce) | Tam paralel çalışma tek kişilik ekipte özellik geliştirmeyi öldürür; sona bırakmak makası açar |
 
 ---
@@ -325,7 +325,7 @@ Görevler:
 | Müşteri | Hetzner sunucu (CX22 sınıfı) | ~€6/ay |
 | Müşteri | Storage Box (yedek) | ~€4/ay |
 | Müşteri | KI (Rezept-Scan) — K4/K-20: Praxura'nın Azure kaynağı + kutuya kısa ömürlü jeton | lisansa dahil mi ayrı mı: fiyatla birlikte belirlenecek ~~IONOS AI kullanımı ~€2–5/ay~~ |
-| Müşteri | Praxura lisansı | **fiyat henüz belirlenmedi** (10.09.2026 kararı; en düşük paket ~59'dan) ~~mevcut plan fiyatları (€29/49/99)~~ |
+| Müşteri | Praxura lisansı | **fiyat henüz belirlenmedi** (Kemal 10.09 + 11.10.2026) |
 | Biz | ~~Beta sponsor sunucuları (geçici)~~ | yok — beta kutuları praksisin kendi hesabında (K12, O-165); istenirse iade/indirim |
 | Biz | Merkez (Vercel+Supabase küçük ölçek+domain) | mevcut düzeyde |
 | Biz | Geliştirme eforu | ~2,5–4 ay (Faz 0–6 toplamı) |
