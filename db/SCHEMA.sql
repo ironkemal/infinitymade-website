@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
--- EXPORTED AT:        2026-10-10T01:02:45.000Z
--- ERZEUGT AM:         2026-10-10
+-- LAST MIGRATION:     20261011142627 0080_drop_verordnung_festschreibung
+-- EXPORTED AT:        2026-10-11T14:27:26.000Z
+-- ERZEUGT AM:         2026-10-11
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -14,7 +14,7 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           109
+--   functions:           108
 --   triggers:            97
 --   indexes:             337
 --   auth_triggers:       1
@@ -1110,7 +1110,7 @@ CREATE TABLE public.bookings (
 --   FK verordnung_id -> prescriptions(id)
 ALTER TABLE ONLY public.bookings OWNER TO postgres;
 COMMENT ON TABLE public.bookings IS 'RLS: user_id (employee self-access) + owner_id (owner and team access) policies both active.';
-COMMENT ON COLUMN public.bookings.verordnung_id IS 'Podologie-Topf: zu welcher `verordnungen`-Zeile gehoert dieser Termin. NIEMALS eine prescriptions.id — der Physio-Topf verknuepft ueber prescription_sessions.booking_id.';
+COMMENT ON COLUMN public.bookings.verordnung_id IS 'Podologie: zu welcher podologischen Verordnung (prescriptions.id, therapie_bereich = ''podo'') gehoert dieser Termin. Seit 04.09.2026 zeigt die Spalte auf prescriptions (vorher Tabelle verordnungen, ids unveraendert uebernommen). Physio/Ergo/Logo verknuepfen Termin und Verordnung NICHT hierueber, sondern ueber prescription_sessions.booking_id. Owner-Riegel: trg_booking_verordnung_owner.';
 COMMENT ON COLUMN public.bookings.dauer_quelle IS 'Herkunft der Termindauer. NULL = nicht erfasst (Altbestand, Backend-Wege). ''vorschlag'' = Vorschlag unveraendert uebernommen. ''manuell'' = im Dauer-Feld von Hand eingetippt/geaendert — NUR diese Zeilen speisen gelernteDauer() in module/termin-dauer.js. ''serie'' = aus einem Serien-/Batch-Lauf uebernommen, zaehlt nicht als Beleg.';
 COMMENT ON COLUMN public.bookings.cancelled_at IS 'Zeitpunkt der Absage ab #192; bei vorher bereits abgesagten Terminen unbekannt (NULL).';
 COMMENT ON COLUMN public.bookings.cancelled_session_links IS 'Historische Zuordnung geplanter Sitzungen, die bei Absage wieder freigegeben wurden. Kein Sitzungszähler.';
@@ -1953,7 +1953,7 @@ CREATE TABLE public.invoices (
 ALTER TABLE ONLY public.invoices OWNER TO postgres;
 COMMENT ON COLUMN public.invoices.prescription_id IS 'Linked Muster-13/Blanko prescription (multi-prescription patients). Set automatically when invoice is created from a physio workflow.';
 COMMENT ON COLUMN public.invoices.invoice_type IS 'gkv = GKV Abrechnung (fixed tariff + Zuzahlung), privat = Privatrechnung (practice prices, no Zuzahlung), selbstzahler, bg = UV-Träger (0068), zuzahlung = Zuzahlungsaufforderung/-beleg ZU-JJJJ-nnnn an den Patienten (0078; VKZ-03-Urbeleg, ab INSERT festgeschrieben, nie draft).';
-COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologie-Verordnung (verordnungen.id). Gegenstueck zu prescription_id fuer den Physio/Ergo/Logo-Topf. Es ist immer hoechstens eines von beiden gesetzt.';
+COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologische Verordnung (prescriptions.id, therapie_bereich = ''podo''), seit 04.09.2026 auf prescriptions (vorher Tabelle verordnungen). Gegenstueck zu prescription_id fuer Physio/Ergo/Logo. Hoechstens eines von beiden ist gesetzt (CHECK invoices_ein_verordnungsbezug).';
 COMMENT ON COLUMN public.invoices.tax_summary IS 'Eingefrorene Aufschluesselung je Steuersatz/Befreiung (§ 14 Abs. 4 Nr. 7 UStG): [{satz, grund, netto, steuer, brutto}].';
 COMMENT ON COLUMN public.invoices.steuerhinweis_text IS 'Wortlaut des gedruckten Steuerhinweises, eingefroren. Nicht zur Druckzeit aus profiles lesen — sonst druckt dieselbe Rechnung in zwei Jahren anders (GoBD Rz. 107 ff., § 146 Abs. 4 AO).';
 COMMENT ON COLUMN public.invoices.steuernummer_snapshot IS 'Steuernummer der Praxis zum Zeitpunkt der Rechnungsstellung (Snapshot, § 14 Abs. 4 Nr. 2 UStG).';

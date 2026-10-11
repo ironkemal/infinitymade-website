@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
--- EXPORTED AT:        2026-10-10T01:02:45.000Z
--- ERZEUGT AM:         2026-10-10
+-- LAST MIGRATION:     20261011142627 0080_drop_verordnung_festschreibung
+-- EXPORTED AT:        2026-10-11T14:27:26.000Z
+-- ERZEUGT AM:         2026-10-11
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -14,7 +14,7 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           109
+--   functions:           108
 --   triggers:            97
 --   indexes:             337
 --   auth_triggers:       1
@@ -5364,42 +5364,6 @@ END;
 $function$
 ;
 ALTER FUNCTION public.vergebe_verordnungsnummer_rx() OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION public.verordnung_festschreibung()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO 'public'
-AS $function$
-BEGIN
-  IF OLD.belegnummer IS NULL THEN
-    RETURN NEW;
-  END IF;
-
-  IF NEW.belegnummer          IS DISTINCT FROM OLD.belegnummer
-  OR NEW.ausstellungsdatum    IS DISTINCT FROM OLD.ausstellungsdatum
-  OR NEW.diagnosegruppe       IS DISTINCT FROM OLD.diagnosegruppe
-  OR NEW.icd10                IS DISTINCT FROM OLD.icd10
-  OR NEW.leitsymptomatik      IS DISTINCT FROM OLD.leitsymptomatik
-  OR NEW.pat_leitsymptomatik  IS DISTINCT FROM OLD.pat_leitsymptomatik
-  OR NEW.dringend              IS DISTINCT FROM OLD.dringend
-  OR NEW.hausbesuch            IS DISTINCT FROM OLD.hausbesuch
-  OR NEW.therapiefrequenz      IS DISTINCT FROM OLD.therapiefrequenz
-  OR NEW.rezeptart             IS DISTINCT FROM OLD.rezeptart
-  OR NEW.zuzahlung_befreit     IS DISTINCT FROM OLD.zuzahlung_befreit
-  OR NEW.kostentraeger_ik      IS DISTINCT FROM OLD.kostentraeger_ik
-  OR NEW.versichertennummer    IS DISTINCT FROM OLD.versichertennummer
-  OR NEW.lead_id                IS DISTINCT FROM OLD.lead_id
-  OR NEW.arzt_id                IS DISTINCT FROM OLD.arzt_id
-  THEN
-    RAISE EXCEPTION 'Verordnung % wurde bereits an die Kasse uebermittelt (Beleg %). Die abgerechneten Angaben sind festgeschrieben und koennen nicht mehr direkt geaendert werden. Korrekturen laufen ueber das Korrekturverfahren (erneute Arztunterschrift + Datum, Anlage 3 TP5 V21 Abschnitt k) sowie ueber Absetzung/Teilabsetzung/Storno (PATCH /verordnung/:id/abrechnungsstatus).', OLD.id, OLD.belegnummer
-      USING ERRCODE = 'check_violation';
-  END IF;
-
-  RETURN NEW;
-END;
-$function$
-;
-ALTER FUNCTION public.verordnung_festschreibung() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.whoami()
  RETURNS jsonb
@@ -12482,8 +12446,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=vergebe_patientennummer() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=verordnung_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=verordnung_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO

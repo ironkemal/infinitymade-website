@@ -1,0 +1,27 @@
+-- Migration 0080_drop_verordnung_festschreibung.sql
+-- SaaS: angewandt 11.10.2026 (MCP: 20261011142627, Freigabe Kemal 11.10.2026 „olur, sen karar ver").
+--
+-- Entfernt die verwaiste Triggerfunktion public.verordnung_festschreibung().
+--
+-- Herkunft: schützte die Podologie-Spalten der Tabelle `verordnungen`. Die Tabelle
+-- wurde am 04.09.2026 gedroppt (Zusammenlegung in prescriptions), ihr Trigger ging mit;
+-- die Funktion blieb stehen und kam so in 0000_baseline.sql:2374 (ohne Trigger).
+-- Ersetzt seit 17.09.2026 durch prescriptions_festschreibung() /
+-- trg_prescriptions_festschreibung (0020), die alle Fachbereiche abdeckt.
+--
+-- Vier-Quellen-Prüfung (db-ustasi, 11.10.2026), alle leer:
+--   1. Code: kein Aufruf/RPC in *.js/*.mjs/*.html (nur Kommentare in 0020/0024).
+--   2. Ham-grep über das Repo (ohne archive/): nur 0000_baseline (CREATE + GRANT),
+--      Kommentare in 0020/0024 und der eigene Eintrag in db/SCHEMA-RLS.sql.
+--   3. SaaS-Katalog live: kein pg_trigger mit tgfoid auf die Funktion, kein anderer
+--      Funktionsrumpf, keine Policy, keine Sicht nennt sie, kein pg_depend-Eintrag,
+--      kein Event-Trigger.
+--   4. api-backend/dsgvo/klassifikation.js: nicht erwähnt (Funktion, keine Tabelle).
+-- Box-Seite: 0000_baseline legt die Funktion an, aber KEINEN Trigger darauf; keine
+-- spätere Migration (0001–0079) bindet sie an einen Trigger. IF EXISTS, damit eine Box,
+-- auf der sie aus irgendeinem Grund fehlt, nicht hängen bleibt. Ohne CASCADE: sollte
+-- doch etwas daran hängen, scheitert die Migration laut statt still mitzulöschen.
+--
+-- Zähler (erwartete-zaehler.json): fonksiyon 101 -> 100. Nachgerechnet, nicht gemessen.
+
+DROP FUNCTION IF EXISTS public.verordnung_festschreibung();

@@ -15,7 +15,7 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Stand:** 2026-10-10 · letzte SaaS-Migration `20261010005316 0078_zuzahlungsbeleg_invoices` (Datei `0078`). Die Kette selbst: `api-backend/db/migrations/`; Warum je Tabelle: `REGISTER.md`. Vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
+**Stand:** 2026-10-11 · letzte SaaS-Migration `20261011142627 0080_drop_verordnung_festschreibung` (Datei `0080`). Die Kette selbst: `api-backend/db/migrations/`; Warum je Tabelle: `REGISTER.md`. Vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).
 Das Ops-Dashboard liegt in einem **anderen** Projekt (`farkaejociddtgqkusvm`) — nicht verwechseln.
 
