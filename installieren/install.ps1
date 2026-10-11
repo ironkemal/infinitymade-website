@@ -384,12 +384,30 @@ Log '[7/11] Autostart beim Einschalten des PCs'
 # sleep infinity haelt die Umgebung offen; Docker startet die Container selbst
 # (restart: unless-stopped). Aendert sich das Windows-Passwort, muss die
 # Aufgabe neu gespeichert werden (Anleitung, Abschnitt Windows).
-if (Get-ScheduledTask -TaskName $AufgabeStart -ErrorAction SilentlyContinue) {
+#
+# O-197/O-198 (11.10.2026, Testbox): der Start-Ausloeser allein reicht nicht.
+# Nach dem Aufwachen aus dem Standby beendet Windows die Umgebung, und beim
+# Hochfahren endete die Aufgabe einmal sofort mit 0xC000013A — beide Male blieb
+# die Box aus, bis jemand von Hand nachsah (RestartCount half nicht). Deshalb
+# zusaetzlich alle 5 Minuten ausloesen; laeuft die Aufgabe noch, verwirft
+# "IgnoreNew" den neuen Start, sonst ist die Box spaetestens dann wieder da.
+$wdh = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
+$set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -StartWhenAvailable -MultipleInstances IgnoreNew
+$vorh = Get-ScheduledTask -TaskName $AufgabeStart -ErrorAction SilentlyContinue
+if ($vorh -and ($vorh.Triggers | Where-Object { $_.Repetition.Interval })) {
   Ok 'Autostart-Aufgabe ist schon eingerichtet'
+} elseif ($vorh) {
+  # Aufgabe aus einer aelteren Einrichtung: Wiederholung nachtragen. Mit
+  # gespeichertem Passwort verlangt Windows es dafuer erneut — dann nur warnen.
+  try {
+    Set-ScheduledTask -TaskName $AufgabeStart -Trigger (@($vorh.Triggers) + $wdh) -Settings $set -ErrorAction Stop | Out-Null
+    Ok 'Autostart-Aufgabe ergaenzt (startet die Box nach Standby/Absturz innerhalb von 5 Minuten neu)'
+  } catch {
+    Warn "Autostart-Aufgabe konnte nicht ergaenzt werden ($($_.Exception.Message)). Nach Standby bleibt die Box aus. Abhilfe: Aufgabe `"$AufgabeStart`" in der Aufgabenplanung loeschen und dieses Skript erneut starten."
+  }
 } else {
   $akt = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\wsl.exe" -Argument "-d $Distro -u root --exec /bin/sleep infinity"
-  $trg = New-ScheduledTaskTrigger -AtStartup
-  $set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -StartWhenAvailable
+  $trg = @((New-ScheduledTaskTrigger -AtStartup), $wdh)
   Log "  Fuer den Start OHNE Anmeldung braucht Windows einmalig das Passwort von $env:USERNAME"
   Log '  (es wird von Windows verschluesselt gespeichert, nicht von Praxura).'
   $cred = Get-Credential -UserName "$env:USERDOMAIN\$env:USERNAME" -Message 'Windows-Passwort fuer den Autostart der Praxis-Box'
@@ -398,7 +416,7 @@ if (Get-ScheduledTask -TaskName $AufgabeStart -ErrorAction SilentlyContinue) {
     Ok 'Autostart eingerichtet (beim Systemstart, auch ohne Anmeldung)'
   } catch {
     Warn "Autostart ohne Anmeldung nicht moeglich ($($_.Exception.Message)) — richte Start bei Anmeldung ein."
-    $trg2 = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+    $trg2 = @((New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"), $wdh)
     Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg2 -Settings $set -User "$env:USERDOMAIN\$env:USERNAME" -RunLevel Highest -Force | Out-Null
     Warn 'Die Box startet jetzt erst, wenn sich jemand an diesem PC anmeldet (automatische Anmeldung waere eine Alternative).'
   }
