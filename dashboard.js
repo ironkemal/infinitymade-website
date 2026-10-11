@@ -98,7 +98,7 @@ import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc'
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zc';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261010zc';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261010zc';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261011a';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261010zc';
@@ -4510,10 +4510,10 @@ async function openBookingModal(b) {
   }
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
-  await initBkCustomerAutocomplete();
+  await initBkCustomerAutocomplete(true);   // Karten stehen schon, samt Bindung (canli-test 11.10.2026)
 }
 
-async function initBkCustomerAutocomplete() {
+async function initBkCustomerAutocomplete(veroSteht = false) {
   const input = document.getElementById('bkCustomerSearch');
   const list = document.getElementById('bkCustomerList');
   const nameH = document.getElementById('bkCustomer');
@@ -4568,7 +4568,7 @@ async function initBkCustomerAutocomplete() {
   // Patienten setzen kann — inklusive Hausbesuch-Panel und Verordnungskarten.
   window._bkApplyLead = applyLeadById;
 
-  function applyLeadById(id) {
+  function applyLeadById(id, ohneVero = false) {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
     if (!lead) return;
     input.value = displayNameWithBirth(lead);
@@ -4578,7 +4578,7 @@ async function initBkCustomerAutocomplete() {
     list.hidden = true;
     if (leadHausbesuch(lead)) document.getElementById('bkHausbesuch').checked = true;   // nur setzen, nie abwaehlen
     refreshBkHausbesuchPanel();
-    loadBkVerordnungen(lead.id);
+    if (!ohneVero) loadBkVerordnungen(lead.id);
   }
 
   async function loadBkVerordnungen(leadId) {
@@ -4665,7 +4665,7 @@ async function initBkCustomerAutocomplete() {
   const existingName = (nameH.value || '').trim().toLowerCase();
   const existingId = (idH.value || '').trim();
   if (existingId && (window.bkAllLeads || []).some(l => l.id === existingId)) {
-    applyLeadById(existingId);
+    applyLeadById(existingId, veroSteht);
   } else if (existingName) {
     const match = (window.bkAllLeads || []).find(l =>
       (displayNameWithBirth(l) || '').toLowerCase() === existingName ||

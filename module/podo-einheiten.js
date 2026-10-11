@@ -51,6 +51,7 @@ import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './veror
 import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261010zc';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261010zf';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({
@@ -402,7 +403,7 @@ async function ladeVerordnung(sb, { ownerId, leadId, vordId }) {
   // nur `booking?.hausbesuch`, und eine Verordnung "Hausbesuch: ja" wurde bei
   // der Serienverteilung ignoriert, sobald der Ausgangstermin keiner war.
   const spalten = 'id, heilmittel, heilmittel_feld_text, heilmittel_position, diagnosegruppe, '
-                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich, frequenz, hausbesuch';
+                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich, frequenz, hausbesuch, status, abrechnung_status';
   if (vordId) {
     const { data } = await sb.from('prescriptions').select(spalten)
       .eq('id', vordId).eq('owner_id', ownerId).eq('therapie_bereich', 'podo').maybeSingle();
@@ -491,12 +492,17 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
 
   zeigeSitzungenArbeit();
 
+  // Eingereichte/stornierte Verordnung: ihre offenen Einheiten sind verfallen —
+  // weder Serie noch Ziehen anbieten (canli-test 11.10.2026; gkv-302-Urteil PE-007:
+  // abgerechnet/storniert = keine weitere Behandlung). `bereit` bleibt planbar.
+  const geschlossen = rxGeschlossen(vord);
+
   const badge = document.getElementById('bkRxSessionsBadge');
-  const offene = plan.einheiten.filter(e => !e.termin && !e.erbracht);
+  const offene = geschlossen ? [] : plan.einheiten.filter(e => !e.termin && !e.erbracht);
   const belegte = plan.einheiten.filter(e => e.termin);
 
   if (badge) {
-    badge.textContent = plan.offen === null
+    badge.textContent = geschlossen ? geschlossen : plan.offen === null
       ? `${belegte.length} vergeben`
       : `${plan.offen} offen / ${plan.einheiten.length} ges.`;
   }
@@ -510,7 +516,7 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   // REZEPT entschieden, nicht nach Fachbereich-Einstellung).
   const serieBtn = document.getElementById('bkRxSerieBtn');
   if (serieBtn) {
-    const aktivierbar = typeof aufSerie === 'function' && plan.offen > 0;
+    const aktivierbar = !geschlossen && typeof aufSerie === 'function' && plan.offen > 0;
     serieBtn.hidden = !aktivierbar;
     if (aktivierbar) {
       // `serienAnzahl` fällt von selbst auf `plan.offen` zurück, wenn die Liste
@@ -528,7 +534,9 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   const stil = 'display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);'
              + 'border:1px solid var(--border);border-radius:8px;font-size:12px;';
 
-  if (plan.offen === null) {
+  if (geschlossen) {
+    unvList.innerHTML = `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Verordnung ${esc(geschlossen)} — keine weiteren Termine planbar.</span>`;
+  } else if (plan.offen === null) {
     // `anzahl_einheiten` fehlt: keine Restmenge behaupten (terminZaehler, Regel 1).
     unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">'
       + 'Einheitenzahl der Verordnung nicht erfasst — es lässt sich nichts vorplanen.</span>';

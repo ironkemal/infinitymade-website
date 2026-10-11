@@ -272,6 +272,7 @@ kaydetmeden önce taze `abrechnung_status` ile tekrar bakılır. Eski metin: for
 "Neue Behandlungen können weiterhin dokumentiert werden."
 **Bağımlı ekranlar:** `abrechnung`, hasta dosyası zaman çizelgesi (`patientenkarte.js`
 → `verordnung-uebersicht.js`, aynı `PODO_ABGERECHNET_OR` filtresini paylaşır)
+**Son test:** 2026-10-11 ~07:25–07:50 Berlin (`7a0d60c7` + `85ad5c3a` + `b119ceae`, canlı `dashboard.js?v=20261010zg`, QA tenant) — **KISMEN GEÇTİ: Behandlungen ekranı 3/3 GEÇTİ, Termin penceresi KALDI (iki P1, aşağıda devir).** (1) Abgerechnet (`796aae21`, status=confirmed + abrechnung_status=gesendet): form yok (Datum/HPNR/Speichern DOM'da 0), `#podDokuLage` data-stufe=sperre „Abgerechnet – keine Behandlung mehr möglich", bilgi şeridi „1 abgerechnet, 0 offen", „Bereits dokumentiert (1)" + Storno düğmesi duruyor, „Status" düğmesi yok. (2) bereit (`06dbeb5c`, `ddf57e1b`): form açık, kutu warnung „Abgeschlossen – noch nicht abgerechnet" + işaretsiz „Trotzdem dokumentieren"; işaretsiz Speichern → hata „… bitte „Trotzdem dokumentieren" ankreuzen.", yazma isteği 0, sayaç 2 kaldı; işaretli Speichern → POST podologie_behandlungen + PATCH prescriptions, tam `goto` sonrası „Bereits dokumentiert (3)". Menge: bereit `f77efc4c` (1 Einheit, 1 dokümante) → sperre „Verordnete Menge erreicht (1 von 1)", form yok. (3) aktiv (`f0a303e6`): kutu yok, form açık, Speichern → POST, `goto` sonrası 1 → 2. Konsol: yalnız bilinen gürültü. **Denenemedi:** storniert / archiviert / abgesetzt / teilabsetzung — QA'da bu durumda podo-VO yok; Status diyaloğu aktiv VO'ya yalnız Bereit / Storniert / Archiviert sunuyor, storniert VO listeden düştüğü için geri alınması belirsiz → yaratılmadı. Kaydetme anındaki taze Menge kontrolü de (form sperre'de hiç çizilmediği için) tıklanamadı. **Yaratılan test verisi:** 2 Behandlung (11.10.2026; `ddf57e1b` ve `f0a303e6`). Not: kaydın ardından gelen „Folgetermin?" diyaloğu bereit VO'da da çıkıyor — domain sorusu, yargılanmadı.
 **Son test:** 2026-10-10 23:10–23:20 Berlin (`7a0d60c7`, PE-007 Dokumentationssperre) — **TEST EDİLEMEDİ, deploy inmedi.** Yerel `dashboard.js?v=20261010zf`, canlı hâlâ `…ze`; `module/podo-dokumentations-sperre.js` canlıda 404, canlı `podologie-abrechnung.js` md5 ≠ yerel (`podDokuLage` 0 eşleşme). Sebep GitHub commit status'ta: `Vercel – infinitymade-website` → failure „Deployment rate limited — retry in 24 hours.“ (`7a0d60c7`, sonraki `b119ceae`/`ffe771cd`/`8b4bf73f` de aynı; `095bcfa2` son başarılı app deploy'u). Backend kapısı 200 (JSON). Tarayıcıda hiçbir şey sınanmadı — 4 madde (Abgerechnet formsuz kutu · bereit sarı kutu/Trotzdem · aktiv kutusuz · Termin penceresi gesendet VO) Vercel kotası açılınca yeniden koşulacak.
 **Son test:** 2026-09-20 (`1d549f6`) — GEÇTİ (kısmi). Grup kapalı geliyor, "▸/▾" ile
 açılıp kapanıyor, 3 Verordnung doğru göründü. Seçilince Tagesbehandlung formu **açık**
@@ -509,6 +510,7 @@ import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) 
 **Beklenen:** Termin başlığı + Ändern, hasta özeti, Verlauf, "Termin Starten", Fußbefund,
 Bearbeiten/Absagen/Nicht erschienen, Verordnung özeti ve seans listesi. Değişiklikten
 (taşıma) sonra panel güncel zamanı göstermeli.
+**Son test:** 2026-10-11 ~07:40 Berlin (`85ad5c3a` + `7a0d60c7`, `?v=20261010zg`, QA) — **sağ panel GEÇTİ, „Termin bearbeiten" KALDI.** Beklenen (podoloji/gkv-302, 10.10.2026): termine bağlı Verordnung her zaman ilk kart; kapalıysa (status completed/billed/cancelled YA DA abrechnung_status → abgerechnet/storniert/archiviert) etiketli, soluk, tıklanamaz. Sağ panel (`#bkVeroPanelCards`), 28.09.2026 tamamlanmış termin, bağlı VO `796aae21` (confirmed + gesendet): ilk kart o, `disabled`, opacity 0.6, etiket „abgerechnet", not „Termin gehört zu dieser Verordnung …", sayaç 1/3, ardından 5 aktif kart; tıklama hiçbir şey yapmıyor. „Ändern" → `#bookingModal`: bağlı kart ~0,6 sn'de doğru çiziliyor, ~1,4–1,6 sn'de ikinci bir çizimle siliniyor (2/2) — P1, devir aşağıda. Aynı panelde abgerechnet VO için „2 offene Einheiten als Serie verteilen" + 2 sürüklenebilir „offen" birim görünüyor — P1, devir aşağıda. „Leistungen des Tages dokumentieren" Behandlungen ekranını bağlı VO ile değil hastanın başka bir aktif VO'su (`741c435c`) seçili açıyor — `dashboard.js:5756` yorumuna göre bilinçli (hasta üzerinden bulunur); kapalı bağlı VO için doğru mu, `podoloji`'ye sorulacak.
 **Son test:** 2026-09-28 — KALDI. "Löschen" düğmesi aslında "Termin absagen" diyaloğu açıyor
 (absage + gerekçe GEÇTİ). Taşımadan sonra panel eski saati göstermeye devam etti. Podolojide
 "Termin Starten" → "Sitzungsnotiz … Sitzung abschließen": not hiçbir tabloya yazılmıyor
@@ -1037,6 +1039,31 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 ---
 
 ## builder'a devredilenler
+
+### [P1] „Termin bearbeiten": termine bağlı Verordnung kartı ~1 sn sonra siliniyor, ön seçim ve `_bkUrspruenglicheVordId` sıfırlanıyor (2026-10-11, PE-007 / `85ad5c3a`)
+
+**Nerede:** `calendar` → termin → sağ panel → „Ändern" (`#bkDetailEditBtn`; „Verschieben" `#bkActionEditBtn` aynı yolu kullanır) → `#bookingModal` / `#bkVeroCards`
+**Yeniden üretme:**
+1. QA tenant, Terminkalender, 28.09.2026 → tek termin (booking `51841395`, verordnung_id `796aae21` = confirmed + gesendet)
+2. Sağ panelde „Ändern"
+3. `#bkVeroCards`'ı 200 ms aralıkla izle
+→ Beklenen: bağlı Verordnung ilk kart (kapalıysa etiketli/soluk/tıklanamaz) ve öyle KALIR
+→ Gerçekleşen: 600 ms: `796a*` (disabled) + 5 aktif, `bkSelectedRxId`=796a, `_bkUrspruenglicheVordId`=796a → 1400 ms: iki alan boş → 1600 ms: yalnız 5 aktif kart, bağlı kart yok. 2/2.
+**Kanıt:** canlı DOM zaman serisi, `?v=20261010zg`; konsol 0 hata
+**Şüpheli:** `dashboard.js:4513` `openBookingModal` sonunda `initBkCustomerAutocomplete()` → `dashboard.js:4668` `applyLeadById(existingId)` → `:4581` `loadBkVerordnungen(lead.id)` → `:4587` `zeigeVerordnungenFuerTermin(..., { bookingId: null, bekannteVerordnungId: null })` — doğru çizimin (`:4450`) üstüne bağsız ikinci çizim; `resetVerordnungFelder` alanları da siler. Satırlar Mayıs 2026'dan (`git blame`), yani aktif bağlı VO'da da ön seçim kayboluyor olmalı (denenmedi).
+**Katman:** 3 (Termin ↔ Verordnung bağı) → 4 (Abrechnung)
+**Etki:** podolog düzenleme penceresinde terminin hangi Verordnung'a ait olduğunu göremiyor; `_bkUrspruenglicheVordId` boş olduğundan başka bir kart seçip kaydederse `aktualisiereBindungBeimSpeichern` bunu yeni bağ sayar (koddan çıkarım — kaydetme DENENMEDİ, tamamlanmış termini abgerechnet VO'dan koparırdı). „Seçilemez" yarısı tutuyor: kapalı kart hiçbir anda tıklanabilir değil.
+
+### [P1] Termin sağ paneli: abgerechnet Verordnung için „offene Einheiten als Serie verteilen" + sürüklenebilir açık birimler sunuluyor (2026-10-11, PE-007 komşusu)
+
+**Nerede:** `calendar` → abgerechnet VO'ya bağlı termin → sağ panel → Einheiten bloğu (`#bkRxSessionsPanel`)
+**Yeniden üretme:** yukarıdaki termin (28.09.2026, VO `796aae21`) → sağ panele bak
+→ Beklenen (PE-007, `module/podo-dokumentations-sperre.js` başlığı: „mit der Einreichung sind offene Einheiten verfallen"; `termin-verordnung.js:124` „sonst bindet man neue Termine an eine abgerechnete VO"): eingereichte VO için yeni termin planlama yolu yok
+→ Gerçekleşen: rozet „2 offen / 3 ges.", `#bkRxSerieBtn` görünür „🗓 2 offene Einheiten als Serie verteilen", `#bkRxUnvergebeneList`'te 2 `draggable` birim (#2, #3). Üstteki kart aynı VO'yu „abgerechnet", tıklanamaz gösteriyor — aynı panelde çelişki.
+**Kanıt:** canlı DOM, `?v=20261010zg`. Seri/sürükleme sonuna kadar KOŞULMADI (abgerechnet VO'ya yeni booking bağlardı) — backend'in bunu reddedip reddetmediği bilinmiyor.
+**Şüpheli:** `module/podo-einheiten.js:513` `aktivierbar = typeof aufSerie === 'function' && plan.offen > 0` — `rxGeschlossen()` / `abrechnung_status` kontrolü yok; sürüklenebilir satırlar `:538-558`.
+**Katman:** 3 → 4
+**Etki:** podolog kasaya gitmiş Verordnung'un „açık" birimlerine termin planlayabilir; o terminlerin Behandlung'u sonra PE-007 engeline takılır. Beklenen davranışın kesin hâli için `gkv-302` / `podoloji` teyidi gerekir (panel açık birim göstersin mi, yoksa „verfallen" mı desin).
 
 ### ~~[P2] „+ Neue Verordnung": boş maske önceki Verordnung'un „Behandlungsanlass (Text auf der Rechnung)" değerini taşıyor (2026-10-10, T33 regresyon)~~ — KAPANDI (`f4a2d9b2`, regresyon 2026-10-10 ~19:55: yeni maskede Anlass boş)
 
