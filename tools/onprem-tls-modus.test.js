@@ -167,7 +167,7 @@ test('praxura-installieren.ps1: beginnt ohne BOM und Import-Certificate-Zweig h�
   assert.ok(importCertPos !== -1, 'praxura-installieren.ps1 muss Import-Certificate enthalten');
 
   // Der Abschnitt vor Import-Certificate in Schritt 9 muss CADDY_TLS_MODUS auswerten
-  const schritt9Start = text.lastIndexOf('# ── 9', importCertPos);
+  const schritt9Start = text.lastIndexOf('# -- 9', importCertPos);
   assert.ok(schritt9Start !== -1, 'Schritt 9 muss vor Import-Certificate existieren');
   const schritt9Text = text.slice(schritt9Start, importCertPos);
   assert.match(schritt9Text, /CADDY_TLS_MODUS/, 'Import-Certificate-Zweig muss CADDY_TLS_MODUS abfragen');
