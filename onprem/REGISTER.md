@@ -5063,12 +5063,14 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 16 | O-18 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-170** (06.10.2026) · **O-196** (11.10.2026) |
+| `offen` | 18 | O-18 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-156 · O-158 · **O-166** · **O-170** (06.10.2026) · **O-196** (11.10.2026) · **O-197** · **O-198** (11.10.2026, §7AT) |
 | `geplant` | 15 | O-10 · O-13 · O-19 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-139 · O-145 · **O-159** · **O-169** (K-20) · **O-192** (10.10.2026, Faz 2.4b) · **O-23** (11.10.2026) |
 | 🟡 `kısmen gelöst` | 44 | **O-193** (`0707bd6c`, kalan bozuk migration denemesi) · **O-191** (`0707bd6c` Parça B, kalan kutu ölçümü) · **O-194** (`73ed40e4`, kalan ölçüm + bağlantı zaman aşımı) · **O-190** (`ffe771cd` a+b, (c) `0707bd6c` main'de, kalan kutu ölçümü → 0.6.0) · **O-189** (`e5778089` a+c, kalan b) · **O-187** (`40491962` + `ac1504d0`, kalan promote 13.10) · O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-155** (T13) · **O-157** + **O-176** (T17) · **O-161** (izleme + T7/T8/T15) · **O-162** (T16) · **O-163** (T17 b) · **O-172** (`6aac145c`, kalan şart i) · **O-177** (`45268912`, kalan T19) · **O-178** (K2b.16 kodu, 08.10 gece; kalan T21 + K2b.15) · **O-181** (S-56/S-57, kalan businesses sayaçları + T25 kutu ölçümü) · **O-183** (`01c99769`, deploy bekliyor) · **O-21** · **O-27** · **O-138** · **O-141** (11.10.2026) |
 | `gelöst` | 102 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** · **O-171** (`004fc537`) · **O-173** (`1736768f`) · **O-164** (`293ac5be`) · **O-165** (K2b.10, 08.10) · **O-180** (08.10) · **O-179** (`d1a0bf70`, 09.10) · **O-146** + **O-182** (`b1ce69bb`, 09.10) · **O-175** (`63abe5f1`, T14 09.10) · **O-185** (`045b70cb`, 09.10) · **O-186** (`11c539e5`, 10.10) · **O-07** · **O-08** · **O-58** · **O-135** · **O-151** · **O-174** · **O-195** (11.10.2026) |
-| `unkritisch` | 15 | **O-188** (10.10.2026) · O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 · **O-184** |
+| `unkritisch` | 16 | **O-199** (11.10.2026) · **O-188** (10.10.2026) · O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 · **O-184** |
 | `widerlegt` | 4 | **O-134** · **O-137** · **O-167** (05.10.2026, K-20) · **O-168** (11.10.2026) |
+
+> ✅ **11.10.2026 gece (soak kutusu ~13 sa kapalı, §7AT):** promote en erken 14.10.2026 03:40; yeni O-197 · O-198 `offen`, O-199 `unkritisch`. 18 + 15 + 44 + 102 + 16 + 4 = **199**, en yüksek **O-199**. Uyuşuyor.
 
 > ✅ **11.10.2026 akşam (`0707bd6c` bildirimi, §7AS):** O-191 · O-193 `geplant`→🟡 `kısmen gelöst` (kod `main`'de, VERSION 0.5.2, kutuda ölçülmedi); O-190 🟡 kalır ((c) `main`'de). Yeni madde yok. 16 + 15 + 44 + 102 + 15 + 4 = **196**, en yüksek **O-196**. Uyuşuyor.
 
@@ -6171,3 +6173,51 @@ Son tarih değişmedi: ilk ücretli kutu `:stable`'a bağlanmadan önce. 13.10 p
 - **Giriş zamanı hükmü: `GEÇER, KAYITLA` — şimdi girebilir, VERSION'a dokunmadan.** "Promote'a kadar repo dışında" notunun iki sebebi vardı (O-190 Durum hücresi, O-191 Parça A notu): (1) PATCH kaçış yolu `v0.5.2..HEAD` paket farkı boş kalsın; (2) VERSION 0.5.2'deyken paket dosyası değişirse `surum: 0.5.2` iki farklı içerik taşır (O-149). (1) `42b400be` ile zaten kapandı (R6, `publish-calendar-api.yml:122-138`, sayım 2 `.sql`). (2) yalnız etiket belirsizliği: VERSION 0.5.2 iken push `release=false` olur (`publish-calendar-api.yml:104-106`), yalnız `:beta` + sha basılır, `:0.5.2` ve `v0.5.2` yazılmaz; soak kutusu `:0.5.2`'ye sabit (§7AM (3)); `promote-stable.yml` VERSION okumaz, yalnız registry digest + `v0.5.2` etiketi + girdiler. Ölçüldü: `git diff --stat v0.5.2 HEAD -- onprem/{docker-compose.yml,manifest.json,update.sh,backup.sh,install.sh,lib-health.sh,lib-ip.sh,restore.sh,ip-melden.sh} VERSION` boş (79 commit).
 - **VERSION → 0.6.0 ayrı ve SON commit, promote'tan sonra.** O commit yayın koşusudur (`v0.6.0` + `:0.6.0`), içerik o anda donar; sonradan eklenen her şey 0.6.1 (migration'sız) ya da 0.7.0 olur. Ondan önce kapanması gerekenler: yukarıdaki şart · O-193 sahte yeşil denemesi (bozuk migration'lı image) · O-194 kalan (1) `connectionTimeoutMillis` · §7AP 0081/0082'nin bu pakete girip girmeyeceği (ön kontrol yeniden) · `erwartete-zaehler.json` `gemessen_am`.
 - **Bozuk migration denemesi nerede:** WSL dağıtımı `Praxura` soak kutusunun **kendisidir** (§7AM (3) `hafer-turm-9`, §7AO), "soak dışı lokal kutu" değildir. Aynı PC'de Docker'lı ikinci WSL dağıtımı O-190 olayını tekrarlar (soak ağı düşer). Promote'tan önce yalnız bu PC dışında (geçici VM) ya da Docker'sız (`tools/onprem-bereitschaft.test.js`, geçiş testi) denenir; kutu denemesi 13.10 14:40'tan sonra, 0.6.0 soak'ı başlamadan.
+
+## 7AT — Soak kutusu ~13 saat kapalı kaldı: Windows uykusu + düşen Autostart görevi (11.10.2026 gece, bildirim + hüküm)
+
+**Olay (çağıranın ölçümü; "Ölçüm 23:22:03" altındaki satırları onprem ajanı kutuda salt-okur ölçtü).** Soak kutusu `hafer-turm-9` (WSL `Praxura`, `:0.5.2`). Windows 10:20:45'te uykuya geçti (AC standby 2 saat idi), 15:48:32'de uyandı, 15:48:34'te WSL dağıtımı kapandı (journal `poweroff.target`). Windows 22:22:28'de yeniden başladı; `Praxura Box (Autostart)` görevi 22:22:47'de koştu, `0xC000013A` ile bitti, kutu kalkmadı. Kutu 23:19:17'de çağıranın `wsl.exe` komutuyla açıldı. Sonra: görev elle başlatıldı, AC standby/hibernate 0'a çekildi.
+- Ölçüm 23:22:03 (+02:00): 8/8 healthy · `/health/ready` 200 (`db_ms` 24) · `praxura-api` ve `praxura-caddy` `Created` 10.10 11:36Z (yeniden yaratılmadı), `StartedAt` 21:19:21Z, restart 0 · `.env` iki image `:0.5.2`.
+- Digest'ler §7AO (2)'deki kayıtla aynı: api `sha256:641f4392…4dbeac`, frontend `sha256:7509159d…63e37f`.
+- 11.10 02:00 gece güncellemesi `ok` (`praxura-stand.json` `2026-10-11T00:00:57Z`, surum 0.5.2).
+
+**(1) Soak saati — HÜKÜM (§7AO (1) kuralının aynısı): `soak_baslangic` aynen kalır, kapalı süre sayılmaz.**
+- Şart karşılandı: image, `.env`, digest değişmedi; konteyner yeniden yaratılmadı. Sebep image değil, host (uyku) → soak sıfırlanmaz.
+- Sayılmayan süre muhafazakâr uçtan: 10:20:45 → ilk yeşil ölçüm 23:22:03 = 13 sa 01 dk 18 sn. Uyanıştaki 2 saniye sayılmaz.
+- **Promote en erken: 14.10.2026 03:39:41** (13.10 14:38:23 + 13:01:18). Elle tutulan pratik eşik: **14.10.2026 03:40.** `promote-stable.yml` kapısı yalnız 13.10 13:36'yı ölçer; 03:40'tan önce tetiklenmez. Önceki eşik (13.10 14:40) geçersiz.
+- Bundan sonraki kesinti: toplam sayılmayan süre bugün 14 sa 03 dk, 72 saatin beşte biri. Yeni bir kesinti olursa süre eklemek yerine soak'ın baştan başlaması Kemal'e sorulur.
+- `soak_kanit` metnine ek (tırnak, ters tırnak, dolar işareti yok): 11.10.2026 10:20 ile 23:22 arasi kutu kapaliydi: Windows uykuya gecti, uyanista WSL dagitimi kapandi, acilista Autostart gorevi 0xC000013A ile dustu. Image, env ve digest degismedi, konteyner yeniden yaratilmadi. Ilk yesil olcum 23:22:03: 8/8 healthy, health ready 200. Kapali sure (13 sa 01 dk) soaka sayilmadi; promote en erken 14.10.2026 03:40.
+- Yan kanıt (tek ölçüm, O-194 için): 0.5.2 (yeniden deneme kodu yok) soğuk açılışta api ve db aynı saniyede başladı, api kalıcı bakım moduna düşmedi. O-194'ün ölçümü bununla yapılmış sayılmaz: yarış bu kez kaybedilmedi, o kadar.
+
+### O-197 — Windows kutusu: host uykudan uyanınca WSL dağıtımı kapanıyor ve kendiliğinden geri gelmiyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | PC uykuya geçip uyandığında `Praxura` dağıtımı kapanır; onu açan tek şey açılış tetikli Autostart görevidir, uyanış bir açılış değildir |
+| **Nerede** | `installieren/install.ps1:390-391` (görev: `wsl.exe -d Praxura --exec /bin/sleep infinity`, tetik yalnız `-AtStartup`; yedek yol `:401` `-AtLogOn`) · `install.ps1:476-480` (güç ayarı bir **soru**, yalnız kurulum anında bir kez yazılır, sonra kimse denetlemez). Olay: §7AT |
+| **Tip** | G + F (kutu tarafı, işletim ortamı) |
+| **Kutuda ne olur** | Praxis PC'si bir kez uyursa (güç planı Windows güncellemesi, IT ya da kullanıcı tarafından değişti; kurulumda soruya hayır dendi) kutu bir sonraki yeniden başlatmaya kadar kapalı kalır. Kapalı kutu alarm da atamaz (O-192 kolu kutunun içinde); praxis sabah boş ekranla karşılaşır. Soak kutusunda ayar 2 saatti; kurulumda mı atlandı sonradan mı değişti **ölçülmedi** |
+| **Çözüm** | `builder`, Windows kurulum hattı (O-163/O-164 ile aynı hat). (a) Görev kendi kendini onarsın: açılış tetiğine ek olarak uyanış olayı tetiği ve kısa aralıklı yineleme, "zaten çalışıyorsa yeni örnek başlatma" kuralıyla; O-198'i de aynı değişiklik kapatır. (b) Güç ayarı tek seferlik soru olmaktan çıksın: aynı görev ya da kutunun durum ekranı ayarı okuyup sapmayı göstersin. (c) `KURULUM.md` §Windows'a bir satır: uyku açılırsa kutu kapanır. Uyanışta dağıtımın **neden** kapandığı (tutan `wsl.exe` süreci mi öldü, WSL VM'i mi) ölçülmedi; (a) sebepten bağımsız çalışır. Linux sunucu kutusunu etkilemez |
+| **Durum** | `offen` — ilk ücretli Windows kutusundan önce (a) kapanmalı; doğrulama KHS K3 Windows kurulumunda: uyut, uyandır, kutu 5 dk içinde yeşil mi. Atanmadı |
+
+### O-198 — Windows kutusu: açılışta Autostart görevi `0xC000013A` ile düşüyor, kutu kalkmıyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Sistem açılışında görev koştu ve `0xC000013A` (süreç dışarıdan sonlandırıldı) ile bitti; ikinci deneme olmadı |
+| **Nerede** | `installieren/install.ps1:390-398`. Görev ayarında `-RestartCount 3 -RestartInterval 1 dk` var (`:392`) ama kutu 22:22:47'den 23:19:17'ye kadar kalkmadı, yani yeniden deneme bu çıkışta işlemedi. Olay: §7AT (tek ölçüm) |
+| **Tip** | F + G |
+| **Kutuda ne olur** | Elektrik kesintisi ya da Windows güncellemesi sonrası PC açılır, kutu açılmaz. O-164 "açılışta kalkıyor"u kapatmıştı; bu, kapanan yolun güvenilmez olduğunu gösteriyor. Sıklığı bilinmiyor (bir açılış, bir düşüş) |
+| **Çözüm** | `builder`. Önce ölçüm: aynı PC'de birkaç yeniden başlatma + Görev Zamanlayıcı geçmişi (görevi kim sonlandırdı, WSL servisi o an hazır mıydı). Çare adayı O-197 (a) ile ortak: yinelenen tetik düşen ilk denemeyi dakikalar içinde telafi eder; açılış tetiğine kısa gecikme eklenir. Görevin başarısı "süreç başladı" ile değil "dağıtım çalışıyor" ile ölçülür |
+| **Durum** | `offen` — O-197 (a) ile aynı değişiklik, aynı K3 doğrulaması (yeniden başlat, oturum açma, kutu yeşil mi). Atanmadı |
+
+### O-199 — Kutu klasöründe eski `*.neu.bekliyor` dosyaları kalıyor: `update.sh` sonraki `ok`'ta temizlemiyor ⚪ **unkritisch**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Sapma (`konflikt`) çıkışında bırakılan kopyalar, çatışma çözülüp güncelleme `ok` olduktan sonra da diskte duruyor |
+| **Nerede** | Yazan tek yer `onprem/update.sh:496`; silen yer yok (`grep -rn "neu.bekliyor" onprem/*.sh installieren/` → 1 satır). Soak kutusu `/opt/praxura/onprem`: `backup.sh`, `restore.sh`, `docker-compose.yml` (08.10 10:53) ve `install.sh`, `ip-melden.sh` (09.10 21:50) kopyaları; hepsi soak başlangıcından (10.10 13:36) eski |
+| **Tip** | G (kutu, artık dosya) |
+| **Kutuda ne olur** | Çalışmayı etkilemez: hiçbir betik bu dosyaları okumaz, manifest'te değiller. Soak kanıtını da etkilemez: son durum `ok`, taban `dateien-sha.json` 11.10 02:00'de tazelendi. Tek zarar destek okumasında: klasöre bakan "bu kutuda çözülmemiş çatışma var" sanır |
+| **Çözüm** | `unkritisch` — gerekçe yukarıda. Fırsat olursa `builder`: `update.sh` Schritt 11 `ok` dalında `*.neu.bekliyor` silinir (tek satır, o dosyaya dokunulan bir sonraki turda). Soak kutusundakiler promote'tan sonra elle silinir; öncesinde kutuya yazılmaz |
+| **Durum** | `unkritisch` |
