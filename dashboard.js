@@ -4522,7 +4522,7 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
   const phoneInput = document.getElementById('bkPhone');
   if (!input || !list || !nameH || !idH) return;
   if (phoneGroup) phoneGroup.hidden = true;
-
+  if (!veroSteht) window._bkUrspruenglicheVordId = null;   // sonst wandert die Bindung des zuletzt bearbeiteten Termins ins neue Fenster
   async function loadBkLeads() {
     const ownerId = getOwnerId();
     const { data } = await bizScope(supabase

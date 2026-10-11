@@ -510,7 +510,9 @@ import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) 
 **Beklenen:** Termin başlığı + Ändern, hasta özeti, Verlauf, "Termin Starten", Fußbefund,
 Bearbeiten/Absagen/Nicht erschienen, Verordnung özeti ve seans listesi. Değişiklikten
 (taşıma) sonra panel güncel zamanı göstermeli.
-**Son test:** 2026-10-11 ~07:40 Berlin (`85ad5c3a` + `7a0d60c7`, `?v=20261010zg`, QA) — **sağ panel GEÇTİ, „Termin bearbeiten" KALDI.** Beklenen (podoloji/gkv-302, 10.10.2026): termine bağlı Verordnung her zaman ilk kart; kapalıysa (status completed/billed/cancelled YA DA abrechnung_status → abgerechnet/storniert/archiviert) etiketli, soluk, tıklanamaz. Sağ panel (`#bkVeroPanelCards`), 28.09.2026 tamamlanmış termin, bağlı VO `796aae21` (confirmed + gesendet): ilk kart o, `disabled`, opacity 0.6, etiket „abgerechnet", not „Termin gehört zu dieser Verordnung …", sayaç 1/3, ardından 5 aktif kart; tıklama hiçbir şey yapmıyor. „Ändern" → `#bookingModal`: bağlı kart ~0,6 sn'de doğru çiziliyor, ~1,4–1,6 sn'de ikinci bir çizimle siliniyor (2/2) — P1, devir aşağıda. Aynı panelde abgerechnet VO için „2 offene Einheiten als Serie verteilen" + 2 sürüklenebilir „offen" birim görünüyor — P1, devir aşağıda. „Leistungen des Tages dokumentieren" Behandlungen ekranını bağlı VO ile değil hastanın başka bir aktif VO'su (`741c435c`) seçili açıyor — `dashboard.js:5756` yorumuna göre bilinçli (hasta üzerinden bulunur); kapalı bağlı VO için doğru mu, `podoloji`'ye sorulacak.
+**Son test:** 2026-10-11 ~07:40–07:55 Berlin, regresyon (`d9eb2d9d`, `?v=20261011a`, QA) — **GEÇTİ (iki P1 kapandı), bir yeni P2 + bir P3 gözlem (devir).** „Termin bearbeiten": bağlı kart (abgerechnet → ilk sırada, disabled, etiketli; aktif → seçili) 6 sn boyunca kalıyor; müşteri elle değiştirilince kartlar o hastaya göre yenileniyor (bağ alanları sıfırlanır — beklenen); „Neuer Termin" → hasta seç → 5 kart. Sağ panel: abgerechnet VO'da seri düğmesi ve sürüklenebilir birim yok, rozet „abgerechnet"; aktif VO'da eskisi gibi. Konsol 0 hata. Kaydetme hiçbir adımda yapılmadı.
+
+**Önceki test:** 2026-10-11 erken tur (`85ad5c3a` + `7a0d60c7`, `?v=20261010zg`, QA) — **sağ panel GEÇTİ, „Termin bearbeiten" KALDI.** Beklenen (podoloji/gkv-302, 10.10.2026): termine bağlı Verordnung her zaman ilk kart; kapalıysa (status completed/billed/cancelled YA DA abrechnung_status → abgerechnet/storniert/archiviert) etiketli, soluk, tıklanamaz. Sağ panel (`#bkVeroPanelCards`), 28.09.2026 tamamlanmış termin, bağlı VO `796aae21` (confirmed + gesendet): ilk kart o, `disabled`, opacity 0.6, etiket „abgerechnet", not „Termin gehört zu dieser Verordnung …", sayaç 1/3, ardından 5 aktif kart; tıklama hiçbir şey yapmıyor. „Ändern" → `#bookingModal`: bağlı kart ~0,6 sn'de doğru çiziliyor, ~1,4–1,6 sn'de ikinci bir çizimle siliniyor (2/2) — P1, devir aşağıda. Aynı panelde abgerechnet VO için „2 offene Einheiten als Serie verteilen" + 2 sürüklenebilir „offen" birim görünüyor — P1, devir aşağıda. „Leistungen des Tages dokumentieren" Behandlungen ekranını bağlı VO ile değil hastanın başka bir aktif VO'su (`741c435c`) seçili açıyor — `dashboard.js:5756` yorumuna göre bilinçli (hasta üzerinden bulunur); kapalı bağlı VO için doğru mu, `podoloji`'ye sorulacak.
 **Son test:** 2026-09-28 — KALDI. "Löschen" düğmesi aslında "Termin absagen" diyaloğu açıyor
 (absage + gerekçe GEÇTİ). Taşımadan sonra panel eski saati göstermeye devam etti. Podolojide
 "Termin Starten" → "Sitzungsnotiz … Sitzung abschließen": not hiçbir tabloya yazılmıyor
@@ -1040,7 +1042,27 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 
 ## builder'a devredilenler
 
-### [P1] „Termin bearbeiten": termine bağlı Verordnung kartı ~1 sn sonra siliniyor, ön seçim ve `_bkUrspruenglicheVordId` sıfırlanıyor (2026-10-11, PE-007 / `85ad5c3a`)
+### [P2] Termin sağ paneli, abgerechnet VO: „Verordnung abgerechnet — keine weiteren Termine planbar." metni DOM'da var ama kullanıcıya hiç görünmüyor (2026-10-11, `d9eb2d9d` regresyon turu)
+
+**Nerede:** `calendar` → abgerechnet VO'ya bağlı termin → sağ panel → Einheiten bloğu → sekme „Unvergebene (0)"
+**Yeniden üretme:**
+1. QA tenant, 28.09.2026 termini (booking `51841395`, VO `796aae21`) → sağ panel
+2. „Unvergebene (0)" sekmesine tıkla (gerçek tıklama, ref ile)
+→ Beklenen: sekme açılır, „Verordnung abgerechnet — keine weiteren Termine planbar." okunur
+→ Gerçekleşen: sekme değişmiyor (`aria-selected` „Termine (1)"de kalıyor), `#bkRxUnvergebeneBox` `hidden`; metin yalnız `textContent`'te. Görünen tek işaret rozet „abgerechnet".
+**Kanıt:** canlı DOM `?v=20261011a`; konsol 0 hata
+**Şüpheli:** `module/podo-einheiten.js:578` `zeigeSitzungsSeiten({ offen: offene.length, … })` — kapalı VO'da `offene = []` (`:501`) → `module/sitzungen-ansicht.js:65-74` `waehleSeite()` boş sayfayı reddedip „vergeben"e döner. Panel her zaman bir terminden açıldığı için `vergeben ≥ 1`, yani metin (`:538`) pratikte erişilemez. Aynı mekanizma eski „Alle vergeben ✓" metni için de geçerli (bilinçli tasarım olabilir).
+**Katman:** 3 (yalnız gösterim; seri/sürükleme yolu kapalı — işlev doğru)
+**Etki:** podolog niye seri düğmesi olmadığını yalnız rozetten çıkarır; açıklayıcı cümle boşa yazılmış. Çözüm yönü (metni sekme dışına almak mı, kapalıyken sekmeyi açılır kılmak mı) `podoloji`'ye sorulabilir.
+
+### [P3 · gözlem, kaydetme DENENMEDİ] „Termin bearbeiten" Abbrechen sonrası `_bkUrspruenglicheVordId` yeni „Neuer Termin" penceresine taşınıyor (2026-10-11, `d9eb2d9d` yan etkisi)
+
+**Nerede:** `calendar` → VO'ya bağlı termin → „Ändern" → Abbrechen → „+ Termin"
+→ Gerçekleşen: boş „Neuer Termin"de `bkSelectedRxId`, `_pendingRxSession`, `_bkGewaehlteRx` temiz, ama `window._bkUrspruenglicheVordId` hâlâ önceki terminin VO'su (`5013*`). Hasta seçilince `resetVerordnungFelder` siliyor (ölçüldü).
+**Şüpheli:** `dashboard.js:4513` — düzeltmeden önce bağsız ikinci çizim bu alanı her açılışta sıfırlıyordu; artık sıfırlayan yok, yeni-termin açılış yolu da sıfırlamıyor. Okuyan: `module/termin-verordnung.js:472-477` (`!gewaehlt && orig && rxFeld===''` → `loeseTermin(yeni bookingId)`).
+**Etki:** koddan çıkarım — hasta listeden seçilmeden kaydedilen (ör. Schnellerfassung) yeni terminde gereksiz bir „lösen" çağrısı; yeni terminin bağı olmadığı için zararsız görünüyor. Kanıtlanmış zarar yok, canlıda kaydetme yapılmadı.
+
+### ~~[P1] „Termin bearbeiten": termine bağlı Verordnung kartı ~1 sn sonra siliniyor, ön seçim ve `_bkUrspruenglicheVordId` sıfırlanıyor (2026-10-11, PE-007 / `85ad5c3a`)~~ — KAPANDI (`d9eb2d9d`, canlı regresyon 2026-10-11 ~07:40–07:55, `?v=20261011a`: 6 sn zaman serisi, 623 ms'den sonra değişim yok — `796a*` ilk kart, disabled + „abgerechnet" etiketi + opacity 0.6, `bkSelectedRxId`/`_bkUrspruenglicheVordId` dolu kalıyor; aktif VO'lu terminde (`e48f89a4`, VO `5013*`) ön seçim de kalıyor)
 
 **Nerede:** `calendar` → termin → sağ panel → „Ändern" (`#bkDetailEditBtn`; „Verschieben" `#bkActionEditBtn` aynı yolu kullanır) → `#bookingModal` / `#bkVeroCards`
 **Yeniden üretme:**
@@ -1054,7 +1076,7 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 **Katman:** 3 (Termin ↔ Verordnung bağı) → 4 (Abrechnung)
 **Etki:** podolog düzenleme penceresinde terminin hangi Verordnung'a ait olduğunu göremiyor; `_bkUrspruenglicheVordId` boş olduğundan başka bir kart seçip kaydederse `aktualisiereBindungBeimSpeichern` bunu yeni bağ sayar (koddan çıkarım — kaydetme DENENMEDİ, tamamlanmış termini abgerechnet VO'dan koparırdı). „Seçilemez" yarısı tutuyor: kapalı kart hiçbir anda tıklanabilir değil.
 
-### [P1] Termin sağ paneli: abgerechnet Verordnung için „offene Einheiten als Serie verteilen" + sürüklenebilir açık birimler sunuluyor (2026-10-11, PE-007 komşusu)
+### ~~[P1] Termin sağ paneli: abgerechnet Verordnung için „offene Einheiten als Serie verteilen" + sürüklenebilir açık birimler sunuluyor (2026-10-11, PE-007 komşusu)~~ — KAPANDI (`d9eb2d9d`, canlı regresyon 2026-10-11: `#bkRxSerieBtn` hidden, sayfada 0 `draggable`, rozet „abgerechnet"; aktif VO'da (`5013*`) rozet „2 offen / 3 ges.", seri düğmesi ve 2 sürüklenebilir birim duruyor. Kalan: metnin görünmezliği → üstteki yeni [P2])
 
 **Nerede:** `calendar` → abgerechnet VO'ya bağlı termin → sağ panel → Einheiten bloğu (`#bkRxSessionsPanel`)
 **Yeniden üretme:** yukarıdaki termin (28.09.2026, VO `796aae21`) → sağ panele bak
