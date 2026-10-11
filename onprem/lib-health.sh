@@ -90,6 +90,10 @@ bereitschaft_einordnen() {
 # bereitschaft_pruefen <timeout_sekunden> — fragt /health/ready im api-Container
 # alle 5 s, bis ok oder schema_fehler (beides endgültig) oder Zeit um.
 # `timeout 15` je Versuch: fetch hat kein eigenes Zeitlimit (onprem 11.10.2026).
+# `</dev/null` ist Pflicht: `timeout` startet den Befehl in einer eigenen
+# Prozessgruppe; liest docker compose dann vom Terminal, hält der Kernel ihn an
+# (SIGTTIN) und `timeout` beendet ihn nicht mehr — install.sh blieb so in
+# Schritt 14 für immer stehen (12.10.2026, erste Windows-Einrichtung von Hand).
 # Muss im Verzeichnis mit der aktiven docker-compose.yml aufgerufen werden.
 bereitschaft_pruefen() {
   local timeout_sek="${1:-60}" versuche roh ergebnis i
@@ -97,7 +101,7 @@ bereitschaft_pruefen() {
   [ "$versuche" -ge 1 ] || versuche=1
   ergebnis="nicht_bereit"
   for i in $(seq 1 "$versuche"); do
-    roh="$(timeout 15 docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/health/ready').then(async r=>{const j=await r.json().catch(()=>({}));const s=v=>String(v||'-').replace(/[^a-z_]/gi,'').slice(0,32)||'-';console.log(r.status+' '+s(j.grund)+' '+s(j.detail&&j.detail.art))}).catch(()=>console.log('0 - -'))" 2>/dev/null | tail -n 1 || true)"
+    roh="$(timeout 15 docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/health/ready').then(async r=>{const j=await r.json().catch(()=>({}));const s=v=>String(v||'-').replace(/[^a-z_]/gi,'').slice(0,32)||'-';console.log(r.status+' '+s(j.grund)+' '+s(j.detail&&j.detail.art))}).catch(()=>console.log('0 - -'))" </dev/null 2>/dev/null | tail -n 1 || true)"
     ergebnis="$(bereitschaft_einordnen "${roh:-0 - -}")"
     case "$ergebnis" in ok|schema_fehler*) echo "$ergebnis"; return 0 ;; esac
     [ "$i" -eq "$versuche" ] || sleep 5

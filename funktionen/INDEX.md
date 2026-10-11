@@ -534,10 +534,10 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 73 · calledBy: lokale_ca_vorbereiten, lokaler_name_pruefen, onprem/install.sh
 - `env_get()` — Zeile 93 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 683 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 684 · calledBy: onprem/install.sh
-- `lokaler_name_pruefen()` — Zeile 738 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
-- `lokale_ca_vorbereiten()` — Zeile 758 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 692 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 693 · calledBy: onprem/install.sh
+- `lokaler_name_pruefen()` — Zeile 747 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
+- `lokale_ca_vorbereiten()` — Zeile 767 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`, `||`
@@ -547,7 +547,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 ### `onprem/lib-health.sh`
 - `warte_auf_gesundheit()` — Zeile 21 · calledBy: onprem/install.sh, onprem/update.sh
 - `bereitschaft_einordnen()` — Zeile 78 · calledBy: bereitschaft_pruefen
-- `bereitschaft_pruefen()` — Zeile 94 · calledBy: onprem/install.sh, onprem/update.sh
+- `bereitschaft_pruefen()` — Zeile 98 · calledBy: onprem/install.sh, onprem/update.sh
 
 ### `onprem/lib-ip.sh`
 - `lan_ip_ermitteln()` — Zeile 22 · calledBy: onprem/install.sh, onprem/ip-melden.sh, onprem/update.sh

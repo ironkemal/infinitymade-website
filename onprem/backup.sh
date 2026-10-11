@@ -123,10 +123,10 @@ sicherung_alarm() {
   eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
   isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
   [ -n "$eposta" ] || return 0
-  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || mrc=$?
+  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" </dev/null >>"$LOG_FILE" 2>&1 || mrc=$?
   if [ "$mrc" -ne 0 ] && [ "$mrc" -ne 3 ]; then
     mrc=0
-    timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || mrc=$?
+    timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" </dev/null >>"$LOG_FILE" 2>&1 || mrc=$?
   fi
   if [ "$mrc" -eq 0 ]; then
     log "  Alarm-Mail gesendet ($sonuc)"

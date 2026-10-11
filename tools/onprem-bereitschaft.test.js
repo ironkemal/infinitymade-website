@@ -108,3 +108,21 @@ test('Übergang: frische lib-health.sh aus Schritt 7 wird nachgeladen', (t) => {
   assert.equal(res.status, 0, res.stderr);
   assert.equal(res.stdout.trim(), 'ergebnis=ok');
 });
+
+// 12.10.2026, erste Einrichtung von Hand: `timeout` startet den Befehl in einer eigenen
+// Prozessgruppe. Liest docker compose dann vom Terminal, hält der Kernel ihn an (SIGTTIN)
+// und `timeout` beendet ihn nicht — install.sh stand in Schritt 14 für immer.
+test('kein `timeout … docker compose` ohne </dev/null in den Box-Skripten', () => {
+  const dir = path.join(repoRoot, 'onprem');
+  const treffer = [];
+  for (const datei of fs.readdirSync(dir).filter((d) => d.endsWith('.sh'))) {
+    const zeilen = fs.readFileSync(path.join(dir, datei), 'utf8').split('\n');
+    zeilen.forEach((z, i) => {
+      if (z.trim().startsWith('#') || !/\btimeout\b[^|;]*\bdocker compose\b/.test(z)) return;
+      // Befehl kann über Folgezeilen gehen (Zeilenende mit \ oder offenem '…')
+      const block = [z, zeilen[i + 1] || ''].join('\n');
+      if (!block.includes('</dev/null')) treffer.push(`${datei}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(treffer, []);
+});

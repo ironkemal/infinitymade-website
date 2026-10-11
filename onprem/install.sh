@@ -518,24 +518,33 @@ elif [ -z "$MERKEZ_URL_VORLAGE" ]; then
 else
   log "  Einrichtungscode (XXXX-XXXX-XXXX-XXXX) eingeben."
   log "  (Enter ohne Eingabe = eigene Adresse manuell konfigurieren)"
-  read -r -s -p "  Einrichtungscode: " RAW_CODE
-  echo ""
-  CLEAN_CODE="$(printf '%s' "$RAW_CODE" | tr -d '[:space:]')"
-  if [ -n "$CLEAN_CODE" ]; then
+  # Sichtbare Eingabe, drei Versuche (Kemal 12.10.2026, erste Einrichtung von Hand:
+  # blind getippt, vertippt, Abbruch der ganzen Einrichtung). Der Code ist einmalig
+  # und 14 Tage gültig; geloggt wird er weiterhin nie (read schreibt nicht ins Protokoll).
+  code_versuche=0
+  while :; do
+    read -r -p "  Einrichtungscode: " RAW_CODE
+    CLEAN_CODE="$(printf '%s' "$RAW_CODE" | tr -d '[:space:]')"
+    [ -n "$CLEAN_CODE" ] || break
     # Alphabet: FORMAT_KUTU (0123456789ABCDEFGHJKMNPQRSTVWXYZ, inkl. I, L, O-Toleranz)
     if printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}$'; then
-      KAYIT_CODE="$CLEAN_CODE"
+      KAYIT_CODE="$CLEAN_CODE"; break
     elif printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{16}$'; then
-      KAYIT_CODE="${CLEAN_CODE:0:4}-${CLEAN_CODE:4:4}-${CLEAN_CODE:8:4}-${CLEAN_CODE:12:4}"
-    else
+      KAYIT_CODE="${CLEAN_CODE:0:4}-${CLEAN_CODE:4:4}-${CLEAN_CODE:8:4}-${CLEAN_CODE:12:4}"; break
+    fi
+    code_versuche=$((code_versuche + 1))
+    if [ "$code_versuche" -ge 3 ]; then
       fail "Ungültiges Code-Format" "Eingabe entspricht nicht dem Format XXXX-XXXX-XXXX-XXXX" \
         "XXXX-XXXX-XXXX-XXXX (16 Zeichen aus Ziffern/Buchstaben)" \
         "Den von Praxura erhaltenen Einrichtungscode im Format XXXX-XXXX-XXXX-XXXX eingeben."
     fi
+    echo "  Das passt nicht zum Format XXXX-XXXX-XXXX-XXXX (16 Zeichen, Bindestriche freiwillig). Bitte noch einmal."
+  done
+  if [ -n "$KAYIT_CODE" ]; then
     KAYIT_MODUS="code"
-    unset RAW_CODE CLEAN_CODE
     ok "Einrichtungscode erfasst (wird nicht geloggt)"
   fi
+  unset RAW_CODE CLEAN_CODE
 fi
 
 if [ "$KAYIT_MODUS" = "adresse" ]; then
@@ -894,11 +903,11 @@ ok "Kanal: ${kanal} ($api_img)"
 # turu): sorulmazsa her kutu veritabanıyla AYNI diskte yedekle teslim edilir
 # — RELEASE-STANDARD.md §4.3'ün "varsayılan kutu dışı" gereği kâğıtta kalır.
 # Panel henüz yok (Faz 2.4), bu yüzden uyarı burada ve install.log'da kalıcı.
-log "[12/17] Yedekleme hedefi (gecelik + migration-öncesi otomatik yedekler)"
-log "  Yedekler varsayılan olarak KUTUNUN KENDİ DİSKİNDE tutulur — disk arızasında"
-log "  veritabanıyla BİRLİKTE kaybolurlar. Önerilen: önceden bağladığınız (mount"
-log "  ettiğiniz) bir NAS/SMB/NFS dizini."
-read -r -p "  Yedek hedefi (boş = kutu içi, aksi hâlde mount edilmiş bir dizin yolu, ör. /mnt/yedek): " backup_ziel
+log "[12/17] Sicherungsziel (nächtliche Sicherung + Sicherung vor Datenbank-Updates)"
+log "  Sicherungen liegen ohne Angabe AUF DER PLATTE DIESER BOX — bei einem"
+log "  Plattenschaden gehen sie ZUSAMMEN mit der Datenbank verloren. Empfohlen: ein"
+log "  vorher eingebundenes Laufwerk (NAS, Netzlaufwerk, externe Platte)."
+read -r -p "  Sicherungsziel (leer = in der Box, sonst der Pfad eines eingebundenen Laufwerks, z. B. /mnt/sicherung): " backup_ziel
 if [ -n "$backup_ziel" ]; then
   if [ ! -d "$backup_ziel" ]; then
     warn "Girilen yol bir dizin olarak bulunamadı: $backup_ziel — yine de kaydediliyor, ama 'bash backup.sh --sebep manuel' ilk yedekte hata verecektir. Mount'un kalıcı olduğundan (fstab/otomatik bağlama) emin ol. Bağladıktan sonra bir kez: sudo touch '$backup_ziel/.praxura-backup-ziel'"

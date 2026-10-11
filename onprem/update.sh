@@ -147,7 +147,7 @@ mail_gonder_container() {
   # Rückgabe 0 = gesendet · 3 = SMTP nicht eingerichtet (O-185: kein Fallback, kein
   # "gesendet") · sonst Fehler. `|| rc=$?`, damit set -e hier nicht greift.
   local rc=0
-  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || rc=$?
+  timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" </dev/null >>"$LOG_FILE" 2>&1 || rc=$?
   [ "$rc" -eq 0 ] && return 0
   if [ "$rc" -eq 3 ]; then log "  Bildirim atlandı: SMTP kurulu değil (sonuc=$sonuc)"; return 3; fi
   warn "  bildirim: 'exec' başarısız oldu (api container sağlıksız olabilir) — 'run --rm' ile tek seferlik deneniyor"
@@ -156,7 +156,7 @@ mail_gonder_container() {
   # olası eşlikçisi) bu yüzden burada da takılırdı (onprem-Gegenlesen 13.09.2026).
   # İmaj zaten yerel: konteyner ondan koşuyordu.
   rc=0
-  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 || rc=$?
+  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" </dev/null >>"$LOG_FILE" 2>&1 || rc=$?
   if [ "$rc" -eq 3 ]; then log "  Bildirim atlandı: SMTP kurulu değil (sonuc=$sonuc)"; fi
   return "$rc"
 }

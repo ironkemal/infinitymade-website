@@ -32,7 +32,7 @@ le_konto_melden() {
   local roh urls anzahl url alt
   [ -d "$SCRIPT_DIR/volumes/ip" ] || return 0
   roh="$(cd "$SCRIPT_DIR" && timeout -k 5 20 docker compose exec -T caddy sh -c \
-    'cat /data/caddy/acme/acme-v02.api.letsencrypt.org-directory/users/*/*.json 2>/dev/null' 2>/dev/null || true)"
+    'cat /data/caddy/acme/acme-v02.api.letsencrypt.org-directory/users/*/*.json 2>/dev/null' </dev/null 2>/dev/null || true)"
   [ -n "$roh" ] || return 0
   urls="$(printf '%s' "$roh" | grep -oE '"location"[[:space:]]*:[[:space:]]*"https://acme-v02\.api\.letsencrypt\.org/acme/acct/[0-9]{1,20}"' \
     | grep -oE 'https://acme-v02\.api\.letsencrypt\.org/acme/acct/[0-9]{1,20}' | sort -u || true)"
