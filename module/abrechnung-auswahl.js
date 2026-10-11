@@ -13,7 +13,7 @@
  *
  * Beide lasen seit dem 04.09.2026 dieselbe Tabelle (`prescriptions`), beide
  * schrieben dieselbe Zeile in `abrechnung`. Die Trennung war historisch, nicht
- * fachlich (`ABRECHNUNG_BILDSCHIRM_PLAN.md`, Abschnitt 1). Diese Datei führt
+ * fachlich (`archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`, Abschnitt 1). Diese Datei führt
  * beide zusammen, OHNE einer Seite etwas wegzunehmen: der Parameter
  * `granularitaet` hält den einzigen echten Unterschied fest.
  *

@@ -19,7 +19,7 @@ Bunlar tek tek bug değil, **bir kalıp**. Kalıbı görmek için envanter gerek
 |---|---|
 | `INDEX.json` | Makine okuru. Her fonksiyon: dosya/satır, dokunduğu tablolar, yazma işlemleri, çağırdıkları, **onu çağıranlar**, hangi sidebar modülünden erişilebildiği, tıklama yolu. |
 | `INDEX.md` | İnsan okuru. Kopya adayları, en çok yazılan tablolar, çift isimler. |
-| `GKV-SORULAR-2026-08-12.md` | 12.08.2026 tarihli gkv-302 soru listesi (`db/REGISTER.md` ve `ABRECHNUNG_BILDSCHIRM_PLAN.md` atıf veriyor). Üretilmez, elle. |
+| `GKV-SORULAR-2026-08-12.md` | 12.08.2026 tarihli gkv-302 soru listesi (`db/REGISTER.md` ve `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` atıf veriyor). Üretilmez, elle. |
 | `FAZ2-BEFUND.md` | 12.08.2026 tek seferlik eleme/karar kartı — **tarihsel**; içindeki `verordnungen` ayrımı 04.09.2026'da geçersiz oldu. Üretilmez, elle. |
 
 İkisi de **üretilir, elle düzenlenmez.** Yanlış varsa düzeltilecek yer

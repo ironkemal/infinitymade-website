@@ -49,7 +49,7 @@ Arşivlemeden önce koddan/git'ten çıkarılamayacak bilgiler ilgili yerlere ta
 | `DEGISIKLIK_REHBERI_2026-06-01.md` | Prod crash-loop kök sebebi: `SUPABASE_SERVICE_KEY` değil **`SUPABASE_SERVICE_ROLE_KEY`** | `.claude/agents/builder.md` |
 | `UI_TEST_REPORT.md` | ES-module kapsamı: inline `onclick` için `window.fn = fn` gerekir | `.claude/agents/builder.md` |
 | `SECURITY_AUDIT_2026-06-03.md` | Bulgularının çoğu çürütüldü (bkz. aşağıdaki uyarı) | hafıza |
-| `infinitymade*.md` | Fiyat setleri — **hepsi geçersiz.** Geçerli set: 29/49/99 €/ay | `CLAUDE.md` |
+| `infinitymade*.md` | Fiyat setleri — **hepsi geçersiz.** Fiyat henüz belirlenmedi (CLAUDE.md → Stripe); hiçbir eski set geçerli değil | `CLAUDE.md` |
 | `Fahrtenbuch.md` | ORS entegrasyonu, 10 dk buffer formülü, durum makinesi | (özellik canlı — koda bak) |
 | `rapor/STRIPE_SETUP.md` | Env var **adları** — hâlâ geçerli, ama dosya Test Mode döneminde yazıldı | `CLAUDE.md` → Stripe bölümü |
 
@@ -132,6 +132,13 @@ kökte durması için sebep yok. Her taşımada atıflar da yönlendirildi.
 - ⚠️ `STRIPE_SETUP.md` tamamen ölü değil: **env var adları hâlâ geçerli.** Geçersiz olan,
   dosyanın Test Mode döneminde yazılmış olması.
 - ⚠️ Buna atıf veren yerler kök yolunu kullanıyor olabilir — `archive/rapor/` önekiyle ara.
+
+#### `rapor/` — 11.10.2026 eki (5 dosya, kapanmış sprint/plan belgeleri)
+
+- `KHS_M2_PLAN.md` — M2 Bauplan; M2 06.10.2026'da abgenommen (`KUTU_HAZIRLIK_SPRINT.md` §0).
+- `KEMAL_M4_UEBERGABE.md` + `CHROME-M4-TEST.md` — M3/M4 kod devri (08.10.2026) ve lokal Chrome test promptu; içinde Melih'in makine yolları var.
+- `ABRECHNUNG_BILDSCHIRM_PLAN.md` — §302 tek ekran planı; 09-10.09.2026'da uygulandı. Kod yorumları ve `db/REGISTER.md` bu yola atıf veriyor.
+- `COMPETITOR_ANALYSIS.md` — Haziran 2026 rakip analizi; fiyat/UI iddiaları bayat, aksiyondan önce doğrula.
 
 ### `denetim/` — UI ve mobil denetim kanıtları (291 dosya · 159 MB · commit `56e8d95`)
 

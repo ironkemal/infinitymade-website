@@ -593,7 +593,7 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
   Zustand der lebenden Verordnung — nur bei ihnen lässt der CHECK eine Absetzung > `netto_eur` zu.
   Für eine Kassenprüfung taugen sie als Beleg nicht; echte Zeilen tragen `herkunft='einreichung'`.
 - **Quelle:** `funktionen/GKV-SORULAR-2026-08-12.md` (Befund) · Anlage 1 TP5 V21 §5.5.2, §7.4.3 ·
-  Plan: `ABRECHNUNG_BILDSCHIRM_PLAN.md`
+  Plan: `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`
 
 ### `abrechnung_zahlung`
 - **Warum:** Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es `abrechnung.paid_at`
@@ -619,7 +619,7 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
   ⚠️ `created_by` ist `ON DELETE SET NULL`: das Löschen eines Mitarbeiterkontos darf keine
   GoBD-Zeile mitnehmen. Kein `trg_set_business_id` — `business_id` kommt vom Aufrufer, weil eine
   Datei zu genau einem Standort gehört und ein Default die falsche Zuordnung still festschreiben würde.
-- **Quelle:** Plan: `ABRECHNUNG_BILDSCHIRM_PLAN.md` · § 146 Abs. 4 AO · Anlage 1 TP5 V21 Kap. 6.4
+- **Quelle:** Plan: `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` · § 146 Abs. 4 AO · Anlage 1 TP5 V21 Kap. 6.4
 
 ### `belegliste`
 - **Warum:** GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.

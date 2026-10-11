@@ -21,7 +21,7 @@
 // ⚠️ 09.09.2026: Diese Datei traegt keinen §302-Teil mehr. Der Bildschirm heisst
 // jetzt „Behandlungen" (Tagesbehandlung + Verordnungsliste); Auswahl, Sammellauf,
 // Dateieinheit-Abzeichen und „trotzdem uebernehmen" sind nach
-// `module/abrechnung-auswahl.js` gezogen (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
+// `module/abrechnung-auswahl.js` gezogen (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
 // Die fuenf Tests, die dort hingehoeren, stehen jetzt in
 // `abrechnung-auswahl.test.js` — sie wurden verschoben, nicht gestrichen.
 import { test } from 'node:test';

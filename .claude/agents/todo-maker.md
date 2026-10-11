@@ -46,7 +46,7 @@ Her görev iki parçadır: **başlık** (`title`) ve **detay** (`notes`, markdow
 
 **Başlık** — 60–110 karakter. Fiille başlar, ne yapılacağını söyler. Şifre değil cümle olsun:
 - ❌ "Katalog düzelt"
-- ❌ "1.1 — Podoloji katalogunu daralt (Stefan bug dedi, katalog-suche.js, ICD filtresi...)"
+- ❌ "1.1 — Podoloji katalogunu daralt (Beta-1 bug dedi, katalog-suche.js, ICD filtresi...)"
 - ✅ "Podoloji katalogunu daralt — Verordnung maskesinde sadece DF/NF/QF/UI1/UI2 görünsün"
 
 **Detay** — aşağıdaki başlıklardan **sadece dolduracak gerçek bilgin olanları** yaz.
@@ -186,7 +186,7 @@ model sınıfına çık veya bloğu küçült.
    - **Görev** → panoya
    - **Karar** ("şunu şöyle yapmayacağız") → Entscheidungen sekmesi, görev değil
    - **Bilgi** ("Zuzahlung %10 + 10 €") → Wissensbank
-   - **Beklenen** ("Stefan şablonu gönderecek") → görev, ama sahibi karşı taraf
+   - **Beklenen** ("Beta-1 şablonu gönderecek") → görev, ama sahibi karşı taraf
    **Parçalama değil birleştirme:** aynı ekranı/konuyu ilgilendiren beş küçük istek tek
    kart olur, gövdesinde maddelenir. Pano 40 minik kartla değil, 12 dolu kartla çalışır.
    İş gerçekten ayrı ellerde ilerleyebiliyorsa `parent` ile alt kart aç (şema iki seviye).

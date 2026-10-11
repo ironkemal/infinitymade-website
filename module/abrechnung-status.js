@@ -21,7 +21,7 @@
  *
  * Herkunft
  * ────────
- * Entstanden als Phase 0.1 von `ABRECHNUNG_BILDSCHIRM_PLAN.md` (08.09.2026):
+ * Entstanden als Phase 0.1 von `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` (08.09.2026):
  * der gemeinsame §302-Bildschirm für alle Fachbereiche braucht ein Archiv
  * mit „oben Mavi (offen), Grün (angenommen), Rot (abgesetzt), Sarı
  * (teilweise)" — dafür fehlte bisher jede Rosette. Diese Datei liefert sie,
@@ -63,7 +63,7 @@
  * Das ist kein Versehen: „Abgelehnt" verwischt genau die Unterscheidung
  * oben (Datei abgewiesen vs. Beleg abgesetzt) — der Fehler, den `gkv-302`
  * als Grund für Veto V2 benennt. Phase 3 (Archiv-Ansicht) löst
- * `renderAbrechnungHistory()` ab (siehe `ABRECHNUNG_BILDSCHIRM_PLAN.md`
+ * `renderAbrechnungHistory()` ab (siehe `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`
  * Abschnitt 6, Phase 3, Fussnote „Wortlaut") und nimmt DIESEN Wortlaut als
  * verbindlich; das `ab_status_*`-Wörterbuch wird dort mit-entfernt, nicht
  * daneben stehen gelassen. Warum hier kein `ctx.t()` (das übliche Muster für

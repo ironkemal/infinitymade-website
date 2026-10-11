@@ -31,7 +31,7 @@ import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from '.
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
-// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
+// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261005b';
@@ -15437,7 +15437,7 @@ async function ladeKostentraegerNamen() {
 // Der 4-Stufen-Assistent (Kontrolle · Taxierung · Export · Archiv) ist am
 // 09.09.2026 entfallen. An seine Stelle treten drei Ansichten — Einstieg, Neu,
 // Bisherige — und EINE Auswahlliste fuer alle vier Fachbereiche
-// (module/abrechnung-auswahl.js, ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
+// (module/abrechnung-auswahl.js, archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
 // Mitgegangen sind setWizardStep(), runPreflightCheck(), renderTaxierungList(),
 // renderExportStep(), renderAbrechnungReady() und createAbrechnung().
 // Mit Phase 3 kamen renderAbrechnungHistory() und downloadAbrechnungFile()

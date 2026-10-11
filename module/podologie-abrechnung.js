@@ -6,7 +6,7 @@
  * ausgezogen: Auswahlliste, Sammellauf, Dateieinheit-Abzeichen, „trotzdem
  * übernehmen" und der Abrechnungszeitraum stehen jetzt in
  * `module/abrechnung-auswahl.js`, gemeinsam mit Physio/Ergo/Logo — EIN
- * §302-Bildschirm für alle vier Fachbereiche (`ABRECHNUNG_BILDSCHIRM_PLAN.md`,
+ * §302-Bildschirm für alle vier Fachbereiche (`archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`,
  * Abschnitt 0 Nr. 1 und Phase 1). Umbenannt wurde die Datei NICHT: ein
  * Dateiname ist billiger falsch als eine Umbenennung, die jeden Import, jeden
  * Cache-Buster und jede Fundstelle in `funktionen/INDEX.json` mitzieht.

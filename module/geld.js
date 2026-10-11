@@ -22,7 +22,7 @@
  * Kopfkommentar sagt).
  *
  * Diese Datei ist Auslöser der geplanten §302-Bildschirm-Zusammenlegung
- * (`ABRECHNUNG_BILDSCHIRM_PLAN.md`, Phase 0.1): neuer Code auf diesem
+ * (`archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`, Phase 0.1): neuer Code auf diesem
  * Bildschirm speist sich ausschliesslich hier. Die fünf alten Kopien
  * wandern beim nächsten Anfassen der jeweiligen Stelle hierher — nicht
  * auf einmal, aber jede neue Kopie ist ab jetzt ein Rückschritt.

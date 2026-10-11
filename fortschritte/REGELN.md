@@ -10,6 +10,8 @@ Dateiname: `JJJJ-MM-TT.md`, also z. B. `2026-08-10.md`.
 Existiert die Datei für heute bereits, wird sie **ergänzt**, nicht ersetzt und
 nicht überschrieben. Neue Einträge kommen unten dazu.
 
+Ausnahme: Übergabe- und Abnahmeprotokolle eines Meilensteins (z. B. `2026-10-05_M1_CLAUDE_HANDOFF.md`) dürfen als eigene Datei neben der Tagesdatei liegen; die Tagesdatei verweist darauf.
+
 ## Warum
 
 Der Ordner beantwortet die Frage „was ist an dem Tag passiert und warum". Wenn

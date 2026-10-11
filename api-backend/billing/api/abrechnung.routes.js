@@ -2286,7 +2286,7 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
 
 // ---------- §302-Bildschirm: Zeilen und Geldeingang ----------
 //
-// Die untere Hälfte des Archivs (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
+// Die untere Hälfte des Archivs (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
 // Sie läuft über das VPS-Backend, nicht über Vercel: dort sind 12/12
 // Funktionen belegt, und G8 verbietet ohnehin eine dreizehnte.
 

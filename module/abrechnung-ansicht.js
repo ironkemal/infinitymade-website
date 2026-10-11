@@ -5,7 +5,7 @@
  *
  * Warum eine eigene, kleine Datei statt eines bestehenden Umschalters
  * ─────────────────────────────────────────────────────────────────────
- * `ABRECHNUNG_BILDSCHIRM_PLAN.md` (Phase 0.3) verbietet ausdrücklich zwei
+ * `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` (Phase 0.3) verbietet ausdrücklich zwei
  * Dinge: `setWizardStep()` (dashboard.js) weiterzuverwenden — die gehört zum
  * 4-Stufen-Assistenten von Physio/Ergo/Logo und schreibt in `_abState`, eine
  * andere Sache als „welche der drei Ansichten ist gerade offen" — und einen
