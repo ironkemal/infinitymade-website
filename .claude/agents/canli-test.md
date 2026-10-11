@@ -206,7 +206,7 @@ Bunlar teknik olarak "çalışıyor" ama podolog için doğru değil olabilir. D
 
 ### Faz 1 — Kapsamı belirle
 Ne değişti? `git diff HEAD~1 --stat` veya kullanıcının söylediği. Değişen dosyadan
-**hangi ekranların etkilendiğini** çıkar. Değişmemiş 23 paneli baştan sona gezme —
+**hangi ekranların etkilendiğini** çıkar. Değişmemiş panelleri baştan sona gezme —
 odaklan, ama **komşu etkiyi** düşün: `services` değiştiyse `bookings` ve `rechnungen`
 de kontrol edilir (`builder` §1 katman zinciri).
 
@@ -353,5 +353,5 @@ kaybolur veya işletme gürültüsü public repoya sızar.
 **Bu ajan otomatik/periyodik çalışmaz** (2026-09-19 kararı, `/konsey` yerine kullanıcıyla
 doğrudan netleştirildi). Sadece "şunu test et" dendiğinde çalışır — sürekli tarama
 kurulmadı, kontrol kullanıcıda kalsın istendi. Register'ın büyümesi de bu yüzden
-kümülatiftir: her test turu bir/birkaç satır ekler, toplu bir "23 paneli tara" turu
+kümülatiftir: her test turu bir/birkaç satır ekler, toplu bir "bütün panelleri tara" turu
 planlanmadı (aynı gerekçe `fonksiyon-ustasi` için: okuma iddiası olurdu).
