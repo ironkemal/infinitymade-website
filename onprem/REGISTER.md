@@ -6255,3 +6255,19 @@ Son tarih değişmedi: ilk ücretli kutu `:stable`'a bağlanmadan önce. 13.10 p
 6. Ortam: AC standby/hibernate 0, Autostart görevi `Running` (O-197/O-198), başka WSL dağıtımı çalışmıyor (O-190), yerel deneme registry'si ve deneme image'ı kaldırıldı.
 7. `BACKUP_ZIEL` bugün boş: gece yedeği hedefi yoksa `/status` `backup` alanı 72 saat boyunca sarı/kırmızı kalır ve "sürekli yeşil" ölçütü tutmaz — soak başlamadan doldurulur ya da sapma `soak_kanit`'a açıkça yazılır.
 8. Geri alma notu: MINOR → geri dönüş yalnız `vor-migration` yedeğinden; önceki `:stable` yok.
+
+**0.6.0 yayınlandı, soak başladı — soak kaydı (11.10.2026 gece; çağıranın ölçümü, `soak_kanit`'a olduğu gibi yazılır).** Etiket ve commit'i onprem ajanı depoda doğruladı; kutu değerleri çağıranın.
+- Yayın: commit `0400dac2` (yalnız `VERSION` + `manifest.json` `surum`), `v0.6.0` = `0400dac2f8ad4ebb0226218497501a55ded6e7e6`, iki yayın koşusu başarılı.
+- Kutu `hafer-turm-9` (WSL `Praxura`, tek kutu, test kullanımı; staging ve sponsor kutu yok): `.env` iki image `:0.6.0`'a sabit (önceki `.env` `.env.vor-pin-0.6.0`), `update.sh --jetzt` rc 0, Schritt 11 `ok` 23:36:11.
+- **`soak_baslangic` = `2026-10-11T23:36:16+02:00`** — 8/8 healthy, `/health` `0.6.0+0400dac`, `/health/ready` ready.
+- **`api_digest` = `sha256:829b1b040c07f8e57c7d3645788ae37eba293e6337b3e419394cfd80c11b03aa`**
+- **`frontend_digest` = `sha256:6cd7b8c2bbb015ef3fb040714d2b364f8ed289711b393cd1844ade5d25011d3c`**
+- İkisi de kutuda `RepoDigests` = registry `:0.6.0` (`imagetools` ile ölçüldü). Taşıma günü kutudan yeniden okunmaz, bu satırlar girdidir.
+- Şema 0080 (defterde 81 satır) · `praxura-stand.json` surum 0.6.0 `ok` · `volumes/status/stand.json` `ok`, `0.6.0+0400dac`, aynı iki digest (O-191: digest yazımı gerçek registry image'ıyla ölçüldü).
+- Yedek: `BACKUP_ZIEL=/mnt/c/PraxuraSicherung/praxura`, `backup.sh` rc 0, `sicherung.json` `letzte_ok_epoch` 1791754576, `ziel_ausserhalb` true. Not: hedef aynı PC'nin `C:` diski; betik "dışarıda" sayıyor, fiziksel olarak aynı makine (soak için yeterli, müşteri kutusu için değil).
+- Ortam: deneme registry'si ve image'ı silindi, AC standby 0, Autostart görevi `Running`.
+- **Ölçülmedi:** `/api/status` tam çıktısı (kutuda owner yok, uç owner oturumu ister) → O-191 bu yüzden 🟡 kalır; selbstcheck `schema` sonucu bildirilmedi.
+- **Promote en erken: 2026-10-14 23:36:16** (kesinti olmazsa; kesinti kuralı §7AO (1), ikinci kesintide baştan başlama Kemal'e sorulur). Yayın penceresi kuralı (RELEASE-STANDARD §9 B adım 14) ayrıca geçerli: 14.10 gece yarısı tetiklemek yerine 15.10 gündüz.
+- Geri alma: MINOR, önceki `:stable` yok; geri dönüş yalnız `vor-migration` yedeğinden.
+
+**Ön kontrol — O-197/O-198 düzeltmesi `installieren/install.ps1`'de: `GEÇER`, soak'ı ve sürüm kapısını etkilemez.** Dosya paket dışı: `onprem/manifest.json`'da yok (0 eşleşme), image'a girmez, iki `publish-*.yml` `paths` listesinde yok → push image basmaz, digest ve etiket değişmez. Dağıtım yolu Vercel'dir (`vercel.json:105,356`, `praxura.de/install.ps1`), push ile dakikalar içinde canlıdır. Tip G + F. İki sonuç: (1) değişiklik **yalnız yeni kurulumlara** varır — betik var olan görevi atlar (`install.ps1:387-388` "schon eingerichtet") ve kurulu kutuya `install.ps1`'i taşıyan bir kanal yok; bugün tek Windows kutusu soak kutusu, orada görev elle yeniden kaydedilir. İlk ücretli Windows kutusundan sonra görev tanımı değişirse bu bir açık olur (o zaman kendi maddesi). (2) Soak kutusunda görevi yeniden kaydetmek host tarafı değişikliğidir, image değil; soak'ı sıfırlamaz ama anı ve içeriği `soak_kanit`'a yazılır, kayıt sırasında dağıtım kapanmamalı (kapanırsa kesinti kuralı işler).
