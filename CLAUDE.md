@@ -157,6 +157,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   ├── gemeinsam/                 Birden fazla alanı ilgilendiren: 302-tp5 · kostentraeger
 │   │                              heilmittel-richtlinie · positionsnummern · icd-10-gm
 │   ├── podologie/ physiotherapie/ ergotherapie/ logopaedie/    alana özel
+│   ├── sitzungen/                 ⚠️ belge DEĞİL — kendi oturum notlarımız (tek istisna, README)
 │   └── _archiv/                   düşmüş · kapsam dışı · mükerrer
 ├── Podoloji/                      ⚠️ Artık BELGE yok — yalnız kendi ürettiğimiz iş:
 │                                  prototip, ürün kararı, loop promptu, HPNR referansı
