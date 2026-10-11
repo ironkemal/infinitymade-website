@@ -169,18 +169,15 @@ Bir tabloyu "kullanılmıyor" ilan etmeden önce dördü birden boş çıkmalı:
 
 ### `sqlTreffer` zayıf bir kanıttır — nedenini bil
 
-`sqlTreffer`, `db/SCHEMA-RLS.sql` içindeki geçiş sayısıdır ve dökümün **iki yapısal boşluğu**
-vardır (2026-08-29'da ölçüldü):
+`sqlTreffer`, `db/SCHEMA-RLS.sql` içindeki geçiş sayısıdır. Döküm bugün `CREATE TRIGGER`
+ve `CREATE FUNCTION` gövdelerini tam içerir (2026-08-29'daki "trigger DDL'i sıfır, gövde yok"
+tespiti artık geçerli değil), yani trigger/RPC ile beslenen tablo `sqlTreffer` üzerinden görünür.
 
-- **2026-08-29'daki tespit (trigger DDL'i sıfır, fonksiyon gövdeleri yok) bugün GEÇERLİ DEĞİL:**
-  `db/SCHEMA-RLS.sql` artık `CREATE TRIGGER` ve `CREATE FUNCTION` gövdelerini tam içerir
-  (sayılar dosya başlığında). Yani trigger/RPC ile beslenen tablo `sqlTreffer` üzerinden
-  görünür hâle gelir; yine de dökümün 2026-10-10 tarihli olduğunu ve ham grep'in dört kaynaktan biri olduğunu unutma.
-
-Sonuç: `sqlTreffer > 0` **pozitif** kanıttır (bir şey onu anıyor). `sqlTreffer = 0`
-**negatif kanıt değildir** — trigger veya gövdesiz bir RPC onu besliyor olabilir ve döküm
-bunu göstermez. Bu boşluğu kapatan tek şey `db/REGISTER.md` kaydıdır; `nummernkreise`
-kaydında "yalnız `naechste_nummer()` trigger'ından beslenir" yazması tam bu yüzdendir.
+Sonuç: `sqlTreffer > 0` **pozitif** kanıttır (bir şey onu anıyor). `sqlTreffer = 0` yine de
+**tek başına negatif kanıt değildir** — backend'in ham SQL'i, seed'ler ve döküm tarihinden
+sonraki değişiklikler dökümde yoktur. Bu yüzden dört kaynak birlikte bakılır ve kayıt
+(`db/REGISTER.md`) niyeti tutar; `nummernkreise` kaydında "yalnız `naechste_nummer()`
+trigger'ından beslenir" yazması bu yüzdendir.
 
 **`codeStumm: true` "ölü" demek DEĞİLDİR** — "kanıt JS tarafında yok, SQL tarafına ve
 kayda bak" demektir. Bu ayrım korunmazsa `icd_sector_ranges` (strict filtresinin temeli)
@@ -241,8 +238,8 @@ Tamamı `db/README.md`'de yazılı, özet:
 7. **`patient_consents` silmeyi bloklar** — hasta da inhaber de 10 yıl silinemez.
    DSGVO Art. 17 cevabı anonimleştirmedir, RESTRICT gevşetmek değil.
 
-Bunlara ek, RLS tarafında **bilinçli olarak açık bırakılmış** iki nokta vardır
-(`employee_services`, `time_offs` mandantlar arası yazılabilir) ve bazı tablolar **team erişimi
+Bunlara ek: `employee_services` ve `time_offs`'taki mandantlar arası yazma açığı 02.10.2026'da
+migration 0054 ile kapandı (`*_mandant` policy'leri). Bazı tablolar **team erişimi
 olmadan** durur (ör. `podologie_behandlungen` team-SELECT-only; `verordnungen` ve `fußstatus`
 artık yok — güncel durum `SCHEMA-RLS.sql` policy'leri ve `db/REGISTER.md`). Bunlar bug değil, **açık ürün sorusudur** — "düzeltmeden" önce sor.
 
