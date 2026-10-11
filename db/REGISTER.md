@@ -1057,7 +1057,7 @@ Heilmittel-Richtlinie …).
 - **Seit:** 01.10.2026 · `0052_fahrten_aenderungsprotokoll` (legal-de + db-ustasi + onprem, SaaS per MCP)
 - **Status:** aktiv
 - **Wer:** schreibt nur `fahrten_aenderung_protokollieren()` (Trigger `trg_fahrten_aenderung_protokollieren` auf `fahrten`); lesen: noch kein Frontend — CSV-Spalte „geändert" + separates Änderungsprotokoll-CSV ist Oturum-A-Arbeit (legal-de: Finanzamt-Ausdruck muss Änderungen zeigen).
-- **Achtung:** offene Fahrten (Start → Ankunft → Ende) erzeugen KEINE Einträge — erst Änderungen nach `fahrt_ended_at`. `alt`/`neu` ohne `lead_id`. Aufbewahrung wie Fahrtenbuch (§147 AO; legal-de: 8 Jahre annehmen, mit Steuerberater klären) → in `api-backend/dsgvo/klassifikation.js` Kategorie `grundaufzeichnung`: Auskunft, NICHT Löschung. ⚠️ Der Code rechnet dort **10 Jahre** (§ 147 Abs. 1 Nr. 1 AO), nicht die hier genannten 8 — offen, welche Zahl gilt. Restrisiko DB-Owner/service_role akzeptiert.
+- **Achtung:** offene Fahrten (Start → Ankunft → Ende) erzeugen KEINE Einträge — erst Änderungen nach `fahrt_ended_at`. `alt`/`neu` ohne `lead_id`. Aufbewahrung wie Fahrtenbuch: **10 Jahre** (§ 147 Abs. 1 Nr. 1, Abs. 3 AO; LEGAL_DECISIONS K1.4 v. 02.10.2026 — ersetzt die vorläufige 8-Jahres-Annahme vom 01.10.2026; legal-de 11.10.2026; Steuerberater-Bestätigung offen) → in `api-backend/dsgvo/klassifikation.js` Kategorie `grundaufzeichnung`: Auskunft, NICHT Löschung. Restrisiko DB-Owner/service_role akzeptiert.
 
 ### `vehicles`
 - **Warum:** Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören nicht an die einzelne Fahrt.
