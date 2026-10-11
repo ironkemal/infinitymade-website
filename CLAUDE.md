@@ -46,9 +46,14 @@ Hosting:     Vercel (bu klasör) — ⚠️ serverless fonksiyon limiti, bkz. Ku
 Auth:        Supabase Auth (email + Google OAuth)
 Database:    Supabase PostgreSQL (project: njvuclullotbksskpwgk)
 Backend:     Node.js Express, VPS'te Docker container — `api-backend/server.js`
-AI:          Azure OpenAI — DOĞRUDAN, n8n aradan çıktı (api-backend/ai/azureClient.js).
-             Rezept OCR, b2c-draft → api-backend/ai/router.js. EU Data Boundary kontrolü kodda.
-             ⚠️ On-prem'de IONOS BYO-key olacak (playbook K4) — sağlayıcı-bağımsız katman Faz 1.3
+AI:          Azure OpenAI — DOĞRUDAN, n8n aradan çıktı. Bütün görevler tek kapıdan geçer:
+             api-backend/ai/ki-gateway.js (ayar: ki-config.js, taşıma: azureClient.js).
+             b2c-draft → api-backend/ai/router.js. EU Data Boundary kontrolü kodda.
+             ⚠️ Rezept OCR bugün KAPALI: `POST /rezept/upload` 503 `AI_OCR_DISABLED` döner
+             (Rezept barkodu yerelde okunur). Kutuda AI: tek Praxura Azure + kısa ömürlü
+             jeton (ki-jeton.js), `AI_MODE=aus|direkt|jeton`, kutuda varsayılan `aus`
+             (playbook K4, 05.10.2026 K-20'de değişti). Jeton modu yazıldı ama AÇILMADI —
+             onprem/REGISTER.md O-169
 Payments:    Stripe LIVE (2026-06-11'den beri gerçek ödeme)
 Monitoring:  Sentry — frontend (sentry-init.js) + backend (api-backend/instrument.js)
 Mail:        nodemailer + SMTP  ⛔ Resend/Postmark KULLANMA
@@ -76,17 +81,18 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 ├── calendar-widget.js             Tarih seçici
 ├── cookie-consent.js · sentry-init.js · supabase-config.js
 │
-├── api/                           Vercel serverless — 11/12 (dsgvo.js 02.10.2026 Express'e taşındı)
+├── api/                           Vercel serverless — limitli, yeni uç AÇILMAZ (bkz. Kurallar)
 │   ├── _lib/                      auth.js, stripe.js, pricing.js (fonksiyon SAYILMAZ)
 │   ├── stripe/                    create-checkout-session, portal-session, webhook
 │   ├── onboarding/                pending, check-email
 │   ├── admin/                     data, feedbacks
-│   └── config.js · contact.js · demo-booking.js · apify/search.js  (dsgvo.js → api-backend, 02.10.2026)
+│   └── config.js · contact.js · demo-booking.js · apify/search.js
 │
 ├── api-backend/                   ★ VPS Express backend (Docker container)
 │   ├── server.js                  doğrudan route + `billing/api/*`/`ai/router.js` alt-router'ları (aşağıya bak)
 │   ├── instrument.js              Sentry init
-│   ├── ai/                        router.js · azureClient.js · pii-mask.js · audit.js
+│   ├── ai/                        router.js · ki-gateway.js · ki-config.js · ki-jeton.js ·
+│   │                              azureClient.js · pii-mask.js · audit.js
 │   │   ├── validators/            Rezept doğrulama (blankoRules, validate)
 │   │   ├── catalogs/  tasks/
 │   ├── billing/                   ★ §302 SGB V zinciri
@@ -95,30 +101,35 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   │   ├── kostentraeger/         IK / Kostenträgerdatei
 │   │   ├── zuzahlung/ belegliste/ pdf/ codes/ utils/ api/
 │   ├── lib/phi-encrypt.js         Hasta verisi şifreleme
+│   ├── dsgvo/                     Auskunft/Löschung/kilit — klassifikation.js tek kaynak
+│   ├── routes/                    dsgvo · mitarbeiter-zugang · status · ueber
+│   ├── setup/                     ★ Kutu kurulum uçları (router.js, kapi.js) — SETUP_TOKEN kapısı
+│   ├── merkez-istemci/            Kutunun merkez VPS'e konuşan tarafı
+│   ├── db/migrations/             ★ Çalıştırılabilir şema zinciri (bkz. Kurallar)
 │   ├── Dockerfile · docker-compose.yml
 │
+├── merkez/                        Merkez VPS servisi (ad, jeton, IP) — ayrı süreç, hasta verisi girmez
+├── installieren/                  Kutu kurulum betikleri (install.sh · install.ps1)
+├── onprem/                        Kutu paketi + sicil (REGISTER.md) — sahibi `onprem` ajanı
+│
 ├── db/                            ★ Şema + tablo kaydı — SQL yazmadan ÖNCE oku
-│   ├── README.md                  Yönelim + 7 tuzak + tazeleme kuralı
-│   ├── SCHEMA.sql                 82 tablo · 1210 kolon, constraint'ler, view'lar
-│   ├── SCHEMA-RLS.sql             155 RLS policy · 63 fonksiyon · 62 trigger · 295 index
-│   │                              (rakamlar dökümün kendi başlığından — orası kaynaktır.
-│   │                               30.08.2026: burada iki kez ve yanlış duruyorlardı —
-│   │                               mükerrer blok silindi, sayılar canlıya karşı sayıldı)
-│   ├── REGISTER.md                ★ NİYE açıldı — 82/82 tablo, elle bakımlı (db-ustasi)
+│   ├── README.md                  Yönelim + tuzaklar + tazeleme kuralı
+│   ├── SCHEMA.sql + SCHEMA-RLS.sql  NE var — üretilir; sayılar dosyaların kendi başlığında
+│   ├── REGISTER.md                ★ NİYE açıldı — her tablo, elle bakımlı (db-ustasi)
 │   └── NUTZUNG.json/.md           KİM okuyor/yazıyor — üretilir (tools/tabellenkarte.mjs)
 │
-├── module/                        ★ YENİ FRONTEND KODUNUN YERİ (Konsey 2026-08-13)
-│                                  78 dosya · `dashboard.js` büyümesin diye burası var.
-│                                  `*.test.js` → `npm test` (node --test, 250 test)
+├── module/                        ★ YENİ FRONTEND KODUNUN YERİ (Konsey 2026-08-13) —
+│                                  `dashboard.js` büyümesin diye. `*.test.js` → `npm test`
 │
 ├── vendor/ + tools/vendor/        ★ CANLI: yerelleştirilmiş supabase-js · node-forge ·
 │                                  fullcalendar · cropperjs. CDN'e geri dönmek YASAK
 │                                  (Konsey 2026-08-13 S3). Üretim + airgap testi:
 │                                  vendor/README.md
-├── tools/                         Kapılar ve üreticiler: check-dashboard-size.sh ·
-│                                  check-namen.sh · check-tabellen-register.sh ·
-│                                  funktionskarte.mjs · tabellenkarte.mjs · plz-orte.mjs
-├── .githooks/pre-commit           Üç kapıyı da çalıştırır (kurulum: bkz. Kurallar)
+├── tools/                         Kapılar (`check-*.sh`) ve üreticiler: funktionskarte.mjs ·
+│                                  tabellenkarte.mjs · schema-dokumente.mjs · plz-orte.mjs ·
+│                                  onprem-manifest.mjs · browser-probe/ (`npm run probe`)
+├── .githooks/pre-commit           Bütün kapıları çalıştırır — liste dosyanın kendisinde
+│                                  (kurulum: bkz. Kurallar)
 │
 ├── funktionen/                    Fonksiyon haritası (üretilir) — INDEX.json + INDEX.md
 ├── canli-test/                    ★ Ekran/akış sicili (elle) — REGISTER.md, bkz. Kurallar
@@ -141,7 +152,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │                                  taşındı ve kaldırıldı.
 │   ├── README.md                  Klasör kuralı — yeni belge nereye gider
 │   ├── REGISTER.md                ★ Herkunft · sürüm · geçerlilik · kaynak→kod→DB zinciri
-│   ├── INDEX.md                   Belgenin İÇİNDE ne var + okuma protokolü (33 kayıt)
+│   ├── INDEX.md                   Belgenin İÇİNDE ne var + okuma protokolü
 │   ├── SPEC-RULES.md              Süzülmüş §302 kuralları
 │   ├── gemeinsam/                 Birden fazla alanı ilgilendiren: 302-tp5 · kostentraeger
 │   │                              heilmittel-richtlinie · positionsnummern · icd-10-gm
@@ -149,47 +160,42 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   └── _archiv/                   düşmüş · kapsam dışı · mükerrer
 ├── Podoloji/                      ⚠️ Artık BELGE yok — yalnız kendi ürettiğimiz iş:
 │                                  prototip, ürün kararı, loop promptu, HPNR referansı
-├── .claude/agents/ + skills/      ★ Ajanlar ve /konsey (aşağıya bak) — .gitignore'lu
+├── .claude/agents/ + skills/konsey/  ★ Ajanlar ve /konsey (aşağıya bak) — git'te İZLENİR,
+│                                  depo public: hassas satır yazma. `.claude/` geri kalanı ignore'lu
 ├── praxissoftware-*.html          SEO landing sayfaları (4 Fachbereich + TI)
 ├── komponenten.html               Elle bakımlı bileşen envanteri (dark dev sayfası).
 │                                  ⚠️ Elle yazıldığı için DRIFT EDER — iddialarını koda
 │                                  karşı doğrula, kaynak funktionen/INDEX.json
 └── archive/                       Eskimiş rapor/kod/medya — güncel bilgi için BAKMA.
-                                   09.09.2026'dan beri alt klasörlü: kod/ · medya/ ·
-                                   rapor/ · denetim-öncesi klasörler (bkz. aşağıdaki
-                                   sınıflandırma tablosu)
+                                   Alt klasörler: kod/ · medya/ · rapor/ · denetim/ · recherche/
 ```
 
-### 🗺️ Haritasız değil, sınıflandırılmış: geri kalan klasörler (2026-08-27)
+### 🗺️ Koda bağlı olmayan klasörler
 
-Aşağıdakiler **koda bağlı değildir** — hiçbiri runtime'da yüklenmez, hiçbiri yayına
-gitmez (`.vercelignore`). Kod ararken buralara bakma; ne oldukları burada yazılı ki
-bir daha "bu klasör neydi" diye açılmasın.
+Aşağıdakiler **runtime'da yüklenmez ve yayına gitmez** (`.vercelignore`). Kod ararken
+buralara bakma.
 
 | Klasör / dosya | Ne | Durum |
 |---|---|---|
-| ~~`ui-audit/` · `mobile-audit/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/denetim/`'a taşındı. Üretici script'ler (`ui_audit_shots.py`, `capture_mobile*.py`) ve `mobil-ui` ajanının protokol dosyası aynı commit'te yeni path'e güncellendi | Path değişti — `archive/denetim/ui-audit/` · `archive/denetim/mobile-audit/` |
-| ~~`competitor-research/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/recherche/`'a taşındı. `archive/competitor-research-optica/` içindeki 36 kırık atıf (zaten farklı makine kullanıcı adına yazılıydı) yeni path'e çekildi, `tools/tabellenkarte.mjs` SKIP_DIRS'ten temizlendi | Path değişti — `archive/recherche/competitor-research/` |
-| `onprem/` | (a) `supabase-docker/` = **upstream vendor kopyası**, bizim kodumuz değil (b) `schema/` = 2026-07-06 pg_dump (c) `poc-frontend-server.mjs` = Faz 0 | REFERANS — playbook Faz 2 girdisi. ⚠️ **Şema gerçeği `db/` altındadır**; `onprem/schema` Temmuz'da dondu (70 tablo) |
-| ~~kök `database_v*.sql` (39)~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/kod/`'a taşındı. Numaralar çakışıyordu (v28/v29/v31 ikişer kez, v13/v14 yok), DB'de 195 migration kayıtlı, çalışma zamanında hiçbiri okunmuyordu (db-ustasi + fonksiyon-ustasi doğruladı). Gerçek şema: `db/SCHEMA.sql` | Path değişti — atıf veriyorsan `archive/kod/` önekiyle |
-| ~~`supabase/migrations/`~~ | ✅ Zaten 04.09.2026'da `archive/supabase-migrations-vor-baseline/`'a taşınmış (14 dosya). ⛔ `supabase/functions/` (Fahrtenbuch Edge Functions, `dashboard.js:5745` vd.) CANLI, karıştırma | — |
-| `sql-melih/` | ⛔ **CANLI KANAL — ARŞİVLİK DEĞİL.** Melih SQL bırakıyor (son: 07-08.09.2026), `db/REGISTER.md` `rechnung_zahlungen` tablosunun kaynağı olarak doğrudan gösteriyor. 09.09.2026'da SQL üç gün burada beklerken backend deploy edilmiş, fatura akışı bloke olmuştu (`db/REGISTER.md:517`) — **açık iş kuyruğu, arşive gitmez.** Yalnız `SUPABASE-JETZT-AUSFUEHREN.sql` (kök kopyası zaten silindi, buradaki kalıyor) ve bayat `OFFEN.md` kapanmış | Melih ile koordine etmeden dokunma |
-| `assets/` · `fonts/` · `images/` | ★ **CANLI.** `assets/img/fn/` = Funktionen-walkthrough (`index.html:1485`), `assets/img/fn/_raw/` = ham PNG kaynağı (eski `funktionen-shots/raw/`), `img/foot/` = podoloji ayak haritası; `fonts/` = self-hosted Inter/Outfit; `images/` sadece `kemal-demir-v4.png` | CANLI |
-| ~~`Logo/` · `web foto/` · `app ss/` · `demo rezept/` · `voice demo/` · `demo slayt/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/medya/`'a taşındı (wissensbank ile doğrulandı, sıfır kod referansı — `Logo/` istisna: `dashboard-vorschau.html`'in iki ikon path'i güncellendi, ama sayfa zaten `.vercelignore`'daki `Logo/` kuralı yüzünden prod'da 404 alıyordu, taşıma bunu değiştirmedi) | — |
-| ~~`pakete/` · `cache/`~~ | ✅ **SİLİNDİ 09.09.2026** (arşive değil) — `pakete/pakete.css` ve `cache/projects.json` tam metin aramada sıfır referans, ikisi de kazara girmiş | — |
-| `.planning/` · `.plans/` | İki **farklı** sistem: `.planning/` = GSD `pause-work` handoff'u (2026-05-19, sprint-6 kapandı) · `.plans/` = 4 eski plan | ARŞİVLİK — açık iş **Ops-Dashboard'a** yazılır |
-| ~~kök `lib/`~~ | ✅ **ÇÖZÜLDÜ 28.08.2026** — `archive/lib-orphan/`'a taşındı. Hiçbir yerden import edilmiyordu (`admin.js` dahil kontrol edildi). Gerekçe ve içinden ne kurtarılabileceği: `archive/README.md` | **`api-backend/lib/` ile KARIŞTIRMA** — o canlı ve dokunulmadı |
-| ~~`ai chatbot proje/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — kod (`index.html`) `archive/ai-chatbot-proje/`'ye taşındı, artık belgeleriyle aynı yerde. Taşıma tamamlandı | — |
-| kök `*.py` (17, önce 26'ydı) | `qa_credentials.py` = 10 script'in ortak import'u · `qa_crawl_*.py` = prod QA (`app.praxura.de`, çalışır) · `capture_flows.py`/`capture_funktionen.py` = `assets/img/fn/_raw/` üretimi (korumalı, bkz. isim kuralı) · `capture_mobile*.py` = `mobil-ui` ajanının protokol altyapısı · `ui_audit_shots.py` = `ui-audit/` üretici. ⚠️ `qa_demo_prep.py` **KIRIK DEĞİL** (09.09.2026 düzeltildi — hedefi `app.praxura.de`, sadece rapor metninde kozmetik bir `infinitymade` geçiyor). `qa_visual_verify*` gerçekten kırık (`app.infinitymade.de` hedefli). 9 gerçek atık (`dash_test`, `fix_encoding`, `scratch_live_demo`, `scratch_screenshot`, `ui_diag`, `ui_montage`, `verify_changes`, `verify_funktionen`, `write_icd`) 09.09.2026'da `archive/kod/`'a taşındı | Karışık — bu ayrım geçerli |
-| ~~kök `*.md` raporları (arşivlik kısım)~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `SEO_AKTIONSPLAN` · `KONTRAST_AUDIT` · `DUPLICATION_AUDIT` · `ITSG_EMAIL_DRAFT` · `STRIPE_SETUP` → `archive/rapor/`. **GÜNCEL** olanlar kökte kaldı: `ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` · `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` (uygulanmamış açık plan) · `LEGAL_ONPREM_REQUIREMENTS` · `UMAMI_SETUP` (⚠️ 29.08.2026 düzeltildi — burada "hiç kurulmadı" yazıyordu, **yanlıştı**: Umami kurulu ve çalışıyor. `cookie-consent.js` → `injectUmami()`, `analytics.infinitymade.de` HTTP 200, 19 blog sayfasının 18'inde (tek istisna ölü `component-lab.html`) + 10 pazarlama sayfasında, `datenschutz.html:121'de ilan edilmiş. ⚠️ `datenschutz.html:146` "onay gerekmez" diyor ama kod yalnız onaydan sonra yüklüyor — Mayıs metni, Haziran kararı; hukuk metni geride kalmış). ⛔ **`PODOLOGIE_ORCHESTRATOR_PROMPT.md` kökte kalıyor, taşınmaz** — satır 333'te canlı bir hesap şifresi var, `guvenlik/REGISTER.md:506` (A-08) bu dosyaya dokunulmamasını kayda geçmiş, taşınırsa o satır atfı kırılır | — |
+| `sql-melih/` | ⛔ **CANLI KANAL — ARŞİVLİK DEĞİL.** Melih'in SQL bıraktığı yer; `db/REGISTER.md` → `rechnung_zahlungen` kaynağı olarak gösteriyor. Burada bekleyen SQL = açık iş kuyruğu (09.09.2026: SQL beklerken backend deploy edildi, fatura akışı bloke oldu) | Melih ile koordine etmeden dokunma |
+| `supabase/functions/` | ⛔ **CANLI** — Fahrtenbuch Edge Functions (`dashboard.js` → `invokeFahrtenbuchFn`). `supabase/migrations/` ise arşivde, kaynak değil | Karıştırma |
+| `assets/` · `fonts/` · `images/` | ★ **CANLI.** `assets/img/fn/` = Funktionen-walkthrough, `assets/img/fn/_raw/` = ham PNG kaynağı, `img/foot/` = podoloji ayak haritası; `fonts/` = self-hosted Inter/Outfit | CANLI |
+| `onprem/supabase-docker/` · `onprem/schema/` | upstream vendor kopyası · 2026-07-06 pg_dump (dondu). **Şema gerçeği `db/` + `api-backend/db/migrations/`** | REFERANS |
+| `.planning/` · `.plans/` | GSD handoff'u (2026-05, kapandı) · 4 eski plan | ARŞİVLİK — açık iş Ops-Dashboard'a |
+| kök `*.py` | `qa_credentials.py` = ortak import · `qa_crawl_*.py` = prod QA (`app.praxura.de`, çalışır) · `capture_flows.py`/`capture_funktionen.py` = `assets/img/fn/_raw/` üretimi (korumalı, bkz. isim kuralı) · `capture_mobile*.py` = `mobil-ui` protokolü · `ui_audit_shots.py`. ⚠️ `qa_visual_verify*` kırık (`app.infinitymade.de` hedefli) | Karışık |
+| kök `*.md` | Yaşayan planlar kökte durur; kapananlar `archive/rapor/`. ⛔ **`PODOLOGIE_ORCHESTRATOR_PROMPT.md` kökte kalır, taşınmaz, dokunulmaz** — satır 333'te canlı bir hesap şifresi var, `guvenlik/REGISTER.md` → A-08 buna dokunulmamasını kayda geçmiş | — |
 
-> **Yayın yüzeyi kuralı (2026-08-27):** `.vercelignore` artık **klasör bazlı** tutulur,
-> yalnızca dosya uzantısı bazlı değil. 2026-06-03 denetimi uzantıları kapatmıştı; sonradan
-> eklenen her klasör aynı delikten geçip `praxura.de` üzerinde HTTP 200 döndü —
-> `ui-audit/`, `onprem/supabase-docker/docker-compose.yml`, `funktionen/INDEX.json`
-> (990 KB, uygulamanın tam fonksiyon haritası), `tools/.namen-hashes`, `dashboard.js.bak`.
-> **Yeni klasör eklerken:** yayına girmesi gerekiyor mu? Gerekmiyorsa aynı commit'te
-> `.vercelignore`'a yazılır. Ölçüt **runtime**'dır — yorumdaki kaynak atfı sayılmaz.
+**Taşınmış yollar** (eski yolu arama): `ui-audit/` · `mobile-audit/` → `archive/denetim/` ·
+`competitor-research/` → `archive/recherche/` · kök `database_v*.sql`, ölü `.py`/`.js` →
+`archive/kod/` · `supabase/migrations/` → `archive/supabase-migrations-vor-baseline/` ·
+`Logo/` `web foto/` `app ss/` `demo rezept/` `voice demo/` `demo slayt/` → `archive/medya/` ·
+kök `lib/` → `archive/lib-orphan/` (⚠️ **`api-backend/lib/` ile KARIŞTIRMA** — o canlı).
+Taşımaların gerekçesi: `archive/rapor/CLAUDE_MD_TARIHCE_2026-10-11.md`.
+
+> **Yayın yüzeyi kuralı:** `.vercelignore` **klasör bazlı** tutulur. **Yeni klasör
+> eklerken:** yayına girmesi gerekiyor mu? Gerekmiyorsa aynı commit'te `.vercelignore`'a
+> yazılır. Ölçüt **runtime**'dır — yorumdaki kaynak atfı sayılmaz. (Bir kez
+> `funktionen/INDEX.json` ve `tools/.namen-hashes` bu delikten `praxura.de`'de yayına çıktı.)
 
 ---
 
@@ -216,22 +222,21 @@ bir daha "bu klasör neydi" diye açılmasın.
 **3. Supabase** → `njvuclullotbksskpwgk.supabase.co`
 - Auth + PostgreSQL + Vault
 - **Vault bugün TEK iş yapıyor:** onboarding'in geçici şifresini şifreli saklamak
-  (`api/onboarding/pending.js`). Eskiden "per-tenant API secrets" tutuyordu — o zincir
-  WhatsApp'la beraber öldü, kalıntı fonksiyonları 2026-08-05'te drop edildi.
+  (`api/onboarding/pending.js`).
 
 ---
 
 ## 🔌 Backend API (`api-backend/server.js`)
 
-**Base:** `https://n8n.infinitymade.de/api` — `server.js`'te doğrudan tanımlı route'lar,
-`billing/api/*` + `ai/router.js` alt-router'larında geri kalanı. ⚠️ Tam sayı burada
-yazılmıyor — üç farklı rakam (75/77/88) dolaşmıştı, kaynak her zaman `server.js`'in
-kendisi (`grep -rn "router\.\(get\|post\|patch\|put\|delete\)" server.js billing/api/
-ai/router.js | wc -l`). Aile aile:
+**Base:** `https://n8n.infinitymade.de/api` — `server.js`'te doğrudan tanımlı route'lar;
+geri kalanı `billing/api/*`, `ai/router.js`, `routes/*` (dsgvo · mitarbeiter-zugang ·
+status · ueber) ve `setup/router.js` alt-router'larında. Sayı burada yazılmaz, kaynak kodun
+kendisi (`grep -rnE "(app|router)\.(get|post|patch|put|delete)\(" server.js billing/api/
+ai/router.js routes/ setup/ | wc -l`). Aşağıdaki tablo yalnız `server.js` ailelerini özetler:
 
 | Aile | Route'lar | Auth |
 |---|---|---|
-| **Rezept / KI** | `POST /rezept/upload` · `/rezept/confirm` · `/rezept/save` · `/prescription/lookup-by-phone` | `requireAuthAI` |
+| **Rezept / KI** | `POST /rezept/upload` (⚠️ OCR kapalı: 503 `AI_OCR_DISABLED`) · `/rezept/confirm` · `/rezept/save` · `/prescription/lookup-by-phone` | `requireAuthAI` |
 | **Booking** | `POST /booking/get-slots` · `/booking/create` · `/booking/manual-create` · `/booking/batch-create` · `/booking/batch-create-explicit` · `/booking/ai-suggest-series` · `PATCH /booking/:id` | karışık |
 | **Termin-Anfrage** | `POST /booking-request/create` · `/approve` · `/decline` · `/cancel` · `GET /booking-request/list` | karışık |
 | **Attendance** | `POST /attendance/check-in` · `/check-out` · `GET /attendance/today` · `/report` · `PATCH /attendance/:id/note` | `requireAuthAI` |
@@ -264,19 +269,14 @@ rate limit (`express-rate-limit`, public route'larda).
   onlar başka bir dönemin artığı, yukarıdaki karar onlara dönüş anlamına gelmez.
 - **Trial:** 14 gün · **Customer Portal:** aktif · **Checkout domain:** `pay.praxura.de`
 - **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.cjs`'te geçmiyor (Ops-Dashboard → **Launch**)
-- **Webhook:** `https://app.praxura.de/api/stripe/webhook` — ✅ 2026-08-05'te panelden
-  doğrulandı. Kodun fallback'i de aynı (`create-checkout-session.js:10`,
-  `portal-session.js:8`), yani `NEXT_PUBLIC_URL` boş olsa bile doğru domain'e gider.
-  ⚠️ Ama env **yanlış** bir değere set edilmişse fallback devreye girmez — Vercel'de
-  `NEXT_PUBLIC_URL` varsa `https://app.praxura.de` olmalı.
+- **Webhook:** `https://app.praxura.de/api/stripe/webhook`. Kodun fallback'i de aynı
+  (`create-checkout-session.js`, `portal-session.js`), yani `NEXT_PUBLIC_URL` boş olsa bile
+  doğru domain'e gider. ⚠️ Ama env **yanlış** bir değere set edilmişse fallback devreye
+  girmez — Vercel'de `NEXT_PUBLIC_URL` varsa `https://app.praxura.de` olmalı.
 
-`archive/rapor/STRIPE_SETUP.md` — env var **adları** geçerli, ama dosya Test Mode
-döneminde yazıldı (09.09.2026'da köşeden `archive/rapor/`'a taşındı).
-LIVE ürün/fiyat scripti: **`stripe-live-setup.cjs`** — `.cjs` uzantısı şart.
-⚠️ Yanındaki `stripe-live-setup.js` **çalışmıyordu**: `package.json`'da `"type": "module"`
-var, dosya ise `require()` kullanıyordu → `ReferenceError: require is not defined in ES
-module scope`. İki dosya tek kelime farkla aynıydı (hata mesajı DE/TR). ✅ 09.09.2026'da
-`archive/kod/stripe-live-setup.js`'e taşındı (silme değil arşivleme — geri alınabilir).
+LIVE ürün/fiyat scripti: **`stripe-live-setup.cjs`** — `.cjs` uzantısı şart
+(`package.json` `"type": "module"`). Env var **adları**: `archive/rapor/STRIPE_SETUP.md`
+(⚠️ Test Mode döneminde yazıldı).
 
 ### Profile alanları
 ```
@@ -289,16 +289,15 @@ stripe_price_id, billing_interval, current_period_end
 
 ## 🤖 n8n
 
-⚠️ **04.09.2026 düzeltmesi — burada "Azure AI gateway" yazıyordu, artık doğru değil.**
-Azure çağrısı n8n'den geçmiyor; `api-backend/ai/azureClient.js` doğrudan gidiyor.
+Azure çağrısı n8n'den geçmiyor. Kodda kalan **gerçek** n8n bağı tek satır, env-guard'lı:
+- `server.js` — `N8N_WEBHOOK_URL`, booking bildirimi (env yoksa sessizce atlanır; sabit
+  fallback yok, PII taşımaz, kutu paketinde bu env hiç yok — onprem/REGISTER.md O-13).
+  Satır numarası yazılmıyor, kayıyor: `grep -n "process.env.N8N_" api-backend/server.js`.
 
-Kodda kalan **gerçek** n8n bağı iki satır, ikisi de env-guard'lı:
-- `server.js:1053` — `N8N_WEBHOOK_URL`, booking bildirimi (env yoksa sessizce atlanıyor)
-- `server.js:1806` — `N8N_AI_SERIES_URL`, seri planlayıcı (deterministik fallback var)
-
-İkisi de playbook Faz 1.2'de Express'e taşınacak; kabul kriteri `grep N8N_` → sıfır.
-Ayrıca `gkv-datenaustausch.de` izleme workflow'u Telegram bildirimi atıyor (merkez tarafı,
-kutuya girmez).
+Seri planlayıcı 12.09.2026'da n8n'den çıktı (O-02): `ai/tasks/series-scheduler.js` üzerinden
+doğrudan Azure'a gidiyor, `N8N_AI_SERIES_URL` okunmuyor. Kalan satır playbook Faz 1.2'de
+Express'e taşınacak; kabul kriteri `grep N8N_` → sıfır. Ayrıca `gkv-datenaustausch.de`
+izleme workflow'u Telegram bildirimi atıyor (merkez tarafı, kutuya girmez).
 
 ⛔ n8n **on-prem pakete konmaz** (playbook K8 — Sustainable Use License ücretli müşteriye
 dağıtımı yasaklıyor). Bu `onprem` ajanının sert veto konularından biri (G3).
@@ -330,7 +329,7 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 - `N8N_WEBHOOK_URL`, `SENTRY_DSN`, `SENTRY_ENVIRONMENT`
 - `SETUP_TOKEN` — ⛔ **SET ETME.** On-prem kutunun `install.sh`'ının ürettiği tek
   kullanımlık kurulum jetonu (Faz 2.1c/2.2, O-62). Aynı kod SaaS VPS'inde de
-  çalışıyor; burada set edilirse `api-backend/routes/setup.js`'in owner-yaratma
+  çalışıyor; burada set edilirse `api-backend/setup/router.js`'in owner-yaratma
   ucu **canlıda** açılır. Kapı bunu göremez (uzak env, repo'da iz bırakmaz) —
   tek koruma bu satırın hiç yazılmamış olması. onprem/REGISTER.md O-66/O-67
 
@@ -344,7 +343,7 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 ### 🗄️ Şema dökümü protokolü (2026-08-10)
 
 **SQL yazmadan / tablo-kolon varsayımı yapmadan önce `db/README.md` okunur.**
-Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`**).
+Orada tuzaklar yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`**).
 
 #### ⛓️ Şema değişikliği artık ÖNCE DOSYA, SONRA CANLI (10.09.2026)
 
@@ -373,10 +372,9 @@ Sıra bağlayıcıdır:
   satırı güncellenir. Tetikleyici cümle: **"şema güncelle"**.
 - **Eski döküm hiç dökümden kötüdür** — okuyan ona inanır. Bu yüzden tazeleme
   ertelenmez, "sonra yaparım" denmez.
-- `supabase/migrations/` **kaynak değildir** ve zaten 04.09.2026'da
-  `archive/supabase-migrations-vor-baseline/`'a taşındı (14 dosya); DB'de 195 migration
-  kayıtlı. Şema gerçeği `db/` altındadır. ⛔ `supabase/functions/` (Fahrtenbuch Edge
-  Functions) CANLI, o klasör yerinde duruyor, karıştırma.
+- `supabase/migrations/` **kaynak değildir** (arşivde). Şema gerçeği `db/` +
+  `api-backend/db/migrations/`. ⛔ `supabase/functions/` (Fahrtenbuch Edge Functions)
+  CANLI, karıştırma.
 - Döküm **sadece yapı** içerir, tek satır veri yok — depo public.
 - Melih'in (ve DB'yi göremeyen her aracın) tek bağlamı bu dosyalar.
   Onun ürettiği SQL bize gelir, MCP ile burada uygulanır, sonra döküm tazelenir.
@@ -416,7 +414,7 @@ niyet altı ayda kaybolur. Kaybolduğu anda her tablo "belki lazımdır" diye du
 ### 🗺️ Fonksiyon haritası protokolü (2026-08-12)
 
 **"Böyle bir fonksiyon var mı" sorusu okuyarak değil `funktionen/INDEX.json` okunarak
-cevaplanır.** `dashboard.js` 24.000+ satır, projede 1700+ fonksiyon var — hiçbir model bunu
+cevaplanır.** Projede binlerce fonksiyon var — hiçbir model bunu
 tek seferde kapsayamaz, okur ve *makul ama eksik* cevap verir.
 (Güncel sayım her zaman `node tools/funktionskarte.mjs --check` çıktısındadır.)
 
@@ -514,7 +512,7 @@ tarihini biriktirir, bir dahaki turda sıfırdan başlanmaz.
   iddiası her zaman orijinal + bölüm + sürüm üçlüsüne dayanır.
 
 Belgeye dokunan her iş şu sırayı izler:
-1. **Önce `wissensbank/INDEX.md`** — 33 belgenin kaydı, sürümü ve bölüm haritası orada
+1. **Önce `wissensbank/INDEX.md`** — her belgenin kaydı, sürümü ve bölüm haritası orada
 2. **Hedefli oku** — kayıttaki "Anahtar bölümler"den `Grep` ile ilgili kısmı bul, sadece onu oku.
    Belgenin tamamını okumak neredeyse her zaman hatadır (`Anlage_1_TP5_V21` tek başına ~130k token)
 3. **Sonra kaydet** — INDEX'te kaydı olmayan bir belge okunduysa kaydı INDEX'e eklenir
@@ -523,10 +521,10 @@ Belgeye dokunan her iş şu sırayı izler:
 Süzülmüş kurallar: `wissensbank/SPEC-RULES.md` (kaynak + sürüm + kod satırı üçlüsü zorunlu).
 Geçerli sürüm: **Anlage 1 ve 3 TP5 = V21**. V22/V10 → 01.02.2027, erken geçiş dosya reddi demektir.
 
-### 🚨 Vercel serverless limiti — 11/12 (02.10.2026: dsgvo.js Express'e taşındı, bir slot boş)
+### 🚨 Vercel serverless limiti — en fazla 12, yeni fonksiyon AÇILMAZ
 
-Vercel planımız **en fazla 12 serverless fonksiyona** izin veriyor. `api/` altında şu an
-**11** tane var (02.10.2026). Boş slotu harcama — yeni uç yine `api-backend/server.js`'e (G8).
+Vercel planımız **en fazla 12 serverless fonksiyona** izin veriyor; `api/` sınırda
+(sayım aşağıdaki komutla). Boş slot olsa bile harcama — yeni uç `api-backend/server.js`'e (G8).
 
 - `api/_lib/*` sayılmaz (import edilen yardımcılar, endpoint değil) — ortak kod oraya gider
 - Yeni bir HTTP endpoint gerekiyorsa → **`api-backend/server.js`'e yaz** (G8 zaten bunu söylüyor)
@@ -559,10 +557,9 @@ bağımlılığı geçiş maliyetini büyütür.
 
 #### 🚧 Yeni kod yeni dosyaya — `dashboard.js` BÜYÜMEZ (Konsey 2026-08-13)
 
-**`dashboard.js` bugün 23.578 satır. Bir satır daha büyümeyecek.** Yeni bir modül/ekran/akış
+**`dashboard.js` bir satır daha büyümeyecek** (taban: `tools/.dashboard-baseline`). Yeni bir modül/ekran/akış
 yazılacaksa `module/<alan>.js` olarak **ayrı dosya** açılır ve `dashboard.js`'e tek `import`
-satırıyla bağlanır. Altyapı zaten var ve çalışıyor — `dashboard.js:1-8`'de 8 örnek
-(`katalog-suche`, `patient-suche`, `calendar-widget`, `nav-registry`, `icd-dg-match`, `arzt-suche`).
+satırıyla bağlanır. Örnek: `dashboard.js`'in en üstündeki import bloğu.
 
 - Bu bir tavsiye değil **kapı**: pre-commit hook `dashboard.js` satır sayısı artarsa commit'i
   reddeder (`tools/check-dashboard-size.sh`, taban `tools/.dashboard-baseline`).
@@ -571,12 +568,9 @@ satırıyla bağlanır. Altyapı zaten var ve çalışıyor — `dashboard.js:1-
 - Mevcut bir fonksiyonu düzeltmek serbest — dosyayı **büyütmemek** şartıyla.
 - Eski kod yeniden yazılmaz; **kuşatma** yöntemiyle dokunuldukça ayrı modüle göç eder.
   Göç tek yönlüdür: modülden `dashboard.js`'e geri taşıma yasak.
-- ✅ İlk kuşatma hedefi **podoloji kümesi** tamamlandı (27.08.2026): 1.315 satır
-  `module/podologie-abrechnung.js` + `module/diagnosegruppen-regeln.js`'e taşındı,
-  `dashboard.js` 26.857 → 24.120 satıra indi. Sıradaki kuşatma hedefi seçilmedi.
 
 > Gerekçe ve ölçüm: `konsey/tutanak/2026-08-13-frontend-mimari-katman.md`.
-> Kararın özeti: React'a geçilmeyecek, 27k satır yeniden yazılmayacak; eksik katmanlar
+> Kararın özeti: React'a geçilmeyecek, `dashboard.js` yeniden yazılmayacak; eksik katmanlar
 > (olay/sinyal, tip kontrolü, veri katmanı) vanilla kalınarak eklenir.
 
 - **Ortak modülleri yeniden yazma.** Yeni seçici/arama/takvim gerekiyorsa önce bak:
@@ -585,8 +579,9 @@ satırıyla bağlanır. Altyapı zaten var ve çalışıyor — `dashboard.js:1-
 - **Sidebar modülü** eklenecekse `nav-registry.js`'e yazılır (tek kaynak + görünürlük toggle)
 - **Dark theme:** `#fff` / `#f3f4f6` gibi sabit renk **YASAK** →
   `--bg-card-solid`, `--text-main` CSS değişkenlerini kullan
-- **i18n:** `data-i18n` etiketi HTML'i ezer; gerçek metin **`dashboard.js` sözlüğünde**
-  (de / en / tr). Metin değiştirirsen **üç dili de** güncelle
+- **Ürün yalnız Almanca** (Kemal, 28.09.2026). `data-i18n` etiketi HTML'i ezer; gerçek
+  metin **`dashboard.js` içindeki `T.de` sözlüğünde**. en/tr sözlükleri koddan kalktı —
+  yeni metinde yalnız `de` yaz
 - Cache busting: `?v=YYYYMMDD`, aynı sürümü tekrar kullanma
 - Inline `onclick` ES-module içinden çalışmaz → `window.fn = fn` gerekir
 
@@ -652,7 +647,7 @@ hukuki kayıt: `compliance/LEGAL_DECISIONS.md`
 - API anahtarını ASLA hardcode etme — env var
 - `console.log` yerine düzgün error response; her route'ta try/catch + anlamlı HTTP status
 - Opsiyonel lookup'ta `.single()` **kullanma** → 406 döner, `.maybeSingle()` kullan
-- UI metinleri Almanca (DE varsayılan)
+- UI metinleri yalnız Almanca
 - `git push`'u **ana context'te ve ön planda** çalıştır — subagent'ta veya
   `run_in_background` ile kimlik deposuna (Windows Credential Manager / macOS Keychain)
   erişilemiyor, sessizce asılı kalır. Ekipte iki ortam var: Kemal Windows, Melih macOS —
@@ -685,27 +680,19 @@ Yani:
 
 ---
 
-## 🧪 Lokal testen und Browser-Proben (2026-08-25)
+## 🧪 Yerel test ve tarayıcı probları
 
-**`node dev_server.cjs` → http://localhost:8081** — der Entwicklungsserver
-beantwortet seit 25.08.2026 auch `/api/config` (aus `.env.local` oder
-Umgebungsvariablen). Vorher scheiterte der Login lokal immer, weil
-`supabase-config.js` die Schlüssel über diese Route holt und ein reiner
-Dateiserver 404 lieferte. Die zwei Werte stehen unter
-`https://app.praxura.de/api/config` und sind kein Geheimnis (Anon-Key, Schutz
-kommt von RLS).
+**`node dev_server.cjs` → http://localhost:8081** — `/api/config`'i de yanıtlar
+(`.env.local` ya da ortam değişkenlerinden; iki değer `https://app.praxura.de/api/config`'te
+durur ve sır değildir — anon key, koruma RLS'ten gelir). Bu olmadan yerelde login çalışmaz.
 
-**`npm run probe`** — drei Prüfungen im echten Browser, **ohne Login**
-(`tools/browser-probe/`, Playwright). Sie messen Kalendergeometrie, laden alle
-in `dashboard.js` importierten Module und zeichnen die Renderer mit erfundenen
-Daten. Sie schliessen die Lücke zwischen `node --test module/*.test.js` (kein
-DOM) und einem Klickdurchgang (braucht Login). Beim ersten Lauf haben sie
-sofort einen Fehler gefunden, der sonst ausgeliefert worden wäre.
+**`npm run probe`** — gerçek tarayıcıda, **login'siz** problar (`tools/browser-probe/`,
+Playwright; liste `package.json` → `probe`). `node --test` (DOM yok) ile tıklama turu
+(login ister) arasındaki boşluğu kapatır: takvim geometrisini ölçer, `dashboard.js`'in
+import ettiği modülleri yükler, renderer'ları uydurma veriyle çizer.
 
-Einmalige Einrichtung: `npm i -D playwright && npx playwright install chromium --only-shell`.
-
-⚠️ `npm install` läuft in diesem Konto in ein Rechteproblem im npm-Cache.
-Umgehung: `--cache /tmp/npm-cache-praxura`.
+Kurulum (bir kez): `npm i -D playwright && npx playwright install chromium --only-shell`.
+⚠️ `npm install` npm cache'inde yetki hatasına düşerse: `--cache /tmp/npm-cache-praxura`.
 
 ---
 
@@ -731,14 +718,15 @@ Manuel müdahale gerekirse (env değişti, container yeniden yaratılacak vb.):
 
 ---
 
-## 🤖 Ajanlar ve /konsey (2026-08-05'te kuruldu)
+## 🤖 Ajanlar ve /konsey
 
-`.claude/agents/` altında 6 uzman ajan var. Kendin araştırmaya başlamadan önce **doğru
+`.claude/agents/` altında uzman ajanlar var (her dosya bir ajan). Kendin araştırmaya başlamadan önce **doğru
 ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 
 | Ajan | Ne için | Kod yazar mı |
 |---|---|---|
 | `builder` | ★ Orkestra şefi. İşi parçalar, `agy` (Antigravity/Gemini) worker'larına dağıtır, dönen kodu doğrulatır. Çok adımlı feature/refactor/toplu düzeltme | ✅ |
+| `fonksiyon-ustasi` | ★ Fonksiyon ve veri akışı haritası. "Böyle bir fonksiyon var mı", kopya kod yolları. Yazmadan ÖNCE sor, yazdıktan SONRA "niye + nerede" bildir (bkz. Kurallar). Kaynak `funktionen/INDEX.json` | ❌ |
 | `db-ustasi` | ★ Veritabanının kurumsal hafızası. Hangi tablo niye/ne zaman açıldı, kim yazıyor, hâlâ gerekli mi. MCP ile canlı DB'ye bağlı. Şema/SQL işinden ÖNCE sor | ✅ (yalnız migration) |
 | `gkv-302` | §302 SGB V, EDIFACT/DTA, Kostenträger/IK, Heilmittel-Richtlinie, Diagnosegruppen, Korrekturverfahren. **"Para gelir mi?"** | ❌ |
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
@@ -773,7 +761,7 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
 
 - **Ops-Dashboard** — ★ **AÇIK İŞLERİN TEK YERİ:** https://ops.infinitymade.de → Aufgaben.
   Kemal + Melih ortak panosu; kategoriler **Ortaklık · Launch · Güvenlik · Teknik · Podoloji ·
-  Fikir**. 2026-08-08'de `TODO.md`'deki 54 açık madde buraya taşındı. **Yeni iş çıkarsa
+  Fikir**. **Yeni iş çıkarsa
   buraya yazılır.** Kod `ops/`, kurulum `ops/SETUP.md`, yazma kanalı `ops/tools/ingest.mjs`.
   ⚠️ **Ayrı Supabase projesi** (`farkaejociddtgqkusvm`) — Supabase MCP aracı ÜRÜN projesine
   bağlıdır, ops tarafına MCP ile SQL çalıştırma.
@@ -805,32 +793,21 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
 - `wissensbank/REGISTER.md` — ★ indirilen resmî belgelerin sicili: nereden geldi, hangi sürüm,
   ne zaman düşer, hangi kod/tabloyu besler. **Geçerlilik takvimi burada** (V22 → 01.02.2027,
   Anhang 03 V10 → 01.02.2027, HPNR 2027 → 01.01.2027)
-- `wissensbank/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
+- `wissensbank/INDEX.md` — GKV/§302 belgelerinin haritası + okuma protokolü
 - `wissensbank/SPEC-RULES.md` — süzülmüş §302 kuralları (kaynak + sürüm + kod satırı)
 - `konsey/KARARLAR.md` — konsey kararlarının dizini
 - `compliance/LEGAL_DECISIONS.md` — kapatılmış hukuki kararlar
 - `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` — podoloji ürün kararları
 - `archive/rapor/STRIPE_SETUP.md` — env var adları (⚠️ Test Mode döneminde yazıldı)
 
-### 🗄️ Arşiv (2026-08-05 · genişletildi 09.09.2026)
-39 eskimiş rapor/plan `archive/` altına taşındı — **silinmedi.** Neden eskidikleri ve içlerinden
-neyin kurtarıldığı `archive/README.md`'de. Oradaki audit bulguları **iddiadır**, aksiyon almadan
-önce koda/DB'ye karşı doğrula (2026-08-05'te iki güvenlik iddiası doğrulandı ve çürüdü).
-
-09.09.2026'da büyük bir kök temizliği yapıldı (fonksiyon-ustasi + db-ustasi + wissensbank ile
-doğrulanarak): `archive/` altına alt klasörler açıldı — `kod/` (ölü .py/.js/.cjs + 39
-database_v*.sql + terk edilmiş "ai chatbot proje/"), `medya/` (Logo/, web foto/, app ss/,
-demo rezept/, voice demo/, demo slayt/), `rapor/` (5 arşivlik kök .md raporu). Detay ve
-gerekçe: yukarıdaki "Haritasız değil, sınıflandırılmış" tablosu. `pakete/` ve `cache/`
-sıfır referans oldukları için arşive değil, doğrudan silindi. Ayrıca kök `.tmp.driveupload/`
-(Google Drive senkron artığı, yasak senaryo — bkz. Deployment) git'ten çıkarıldı.
+### 🗄️ Arşiv
+Eskimiş rapor/plan/kod/medya `archive/` altında — **silinmedi.** Neden eskidikleri ve
+içlerinden neyin kurtarıldığı `archive/README.md`'de. Oradaki audit bulguları **iddiadır**,
+aksiyon almadan önce koda/DB'ye karşı doğrula. Bu dosyadan çıkarılan tarihçe:
+`archive/rapor/CLAUDE_MD_TARIHCE_2026-10-11.md`.
 
 ---
 
-*Son güncelleme: 28.09.2026 (yalnız platform notu + Codex-yansıması; rakamlar 09.09.2026'dan —
-güncel sayımlar üreticilerde: `funktionskarte.mjs --check`, `tabellenkarte.mjs`, `npm test`) |
-Status: Beta, ilk müşteriler test ediyor 🟡*
-
-> **Codex yansıması:** `AGENTS.md` bu dosyanın Codex için kopyasıdır, `.codex/agents/` ise
-> `.claude/agents/`'ın kopyasıdır (`.codex/` gitignore'lu). Kaynak **bu dosya**; kopya
-> sürüklenir, iki yerde ayrı düzenleme yapma.
+*Son güncelleme: 11.10.2026 (bayat sayılar ve kapanmış tarihçe temizlendi). Bu dosyaya sayı
+yazılmaz — güncel sayımlar üreticilerde: `funktionskarte.mjs --check`, `tabellenkarte.mjs`,
+`db/SCHEMA*.sql` başlıkları, `npm test`.*
