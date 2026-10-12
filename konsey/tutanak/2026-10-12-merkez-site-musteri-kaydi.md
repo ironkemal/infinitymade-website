@@ -47,3 +47,6 @@ Lisans `boxes` satırına bağlanacağı için kayıt, lisans ve kutu kimliği a
 
 ## Sert veto varsa
 Yok. Ön koşul (guvenlik S-52 Bed. 11, açık): Hetzner, Cloudflare, registrar, GitHub'da 2FA + registrar kilidi — ilk ücretli kutudan önce.
+
+## Nachtrag (Kemal, 12.10.2026 öğleden sonra) — site hedefi değişti
+Tanıtım sitesi merkeze **değil, Cloudflare Pages'e** taşınır; **SaaS (`app.praxura.de`) kapandıktan sonra**. Gerekçe: Vercel Hobby ticari kullanıma kapalı; Pages bedava pakette ticari kullanım yasağı yok, statik trafik sınırsız, alan adı zaten Cloudflare'de; merkezde internete açık site yüzeyi doğmaz (guvenlik'in asıl kaygısı). Kararın "Site aynı merkez VPS'e … Actions'a yetkili SSH anahtarı YOK, sunucu çeker" kısmı bununla düşer: deploy Cloudflare'in GitHub entegrasyonuyla, GitHub'a sır konmaz. Müşteri kaydı + lisans kararı aynen geçerli. Formlar (`/api/contact`, `/api/demo-booking`) için açık karar ve bütün adımlar: `CLOUDFLARE_PAGES_GECIS_PLANI.md`.
