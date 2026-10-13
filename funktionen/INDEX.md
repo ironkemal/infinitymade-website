@@ -3,7 +3,7 @@
 > Üretim: 2026-10-13 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3500 fonksiyon** (3392 JS · 87 bash · 21 ps1) · 433 dosya · 41 sidebar modülü
+**3505 fonksiyon** (3392 JS · 88 bash · 25 ps1) · 433 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -482,8 +482,8 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 ## Shell (onprem/)
 
 ### `installieren/install.ps1`
-- `U()` — Zeile 112 · calledBy: BoxEnv, Frage, InWsl, UiStarten, installieren/install.ps1
-- `Rgb()` — Zeile 122 · calledBy: installieren/install.ps1
+- `U()` — Zeile 112 · calledBy: BoxEnv, BoxFrage, BoxImFenster, BoxZeile, Frage, InWsl, UiStarten, installieren/install.ps1
+- `Rgb()` — Zeile 122 · calledBy: Dialog, installieren/install.ps1
 - `Pt()` — Zeile 123 · calledBy: installieren/install.ps1
 - `Gr()` — Zeile 124 · calledBy: installieren/install.ps1
 - `UiStarten()` — Zeile 226 · calledBy: installieren/install.ps1
@@ -492,17 +492,21 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `UiAbschluss()` — Zeile 270 · calledBy: Fehler, installieren/install.ps1
 - `UiZu()` — Zeile 280 · calledBy: UiAbschluss
 - `KonsoleZeigen()` — Zeile 288 · calledBy: UiZu, installieren/install.ps1
-- `Log()` — Zeile 298 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
-- `Ok()` — Zeile 305 · calledBy: installieren/install.ps1
-- `Warn()` — Zeile 306 · calledBy: installieren/install.ps1
-- `Fehler()` — Zeile 307 · calledBy: UiStarten, installieren/install.ps1
-- `Frage()` — Zeile 321 · calledBy: installieren/install.ps1
-- `InWsl()` — Zeile 337 · calledBy: installieren/install.ps1
-- `WslLeise()` — Zeile 350 · calledBy: BoxEnv, DistroVorhanden, installieren/install.ps1
-- `WslMitFehlertext()` — Zeile 354 · calledBy: installieren/install.ps1
-- `WslInBenutzung()` — Zeile 361
-- `BoxEnv()` — Zeile 365 · calledBy: installieren/install.ps1
-- `DistroVorhanden()` — Zeile 370
+- `Dialog()` — Zeile 306 · calledBy: BoxFrage
+- `BoxFrage()` — Zeile 377 · calledBy: BoxImFenster
+- `BoxZeile()` — Zeile 413 · calledBy: BoxImFenster
+- `BoxImFenster()` — Zeile 421 · calledBy: installieren/install.ps1
+- `Log()` — Zeile 455 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
+- `Ok()` — Zeile 462 · calledBy: Dialog, installieren/install.ps1
+- `Warn()` — Zeile 463 · calledBy: installieren/install.ps1
+- `Fehler()` — Zeile 464 · calledBy: UiStarten, installieren/install.ps1
+- `Frage()` — Zeile 478 · calledBy: BoxImFenster, installieren/install.ps1
+- `InWsl()` — Zeile 494 · calledBy: installieren/install.ps1
+- `WslLeise()` — Zeile 507 · calledBy: BoxEnv, DistroVorhanden, installieren/install.ps1
+- `WslMitFehlertext()` — Zeile 511 · calledBy: installieren/install.ps1
+- `WslInBenutzung()` — Zeile 518
+- `BoxEnv()` — Zeile 522 · calledBy: installieren/install.ps1
+- `DistroVorhanden()` — Zeile 527
 
 ### `installieren/install.sh`
 - sources: `os-release`
@@ -541,13 +545,14 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `ok()` — Zeile 69 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
 - `warn()` — Zeile 70 · calledBy: onprem/install.sh
 - `reveal_once()` — Zeile 71 · calledBy: onprem/install.sh
-- `fail()` — Zeile 73 · calledBy: lokale_ca_vorbereiten, lokaler_name_pruefen, onprem/install.sh
-- `env_get()` — Zeile 93 · calledBy: onprem/install.sh
-- `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 692 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 693 · calledBy: onprem/install.sh
-- `lokaler_name_pruefen()` — Zeile 747 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
-- `lokale_ca_vorbereiten()` — Zeile 767 · calledBy: onprem/install.sh
+- `frage()` — Zeile 85 · calledBy: onprem/install.sh
+- `fail()` — Zeile 97 · calledBy: frage, lokale_ca_vorbereiten, lokaler_name_pruefen, onprem/install.sh
+- `env_get()` — Zeile 117 · calledBy: onprem/install.sh
+- `set_env()` — Zeile 127 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 723 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 724 · calledBy: onprem/install.sh
+- `lokaler_name_pruefen()` — Zeile 778 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
+- `lokale_ca_vorbereiten()` — Zeile 798 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`, `||`

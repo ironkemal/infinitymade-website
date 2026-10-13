@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-13",
  "dateien": 433,
- "funktionen": 3500,
+ "funktionen": 3505,
  "module": [
   "abrechnung",
   "anamnese",
@@ -70700,6 +70700,9 @@
    "calls": [],
    "calledBy": [
     "BoxEnv",
+    "BoxFrage",
+    "BoxImFenster",
+    "BoxZeile",
     "Frage",
     "InWsl",
     "UiStarten",
@@ -70726,6 +70729,7 @@
    "sources": [],
    "calls": [],
    "calledBy": [
+    "Dialog",
     "installieren/install.ps1"
    ]
   },
@@ -70925,12 +70929,117 @@
    ]
   },
   {
+   "name": "Dialog",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 306,
+   "end": 375,
+   "lines": 70,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Ok",
+    "Rgb"
+   ],
+   "calledBy": [
+    "BoxFrage"
+   ]
+  },
+  {
+   "name": "BoxFrage",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 377,
+   "end": 411,
+   "lines": 35,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Dialog",
+    "U"
+   ],
+   "calledBy": [
+    "BoxImFenster"
+   ]
+  },
+  {
+   "name": "BoxZeile",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 413,
+   "end": 420,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "U"
+   ],
+   "calledBy": [
+    "BoxImFenster"
+   ]
+  },
+  {
+   "name": "BoxImFenster",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 421,
+   "end": 453,
+   "lines": 33,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "BoxFrage",
+    "BoxZeile",
+    "Frage",
+    "U"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
    "name": "Log",
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 298,
-   "end": 304,
+   "start": 455,
+   "end": 461,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -70957,8 +71066,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 305,
-   "end": 305,
+   "start": 462,
+   "end": 462,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -70974,6 +71083,7 @@
     "Log"
    ],
    "calledBy": [
+    "Dialog",
     "installieren/install.ps1"
    ]
   },
@@ -70982,8 +71092,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 306,
-   "end": 306,
+   "start": 463,
+   "end": 463,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -71007,8 +71117,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 307,
-   "end": 320,
+   "start": 464,
+   "end": 477,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -71035,8 +71145,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 321,
-   "end": 330,
+   "start": 478,
+   "end": 487,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -71053,6 +71163,7 @@
     "UiMeldung"
    ],
    "calledBy": [
+    "BoxImFenster",
     "installieren/install.ps1"
    ]
   },
@@ -71061,8 +71172,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 337,
-   "end": 342,
+   "start": 494,
+   "end": 499,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -71086,8 +71197,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 350,
-   "end": 353,
+   "start": 507,
+   "end": 510,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71111,8 +71222,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 354,
-   "end": 357,
+   "start": 511,
+   "end": 514,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71134,8 +71245,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 361,
-   "end": 364,
+   "start": 518,
+   "end": 521,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71155,8 +71266,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 365,
-   "end": 369,
+   "start": 522,
+   "end": 526,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -71181,8 +71292,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 370,
-   "end": 375,
+   "start": 527,
+   "end": 532,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -172807,8 +172918,8 @@
    "lang": "bash",
    "file": "onprem/install.sh",
    "start": 71,
-   "end": 71,
-   "lines": 1,
+   "end": 73,
+   "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -172830,12 +172941,42 @@
    ]
   },
   {
+   "name": "frage",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/install.sh",
+   "start": 85,
+   "end": 95,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-ip.sh",
+    "lib-setup-jeton.sh",
+    "||",
+    "lib-health.sh"
+   ],
+   "calls": [
+    "fail"
+   ],
+   "calledBy": [
+    "onprem/install.sh"
+   ]
+  },
+  {
    "name": "fail",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 73,
-   "end": 83,
+   "start": 97,
+   "end": 107,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -172856,6 +172997,7 @@
     "log"
    ],
    "calledBy": [
+    "frage",
     "lokale_ca_vorbereiten",
     "lokaler_name_pruefen",
     "onprem/install.sh"
@@ -172866,8 +173008,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 93,
-   "end": 95,
+   "start": 117,
+   "end": 119,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -172894,8 +173036,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 103,
-   "end": 116,
+   "start": 127,
+   "end": 140,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -172922,8 +173064,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 692,
-   "end": 692,
+   "start": 723,
+   "end": 723,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -172950,8 +173092,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 693,
-   "end": 703,
+   "start": 724,
+   "end": 734,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -172980,8 +173122,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 747,
-   "end": 765,
+   "start": 778,
+   "end": 796,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -173011,8 +173153,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 767,
-   "end": 814,
+   "start": 798,
+   "end": 845,
    "lines": 48,
    "spiegelHinweis": null,
    "tables": [],
@@ -190000,7 +190142,7 @@
   {
    "name": "fail",
    "orte": [
-    "onprem/install.sh:73",
+    "onprem/install.sh:97",
     "onprem/reset-owner-passwort.sh:22",
     "onprem/update.sh:79"
    ],

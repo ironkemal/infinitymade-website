@@ -42,3 +42,13 @@ deger-mi + muhalif: "bugün önce mevcut tek satırla test PC'yi bitir, GUI sonr
 
 ## Sert veto varsa
 Yok.
+
+## Nachtrag 13.10.2026 — Aşama 2 öne çekildi (Kemal)
+Kemal aşama 1'i gördükten sonra: "müşteri hiç siyah ekran görmesin". Aşama 2 aynı gün yapıldı (0.6.2),
+konseyin şartlarıyla: `install.sh --fenster` (yalnız açık bayrakla; terminal şartı onsuz aynen), sorular
+`frage()` üzerinden `@@PRAXURA FRAGE`, cevaplar yalnız fd 3 (stdin borusu), diğer bütün komutlar `/dev/null`;
+anahtarlar `@@PRAXURA GEHEIM` satırlarıyla yalnız anahtar diyaloğuna, log'a hiç; `GESICHERT` elle, diyalog
+kapatılamaz. `install.ps1` yetenek kontrolü yapar (`grep -- --fenster`), eski image'ta aşama 1'e düşer.
+Bir sapma: `fail()`'e makine okunur FEHLER satırı eklemek otomatik izin denetiminde reddedildi; pencere aynı
+bilgiyi mevcut "[fehler] / Gefunden / Was tun" satırlarından okuyor. Sahte betikle (WSL, kutuya dokunmadan)
+uçtan uca ölçüldü: kod/ad/yedek/anahtar diyalogları, iptalde temiz durma, `windows-einrichtung.log`'da sır yok.

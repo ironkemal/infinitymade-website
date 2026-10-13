@@ -295,6 +295,163 @@ function KonsoleZeigen([int]$modus) {
   } catch { }
 }
 
+# -- Stufe 2: install.sh --fenster (Konsey 2026-10-13) ------------------------
+# install.sh laeuft ohne Terminal; seine Fragen kommen als '@@PRAXURA FRAGE <id> <Text>'
+# und werden hier als Dialog gestellt, die Antwort geht als EINE Zeile ueber die
+# stdin-Pipe zurueck (nie argv/env/Datei). '@@PRAXURA GEHEIM'-Zeilen (Notfall-
+# schluessel) landen nur im Schluessel-Dialog - nie im Protokoll, nie im Log.
+$script:BoxFehler = @{ Titel = ''; Gefunden = ''; Tun = '' }
+$BraunDunkel = '#2B2118'; $BraunMittel = '#9A7655'
+#  Ein Dialog fuer alle Fragen: Text, optional Schluesselblock, Eingabefeld mit Pruefung.
+function Dialog {
+  param([string]$titel, [string]$text, [string]$geheim = '', [bool]$feld = $true, [string]$vorgabe = '',
+        [scriptblock]$pruef = $null, [string]$hinweis = '', [bool]$abbrechbar = $true, [bool]$gross = $false,
+        [string]$weiter = 'Weiter', [string]$nein = '')
+  $rgb = { param($h) [System.Drawing.ColorTranslator]::FromHtml($h) }
+  $d = New-Object System.Windows.Forms.Form
+  $d.Text = 'Praxura'; $d.StartPosition = 'CenterScreen'; $d.FormBorderStyle = 'FixedDialog'
+  $d.MaximizeBox = $false; $d.MinimizeBox = $false; $d.TopMost = $true; $d.ShowInTaskbar = $true
+  $d.BackColor = [System.Drawing.Color]::White; $d.ForeColor = (& $rgb $BraunDunkel)
+  $d.Font = New-Object System.Drawing.Font('Segoe UI', 10)
+  $w = 560; $y = 24
+  $kopf = New-Object System.Windows.Forms.Label
+  $kopf.Text = $titel; $kopf.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 14)
+  $kopf.Location = New-Object System.Drawing.Point(28, $y); $kopf.Size = New-Object System.Drawing.Size(($w - 56), 32)
+  $d.Controls.Add($kopf); $y += 42
+  $info = New-Object System.Windows.Forms.Label
+  $info.Text = $text; $info.Location = New-Object System.Drawing.Point(28, $y)
+  $info.MaximumSize = New-Object System.Drawing.Size(($w - 56), 0); $info.AutoSize = $true
+  $d.Controls.Add($info); $y += $info.PreferredHeight + 14
+  if ($geheim) {
+    $box = New-Object System.Windows.Forms.TextBox
+    $box.Multiline = $true; $box.ReadOnly = $true; $box.ScrollBars = 'Vertical'; $box.WordWrap = $true
+    $box.Text = $geheim; $box.Font = New-Object System.Drawing.Font('Consolas', 10)
+    $box.BackColor = (& $rgb '#FAF3EA'); $box.BorderStyle = 'FixedSingle'
+    $box.Location = New-Object System.Drawing.Point(28, $y); $box.Size = New-Object System.Drawing.Size(($w - 56), 190)
+    $d.Controls.Add($box); $y += 204
+  }
+  $ein = $null
+  if ($feld) {
+    $ein = New-Object System.Windows.Forms.TextBox
+    $ein.Text = $vorgabe; $ein.Location = New-Object System.Drawing.Point(28, $y); $ein.Size = New-Object System.Drawing.Size(($w - 56), 30)
+    if ($gross) { $ein.CharacterCasing = 'Upper'; $ein.Font = New-Object System.Drawing.Font('Consolas', 14) }
+    $d.Controls.Add($ein); $y += 40
+  }
+  $hin = New-Object System.Windows.Forms.Label
+  $hin.Text = $hinweis; $hin.ForeColor = (& $rgb '#B3261E'); $hin.Location = New-Object System.Drawing.Point(28, $y)
+  $hin.Size = New-Object System.Drawing.Size(($w - 56), 22); $d.Controls.Add($hin); $y += 30
+  $ok = New-Object System.Windows.Forms.Button
+  $ok.Text = $weiter; $ok.Size = New-Object System.Drawing.Size(130, 36); $ok.Location = New-Object System.Drawing.Point(($w - 28 - 130), $y)
+  $ok.FlatStyle = 'Flat'; $ok.FlatAppearance.BorderSize = 0; $ok.ForeColor = [System.Drawing.Color]::White
+  $ok.DialogResult = 'OK'; $d.AcceptButton = $ok; $d.Controls.Add($ok)
+  $setzeOk = {
+    $an = (-not $pruef) -or ($ein -and [bool](& $pruef $ein.Text))
+    $ok.Enabled = $an; $ok.BackColor = $(if ($an) { & $rgb $BraunDunkel } else { & $rgb '#D9D2C9' })
+  }
+  if ($ein) { $ein.Add_TextChanged($setzeOk) }
+  & $setzeOk
+  if ($nein) {
+    # Zweite Antwort statt Abbruch (z. B. "Anderen Namen") - liefert '__NEIN__'.
+    $nb = New-Object System.Windows.Forms.Button
+    $nb.Text = $nein; $nb.Size = New-Object System.Drawing.Size(170, 36); $nb.Location = New-Object System.Drawing.Point(($w - 28 - 130 - 180), $y)
+    $nb.FlatStyle = 'Flat'; $nb.DialogResult = 'No'; $d.Controls.Add($nb)
+    $d.ControlBox = $false
+  } elseif ($abbrechbar) {
+    $ab = New-Object System.Windows.Forms.Button
+    $ab.Text = 'Abbrechen'; $ab.Size = New-Object System.Drawing.Size(110, 36); $ab.Location = New-Object System.Drawing.Point(($w - 28 - 130 - 120), $y)
+    $ab.FlatStyle = 'Flat'; $ab.DialogResult = 'Cancel'; $d.CancelButton = $ab; $d.Controls.Add($ab)
+  } else {
+    # Schluessel-Dialog: Schliessen erst nach GESICHERT (sonst blieben Sicherungen unlesbar).
+    $d.ControlBox = $false
+  }
+  $d.ClientSize = New-Object System.Drawing.Size($w, ($y + 56))
+  $d.Add_Shown({ $d.Activate(); if ($ein) { $ein.Focus(); $ein.SelectAll() } })
+  $erg = $d.ShowDialog()
+  $wert = if ($ein) { $ein.Text } else { '' }
+  $d.Dispose()
+  if ($erg -eq 'No') { return '__NEIN__' }
+  if ($erg -ne 'OK') { return $null }
+  return $wert
+}
+#  Eine Frage aus install.sh beantworten. $null = abgebrochen.
+function BoxFrage([string]$id, [string]$text, [string]$geheim) {
+  switch ($id) {
+    'code' {
+      $script:CodeVersuche++
+      $h = if ($script:CodeVersuche -gt 1) { U 'Das passt nicht zum Format {-} bitte noch einmal pr{ue}fen.' } else { '' }
+      return Dialog 'Einrichtungscode' (U "Bitte den Einrichtungscode eingeben, den Sie von Praxura erhalten haben.`r`nFormat: XXXX-XXXX-XXXX-XXXX (Bindestriche d{ue}rfen fehlen).") -gross $true -hinweis $h `
+        -pruef { param($t) ($t -replace '[\s-]', '') -match '^[0-9A-Za-z]{16}$' }
+    }
+    'name' {
+      $adr = if ($script:Vorschlag) { $script:Vorschlag } else { '(siehe Protokoll)' }
+      $a = Dialog 'Adresse der Box' (U "Ihre Praxis-Box ist im Praxisnetz unter dieser Adresse erreichbar:`r`n`r`n      $adr`r`n`r`nPasst der Name? Sonst schl{ae}gt Praxura einen anderen vor.") -feld $false `
+        -weiter (U '{Ue}bernehmen') -nein 'Anderen Namen'
+      if ($a -eq '__NEIN__') { return 'N' } elseif ($null -eq $a) { return $null } else { return 'J' }
+    }
+    'sicherungsziel' {
+      return Dialog 'Sicherungsziel' (U ("Die Box sichert jede Nacht ihre Daten. Wohin?`r`n`r`n" +
+        "F{ue}r den Anfang einfach leer lassen {-} dann bleiben die Sicherungen auf diesem PC. " +
+        "Eine externe Platte oder ein NAS l{ae}sst sich sp{ae}ter einrichten (Pfad in der Linux-Umgebung, z. B. /mnt/sicherung).")) -weiter 'Weiter'
+    }
+    'tls' {
+      $a = Dialog 'Zertifikat' (U "Ist die Adresse der Box aus dem Internet {ue}ber eine echte Domain erreichbar, und soll Let's Encrypt ein Zertifikat ausstellen?`r`n`r`nIm Praxisnetz: Nein.") -feld $false `
+        -weiter 'Nein (Praxisnetz)' -nein "Ja, Let's Encrypt"
+      if ($a -eq '__NEIN__') { return 'j' } elseif ($null -eq $a) { return $null } else { return 'n' }
+    }
+    'gesichert' {
+      $block = (($geheim -split "`n") | Where-Object { $_ -notmatch '^\s*[^\x00-\x7F]{8,}\s*$' }) -join "`r`n"
+      return Dialog (U 'Notfall-Schl{ue}ssel {-} jetzt sichern') (U ("Diese Schl{ue}ssel werden nur jetzt ein einziges Mal angezeigt. Ohne sie lassen sich Sicherungen und verschl{ue}sselte Patientendaten nicht wiederherstellen.`r`n`r`n" +
+        "Auf Papier notieren oder auf einem USB-Stick speichern {-} NICHT auf diesem PC und nicht im Sicherungsordner. Danach unten GESICHERT eintippen.")) `
+        -geheim $block.Trim() -abbrechbar $false -gross $true -pruef { param($t) $t.Trim() -eq 'GESICHERT' }
+    }
+    default {
+      return Dialog 'Praxura' ($text.Trim())
+    }
+  }
+}
+#  Eine normale Zeile von install.sh: ins Protokoll, Teilschritt in die Statuszeile.
+function BoxZeile([string]$z) {
+  $Ui.Zeilen.Enqueue("    $z")
+  if ($z -match '^\[(\d+)/17\]\s*(.*)$') { $Ui.Titel = "Schritt 6 von 11: Box einrichten $(U '{-}') $($Matches[2]) ($($Matches[1])/17)" }
+  elseif ($z -match 'Vorgeschlagene Adresse:\s*(\S+)') { $script:Vorschlag = $Matches[1] }
+  elseif ($z -match '\[fehler\]\s*(.*)$') { $script:BoxFehler.Titel = $Matches[1].Trim() }
+  elseif ($z -match '^\s*Gefunden:\s*(.*)$') { $script:BoxFehler.Gefunden = $Matches[1].Trim() }
+  elseif ($z -match '^\s*Was tun:\s*(.*)$') { $script:BoxFehler.Tun = $Matches[1].Trim() }
+}
+function BoxImFenster {
+  $script:CodeVersuche = 0; $script:Vorschlag = ''
+  $psi = New-Object System.Diagnostics.ProcessStartInfo
+  $psi.FileName = 'wsl.exe'
+  # Nur feste Werte in der Kommandozeile (Kanal, Pfad) - keine Antwort, kein Geheimnis.
+  $psi.Arguments = "-d $Distro -u root --exec bash -c `"exec 2>&1; PRAXURA_BROWSER_OEFFNEN=1 exec bash '$BoxPfad/install.sh' --kanal=$Kanal --fenster`""
+  $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true
+  $psi.RedirectStandardInput = $true; $psi.RedirectStandardOutput = $true
+  $psi.StandardOutputEncoding = New-Object System.Text.UTF8Encoding $false
+  $p = [System.Diagnostics.Process]::Start($psi)
+  $an = New-Object System.IO.StreamWriter($p.StandardInput.BaseStream, (New-Object System.Text.UTF8Encoding $false))
+  $an.NewLine = "`n"; $an.AutoFlush = $true
+  $geheim = New-Object System.Text.StringBuilder
+  while ($null -ne ($z = $p.StandardOutput.ReadLine())) {
+    if ($z.StartsWith('@@PRAXURA GEHEIM ')) { [void]$geheim.AppendLine($z.Substring(17)); continue }
+    if ($z.StartsWith('@@PRAXURA GEHEIM')) { [void]$geheim.AppendLine(''); continue }
+    if ($z.StartsWith('@@PRAXURA FRAGE ')) {
+      $teile = @($z.Substring(16) -split ' ', 2)
+      $text = if ($teile.Count -gt 1) { $teile[1] } else { '' }
+      $antwort = BoxFrage $teile[0] $text $geheim.ToString()
+      if ($teile[0] -eq 'gesichert') { [void]$geheim.Clear() }
+      if ($null -eq $antwort) { try { $an.Close() } catch { } ; continue }   # EOF -> install.sh bricht sauber ab
+      try { $an.WriteLine($antwort) } catch { }
+      $antwort = $null
+      continue
+    }
+    BoxZeile $z
+  }
+  $p.WaitForExit()
+  [void]$geheim.Clear()
+  try { $an.Dispose() } catch { }
+  return $p.ExitCode
+}
+
 function Log([string]$t)  {
   $z = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $t"; Add-Content -Path $LogDatei -Value $z -Encoding UTF8; Write-Host $t
   if ($Ui) {
@@ -608,6 +765,12 @@ $installiertJetzt = $false
 if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Ok 'Box ist schon eingerichtet (.env vorhanden) - install.sh wird NICHT erneut ausgefuehrt'
 } else {
+  # Stufe 2 (Konsey 2026-10-13): kann das install.sh dieses Kanals --fenster, fragt
+  # das Einrichtungsfenster selbst - kein schwarzes Fenster. Sonst (aelteres Image,
+  # O-204 Bed. 1) Stufe 1: eigenes Konsolenfenster.
+  $fensterFaehig = $false
+  if ($Ui) { $fensterFaehig = ((InWsl "grep -q -- '--fenster' $BoxPfad/install.sh") -eq 0) }
+  if (-not $fensterFaehig) {
   Log ''
   Log '  Gleich stellt die Einrichtung Fragen. Empfehlungen fuer diesen PC:'
   Log '    Einrichtungscode:    Einrichtungscode (von Praxura erhalten) eingeben - Enter ohne Code = eigene Adresse (Ausnahmefall)'
@@ -615,7 +778,11 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar; entfaellt bei Einrichtungscode)'
   Log '    Sicherungsziel:      siehe Schritt 11 unten - fuer den Anfang leer lassen geht auch'
   Log ''
-  if ($Ui) {
+  }
+  if ($fensterFaehig) {
+    $Ui.Titel = 'Die Box wird eingerichtet ...'
+    $rcSh = BoxImFenster
+  } elseif ($Ui) {
     # Eigenes Konsolenfenster: install.sh braucht ein echtes Terminal (-t 0) und die
     # Antworten (Code, Name, GESICHERT) tippt die Praxis dort selbst - nichts davon
     # geht durch das Einrichtungsfenster, die Kommandozeile oder eine Datei.
@@ -643,6 +810,9 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
     $rcSh = $LASTEXITCODE
   }
   if ($rcSh -ne 0) {
+    if ($script:BoxFehler.Titel) {
+      Fehler $script:BoxFehler.Titel $script:BoxFehler.Gefunden "$($script:BoxFehler.Tun) (Protokoll der Box: wsl -d $Distro -- cat $BoxPfad/install.log)"
+    }
     Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $rcSh" "Meldung oben bzw. im zweiten Fenster lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
   }
   $installiertJetzt = $true
