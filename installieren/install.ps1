@@ -50,7 +50,9 @@ param(
   [switch]$NeuerJeton,
   # Update-Kanal; 'stable' fehlt noch -> Rueckfrage, ob 'beta' (O-148: Kanal nur vorwaerts).
   [ValidateSet('stable', 'beta')]
-  [string]$Kanal = 'stable'
+  [string]$Kanal = 'stable',
+  # Nur Textfenster, kein Einrichtungsfenster (Konsey 13.10.2026: Rueckweg bleibt offen).
+  [switch]$Text
 )
 
 $ErrorActionPreference = 'Stop'
@@ -100,9 +102,208 @@ New-Item -ItemType Directory -Force -Path $DatenOrt | Out-Null
 if (-not ($PSCommandPath -and ((Resolve-Path $PSCommandPath).Path -eq $SkriptKopie))) {
   [IO.File]::WriteAllText($SkriptKopie, $eigenerText, $utf8Bom)
 }
-function Log([string]$t)  { $z = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $t"; Add-Content -Path $LogDatei -Value $z -Encoding UTF8; Write-Host $t }
+# -- Einrichtungsfenster (Konsey 2026-10-13, Stufe 1) ------------------------
+# Zeigt die 11 Schritte mit Haken + Protokoll. Es laeuft in einem eigenen
+# STA-Runspace; das Skript selbst bleibt sequenziell wie im Textmodus. Geheimnisse
+# (Einrichtungscode, Schluessel, GESICHERT) gehen NIE durch dieses Fenster:
+# install.sh fragt sie in seinem eigenen Konsolenfenster (Schritt 6), von Hand.
+# Datei bleibt reines ASCII (install-ps1-ascii.test.js) - Umlaute ueber U().
+$Ui = $null
+function U([string]$s) {
+  $s.Replace('{ae}', [string][char]0xE4).Replace('{oe}', [string][char]0xF6).Replace('{ue}', [string][char]0xFC).
+     Replace('{Ae}', [string][char]0xC4).Replace('{Oe}', [string][char]0xD6).Replace('{Ue}', [string][char]0xDC).
+     Replace('{ss}', [string][char]0xDF).Replace('{-}', [string][char]0x2013)
+}
+$UiSkript = {
+  try {
+    Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+    [System.Windows.Forms.Application]::EnableVisualStyles()
+    $t = $s.Texte
+    function Rgb([string]$h) { [System.Drawing.ColorTranslator]::FromHtml($h) }
+    function Pt([int]$x, [int]$y) { New-Object System.Drawing.Point($x, $y) }
+    function Gr([int]$w, [int]$h) { New-Object System.Drawing.Size($w, $h) }
+    $dunkel = Rgb '#2B2118'; $bronze = Rgb '#9A7655'; $creme = Rgb '#FAF3EA'; $linie = Rgb '#E8DED1'
+    $f = New-Object System.Windows.Forms.Form
+    $f.Text = $t.Fenster; $f.StartPosition = 'CenterScreen'; $f.FormBorderStyle = 'FixedDialog'; $f.MaximizeBox = $false
+    $f.ClientSize = Gr 680 668; $f.BackColor = [System.Drawing.Color]::White; $f.ForeColor = $dunkel
+    $f.Font = New-Object System.Drawing.Font('Segoe UI', 10)
+    $logo = $null
+    try {
+      $logo = [System.Drawing.Image]::FromStream((New-Object System.IO.MemoryStream (, [Convert]::FromBase64String($t.Logo))))
+      $f.Icon = [System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]$logo).GetHicon())
+    } catch { }
+    # Kopf
+    $kopf = New-Object System.Windows.Forms.Panel
+    $kopf.Location = Pt 0 0; $kopf.Size = Gr 680 100; $kopf.BackColor = $creme
+    if ($logo) {
+      $bild = New-Object System.Windows.Forms.PictureBox
+      $bild.Image = $logo; $bild.SizeMode = 'Zoom'; $bild.Location = Pt 28 22; $bild.Size = Gr 56 56
+      $kopf.Controls.Add($bild)
+    }
+    $marke = New-Object System.Windows.Forms.Label
+    $marke.Text = 'PRAXURA'; $marke.AutoSize = $true; $marke.Location = Pt 100 20; $marke.ForeColor = $bronze
+    $marke.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 9)
+    $titel = New-Object System.Windows.Forms.Label
+    $titel.Text = $t.Kopf; $titel.AutoSize = $true; $titel.Location = Pt 98 38
+    $titel.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 16)
+    $kopf.Controls.AddRange(@($marke, $titel))
+    $strich = New-Object System.Windows.Forms.Panel
+    $strich.Location = Pt 0 100; $strich.Size = Gr 680 1; $strich.BackColor = $linie
+    $unter = New-Object System.Windows.Forms.Label
+    $unter.Text = $t.Unter; $unter.Location = Pt 28 114; $unter.Size = Gr 624 40; $unter.ForeColor = Rgb '#6B6158'
+    $unter.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
+    # Fortschrittsbalken
+    $bahn = New-Object System.Windows.Forms.Panel
+    $bahn.Location = Pt 28 160; $bahn.Size = Gr 624 6; $bahn.BackColor = Rgb '#EFE7DC'
+    $fuell = New-Object System.Windows.Forms.Panel
+    $fuell.Location = Pt 0 0; $fuell.Size = Gr 0 6; $fuell.BackColor = $bronze
+    $bahn.Controls.Add($fuell)
+    $f.Controls.AddRange(@($kopf, $strich, $unter, $bahn))
+    # Schritte
+    $marken = @(); $zeilen = @()
+    for ($i = 0; $i -lt $t.Schritte.Count; $i++) {
+      $y = 182 + $i * 26
+      $m = New-Object System.Windows.Forms.Label
+      $m.Location = Pt 30 $y; $m.Size = Gr 26 24; $m.TextAlign = 'MiddleCenter'
+      $m.Font = New-Object System.Drawing.Font('Segoe UI Symbol', 11)
+      $l = New-Object System.Windows.Forms.Label
+      $l.Location = Pt 60 $y; $l.Size = Gr 590 24; $l.TextAlign = 'MiddleLeft'
+      $f.Controls.AddRange(@($m, $l)); $marken += $m; $zeilen += $l
+    }
+    $protTitel = New-Object System.Windows.Forms.Label
+    $protTitel.Text = 'Protokoll'; $protTitel.AutoSize = $true; $protTitel.Location = Pt 26 474; $protTitel.ForeColor = Rgb '#8A7F74'
+    $protTitel.Font = New-Object System.Drawing.Font('Segoe UI', 8.5)
+    $prot = New-Object System.Windows.Forms.TextBox
+    $prot.Multiline = $true; $prot.ReadOnly = $true; $prot.ScrollBars = 'Vertical'; $prot.WordWrap = $true
+    $prot.Location = Pt 28 494; $prot.Size = Gr 624 108; $prot.BorderStyle = 'FixedSingle'
+    $prot.Font = New-Object System.Drawing.Font('Consolas', 8.5); $prot.BackColor = Rgb '#FBF9F6'; $prot.ForeColor = Rgb '#4A4038'
+    $stand = New-Object System.Windows.Forms.Label
+    $stand.Location = Pt 28 616; $stand.Size = Gr 480 40; $stand.TextAlign = 'MiddleLeft'
+    $stand.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 10)
+    $knopf = New-Object System.Windows.Forms.Button
+    $knopf.Text = $t.Schliessen; $knopf.Location = Pt 532 618; $knopf.Size = Gr 120 36
+    $knopf.FlatStyle = 'Flat'; $knopf.FlatAppearance.BorderSize = 0; $knopf.BackColor = Rgb '#D9D2C9'; $knopf.ForeColor = [System.Drawing.Color]::White
+    $knopf.Enabled = $false; $knopf.Add_Click({ $f.Close() })
+    $f.Controls.AddRange(@($protTitel, $prot, $stand, $knopf))
+    $zeichen = @{ offen = [string][char]0x25CB; laeuft = [string][char]0x25CF; ok = [string][char]0x2714; hinweis = [string][char]0x2714; fehler = [string][char]0x2716 }
+    $farbe = @{ offen = (Rgb '#CFC7BC'); laeuft = $bronze; ok = (Rgb '#3C8D5A'); hinweis = (Rgb '#C27C0E'); fehler = (Rgb '#B3261E') }
+    $fN = New-Object System.Drawing.Font('Segoe UI', 10)
+    $fB = New-Object System.Drawing.Font('Segoe UI Semibold', 10)
+    $grau = Rgb '#A39A90'
+    $tick = {
+      if ($s.JetztZu) { $uhr.Stop(); $f.Close(); return }
+      while ($s.Zeilen.Count -gt 0) { $prot.AppendText([string]$s.Zeilen.Dequeue() + "`r`n") }
+      $fertig = 0
+      for ($i = 0; $i -lt $zeilen.Count; $i++) {
+        $z = [string]$s.Stand[$i + 1]; if (-not $z) { $z = 'offen' }
+        if ($z -eq 'ok' -or $z -eq 'hinweis') { $fertig++ }
+        $marken[$i].Text = $zeichen[$z]; $marken[$i].ForeColor = $farbe[$z]
+        $zeilen[$i].Text = $t.Schritte[$i]
+        $zeilen[$i].ForeColor = $(if ($z -eq 'offen') { $grau } elseif ($z -eq 'fehler') { $farbe.fehler } else { $dunkel })
+        $zeilen[$i].Font = $(if ($z -eq 'laeuft') { $fB } else { $fN })
+      }
+      $fuell.Width = [int](624 * $fertig / [math]::Max(1, $zeilen.Count))
+      $stand.Text = [string]$s.Titel
+      if ($s.Ende -and -not $knopf.Enabled) {
+        $knopf.Enabled = $true; $knopf.BackColor = $dunkel
+        if ($s.Gut) { $fuell.Width = 624 } else { $fuell.BackColor = $farbe.fehler }
+        $f.Activate()
+      }
+    }
+    $uhr = New-Object System.Windows.Forms.Timer
+    $uhr.Interval = 250; $uhr.Add_Tick($tick)
+    # Waehrend der Einrichtung nicht schliessbar - sonst liefe sie unsichtbar weiter.
+    $f.Add_FormClosing({ param($q, $e) if (-not $s.Ende) { $e.Cancel = $true } })
+    $f.Add_Shown({ & $tick; $s.Bereit = $true; $f.Activate() })
+    $uhr.Start()
+    [System.Windows.Forms.Application]::Run($f)
+  } catch {
+    $s.Fehler = "$_"
+  } finally {
+    $s.Zu = $true
+  }
+}
+function UiStarten {
+  try { Add-Type -AssemblyName System.Windows.Forms, System.Drawing -ErrorAction Stop } catch { return $null }
+  $s = [hashtable]::Synchronized(@{
+    Zeilen = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
+    Stand = [hashtable]::Synchronized(@{}); Hinweis = [hashtable]::Synchronized(@{})
+    Aktiv = 0; Titel = ''; Ende = $false; Zu = $false; Bereit = $false; Fehler = ''; JetztZu = $false; Gut = $false
+    Texte = @{
+      Fenster = 'Praxura ' + (U '{-}') + ' Einrichtung der Praxis-Box'
+      Kopf = 'Ihre Praxis-Box wird eingerichtet'
+      # Praxura-Logo, 112 px PNG (aus logo.png, 48 Farben) - eingebettet, kein Download.
+      Logo = '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'
+      Unter = U 'Bitte dieses Fenster offen lassen {-} Fragen erscheinen als eigene Fenster. Dauer etwa 15{-}30 Minuten, beim ersten Mal mit einem Windows-Neustart.'
+      Schliessen = U 'Schlie{ss}en'
+      Schritte = @((U 'Vorpr{ue}fung'), 'WSL-Einstellungen', 'Linux-Umgebung', 'Docker', 'Programmdateien',
+                   'Einrichtung der Box (Einrichtungscode)', 'Autostart', 'Firewall', 'Zertifikat + Adresse',
+                   'Energieoptionen', 'Sicherungsziel')
+    }
+  })
+  $rs = [runspacefactory]::CreateRunspace(); $rs.ApartmentState = 'STA'; $rs.ThreadOptions = 'ReuseThread'; $rs.Open()
+  $rs.SessionStateProxy.SetVariable('s', $s)
+  $ps = [powershell]::Create(); $ps.Runspace = $rs
+  [void]$ps.AddScript($UiSkript)
+  $s.Lauf = $ps.BeginInvoke(); $s.Ps = $ps
+  for ($i = 0; $i -lt 100 -and -not $s.Bereit -and -not $s.Zu; $i++) { Start-Sleep -Milliseconds 100 }
+  if (-not $s.Bereit) { return $null }
+  return $s
+}
+function UiSchritt([int]$n) {
+  if (-not $Ui) { return }
+  $alt = [int]$Ui.Aktiv
+  if ($alt -gt 0 -and $Ui.Stand[$alt] -eq 'laeuft') { $Ui.Stand[$alt] = $(if ($Ui.Hinweis[$alt]) { 'hinweis' } else { 'ok' }) }
+  $Ui.Aktiv = $n; $Ui.Stand[$n] = 'laeuft'
+  $Ui.Titel = "Schritt $n von 11: $($Ui.Texte.Schritte[$n - 1]) ..."
+}
+#  Meldung als Fenster im Vordergrund (Besitzer = unsichtbares TopMost-Fenster).
+function UiMeldung([string]$text, [string]$titel, [string]$knoepfe = 'OK', [string]$symbol = 'Information', [string]$vorgabe = 'Button1') {
+  $b = New-Object System.Windows.Forms.Form
+  $b.TopMost = $true; $b.ShowInTaskbar = $false; $b.Opacity = 0; $b.StartPosition = 'Manual'
+  $b.Location = New-Object System.Drawing.Point(-3000, -3000); $b.Size = New-Object System.Drawing.Size(1, 1)
+  $b.Show()
+  try { return [string][System.Windows.Forms.MessageBox]::Show($b, $text, $titel, $knoepfe, $symbol, $vorgabe) }
+  finally { $b.Close(); $b.Dispose() }
+}
+#  Ende im Fenster: Haken setzen, Schliessen-Knopf frei, warten bis es zu ist.
+function UiAbschluss([string]$titel, [bool]$gut, [bool]$warten = $true) {
+  if (-not $Ui) { return }
+  $n = [int]$Ui.Aktiv
+  if ($n -gt 0) { $Ui.Stand[$n] = $(if (-not $gut) { 'fehler' } elseif ($Ui.Hinweis[$n]) { 'hinweis' } else { 'ok' }) }
+  $Ui.Titel = $titel; $Ui.Gut = $gut; $Ui.Ende = $true
+  if ($warten) { while (-not $Ui.Zu) { Start-Sleep -Milliseconds 300 } }
+  UiZu
+}
+#  Fenster sicher schliessen, BEVOR das Skript endet: endet der Prozess bei offenem
+#  Fenster, wirft dessen Zeitgeber eine PipelineStoppedException (Testlauf 13.10.2026).
+function UiZu {
+  if (-not $Ui) { return }
+  $Ui.Ende = $true; $Ui.JetztZu = $true
+  for ($i = 0; $i -lt 50 -and -not $Ui.Zu; $i++) { Start-Sleep -Milliseconds 100 }
+  try { $Ui.Ps.Dispose() } catch { }
+  KonsoleZeigen 9
+}
+#  Konsolenfenster im Fenstermodus minimieren (6) bzw. wiederherstellen (9) - bestmoeglich.
+function KonsoleZeigen([int]$modus) {
+  try {
+    if (-not ('Praxura.Konsole' -as [type])) {
+      Add-Type -Namespace Praxura -Name Konsole -MemberDefinition '[DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);'
+    }
+    $h = [Praxura.Konsole]::GetConsoleWindow()
+    if ($h -ne [IntPtr]::Zero) { [Praxura.Konsole]::ShowWindow($h, $modus) | Out-Null }
+  } catch { }
+}
+
+function Log([string]$t)  {
+  $z = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $t"; Add-Content -Path $LogDatei -Value $z -Encoding UTF8; Write-Host $t
+  if ($Ui) {
+    if ($t -match '^\[(\d+)/11\]') { UiSchritt ([int]$Matches[1]) }
+    $Ui.Zeilen.Enqueue($t)
+  }
+}
 function Ok([string]$t)   { Log "  [ok] $t" }
-function Warn([string]$t) { Log "  [Hinweis] $t" }
+function Warn([string]$t) { Log "  [Hinweis] $t"; if ($Ui -and $Ui.Aktiv) { $Ui.Hinweis[[int]$Ui.Aktiv] = $true } }
 function Fehler([string]$titel, [string]$gefunden, [string]$tun) {
   Log ''
   Log "  X [Fehler] $titel"
@@ -110,9 +311,18 @@ function Fehler([string]$titel, [string]$gefunden, [string]$tun) {
   Log "      Was tun:  $tun"
   Log ''
   Log "  Protokoll: $LogDatei"
+  if ($Ui) {
+    $Ui.Titel = "Abgebrochen: $titel"
+    UiMeldung "$titel`r`n`r`nGefunden: $gefunden`r`n`r`nWas tun: $tun`r`n`r`nProtokoll: $LogDatei" 'Praxura - Einrichtung abgebrochen' 'OK' 'Error' | Out-Null
+    UiAbschluss "Abgebrochen: $titel" $false
+  }
   exit 1
 }
 function Frage([string]$text, [bool]$standardJa = $true) {
+  if ($Ui) {
+    $a = UiMeldung (U $text) 'Praxura - Einrichtung' 'YesNo' 'Question' $(if ($standardJa) { 'Button1' } else { 'Button2' })
+    return ($a -eq 'Yes')
+  }
   $vorschlag = if ($standardJa) { '[J/n]' } else { '[j/N]' }
   $a = Read-Host "  $text $vorschlag"
   if ([string]::IsNullOrWhiteSpace($a)) { return $standardJa }
@@ -184,6 +394,11 @@ if ($NeuerJeton) {
     Warn "Browser liess sich nicht oeffnen - Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
   }
   exit 0
+}
+
+if (-not $Text) {
+  $Ui = UiStarten
+  if ($Ui) { KonsoleZeigen 6 } else { Log '  (Einrichtungsfenster nicht verfuegbar - es geht hier im Textfenster weiter)' }
 }
 
 # -- 1  Vorpruefung -----------------------------------------------------------
@@ -298,6 +513,7 @@ if (DistroVorhanden) {
       $weiterArgs = ''
       if ($PSBoundParameters.ContainsKey('Kanal')) { $weiterArgs += " -Kanal $Kanal" }
       if ($NurVorbereiten) { $weiterArgs += ' -NurVorbereiten' }
+      if ($Text) { $weiterArgs += ' -Text' }
       $akt = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoExit -ExecutionPolicy Bypass -File `"$SkriptKopie`" -Fortsetzen$weiterArgs"
       $trg = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
       $prn = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
@@ -305,6 +521,12 @@ if (DistroVorhanden) {
       Log ''
       Log '  >>> Windows muss jetzt einmal NEU GESTARTET werden. Nach der Anmeldung'
       Log '      geht die Einrichtung in einem PowerShell-Fenster von selbst weiter.'
+      if ($Ui) {
+        $Ui.Titel = 'Neustart noetig - danach geht es von selbst weiter'
+        $a = UiMeldung (U "Windows muss jetzt einmal neu gestartet werden.`r`n`r`nNach der Anmeldung geht die Einrichtung von selbst weiter (Windows fragt dann noch einmal nach Administratorrechten).`r`n`r`nJetzt neu starten?") 'Praxura - Neustart' 'YesNo' 'Information'
+        if ($a -eq 'Yes') { Restart-Computer -Force }
+        UiAbschluss (U 'Neustart n{oe}tig {-} danach geht es von selbst weiter') $true $false
+      }
       exit 0
     }
     Fehler 'Linux-Umgebung konnte nicht angelegt werden' "wsl --install, Rueckgabe $code" 'Ausgabe oben bzw. im Protokoll pruefen. "wsl --update" ausfuehren und dieses Skript erneut starten.'
@@ -376,6 +598,7 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
 if ($NurVorbereiten) {
   Log ''
   Log "  -NurVorbereiten: hier Stopp. Weiter von Hand: wsl -d $Distro -u root -- bash $BoxPfad/install.sh"
+  UiAbschluss '-NurVorbereiten: Schritte 1-5 fertig' $true
   exit 0
 }
 
@@ -392,9 +615,35 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar; entfaellt bei Einrichtungscode)'
   Log '    Sicherungsziel:      siehe Schritt 11 unten - fuer den Anfang leer lassen geht auch'
   Log ''
-  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" "--kanal=$Kanal"
-  if ($LASTEXITCODE -ne 0) {
-    Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $LASTEXITCODE" "Meldung oben lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
+  if ($Ui) {
+    # Eigenes Konsolenfenster: install.sh braucht ein echtes Terminal (-t 0) und die
+    # Antworten (Code, Name, GESICHERT) tippt die Praxis dort selbst - nichts davon
+    # geht durch das Einrichtungsfenster, die Kommandozeile oder eine Datei.
+    $Ui.Titel = 'Bitte im zweiten Fenster weitermachen ...'
+    UiMeldung (U ("Gleich {oe}ffnet sich ein zweites, schwarzes Fenster. Dort stellt die Box ihre Fragen:`r`n`r`n" +
+      "  {-} Einrichtungscode: den Code von Praxura eintippen, Enter`r`n" +
+      "  {-} Name der Box: mit Enter {ue}bernehmen`r`n" +
+      "  {-} Sicherungsziel: f{ue}r den Anfang leer lassen (Enter)`r`n" +
+      "  {-} Werden Schl{ue}ssel angezeigt: auf Papier oder USB-Stick sichern und dann GESICHERT eintippen`r`n`r`n" +
+      "Am Ende das Fenster mit Enter schlie{ss}en {-} danach geht es hier weiter.")) 'Praxura - Einrichtung der Box' 'OK' 'Information' | Out-Null
+    $sh = ("printf ']0;Praxura - Einrichtung der Box'`n" +
+           "env PRAXURA_BROWSER_OEFFNEN=1 bash '$BoxPfad/install.sh' '--kanal=$Kanal'`n" +
+           "rc=`$?`n" +
+           "echo`n" +
+           "if [ `$rc -eq 0 ]; then echo '  Fertig. Enter druecken - es geht im Praxura-Fenster weiter.'; else echo `"  Abgebrochen (Rueckgabe `$rc). Meldung oben lesen, dann Enter druecken.`"; fi`n" +
+           "read -r _`n" +
+           "exit `$rc`n")
+    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($sh))
+    $proc = Start-Process -FilePath 'wsl.exe' -ArgumentList "-d $Distro -u root --exec bash -c `"source <(echo $b64 | base64 -d)`"" -PassThru
+    $null = $proc.Handle   # sonst liefert ExitCode in PowerShell 5.1 nichts
+    $proc.WaitForExit()
+    $rcSh = $proc.ExitCode
+  } else {
+    & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" "--kanal=$Kanal"
+    $rcSh = $LASTEXITCODE
+  }
+  if ($rcSh -ne 0) {
+    Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $rcSh" "Meldung oben bzw. im zweiten Fenster lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
   }
   $installiertJetzt = $true
 }
@@ -590,6 +839,7 @@ if ($installiertJetzt) {
     }
   }
 }
+UiAbschluss (U "Fertig {-} weiter im Browser: $siteUrl") $true
 
 
 # PRAXURA-SKRIPT-ENDE

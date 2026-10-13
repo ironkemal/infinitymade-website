@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-11",
+ "erzeugt": "2026-10-13",
  "dateien": 433,
- "funktionen": 3490,
+ "funktionen": 3500,
  "module": [
   "abrechnung",
   "anamnese",
@@ -70680,12 +70680,39 @@
    "uiPfad": []
   },
   {
-   "name": "Log",
+   "name": "U",
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 103,
-   "end": 103,
+   "start": 112,
+   "end": 116,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "BoxEnv",
+    "Frage",
+    "InWsl",
+    "UiStarten",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Rgb",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 122,
+   "end": 122,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -70699,6 +70726,226 @@
    "sources": [],
    "calls": [],
    "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Pt",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 123,
+   "end": 123,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Gr",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 124,
+   "end": 124,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "UiStarten",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 226,
+   "end": 252,
+   "lines": 27,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Fehler",
+    "U"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "UiSchritt",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 253,
+   "end": 259,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "Log"
+   ]
+  },
+  {
+   "name": "UiMeldung",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 261,
+   "end": 268,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "Fehler",
+    "Frage",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "UiAbschluss",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 270,
+   "end": 277,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "UiZu"
+   ],
+   "calledBy": [
+    "Fehler",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "UiZu",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 280,
+   "end": 286,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "KonsoleZeigen"
+   ],
+   "calledBy": [
+    "UiAbschluss"
+   ]
+  },
+  {
+   "name": "KonsoleZeigen",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 288,
+   "end": 296,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "UiZu",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Log",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 298,
+   "end": 304,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "UiSchritt"
+   ],
+   "calledBy": [
     "Fehler",
     "Ok",
     "Warn",
@@ -70710,8 +70957,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 104,
-   "end": 104,
+   "start": 305,
+   "end": 305,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -70735,8 +70982,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 105,
-   "end": 105,
+   "start": 306,
+   "end": 306,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -70760,9 +71007,9 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 106,
-   "end": 114,
-   "lines": 9,
+   "start": 307,
+   "end": 320,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70774,9 +71021,12 @@
    "gemeinsam": false,
    "sources": [],
    "calls": [
-    "Log"
+    "Log",
+    "UiAbschluss",
+    "UiMeldung"
    ],
    "calledBy": [
+    "UiStarten",
     "installieren/install.ps1"
    ]
   },
@@ -70785,9 +71035,9 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 115,
-   "end": 120,
-   "lines": 6,
+   "start": 321,
+   "end": 330,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70798,7 +71048,10 @@
    "uiPfad": [],
    "gemeinsam": false,
    "sources": [],
-   "calls": [],
+   "calls": [
+    "U",
+    "UiMeldung"
+   ],
    "calledBy": [
     "installieren/install.ps1"
    ]
@@ -70808,8 +71061,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 127,
-   "end": 132,
+   "start": 337,
+   "end": 342,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -70821,7 +71074,9 @@
    "uiPfad": [],
    "gemeinsam": false,
    "sources": [],
-   "calls": [],
+   "calls": [
+    "U"
+   ],
    "calledBy": [
     "installieren/install.ps1"
    ]
@@ -70831,8 +71086,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 140,
-   "end": 143,
+   "start": 350,
+   "end": 353,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -70856,8 +71111,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 144,
-   "end": 147,
+   "start": 354,
+   "end": 357,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -70879,8 +71134,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 151,
-   "end": 154,
+   "start": 361,
+   "end": 364,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -70900,8 +71155,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 155,
-   "end": 159,
+   "start": 365,
+   "end": 369,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -70914,6 +71169,7 @@
    "gemeinsam": false,
    "sources": [],
    "calls": [
+    "U",
     "WslLeise"
    ],
    "calledBy": [
@@ -70925,8 +71181,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 160,
-   "end": 165,
+   "start": 370,
+   "end": 375,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],

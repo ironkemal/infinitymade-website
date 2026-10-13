@@ -107,6 +107,14 @@
         { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
         { "key": "Cache-Control", "value": "no-store" }
       ]
+    },
+    {
+      "source": "/installieren/Praxura-Einrichtung.cmd",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Praxura-Einrichtung.cmd\"" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ],
   "redirects": [
