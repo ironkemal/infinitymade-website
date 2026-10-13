@@ -981,3 +981,15 @@ verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Aus
 - Funktionenkarte bei dieser Nachmeldung: erzeugt 08.10.2026, 3192 Einträge. Gezielte
   Karten- und Quellenprüfung bestätigt genannte Integrationsstellen. Diese Intentmeldung
   bestätigt weder abgeschlossene QA noch externe Provider-, Rechts- oder Produktionsfreigabe.
+
+### 13.10.2026 · Windows-Einrichtungsfenster (install.ps1, Stufe 1) — Intentmeldung
+
+- `installieren/install.ps1`, Commit 1bee7189: `U` (Umlaut in ASCII-Datei), `UiStarten` + Skriptblock
+  `$UiSkript` (WinForms-Fenster im STA-Runspace; darin `Rgb`/`Pt`/`Gr` — die Karte führt sie als
+  Top-Level, sie leben im Skriptblock), `UiSchritt`, `UiMeldung` (TopMost-MessageBox), `UiAbschluss`,
+  `UiZu` (schließt das Fenster vor jedem Skriptende — sonst PipelineStoppedException aus dem
+  Zeitgeber), `KonsoleZeigen`. Niye: Konsey 2026-10-13 Windows-Kurulum-Sihirbazı Stufe 1 — Kemal
+  wollte auf dem Test-PC ohne Kommandoeingabe einrichten. Nerede: nur `install.ps1`; `Log`/`Warn`/
+  `Fehler`/`Frage` rufen sie auf, Schritt 6 startet `install.sh` in eigenem Konsolenfenster
+  (Geheimnisse gehen nicht durch das Fenster). `-Text` = alter Textweg. Karte im selben Commit
+  aufgefrischt (`--check`: taze, 3500 Einträge). Tutanak: `konsey/tutanak/2026-10-13-windows-kurulum-sihirbazi.md`.
