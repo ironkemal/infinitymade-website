@@ -89,17 +89,17 @@
     "alternateName": "Praxura Praxissoftware",
     "applicationCategory": "BusinessApplication",
     "applicationSubCategory": "Praxismanagement",
-    "operatingSystem": "Web",
+    "operatingSystem": "Windows 11, Linux",
     "url": "https://praxura.de/heilmittelabrechnung-software.html",
     "description": "All-in-One Praxissoftware für Physiotherapie, Ergotherapie, Logopädie und Podologie. Bereitet DTA-Abrechnungsdateien nach § 302 SGB V zur Abrechnung ohne Abrechnungszentrum vor.",
     "publisher": { "@id": "https://praxura.de/#organization" },
     "featureList": [
       "Vorbereitung DTA-Abrechnungsdatei nach §302 SGB V",
-      "KI-Rezeptprüfung zur Vermeidung von Absetzungen",
+      "Verordnungsprüfung zur Vermeidung von Absetzungen",
       "Transparente, provisionsfreie Festpreise",
-      "Online-Terminbuchung & Kalendersynchronisation",
+      "Terminplanung & Teamkalender",
       "Elektronisches Fahrtenbuch & Routenplanung für Hausbesuche",
-      "DSGVO-konformes Hosting in der EU"
+      "Lokaler Betrieb: Patientendaten bleiben auf dem Rechner der Praxis"
     ]
   }
   </script>
@@ -159,7 +159,7 @@
         "name": "Wie vermeide ich Absetzungen?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Praxura verfügt über eine KI-Rezeptprüfung mit integrierter OCR. Sie fotografieren oder scannen die Verordnung. Das System prüft automatisch auf formale Unstimmigkeiten in der Heilmittelkombination, Hinweise auf fehlende Unterschriften, unvollständige ICD-10-Codes oder Fristüberschreitungen vor Behandlungsbeginn. So korrigieren Sie Fehler frühzeitig und vermeiden teure Absetzungen."
+          "text": "Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht. Sie bestätigen die Felder; die Prüfung gegen die Heilmittelrichtlinie zeigt formale Unstimmigkeiten in den Heilmittelpositionen, unvollständige ICD-10-Diagnosecodes oder versäumte Fristen vor Behandlungsbeginn. So können Sie Unstimmigkeiten rechtzeitig klären und Absetzungen vorbeugen."
         }
       }
     ]
@@ -604,7 +604,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        <span><strong>KI-Rezeptprüfung:</strong> Integrierte OCR prüft Heilmittelkatalog-Kombinationen vor Behandlungsbeginn.</span>
+        <span><strong>Verordnungsprüfung:</strong> Barcode des Muster 13 lokal einlesen, Heilmittelkombinationen vor Behandlungsbeginn prüfen.</span>
       </li>
       <li class="px-hero-card-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -652,8 +652,8 @@
             <div class="px-compare-p">Keine prozentualen Abzüge. Praxura bietet einen transparenten monatlichen Festpreis — unabhängig von Ihrem Umsatz.</div>
           </li>
           <li class="px-compare-item active-solution">
-            <div class="px-compare-h" style="color: var(--bronze);">KI-Frühwarnsystem vor Ort</div>
-            <div class="px-compare-p">Rezepte scannen per OCR. Die KI vergleicht Daten in Echtzeit mit den Richtlinien des Heilmittelkatalogs.</div>
+            <div class="px-compare-h" style="color: var(--bronze);">Frühwarnung vor Ort</div>
+            <div class="px-compare-p">Verordnung per Barcode lokal einlesen und sofort gegen die Heilmittelrichtlinie prüfen – in Ihrer Praxis, auf Ihrem Rechner.</div>
           </li>
           <li class="px-compare-item active-solution">
             <div class="px-compare-h" style="color: var(--bronze);">Direktzahlung auf Ihr Konto</div>
@@ -691,9 +691,9 @@
 
   <h2>Wie funktioniert der Ablauf mit Praxura?</h2>
   
-  <h3>1. Rezept erfassen und KI-Prüfung aktivieren</h3>
+  <h3>1. Verordnung erfassen und prüfen</h3>
   <p>
-    Sobald ein Patient mit einer Verordnung Ihre Praxis betritt, scannen oder fotografieren Sie das Rezept. Die integrierte OCR-Texterkennung erfasst alle relevanten Informationen wie Patientendaten, Arztnummer, Diagnosecode (ICD-10) und Heilmittelpositionen. Das KI-Prüfmodul vergleicht diese Daten sofort mit den aktuellen Richtlinien des Heilmittelkatalogs. Unplausibler Behandlungsbedarf, fehlerhafte Frequenzangaben oder versäumte Fristen (z. B. der Behandlungsbeginn innerhalb von 28 Tagen) werden sofort markiert. Sie können reagieren, noch bevor die erste Behandlung stattfindet.
+    Sobald ein Patient mit einer Verordnung Ihre Praxis betritt, lesen Sie die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – Patientendaten, Arztnummer, Diagnosecode (ICD-10) und Heilmittelpositionen. Sie bestätigen die Felder, und Praxura vergleicht die Daten sofort mit den aktuellen Richtlinien des Heilmittelkatalogs. Unplausibler Behandlungsbedarf, fehlerhafte Frequenzangaben oder versäumte Fristen (z. B. der Behandlungsbeginn innerhalb von 28 Tagen) werden sofort markiert. Sie können reagieren, noch bevor die erste Behandlung stattfindet.
   </p>
 
   <h3>2. Behandlungen dokumentieren</h3>
@@ -779,7 +779,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Dafür nutzt Praxura eine KI-gestützte Rezeptprüfung mit automatischer Texterkennung (OCR). Sie prüft automatisch auf formale Unstimmigkeiten in den Heilmittelpositionen, unvollständige ICD-10-Diagnosecodes oder Hinweise auf fehlende Arztunterschriften direkt beim Scannen des Rezepts. So können Sie Unstimmigkeiten vor Behandlungsbeginn klären und Absetzungen vorbeugen.
+        Praxura liest die Verordnungsdaten aus dem Barcode des Muster 13 lokal ein – das Bild verlässt Ihren Rechner nicht. Sie bestätigen die Felder; die Prüfung gegen die Heilmittelrichtlinie zeigt formale Unstimmigkeiten in den Heilmittelpositionen, unvollständige ICD-10-Diagnosecodes oder versäumte Fristen vor Behandlungsbeginn. So können Sie Unstimmigkeiten rechtzeitig klären und Absetzungen vorbeugen.
       </div>
     </details>
   </div>
@@ -854,6 +854,7 @@
       <h4>Produkte</h4>
       <ul>
         <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/pvs-heilmittelerbringer.html">PVS für Heilmittelerbringer</a></li>
         <li><a href="/heilmittelabrechnung-software.html">§ 302-Abrechnung</a></li>
         <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
         <li><a href="/blog/">Insights</a></li>

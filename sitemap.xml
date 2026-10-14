@@ -6,13 +6,13 @@
     <loc>https://praxura.de/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <lastmod>2026-06-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
   </url>
   <url>
     <loc>https://praxura.de/praxis.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-06-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
   </url>
   <url>
     <loc>https://praxura.de/support.html</loc>
@@ -22,21 +22,22 @@
   </url>
 
   <!-- Fachbereich-Landingpages -->
-  <url><loc>https://praxura.de/praxissoftware-physiotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/praxissoftware-ergotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/praxissoftware-logopaedie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/praxissoftware-podologie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-physiotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-ergotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-logopaedie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-podologie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
 
   <!-- Themen-Landingpages -->
-  <url><loc>https://praxura.de/heilmittelabrechnung-software.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/ti-anbindung-heilmittel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
+  <url><loc>https://praxura.de/pvs-heilmittelerbringer.html</loc><changefreq>monthly</changefreq><priority>0.9</priority><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://praxura.de/heilmittelabrechnung-software.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://praxura.de/ti-anbindung-heilmittel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-10-14</lastmod></url>
 
   <!-- AI / LLM Discovery -->
   <url>
     <loc>https://praxura.de/llms.txt</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
-    <lastmod>2026-06-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
   </url>
 
   <!-- Blog & Insights -->
