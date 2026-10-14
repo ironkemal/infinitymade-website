@@ -362,6 +362,8 @@
   "rewrites": [
     { "source": "/install.sh", "destination": "/installieren/install.sh" },
     { "source": "/install.ps1", "destination": "/installieren/install.ps1" },
+    { "source": "/installieren", "destination": "/installieren.html" },
+    { "source": "/installieren/", "destination": "/installieren.html" },
     {
       "source": "/praxis",
       "destination": "/praxis.html"
