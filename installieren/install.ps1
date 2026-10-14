@@ -185,6 +185,25 @@ $UiSkript = {
     $knopf.FlatStyle = 'Flat'; $knopf.FlatAppearance.BorderSize = 0; $knopf.BackColor = Rgb '#D9D2C9'; $knopf.ForeColor = [System.Drawing.Color]::White
     $knopf.Enabled = $false; $knopf.Add_Click({ $f.Close() })
     $f.Controls.AddRange(@($protTitel, $prot, $stand, $knopf))
+    # Frage IM Fenster (14.10.2026): ersetzt das Protokoll, bis geantwortet ist. Ein
+    # MessageBox-Fenster lag beim Test hinter/neben dem Fenster und war unauffindbar.
+    # Nur Ja/Nein - Geheimnisse (Code, Schluessel, Passwort) kommen hier NIE durch.
+    $fp = New-Object System.Windows.Forms.Panel
+    $fp.Location = Pt 28 470; $fp.Size = Gr 624 138; $fp.BackColor = $creme; $fp.Visible = $false
+    $fpT = New-Object System.Windows.Forms.Label
+    $fpT.Location = Pt 16 10; $fpT.Size = Gr 592 24; $fpT.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 11)
+    $fpX = New-Object System.Windows.Forms.Label
+    $fpX.Location = Pt 16 36; $fpX.Size = Gr 592 56; $fpX.Font = New-Object System.Drawing.Font('Segoe UI', 9.5); $fpX.ForeColor = Rgb '#4A4038'
+    $fpJa = New-Object System.Windows.Forms.Button
+    $fpJa.Location = Pt 448 94; $fpJa.Size = Gr 160 34; $fpJa.FlatStyle = 'Flat'; $fpJa.FlatAppearance.BorderSize = 0
+    $fpJa.BackColor = $dunkel; $fpJa.ForeColor = [System.Drawing.Color]::White
+    $fpNein = New-Object System.Windows.Forms.Button
+    $fpNein.Location = Pt 278 94; $fpNein.Size = Gr 160 34; $fpNein.FlatStyle = 'Flat'; $fpNein.BackColor = [System.Drawing.Color]::White
+    $fpAus = { $fp.Visible = $false; $prot.Visible = $true; $protTitel.Visible = $true }
+    $fpJa.Add_Click({ $s.Frage = $null; $s.Antwort = 'ja'; & $fpAus })
+    $fpNein.Add_Click({ $s.Frage = $null; $s.Antwort = 'nein'; & $fpAus })
+    $fp.Controls.AddRange(@($fpT, $fpX, $fpJa, $fpNein))
+    $f.Controls.Add($fp); $fp.BringToFront()
     $zeichen = @{ offen = [string][char]0x25CB; laeuft = [string][char]0x25CF; ok = [string][char]0x2714; hinweis = [string][char]0x2714; fehler = [string][char]0x2716 }
     $farbe = @{ offen = (Rgb '#CFC7BC'); laeuft = $bronze; ok = (Rgb '#3C8D5A'); hinweis = (Rgb '#C27C0E'); fehler = (Rgb '#B3261E') }
     $fN = New-Object System.Drawing.Font('Segoe UI', 10)
@@ -204,6 +223,15 @@ $UiSkript = {
       }
       $fuell.Width = [int](624 * $fertig / [math]::Max(1, $zeilen.Count))
       $stand.Text = [string]$s.Titel
+      $q = $s.Frage
+      if ($q -and -not $fp.Visible) {
+        $fpT.Text = [string]$q.Titel; $fpX.Text = [string]$q.Text
+        $fpJa.Text = [string]$q.Ja; $fpNein.Text = [string]$q.Nein; $fpNein.Visible = [bool]$q.Nein
+        $prot.Visible = $false; $protTitel.Visible = $false; $fp.Visible = $true
+        # Nach vorn holen, auch wenn ein anderes Fenster den Fokus hat.
+        if ($f.WindowState -eq 'Minimized') { $f.WindowState = 'Normal' }
+        $f.TopMost = $true; $f.TopMost = $false; $f.Activate(); $fpJa.Focus() | Out-Null
+      }
       if ($s.Ende -and -not $knopf.Enabled) {
         $knopf.Enabled = $true; $knopf.BackColor = $dunkel
         if ($s.Gut) { $fuell.Width = 624 } else { $fuell.BackColor = $farbe.fehler }
@@ -229,12 +257,13 @@ function UiStarten {
     Zeilen = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
     Stand = [hashtable]::Synchronized(@{}); Hinweis = [hashtable]::Synchronized(@{})
     Aktiv = 0; Titel = ''; Ende = $false; Zu = $false; Bereit = $false; Fehler = ''; JetztZu = $false; Gut = $false
+    Frage = $null; Antwort = $null
     Texte = @{
       Fenster = 'Praxura ' + (U '{-}') + ' Einrichtung der Praxis-Box'
       Kopf = 'Ihre Praxis-Box wird eingerichtet'
       # Praxura-Logo, 112 px PNG (aus logo.png, 48 Farben) - eingebettet, kein Download.
       Logo = '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'
-      Unter = U 'Bitte dieses Fenster offen lassen {-} Fragen erscheinen als eigene Fenster. Dauer etwa 15{-}30 Minuten, beim ersten Mal mit einem Windows-Neustart.'
+      Unter = U 'Bitte dieses Fenster offen lassen {-} Fragen erscheinen hier unten bzw. als kleines Praxura-Fenster davor. Dauer etwa 15{-}30 Minuten, beim ersten Mal mit einem Windows-Neustart.'
       Schliessen = U 'Schlie{ss}en'
       Schritte = @((U 'Vorpr{ue}fung'), 'WSL-Einstellungen', 'Linux-Umgebung', 'Docker', 'Programmdateien',
                    'Einrichtung der Box (Einrichtungscode)', 'Autostart', 'Firewall', 'Zertifikat + Adresse',
@@ -257,14 +286,14 @@ function UiSchritt([int]$n) {
   $Ui.Aktiv = $n; $Ui.Stand[$n] = 'laeuft'
   $Ui.Titel = "Schritt $n von 11: $($Ui.Texte.Schritte[$n - 1]) ..."
 }
-#  Meldung als Fenster im Vordergrund (Besitzer = unsichtbares TopMost-Fenster).
-function UiMeldung([string]$text, [string]$titel, [string]$knoepfe = 'OK', [string]$symbol = 'Information', [string]$vorgabe = 'Button1') {
-  $b = New-Object System.Windows.Forms.Form
-  $b.TopMost = $true; $b.ShowInTaskbar = $false; $b.Opacity = 0; $b.StartPosition = 'Manual'
-  $b.Location = New-Object System.Drawing.Point(-3000, -3000); $b.Size = New-Object System.Drawing.Size(1, 1)
-  $b.Show()
-  try { return [string][System.Windows.Forms.MessageBox]::Show($b, $text, $titel, $knoepfe, $symbol, $vorgabe) }
-  finally { $b.Close(); $b.Dispose() }
+#  Frage/Meldung IM Einrichtungsfenster (unten, statt Protokoll). $nein = '' -> nur ein Knopf.
+#  Ersetzt die MessageBox (Test 14.10.2026: lag unsichtbar, Einrichtung stand in Schritt 10).
+function UiFrage([string]$titel, [string]$text, [string]$ja = 'Ja', [string]$nein = 'Nein') {
+  $Ui.Antwort = $null
+  $Ui.Frage = @{ Titel = $titel; Text = $text; Ja = $ja; Nein = $nein }
+  while (-not $Ui.Antwort -and -not $Ui.Zu) { Start-Sleep -Milliseconds 200 }
+  $Ui.Frage = $null
+  return ($Ui.Antwort -eq 'ja')
 }
 #  Ende im Fenster: Haken setzen, Schliessen-Knopf frei, warten bis es zu ist.
 function UiAbschluss([string]$titel, [bool]$gut, [bool]$warten = $true) {
@@ -306,7 +335,7 @@ $BraunDunkel = '#2B2118'; $BraunMittel = '#9A7655'
 function Dialog {
   param([string]$titel, [string]$text, [string]$geheim = '', [bool]$feld = $true, [string]$vorgabe = '',
         [scriptblock]$pruef = $null, [string]$hinweis = '', [bool]$abbrechbar = $true, [bool]$gross = $false,
-        [string]$weiter = 'Weiter', [string]$nein = '')
+        [string]$weiter = 'Weiter', [string]$nein = '', [bool]$passwort = $false)
   $rgb = { param($h) [System.Drawing.ColorTranslator]::FromHtml($h) }
   $d = New-Object System.Windows.Forms.Form
   $d.Text = 'Praxura'; $d.StartPosition = 'CenterScreen'; $d.FormBorderStyle = 'FixedDialog'
@@ -335,6 +364,7 @@ function Dialog {
     $ein = New-Object System.Windows.Forms.TextBox
     $ein.Text = $vorgabe; $ein.Location = New-Object System.Drawing.Point(28, $y); $ein.Size = New-Object System.Drawing.Size(($w - 56), 30)
     if ($gross) { $ein.CharacterCasing = 'Upper'; $ein.Font = New-Object System.Drawing.Font('Consolas', 14) }
+    if ($passwort) { $ein.UseSystemPasswordChar = $true }
     $d.Controls.Add($ein); $y += 40
   }
   $hin = New-Object System.Windows.Forms.Label
@@ -470,17 +500,15 @@ function Fehler([string]$titel, [string]$gefunden, [string]$tun) {
   Log "  Protokoll: $LogDatei"
   if ($Ui) {
     $Ui.Titel = "Abgebrochen: $titel"
-    UiMeldung "$titel`r`n`r`nGefunden: $gefunden`r`n`r`nWas tun: $tun`r`n`r`nProtokoll: $LogDatei" 'Praxura - Einrichtung abgebrochen' 'OK' 'Error' | Out-Null
+    UiFrage "Abgebrochen: $titel" "Gefunden: $gefunden`r`nWas tun: $tun" 'OK' '' | Out-Null
     UiAbschluss "Abgebrochen: $titel" $false
   }
   exit 1
 }
-function Frage([string]$text, [bool]$standardJa = $true) {
-  if ($Ui) {
-    $a = UiMeldung (U $text) 'Praxura - Einrichtung' 'YesNo' 'Question' $(if ($standardJa) { 'Button1' } else { 'Button2' })
-    return ($a -eq 'Yes')
-  }
+function Frage([string]$text, [bool]$standardJa = $true, [string]$erklaerung = '', [string]$ja = 'Ja', [string]$nein = 'Nein') {
+  if ($Ui) { return (UiFrage (U $text) (U $erklaerung) (U $ja) (U $nein)) }
   $vorschlag = if ($standardJa) { '[J/n]' } else { '[j/N]' }
+  if ($erklaerung) { Write-Host "  $(U $erklaerung)" }
   $a = Read-Host "  $text $vorschlag"
   if ([string]::IsNullOrWhiteSpace($a)) { return $standardJa }
   return ($a -match '^[jJyY]')
@@ -680,8 +708,8 @@ if (DistroVorhanden) {
       Log '      geht die Einrichtung in einem PowerShell-Fenster von selbst weiter.'
       if ($Ui) {
         $Ui.Titel = 'Neustart noetig - danach geht es von selbst weiter'
-        $a = UiMeldung (U "Windows muss jetzt einmal neu gestartet werden.`r`n`r`nNach der Anmeldung geht die Einrichtung von selbst weiter (Windows fragt dann noch einmal nach Administratorrechten).`r`n`r`nJetzt neu starten?") 'Praxura - Neustart' 'YesNo' 'Information'
-        if ($a -eq 'Yes') { Restart-Computer -Force }
+        $a = UiFrage 'Windows jetzt neu starten?' (U "Die Linux-Umgebung ist erst nach einem Neustart fertig. Nach der Anmeldung geht die Einrichtung von selbst weiter (Windows fragt dann noch einmal nach Administratorrechten). Vorher offene Dokumente speichern.") 'Jetzt neu starten' (U 'Sp{ae}ter selbst')
+        if ($a) { Restart-Computer -Force }
         UiAbschluss (U 'Neustart n{oe}tig {-} danach geht es von selbst weiter') $true $false
       }
       exit 0
@@ -731,7 +759,7 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   if ((InWsl "docker manifest inspect ${ApiImageBasis}:$Kanal >/dev/null 2>&1") -ne 0) {
     if ($Kanal -eq 'stable' -and -not $PSBoundParameters.ContainsKey('Kanal')) {
       Warn "Der Kanal 'stable' ist noch nicht veroeffentlicht."
-      if (-not (Frage "Mit 'beta' installieren? (Wechsel zu 'stable' geht erst, wenn 'stable' Ihre Version erreicht hat)" $true)) {
+      if (-not (Frage "Mit 'beta' installieren?" $true "Der Kanal 'stable' ist noch nicht ver{oe}ffentlicht. Ein Wechsel zu 'stable' geht sp{ae}ter, sobald 'stable' Ihre Version erreicht hat. 'Nein' bricht die Einrichtung ab.")) {
         Fehler 'Abgebrochen' "Kanal 'stable' nicht verfuegbar" 'Spaeter erneut starten oder mit -Kanal beta.'
       }
       $Kanal = 'beta'
@@ -787,12 +815,8 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
     # Antworten (Code, Name, GESICHERT) tippt die Praxis dort selbst - nichts davon
     # geht durch das Einrichtungsfenster, die Kommandozeile oder eine Datei.
     $Ui.Titel = 'Bitte im zweiten Fenster weitermachen ...'
-    UiMeldung (U ("Gleich {oe}ffnet sich ein zweites, schwarzes Fenster. Dort stellt die Box ihre Fragen:`r`n`r`n" +
-      "  {-} Einrichtungscode: den Code von Praxura eintippen, Enter`r`n" +
-      "  {-} Name der Box: mit Enter {ue}bernehmen`r`n" +
-      "  {-} Sicherungsziel: f{ue}r den Anfang leer lassen (Enter)`r`n" +
-      "  {-} Werden Schl{ue}ssel angezeigt: auf Papier oder USB-Stick sichern und dann GESICHERT eintippen`r`n`r`n" +
-      "Am Ende das Fenster mit Enter schlie{ss}en {-} danach geht es hier weiter.")) 'Praxura - Einrichtung der Box' 'OK' 'Information' | Out-Null
+    UiFrage 'Gleich kommt ein zweites, schwarzes Fenster' (U ("Dort: Einrichtungscode eintippen, Name und Sicherungsziel mit Enter {ue}bernehmen, " +
+      "angezeigte Schl{ue}ssel auf Papier/USB-Stick sichern und GESICHERT eintippen. Am Ende mit Enter schlie{ss}en {-} danach geht es hier weiter.")) 'Verstanden' '' | Out-Null
     $sh = ("printf ']0;Praxura - Einrichtung der Box'`n" +
            "env PRAXURA_BROWSER_OEFFNEN=1 bash '$BoxPfad/install.sh' '--kanal=$Kanal'`n" +
            "rc=`$?`n" +
@@ -838,9 +862,23 @@ Log '[7/11] Autostart beim Einschalten des PCs'
 # "IgnoreNew" den neuen Start, sonst ist die Box spaetestens dann wieder da.
 $wdh = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 5)
 $set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -StartWhenAvailable -MultipleInstances IgnoreNew
+# Ohne Fenster (Test 14.10.2026): wsl.exe direkt als Aufgabe oeffnet bei "Start bei
+# Anmeldung" ein schwarzes Konsolenfenster. conhost --headless startet es unsichtbar.
+$wslArg = "-d $Distro -u root --exec /bin/sleep infinity"
+$conhost = "$env:SystemRoot\System32\conhost.exe"
+if (Test-Path $conhost) { $akt = New-ScheduledTaskAction -Execute $conhost -Argument "--headless `"$env:SystemRoot\System32\wsl.exe`" $wslArg" }
+else { $akt = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\wsl.exe" -Argument $wslArg }
 $vorh = Get-ScheduledTask -TaskName $AufgabeStart -ErrorAction SilentlyContinue
 if ($vorh -and ($vorh.Triggers | Where-Object { $_.Repetition.Interval })) {
   Ok 'Autostart-Aufgabe ist schon eingerichtet'
+  if ((Test-Path $conhost) -and -not ($vorh.Actions | Where-Object { $_.Execute -like '*conhost*' })) {
+    try {
+      Set-ScheduledTask -TaskName $AufgabeStart -Action $akt -ErrorAction Stop | Out-Null
+      Ok 'Autostart-Aufgabe startet die Box jetzt ohne sichtbares Fenster'
+    } catch {
+      Warn "Autostart-Aufgabe konnte nicht auf 'ohne Fenster' umgestellt werden ($($_.Exception.Message))."
+    }
+  }
 } elseif ($vorh) {
   # Aufgabe aus einer aelteren Einrichtung: Wiederholung nachtragen. Mit
   # gespeichertem Passwort verlangt Windows es dafuer erneut - dann nur warnen.
@@ -851,15 +889,30 @@ if ($vorh -and ($vorh.Triggers | Where-Object { $_.Repetition.Interval })) {
     Warn "Autostart-Aufgabe konnte nicht ergaenzt werden ($($_.Exception.Message)). Nach Standby bleibt die Box aus. Abhilfe: Aufgabe `"$AufgabeStart`" in der Aufgabenplanung loeschen und dieses Skript erneut starten."
   }
 } else {
-  $akt = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\wsl.exe" -Argument "-d $Distro -u root --exec /bin/sleep infinity"
   $trg = @((New-ScheduledTaskTrigger -AtStartup), $wdh)
   Log "  Fuer den Start OHNE Anmeldung braucht Windows einmalig das Passwort von $env:USERNAME"
   Log '  (es wird von Windows verschluesselt gespeichert, nicht von Praxura).'
-  $cred = Get-Credential -UserName "$env:USERDOMAIN\$env:USERNAME" -Message 'Windows-Passwort fuer den Autostart der Praxis-Box'
+  # Im Fenstermodus eigener Praxura-Dialog: Get-Credential kam beim Test (14.10.2026)
+  # nicht sichtbar und lieferte leer. Das Passwort geht nur an Register-ScheduledTask,
+  # nie ins Einrichtungsfenster, Protokoll oder Log.
+  if ($Ui) {
+    $pw = Dialog 'Windows-Passwort' (U ("Damit die Box schon beim Einschalten des PCs startet {-} auch bevor sich jemand anmeldet {-} braucht Windows einmalig das Passwort von $env:USERNAME. " +
+      "Windows speichert es verschl{ue}sselt, Praxura nicht.`r`n`r`n'{Ue}berspringen': die Box startet erst, wenn sich jemand an diesem PC anmeldet.")) `
+      -passwort $true -weiter 'Speichern' -nein (U '{Ue}berspringen') -pruef { param($t) $t.Length -gt 0 }
+    if ($pw -eq '__NEIN__') { $pw = $null }
+    $benutzer = "$env:USERDOMAIN\$env:USERNAME"
+  } else {
+    $cred = Get-Credential -UserName "$env:USERDOMAIN\$env:USERNAME" -Message 'Windows-Passwort fuer den Autostart der Praxis-Box'
+    $pw = if ($cred) { $cred.GetNetworkCredential().Password } else { $null }
+    $benutzer = if ($cred) { $cred.UserName } else { "$env:USERDOMAIN\$env:USERNAME" }
+  }
   try {
-    Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg -Settings $set -User $cred.UserName -Password $cred.GetNetworkCredential().Password -RunLevel Highest -Force | Out-Null
+    if (-not $pw) { throw 'kein Passwort eingegeben' }
+    Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg -Settings $set -User $benutzer -Password $pw -RunLevel Highest -Force | Out-Null
+    $pw = $null
     Ok 'Autostart eingerichtet (beim Systemstart, auch ohne Anmeldung)'
   } catch {
+    $pw = $null
     Warn "Autostart ohne Anmeldung nicht moeglich ($($_.Exception.Message)) - richte Start bei Anmeldung ein."
     $trg2 = @((New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"), $wdh)
     Register-ScheduledTask -TaskName $AufgabeStart -Action $akt -Trigger $trg2 -Settings $set -User "$env:USERDOMAIN\$env:USERNAME" -RunLevel Highest -Force | Out-Null
@@ -936,7 +989,8 @@ if ($box.Count -eq 1 -and $box[0] -eq $zeile) {
 # -- 10 Energie ---------------------------------------------------------------
 Log '[10/11] Energieoptionen'
 Log '  Schlaeft oder ruht der PC, ist die Box fuer alle anderen Geraete weg.'
-if (Frage 'Am Netzteil Standby + Ruhezustand ausschalten und "Deckel zuklappen = nichts tun"?' $true) {
+if (Frage 'Soll dieser PC wach bleiben?' $true ('Schl{ae}ft der PC, ist die Box f{ue}r Tablets und andere PCs weg. "Ja": am Netzteil kein Standby/Ruhezustand, ' +
+    'Deckel zuklappen = nichts tun. "Nein": nichts {ae}ndern - reicht, wenn Praxura nur an diesem PC benutzt wird.') 'Ja, wach bleiben' 'Nein, nichts {ae}ndern') {
   powercfg /change standby-timeout-ac 0   | Out-Null
   powercfg /change hibernate-timeout-ac 0 | Out-Null
   $eapAlt = $ErrorActionPreference; $ErrorActionPreference = 'Continue'   # Desktop-PC ohne Deckel: Fehlerzeile, kein Abbruch
