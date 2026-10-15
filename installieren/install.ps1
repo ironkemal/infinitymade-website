@@ -222,7 +222,13 @@ $UiSkript = {
     $epO.Location = Pt 448 94; $epO.Size = Gr 160 34; $epO.FlatStyle = 'Flat'; $epO.FlatAppearance.BorderSize = 0
     $epO.BackColor = $dunkel; $epO.ForeColor = [System.Drawing.Color]::White
     $epO.Add_Click({ try { Start-Process ([string]$s.Link) } catch { } })
-    $ep.Controls.AddRange(@($epT, $epX, $epL, $epK, $epO))
+    # Einrichtung noch offen (15.10.2026): Ausweg, falls der Setup-Tab nicht aufging
+    # oder hinten liegt. Der Link mit Jeton wird nie angezeigt, nur geoeffnet.
+    $epS = New-Object System.Windows.Forms.Button
+    $epS.Location = Pt 108 94; $epS.Size = Gr 160 34; $epS.FlatStyle = 'Flat'; $epS.FlatAppearance.BorderSize = 0
+    $epS.BackColor = $dunkel; $epS.ForeColor = [System.Drawing.Color]::White; $epS.Visible = $false
+    $epS.Add_Click({ try { Start-Process ([string]$s.SetupLink) } catch { } })
+    $ep.Controls.AddRange(@($epT, $epX, $epL, $epK, $epO, $epS))
     $f.Controls.Add($ep); $ep.BringToFront()
     $zeichen = @{ offen = [string][char]0x25CB; laeuft = [string][char]0x25CF; ok = [string][char]0x2714; hinweis = [string][char]0x2714; fehler = [string][char]0x2716 }
     $farbe = @{ offen = (Rgb '#CFC7BC'); laeuft = $bronze; ok = (Rgb '#3C8D5A'); hinweis = (Rgb '#C27C0E'); fehler = (Rgb '#B3261E') }
@@ -258,6 +264,10 @@ $UiSkript = {
         if ($s.Gut -and $s.Link) {
           $epT.Text = $t.EndeTitel; $epX.Text = [string]$s.LinkText; $epL.Text = [string]$s.Link
           $epK.Text = $t.Kopieren; $epO.Text = $t.Oeffnen
+          if ($s.SetupLink) {
+            $epS.Text = $t.Einrichten; $epS.Visible = $true
+            $epO.BackColor = [System.Drawing.Color]::White; $epO.ForeColor = $dunkel; $epO.FlatAppearance.BorderSize = 1
+          }
           $fp.Visible = $false; $prot.Visible = $false; $protTitel.Visible = $false; $ep.Visible = $true
         }
         $f.Activate()
@@ -282,7 +292,7 @@ function UiStarten {
     Zeilen = [System.Collections.Queue]::Synchronized((New-Object System.Collections.Queue))
     Stand = [hashtable]::Synchronized(@{}); Hinweis = [hashtable]::Synchronized(@{})
     Aktiv = 0; Titel = ''; Ende = $false; Zu = $false; Bereit = $false; Fehler = ''; JetztZu = $false; Gut = $false
-    Frage = $null; Antwort = $null; Link = ''; LinkText = ''
+    Frage = $null; Antwort = $null; Link = ''; LinkText = ''; SetupLink = ''
     Texte = @{
       Fenster = 'Praxura ' + (U '{-}') + ' Einrichtung der Praxis-Box'
       Kopf = 'Ihre Praxis-Box wird eingerichtet'
@@ -293,6 +303,7 @@ function UiStarten {
       EndeTitel = 'Praxura ist bereit'
       Kopieren = 'Link kopieren'
       Oeffnen = U 'Im Browser {oe}ffnen'
+      Einrichten = U 'Einrichtung {oe}ffnen'
       Schritte = @((U 'Vorpr{ue}fung'), 'WSL-Einstellungen', 'Linux-Umgebung', 'Docker', 'Programmdateien',
                    'Einrichtung der Box (Einrichtungscode)', 'Autostart', 'Firewall', 'Zertifikat + Adresse',
                    'Energieoptionen', 'Sicherungsziel')
@@ -594,18 +605,57 @@ if ($Fortsetzen) {
   Unregister-ScheduledTask -TaskName $AufgabeFortsetzen -Confirm:$false -ErrorAction SilentlyContinue
 }
 
-if ($NeuerJeton) {
-  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" --neuer-jeton
-  if ($LASTEXITCODE -ne 0) {
-    Fehler 'install.sh --neuer-jeton ist nicht durchgelaufen' "Rueckgabe $LASTEXITCODE" "Meldung oben lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
-  }
-  $siteUrl = BoxEnv 'SITE_URL'
+#  Link zur Einrichtung im Browser (setup.html#Jeton), solange sie NICHT abgeschlossen
+#  ist - nach der Installation UND bei jedem erneuten Lauf (Test 15.10.2026: der
+#  Setup-Tab lag hinten bzw. ein zweiter Lauf oeffnete ihn nie, die Praxis stand am
+#  Login ohne Konto). Stand direkt aus der DB der Box (lib-setup-jeton.sh, "nie ueber
+#  Caddy"). Abgelaufener (14 Tage) oder fehlender Jeton -> install.sh --neuer-jeton.
+#  Rueckgabe: Link mit Jeton - nur fuer Browser/Knopf, NIE anzeigen - oder $null.
+function EinrichtungsLink([bool]$neu = $false) {
+  $env:WSL_UTF8 = '1'
+  $stand = ([string]((WslLeise -d $Distro -u root --exec bash -c "cd '$BoxPfad' && export ENV_FILE='$BoxPfad/.env' && . ./lib-setup-jeton.sh && setup_abgeschlossen_lesen") | Select-Object -First 1)).Trim()
+  if ($stand -eq 'ja') { return $null }
   $jeton = BoxEnv 'SETUP_TOKEN'
-  try {
-    Start-Process "$siteUrl/setup.html#$jeton"
-  } catch {
-    Warn "Browser liess sich nicht oeffnen - Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+  $seit = 0L
+  $abgelaufen = [long]::TryParse((BoxEnv 'SETUP_TOKEN_SEIT'), [ref]$seit) -and $seit -gt 0 -and
+    ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $seit) -gt 14 * 86400
+  if ($neu -or $abgelaufen -or (-not $jeton -and $stand -eq 'nein')) {
+    & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" --neuer-jeton | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+      Warn "Neuer Einrichtungslink nicht moeglich (Rueckgabe $LASTEXITCODE) - Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
+      return $null
+    }
+    $jeton = BoxEnv 'SETUP_TOKEN'
   }
+  if (-not $jeton) { return $null }
+  return "$(BoxEnv 'SITE_URL')/setup.html#$jeton"
+}
+#  Wartet, bis die Box antwortet (TLS kann direkt nach der Installation noch fehlen,
+#  dann zeigt der Browser nicht einmal "trotzdem fortfahren"), und oeffnet den Link.
+function EinrichtungOeffnen([string]$link) {
+  $basis = BoxEnv 'SITE_URL'
+  $bereit = $false
+  for ($i = 0; $i -lt 24; $i++) {
+    try {
+      $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Uri "$basis/health" -ErrorAction Stop
+      if ($r.StatusCode -eq 200) { $bereit = $true; break }
+    } catch { }
+    Start-Sleep -Seconds 5
+  }
+  if (-not $bereit) {
+    Warn 'Die Seite ist evtl. noch nicht bereit - in 1-2 Minuten im Browser neu laden (F5).'
+  }
+  try {
+    Start-Process $link
+  } catch {
+    Warn "Browser liess sich nicht oeffnen - Link: $basis/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+  }
+}
+
+if ($NeuerJeton) {
+  $link = EinrichtungsLink $true
+  if ($link) { EinrichtungOeffnen $link }
+  else { Warn "Kein Einrichtungslink - ist die Einrichtung schon abgeschlossen? Anmeldung: $(BoxEnv 'SITE_URL')/login.html" }
   exit 0
 }
 
@@ -647,11 +697,19 @@ if ($dd) {
 if (Test-Path "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe") {
   Warn 'Docker Desktop ist installiert (laeuft aber nicht). Nicht gleichzeitig mit der Box starten.'
 }
-if (-not $Fortsetzen -or -not (DistroVorhanden)) {
+# Erneuter Lauf auf einer schon eingerichteten Box (15.10.2026: "Praxura-Einrichtung
+# nochmal starten" ist der Ausweg bei offener Einrichtung) - 80/443 belegt sie selbst,
+# deshalb dann nur Hinweis (mit Programmname) statt Abbruch (onprem §7BA).
+$boxSchonDa = (DistroVorhanden) -and ((InWsl "[ -f $BoxPfad/.env ]") -eq 0)
+if ($boxSchonDa -or -not $Fortsetzen -or -not (DistroVorhanden)) {
   $belegt = Get-NetTCPConnection -State Listen -LocalPort 80, 443 -ErrorAction SilentlyContinue
   if ($belegt) {
     $p = ($belegt | ForEach-Object { (Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName } | Sort-Object -Unique) -join ', '
-    Fehler 'Port 80 oder 443 ist belegt' "Programm: $p" 'Dieses Programm beenden/deinstallieren (z. B. IIS, Skype, ein anderer Webserver). Die Box braucht beide Ports. (install.sh sieht Windows-Programme nicht - deshalb hier.)'
+    if ($boxSchonDa) {
+      Warn "Port 80/443 belegt (Programm: $p) - normal, wenn es die Box selbst ist (wsl/wslrelay). Sonst dieses Programm beenden."
+    } else {
+      Fehler 'Port 80 oder 443 ist belegt' "Programm: $p" 'Dieses Programm beenden/deinstallieren (z. B. IIS, Skype, ein anderer Webserver). Die Box braucht beide Ports. (install.sh sieht Windows-Programme nicht - deshalb hier.)'
+    }
   }
 }
 Ok "Windows Build $build - $ramGb GB RAM - $frei GB frei auf C: - Virtualisierung an"
@@ -817,7 +875,6 @@ if ($NurVorbereiten) {
 
 # -- 6  install.sh ------------------------------------------------------------
 Log '[6/11] Einrichtung der Box (install.sh)'
-$installiertJetzt = $false
 if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Ok 'Box ist schon eingerichtet (.env vorhanden) - install.sh wird NICHT erneut ausgefuehrt'
 } else {
@@ -867,7 +924,6 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
     }
     Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $rcSh" "Meldung oben bzw. im zweiten Fenster lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
   }
-  $installiertJetzt = $true
 }
 $siteUrl = BoxEnv 'SITE_URL'
 $hostName = ($siteUrl -replace '^https://', '').Trim().TrimEnd('/')
@@ -1064,38 +1120,23 @@ Log '  ================================================================'
 Log "  Protokoll: $LogDatei"
 
 # hosts-Eintrag (Schritt 9) ist dann schon gesetzt, deshalb erst am Ende.
-if ($installiertJetzt) {
-  $jeton = BoxEnv 'SETUP_TOKEN'
-  if ($jeton) {
-    # Im acmedns-Modus kann das Let's-Encrypt-Zertifikat direkt nach der
-    # Installation noch fehlen; Caddy bricht TLS dann ab und der Browser
-    # zeigt nicht einmal "trotzdem fortfahren". Bis zu ~120 s auf /health warten.
-    $bereit = $false
-    for ($i = 0; $i -lt 24; $i++) {
-      try {
-        $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Uri "$siteUrl/health" -ErrorAction Stop
-        if ($r.StatusCode -eq 200) { $bereit = $true; break }
-      } catch {
-        # Noch nicht bereit oder TLS-Handshake noch nicht moeglich
-      }
-      Start-Sleep -Seconds 5
-    }
-    if (-not $bereit) {
-      Warn 'Die Seite ist evtl. noch nicht bereit - in 1-2 Minuten im Browser neu laden (F5).'
-    }
-    Log '  Die Einrichtung oeffnet sich jetzt im Browser.'
-    try {
-      Start-Process "$siteUrl/setup.html#$jeton"
-    } catch {
-      Warn "Browser liess sich nicht oeffnen - Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
-    }
-  }
+# Nicht nur nach frischer Installation: auch ein erneuter Lauf bringt eine offene
+# Einrichtung zurueck in den Browser ("Praxura-Einrichtung nochmal starten" = Ausweg).
+$setupLink = EinrichtungsLink
+if ($setupLink) {
+  Log '  Die Einrichtung oeffnet sich jetzt im Browser (Praxisname, E-Mail und Passwort fuer die Anmeldung).'
+  Log '  Nicht geoeffnet? Im Praxura-Fenster "Einrichtung oeffnen" - oder Praxura-Einrichtung erneut starten.'
+  EinrichtungOeffnen $setupLink
 }
 if ($Ui) {
-  # Nur die Adresse - nie den Einrichtungs-Jeton (der geht nur direkt an den Browser).
+  # Angezeigt wird nur die Adresse - nie der Jeton. SetupLink (mit Jeton) liegt
+  # nur hinter dem Knopf "Einrichtung oeffnen" und geht direkt an den Browser.
   $Ui.Link = "$siteUrl/login.html"
   $Ui.LinkText = U 'Hier melden Sie sich an {-} am besten als Lesezeichen speichern:'
-  if ($installiertJetzt) { $Ui.LinkText = U 'Die Einrichtung wurde im Browser ge{oe}ffnet. Danach melden Sie sich hier an:' }
+  if ($setupLink) {
+    $Ui.SetupLink = $setupLink
+    $Ui.LinkText = U 'Einrichtung nicht ge{oe}ffnet? Knopf unten links. Danach hier anmelden:'
+  }
 }
 UiAbschluss (U "Fertig {-} weiter im Browser: $siteUrl") $true
 

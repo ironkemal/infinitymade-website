@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-10-13 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-15 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3505 fonksiyon** (3392 JS · 88 bash · 25 ps1) · 433 dosya · 41 sidebar modülü
+**3509 fonksiyon** (3394 JS · 88 bash · 27 ps1) · 434 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -475,38 +475,41 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
-- `applyLang` — kalender.js:67 · login.js:52 · setup.js:86
+- `applyLang` — kalender.js:67 · login.js:53 · setup.js:86
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:109
 - `env_wert` — onprem/backup.sh:149 · onprem/restore.sh:93 · onprem/update.sh:125
 
 ## Shell (onprem/)
 
 ### `installieren/install.ps1`
-- `U()` — Zeile 112 · calledBy: BoxEnv, BoxFrage, BoxImFenster, BoxZeile, Frage, InWsl, UiStarten, installieren/install.ps1
+- sources: `lib-setup-jeton.sh`
+- `U()` — Zeile 112 · calledBy: BoxEnv, BoxFrage, BoxImFenster, BoxZeile, EinrichtungsLink, Frage, InWsl, UiStarten, installieren/install.ps1
 - `Rgb()` — Zeile 122 · calledBy: Dialog, installieren/install.ps1
 - `Pt()` — Zeile 123 · calledBy: installieren/install.ps1
 - `Gr()` — Zeile 124 · calledBy: installieren/install.ps1
-- `UiStarten()` — Zeile 226 · calledBy: installieren/install.ps1
-- `UiSchritt()` — Zeile 253 · calledBy: Log
-- `UiMeldung()` — Zeile 261 · calledBy: Fehler, Frage, installieren/install.ps1
-- `UiAbschluss()` — Zeile 270 · calledBy: Fehler, installieren/install.ps1
-- `UiZu()` — Zeile 280 · calledBy: UiAbschluss
-- `KonsoleZeigen()` — Zeile 288 · calledBy: UiZu, installieren/install.ps1
-- `Dialog()` — Zeile 306 · calledBy: BoxFrage
-- `BoxFrage()` — Zeile 377 · calledBy: BoxImFenster
-- `BoxZeile()` — Zeile 413 · calledBy: BoxImFenster
-- `BoxImFenster()` — Zeile 421 · calledBy: installieren/install.ps1
-- `Log()` — Zeile 455 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
-- `Ok()` — Zeile 462 · calledBy: Dialog, installieren/install.ps1
-- `Warn()` — Zeile 463 · calledBy: installieren/install.ps1
-- `Fehler()` — Zeile 464 · calledBy: UiStarten, installieren/install.ps1
-- `Frage()` — Zeile 478 · calledBy: BoxImFenster, installieren/install.ps1
-- `InWsl()` — Zeile 494 · calledBy: installieren/install.ps1
-- `WslLeise()` — Zeile 507 · calledBy: BoxEnv, DistroVorhanden, installieren/install.ps1
-- `WslMitFehlertext()` — Zeile 511 · calledBy: installieren/install.ps1
-- `WslInBenutzung()` — Zeile 518
-- `BoxEnv()` — Zeile 522 · calledBy: installieren/install.ps1
-- `DistroVorhanden()` — Zeile 527
+- `UiStarten()` — Zeile 289 · calledBy: installieren/install.ps1
+- `UiSchritt()` — Zeile 321 · calledBy: Log
+- `UiFrage()` — Zeile 330 · calledBy: Fehler, Frage, installieren/install.ps1
+- `UiAbschluss()` — Zeile 338 · calledBy: Fehler, installieren/install.ps1
+- `UiZu()` — Zeile 348 · calledBy: UiAbschluss
+- `KonsoleZeigen()` — Zeile 356 · calledBy: UiZu, installieren/install.ps1
+- `Dialog()` — Zeile 374 · calledBy: BoxFrage, installieren/install.ps1
+- `BoxFrage()` — Zeile 446 · calledBy: BoxImFenster
+- `BoxZeile()` — Zeile 482 · calledBy: BoxImFenster
+- `BoxImFenster()` — Zeile 490 · calledBy: installieren/install.ps1
+- `Log()` — Zeile 524 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
+- `Ok()` — Zeile 531 · calledBy: Dialog, installieren/install.ps1
+- `Warn()` — Zeile 532 · calledBy: EinrichtungOeffnen, EinrichtungsLink, installieren/install.ps1
+- `Fehler()` — Zeile 533 · calledBy: UiStarten, installieren/install.ps1
+- `Frage()` — Zeile 547 · calledBy: BoxImFenster, UiFrage, UiStarten, installieren/install.ps1
+- `InWsl()` — Zeile 561 · calledBy: installieren/install.ps1
+- `WslLeise()` — Zeile 574 · calledBy: BoxEnv, DistroVorhanden, EinrichtungsLink, installieren/install.ps1
+- `WslMitFehlertext()` — Zeile 578 · calledBy: installieren/install.ps1
+- `WslInBenutzung()` — Zeile 585
+- `BoxEnv()` — Zeile 589 · calledBy: EinrichtungOeffnen, EinrichtungsLink, installieren/install.ps1
+- `DistroVorhanden()` — Zeile 594
+- `EinrichtungsLink()` — Zeile 614 · calledBy: installieren/install.ps1
+- `EinrichtungOeffnen()` — Zeile 635 · calledBy: installieren/install.ps1
 
 ### `installieren/install.sh`
 - sources: `os-release`

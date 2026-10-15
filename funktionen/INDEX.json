@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-13",
- "dateien": 433,
- "funktionen": 3505,
+ "erzeugt": "2026-10-15",
+ "dateien": 434,
+ "funktionen": 3509,
  "module": [
   "abrechnung",
   "anamnese",
@@ -35610,6 +35610,7 @@
     "db",
     "declineAnfrage",
     "decode",
+    "einrichtungHinweisZeigen",
     "empfaengerVorabPruefen",
     "erstelleAcmeDns",
     "erstelleApp",
@@ -37735,6 +37736,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -39949,6 +39951,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -40151,6 +40154,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -41237,6 +41241,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -65173,6 +65178,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -70696,13 +70702,16 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "BoxEnv",
     "BoxFrage",
     "BoxImFenster",
     "BoxZeile",
+    "EinrichtungsLink",
     "Frage",
     "InWsl",
     "UiStarten",
@@ -70726,7 +70735,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "Dialog",
@@ -70750,7 +70761,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "installieren/install.ps1"
@@ -70773,7 +70786,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "installieren/install.ps1"
@@ -70784,9 +70799,9 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 226,
-   "end": 252,
-   "lines": 27,
+   "start": 289,
+   "end": 320,
+   "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70796,9 +70811,12 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Fehler",
+    "Frage",
     "U"
    ],
    "calledBy": [
@@ -70810,8 +70828,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 253,
-   "end": 259,
+   "start": 321,
+   "end": 327,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -70822,20 +70840,22 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "Log"
    ]
   },
   {
-   "name": "UiMeldung",
+   "name": "UiFrage",
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 261,
-   "end": 268,
-   "lines": 8,
+   "start": 330,
+   "end": 336,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70845,8 +70865,12 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
-   "calls": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "Frage"
+   ],
    "calledBy": [
     "Fehler",
     "Frage",
@@ -70858,8 +70882,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 270,
-   "end": 277,
+   "start": 338,
+   "end": 345,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -70870,7 +70894,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "UiZu"
    ],
@@ -70884,8 +70910,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 280,
-   "end": 286,
+   "start": 348,
+   "end": 354,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -70896,7 +70922,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "KonsoleZeigen"
    ],
@@ -70909,8 +70937,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 288,
-   "end": 296,
+   "start": 356,
+   "end": 364,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -70921,7 +70949,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "UiZu",
@@ -70933,9 +70963,9 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 306,
-   "end": 375,
-   "lines": 70,
+   "start": 374,
+   "end": 444,
+   "lines": 71,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -70945,13 +70975,16 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Ok",
     "Rgb"
    ],
    "calledBy": [
-    "BoxFrage"
+    "BoxFrage",
+    "installieren/install.ps1"
    ]
   },
   {
@@ -70959,8 +70992,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 377,
-   "end": 411,
+   "start": 446,
+   "end": 480,
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [],
@@ -70971,7 +71004,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Dialog",
     "U"
@@ -70985,8 +71020,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 413,
-   "end": 420,
+   "start": 482,
+   "end": 489,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -70997,7 +71032,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "U"
    ],
@@ -71010,8 +71047,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 421,
-   "end": 453,
+   "start": 490,
+   "end": 522,
    "lines": 33,
    "spiegelHinweis": null,
    "tables": [],
@@ -71022,7 +71059,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "BoxFrage",
     "BoxZeile",
@@ -71038,8 +71077,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 455,
-   "end": 461,
+   "start": 524,
+   "end": 530,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -71050,7 +71089,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "UiSchritt"
    ],
@@ -71066,8 +71107,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 462,
-   "end": 462,
+   "start": 531,
+   "end": 531,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -71078,7 +71119,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Log"
    ],
@@ -71092,8 +71135,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 463,
-   "end": 463,
+   "start": 532,
+   "end": 532,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -71104,11 +71147,15 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Log"
    ],
    "calledBy": [
+    "EinrichtungOeffnen",
+    "EinrichtungsLink",
     "installieren/install.ps1"
    ]
   },
@@ -71117,8 +71164,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 464,
-   "end": 477,
+   "start": 533,
+   "end": 546,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -71129,11 +71176,13 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "Log",
     "UiAbschluss",
-    "UiMeldung"
+    "UiFrage"
    ],
    "calledBy": [
     "UiStarten",
@@ -71145,9 +71194,9 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 478,
-   "end": 487,
-   "lines": 10,
+   "start": 547,
+   "end": 554,
+   "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -71157,13 +71206,17 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "U",
-    "UiMeldung"
+    "UiFrage"
    ],
    "calledBy": [
     "BoxImFenster",
+    "UiFrage",
+    "UiStarten",
     "installieren/install.ps1"
    ]
   },
@@ -71172,8 +71225,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 494,
-   "end": 499,
+   "start": 561,
+   "end": 566,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -71184,7 +71237,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "U"
    ],
@@ -71197,8 +71252,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 507,
-   "end": 510,
+   "start": 574,
+   "end": 577,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71209,11 +71264,14 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "BoxEnv",
     "DistroVorhanden",
+    "EinrichtungsLink",
     "installieren/install.ps1"
    ]
   },
@@ -71222,8 +71280,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 511,
-   "end": 514,
+   "start": 578,
+   "end": 581,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71234,7 +71292,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": [
     "installieren/install.ps1"
@@ -71245,8 +71305,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 518,
-   "end": 521,
+   "start": 585,
+   "end": 588,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71257,7 +71317,9 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [],
    "calledBy": []
   },
@@ -71266,8 +71328,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 522,
-   "end": 526,
+   "start": 589,
+   "end": 593,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -71278,12 +71340,16 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "U",
     "WslLeise"
    ],
    "calledBy": [
+    "EinrichtungOeffnen",
+    "EinrichtungsLink",
     "installieren/install.ps1"
    ]
   },
@@ -71292,8 +71358,8 @@
    "kind": "ps-function",
    "lang": "ps1",
    "file": "installieren/install.ps1",
-   "start": 527,
-   "end": 532,
+   "start": 594,
+   "end": 599,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -71304,11 +71370,71 @@
    "modules": [],
    "uiPfad": [],
    "gemeinsam": false,
-   "sources": [],
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
    "calls": [
     "WslLeise"
    ],
    "calledBy": []
+  },
+  {
+   "name": "EinrichtungsLink",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 614,
+   "end": 632,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "BoxEnv",
+    "U",
+    "Warn",
+    "WslLeise"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "EinrichtungOeffnen",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 635,
+   "end": 653,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "BoxEnv",
+    "Warn"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
   },
   {
    "name": "log",
@@ -71667,6 +71793,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -73935,8 +74062,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 52,
-   "end": 82,
+   "start": 53,
+   "end": 83,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -73959,8 +74086,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 91,
-   "end": 100,
+   "start": 92,
+   "end": 101,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -74022,8 +74149,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 102,
-   "end": 105,
+   "start": 103,
+   "end": 106,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -74047,8 +74174,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 106,
-   "end": 109,
+   "start": 107,
+   "end": 110,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -74070,8 +74197,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 111,
-   "end": 115,
+   "start": 112,
+   "end": 116,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -74092,8 +74219,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 135,
-   "end": 142,
+   "start": 137,
+   "end": 144,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -74119,8 +74246,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 144,
-   "end": 147,
+   "start": 146,
+   "end": 149,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -102353,6 +102480,55 @@
    "uiPfad": [
     "ortak yardımcı — 35 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "einrichtungHinweisText",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einrichtung-hinweis.js",
+   "start": 17,
+   "end": 27,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "einrichtungHinweisZeigen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "einrichtungHinweisZeigen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/einrichtung-hinweis.js",
+   "start": 30,
+   "end": 58,
+   "lines": 29,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [
+    "/setup/status"
+   ],
+   "storage": [],
+   "calls": [
+    "einrichtungHinweisText",
+    "json"
+   ],
+   "calledBy": [
+    "(datei) login.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "esc",
@@ -171482,6 +171658,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -184503,6 +184680,7 @@
     "(datei) cookie-consent.js",
     "(datei) dashboard.js",
     "(datei) kalender.js",
+    "(datei) module/einrichtung-hinweis.js",
     "(datei) onboarding.js",
     "(datei) ops/vendor/supabase-js.js",
     "(datei) setup.js",
@@ -190107,7 +190285,7 @@
    "name": "applyLang",
    "orte": [
     "kalender.js:67",
-    "login.js:52",
+    "login.js:53",
     "setup.js:86"
    ],
    "aynalar": []
@@ -190189,7 +190367,7 @@
    "orte": [
     "admin-login.js:18",
     "api/_lib/auth.js:90",
-    "login.js:135"
+    "login.js:137"
    ],
    "aynalar": []
   },
@@ -190288,7 +190466,7 @@
    "orte": [
     "admin-login.js:15",
     "attendance.js:69",
-    "login.js:102"
+    "login.js:103"
    ],
    "aynalar": []
   },
@@ -190455,7 +190633,7 @@
    "name": "clearMsg",
    "orte": [
     "admin-login.js:16",
-    "login.js:106"
+    "login.js:107"
    ],
    "aynalar": []
   },
@@ -191094,7 +191272,7 @@
   {
    "name": "showView",
    "orte": [
-    "login.js:91",
+    "login.js:92",
     "ops/app.js:185"
    ],
    "aynalar": []
