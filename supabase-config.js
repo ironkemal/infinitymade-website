@@ -1,10 +1,8 @@
-// Public config loaded from server — keys never stored in source code
-const _res = await fetch('/api/config').catch(() => null);
-const _cfg = (_res?.ok) ? await _res.json() : {};
+import { ladeAppKonfiguration, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 
-if (!_cfg.supabaseUrl || !_cfg.supabaseAnonKey) {
-  console.error('[supabase-config] /api/config failed — set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel env vars');
-}
+let _cfg;
+try { _cfg = await ladeAppKonfiguration(); }
+catch { zeigeStartfehler(); throw new Error('APP_CONFIGURATION_UNAVAILABLE'); }
 
 export const SUPABASE_URL = _cfg.supabaseUrl || '';
 export const SUPABASE_ANON_KEY = _cfg.supabaseAnonKey || '';

@@ -14,7 +14,7 @@
 import {
   fahrtenbuchCsv, aenderungsprotokollCsv, patientenverzeichnisCsv,
   csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS
-} from './fahrtenbuch-regeln.js?v=20261001e';
+} from './fahrtenbuch-regeln.js?v=20261014five1';
 
 const SEITE = 1000; // PostgREST liefert höchstens 1000 Zeilen je Anfrage
 
@@ -80,8 +80,15 @@ export async function exportAenderungsprotokollCsv({ supabase, ownerId, rows, fi
   const referenzen = {};
   (rows || []).forEach(r => {
     if (r.user_id && r._therapist) namen[r.user_id] = r._therapist;
-    if (r.id && r.booking_id) referenzen[r.id] = r.booking_id;
+    if (r.id) referenzen[r.id] = r;
   });
+  // Gelöschte Fahrten fehlen in der aktuellen Liste. Neuester Audit-Snapshot
+  // erhält ihre gespeicherte Referenz; aktuelle Fahrten haben immer Vorrang.
+  for (const a of [...aenderungen].reverse()) {
+    if (!a.fahrt_id || Object.hasOwn(referenzen, a.fahrt_id)) continue;
+    const snapshot = a.neu?.booking_id ? a.neu : a.alt;
+    if (snapshot?.booking_id) referenzen[a.fahrt_id] = snapshot;
+  }
   const fehlend = aenderungen
     .flatMap(a => [a.geaendert_von, a.fahrer_id, a.alt?.user_id, a.neu?.user_id])
     .filter(id => id && !namen[id]);

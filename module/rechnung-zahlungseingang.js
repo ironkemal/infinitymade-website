@@ -49,6 +49,66 @@ import {
 import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20261010w';
 import { alsISODatum } from './datum.js?v=20261001a';
 
+/**
+ * Modulweiter Zustand für Rechnungen mit unbestätigter Buchungslage (K4 Finanzsicherheit).
+ * Sobald ein Buchungs-POST losgetreten wurde und unklar endet (Timeout, Abort, Netzwerkabbruch,
+ * Server-5xx oder unlesbare/ungültige Antwort), wird die Rechnung fail-closed gesperrt.
+ * Reopen/Schließen reaktiviert den Buchen-Knopf NICHT.
+ */
+const unbestaetigteRechnungen = new Map();
+const laufendeBuchungen = new Set();
+
+export const UNGEWISSER_BUCHUNGS_HINWEIS =
+  'Der Status der Buchung ist unklar (z. B. Zeitüberschreitung, Netzwerk- oder Serverfehler). '
+  + 'Eine erneute Buchung ist gesperrt, um doppelte Zahlungen zu verhindern. '
+  + 'Bitte prüfen Sie das Belegjournal, bevor Sie eine weitere Buchung vornehmen.';
+
+const LOCK_PREFIX = 'praxura:zahlung_lock:';
+
+function holePersistiertenLock(rechnungId) {
+  if (!rechnungId) return null;
+  try {
+    if (typeof localStorage === 'undefined') return { status: 'uncertain' };
+    const raw = localStorage.getItem(LOCK_PREFIX + rechnungId);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.invoice_id === String(rechnungId)
+      && ['in_flight', 'uncertain'].includes(parsed.status)) return parsed;
+  } catch {}
+  // Unlesbare Sperren dürfen keinen erneuten Buchungsversuch freigeben.
+  return { status: 'uncertain' };
+}
+
+function speicherePersistiertenLock(rechnungId, status) {
+  if (!rechnungId) return;
+  if (typeof localStorage === 'undefined') {
+    throw new Error('localStorage nicht verfügbar');
+  }
+  // Nur invoiceUUID und status — KEIN Patient, KEIN Betrag, KEIN PHI!
+  localStorage.setItem(LOCK_PREFIX + rechnungId, JSON.stringify({
+    invoice_id: String(rechnungId),
+    status: String(status),
+    ts: Date.now(),
+  }));
+}
+
+function loeschePersistiertenLock(rechnungId) {
+  if (!rechnungId) return;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(LOCK_PREFIX + rechnungId);
+    }
+  } catch {}
+}
+
+export function istZahlungUnklar(invoiceId) {
+  const id = String(invoiceId || '');
+  if (!id) return false;
+  if (unbestaetigteRechnungen.has(id)) return true;
+  const lock = holePersistiertenLock(id);
+  return Boolean(lock && (lock.status === 'uncertain' || lock.status === 'in_flight'));
+}
+
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */
 const cent = (v) => Math.round((Number(v) || 0) * 100);
 const euro = (c) => Math.round(c) / 100;
@@ -288,9 +348,26 @@ export function oeffneZahlungseingang(opts) {
   const rechnungsbetrag = Number(rechnung?.total_patient) || 0;
   const offen = offenerBetrag({ rechnungsbetrag, bereitsGebucht });
 
-  return new Promise(resolve => {
-    document.getElementById('_zeModal')?.remove();
+  const rechnungId = String(rechnung?.id || opts.invoiceId || '');
 
+  // 1. Wenn aktuell irgendeine Buchung in-flight ist: existierenden Dialog nicht zerstören!
+  if (laufendeBuchungen.size > 0) {
+    if (typeof showToast === 'function') {
+      showToast('Eine Buchung wird bereits verarbeitet. Bitte warten.', 'error');
+    }
+    return Promise.resolve(false);
+  }
+
+  // 2. Existierendes Modal im DOM prüfen: nicht zerstören, falls in-flight
+  const altesModal = typeof document !== 'undefined' ? document.getElementById('_zeModal') : null;
+  if (altesModal) {
+    if (altesModal.dataset?.submitting === 'true') {
+      return Promise.resolve(false);
+    }
+    altesModal.remove();
+  }
+
+  return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.id = '_zeModal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10001;'
@@ -377,6 +454,7 @@ export function oeffneZahlungseingang(opts) {
 
     const $ = (id) => overlay.querySelector('#' + id);
     const betragEl = $('_zeBetrag');
+    const datumEl = $('_zeDatum');
     const kontoEl = $('_zeKonto');
     const ausKontoEl = $('_zeAusKonto');
     const restWrap = $('_zeRestWrap');
@@ -384,7 +462,12 @@ export function oeffneZahlungseingang(opts) {
     const ausKontoWrap = $('_zeAusKontoWrap');
     const hinweisEl = $('_zeHinweis');
     const fehlerEl = $('_zeFehler');
+    const abbrechenBtn = $('_zeAbbrechen');
     const buchenBtn = $('_zeBuchen');
+
+    const rechnungId = String(rechnung?.id || opts.invoiceId || '');
+    let dialogZustand = 'idle'; // 'idle' | 'submitting' | 'uncertain' | 'success'
+    let geschlossen = false;
 
     if (ausKontoEl) ausKontoEl.value = AUSBUCHUNGSKONTO_STANDARD;
 
@@ -392,12 +475,49 @@ export function oeffneZahlungseingang(opts) {
       return overlay.querySelector('input[name="_zeRestModus"]:checked')?.value || 'offen_lassen';
     }
 
+    function setzeSteuerelementeGesperrt(gesperrt) {
+      if (betragEl) betragEl.disabled = gesperrt;
+      if (datumEl) datumEl.disabled = gesperrt;
+      if (kontoEl) kontoEl.disabled = gesperrt;
+      if (ausKontoEl) ausKontoEl.disabled = gesperrt;
+      overlay.querySelectorAll('input[name="_zeRestModus"]').forEach(r => {
+        r.disabled = gesperrt;
+      });
+      if (abbrechenBtn) abbrechenBtn.disabled = gesperrt;
+      if (buchenBtn) buchenBtn.disabled = gesperrt;
+    }
+
+    function wechsleZuUnbestaetigt(nachricht = UNGEWISSER_BUCHUNGS_HINWEIS) {
+      dialogZustand = 'uncertain';
+      overlay.dataset.submitting = 'false';
+      if (rechnungId) {
+        unbestaetigteRechnungen.set(rechnungId, nachricht);
+        try { speicherePersistiertenLock(rechnungId, 'uncertain'); } catch {}
+        laufendeBuchungen.delete(rechnungId);
+      }
+      setzeSteuerelementeGesperrt(true);
+      if (abbrechenBtn) {
+        abbrechenBtn.disabled = false;
+        abbrechenBtn.textContent = 'Schließen';
+      }
+      if (buchenBtn) {
+        buchenBtn.disabled = true;
+        buchenBtn.textContent = 'Buchung unklar';
+      }
+      if (fehlerEl) {
+        fehlerEl.textContent = nachricht;
+        fehlerEl.style.display = '';
+      }
+    }
+
     function aktualisiere() {
+      if (dialogZustand !== 'idle') return;
+
       const plan = planeZahlung({
         rechnungsbetrag, bereitsGebucht,
-        eingegangen: betragEl.value,
+        eingegangen: betragEl?.value,
         restbetragModus: modus(),
-        gegenkontoCode: kontoEl.value,
+        gegenkontoCode: kontoEl?.value,
         ausbuchungskontoCode: ausKontoEl?.value,
         hatRezeptbezug,
       });
@@ -425,74 +545,224 @@ export function oeffneZahlungseingang(opts) {
       hinweisEl.style.display = hinweise.length ? '' : 'none';
     }
 
-    betragEl.addEventListener('input', aktualisiere);
-    kontoEl.addEventListener('change', aktualisiere);
+    betragEl?.addEventListener('input', aktualisiere);
+    datumEl?.addEventListener('change', aktualisiere);
+    kontoEl?.addEventListener('change', aktualisiere);
     ausKontoEl?.addEventListener('change', aktualisiere);
     overlay.querySelectorAll('input[name="_zeRestModus"]').forEach(r =>
       r.addEventListener('change', aktualisiere));
 
     function schliessen(ergebnis) {
+      if (dialogZustand === 'submitting') return;
+      if (geschlossen) return;
+      geschlossen = true;
+      if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+        window.removeEventListener('keydown', onKeyDown);
+      }
       overlay.remove();
-      resolve(ergebnis);
+      resolve(Boolean(ergebnis));
     }
 
-    $('_zeAbbrechen').addEventListener('click', () => schliessen(false));
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) schliessen(false); });
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (dialogZustand === 'submitting') {
+          e.preventDefault?.();
+          return;
+        }
+        schliessen(false);
+      }
+    };
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('keydown', onKeyDown);
+    }
 
-    buchenBtn.addEventListener('click', async () => {
-      const plan = planeZahlung({
-        rechnungsbetrag, bereitsGebucht,
-        eingegangen: betragEl.value,
-        restbetragModus: modus(),
-        gegenkontoCode: kontoEl.value,
-        ausbuchungskontoCode: ausKontoEl?.value,
-        hatRezeptbezug,
-      });
-      if (!plan.ok) { fehlerEl.textContent = plan.fehler; fehlerEl.style.display = ''; return; }
+    abbrechenBtn?.addEventListener('click', () => {
+      if (dialogZustand === 'submitting') return;
+      schliessen(false);
+    });
 
-      // Doppelklick sperren: die Buchung hat keinen Idempotenz-Schlüssel, ein
-      // zweiter Aufruf würde ein zweites Mal buchen.
-      buchenBtn.disabled = true;
-      buchenBtn.textContent = '…';
-      // Ops #293: gleiche Absicherung wie starteZahlungseingang() oben — ohne
-      // Timeout blieb der Knopf bei einem haengenden Backend fuer immer auf
-      // "…" stehen, die Rechnungsliste wurde nie neu geladen.
-      const abbruch = new AbortController();
-      const uhr = setTimeout(() => abbruch.abort(), 8000);
-      try {
-        const jwt = await token();
-        const res = await fetch(`${apiBasis}/billing/rechnungen/${rechnung.id}/zahlung`, {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eingegangener_betrag: plan.buchungen[0].betrag_eur,
-            zahlungsdatum: $('_zeDatum').value || null,
-            gegenkonto_code: kontoEl.value,
-            restbetrag_modus: modus(),
-            ausbuchungskonto_code: ausKontoEl?.value || AUSBUCHUNGSKONTO_STANDARD,
-          }),
-          signal: abbruch.signal,
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || `Serverfehler (${res.status})`);
-
-        showToast(json.beleg_nr
-          ? `Zahlung gebucht ✓ · Beleg ${String(json.beleg_nr).padStart(6, '0')}`
-          : 'Zahlung gebucht ✓');
-        schliessen(true);
-      } catch (e) {
-        console.error('[zahlungseingang]', e);
-        fehlerEl.textContent = e.name === 'AbortError' ? 'Zeitüberschreitung — bitte erneut versuchen.' : e.message;
-        fehlerEl.style.display = '';
-        buchenBtn.disabled = false;
-        buchenBtn.textContent = 'Buchen';
-      } finally {
-        clearTimeout(uhr);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        if (dialogZustand === 'submitting') return;
+        schliessen(false);
       }
     });
 
-    aktualisiere();
-    betragEl.focus();
-    betragEl.select();
+    buchenBtn?.addEventListener('click', async () => {
+      if (dialogZustand !== 'idle') return;
+      if (rechnungId && istZahlungUnklar(rechnungId)) {
+        wechsleZuUnbestaetigt(unbestaetigteRechnungen.get(rechnungId));
+        return;
+      }
+      if (rechnungId && laufendeBuchungen.has(rechnungId)) {
+        return;
+      }
+
+      // 1. Snapshot aller Eingaben VOR jeglichem await einfrieren
+      const eingegangenRaw = betragEl?.value;
+      const datumRaw = datumEl?.value || null;
+      const gegenkontoRaw = kontoEl?.value;
+      const restModusRaw = modus();
+      const ausKontoRaw = ausKontoEl?.value || AUSBUCHUNGSKONTO_STANDARD;
+
+      const plan = planeZahlung({
+        rechnungsbetrag, bereitsGebucht,
+        eingegangen: eingegangenRaw,
+        restbetragModus: restModusRaw,
+        gegenkontoCode: gegenkontoRaw,
+        ausbuchungskontoCode: ausKontoRaw,
+        hatRezeptbezug,
+      });
+
+      if (!plan.ok) {
+        fehlerEl.textContent = plan.fehler;
+        fehlerEl.style.display = '';
+        buchenBtn.disabled = true;
+        return;
+      }
+
+      const snapshot = Object.freeze({
+        eingegangener_betrag: plan.buchungen[0].betrag_eur,
+        zahlungsdatum: datumRaw,
+        gegenkonto_code: gegenkontoRaw,
+        restbetrag_modus: restModusRaw,
+        ausbuchungskonto_code: ausKontoRaw,
+      });
+
+      // 2. In-flight Zustand aktivieren und Interaktionen sperren
+      dialogZustand = 'submitting';
+      overlay.dataset.submitting = 'true';
+      if (rechnungId) laufendeBuchungen.add(rechnungId);
+      setzeSteuerelementeGesperrt(true);
+      buchenBtn.textContent = '…';
+      fehlerEl.style.display = 'none';
+
+      // 3. Token vor POST anfordern mit strikter 8s-Frist (späteres Auflösen darf niemals POST senden)
+      let jwt;
+      let tokenAbgelaufen = false;
+      const tokenAbbruch = new AbortController();
+      const tokenUhr = setTimeout(() => {
+        tokenAbgelaufen = true;
+        tokenAbbruch.abort();
+      }, 8000);
+
+      try {
+        const tokenP = Promise.resolve().then(() => token({ signal: tokenAbbruch.signal }));
+        const timeoutP = new Promise((_, reject) => {
+          tokenAbbruch.signal.addEventListener('abort', () => {
+            reject(new Error('Zeitüberschreitung beim Abrufen des Authentifizierungs-Tokens.'));
+          });
+        });
+
+        jwt = await Promise.race([tokenP, timeoutP]);
+        clearTimeout(tokenUhr);
+
+        if (tokenAbgelaufen || !jwt) {
+          throw new Error(tokenAbgelaufen
+            ? 'Zeitüberschreitung beim Abrufen des Authentifizierungs-Tokens.'
+            : 'Kein Sitzungstoken vorhanden.');
+        }
+      } catch (tokenFehler) {
+        clearTimeout(tokenUhr);
+        console.error('[zahlungseingang] Sitzung konnte vor der Buchung nicht bestätigt werden.');
+        dialogZustand = 'idle';
+        overlay.dataset.submitting = 'false';
+        if (rechnungId) laufendeBuchungen.delete(rechnungId);
+        setzeSteuerelementeGesperrt(false);
+        buchenBtn.textContent = 'Buchen';
+        fehlerEl.textContent = 'Sitzung konnte vor der Buchung nicht bestätigt werden. Bitte erneut anmelden.';
+        fehlerEl.style.display = '';
+        aktualisiere();
+        return;
+      }
+
+      try {
+        speicherePersistiertenLock(rechnungId, 'in_flight');
+      } catch {
+        wechsleZuUnbestaetigt('Buchung nicht gesendet: Zahlungssperre konnte nicht gespeichert werden. Bitte Browserspeicher prüfen.');
+        return;
+      }
+
+      // 4. POST und vollständiges Parsen der Antwort unter EINEM Timeout (8s)
+      const postAbbruch = new AbortController();
+      const postUhr = setTimeout(() => postAbbruch.abort(), 8000);
+      let res;
+      let json;
+
+      try {
+        res = await fetch(`${apiBasis}/billing/rechnungen/${rechnungId}/zahlung`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+          body: JSON.stringify(snapshot),
+          signal: postAbbruch.signal,
+        });
+
+        if (res.status >= 500) {
+          console.error('[zahlungseingang] server error:', res.status);
+          wechsleZuUnbestaetigt(UNGEWISSER_BUCHUNGS_HINWEIS);
+          return;
+        }
+
+        if (!res.ok) {
+          // Explizite 4xx-Ablehnung -> Korrektur möglich
+          loeschePersistiertenLock(rechnungId);
+          const errJson = await res.json().catch(() => ({}));
+          dialogZustand = 'idle';
+          overlay.dataset.submitting = 'false';
+          if (rechnungId) laufendeBuchungen.delete(rechnungId);
+          setzeSteuerelementeGesperrt(false);
+          buchenBtn.textContent = 'Buchen';
+          fehlerEl.textContent = errJson.error || `Fehler bei der Buchung (${res.status})`;
+          fehlerEl.style.display = '';
+          aktualisiere();
+          return;
+        }
+
+        // 2xx-Antwort: Parsen MUSS vor dem Timeout-Clear erfolgen (hängender Body = unklar)
+        json = await res.json();
+      } catch (postOrParseError) {
+        console.error('[zahlungseingang] post/parse error:', postOrParseError);
+        wechsleZuUnbestaetigt(UNGEWISSER_BUCHUNGS_HINWEIS);
+        return;
+      } finally {
+        clearTimeout(postUhr);
+      }
+
+      // 5. Validierung des exakten RPC-Rückgabe-Shapes aus rechnung_zahlung_buchen:
+      // RETURN jsonb_build_object('zahlung_id', v_zahlung_id, 'ausbuchung_id', v_ausbuchung_id,
+      //                          'beleg_nr', v_beleg_nr, 'payment_status', v_status, 'offen_eur', ...)
+      const istGueltigerRpcPayload = json
+        && typeof json === 'object'
+        && typeof json.zahlung_id === 'string'
+        && json.zahlung_id.length > 0
+        && ['paid', 'partial'].includes(json.payment_status);
+
+      if (!istGueltigerRpcPayload) {
+        console.error('[zahlungseingang] ungültiger Rückgabe-Payload:', json);
+        wechsleZuUnbestaetigt(UNGEWISSER_BUCHUNGS_HINWEIS);
+        return;
+      }
+
+      // 6. Eindeutiger Erfolg
+      loeschePersistiertenLock(rechnungId);
+      if (rechnungId) {
+        laufendeBuchungen.delete(rechnungId);
+        unbestaetigteRechnungen.delete(rechnungId);
+      }
+      overlay.dataset.submitting = 'false';
+      showToast(json?.beleg_nr
+        ? `Zahlung gebucht ✓ · Beleg ${String(json.beleg_nr).padStart(6, '0')}`
+        : 'Zahlung gebucht ✓');
+      dialogZustand = 'success';
+      schliessen(true);
+    });
+
+    if (rechnungId && istZahlungUnklar(rechnungId)) {
+      wechsleZuUnbestaetigt(unbestaetigteRechnungen.get(rechnungId));
+    } else {
+      aktualisiere();
+      if (typeof betragEl?.focus === 'function') betragEl.focus();
+      if (typeof betragEl?.select === 'function') betragEl.select();
+    }
   });
 }

@@ -993,3 +993,12 @@ verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Aus
   `Fehler`/`Frage` rufen sie auf, Schritt 6 startet `install.sh` in eigenem Konsolenfenster
   (Geheimnisse gehen nicht durch das Fenster). `-Text` = alter Textweg. Karte im selben Commit
   aufgefrischt (`--check`: taze, 3500 Einträge). Tutanak: `konsey/tutanak/2026-10-13-windows-kurulum-sihirbazi.md`.
+
+### 16.10.2026 — geprüfte Dashboard-Korrekturen
+
+- Notizencontroller bindet bearbeitbaren Inhalt an erfolgreich geladene Patienten-/Inhaberidentität; verspätete Antworten und Schreibfehler erzeugen keine falsche Zuordnung/Erfolgsmeldung.
+- Zahlungsjournal rendert nur aktuelle Filtergeneration. Wartelisten-Auswahl verwirft alte ID nach Texteingabe und prüft Zeitfenster bei Neu/Bearbeitung.
+- Rechnungseingaben werden vor asynchroner Verarbeitung eingefroren; Rechnungseditor wird erst nach vollständigem Laden geöffnet.
+- No-show-Sperre prüft aktuelle Termin-/Sitzungs-/Snapshot-Verknüpfungen. Fahrtenreferenzen sind für neue Fahrten vollständig, historische Referenzen bleiben konsistent in Anzeige und CSV.
+- Startkonfiguration/Profil/Rechte müssen bestätigt geladen sein; Fehler bleiben sichtbar statt erfundener Ownerfreigabe oder Login-Schleife.
+- Diese Änderung benötigt keine neue Backend-RPC. Serienparität sowie atomare Backend-/Schema-Korrekturen werden separat erst nach bestätigter Migration ausgeliefert.

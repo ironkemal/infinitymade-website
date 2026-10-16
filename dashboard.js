@@ -1,3 +1,4 @@
+import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261008m4b';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261008m4b';
@@ -49,12 +50,12 @@ import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261011c';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
-import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
-import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261001b';
+import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
+import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261006m';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
-import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
+import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
@@ -71,7 +72,7 @@ import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010z
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010zc'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
-import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261010w'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
+import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
@@ -122,6 +123,9 @@ import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
+import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
+import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261016six1';
+import { wartelisteZeitfensterGueltig } from './module/warteliste-zeitfenster.js?v=20261014a';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
@@ -548,23 +552,24 @@ function applyI18n() {
 let modulePermissions = null; // { dashboard: true, calendar: true, ... }
 
 async function loadModulePermissions() {
-  if (!currentBusiness?.id) { modulePermissions = null; return; }
+  if (currentProfile?.role === 'owner') { modulePermissions = null; return; }
+  if (!currentBusiness?.id) { modulePermissions = {}; if (currentProfile?.role === 'employee') { zeigeStartfehler(undefined, undefined, 'Praxisstandort und Zugriffsrechte konnten nicht bestätigt werden. Bitte Praxisinhaber kontaktieren.'); throw new Error('PERMISSIONS_UNAVAILABLE'); } return; }
   try {
     const { data, error } = await supabase.rpc('get_my_permissions', { p_business_id: currentBusiness.id });
-    if (error) { console.warn('[permissions]', error); modulePermissions = null; return; }
+    if (error) throw new Error('PERMISSIONS_UNAVAILABLE');
     const map = {};
     (data || []).forEach(r => { map[r.module] = r.has_access; });
     modulePermissions = map;
   } catch (e) {
-    console.warn('[permissions]', e);
-    modulePermissions = null;
+    modulePermissions = {}; zeigeStartfehler(undefined, undefined, 'Praxisrechte konnten nicht geladen werden. Bitte erneut versuchen oder Praxisinhaber kontaktieren.');
+    throw new Error('PERMISSIONS_UNAVAILABLE');
   }
 }
 
 function hasModuleAccess(module) {
   // Owner her zaman tüm modüllere erişebilir (fallback)
   if (currentProfile?.role === 'owner') return true;
-  if (!modulePermissions) return true; // fallback: kapanmadan önce gösterilebilir
+  if (!modulePermissions) return false;
   return modulePermissions[module] === true;
 }
 
@@ -620,7 +625,7 @@ const SIDEBAR_TO_MODULE = {
 async function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
   nav.innerHTML = '';
-  const role = currentProfile.role || 'owner';
+  const role = currentProfile.role;
 
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
     const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen,' + BRANDING_SPALTEN).eq('id', currentProfile.owner_id).maybeSingle();
@@ -753,6 +758,7 @@ window.gehZuEinstellung = gehZuEinstellung;
 async function switchPanel(id) {
   window.switchPanel = switchPanel;
   const panelId = id;
+  if (currentProfile?.role === 'employee' && SIDEBAR_TO_MODULE[id] && !hasModuleAccess(SIDEBAR_TO_MODULE[id])) { showToast('Keine Berechtigung für diesen Bereich.', 'error'); return; }
   // Aktif panelin grubunu otomatik aç
   const _allItems = getSidebarItems ? getSidebarItems() : [];
   const _activeNavItem = _allItems.find(i => i.id === panelId);
@@ -770,6 +776,7 @@ async function switchPanel(id) {
   // Ein angefangenes Verschieben gehoert zum Kalender. Verlaesst man ihn, wird es
   // beendet — sonst bliebe der Modus unsichtbar aktiv.
   if (id !== 'calendar' && moveBooking) cancelMoveBooking();
+  if (id !== 'notizen') notizenController.invalidate();
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
@@ -3736,6 +3743,9 @@ async function saveFahrtEndHandler() {
     err.textContent = 'End-KM darf nicht kleiner als Start-KM sein.'; err.style.display = ''; return;
   }
 
+  const { data: alteFahrt, error: altErr } = await supabase.from('fahrten').select('booking_id,lead_id,zweck,zielort').eq('owner_id', b.owner_id).eq('booking_id', b.id).maybeSingle();
+  if (altErr) { showToast('Bestehende Fahrtenreferenz konnte nicht geprüft werden.', 'error'); return; }
+
   const nowIso = new Date().toISOString();
   const { data: updData, error: updErr } = await supabase.from('bookings').update({
     fahrt_status: 'fahrt_completed',
@@ -3768,7 +3778,7 @@ async function saveFahrtEndHandler() {
   const leadId = lead?.id || null;
   const leadDurationMin = lead?.duration_min || null;
   // S-35: kein Patientenname/keine Anschrift im Fahrtenbuch (Verzeichnis-Nr. statt dessen)
-  const { zweck, zielort } = fahrtZweckUndZiel(b.id);
+  const { zweck, zielort } = alteFahrt ? fahrtAnzeigeText({ ...alteFahrt, lead_id: leadId || alteFahrt.lead_id }) : fahrtZweckUndZiel(b.id);
   const abfahrtsort = [
     currentProfile?.street,
     [currentProfile?.plz, currentProfile?.city].filter(Boolean).join(' ')
@@ -7184,7 +7194,7 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
 async function ensureLeistungskatalog() {
   if (katalogNachladen({ katalog: servicesCache,
         sektorHatGkvKatalog: (GKV_LEISTUNGSKATALOG[getSector()] || []).length > 0 })) {
-    try { await loadServices(); } catch (e) { console.error('[ensureLeistungskatalog]', e); }
+    await loadServices({ throwOnError: true });
   }
   ownerServices = servicesCache;
   return ownerServices;
@@ -8499,13 +8509,13 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 
 let servicesCache = [];
 
-async function loadServices() {
+async function loadServices({ throwOnError = false } = {}) {
   let q = supabase.from('services')
     .select('*,employee_services(employee_id),price_config,code')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   q = bizScope(q, 'services');
   const { data, error: ladeFehler } = await q;
-  if (ladeFehler) { console.error('[services]', ladeFehler); return; }
+  if (ladeFehler) { if (throwOnError) throw ladeFehler; console.error('[services]', ladeFehler); return; }
   servicesCache = data || [];
   await ermittleKostentraegerSpalte(servicesCache, supabase);
 
@@ -12527,7 +12537,11 @@ function loadBeispielmodus() {
         <a class="btn btn-primary zygote-fallback-btn" href="https://www.zygotebody.com/" target="_blank" rel="noopener noreferrer">↗ Zygote Body öffnen</a>
       </div>`;
 }
+const notizenController = erstelleNotizenController({ document, supabase, getOwnerId, showToast, onSaved: () => {
+  if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
+} });
 async function loadNotizen() {
+  const session = notizenController.invalidate();
   const input = document.getElementById('notesPatientInput');
   const list = document.getElementById('notesPatientList');
   const hidden = document.getElementById('notesPatient');
@@ -12537,9 +12551,11 @@ async function loadNotizen() {
 
   // bizScope ist Pflicht — sonst weicht die Notizen-Patientenliste von der
   // Patientenliste ab (siehe bizScope-Kommentar).
-  const { data: leads } = await bizScope(supabase.from('leads')
+  const { data: leads, error } = await Promise.resolve(bizScope(supabase.from('leads')
     .select('id,title,first_name,last_name,metadata,phone,geburtsdatum')
-    .eq('owner_id', ownerId).order('title'), 'patients');
+    .eq('owner_id', ownerId).order('title'), 'patients')).catch(error => ({ data: null, error }));
+  if (!notizenController.isCurrent(session)) return;
+  if (error) { showToast('Patienten konnten nicht geladen werden.', 'error'); return; }
   const allLeads = leads || [];
 
   input.value = '';
@@ -12552,7 +12568,7 @@ async function loadNotizen() {
     if (prefillLead) {
       input.value = displayNameWithBirth(prefillLead);
       hidden.value = prefillLead.id;
-      loadPatientNotes(prefillLead.id);
+      notizenController.load(prefillLead.id);
     }
     prefillNotesPatientId = null;
   }
@@ -12591,21 +12607,10 @@ async function loadNotizen() {
     loadPatientNotes(id);
   }
 
-  async function loadPatientNotes(leadId) {
-    form.hidden = false; empty.hidden = true;
-    const { data: rec } = await supabase.from('patient_notes').select('*').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
-    document.getElementById('notesDoctor').value = rec?.doctor_notes || '';
-    document.getElementById('notesTherapist').value = rec?.therapist_notes || '';
-    const aiBox = document.getElementById('aiReportBox');
-    if (rec?.ai_summary) {
-      aiBox.textContent = rec.ai_summary;
-      aiBox.style.display = 'block';
-    } else {
-      aiBox.style.display = 'none';
-    }
-  }
+  const loadPatientNotes = leadId => notizenController.load(leadId);
 
   input.oninput = () => {
+    notizenController.invalidate();
     if (hidden.value) { hidden.value = ''; form.hidden = true; empty.hidden = false; }
     renderList(input.value);
   };
@@ -12641,52 +12646,19 @@ async function loadNotizen() {
     if (li) selectPatient(li.dataset.id);
   };
 
-  document.addEventListener('click', (e) => {
-    if (!document.getElementById('notesPatientWrap').contains(e.target)) {
-      list.hidden = true;
-    }
-  });
+  if (!input.dataset.notesOutsideBound) {
+    input.dataset.notesOutsideBound = '1';
+    document.addEventListener('click', e => { if (!document.getElementById('notesPatientWrap').contains(e.target)) list.hidden = true; });
+  }
 }
 
-document.getElementById('notesSaveBtn').addEventListener('click', async () => {
-  const leadId = document.getElementById('notesPatient').value;
-  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
-  const ownerId = getOwnerId();
-  const payload = {
-    owner_id: ownerId,
-    lead_id: leadId,
-    doctor_notes: document.getElementById('notesDoctor').value.trim(),
-    therapist_notes: document.getElementById('notesTherapist').value.trim()
-  };
-  const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
-  const { error } = existing
-    ? await supabase.from('patient_notes').update(payload).eq('id', existing.id)
-    : await supabase.from('patient_notes').insert(payload);
-  if (error) { showToast(t('err_generic'), 'error'); return; }
-  showToast(t('saved'));
-  if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
-    setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
-  }
-});
-
-document.getElementById('aiGenBtn').addEventListener('click', async () => {
-  const leadId = document.getElementById('notesPatient').value;
-  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
-  const notes = document.getElementById('notesTherapist').value.trim();
-  if (!notes) { showToast('Therapeutennotizen eingeben', 'error'); return; }
-  showToast('Automatische KI-Zusammenfassung ist derzeit deaktiviert. Therapeutennotizen als Entwurf übernommen.', 'info');
-  document.getElementById('aiReportBox').textContent = notes;
-  document.getElementById('aiReportBox').style.display = 'block';
-  const ownerId = getOwnerId();
-  const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
-  if (existing) {
-    await supabase.from('patient_notes').update({ ai_summary: notes }).eq('id', existing.id);
-  }
-});
+document.getElementById('notesSaveBtn').addEventListener('click', () => notizenController.save());
+document.getElementById('aiGenBtn').addEventListener('click', () => notizenController.save(true));
 
 document.getElementById('notesSendBtn').addEventListener('click', async () => {
   const leadId = document.getElementById('notesPatient').value;
-  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
+  if (!notizenController.ready(leadId)) { showToast('Bitte Notizen vollständig laden.', 'error'); return; }
+  const session = notizenController.version();
   const summary = document.getElementById('aiReportBox').textContent;
   if (!summary || document.getElementById('aiReportBox').style.display === 'none') {
     showToast('Zuerst AI-Bericht erstellen', 'error'); return;
@@ -12698,7 +12670,8 @@ document.getElementById('notesSendBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { data: lead } = await supabase.from('leads').select('email,title,first_name,last_name').eq('id', leadId).single();
+  const { data: lead } = await supabase.from('leads').select('email,title,first_name,last_name').eq('id', leadId).eq('owner_id', getOwnerId()).single();
+  if (!notizenController.isCurrent(session)) return;
   if (!lead?.email) { showToast('Patient hat keine E-Mail', 'error'); return; }
 
   mailPreviewLeadId = leadId;
@@ -13315,10 +13288,9 @@ function printArea() {
 }
 
 async function loadInvPatients() {
-  const ownerId = getOwnerId();
-  const { data } = await supabase.from('leads')
-    .select('id,first_name,last_name,title,phone,email,metadata,insurance_type')
-    .eq('owner_id', ownerId).order('first_name', { ascending: true });
+  const ownerId = getOwnerId(); const { data, error } = await supabase.from('leads')
+    .select('id,first_name,last_name,title,phone,email,metadata,insurance_type').eq('owner_id', ownerId).order('first_name', { ascending: true });
+  if (error) throw error;
   const sel = document.getElementById('invPatientSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
@@ -13424,33 +13396,30 @@ function resetInvEditor() {
 }
 
 async function openInvEditor(invoiceId) {
-  zeigeRechnungsModus('editor');
-  await Promise.all([loadInvPatients(), ensureLeistungskatalog()]);
-  resetInvEditor();
-  if (invoiceId) {
-    let inv = invListCache.find(i => i.id === invoiceId); // Liste evtl. nie geladen (Geldzeile/Akte direkt nach F5, canli-test 10.10.)
-    if (!inv) { await loadRechnungen(); inv = invListCache.find(i => i.id === invoiceId); if (!inv) { showToast('Rechnung konnte nicht geladen werden.', 'error'); return; } }
-    invPatientId = inv.patient_id;
-    invPrescriptionId = inv.prescription_id || null;
-    invVerordnungId = inv.verordnung_id || null;
-    document.getElementById('invPatientSelect').value = inv.patient_id || '';
-    invLines = (inv.line_items || []).map(l => ({ ...l }));
-    document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0;
-    document.getElementById('invKasse').value = inv.kassenzuzahlung || 0;
-    document.getElementById('invNotes').value = inv.notes || '';
-    document.getElementById('invPrintBtn').disabled = false;
-    const dmrzBtn = document.getElementById('invDmrzBtn');
-    if (dmrzBtn) dmrzBtn.disabled = false;
-    window._currentInvoiceId = inv.id; setzeSpeichernText(document.getElementById('invSaveBtn'), true);
-    invPatientInsuranceType = inv.invoice_type || null;
-    renderInvLines();
-    updateInvForInsuranceType();
-  } else {
-    document.getElementById('invPatientSelect').focus();
+  const session = (openInvEditor._session = (openInvEditor._session || 0) + 1); resetInvEditor(); zeigeRechnungsModus('liste');
+  try {
+    await Promise.all([loadInvPatients(), ensureLeistungskatalog()]);
+    if (session !== openInvEditor._session) return;
+    if (invoiceId) {
+      let inv = invListCache.find(i => i.id === invoiceId); // Liste evtl. nie geladen (Geldzeile/Akte direkt nach F5, canli-test 10.10.)
+      if (!inv) { await loadRechnungen(); inv = invListCache.find(i => i.id === invoiceId); if (!inv) { showToast('Rechnung konnte nicht geladen werden.', 'error'); return; } if (session !== openInvEditor._session) return; }
+      invPatientId = inv.patient_id; invPrescriptionId = inv.prescription_id || null; invVerordnungId = inv.verordnung_id || null;
+      document.getElementById('invPatientSelect').value = inv.patient_id || ''; invLines = (inv.line_items || []).map(l => ({ ...l }));
+      document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0; document.getElementById('invKasse').value = inv.kassenzuzahlung || 0;
+      document.getElementById('invNotes').value = inv.notes || ''; document.getElementById('invPrintBtn').disabled = false;
+      const dmrzBtn = document.getElementById('invDmrzBtn'); if (dmrzBtn) dmrzBtn.disabled = false;
+      window._currentInvoiceId = inv.id; setzeSpeichernText(document.getElementById('invSaveBtn'), true);
+      invPatientInsuranceType = inv.invoice_type || null;
+      renderInvLines(); updateInvForInsuranceType();
+    }
+    zeigeRechnungsModus('editor');
+    if (!invoiceId) document.getElementById('invPatientSelect').focus();
+  } catch {
+    if (session === openInvEditor._session) { zeigeRechnungsModus('liste'); showToast('Rechnung konnte nicht geladen werden.', 'error'); }
   }
 }
 function closeInvEditor() {
-  zeigeRechnungsModus('liste');
+  openInvEditor._session = (openInvEditor._session || 0) + 1; zeigeRechnungsModus('liste');
 }
 const invoiceSaveGuard = createPendingGuard(() => document.getElementById('invSaveBtn'), (err) => {
     console.error('[invoice save]', err);
@@ -15007,13 +14976,11 @@ async function init() {
     }
     initBeleglisteUI();
   } catch (e) {
-    console.error('[dashboard init]', e);
+    throw e;
   } finally {
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = '';
-    startClock();
-    initRezeptScanner();
   }
+  document.getElementById('app').style.display = ''; startClock(); initRezeptScanner();
 }
 
 // ===== Phase 2: rxPreset → booking modal + AI series scheduler =====
@@ -15914,7 +15881,7 @@ async function loadFbFahrten() {
   tbody.innerHTML = data.map(f => {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
     const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    const ref = fahrtReferenz(f.booking_id) || '—';
+    const ref = fahrtZeilenReferenz(f) || '—';
     const therapist = userMap[f.user_id] || '—';
     const duration = (f.fahrt_started_at && f.fahrt_ended_at)
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
@@ -16265,81 +16232,7 @@ window.openBookingModal = openBookingModal;
 // Zahlungsjournal (Belegliste) UI Mechanics
 // ============================================================================
 
-async function loadBelegliste() {
-  const tbody = document.getElementById('beleglisteBody');
-  const empty = document.getElementById('beleglisteEmpty');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  
-  const from = document.getElementById('blFilterFrom')?.value || '';
-  const to = document.getElementById('blFilterTo')?.value || '';
-  const type = document.getElementById('blFilterType')?.value || 'all';
-  const zahlart = document.getElementById('blFilterZahlart')?.value || 'all';
-
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token || '';
-
-  // Use the Express backend endpoint to fetch and filter Belege
-  const url = new URL(`${API}/billing/belegliste`, location.origin); // Box: API="/api" (relativ)
-  if (type !== 'all') url.searchParams.append('type', type);
-  if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
-  if (from) url.searchParams.append('from', from);
-  if (to) url.searchParams.append('to', to);
-
-  try {
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || 'Serverfehler');
-    }
-
-    const rows = await res.json();
-
-    if (!rows || !rows.length) {
-      empty.hidden = false;
-      return;
-    }
-    empty.hidden = true;
-
-    rows.forEach(r => {
-      const dateStr = new Date(r.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
-      const isNegative = Number(r.amount_eur) < 0;
-      const color = isNegative ? 'var(--danger)' : 'var(--success)';
-      const tr = document.createElement('tr');
-      tr.style.borderBottom = '1px solid var(--border)';
-      
-      const stornoBtn = r.type !== 'storno' 
-        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
-        : '';
-
-      tr.innerHTML = `
-        <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
-        <td style="color:var(--text-main);">${dateStr}</td>
-        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
-        <td style="color:var(--text-muted);">${r.zahlart ? escapeHtml(zahlartLabel(r.zahlart)) : '—'}</td>
-        <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
-        <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
-        <td style="color:var(--text-muted);font-size:12px;">${escapeHtml(r.storno_reason || (r.type === 'storno' ? '—' : ''))}</td>
-        <td style="color:var(--text-muted);">${r.created_by ? (r.created_by === currentSession?.user?.id ? 'Sie' : 'Benutzer ' + String(r.created_by).slice(0, 8)) : 'System'}</td>
-        <td>${stornoBtn}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    // Wire Storno Event
-    tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
-      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
-    });
-  } catch (err) {
-    showToast('Zahlungsjournal Fehler: ' + err.message, 'error');
-  }
-}
+const loadBelegliste = erstelleZahlungsjournalLader({ document, supabase, API, location, fetch: (...args) => fetch(...args), escapeHtml, zahlartLabel, fmtEur, getUserId: () => currentSession?.user?.id, showToast, triggerStorno });
 
 // prescriptionId/patientId werden mitgegeben, damit die Gegenbuchung dem Rezept
 // zugeordnet bleibt. Mahnwesen und Statistik rechnen Zuzahlung und Storno je
@@ -17110,6 +17003,8 @@ window.openWlEntry = async function(id) {
   const modal = document.getElementById('wlModal');
   if (!modal) return;
   document.getElementById('wlEntryId').value = id;
+  await initWlPatientAutocomplete();
+  await populateWlServices();
   document.getElementById('wlModalTitle').textContent = 'Warteliste — Eintrag bearbeiten';
   document.getElementById('wlDeleteBtn').hidden = false;
 
@@ -17185,15 +17080,19 @@ async function initWlPatientAutocomplete() {
   const list = document.getElementById('wlPatientList');
   const idH = document.getElementById('wlPatientId');
   if (!input || !list || !idH) return;
+  if (!input.dataset.wlClearBound) { input.dataset.wlClearBound = '1'; input.addEventListener('input', () => { idH.value = ''; }); }
   if (input.dataset.wlBound) return;
-  input.dataset.wlBound = '1';
+
 
   const ownerId = getOwnerId();
   // bizScope ist Pflicht: ohne sie zeigt die Warteliste Patienten ALLER
   // Standorte, auch wenn der Owner die Patienten-Freigabe abgeschaltet hat.
-  const { data: leads } = await bizScope(supabase.from('leads')
+  const { data: leads, error } = await Promise.resolve(bizScope(supabase.from('leads')
     .select('id,title,first_name,last_name,phone,geburtsdatum,metadata')
-    .eq('owner_id', ownerId).order('title'), 'patients');
+    .eq('owner_id', ownerId).order('title'), 'patients')).catch(error => ({ data: null, error }));
+  if (error) { showToast('Patienten konnten nicht geladen werden.', 'error'); return; }
+  if (input.dataset.wlBound) return;
+  input.dataset.wlBound = '1';
   const allLeads = leads || [];
 
   // Gemeinsames Modul: bringt Pfeiltasten, Treffer-Hervorhebung und die Suche
@@ -17233,8 +17132,9 @@ function initWlModal() {
       notes: document.getElementById('wlNotes').value || null,
       status: 'waiting',
     };
+    if (!wartelisteZeitfensterGueltig(payload.preferred_time_from, payload.preferred_time_to)) { showToast('Bitte gültiges Zeitfenster wählen: Beginn muss vor Ende liegen.', 'error'); return; }
     const { error } = id
-      ? await supabase.from('warteliste').update(payload).eq('id', id)
+      ? await supabase.from('warteliste').update(payload).eq('id', id).eq('owner_id', payload.owner_id)
       : await supabase.from('warteliste').insert(payload);
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     document.getElementById('wlModal').hidden = true;
@@ -17319,14 +17219,14 @@ function initDruckeinstellungen() {
     currentSession = session;
 
     const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (profErr) console.error('[profile]', profErr);
-    currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
+    if (profErr) throw new Error('PROFILE_UNAVAILABLE');
+    currentProfile = pruefeStartprofil(profile, session.user.id);
     refreshKiControls({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, isOwner: () => currentProfile?.role === 'owner'});
     // `currentProfile.language` wird nicht mehr angewendet — die Oberflaeche ist deutsch (28.08.2026).
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
       const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen,' + BRANDING_SPALTEN).eq('id', currentProfile.owner_id).maybeSingle();
-      if (ownerErr) console.error('[ownerProfile]', ownerErr);
+      if (ownerErr || !owner) throw new Error('OWNER_PROFILE_UNAVAILABLE');
       if (owner) {
         ownerProfile = owner;
         if (!currentProfile.sector || currentProfile.sector === 'default') {
@@ -17347,8 +17247,8 @@ function initDruckeinstellungen() {
 
     await init();
   } catch (e) {
-    console.error('[boot]', e);
-    window.location.href = 'login.html';
+    console.error('[boot] APP_START_FAILED');
+    zeigeStartfehler();
   }
 })();
 
