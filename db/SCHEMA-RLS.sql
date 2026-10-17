@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261017202847 0082_request_approve_atomic
--- EXPORTED AT:        2026-10-17T20:30:00.000Z
+-- LAST MIGRATION:     20261017224757 0083_funktionen_search_path_fest
+-- EXPORTED AT:        2026-10-17T22:50:00.000Z
 -- ERZEUGT AM:         2026-10-17
 -- POSTGRESQL VERSION: 17.6
 --
@@ -1622,6 +1622,7 @@ ALTER FUNCTION public.admin_top_tenants_by_rows() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.aerzte_touch_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
   NEW.updated_at = now();
@@ -3313,6 +3314,7 @@ ALTER FUNCTION public.normalize_phone(p text) OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.notify_feedback_telegram()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
   PERFORM net.http_post(
@@ -3360,6 +3362,7 @@ ALTER FUNCTION public.notify_new_referral_draft() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.pat_fussbefund_versionieren()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 DECLARE
   v_max integer;
@@ -5430,6 +5433,7 @@ ALTER FUNCTION public.trg_prescriptions_updated_at() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.update_attendance_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $function$
