@@ -54,7 +54,7 @@ return async function loadBelegliste() {
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid var(--border)';
 
-      const stornoBtn = r.type !== 'storno'
+      const stornoBtn = r.type !== 'storno' && !r.bereits_storniert
         ? `<button class="btn-ghost btn-sm bl-storno-btn" data-id="${escapeHtml(r.id || '')}" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
         : '';
 

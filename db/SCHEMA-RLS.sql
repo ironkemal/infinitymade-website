@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261017224757 0083_funktionen_search_path_fest
--- EXPORTED AT:        2026-10-17T22:50:00.000Z
+-- LAST MIGRATION:     20261017225700 0084_belegliste_storno_bindung
+-- EXPORTED AT:        2026-10-18T07:30:00.000Z
 -- ERZEUGT AM:         2026-10-17
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1398
+--   table_columns:       1399
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           110
---   triggers:            97
---   indexes:             337
+--   functions:           111
+--   triggers:            98
+--   indexes:             338
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -2310,6 +2310,67 @@ AS $function$
 $function$
 ;
 ALTER FUNCTION public.auth_tenant_id() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.belegliste_storno_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_nr bigint;
+  v_otype text;
+  v_onr bigint;
+  v_oamount numeric;
+  v_oowner uuid;
+  v_saldo numeric;
+BEGIN
+  IF NEW.type <> 'storno' THEN
+    RETURN NEW;
+  END IF;
+
+  -- Verweis aus dem Altformat aufloesen (alte Backend-Version schreibt storno_von nicht).
+  IF NEW.storno_von IS NULL AND NEW.reference_text ~ '^STORNO für Beleg-Nr: [1-9][0-9]{0,14} \(' THEN
+    v_nr := substring(NEW.reference_text from '^STORNO für Beleg-Nr: ([1-9][0-9]{0,14}) \(')::bigint;
+    SELECT id INTO NEW.storno_von FROM public.belegliste
+     WHERE owner_id = NEW.owner_id AND beleg_nr = v_nr AND type <> 'storno';
+  END IF;
+
+  IF NEW.storno_von IS NOT NULL THEN
+    SELECT owner_id, type, beleg_nr, amount_eur INTO v_oowner, v_otype, v_onr, v_oamount
+      FROM public.belegliste WHERE id = NEW.storno_von FOR UPDATE;
+    IF NOT FOUND OR v_oowner <> NEW.owner_id OR v_otype = 'storno' THEN
+      RAISE EXCEPTION 'Storno verweist auf keinen stornierbaren Originalbeleg dieser Praxis.' USING ERRCODE = '23514';
+    END IF;
+    IF NEW.amount_eur <> -v_oamount THEN
+      RAISE EXCEPTION 'Storno muss den Betrag des Originals vollstaendig aufheben.' USING ERRCODE = '23514';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.belegliste s
+       WHERE s.owner_id = NEW.owner_id AND s.type = 'storno' AND s.storno_von IS NULL
+         AND s.reference_text ~ '^STORNO für Beleg-Nr: [1-9][0-9]{0,14} \('
+         AND substring(s.reference_text from '^STORNO für Beleg-Nr: ([1-9][0-9]{0,14}) \(')::bigint = v_onr
+    ) THEN
+      RAISE EXCEPTION 'Dieser Beleg wurde bereits storniert.' USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  -- Zuzahlungs-Saldo je Rezept darf durch einen Storno nie negativ werden (deckt auch den
+  -- Rezept-Saldo-Weg und gleichzeitige Anfragen ab).
+  IF NEW.prescription_id IS NOT NULL AND (NEW.storno_von IS NULL OR v_otype = 'zuzahlung') THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(NEW.prescription_id::text, 0));
+    SELECT coalesce(sum(amount_eur), 0) INTO v_saldo FROM public.belegliste
+     WHERE owner_id = NEW.owner_id AND prescription_id = NEW.prescription_id
+       AND type IN ('zuzahlung', 'storno');
+    IF v_saldo + NEW.amount_eur < 0 THEN
+      RAISE EXCEPTION 'Storno uebersteigt den gezahlten Betrag des Rezepts.' USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.belegliste_storno_pruefen() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.business_lookup_for_inbound(p_whatsapp_phone_number_id text)
  RETURNS TABLE(business_id uuid, business_name text, sector text, city text, language text, is_active boolean, cal_api_key text, cal_username text, whatsapp_access_token text, whatsapp_waba_id text, working_hours jsonb, faq jsonb, message_templates jsonb, system_prompt text, services jsonb)
@@ -5609,6 +5670,8 @@ CREATE TRIGGER trg_set_ausfallrechnung_nr BEFORE INSERT ON ausfallrechnungen FOR
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON b2b_contacts FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER trg_belegliste_storno_pruefen BEFORE INSERT ON belegliste FOR EACH ROW EXECUTE FUNCTION belegliste_storno_pruefen();
+
 CREATE TRIGGER trg_prevent_belegliste_mod BEFORE DELETE OR UPDATE ON belegliste FOR EACH ROW EXECUTE FUNCTION prevent_belegliste_mod();
 
 CREATE TRIGGER trg_set_beleg_nr BEFORE INSERT ON belegliste FOR EACH ROW WHEN (new.beleg_nr IS NULL OR new.beleg_nr = 0) EXECUTE FUNCTION set_next_beleg_nr();
@@ -5889,6 +5952,8 @@ CREATE INDEX idx_b2b_contacts_owner ON b2b_contacts USING btree (owner_id);
 
 -- Index belegliste_pkey ON public.belegliste is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX belegliste_pkey ON belegliste USING btree (id);
+
+CREATE UNIQUE INDEX belegliste_storno_von_einmal ON belegliste USING btree (storno_von) WHERE (storno_von IS NOT NULL);
 
 CREATE INDEX idx_belegliste_invoice ON belegliste USING btree (invoice_id) WHERE invoice_id IS NOT NULL;
 
@@ -7013,6 +7078,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_twilio(p_to_number text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO

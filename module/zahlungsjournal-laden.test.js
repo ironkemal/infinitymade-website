@@ -48,3 +48,18 @@ test('Journal Storno binds original ledger ID through button and dashboard POST'
   assert.equal(sent.type, 'storno');
   assert.equal(sent.amount_eur, -30);
 });
+
+test('Bereits stornierter Originalbeleg bekommt keinen Storno-Knopf', async () => {
+  const f = fixture();
+  const current = f.load();
+  await tick();
+  f.requests[0].resolve(response([
+    { ...row('zuzahlung', 1), id: 'a', bereits_storniert: true },
+    { ...row('zuzahlung', 2), id: 'b', bereits_storniert: false },
+    { ...row('storno', 3), id: 'c' },
+  ]));
+  await current;
+  assert.ok(!f.rows[0].innerHTML.includes('bl-storno-btn'));
+  assert.ok(f.rows[1].innerHTML.includes('bl-storno-btn'));
+  assert.ok(!f.rows[2].innerHTML.includes('bl-storno-btn'));
+});

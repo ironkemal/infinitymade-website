@@ -9,7 +9,7 @@ import { berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 // PostgREST adapter. No production credentials, HTTP requests or database writes.
 const source = fs.readFileSync(new URL('./abrechnung.routes.js', import.meta.url), 'utf8');
 const routeSource = source.slice(source.indexOf("router.get('/belegliste',"), source.indexOf('// POST /api/billing/abrechnung/preflight'));
-function fixture(initialRows = [], { employee = false, queryError = null } = {}) {
+function fixture(initialRows = [], { employee = false, queryError = null, insertError = null } = {}) {
   const rows = structuredClone(initialRows);
   const handlers = {};
   const calls = [];
@@ -29,6 +29,7 @@ function fixture(initialRows = [], { employee = false, queryError = null } = {})
         async maybeSingle() { return { data: rows.find(r => filters.every(f => f(r))) || null, error: queryError }; },
         async single() {
           if (table === 'profiles') return { data: { id: employee ? 'employee' : 'owner', role: employee ? 'employee' : 'owner', owner_id: employee ? 'owner' : null } };
+          if (insertError) return { data: null, error: insertError };
           const row = { ...insertion, id: 'new-' + rows.length, beleg_nr: rows.length + 1, created_at: '2026-10-16T10:00:00Z' };
           rows.push(row);
           return { data: row };
@@ -176,4 +177,32 @@ test('Nicht endliche Beträge bleiben auch bei normalen Zahlungseingängen gespe
   for (const amount_eur of [Infinity, -Infinity, 'Infinity']) {
     assert.equal((await fixture().call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur } })).status, 400);
   }
+});
+
+test('Einzelstorno schreibt storno_von; Insert-Fehler 23505/23514 wird als 409 gemeldet', async () => {
+  const f = fixture([payment()]);
+  const ok = await f.call('POST /belegliste', { body: { type: 'storno', original_id: 'original' } });
+  assert.equal(ok.status, 201);
+  assert.equal(ok.output.storno_von, 'original');
+  for (const code of ['23505', '23514']) {
+    const g = fixture([payment()], { insertError: { code, message: 'x' } });
+    const dup = await g.call('POST /belegliste', { body: { type: 'storno', original_id: 'original' } });
+    assert.equal(dup.status, 409, code);
+    assert.match(dup.output.error, /bereits storniert/);
+  }
+});
+
+test('GET markiert bereits stornierte Originale, auch bei Filter und Altformat ohne storno_von', async () => {
+  const f = fixture([
+    payment({ id: 'a', beleg_nr: 1 }),
+    payment({ id: 'b', beleg_nr: 2 }),
+    payment({ id: 'c', beleg_nr: 3 }),
+    { id: 's1', owner_id: 'owner', beleg_nr: 4, type: 'storno', amount_eur: -30, storno_von: 'a', reference_text: 'x', created_at: '2026-10-16T09:30:00Z' },
+    { id: 's2', owner_id: 'owner', beleg_nr: 5, type: 'storno', amount_eur: -30, storno_von: null, reference_text: 'STORNO für Beleg-Nr: 2 (Altbestand)', created_at: '2026-10-16T09:31:00Z' },
+  ]);
+  const all = await f.call('GET /belegliste');
+  const flag = Object.fromEntries(all.output.map(r => [r.id, r.bereits_storniert]));
+  assert.deepEqual(flag, { a: true, b: true, c: false, s1: false, s2: false });
+  const filtered = await f.call('GET /belegliste', { query: { type: 'zuzahlung' } });
+  assert.deepEqual(filtered.output.map(r => [r.id, r.bereits_storniert]).sort(), [['a', true], ['b', true], ['c', false]]);
 });

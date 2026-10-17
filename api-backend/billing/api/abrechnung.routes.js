@@ -3253,7 +3253,26 @@ router.get('/belegliste', async (req, res) => {
     const { data: rows, error: qErr } = await query;
     if (qErr) throw qErr;
 
-    return res.json(rows || []);
+    // "Bereits storniert" unabhaengig vom Filter: Storno-Zeilen des Mandanten, per storno_von
+    // oder (Altbestand ohne Verweis) per Belegnummer im Referenztext.
+    const { data: stornos, error: sErr } = await supabase
+      .from('belegliste')
+      .select('storno_von, reference_text')
+      .eq('owner_id', tenantId)
+      .eq('type', 'storno');
+    if (sErr) throw sErr;
+    const storniertIds = new Set();
+    const storniertNr = new Set();
+    for (const s of stornos || []) {
+      if (s.storno_von) storniertIds.add(s.storno_von);
+      const m = typeof s.reference_text === 'string' ? /^STORNO für Beleg-Nr: ([1-9]\d{0,14}) \(/.exec(s.reference_text) : null;
+      if (m) storniertNr.add(Number(m[1]));
+    }
+
+    return res.json((rows || []).map(r => ({
+      ...r,
+      bereits_storniert: r.type !== 'storno' && (storniertIds.has(r.id) || storniertNr.has(Number(r.beleg_nr))),
+    })));
   } catch (e) {
     console.error('[belegliste/get]', e);
     return res.status(500).json({ error: 'Server-Fehler: ' + e.message });
@@ -3285,6 +3304,7 @@ router.post('/belegliste', async (req, res) => {
     const { type, reference_text, storno_reason, original_id } = req.body || {};
     let { amount_eur, patient_id, prescription_id, abrechnung_id, zahlart } = req.body || {};
     let invoice_id = null;
+    let storno_von = null;
 
     if (type === 'storno') {
       // Identität und Zahlart kommen vom Original, niemals aus dem Browser.
@@ -3307,6 +3327,7 @@ router.post('/belegliste', async (req, res) => {
         }
         amount_eur = -Number(original.amount_eur);
         ({ patient_id, prescription_id, abrechnung_id, invoice_id, zahlart } = original);
+        storno_von = original.id;
       } else if (prescription_id) {
         // Alter Rezept-Button storniert den offenen Journalsaldo. Rückwärts-
         // kompatibel bleiben, aber Saldo und Buchungsbezüge serverseitig prüfen.
@@ -3350,6 +3371,7 @@ router.post('/belegliste', async (req, res) => {
         prescription_id: prescription_id || null,
         abrechnung_id: abrechnung_id || null,
         invoice_id: invoice_id || null,
+        storno_von: storno_von || null,
         reference_text: reference_text || null,
         created_by: u.user.id,
         zahlart: zahlart || null,
@@ -3357,7 +3379,13 @@ router.post('/belegliste', async (req, res) => {
       })
       .select()
       .single();
-    if (insErr) throw insErr;
+    if (insErr) {
+      // Migration 0084: belegliste_storno_von_einmal (23505) / belegliste_storno_pruefen (23514)
+      if (type === 'storno' && (insErr.code === '23505' || insErr.code === '23514')) {
+        return res.status(409).json({ error: 'Dieser Beleg wurde bereits storniert oder der Storno passt nicht zum Zahlungsstand. Bitte Zahlungsjournal neu laden.' });
+      }
+      throw insErr;
+    }
 
     return res.status(201).json(newRow);
   } catch (e) {

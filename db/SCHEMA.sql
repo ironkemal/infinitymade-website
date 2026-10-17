@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261017224757 0083_funktionen_search_path_fest
--- EXPORTED AT:        2026-10-17T22:50:00.000Z
+-- LAST MIGRATION:     20261017225700 0084_belegliste_storno_bindung
+-- EXPORTED AT:        2026-10-18T07:30:00.000Z
 -- ERZEUGT AM:         2026-10-17
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1398
+--   table_columns:       1399
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           110
---   triggers:            97
---   indexes:             337
+--   functions:           111
+--   triggers:            98
+--   indexes:             338
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -848,7 +848,8 @@ CREATE TABLE public.belegliste (
   created_by uuid,
   storno_reason text,
   zahlart text,
-  invoice_id uuid
+  invoice_id uuid,
+  storno_von uuid
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK created_by -> auth.users(id)
@@ -856,9 +857,11 @@ CREATE TABLE public.belegliste (
 --   FK owner_id -> profiles(id)
 --   FK patient_id -> leads(id)
 --   FK prescription_id -> prescriptions(id)
+--   FK storno_von -> belegliste(id)
 ALTER TABLE ONLY public.belegliste OWNER TO postgres;
 COMMENT ON COLUMN public.belegliste.zahlart IS 'Zahlungsart des Belegs: bar | ec | ueberweisung | sonstiges. NULL = Altbeleg vor v32.';
 COMMENT ON COLUMN public.belegliste.invoice_id IS 'Bei type IN (''rechnung'',''storno''): die bar bezahlte Privatrechnung bzw. deren Gegenbuchung. Die Storno-Zeile braucht die Referenz ebenso, sonst ist der Kassenbuch-Saldo je Rechnung nicht rechenbar (Muster: prescription_id in saldoJeRezept). Bewusst KEIN CHECK darauf. Bank/EC erzeugen keine Beleglisten-Zeile, Ausbuchungen nie (kein Geldfluss).';
+COMMENT ON COLUMN public.belegliste.storno_von IS 'Original-Beleg, den dieser Storno aufhebt (je Original hoechstens ein Storno). NULL bei Altstornos und beim Rezept-Saldo-Storno.';
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
@@ -883,6 +886,12 @@ ALTER TABLE ONLY public.belegliste
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_storno_von_fkey FOREIGN KEY (storno_von) REFERENCES belegliste(id);
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_storno_von_nur_storno CHECK (storno_von IS NULL OR type = 'storno'::text);
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_type_check CHECK (type = ANY (ARRAY['zuzahlung'::text, 'barverkauf'::text, 'storno'::text, 'ausfall'::text, 'rechnung'::text]));
