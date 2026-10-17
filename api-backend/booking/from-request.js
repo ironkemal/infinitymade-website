@@ -32,11 +32,22 @@ export function createBookingsFromRequestFactory({
     return slotTimes.includes(timeStr.substring(0, 5));
   }
 
-  return async function createBookingsFromRequest(bookReq, ownerId, empId, patName) {
+  return async function createBookingsFromRequest(bookReq, ownerId, empId, patName, options = {}) {
+    // Nur die manuelle Bestätigung übergibt commit: vor dem RPC werden keine
+    // Termine geschrieben. Die bisherigen Auto-/Alternativwege bleiben unverändert.
+    const plannedRows = [];
+    const insertBooking = async (row) => {
+      if (options.commit) {
+        plannedRows.push(row);
+        return { data: { id: `planned-${plannedRows.length}` }, error: null };
+      }
+      return supabase.from('bookings').insert(row).select('id').single();
+    };
     let duration = 30;
     if (bookReq.service_id) {
-      const { data: svc } = await supabase.from('services')
+      const { data: svc, error: serviceError } = await supabase.from('services')
         .select('duration_minutes').eq('id', bookReq.service_id).maybeSingle();
+      if (options.commit && (serviceError || !svc)) throw serviceError || new Error('Leistung nicht gefunden');
       if (svc?.duration_minutes) duration = svc.duration_minutes;
     }
 
@@ -55,10 +66,10 @@ export function createBookingsFromRequestFactory({
       : new Date().toISOString();
     const endUTC = new Date(new Date(startTime).getTime() + duration * 60000).toISOString();
 
-    const { data: booking, error: bookErr } = await supabase.from('bookings').insert({
+    const { data: booking, error: bookErr } = await insertBooking({
       user_id: empId, owner_id: ownerId, service_id: bookReq.service_id || null,
       customer_name: patName, start_time: startTime, end_time: endUTC, status: 'confirmed',
-    }).select('id').single();
+    });
     // 23P01 = no_overlapping_bookings. Zwischen Pruefung und Insert kann jemand
     // schneller gewesen sein — die DB-Sperre bleibt der letzte, verlaessliche Schutz.
     if (bookErr?.code === '23P01') return { conflict: true };
@@ -88,10 +99,10 @@ export function createBookingsFromRequestFactory({
             }
             const st = berlinLocalToUTC(dateStr, bookReq.preferred_time).toISOString();
             const et = new Date(new Date(st).getTime() + duration * 60000).toISOString();
-            const { data: extra, error: extraErr } = await supabase.from('bookings').insert({
+            const { data: extra, error: extraErr } = await insertBooking({
               user_id: empId, owner_id: ownerId, service_id: bookReq.service_id || null,
               customer_name: patName, start_time: st, end_time: et, status: 'confirmed',
-            }).select('id').single();
+            });
             if (extraErr) { extraConflicts++; } else { extraCreated++; alleIds.push(extra.id); }
           } catch {
             extraConflicts++;
@@ -102,7 +113,7 @@ export function createBookingsFromRequestFactory({
       }
     }
 
-    return {
+    const result = {
       booking_id: booking.id,
       booking_ids: alleIds,
       sessions_total: sessionsTotal,
@@ -110,5 +121,6 @@ export function createBookingsFromRequestFactory({
       sessions_conflicts: extraConflicts,
       needs_manual_scheduling: needsManualScheduling,
     };
+    return options.commit ? options.commit(plannedRows, result) : result;
   };
 }

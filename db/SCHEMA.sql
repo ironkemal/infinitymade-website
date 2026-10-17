@@ -3,18 +3,18 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261011142627 0080_drop_verordnung_festschreibung
--- EXPORTED AT:        2026-10-11T14:27:26.000Z
--- ERZEUGT AM:         2026-10-11
+-- LAST MIGRATION:     20261017202847 0082_request_approve_atomic
+-- EXPORTED AT:        2026-10-17T20:30:00.000Z
+-- ERZEUGT AM:         2026-10-17
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1397
+--   table_columns:       1398
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           108
+--   functions:           110
 --   triggers:            97
 --   indexes:             337
 --   auth_triggers:       1
@@ -760,7 +760,8 @@ CREATE TABLE public.ausfallrechnungen (
   created_by uuid,
   bezahlt_at timestamp with time zone,
   aussteller_snapshot jsonb,
-  empfaenger_snapshot jsonb
+  empfaenger_snapshot jsonb,
+  faellig_am date
 );
 --   FK booking_id -> bookings(id)
 --   FK business_id -> businesses(id)
@@ -770,6 +771,7 @@ ALTER TABLE ONLY public.ausfallrechnungen OWNER TO postgres;
 COMMENT ON TABLE public.ausfallrechnungen IS 'Private Ausfallhonorar-Rechnungen (Schadensersatz, umsatzsteuerfrei) für No-Shows und kurzfristige Absagen. Nicht GKV-relevant.';
 COMMENT ON COLUMN public.ausfallrechnungen.aussteller_snapshot IS 'Praxis (Aussteller) wie gedruckt, eingefroren beim Anlegen (POST /billing/ausfall/create): gleiche Schlüssel wie invoices.aussteller_snapshot (v, name, inhaber, strasse, plzOrt, telefon, email, ik, bank{name,iban,bic}); name = tatsächlich gedruckter Name (Standortname bei mehreren Standorten). Ab status=bezahlt gesperrt (ausfallrechnung_festschreibung, 0076). § 147 Abs. 2 Nr. 1 AO.';
 COMMENT ON COLUMN public.ausfallrechnungen.empfaenger_snapshot IS 'Rechnungsempfänger (Patient) wie gedruckt: gleiche Schlüssel wie invoices.empfaenger_snapshot art=patient (v, art, name, strasse, plzOrt, geburtsdatum, krankenkasse, versichertennummer). Kein IBAN, keine Diagnose. Ab status=bezahlt gesperrt (0076).';
+COMMENT ON COLUMN public.ausfallrechnungen.faellig_am IS 'Bei Ausstellung gespeichertes, unveränderliches Zahlungsziel. NULL = Altbeleg, ursprüngliche Fälligkeit nicht nachgewiesen; keine automatische Mahnung.';
 
 ALTER TABLE ONLY public.ausfallrechnungen
   ADD CONSTRAINT ausfallrechnungen_amount_check CHECK (amount_eur > 0::numeric);

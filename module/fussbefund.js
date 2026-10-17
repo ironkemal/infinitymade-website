@@ -176,6 +176,23 @@ let ausstehenderPreset = null;
 let risikoRow = null;           // gültige Podo-Anamnese des gewählten Patienten (führende Quelle der Dauerrisiken)
 let befundRisikoAnzeige = null; // `befund.risiken` des gerade offenen Befunds (nur für den Erklärhinweis)
 let aktuelleWurzel = null;      // Container, in dem die Karte gerade steht (Panel oder Tagesbehandlung)
+let kontextVersion = 0;
+let patientenKontext = null;
+let geladenerKontext = null;
+let speicherLauf = null;
+
+function kontextAktuell(lauf) {
+  return !!lauf && lauf.version === kontextVersion && lauf.ownerId === ctx?.ownerId()
+    && lauf.feld === el('fbpPatient') && lauf.feld?.isConnected !== false && lauf.feld?.value === lauf.leadId;
+}
+
+function syncSpeichern() {
+  const btn = el('fbpSaveBtn');
+  if (btn) {
+    btn.disabled = !!speicherLauf || !kontextAktuell(geladenerKontext);
+    btn.textContent = speicherLauf ? 'Speichert…' : 'Speichern';
+  }
+}
 
 function aktiveLegende() {
   return legende.find(e => e.id === aktiveLegendeId) || legende[0] || STANDARD_LEGENDE[0];
@@ -489,16 +506,17 @@ function sortiereTermine(liste) {
   return [...liste].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
 }
 
-async function ladePatientenkontext(leadId) {
+async function ladePatientenkontext(leadId, lauf = patientenKontext) {
+  if (!kontextAktuell(lauf)) return false;
   termine = [];
   befundeDesPatienten = [];
-  if (!leadId) return;
+  if (!leadId) return false;
 
   const [terminRes, befundRes] = await Promise.all([
     ctx.supabase
       .from('bookings')
       .select('id, start_time, status, service:service_id(title)')
-      .eq('owner_id', ctx.ownerId())
+      .eq('owner_id', lauf.ownerId)
       .eq('lead_id', leadId)
       .neq('status', 'cancelled')
       .order('start_time', { ascending: false })
@@ -507,17 +525,20 @@ async function ladePatientenkontext(leadId) {
       .from('pat_fussbefund')
       .select('id, erstellt_am, created_at, befund, markierungen, notiz, lead_id, booking_id, ' +
               'uebernommen_von, eintrag_id, version, ist_aktuell, serie_id, serie_farbe, wagner_grad')
-      .eq('owner_id', ctx.ownerId())
+      .eq('owner_id', lauf.ownerId)
       .eq('lead_id', leadId)
       .order('erstellt_am', { ascending: false })
       .limit(300),
   ]);
 
+  if (!kontextAktuell(lauf)) return false;
   if (terminRes.error) console.error('[fussbefund] Termine laden:', terminRes.error.message);
   if (befundRes.error) console.error('[fussbefund] Befunde laden:', befundRes.error.message);
+  if (terminRes.error || befundRes.error) { geladenerKontext = null; syncSpeichern(); return false; }
 
   termine = sortiereTermine(terminRes.data || []);
   befundeDesPatienten = befundRes.data || [];
+  return true;
 }
 
 /** Nur gültige Zeilen. Vorversionen sind Geschichte, keine Arbeitsgrundlage. */
@@ -655,46 +676,63 @@ function terminGewaehlt() {
 }
 
 async function patientGewaehlt(leadId) {
-  risikoRow = null;
-  autofillStammdaten(leadId);
-  currentId = null;
-  currentEintragId = null;
-  serieId = null;
-  serieFarbe = null;
-  uebernommenVon = null;
-  offeneVersionen = new Set();
-  zeigeUebernahme(null);
-  leereBefundFelder();
+  const lauf = { version: ++kontextVersion, leadId, ownerId: ctx.ownerId(), feld: el('fbpPatient') };
+  patientenKontext = lauf; geladenerKontext = null; syncSpeichern();
+  termine = []; befundeDesPatienten = [];
+  try {
+    risikoRow = null;
+    autofillStammdaten(leadId);
+    currentId = null;
+    currentEintragId = null;
+    serieId = null;
+    serieFarbe = null;
+    uebernommenVon = null;
+    offeneVersionen = new Set();
+    zeigeUebernahme(null);
+    leereBefundFelder();
 
-  const sel = el('fbpTermin');
-  if (sel) sel.innerHTML = '<option value="">Termine werden geladen…</option>';
+    const sel = el('fbpTermin');
+    if (sel) sel.innerHTML = '<option value="">Termine werden geladen…</option>';
 
-  await ladePatientenkontext(leadId);
-  await ladeRisiko(leadId);
-  renderTerminAuswahl();
+    renderBefundListe();
+    if (!await ladePatientenkontext(leadId, lauf)) return false;
+    if (!await ladeRisiko(leadId, lauf)) return false;
+    if (!kontextAktuell(lauf)) return false;
+    geladenerKontext = lauf; syncSpeichern();
+    renderTerminAuswahl();
 
-  // Der zeitlich nächste Termin ist die Vorauswahl — das ist der Griff, den
-  // der Podologe sonst jedes Mal selbst machen müsste.
-  if (sel && termine.length) {
-    sel.value = termine[0].id;
-    terminGewaehlt();
-  } else {
-    if (sel) sel.value = '__ohne__';
-    syncDatumsfeld();
-    const d = el('fbpDatum');
-    if (d) d.value = isoDatum(new Date());
+    // Der zeitlich nächste Termin ist die Vorauswahl — das ist der Griff, den
+    // der Podologe sonst jedes Mal selbst machen müsste.
+    if (sel && termine.length) {
+      sel.value = termine[0].id;
+      terminGewaehlt();
+    } else {
+      if (sel) sel.value = '__ohne__';
+      syncDatumsfeld();
+      const d = el('fbpDatum');
+      if (d) d.value = isoDatum(new Date());
+    }
+
+    renderBefundListe();
+    return true;
+  } catch (error) {
+    if (kontextAktuell(lauf)) {
+      geladenerKontext = null; syncSpeichern();
+      ctx.showToast('Fußbefund konnte nicht geladen werden. Bitte Patient erneut auswählen.', 'error');
+    }
+    return false;
   }
-
-  renderBefundListe();
 }
 
 // ── Risikoblock: Nur-Lese-Anzeige der Anamnese ─────────────────────────────
 
 /** Lädt die gültige Podo-Anamnese; bei Fehler bleibt der Block ehrlich leer („nicht ladbar"). */
-async function ladeRisiko(leadId) {
+async function ladeRisiko(leadId, lauf = patientenKontext) {
   const { row, fehler } = await ladeAktuelle(ctx.supabase, leadId, 'podo');
+  if (!kontextAktuell(lauf)) return false;
   risikoRow = fehler ? null : row;
   renderRisikoBox(fehler);
+  return !fehler;
 }
 
 function renderRisikoBox(fehler = false) {
@@ -730,6 +768,10 @@ function renderRisikoBox(fehler = false) {
 // ── Speichern ──────────────────────────────────────────────────────────────
 
 async function speichern() {
+  if (speicherLauf) return;
+  if (!kontextAktuell(geladenerKontext)) {
+    ctx.showToast('Bitte Patient auswählen und Fußbefund vollständig laden.', 'error'); return;
+  }
   const patientId = el('fbpPatient')?.value;
   const terminId  = el('fbpTermin')?.value || '';
 
@@ -756,16 +798,13 @@ async function speichern() {
     erstelltAm = new Date(termin.start_time).toISOString();
   }
 
-  const btn = el('fbpSaveBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Speichert…'; }
-
-  // Frisch lesen: zwischen Öffnen und Speichern kann die Anamnese eine neue Version bekommen haben.
-  await ladeRisiko(patientId);
-
+  const lauf = geladenerKontext;
+  const deps = ctx;
+  // Capture all editable values and version keys before the first await.
   const felder = {
     erstellt_am:  erstelltAm,
     befund:       collectBefund(),
-    markierungen: markierungen,
+    markierungen: structuredClone(markierungen),
     notiz:        el('fbpNotiz')?.value?.trim() || '',
     wagner_grad:  wagnerWert(el('fbpWagner')?.value),   // NULL = nicht erhoben; Konsey S0 2a, einzige Eingabestelle
     booking_id:   bookingId,
@@ -776,53 +815,62 @@ async function speichern() {
   // (`eintrag_id`). Nur so bleibt der Stand von letzter Woche sichtbar.
   // `version` und `ist_aktuell` setzt der Trigger, deshalb stehen sie hier nicht.
   const warKorrektur = !!currentEintragId;
+  const versionen = { eintrag_id: currentEintragId, serie_id: serieId,
+    serie_farbe: serieFarbe || naechsteSerienFarbe(), uebernommen_von: uebernommenVon };
+  const job = {}; speicherLauf = job; syncSpeichern();
+  try {
+    // Refresh risks for the captured patient, never read another form afterwards.
+    if (!await ladeRisiko(patientId, lauf) || !kontextAktuell(lauf)) return;
+    felder.befund.risiken = risikoKopie(risikoRow) || {};
+    const { data, error } = await deps.supabase
+      .from('pat_fussbefund')
+      .insert([{
+        ...felder,
+        owner_id:        lauf.ownerId,
+        lead_id:         patientId,
+        ...versionen,
+        erfasst_von:     deps.userId() || null,
+      }])
+      .select('id, eintrag_id, version, serie_id, serie_farbe')
+      .single();
 
-  const { data, error } = await ctx.supabase
-    .from('pat_fussbefund')
-    .insert([{
-      ...felder,
-      owner_id:        ctx.ownerId(),
-      lead_id:         patientId,
-      eintrag_id:      currentEintragId,                   // null → neuer Eintrag
-      serie_id:        serieId,                            // null → neue Serie
-      serie_farbe:     serieFarbe || naechsteSerienFarbe(),
-      uebernommen_von: uebernommenVon,
-      erfasst_von:     ctx.userId() || null,
-    }])
-    .select('id, eintrag_id, version, serie_id, serie_farbe')
-    .single();
+    if (!kontextAktuell(lauf)) return;
 
-  if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+    if (error) {
+      // 23505 = ein zweiter Tab hat denselben Befund parallel fortgeschrieben.
+      // Nachladen statt Erzwingen: sonst überholte die eine Version die andere.
+      const msg = error.code === '23505'
+        ? 'Dieser Befund wurde zwischenzeitlich an anderer Stelle gespeichert. Bitte den Termin neu wählen — der aktuelle Stand wird dann geladen.'
+        : 'Fehler beim Speichern: ' + error.message;
+      ctx.showToast(msg, 'error');
+      return;
+    }
 
-  if (error) {
-    // 23505 = ein zweiter Tab hat denselben Befund parallel fortgeschrieben.
-    // Nachladen statt Erzwingen: sonst überholte die eine Version die andere.
-    const msg = error.code === '23505'
-      ? 'Dieser Befund wurde zwischenzeitlich an anderer Stelle gespeichert. Bitte den Termin neu wählen — der aktuelle Stand wird dann geladen.'
-      : 'Fehler beim Speichern: ' + error.message;
-    ctx.showToast(msg, 'error');
-    return;
+    currentId        = data.id;
+    currentEintragId = data.eintrag_id;
+    serieId          = data.serie_id;
+    serieFarbe       = data.serie_farbe;
+
+    ctx.showToast(
+      warKorrektur && data.version > 1
+        ? `Version ${data.version} gespeichert ✓ — der vorherige Stand bleibt im Verlauf`
+        : 'Befund gespeichert ✓'
+    );
+    zeigeUebernahme(null);
+    emit('fussbefund:changed', { leadId: patientId, id: data.id });   // z. B. Wagner-Rozet der Tagesbehandlung
+
+    // Kontext neu ziehen, damit „✓ Befund" am Termin steht und die Liste stimmt.
+    if (!await ladePatientenkontext(patientId, lauf)) return;
+    renderTerminAuswahl();
+    const sel = el('fbpTermin');
+    if (sel) { sel.value = bookingId || '__ohne__'; syncDatumsfeld(); }
+    renderBefundListe();
+  } catch (error) {
+    if (kontextAktuell(lauf)) deps.showToast('Fehler beim Speichern: ' + error.message, 'error');
+  } finally {
+    if (speicherLauf === job) speicherLauf = null;
+    syncSpeichern();
   }
-
-  currentId        = data.id;
-  currentEintragId = data.eintrag_id;
-  serieId          = data.serie_id;
-  serieFarbe       = data.serie_farbe;
-
-  ctx.showToast(
-    warKorrektur && data.version > 1
-      ? `Version ${data.version} gespeichert ✓ — der vorherige Stand bleibt im Verlauf`
-      : 'Befund gespeichert ✓'
-  );
-  zeigeUebernahme(null);
-  emit('fussbefund:changed', { leadId: patientId, id: data.id });   // z. B. Wagner-Rozet der Tagesbehandlung
-
-  // Kontext neu ziehen, damit „✓ Befund" am Termin steht und die Liste stimmt.
-  await ladePatientenkontext(patientId);
-  renderTerminAuswahl();
-  const sel = el('fbpTermin');
-  if (sel) { sel.value = bookingId || '__ohne__'; syncDatumsfeld(); }
-  renderBefundListe();
 }
 
 // ── Liste der gespeicherten Befunde ────────────────────────────────────────
@@ -1094,6 +1142,8 @@ function oeffneBefund(row) {
 }
 
 function neuerBefund() {
+  kontextVersion++; patientenKontext = null; geladenerKontext = null; risikoRow = null;
+  syncSpeichern();
   currentId = null;
   currentEintragId = null;
   serieId = null;
@@ -1467,6 +1517,7 @@ function verdrahte(wurzel) {
  *                         dann fest, die Patientensuche ist ausgeblendet.
  */
 export async function mountFussbefund(deps, preset, optionen) {
+  const montage = ++kontextVersion; patientenKontext = null; geladenerKontext = null;
   ctx = deps;
   // Sofort einlösen, nicht erst am Ende: `oeffneFussbefundFuerTermin` erkennt am
   // geleerten Feld, dass der Panelwechsel den Aufbau bereits angestossen hat.
@@ -1495,6 +1546,7 @@ export async function mountFussbefund(deps, preset, optionen) {
       .order('last_name', { ascending: true }), 'patients'),
     ladeLegende(ctx.supabase, ownerId),
   ]);
+  if (montage !== kontextVersion || aktuelleWurzel !== wurzel || ctx !== deps) return;
 
   if (patRes.error) console.error('[fussbefund] Patienten laden:', patRes.error.message);
 
@@ -1516,6 +1568,7 @@ export async function mountFussbefund(deps, preset, optionen) {
   befundeDesPatienten = [];
 
   wurzel.innerHTML = kartenHtml(isoDatum(new Date()));
+  syncSpeichern();
   verdrahte(wurzel);
   if (eingebettet && el('fbpPatientSearch')?.parentElement) el('fbpPatientSearch').parentElement.hidden = true;
   renderWerkzeugleiste();
@@ -1546,7 +1599,8 @@ async function wendePresetAn(preset) {
   const suche = el('fbpPatientSearch');
   if (suche) suche.value = ctx.displayNameWithBirth(p);
 
-  await patientGewaehlt(p.id);
+  if (!await patientGewaehlt(p.id)) return;
+  const lauf = patientenKontext;
 
   // Einstieg aus dem Archiv in der Patientenkarte: dort wird eine konkrete
   // Zeile angeklickt, also soll genau dieser Befund offen sein — nicht der
@@ -1568,7 +1622,8 @@ async function wendePresetAn(preset) {
   if (!termine.some(t => t.id === preset.bookingId)) {
     const { data: nach } = await ctx.supabase.from('bookings')
       .select('id, start_time, status, service:service_id(title)')
-      .eq('owner_id', ctx.ownerId()).eq('id', preset.bookingId).maybeSingle();
+      .eq('owner_id', lauf.ownerId).eq('lead_id', p.id).eq('id', preset.bookingId).maybeSingle();
+    if (!kontextAktuell(lauf)) return;
     if (nach && nach.status !== 'cancelled') {
       termine = sortiereTermine([...termine, nach]);
       renderTerminAuswahl();

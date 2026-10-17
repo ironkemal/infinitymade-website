@@ -1002,3 +1002,18 @@ verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Aus
 - No-show-Sperre prüft aktuelle Termin-/Sitzungs-/Snapshot-Verknüpfungen. Fahrtenreferenzen sind für neue Fahrten vollständig, historische Referenzen bleiben konsistent in Anzeige und CSV.
 - Startkonfiguration/Profil/Rechte müssen bestätigt geladen sein; Fehler bleiben sichtbar statt erfundener Ownerfreigabe oder Login-Schleife.
 - Diese Änderung benötigt keine neue Backend-RPC. Serienparität sowie atomare Backend-/Schema-Korrekturen werden separat erst nach bestätigter Migration ausgeliefert.
+
+### 16.10.2026 — vorbereitete Backend-/Installationskorrekturen
+
+- Bestehende authentifizierte Terminpfade prüfen Praxiszugehörigkeit von Mitarbeiter/Leistung; Serienberechnung teilt dieselben Regeln wie Vorschau und erzeugt keine Termine vor Startdatum. SITE_URL wird zum HTTP(S)-Origin normalisiert.
+- Wartelisten-API prüft optionales Zeitfenster, Mahnungen verwenden vorhandene Ledger-/Legacylogik für tatsächlichen Restbetrag.
+- Migration0081 führt eingefrorene AF-Fälligkeit und atomare AF-Status-/Journalbuchung ein. Migration0082 bestätigt Anfrage und legt Kalendertermine in gemeinsamer Transaktion an. Beide RPCs SECURITY INVOKER, ausschließlich service_role. Keine nichtatomaren Fallbacks.
+- Upstream-Migrationen0079/0080 bleiben unverändert. Aktuelle volle Kette bis0082 physisch lokal geprüft; kein Live-Nachweis bei verweigertem Supabase-Zugriff.
+- Installer prüft alle TLS-Modi mit tatsächlicher Zertifikatsvalidierung und begrenzten HTTP-Fristen. Neuere Upstream-Readiness-/Reload-Logik bleibt erhalten.
+
+### 17.10.2026 — Patienten-/Maskenkontext bei verzögerten Antworten
+
+- `module/rezept-patientenkopf.js` übernimmt bisherigen Rezept-Prefill aus Dashboard: Patient, Inhaber und Maskengeneration bleiben verbunden, Speichern wartet auf vollständige Stammdaten. Arztname/LANR/BSNR werden als Gruppe behandelt; manuelle Angaben bleiben erhalten.
+- `module/patient-ueberweisung-upload.js` bindet Dateiauswahl an ursprünglichen Patienten/Inhaber und verwirft Dateilesen/Rückmeldungen nach Aktenwechsel. Erste Verwendung: Dashboard-Überweisungsupload.
+- Bestehender Fußbefund bleibt einziger Editor; Ladegeneration und Schreibsnapshot verhindern gemischte Patienten-/Versionsketten. Patiententermine verwenden Telefonnummer nur bei unzugeordneten Altterminen.
+- Absicht und erste Verwendung an `fonksiyon-ustasi` vor und nach Änderung mitgeteilt; Funktionskarte erneuert. Nur lokale Nachweise, kein Live-Release.

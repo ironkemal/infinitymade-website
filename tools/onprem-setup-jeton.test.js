@@ -120,11 +120,17 @@ test('praxura-installieren.ps1: kein UTF-8 BOM', () => {
   assert.notEqual(puffer[0], 0xEF, 'install.ps1 darf nicht mit einem BOM beginnen');
 });
 
-test('praxura-installieren.ps1: PRAXURA_BROWSER_OEFFNEN=1 im wsl-Aufruf und Start-Process mit setup.html#', () => {
+test('praxura-installieren.ps1: Jeton-Erneuerung und Start laufen über Link- und Browserhelfer', () => {
   const inhalt = fs.readFileSync(ps1Pfad, 'utf8');
-
-  assert.match(inhalt, /env\s+PRAXURA_BROWSER_OEFFNEN=1\s+bash/, 'wsl.exe-Aufruf muss PRAXURA_BROWSER_OEFFNEN=1 setzen');
-  assert.match(inhalt, /Start-Process\s+["']\$siteUrl\/setup\.html#\$jeton["']/, 'Start-Process muss $siteUrl/setup.html#$jeton aufrufen');
+  const linkHelfer = inhalt.slice(inhalt.indexOf('function EinrichtungsLink('), inhalt.indexOf('function EinrichtungOeffnen('));
+  const browserHelfer = inhalt.slice(inhalt.indexOf('function EinrichtungOeffnen('), inhalt.indexOf('if ($NeuerJeton)'));
+  assert.match(linkHelfer, /env\s+PRAXURA_BROWSER_OEFFNEN=1\s+bash[^\n]*--neuer-jeton/, 'Erneuerung fordert Link für Windows an');
+  assert.match(linkHelfer, /if \(\$stand -eq 'ja'\) \{ return \$null \}/, 'abgeschlossene Einrichtung liefert keinen Jeton-Link');
+  assert.match(linkHelfer, /return "\$\(BoxEnv 'SITE_URL'\)\/setup\.html#\$jeton"/, 'URL enthält aktuellen Box-Host und Jeton im Fragment');
+  assert.match(browserHelfer, /Invoke-WebRequest[^\n]*-TimeoutSec 5[^\n]*-Uri "\$basis\/health"/, 'Browserstart wartet begrenzt auf Box');
+  assert.match(browserHelfer, /Start-Process\s+\$link\b/, 'Browser erhält unveränderten Link samt Fragment');
+  assert.match(inhalt, /if \(\$NeuerJeton\) \{\s*\$link = EinrichtungsLink \$true\s*if \(\$link\) \{ EinrichtungOeffnen \$link \}/, 'Erneuerung verwendet beide Helfer');
+  assert.match(inhalt, /\$setupLink = EinrichtungsLink[^\n]*\n[\s\S]*?EinrichtungOeffnen \$setupLink/, 'normaler Abschluss verwendet beide Helfer');
 });
 
 test('praxura-installieren.ps1: kein Log/Warn/Ok/Fehler mit $jeton', () => {

@@ -8,7 +8,9 @@ import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, v
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
-import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
+import { zeigePatientTermine } from './module/patient-termine.js?v=20261017seven1';
+import { erstelleRezeptPatientenkopf } from './module/rezept-patientenkopf.js?v=20261017seven1';
+import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload.js?v=20261017seven1';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
@@ -42,7 +44,7 @@ import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, ope
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261003m16';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261017seven1';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
@@ -60,7 +62,7 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261010zc'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261017seven1'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -91,7 +93,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261011c';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
-import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261010zf';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
@@ -124,7 +126,7 @@ import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWarte
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
-import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261016six1';
+import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261016journal2';
 import { wartelisteZeitfensterGueltig } from './module/warteliste-zeitfenster.js?v=20261014a';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
@@ -135,14 +137,14 @@ import {
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261010zc'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
-import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
+import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20261014fix1';
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261009k15c';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261016patient2';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -914,6 +916,8 @@ function closeBkActionPanel() {
 }
 
 function closeModal(id) {
+  if (id === 'rezeptModal') rezeptPatientenkopf.invalidate();
+  if (id === 'patientDetailModal') ueberweisungUpload.invalidate();
   if (id === 'bkActionModal') { closeBkActionPanel(); return; }
   if (id === 'dasGuideModal') onDasGuideModalClosed();
   const el = document.getElementById(id);
@@ -7282,6 +7286,7 @@ async function pdSpringeZu(ziel, id, extra = {}) {
 }
 
 async function openPatientDetailModal(lead) {
+  ueberweisungUpload.invalidate();
   pdCurrentLeadId = lead.id;
   pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
@@ -8046,10 +8051,12 @@ async function loadPatientDetailMails(leadId) {
 }
 
 async function loadPatientDetailUeberweisung(leadId) {
+  const version = ueberweisungUpload.version();
   const { data } = await supabase.from('ueberweisungen')
     .select('*')
     .eq('lead_id', leadId)
     .order('created_at', { ascending: false });
+  if (version !== ueberweisungUpload.version() || pdCurrentLeadId !== leadId) return;
   const content = document.getElementById('pdUeberContent');
   if (!data || data.length === 0) {
     content.innerHTML = '<div class="pd-empty">Noch keine Überweisung eingetragen.</div>';
@@ -8119,24 +8126,9 @@ document.getElementById('pdUeberAddBtn').addEventListener('click', () => {
   document.getElementById('pdUeberFileInput').click();
 });
 
-document.getElementById('pdUeberFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file || !pdCurrentLeadId) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result;
-    const { error } = await supabase.from('ueberweisungen').insert({
-      owner_id: getOwnerId(),
-      lead_id: pdCurrentLeadId,
-      image_url: base64,
-      created_at: new Date().toISOString()
-    });
-    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-    showToast('Überweisung gespeichert ✓');
-    loadPatientDetailUeberweisung(pdCurrentLeadId);
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+const ueberweisungUpload = erstelleUeberweisungUpload({ supabase, getPatientId: () => pdCurrentLeadId, getOwnerId, showToast, reload: loadPatientDetailUeberweisung });
+document.getElementById('pdUeberFileInput').addEventListener('change', e => {
+  const file = e.target.files[0]; e.target.value = ''; ueberweisungUpload.upload(file);
 });
 
 document.querySelectorAll('.pd-tab').forEach(tab => {
@@ -14047,59 +14039,8 @@ function setM13Hausbesuch(isJa) {
 // Sektör → Muster-13 Therapiebereich eşlemesi (manuel + OCR ortak)
 const M13_SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
 
-async function fillRzPatientFromLead(leadId) {
-  const g = id => document.getElementById(id);
-  g('rzPatientId').value = leadId || '';
-  const hint = g('rzPatientHint');
-  if (!leadId) { if (hint) hint.textContent = ''; return; }
-
-  // Vollen Patientendatensatz laden (robust — unabhängig vom Dropdown-Cache)
-  let lead = null;
-  try {
-    const { data } = await supabase.from('leads').select('*').eq('id', leadId).maybeSingle();
-    lead = data;
-  } catch (e) { console.error('[fillRzPatientFromLead]', e); }
-  if (!lead) { if (hint) hint.textContent = ''; return; }
-  const md = lead.metadata || {};
-
-  g('rzPatName').value = lead.last_name || '';
-  g('rzPatVorname').value = lead.first_name || '';
-  // Geburtsdatum → dt. Format TT.MM.JJJJ
-  const bd = leadGeburtsdatum(lead) || '';
-  const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  g('rzPatGeb').value = m ? `${m[3]}.${m[2]}.${m[1]}` : (bd || '');
-  g('rzPatStrasse').value = lead.street || '';
-  g('rzPatOrt').value = [lead.plz, lead.city].filter(Boolean).join(' ');
-  g('rzPatVersNr').value = lead.versichertennummer || md.krankenkassennummer || '';
-  g('rzPatStatus').value = lead.versichertenstatus || '';
-  const kasse = lead.krankenkasse || md.krankenkasse || '';
-  g('rzPatKasse').value = kasse; vorauswahlArtAusPatient(lead);
-  // Karten-IK aus der Akte (S3.8b), NICHT aus der Kassenliste (dort: Kostenträger-IK, gkv-302)
-  g('rzPatKasseIk').value = lead.krankenkasse_ik || ''; tazeleIkHinweis(g('rzPatKasseIk'));
-
-  // Hausbesuch + Arzt vom Patienten übernehmen (nur wenn Felder noch leer)
-  if (leadHausbesuch(lead)) setM13Hausbesuch(true);
-  if (lead.arzt_id && !g('rzArztName').value) {
-    try {
-      const { data: arzt } = await supabase.from('aerzte')
-        .select('arzt_name,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
-      if (arzt) {
-        g('rzArztName').value = arzt.arzt_name || '';
-        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || ''; aktualisiereArztSperreBanner();
-        if (!g('rzBsnr').value) g('rzBsnr').value = arzt.bsnr || '';
-      }
-    } catch { /* ignore */ }
-  }
-
-  if (hint) {
-    const missing = [];
-    if (!g('rzPatGeb').value) missing.push('Geb.-Datum');
-    if (!g('rzPatVersNr').value) missing.push('Vers.-Nr.');
-    if (!kasse) missing.push('Kasse');
-    hint.textContent = missing.length ? `⚠ fehlt beim Patienten: ${missing.join(', ')} — bitte manuell ergänzen` : '✓ Patientendaten übernommen';
-    hint.style.color = missing.length ? '#b45309' : '#15803d';
-  }
-}
+const rezeptPatientenkopf = erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, leadGeburtsdatum, leadHausbesuch, setHausbesuch: setM13Hausbesuch, vorauswahlArtAusPatient, tazeleIkHinweis, aktualisiereArztSperreBanner });
+async function fillRzPatientFromLead(leadId) { return rezeptPatientenkopf.load(leadId); }
 
 function rzPatientLabel(l) {
   const md = l.metadata || {};
@@ -14116,7 +14057,7 @@ async function openRezeptModal(phone, leadId) {
   // stehen. Ohne diesen Schritt öffnete sich hier ein LEERES Modal — und alle
   // `g(...)`-Zuweisungen unten liefen ins Nichts. Der Weg ist der häufige:
   // erst eine Verordnung aufschlagen, dann „+ Neue Verordnung" drücken.
-  maskeHeimschicken();
+  maskeHeimschicken(); const kopfVersion = rezeptPatientenkopf.version();
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
@@ -14162,7 +14103,9 @@ async function openRezeptModal(phone, leadId) {
 
   // Patientenliste für den Kopf-Selector. Die Suche selbst macht
   // patient-suche.js; hier wird nur der Cache gefüllt, aus dem sie liest.
+  if (kopfVersion !== rezeptPatientenkopf.version()) return;
   const ownerId = await ladeRzPatientenCache();
+  if (kopfVersion !== rezeptPatientenkopf.version()) return;
   // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
   if (leadId && search) {
     const pre = rzPatientCache.find(l => l.id === leadId);
@@ -14206,7 +14149,7 @@ async function saveRezept() {
   // ist keine Zusicherung. Regeln: module/verordnung-maske.js.
   const _nein = pruefeAenderungErlaubt(); if (_nein) { showToast(_nein, 'error'); return; }
 
-  const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
+  const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft || btn.dataset.patientLoading) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
 
   let riegel = null;
   try {
@@ -14933,7 +14876,7 @@ async function init() {
     // es sich über `window` zu holen (module/verordnung-maske.js, Kopf).
     setzeMaskeBruecke({
       apiBasis: API,                 // KEINE zweite Adresskonstante (onprem O-44)
-      fuellePatient: fillRzPatientFromLead,
+      fuellePatient: fillRzPatientFromLead, verwerfePatientenkopf: () => rezeptPatientenkopf.invalidate(),
       lsApply,
       setTherapiebereich: setM13Therapy,
       setHausbesuch: setM13Hausbesuch, verdrahteToggles: wireM13Toggles,   // auch für die eingebettete Maske
@@ -16238,7 +16181,7 @@ const loadBelegliste = erstelleZahlungsjournalLader({ document, supabase, API, l
 // zugeordnet bleibt. Mahnwesen und Statistik rechnen Zuzahlung und Storno je
 // Rezept gegeneinander auf — ohne die ID bliebe ein storniertes Rezept dort
 // faelschlich als bezahlt stehen.
-async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null) {
+async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null, originalId = null) {
   // Storno reason input modal
   const reason = await showInputModal({
     title: 'Beleg Stornieren',
@@ -16263,6 +16206,7 @@ async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null
       },
       body: JSON.stringify({
         type: 'storno',
+        original_id: originalId,
         amount_eur: -Number(amount),
         prescription_id: prescriptionId || null,
         patient_id: patientId || null,

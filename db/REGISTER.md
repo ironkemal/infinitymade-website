@@ -1384,3 +1384,9 @@ aber hier vermerkt, damit sie niemand für lebendig hält.
 - **Struktur.** Spalten und Constraints stehen in `db/SCHEMA.sql`, Policies in `db/SCHEMA-RLS.sql`. Doppelte Wahrheit veraltet doppelt.
 - **Die Nutzungsliste.** Wer genau schreibt, steht in `db/NUTZUNG.md` und wird erzeugt. Hier stehen nur die Einstiegspunkte in Worten.
 - **Das Ops-Dashboard.** Anderes Supabase-Projekt (`farkaejociddtgqkusvm`), eigener Bestand, hier nicht erfasst.
+
+### 17.10.2026 — Migrationen 0081/0082 live angewandt
+
+- `ausfallrechnungen`: Migration 0081 ergänzt unveränderliches `faellig_am` (NULL = Altbeleg, keine automatische Mahnung) und die service-only RPC `ausfall_status_buchen`. Status und `belegliste`-Eintrag entstehen atomar. Hinweis: `abgeschrieben` → `bezahlt` ist weiterhin möglich (Zahlung nach Abschreibung) — fachlich bewusst zu entscheiden.
+- `booking_requests`: Migration 0082 ergänzt die service-only RPC `approve_booking_request_atomic` (optimistische Sperre über `updated_at`). Terminanlage und Anfrageabschluss laufen in einer Transaktion; Überschneidungen weist `no_overlapping_bookings` ab (23P01), das Backend übersetzt den Fehler.
+- Angewandt per MCP 17.10.2026 (`20261017202834`, `20261017202847`); Pflichtberater `db-ustasi` und `onprem`: GO.

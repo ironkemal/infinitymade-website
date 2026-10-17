@@ -15,6 +15,7 @@ import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
 import { standortFuerName, standortFuerZuordnung } from '../ausfall/standort.js';
 import { ZAHLARTEN } from '../belegliste/helper.js';
 import { ausfallAusstellerSnapshot, ausfallEmpfaengerSnapshot } from '../ausfall/snapshot.js';
+import { ausfallFaelligAm, gespeicherteAusfallFaelligkeit } from '../ausfall/faelligkeit.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -23,7 +24,6 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-const ZAHLUNGSZIEL_TAGE = 14;
 
 async function resolveAuth(req, res) {
   const token = req.headers.authorization?.slice(7);
@@ -86,9 +86,9 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
 
   const createdAt = row.created_at ? new Date(row.created_at) : new Date();
 
-  const targetZahlungsziel = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
-    ? Number(vorlage.zahlungsziel_tage)
-    : ZAHLUNGSZIEL_TAGE;
+  const gespeichert = gespeicherteAusfallFaelligkeit(row);
+  const faelligkeit = gespeichert || new Date(ausfallFaelligAm(createdAt, 14) + 'T12:00:00Z');
+  const altHinweis = gespeichert ? '' : 'Altbeleg: Das ursprünglich vereinbarte Zahlungsziel ist nicht gespeichert und nicht nachgewiesen. Angezeigtes Datum: rechnerischer 14-Tage-Ersatzwert; keine Grundlage für automatische Mahnungen.';
 
   return renderAusfallrechnung({
     praxis: {
@@ -103,7 +103,7 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
     rechnung: {
       nummer: `AF-${String(row.rechnung_nr).padStart(4, '0')}`,
       datum: createdAt,
-      faelligkeit: new Date(createdAt.getTime() + targetZahlungsziel * 24 * 60 * 60 * 1000),
+      faelligkeit,
     },
     termin: {
       datum: row.leistung_datum,
@@ -112,7 +112,7 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort =
     },
     amount_eur: Number(row.amount_eur),
     bankverbindung,
-    hinweisText: praxisProfile?.ausfall_hinweis || business?.ausfall_hinweis || null,
+    hinweisText: [altHinweis, praxisProfile?.ausfall_hinweis || business?.ausfall_hinweis].filter(Boolean).join(' ') || null,
     logoUrl: praxisProfile.praxis_logo_url || '',
     invoiceFooterText: praxisProfile.invoice_footer_text || '',
     vorlage: vorlage || {},
@@ -259,9 +259,12 @@ router.post('/ausfall/create', async (req, res) => {
     const userEmail = praxisProfile.id === user.id ? user.email : '';
     const patient = patientFromBooking(booking);
 
+    const createdAt = new Date().toISOString();
     const { data: row, error: insErr } = await supabase
       .from('ausfallrechnungen')
       .insert({
+        created_at: createdAt,
+        faellig_am: ausfallFaelligAm(createdAt, vorlageJson.zahlungsziel_tage),
         aussteller_snapshot: ausfallAusstellerSnapshot(praxisProfile, { standort: standortName, userEmail }),
         empfaenger_snapshot: ausfallEmpfaengerSnapshot(patient),
         owner_id: tenantId,
@@ -458,45 +461,21 @@ router.patch('/ausfall/:id/status', async (req, res) => {
       return res.status(400).json({ error: `Zahlart erforderlich. Erlaubt: ${ZAHLARTEN.join(', ')}.` });
     }
 
-    const { data: existing, error: fetchErr } = await supabase
-      .from('ausfallrechnungen')
-      .select('id, owner_id, status, amount_eur, patient_id, rechnung_nr, leads:patient_id (first_name, last_name), bookings:booking_id (customer_name)')
-      .eq('id', req.params.id)
-      .maybeSingle();
-    if (fetchErr || !existing) return res.status(404).json({ error: 'Ausfallrechnung not found' });
-    if (existing.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
-    // Paid invoices are locked — the Belegliste entry already exists (GoBD)
-    if (existing.status === 'bezahlt') {
-      return res.status(409).json({ error: 'Bereits als bezahlt gebucht — nicht mehr änderbar.' });
-    }
-    // Storno ist endgültig (0077): nach Storno darf /ausfall/create eine neue AF für den Termin anlegen.
-    if (existing.status === 'storniert') {
-      return res.status(409).json({ error: 'Storniert — nicht mehr änderbar. Für den Termin kann eine neue Ausfallrechnung angelegt werden.' });
-    }
-
-    const update = { status };
-    if (status === 'bezahlt') update.bezahlt_at = new Date().toISOString();
-
-    const { error: upErr } = await supabase
-      .from('ausfallrechnungen')
-      .update(update)
-      .eq('id', req.params.id);
-    if (upErr) return res.status(500).json({ error: upErr.message });
-
-    if (status === 'bezahlt') {
-      const patientName = existing.leads
-        ? `${existing.leads.first_name || ''} ${existing.leads.last_name || ''}`.trim()
-        : (existing.bookings?.customer_name || '');
-      const { error: blErr } = await supabase.from('belegliste').insert({
-        owner_id: tenantId,
-        type: 'ausfall',
-        amount_eur: Number(existing.amount_eur),
-        patient_id: existing.patient_id,
-        reference_text: `Ausfallhonorar erhalten (AF-${String(existing.rechnung_nr).padStart(4, '0')})${patientName ? ': ' + patientName : ''}`,
-        created_by: user.id,
-        zahlart: zahlart || null,
-      });
-      if (blErr) console.error('[ausfall/status] belegliste insert failed:', blErr.message);
+    // Status und Zahlung müssen in EINER DB-Transaktion geschrieben werden.
+    // Kein REST-Fallback: ohne Migration bleibt die Rechnung vollständig unverändert.
+    const { error } = await supabase.rpc('ausfall_status_buchen', {
+      p_owner_id: tenantId,
+      p_actor_id: user.id,
+      p_ausfall_id: req.params.id,
+      p_status: status,
+      p_zahlart: status === 'bezahlt' ? zahlart : null,
+    });
+    if (error) {
+      if (['PGRST202', '42883'].includes(error.code)) return res.status(503).json({ error: 'Ausfallbuchung noch nicht verfügbar. Datenbankmigration erforderlich.' });
+      if (error.code === 'P0002') return res.status(404).json({ error: 'Ausfallrechnung nicht gefunden.' });
+      if (error.code === '42501') return res.status(403).json({ error: 'Kein Zugriff.' });
+      if (error.code === '23514') return res.status(409).json({ error: error.message });
+      return res.status(500).json({ error: 'Ausfallbuchung fehlgeschlagen. Status und Zahlungsbeleg wurden nicht geändert.' });
     }
 
     return res.json({ ok: true });

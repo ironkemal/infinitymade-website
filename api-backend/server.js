@@ -15,6 +15,8 @@ import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
 import { cancelRequestBookings } from './booking/cancel-request.js';
 import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
+import { validateAuthenticatedService, validateExistingBookingTherapist } from './booking/auth-guards.js';
+import { serienDaten, isValidCalendarDate, isStrictInteger } from './booking/series.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
@@ -78,7 +80,9 @@ const ALLOWED_ORIGINS = [
 // ist SITE_URL nie gesetzt (/opt/calendar-api/.env.calendar), das Array bleibt
 // dort byte-identisch — NICHT aus Bequemlichkeit auch auf dem SaaS-VPS setzen.
 if (process.env.SITE_URL && process.env.SITE_URL.trim()) {
-  ALLOWED_ORIGINS.push(process.env.SITE_URL.trim());
+  const siteUrl = new URL(process.env.SITE_URL.trim());
+  if (!['http:', 'https:'].includes(siteUrl.protocol)) throw new Error('SITE_URL must use HTTP or HTTPS');
+  ALLOWED_ORIGINS.push(siteUrl.origin);
 }
 app.use(cors({
   origin: function (origin, callback) {
@@ -1462,8 +1466,30 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
   const bezugLeadId = await pruefeLeadId(leadId, ownerId);
 
-  if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
+  if (!userId || !ownerId || !startDate || !time || !isValidCalendarDate(startDate) || !isStrictInteger(count) || count < 1 || count > 52) {
     return res.status(400).json({ error: 'Missing or invalid params' });
+  }
+
+  if (weekdays !== undefined && weekdays !== null) {
+    if (!Array.isArray(weekdays)) return res.status(400).json({ error: 'Missing or invalid params' });
+    if (weekdays.length > 0) {
+      const allValid = weekdays.every(n => isStrictInteger(n) && Number(n) >= 0 && Number(n) <= 6);
+      if (!allValid) return res.status(400).json({ error: 'Missing or invalid params' });
+    }
+  }
+
+  const therapistGuard = await validateTherapist(supabase, userId, ownerId);
+  if (!therapistGuard.ok) {
+    return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
+  }
+
+  let svc = null;
+  if (serviceId) {
+    const serviceGuard = await validateAuthenticatedService(supabase, serviceId, ownerId);
+    if (!serviceGuard.ok) {
+      return res.status(serviceGuard.status || 400).json({ error: serviceGuard.error });
+    }
+    svc = serviceGuard.service;
   }
 
   // Trust the duration sent from the frontend (the user picked it from the
@@ -1471,23 +1497,16 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   // duration if the frontend didn't send one.
   let dur = parseInt(duration, 10);
   if (!dur || dur <= 0) {
-    if (serviceId) {
-      const { data: svc } = await supabase
-        .from('services')
-        .select('duration_minutes, price_config')
-        .eq('id', serviceId)
-        .single();
-      if (svc) {
-        if (svc.duration_minutes && svc.duration_minutes > 0) {
-          dur = svc.duration_minutes;
-        } else if (svc.price_config && svc.price_config.durations) {
-          const active = Object.entries(svc.price_config.durations)
-            .filter(([_, v]) => v && v.active)
-            .map(([k]) => parseInt(k, 10))
-            .filter(n => n > 0)
-            .sort((a, b) => a - b);
-          if (active.length) dur = active[0];
-        }
+    if (svc) {
+      if (svc.duration_minutes && svc.duration_minutes > 0) {
+        dur = svc.duration_minutes;
+      } else if (svc.price_config && svc.price_config.durations) {
+        const active = Object.entries(svc.price_config.durations)
+          .filter(([_, v]) => v && v.active)
+          .map(([k]) => parseInt(k, 10))
+          .filter(n => n > 0)
+          .sort((a, b) => a - b);
+        if (active.length) dur = active[0];
       }
     }
   }
@@ -1497,37 +1516,16 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   const created = [];
   const conflicts = [];
 
-  function addDays(dateStr, days) {
-    const d = new Date(dateStr + 'T12:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().substring(0, 10);
-  }
-
-  const targetDates = [];
-
-  if (recurrence === 'daily') {
-    for (let i = 0; i < count; i++) {
-      targetDates.push(addDays(startDate, i));
-    }
-  } else {
-    const wdSet = new Set((weekdays || []).map(Number));
-    const startWd = berlinDayOfWeek(startDate);
-    if (!wdSet.has(startWd)) wdSet.add(startWd);
-    // intervalDays: "1x alle 3/4/6/8 Wochen" gibi frekanslar için esnek hafta adımı
-    const customStep = parseInt(intervalDays, 10);
-    const step = (customStep >= 7 && customStep <= 84) ? customStep : (recurrence === 'biweekly' ? 14 : 7);
-
-    const first = new Date(startDate + 'T12:00:00Z');
-    let current = addDays(startDate, -first.getUTCDay());
-
-    while (targetDates.length < count) {
-      wdSet.forEach(d => {
-        if (targetDates.length >= count) return;
-        const candidate = addDays(current, d);
-        if (berlinDayOfWeek(candidate) === d) targetDates.push(candidate);
-      });
-      current = addDays(current, step);
-    }
+  const targetDates = serienDaten({
+    startDatum: startDate,
+    anzahl: count,
+    intervalDays,
+    taeglich: recurrence === 'daily',
+    recurrence,
+    wochentage: weekdays
+  });
+  if (targetDates.length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid params' });
   }
 
   for (const dateStr of targetDates.slice(0, count)) {
@@ -2272,18 +2270,35 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
   if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
     return res.status(400).json({ error: 'ownerId and slots[] required' });
   }
+
+  let svc = null;
+  if (serviceId) {
+    const serviceGuard = await validateAuthenticatedService(supabase, serviceId, ownerId);
+    if (!serviceGuard.ok) {
+      return res.status(serviceGuard.status || 400).json({ error: serviceGuard.error });
+    }
+    svc = serviceGuard.service;
+  }
+
+  for (const s of slots) {
+    if (!s || !s.employeeId) {
+      return res.status(400).json({ error: 'Ungültiger Therapeut' });
+    }
+    const therapistGuard = await validateTherapist(supabase, s.employeeId, ownerId);
+    if (!therapistGuard.ok) {
+      return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
+    }
+  }
+
   // Einmal je Request geprüft, nicht je Slot — siehe pruefeLeadId().
   const bezugLeadId = await pruefeLeadId(leadId, ownerId);
   let dur = parseInt(duration, 10);
   if (!dur || dur <= 0) {
-    if (serviceId) {
-      const { data: svc } = await supabase.from('services').select('duration_minutes,price_config').eq('id', serviceId).single();
-      if (svc) {
-        if (svc.duration_minutes && svc.duration_minutes > 0) dur = svc.duration_minutes;
-        else if (svc.price_config?.durations) {
-          const active = Object.entries(svc.price_config.durations).filter(([_, v]) => v && v.active).map(([k]) => parseInt(k)).filter(n => n > 0).sort((a, b) => a - b);
-          if (active.length) dur = active[0];
-        }
+    if (svc) {
+      if (svc.duration_minutes && svc.duration_minutes > 0) dur = svc.duration_minutes;
+      else if (svc.price_config?.durations) {
+        const active = Object.entries(svc.price_config.durations).filter(([_, v]) => v && v.active).map(([k]) => parseInt(k)).filter(n => n > 0).sort((a, b) => a - b);
+        if (active.length) dur = active[0];
       }
     }
   }
@@ -2328,14 +2343,27 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   try {
-    const { employeeId, title, start_time, end_time, customerName, customerPhone, leadId } = req.body;
+    const { employeeId, title, start_time, end_time, customerName, customerPhone, leadId, serviceId } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
 
-    const { data, error } = await supabase.from('bookings').insert({
+    const therapistGuard = await validateTherapist(supabase, employeeId, ownerId);
+    if (!therapistGuard.ok) {
+      return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
+    }
+
+    const resolvedServiceId = serviceId || req.body.service_id;
+    if (resolvedServiceId) {
+      const serviceGuard = await validateAuthenticatedService(supabase, resolvedServiceId, ownerId);
+      if (!serviceGuard.ok) {
+        return res.status(serviceGuard.status || 400).json({ error: serviceGuard.error });
+      }
+    }
+
+    const insertData = {
       owner_id: ownerId,
       user_id: employeeId,
-      customer_name: customerName,
-      customer_phone: customerPhone,
+      customer_name: customerName || null,
+      customer_phone: customerPhone || null,
       start_time: start_time,
       end_time: end_time,
       customer_email: 'manual@booking.com',
@@ -2344,7 +2372,10 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
       // tippt den Namen. Der Endpunkt nimmt den Bezug trotzdem entgegen, damit
       // dieser Weg nicht die nächste Quelle beziehungsloser Termine wird.
       lead_id: await pruefeLeadId(leadId, ownerId)
-    }).select().single();
+    };
+    if (resolvedServiceId) insertData.service_id = resolvedServiceId;
+
+    const { data, error } = await supabase.from('bookings').insert(insertData).select().single();
 
     if (error) {
       if (error.code === '23P01') {
@@ -2375,13 +2406,40 @@ app.patch('/api/booking/:id', requireAuthAI, async (req, res) => {
       return res.status(400).json({ error: 'Keine Felder zum Aktualisieren angegeben.' });
     }
 
+    const { data: existingBooking, error: fetchErr } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .eq('owner_id', ownerId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      return res.status(500).json({ error: 'Interner Serverfehler' });
+    }
+    if (!existingBooking) {
+      return res.status(404).json({ error: 'Buchung nicht gefunden oder keine Berechtigung.' });
+    }
+
+    if (existingBooking.user_id) {
+      const therapistGuard = await validateExistingBookingTherapist(supabase, existingBooking.user_id, ownerId);
+      if (!therapistGuard.ok) {
+        return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
+      }
+    }
+    if (existingBooking.service_id) {
+      const serviceGuard = await validateAuthenticatedService(supabase, existingBooking.service_id, ownerId);
+      if (!serviceGuard.ok) {
+        return res.status(serviceGuard.status || 400).json({ error: serviceGuard.error });
+      }
+    }
+
     const { data, error } = await supabase
       .from('bookings')
       .update(updates)
       .eq('id', bookingId)
       .eq('owner_id', ownerId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       if (error.code === '23P01') return res.status(409).json({ error: 'Zeitkonflikt — dieser Slot ist bereits belegt.' });
@@ -4242,21 +4300,34 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     const anfrage = { ...bookReq, ...aenderungen, employee_id: empId };
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
-    const result = await createBookingsFromRequest(anfrage, owner_id, empId, patName);
+    const result = await createBookingsFromRequest(anfrage, owner_id, empId, patName, {
+      commit: async (rows, metadata) => {
+        const { data, error } = await supabase.rpc('approve_booking_request_atomic', {
+          p_request_id: request_id, p_owner_id: owner_id, p_actor_id: userId,
+          p_expected_updated_at: bookReq.updated_at, p_employee_id: empId,
+          p_changes: aenderungen, p_bookings: rows, p_result: metadata,
+        });
+        if (error) {
+          if (error.code === '23P01' || error.code === '40001') return { conflict: true };
+          if (error.code === 'PGRST202' || error.code === '42883') {
+            const unavailable = new Error('Atomare Terminbestätigung nicht verfügbar');
+            unavailable.status = 503;
+            throw unavailable;
+          }
+          throw error;
+        }
+        if (!data?.booking_id || !Array.isArray(data.booking_ids) || !data.booking_ids.length
+          || data.booking_ids.length !== rows.length || !data.booking_ids.includes(data.booking_id)) {
+          throw new Error('Atomare Terminbestätigung lieferte kein vollständiges Ergebnis');
+        }
+        return data;
+      },
+    });
     if (result.conflict) {
       return res.status(409).json({
         error: 'Der Wunschtermin ist inzwischen belegt. Bitte einen anderen Termin mit dem Patienten vereinbaren.',
       });
     }
-
-    await supabase.from('booking_requests')
-      .update({
-        ...aenderungen,
-        employee_id: empId,
-        status: 'approved', booking_id: result.booking_id, booking_ids: result.booking_ids,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', request_id);
 
     // Box ohne SMTP: Entwurf an den Inhaber statt Versand (K2b.15, lib/mail-entwurf.js)
     if (bookReq.patients?.email && mailEntwurfStattVersand()) {
@@ -4296,7 +4367,8 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     return res.json(result);
   } catch (e) {
     console.error('[booking-request/approve]', e.message);
-    return res.status(500).json({ error: 'Bestätigung fehlgeschlagen' });
+    return res.status(e.status === 503 ? 503 : 500).json({ error: e.status === 503
+      ? 'Terminbestätigung derzeit nicht verfügbar. Bitte Datenbankstand prüfen.' : 'Bestätigung fehlgeschlagen' });
   }
 });
 

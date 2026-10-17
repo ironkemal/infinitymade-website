@@ -8,6 +8,7 @@
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { wartelisteZeitfensterGueltig } from '../../booking/warteliste-zeitfenster.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -97,6 +98,10 @@ router.post('/', async (req, res) => {
       notes,
       priority,
     } = req.body || {};
+
+    if (!wartelisteZeitfensterGueltig(preferred_time_from, preferred_time_to)) {
+      return res.status(400).json({ error: 'Ungültiges Zeitfenster. Die Endzeit muss nach der Startzeit liegen.' });
+    }
 
     const payload = {
       owner_id: tenantId,

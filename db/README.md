@@ -248,3 +248,7 @@ der Dump ohne neue Kettendatei aktualisiert wird.
 `supabase/migrations/` gibt es nicht mehr (archiviert 04.09.2026 nach
 `archive/supabase-migrations-vor-baseline/`). Für den Schemastand maßgeblich sind
 diese Dateien hier.
+
+## Migrationen 0081/0082 — SaaS-angewandt 17.10.2026
+
+`0081_ausfall_zahlung_faelligkeit.sql` (MCP-Version `20261017202834`) und `0082_request_approve_atomic.sql` (`20261017202847`) ergänzen Fälligkeitssnapshot/atomare Ausfallzahlung und atomare Anfragebestätigung. Beide rein expansiv (`:stable` läuft weiter). Live geprüft: Spalte `ausfallrechnungen.faellig_am` vorhanden, die RPCs `ausfall_status_buchen` und `approve_booking_request_atomic` nur für `service_role` ausführbar (anon/authenticated: nein). Schemaexports `SCHEMA.sql`/`SCHEMA-RLS.sql` am 17.10.2026 gezielt fortgeschrieben (Spalte, 3 Funktionen, ACLs, Zähler 1398 Spalten / 110 Funktionen); kein vollständiger Katalogexport.

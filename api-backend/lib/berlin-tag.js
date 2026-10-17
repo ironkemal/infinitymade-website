@@ -36,3 +36,32 @@ export function jahresendePlus(jahre, jetzt = new Date()) {
   return `${jahr}-12-31`;
 }
 
+
+const MIDNIGHT_FORMAT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Berlin', hourCycle: 'h23', era: 'short',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+});
+
+/** UTC-Grenzen eines Berliner Kalendertags; Ende ist exklusiv, auch bei DST. */
+export function berlinTagesgrenzen(tag) {
+  if (!istStichtag(tag) || tag.startsWith('0000-')) return null;
+  const target = new Date(`${tag}T00:00:00Z`);
+  const next = new Date(target);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const bounds = [target, next].map(day => {
+    let ms = day.getTime();
+    for (let i = 0; i < 6; i++) {
+      const parts = Object.fromEntries(MIDNIGHT_FORMAT.formatToParts(new Date(ms))
+        .filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+      const local = new Date(0);
+      local.setUTCFullYear(parts.era === 'BC' ? 1 - Number(parts.year) : Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+      local.setUTCHours(Number(parts.hour), Number(parts.minute), Number(parts.second), 0);
+      const delta = local.getTime() - day.getTime();
+      if (delta === 0) return new Date(ms).toISOString();
+      ms -= delta;
+    }
+    return null;
+  });
+  return bounds.every(Boolean) ? { tag, von: bounds[0], bisExklusiv: bounds[1] } : null;
+}

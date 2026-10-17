@@ -55,7 +55,7 @@ return async function loadBelegliste() {
       tr.style.borderBottom = '1px solid var(--border)';
 
       const stornoBtn = r.type !== 'storno'
-        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
+        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-id="${escapeHtml(r.id || '')}" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
         : '';
 
       tr.innerHTML = `
@@ -74,7 +74,7 @@ return async function loadBelegliste() {
 
     // Wire Storno Event
     tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
-      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
+      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null, btn.dataset.id || null));
     });
   } catch (err) {
     if (request !== generation) return;

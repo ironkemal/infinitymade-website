@@ -108,6 +108,7 @@ function ensureRoot() {
  */
 export async function openEinwilligungFlow(opts = {}) {
   const { patientId } = opts;
+  if (opts.istAktuell && !opts.istAktuell()) return;
   if (!patientId) { deps.showToast('Kein Patient ausgewählt.', 'error'); return; }
 
   let patient = opts.patient;
@@ -117,6 +118,7 @@ export async function openEinwilligungFlow(opts = {}) {
       .select('id, title, first_name, last_name, geburtsdatum')
       .eq('id', patientId)
       .maybeSingle();               // .single() liefert 406, wenn nichts da ist
+    if (opts.istAktuell && !opts.istAktuell()) return;
     if (error || !data) { deps.showToast('Patient konnte nicht geladen werden.', 'error'); return; }
     patient = data;
   }
@@ -148,6 +150,7 @@ export async function openEinwilligungFlow(opts = {}) {
     }
   }
 
+  if (opts.istAktuell && !opts.istAktuell()) return;
   _state = {
     patient,
     profile,
@@ -156,6 +159,7 @@ export async function openEinwilligungFlow(opts = {}) {
     optionen: [],
     gespeichert: [],
     kiAktiv: Boolean(kiAktiv),
+    istAktuell: opts.istAktuell,
     onClose: typeof opts.onClose === 'function' ? opts.onClose : null,
   };
 
@@ -176,8 +180,8 @@ function closeFlow() {
   try { danach?.(); } catch (e) { console.error('[einwilligung] onClose', e); }
 }
 
-function ctxFor() {
-  const p = _state.profile || {};
+function ctxFor(state = _state) {
+  const p = state.profile || {};
   return {
     // Spaltennamen gegen db/SCHEMA.sql (Tabelle profiles) geprüft — nicht raten.
     praxis_name: p.business_name
@@ -186,21 +190,22 @@ function ctxFor() {
     // zip ist die geschriebene Spalte, plz Altlast; Hausnummer steht getrennt (db-ustasi 09.10.2026, v4).
     praxis_adresse: [[p.street, p.house_number].filter(Boolean).join(' '),
       [p.zip || p.plz, p.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
-    patient_name: patientName(_state.patient),
-    patient_geburtsdatum: _state.patient.geburtsdatum
-      ? new Date(_state.patient.geburtsdatum).toLocaleDateString('de-DE')
+    patient_name: patientName(state.patient),
+    patient_geburtsdatum: state.patient.geburtsdatum
+      ? new Date(state.patient.geburtsdatum).toLocaleDateString('de-DE')
       : '—',
     datum: heute(),
     profile: p,
-    optionen: _state.optionen,
+    optionen: state.optionen,
     // Praxura-Box in der Praxis oder SaaS — bestimmt den Satz zur Praxissoftware (legal-de F6, M2.8).
     betrieb: IST_KUTU ? 'kutu' : 'saas',
     // KI-Absatz nur, wenn tatsächliche effektive Serverentscheidung aktiv ist (K-20, M4.11) — unbekannt/aus = false.
-    kiAktiv: Boolean(_state?.kiAktiv),
+    kiAktiv: Boolean(state?.kiAktiv),
   };
 }
 
 function renderStep() {
+  const state = _state;
   const type = _state.types[_state.step];
   const def = EINWILLIGUNG_TEXTE[type];
   if (!def) { closeFlow(); return; }
@@ -275,6 +280,7 @@ function renderStep() {
 
   _root.querySelectorAll('.ew-option').forEach(cb => {
     cb.addEventListener('change', () => {
+      if (_state !== state || (state.istAktuell && !state.istAktuell())) return;
       _state.optionen = Array.from(_root.querySelectorAll('.ew-option:checked')).map(x => x.value);
       aktualisiereVolltext();       // Auswahl ist Teil des unterschriebenen Textes
     });
@@ -283,12 +289,13 @@ function renderStep() {
   const pad = signaturePad(d('ewCanvas'), d('ewHinweis'));
   d('ewLoeschen').addEventListener('click', () => pad.clear());
   d('ewAbbrechen').addEventListener('click', async () => {
+    if (_state !== state || (state.istAktuell && !state.istAktuell())) return;
     const ok = deps.showConfirmModal
       ? await deps.showConfirmModal({ title: 'Ablauf abbrechen?', message: 'Ablauf abbrechen? Bereits unterschriebene Erklärungen bleiben gespeichert.', confirmText: 'Ablauf abbrechen', cancelText: 'Zurück', variant: 'warning' })
       : window.confirm('Ablauf abbrechen? Bereits unterschriebene Erklärungen bleiben gespeichert.');
-    if (ok) closeFlow();
+    if (ok && _state === state && (!state.istAktuell || state.istAktuell())) closeFlow();
   });
-  d('ewWeiter').addEventListener('click', () => weiter(pad, type));
+  d('ewWeiter').addEventListener('click', () => weiter(pad, type, state));
 
   _root.scrollTop = 0;
 }
@@ -304,7 +311,9 @@ function aktualisiereVolltext() {
   if (pre) pre.textContent = renderEinwilligungText(type, ctxFor()).text;
 }
 
-async function weiter(pad, type) {
+async function weiter(pad, type, state) {
+  const istAktuell = () => _state === state && (!state.istAktuell || state.istAktuell());
+  if (!istAktuell()) return;
   const fehler = d('ewFehler');
   const btn = d('ewWeiter');
   const setzeFehler = (m) => { if (fehler) fehler.textContent = m || ''; };
@@ -317,8 +326,9 @@ async function weiter(pad, type) {
 
   btn.disabled = true;
   try {
-    await speichereEinwilligung(type, pad);
-    _state.gespeichert.push(type);
+    await speichereEinwilligung(type, pad, state);
+    if (!istAktuell()) return;
+    state.gespeichert.push(type);
 
     if (_state.step + 1 < _state.types.length) {
       _state.step += 1;
@@ -332,6 +342,7 @@ async function weiter(pad, type) {
       if (box) renderEinwilligungListe(box, patientId);
     }
   } catch (e) {
+    if (!istAktuell()) return;
     console.error('[einwilligung]', e);
     setzeFehler('Speichern fehlgeschlagen: ' + (e.message || 'unbekannter Fehler'));
   } finally {
@@ -339,18 +350,18 @@ async function weiter(pad, type) {
   }
 }
 
-async function speichereEinwilligung(type, pad) {
+async function speichereEinwilligung(type, pad, state) {
   const ownerId = deps.getOwnerId?.();
   if (!ownerId) throw new Error('Kein Inhaber-Kontext');
 
-  const gerendert = renderEinwilligungText(type, ctxFor());
+  const gerendert = renderEinwilligungText(type, ctxFor(state));
   const sha = await sha256Hex(gerendert.text);
 
   // Unterschrift als Raster-PNG. Bewusst kein Vektor mit Zeitachse — siehe
   // Dateikopf (Art. 9 / Signaturdynamik).
   const blob = await pad.toPngBlob();
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const path = `${ownerId}/${_state.patient.id}/einwilligung_${type}_${stamp}.png`;
+  const path = `${ownerId}/${state.patient.id}/einwilligung_${type}_${stamp}.png`;
 
   const { error: upErr } = await deps.supabase.storage
     .from(BUCKET)
@@ -360,13 +371,13 @@ async function speichereEinwilligung(type, pad) {
   const row = {
     owner_id: ownerId,
     business_id: deps.getBusinessId?.() || null,
-    patient_id: _state.patient.id,
+    patient_id: state.patient.id,
     consent_type: type,
     text_version: gerendert.version,
     text_sha256: sha,
     text_snapshot: gerendert.text,
     signature_path: path,
-    signed_name: patientName(_state.patient),
+    signed_name: patientName(state.patient),
     captured_by_user_id: deps.getSessionUserId?.() || null,
     device_label: geraetLabel(),
   };
@@ -489,8 +500,13 @@ const TYP_LABEL = {
   foto: 'Foto-Einwilligung',
 };
 
+const listenKontexte = new WeakMap();
+
 export async function renderEinwilligungListe(container, patientId) {
   if (!container) return;
+  const kontext = {};
+  listenKontexte.set(container, kontext);
+  const istAktuell = () => listenKontexte.get(container) === kontext;
   container.innerHTML = '<div style="padding:16px;color:var(--text-muted);">Wird geladen…</div>';
 
   const { data, error } = await deps.supabase
@@ -499,6 +515,7 @@ export async function renderEinwilligungListe(container, patientId) {
     .eq('patient_id', patientId)
     .order('consented_at', { ascending: false });
 
+  if (!istAktuell()) return;
   if (error) {
     container.innerHTML = `<div style="padding:16px;color:var(--danger);">Fehler: ${esc(error.message)}</div>`;
     return;
@@ -522,6 +539,7 @@ export async function renderEinwilligungListe(container, patientId) {
   const liste = container.querySelector('#ewListe');
 
   function zeichne() {
+    if (!istAktuell()) return;
     const q = (container.querySelector('#ewSuche')?.value || '').toLowerCase().trim();
     const typ = container.querySelector('#ewTypFilter')?.value || '';
     const gefiltert = rows.filter(r => {
@@ -564,14 +582,14 @@ export async function renderEinwilligungListe(container, patientId) {
     }).join('');
 
     liste.querySelectorAll('.ew-pdf').forEach(b =>
-      b.addEventListener('click', () => kopieOeffnen(rows.find(x => x.id === b.dataset.id))));
+      b.addEventListener('click', () => { if (istAktuell()) return kopieOeffnen(rows.find(x => x.id === b.dataset.id), istAktuell); }));
     liste.querySelectorAll('.ew-widerruf').forEach(b =>
-      b.addEventListener('click', () => widerrufen(rows.find(x => x.id === b.dataset.id), container, patientId)));
+      b.addEventListener('click', () => { if (istAktuell()) return widerrufen(rows.find(x => x.id === b.dataset.id), container, patientId, istAktuell); }));
   }
 
   container.querySelector('#ewSuche')?.addEventListener('input', zeichne);
   container.querySelector('#ewTypFilter')?.addEventListener('change', zeichne);
-  container.querySelector('#ewNeuBtn')?.addEventListener('click', () => openEinwilligungFlow({ patientId }));
+  container.querySelector('#ewNeuBtn')?.addEventListener('click', () => { if (istAktuell()) return openEinwilligungFlow({ patientId, istAktuell }); });
   zeichne();
 }
 
@@ -579,20 +597,21 @@ export async function renderEinwilligungListe(container, patientId) {
  * Widerruf nach Art. 7 Abs. 3 DSGVO. Der Nachweis wird NICHT gelöscht —
  * er wird markiert. Löschen wäre auch technisch blockiert (§ 630f, 10 Jahre).
  */
-async function widerrufen(row, container, patientId) {
-  if (!row) return;
+async function widerrufen(row, container, patientId, istAktuell) {
+  if (!row || !istAktuell()) return;
   if (row.consent_type === 'behandlungsvertrag') {
     deps.showToast('Der Behandlungsvertrag ist keine widerrufliche Einwilligung nach Art. 7 DSGVO. Bitte die Behandlung regulär beenden.', 'error');
     return;
   }
   const grund = window.prompt('Widerruf festhalten. Grund (optional):', '');
-  if (grund === null) return;
+  if (grund === null || !istAktuell()) return;
 
   const { error } = await deps.supabase
     .from('patient_consents')
     .update({ revoked_at: new Date().toISOString(), revoke_reason: grund || null })
     .eq('id', row.id);
 
+  if (!istAktuell()) return;
   if (error) { deps.showToast('Widerruf fehlgeschlagen: ' + error.message, 'error'); return; }
   deps.showToast('Widerruf vermerkt.');
   renderEinwilligungListe(container, patientId);
@@ -603,19 +622,21 @@ async function widerrufen(row, container, patientId) {
  * kann „Als PDF speichern" und wir schleppen keine neue Abhängigkeit ein (G8).
  * Gedruckt wird der eingefrorene `text_snapshot`, nicht der aktuelle Vorlagentext.
  */
-async function kopieOeffnen(row) {
-  if (!row) return;
+async function kopieOeffnen(row, istAktuell) {
+  if (!row || !istAktuell()) return;
 
   const { data: voll, error } = await deps.supabase
     .from('patient_consents')
     .select('text_snapshot, text_version, text_sha256, consented_at, signed_name, signature_path, revoked_at')
     .eq('id', row.id)
     .maybeSingle();
+  if (!istAktuell()) return;
   if (error || !voll) { deps.showToast('Kopie konnte nicht geladen werden.', 'error'); return; }
 
   let sigUrl = '';
   if (voll.signature_path) {
     const { data: s } = await deps.supabase.storage.from(BUCKET).createSignedUrl(voll.signature_path, 300);
+    if (!istAktuell()) return;
     sigUrl = s?.signedUrl || '';
   }
 

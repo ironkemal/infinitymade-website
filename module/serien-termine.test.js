@@ -97,3 +97,39 @@ test('der Hinweis sagt, was mit dem Rest passiert', () => {
   assert.match(anzahlHinweisText(3, true), /Alle 3 Termine/);
   assert.equal(anzahlHinweisText(1, false), '');
 });
+
+/* ── Bugfix 2026-10-14: Keine Termine vor Start, gewählte Wochentage, Sortierung ── */
+
+test('start 2026-10-14 (Mi) gewählt [1] (Mo) liefert 2026-10-19 und niemals 2026-10-12', () => {
+  const tage = serienDaten({ startDatum: '2026-10-14', anzahl: 2, intervalDays: 7, wochentage: [1] });
+  assert.deepEqual(tage, ['2026-10-19', '2026-10-26']);
+  assert.ok(tage.every(d => d >= '2026-10-14'), 'Kein Termin darf vor dem Startdatum liegen');
+});
+
+test('unsortierte Wochentage werden chronologisch sortiert und dedupliziert', () => {
+  const tage = serienDaten({ startDatum: '2026-10-14', anzahl: 4, intervalDays: 7, wochentage: [5, 1, 5, 1] });
+  // 2026-10-14 ist Mittwoch. Mo 12.10. liegt vor Start, also Fr 16.10., Mo 19.10., Fr 23.10., Mo 26.10.
+  assert.deepEqual(tage, ['2026-10-16', '2026-10-19', '2026-10-23', '2026-10-26']);
+});
+
+test('benutzerdefiniertes Intervall (z.B. alle 3 Wochen / 21 Tage)', () => {
+  const tage = serienDaten({ startDatum: '2026-10-14', anzahl: 3, intervalDays: 21, wochentage: [3] });
+  assert.deepEqual(tage, ['2026-10-14', '2026-11-04', '2026-11-25']);
+});
+
+test('ungültige Wochentage oder Datum frieren die Berechnung nicht ein und werden verworfen', () => {
+  assert.deepEqual(serienDaten({ startDatum: 'invalid-date', anzahl: 5 }), []);
+  assert.deepEqual(serienDaten({ startDatum: '2026-10-14', anzahl: -3 }), []);
+  // Kalender-Rollover (z.B. 30. Februar) wird strikt abgewiesen
+  assert.deepEqual(serienDaten({ startDatum: '2026-02-30', anzahl: 2 }), []);
+  // Nicht-ganzzahlige Terminzahl (1.5) wird abgewiesen
+  assert.deepEqual(serienDaten({ startDatum: '2026-10-14', anzahl: 1.5 }), []);
+  assert.deepEqual(serienDaten({ startDatum: '2026-10-14', anzahl: '1.5' }), []);
+  // Ungültige Wochentag-Zahlen fallen NICHT still auf Startwochentag zurück
+  assert.deepEqual(serienDaten({ startDatum: '2026-10-14', anzahl: 2, intervalDays: 7, wochentage: [99, -5] }), []);
+});
+
+test('recurrence biweekly ohne intervalDays liefert 14 Tage Abstand', () => {
+  const tage = serienDaten({ startDatum: '2026-10-14', anzahl: 3, recurrence: 'biweekly', wochentage: [3] });
+  assert.deepEqual(tage, ['2026-10-14', '2026-10-28', '2026-11-11']);
+});

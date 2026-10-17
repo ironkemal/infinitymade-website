@@ -699,7 +699,7 @@ if (Test-Path "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe") {
 }
 # Erneuter Lauf auf einer schon eingerichteten Box (15.10.2026: "Praxura-Einrichtung
 # nochmal starten" ist der Ausweg bei offener Einrichtung) - 80/443 belegt sie selbst,
-# deshalb dann nur Hinweis (mit Programmname) statt Abbruch (onprem §7BA).
+# deshalb dann nur Hinweis (mit Programmname) statt Abbruch (onprem Abschnitt 7BA).
 $boxSchonDa = (DistroVorhanden) -and ((InWsl "[ -f $BoxPfad/.env ]") -eq 0)
 if ($boxSchonDa -or -not $Fortsetzen -or -not (DistroVorhanden)) {
   $belegt = Get-NetTCPConnection -State Listen -LocalPort 80, 443 -ErrorAction SilentlyContinue

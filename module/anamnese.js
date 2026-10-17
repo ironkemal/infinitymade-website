@@ -37,6 +37,7 @@ let aktuellerPatient = null;        // im Panel gewählt
 let aktuelleRow = null;             // gültige Anamnese des Fachbereichs (oder null)
 let vorschlaege = {};               // Übergang: Vorschläge aus altem Fußbefund
 let ladeNr = 0;                     // verwirft veraltete Antworten beim schnellen Patientenwechsel
+let geladeneNr = null;              // Speichern erst nach vollständig geladenem Formularkontext
 let akteLead = null;                // Patient im geöffneten Akten-Modal
 
 const $ = (id) => document.getElementById(id);
@@ -236,6 +237,7 @@ function aktualisiereKopf() {
   if (istKiosk() || !aktuellerPatient) { box.hidden = true; box.innerHTML = ''; return; }
   const fb = fachbereich(); const label = FACHBEREICH_LABEL[fb];
   const row = aktuelleRow;
+  const nr = ladeNr; const patientId = aktuellerPatient;
   let html;
   if (!row) {
     html = `<div class="anam-kopf">Noch keine Anamnese ${esc(label)} für diesen Patienten.</div>`;
@@ -249,7 +251,7 @@ function aktualisiereKopf() {
   }
   box.innerHTML = html; box.hidden = false;
   box.querySelector('[data-anam-aktion="pruefen"]')?.addEventListener('click', () => pruefeKlick({ dataset: { anamnesePruefen: row.id } }));
-  box.querySelector('[data-anam-aktion="bestaetigen"]')?.addEventListener('click', () => bestaetigeUnveraendert(row, () => fuelleFormular(aktuellerPatient)));
+  box.querySelector('[data-anam-aktion="bestaetigen"]')?.addEventListener('click', () => { if (nr === ladeNr) return bestaetigeUnveraendert(row, () => fuelleFormular(patientId), () => nr === ladeNr); });
 }
 
 async function pruefeKlick(b) {
@@ -262,8 +264,9 @@ async function pruefeKlick(b) {
   if (akteLead && $('patientDetailModal') && !$('patientDetailModal').hidden) ladePatientenAnamnese(akteLead);
 }
 
-async function bestaetigeUnveraendert(row, danach) {
+async function bestaetigeUnveraendert(row, danach, istAktuell = () => true) {
   const r = await bestaetige(d.supabase, row, { userId: d.getUserId?.(), heute: alsISODatum(new Date()) });
+  if (!istAktuell()) return;
   if (r.error) { d.showToast('Fehler: ' + r.error, 'error'); return; }
   d.showToast('Anamnese unverändert bestätigt — neue Version angelegt.');
   await danach?.();
@@ -347,6 +350,8 @@ function leerePhysio() {
 }
 
 function resetForm() {
+  ++ladeNr; geladeneNr = null;
+  $('anamSaveBtn').disabled = true;
   aktuelleRow = null; aktuellerPatient = null; vorschlaege = {};
   $('anamAufnahme').value = alsISODatum(new Date());
   if (fachbereich() === 'physio') leerePhysio(); else zeichneFormular();
@@ -392,13 +397,14 @@ function physioSpalten() {
 
 // ── Kontext der aktiven Verordnung (unverändert aus dashboard.js) ───────────
 
-async function ladeRxKontext(patientId) {
+async function ladeRxKontext(patientId, nr) {
   const box = $('anamRxContext'); if (!box) return;
   if (!patientId || !d.isPraxisSector(d.getSector())) { box.style.display = 'none'; return; }
   const { data: rx } = await d.supabase.from('prescriptions')
     .select('id, rezept_typ, status, heilmittel, icd10, diagnosegruppe, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis, hausbesuch, is_dringend, prescription_sessions(status)')
     .eq('patient_id', patientId).in('status', ['parsed', 'confirmed', 'in_therapy'])
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (nr !== ladeNr) return;
   if (!rx) { box.style.display = 'none'; return; }
 
   const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' }[rx.rezept_typ] || rx.rezept_typ;
@@ -435,44 +441,57 @@ async function verordnenderArzt(patientId) {
 }
 
 async function fuelleFormular(patientId) {
-  const nr = ++ladeNr;
-  ladeRxKontext(patientId).catch(() => { });
-  if (!(d.getAerzte?.() || []).length) await d.loadAerzte?.();
-  if (!patientId) { resetForm(); return; }
-  aktuellerPatient = patientId; vorschlaege = {};
+  resetForm();
+  const nr = ladeNr;
+  if ($('anamRxContext')) $('anamRxContext').style.display = 'none';
+  ladeRxKontext(patientId, nr).catch(() => { });
+  if (!patientId) return;
   const fb = fachbereich();
-  const { row, fehler } = await ladeAktuelle(d.supabase, patientId, fb, d.getOwnerId());
-  if (nr !== ladeNr) return;
-  if (fehler) d.showToast('Anamnese konnte nicht geladen werden.', 'error');
-  aktuelleRow = row;
-  $('anamAufnahme').value = row?.aufnahmedatum || alsISODatum(new Date());
-  $('anamSaveBtn').textContent = row ? 'Als neue Version speichern' : 'Speichern';
-  $('anamPrintBtn').hidden = !row;
-
-  if (fb === 'physio') {
-    if (row) fuellePhysio(row); else leerePhysio();
-    aktualisiereKopf();
-    return;
-  }
-  zeichneFormular();
-  const wurzel = $('anamDynForm'); const def = formular(fb);
-  if (row) {
-    schreibeForm(wurzel, def, rohAusRow(def, row));
-  } else if (fb === 'podo') {
-    // Übergang: noch keine Podo-Anamnese → alte Fußbefund-Risiken nur VORSCHLAGEN (nie still übernehmen).
-    const [alt, arzt] = await Promise.all([ladeAltrisiken(d.supabase, patientId), verordnenderArzt(patientId)]);
+  try {
+    if (!(d.getAerzte?.() || []).length) await d.loadAerzte?.();
     if (nr !== ladeNr) return;
-    if (alt) vorschlaege = vorschlaegeAusRisiken(alt.risiken);
-    if (arzt) schreibeForm(wurzel, def, { ...liesForm(wurzel, def), hausarzt: arzt });
+    const { row, fehler } = await ladeAktuelle(d.supabase, patientId, fb, d.getOwnerId());
+    if (nr !== ladeNr) return;
+    if (fehler) { d.showToast('Anamnese konnte nicht geladen werden.', 'error'); return; }
+    aktuelleRow = row;
+    $('anamAufnahme').value = row?.aufnahmedatum || alsISODatum(new Date());
+    $('anamSaveBtn').textContent = row ? 'Als neue Version speichern' : 'Speichern';
+    $('anamPrintBtn').hidden = !row;
+
+    if (fb === 'physio') {
+      if (row) fuellePhysio(row); else leerePhysio();
+      aktuellerPatient = patientId; geladeneNr = nr; $('anamSaveBtn').disabled = false;
+      aktualisiereKopf();
+      return;
+    }
+    zeichneFormular();
+    const wurzel = $('anamDynForm'); const def = formular(fb);
+    if (row) {
+      schreibeForm(wurzel, def, rohAusRow(def, row));
+    } else if (fb === 'podo') {
+      // Übergang: noch keine Podo-Anamnese → alte Fußbefund-Risiken nur VORSCHLAGEN (nie still übernehmen).
+      const [alt, arzt] = await Promise.all([ladeAltrisiken(d.supabase, patientId), verordnenderArzt(patientId)]);
+      if (nr !== ladeNr) return;
+      if (alt) vorschlaege = vorschlaegeAusRisiken(alt.risiken);
+      if (arzt) schreibeForm(wurzel, def, { ...liesForm(wurzel, def), hausarzt: arzt });
+    }
+    aktualisiereSichtbarkeit(wurzel, def, istKiosk());
+    zeigeVorschlaege(wurzel);
+    aktuellerPatient = patientId; geladeneNr = nr; $('anamSaveBtn').disabled = false;
+    aktualisiereKopf();
+  } catch {
+    if (nr === ladeNr) {
+      resetForm();
+      d.showToast('Anamnese konnte nicht geladen werden.', 'error');
+    }
   }
-  aktualisiereSichtbarkeit(wurzel, def, istKiosk());
-  zeigeVorschlaege(wurzel);
-  aktualisiereKopf();
 }
 
 async function speichere() {
   const patientId = $('anamPatientSelect').value;
   if (!patientId) { d.showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+  const nr = ladeNr;
+  if (geladeneNr !== nr || aktuellerPatient !== patientId || $('anamSaveBtn').disabled) return;
   const fb = fachbereich(); const def = formular(fb); const kiosk = istKiosk();
   let felder = {}; let spalten;
   if (fb === 'physio') {
@@ -499,10 +518,13 @@ async function speichere() {
   });
   const btn = $('anamSaveBtn'); btn.disabled = true;
   const r = await speichereNeu(d.supabase, payload);
-  btn.disabled = false;
-  if (r.error) { d.showToast('Fehler: ' + r.error, 'error'); return; }
+  if (nr !== ladeNr) return;
+  if (r.error) { btn.disabled = false; d.showToast('Fehler: ' + r.error, 'error'); return; }
   d.showToast(kiosk ? 'Vielen Dank — die Angaben wurden gespeichert.' : 'Anamnese gespeichert.');
-  const { row } = await ladeAktuelle(d.supabase, patientId, fb, d.getOwnerId());
+  const { row, fehler } = await ladeAktuelle(d.supabase, patientId, fb, payload.owner_id);
+  if (nr !== ladeNr) return;
+  if (fehler) { resetForm(); d.showToast('Anamnese konnte nicht geladen werden.', 'error'); return; }
+  btn.disabled = false;
   aktuelleRow = row; vorschlaege = {};
   $('anamSaveBtn').textContent = 'Als neue Version speichern'; $('anamPrintBtn').hidden = !row;
   if (fb !== 'physio') zeigeVorschlaege($('anamDynForm'));
@@ -513,8 +535,11 @@ async function speichere() {
 async function druckeInline() {
   const patientId = aktuellerPatient;
   if (!patientId) { d.showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+  const nr = ladeNr;
+  if (geladeneNr !== nr || $('anamPatientSelect').value !== patientId) return;
   const fb = fachbereich();
   const { row: a } = await ladeAktuelle(d.supabase, patientId, fb, d.getOwnerId());
+  if (nr !== ladeNr) return;
   if (!a) { d.showToast('Keine Anamnese für diesen Patienten gefunden.', 'error'); return; }
   const def = formular(fb);
   const name = document.querySelector('#anamPatientSelect option:checked')?.textContent || 'Unbekannt';

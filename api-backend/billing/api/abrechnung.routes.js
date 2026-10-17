@@ -28,7 +28,7 @@ import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
-import { berlinHeute } from '../../lib/berlin-tag.js';
+import { berlinHeute, berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 import { nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
@@ -3242,12 +3242,13 @@ router.get('/belegliste', async (req, res) => {
     if (zahlart && zahlart !== 'all') {
       query = query.eq('zahlart', zahlart);
     }
-    if (from) {
-      query = query.gte('created_at', `${from}T00:00:00Z`);
+    const fromDay = from ? berlinTagesgrenzen(from) : null;
+    const toDay = to ? berlinTagesgrenzen(to) : null;
+    if ((from && !fromDay) || (to && !toDay) || (fromDay && toDay && from > to)) {
+      return res.status(400).json({ error: 'Ungültiger Zeitraum. Bitte echte Kalendertage (JJJJ-MM-TT) und von ≤ bis angeben.' });
     }
-    if (to) {
-      query = query.lte('created_at', `${to}T23:59:59Z`);
-    }
+    if (fromDay) query = query.gte('created_at', fromDay.von);
+    if (toDay) query = query.lt('created_at', toDay.bisExklusiv);
 
     const { data: rows, error: qErr } = await query;
     if (qErr) throw qErr;
@@ -3281,7 +3282,57 @@ router.post('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Input Validation ----
-    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason, zahlart } = req.body || {};
+    const { type, reference_text, storno_reason, original_id } = req.body || {};
+    let { amount_eur, patient_id, prescription_id, abrechnung_id, zahlart } = req.body || {};
+    let invoice_id = null;
+
+    if (type === 'storno') {
+      // Identität und Zahlart kommen vom Original, niemals aus dem Browser.
+      const legacyMatch = typeof reference_text === 'string'
+        ? /^STORNO für Beleg-Nr: ([1-9]\d*) \([\s\S]*\)$/.exec(reference_text) : null;
+      const legacyNr = legacyMatch ? Number(legacyMatch[1]) : null;
+      if (legacyMatch && !Number.isSafeInteger(legacyNr)) {
+        return res.status(400).json({ error: 'Ungültige Originalbelegnummer. Bitte Zahlungsjournal neu laden.' });
+      }
+      if (original_id || legacyNr) {
+        let originalQuery = supabase.from('belegliste')
+          .select('id, type, amount_eur, zahlart, patient_id, prescription_id, abrechnung_id, invoice_id')
+          .eq('owner_id', tenantId);
+        originalQuery = original_id ? originalQuery.eq('id', original_id) : originalQuery.eq('beleg_nr', legacyNr);
+        const { data: original, error: originalErr } = await originalQuery.maybeSingle();
+        if (originalErr) throw originalErr;
+        if (!original) return res.status(404).json({ error: 'Originalbeleg nicht gefunden.' });
+        if (original.type === 'storno' || !Number.isFinite(Number(original.amount_eur)) || Number(original.amount_eur) <= 0) {
+          return res.status(400).json({ error: 'Nur positive Originalbelege können storniert werden.' });
+        }
+        amount_eur = -Number(original.amount_eur);
+        ({ patient_id, prescription_id, abrechnung_id, invoice_id, zahlart } = original);
+      } else if (prescription_id) {
+        // Alter Rezept-Button storniert den offenen Journalsaldo. Rückwärts-
+        // kompatibel bleiben, aber Saldo und Buchungsbezüge serverseitig prüfen.
+        const { data: belege, error: belegErr } = await supabase.from('belegliste')
+          .select('amount_eur, zahlart, patient_id, abrechnung_id, invoice_id')
+          .eq('owner_id', tenantId).eq('prescription_id', prescription_id)
+          .in('type', ['zuzahlung', 'storno']);
+        if (belegErr) throw belegErr;
+        const rows = belege || [];
+        const saldo = Math.round(rows.reduce((sum, r) => sum + Number(r.amount_eur), 0) * 100);
+        if (!Number.isSafeInteger(saldo) || saldo <= 0 || !Number.isFinite(Number(amount_eur)) || Math.abs(Number(amount_eur) * 100 + saldo) > 0.000001) {
+          return res.status(409).json({ error: 'Zahlungssaldo hat sich geändert oder ist bereits ausgeglichen. Bitte neu laden.' });
+        }
+        for (const field of ['zahlart', 'patient_id', 'abrechnung_id', 'invoice_id']) {
+          const values = new Set(rows.map(r => r[field] ?? null));
+          if (values.size !== 1) return res.status(409).json({ error: 'Mehrere Zahlarten oder Buchungsbezüge. Bitte Originalbelege einzeln im Zahlungsjournal stornieren.' });
+        }
+        amount_eur = -saldo / 100;
+        ({ patient_id, abrechnung_id, invoice_id, zahlart } = rows[0]);
+      } else {
+        return res.status(400).json({ error: 'Zum Stornieren wird ein Originalbeleg benötigt. Bitte Zahlungsjournal neu laden.' });
+      }
+      // Ein reiner Journalbeleg darf den unabhängigen Rechnungs-Zahlungssaldo
+      // nicht umgehen. Dafür ist eine gemeinsame Gegenbuchung erforderlich.
+      if (invoice_id) return res.status(409).json({ error: 'Rechnungszahlung kann hier nicht storniert werden: Zahlungsbuchung und Rechnungsstatus müssen gemeinsam korrigiert werden.' });
+    }
 
     const validation = validateBelegEntry(type, amount_eur, zahlart);
     if (!validation.isValid) {
@@ -3298,6 +3349,7 @@ router.post('/belegliste', async (req, res) => {
         patient_id: patient_id || null,
         prescription_id: prescription_id || null,
         abrechnung_id: abrechnung_id || null,
+        invoice_id: invoice_id || null,
         reference_text: reference_text || null,
         created_by: u.user.id,
         zahlart: zahlart || null,
@@ -3354,12 +3406,13 @@ router.get('/belegliste/export', async (req, res) => {
     if (zahlart && zahlart !== 'all') {
       query = query.eq('zahlart', zahlart);
     }
-    if (from) {
-      query = query.gte('created_at', `${from}T00:00:00Z`);
+    const fromDay = from ? berlinTagesgrenzen(from) : null;
+    const toDay = to ? berlinTagesgrenzen(to) : null;
+    if ((from && !fromDay) || (to && !toDay) || (fromDay && toDay && from > to)) {
+      return res.status(400).json({ error: 'Ungültiger Zeitraum. Bitte echte Kalendertage (JJJJ-MM-TT) und von ≤ bis angeben.' });
     }
-    if (to) {
-      query = query.lte('created_at', `${to}T23:59:59Z`);
-    }
+    if (fromDay) query = query.gte('created_at', fromDay.von);
+    if (toDay) query = query.lt('created_at', toDay.bisExklusiv);
 
     const { data: rows, error: qErr } = await query;
     if (qErr) throw qErr;
