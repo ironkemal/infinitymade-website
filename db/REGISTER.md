@@ -1309,7 +1309,7 @@ Heilmittel-Richtlinie …).
 - **Seit:** 18.06.2026 · `enable_postgis`
 - **Status:** System
 - **Wer:** PostGIS selbst.
-- **Achtung:** **Die einzige Tabelle ohne RLS** — das ist korrekt und unkritisch. Nicht „reparieren": ein RLS auf einer Erweiterungstabelle bricht PostGIS.
+- **Achtung:** **Die einzige Tabelle ohne RLS.** Eigentümer ist `supabase_admin`; RLS aktivieren oder Rechte entziehen geht als `postgres` nicht (REVOKE bleibt wirkungslos, geprüft 17.10.2026). **Nicht „unkritisch":** `anon` und `authenticated` haben INSERT/UPDATE/DELETE auf der Tabelle (Sicherheitsregister S-57, Schwere mittel: Verfügbarkeit/Integrität, keine Datenabfluss-Gefahr). Weg: Supabase-Support um REVOKE als `supabase_admin` bitten. PostGIS verschieben (Drop/Recreate) bricht die geography-Spalten und ist abgelehnt.
 
 ---
 
