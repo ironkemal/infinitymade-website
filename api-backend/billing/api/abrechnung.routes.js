@@ -3269,9 +3269,25 @@ router.get('/belegliste', async (req, res) => {
       if (m) storniertNr.add(Number(m[1]));
     }
 
+    // Rezept-Saldo-Storno bindet sich an kein einzelnes Original (storno_von NULL): ist der
+    // Zuzahlungs-Saldo des Rezepts ausgeglichen, gilt dessen Zuzahlung ebenfalls als storniert.
+    const { data: saldoRows, error: saldoErr } = await supabase
+      .from('belegliste')
+      .select('prescription_id, amount_eur, type')
+      .eq('owner_id', tenantId)
+      .in('type', ['zuzahlung', 'storno']);
+    if (saldoErr) throw saldoErr;
+    const saldoCent = new Map();
+    for (const x of saldoRows || []) {
+      if (!x.prescription_id) continue;
+      saldoCent.set(x.prescription_id, (saldoCent.get(x.prescription_id) || 0) + Math.round(Number(x.amount_eur) * 100));
+    }
+
     return res.json((rows || []).map(r => ({
       ...r,
-      bereits_storniert: r.type !== 'storno' && (storniertIds.has(r.id) || storniertNr.has(Number(r.beleg_nr))),
+      bereits_storniert: r.type !== 'storno' && (
+        storniertIds.has(r.id) || storniertNr.has(Number(r.beleg_nr))
+        || (r.type === 'zuzahlung' && !!r.prescription_id && (saldoCent.get(r.prescription_id) ?? 1) <= 0)),
     })));
   } catch (e) {
     console.error('[belegliste/get]', e);

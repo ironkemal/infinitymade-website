@@ -206,3 +206,15 @@ test('GET markiert bereits stornierte Originale, auch bei Filter und Altformat o
   const filtered = await f.call('GET /belegliste', { query: { type: 'zuzahlung' } });
   assert.deepEqual(filtered.output.map(r => [r.id, r.bereits_storniert]).sort(), [['a', true], ['b', true], ['c', false]]);
 });
+
+test('GET: durch Rezept-Saldo-Storno ausgeglichene Zuzahlung gilt als storniert, offene nicht', async () => {
+  const f = fixture([
+    payment({ id: 'z1', beleg_nr: 1, prescription_id: 'rxA' }),
+    { id: 's1', owner_id: 'owner', beleg_nr: 2, type: 'storno', amount_eur: -30, storno_von: null, prescription_id: 'rxA', reference_text: 'STORNO Zuzahlung: X', created_at: '2026-10-16T09:30:00Z' },
+    payment({ id: 'z2', beleg_nr: 3, prescription_id: 'rxB' }),
+    payment({ id: 'z3', beleg_nr: 4, prescription_id: null }),
+  ]);
+  const out = await f.call('GET /belegliste');
+  const flag = Object.fromEntries(out.output.map(r => [r.id, r.bereits_storniert]));
+  assert.deepEqual(flag, { z1: true, s1: false, z2: false, z3: false });
+});
