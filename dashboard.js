@@ -96,7 +96,7 @@ import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021d';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
-import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
+import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021e';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc';
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zc';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
@@ -3080,7 +3080,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         // Hier waehlt eine Karte, WELCHE Verordnung das Panel zeigt — sie fuellt
         // nicht die Terminmaske (das tut selectVerordnung in #bookingModal).
         onSelect: (gewaehlt) => openBookingActionModal(booking, { ...opts, rxId: gewaehlt.id }),
-        onAnlegen: () => oeffneAnlegenWahl(leadId),
+        onAnlegen: () => oeffneAnlegenWahl(leadId, booking?.id),
       });
       veroWrap.hidden = false;
     }
@@ -14121,10 +14121,10 @@ async function saveRezept() {
     } else {
       // Ein gescanntes Rezept fuehrt weiter in die Terminplanung — so endete
       // der Scan-Weg schon immer. Von Hand getippt bleibt es beim Schliessen.
-      const warScan = !!scanHerkunft();
-      closeModal('rezeptModal');
-      showToast('Verordnung gespeichert ✓', 'success');
-      if (warScan) {
+      const warScan = !!scanHerkunft(); closeModal('rezeptModal');
+      const tb = await bindeAnTerminNachAnlage(supabase, { ownerId, rxId: rx.id, patientId: patId, emit });   // aus dem Termin angelegt → zuordnen statt neue Terminplanung
+      showToast(tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
+      if (warScan && !tb?.podo) {
         const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
         window._physioFlow = vorgabe;
         sessionStorage.setItem('rxPreset', JSON.stringify(vorgabe));

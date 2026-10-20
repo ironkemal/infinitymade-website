@@ -22,8 +22,12 @@
  * kommt.
  */
 
+import { bindePodoSerieVonRezept } from './podo-einheiten.js?v=20261021d';
+
 /** Patient, fuer den die Wahl geoeffnet wurde — `null` heisst „noch offen". */
 let _leadId = null;
+/** Termin, aus dem heraus angelegt wird (Seitenbereich) — sonst `null`. */
+let _terminId = null;
 
 const g = (id) => document.getElementById(id);
 
@@ -32,9 +36,12 @@ const g = (id) => document.getElementById(id);
  *
  * @param {?string} leadId  Patient aus dem Zusammenhang (Termin, Akte) oder
  *                          `null`, wenn ohne Bezug angelegt wird.
+ * @param {?string} [terminId]  Termin, aus dessen Seitenbereich angelegt wird —
+ *                          die neue Verordnung wird ihm danach zugeordnet.
  */
-export function oeffneAnlegenWahl(leadId = null) {
+export function oeffneAnlegenWahl(leadId = null, terminId = null) {
   _leadId = leadId || null;
+  _terminId = terminId || null;
   const fehler = g('rxScanError');
   if (fehler) fehler.style.display = 'none';
   const wahl = g('rxScanChooser');
@@ -66,4 +73,37 @@ export function verdrahteAnlegenWahl(oeffneMaske) {
     schliesseAnlegenWahl();
     oeffneMaske(_leadId);
   });
+}
+
+/**
+ * Nach dem Anlegen: kam die Wahl aus einem Termin, wird die neue Verordnung
+ * diesem Termin und den folgenden, noch unzugeordneten Terminen desselben
+ * Patienten zugeordnet — gedeckelt auf die verordnete Menge
+ * (`bindePodoSerieVonRezept`). Vorher landete man nach dem Speichern in
+ * „Neuer Termin" + KI-Vorschlag, und jeder Serientermin musste einzeln über
+ * „Ändern" verknüpft werden (canli-test 20.10.2026).
+ *
+ * Nur Podologie (Zuordnung über `bookings.verordnung_id`); Physio/Ergo/Logo
+ * führen ein Sitzungsbuch und gehen ihren eigenen Weg — dann `{ podo:false }`.
+ *
+ * @returns {Promise<null|{podo:boolean, gebunden?:number, meldung?:string, warnung?:boolean}>}
+ *          `null` = nicht aus einem Termin heraus angelegt.
+ */
+export async function bindeAnTerminNachAnlage(sb, { ownerId, rxId, patientId, emit } = {}) {
+  const terminId = _terminId;
+  _terminId = null;
+  if (!terminId || !sb || !rxId) return null;
+  const { data: quelle } = await sb.from('bookings').select('id,start_time,lead_id').eq('id', terminId).maybeSingle();
+  if (!quelle) return null;
+  const { data: folgende } = await sb.from('bookings')
+    .select('id,start_time')
+    .eq('lead_id', patientId || quelle.lead_id).eq('status', 'confirmed').is('verordnung_id', null)
+    .gte('start_time', quelle.start_time).order('start_time', { ascending: true });
+  const ids = [quelle.id, ...(folgende || []).map(b => b.id).filter(id => id !== quelle.id)];
+  const created = ids.map(id => ({ id, start_time: id === quelle.id ? quelle.start_time : (folgende || []).find(b => b.id === id)?.start_time }));
+  const erg = await bindePodoSerieVonRezept(sb, { ownerId, prescriptionId: rxId, created, emit });
+  if (erg.podo && !erg.meldung && erg.gebunden) {
+    erg.meldung = erg.gebunden === 1 ? 'Verordnung dem Termin zugeordnet.' : `Verordnung ${erg.gebunden} Terminen zugeordnet.`;
+  }
+  return erg;
 }

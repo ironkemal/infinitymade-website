@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-20",
  "dateien": 450,
- "funktionen": 3616,
+ "funktionen": 3617,
  "module": [
   "abrechnung",
   "anamnese",
@@ -66019,6 +66019,7 @@
     "beginRezeptSpeicherlauf",
     "behandlungsbeginnFrist",
     "bgHinweiseAusMaske",
+    "bindeAnTerminNachAnlage",
     "closeModal",
     "emit",
     "error",
@@ -133271,6 +133272,7 @@
    ],
    "calledBy": [
     "(datei) module/podo-einheiten.js",
+    "bindeAnTerminNachAnlage",
     "meldePodoSerienBindung"
    ],
    "modules": [],
@@ -163912,8 +163914,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-anlegen.js",
-   "start": 28,
-   "end": 33,
+   "start": 32,
+   "end": 37,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -164009,9 +164011,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-anlegen.js",
-   "start": 36,
-   "end": 48,
-   "lines": 13,
+   "start": 42,
+   "end": 55,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -164081,8 +164083,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-anlegen.js",
-   "start": 51,
-   "end": 54,
+   "start": 58,
+   "end": 61,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -164105,8 +164107,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-anlegen.js",
-   "start": 57,
-   "end": 57,
+   "start": 64,
+   "end": 64,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -164125,8 +164127,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-anlegen.js",
-   "start": 64,
-   "end": 69,
+   "start": 71,
+   "end": 76,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -164139,6 +164141,32 @@
     "schliesseAnlegenWahl"
    ],
    "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "bindeAnTerminNachAnlage",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-anlegen.js",
+   "start": 92,
+   "end": 109,
+   "lines": 18,
+   "spiegelHinweis": null,
+   "tables": [
+    "bookings"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "bindePodoSerieVonRezept"
+   ],
+   "calledBy": [
+    "saveRezept"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -200733,7 +200761,7 @@
     "module/rezept-barcode-dialog.js:6",
     "module/rezept-in-maske.js:40",
     "module/rezept-patientenkopf.js:4",
-    "module/verordnung-anlegen.js:28",
+    "module/verordnung-anlegen.js:32",
     "module/verordnung-maske.js:434",
     "module/verordnung-nachweis.js:28"
    ],
