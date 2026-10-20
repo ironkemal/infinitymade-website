@@ -56,7 +56,7 @@ import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './modu
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261006m';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261020map';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261020vo'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261020vo';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
@@ -8345,7 +8345,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
 // Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
 // Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.
 document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePatientenImport({
-  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast,
+  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
   nachImport: async (anzahl) => { verwerfeKassenCache(); emit('leads:changed', { anzahl }); await loadLeads(); },
 }));
 

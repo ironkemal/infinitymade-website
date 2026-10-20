@@ -69,7 +69,7 @@ export function leseCsv(text) {
 
 // ── Spalten zuordnen ────────────────────────────────────────────────────
 
-const norm = (s) => String(s ?? '').trim().toLowerCase()
+export const norm = (s) => String(s ?? '').trim().toLowerCase()
   .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
   .replace(/[^a-z0-9]/g, '');
 
@@ -118,11 +118,11 @@ export function fehlendePflicht(zuordnung) {
 }
 
 /** @returns {Object<string, number>} Feld → Spaltenindex */
-export function ordneSpaltenZu(kopf) {
+export function ordneSpaltenZu(kopf, spalten = SPALTEN) {
   const k = (kopf || []).map(norm);
   const out = {};
   const vergeben = new Set();
-  for (const [feld, namen] of Object.entries(SPALTEN)) {
+  for (const [feld, namen] of Object.entries(spalten)) {
     for (const n of namen) {
       const i = k.findIndex((h, idx) => h === n && !vergeben.has(idx));
       if (i >= 0) { out[feld] = i; vergeben.add(i); break; }
@@ -154,7 +154,7 @@ export function leseDatum(roh) {
 }
 
 /** „Müller, Anna" oder „Anna Müller" → { vor, nach } */
-function teileName(voll) {
+export function teileName(voll) {
   const s = String(voll ?? '').trim().replace(/\s+/g, ' ');
   if (!s) return { vor: '', nach: '' };
   if (s.includes(',')) {
@@ -305,12 +305,95 @@ async function istSchonBenutzt(supabase, ids) {
 
 // ── Oberfläche ──────────────────────────────────────────────────────────
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const BTN = 'padding:9px 16px;border-radius:6px;font-size:14px;cursor:pointer;';
+export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export const BTN = 'padding:9px 16px;border-radius:6px;font-size:14px;cursor:pointer;';
+
+/**
+ * Zwischenschritt beider Importe (Patienten, Verordnungen): jede Spalte der
+ * Datei einem Feld zuordnen. Vorbelegt aus der Überschrift; die letzte
+ * Zuordnung zu gleichen Überschriften wird gemerkt (nur Spaltennamen, keine
+ * Inhalte — localStorage dieses Browsers).
+ *
+ * @param {object} o
+ * @param {HTMLElement} o.inhalt  Inhaltsbereich des Dialogs
+ * @param {HTMLElement} o.fuss    Knopfleiste des Dialogs
+ * @param {string[]} o.kopf       Kopfzeile der Datei
+ * @param {string[][]} o.daten    Datenzeilen (für Beispielwerte)
+ * @param {Object<string,string>} o.felder   Feld → Beschriftung
+ * @param {Object<string,string[]>} o.spalten Feld → erkannte Überschriften
+ * @param {(zu:object) => string[]} o.fehlendePflicht
+ * @param {string[]} o.pflichtNamen  Anzeige oben, in dieser Reihenfolge
+ * @param {string} o.merkPraefix
+ * @param {string} [o.hinweis]
+ * @param {Function} o.zurueck
+ * @param {(zu:object, wiederZeigen:Function) => void} o.weiter
+ */
+export function zuordnungsSchritt(o) {
+  const { inhalt, fuss, kopf, daten, felder, spalten, pflichtNamen } = o;
+  const merkKey = o.merkPraefix + kopf.map(norm).join('|');
+  const auto = ordneSpaltenZu(kopf, spalten);
+  let zu = { ...auto };
+  try { const alt = JSON.parse(localStorage.getItem(merkKey) || 'null'); if (alt) zu = alt; } catch { /* ohne Merken */ }
+  // Spalte → Feld (Umkehrung), damit jede Zeile ein Auswahlfeld hat
+  const spalteFeld = () => Object.fromEntries(Object.entries(zu).map(([f, i]) => [i, f]));
+  const beispiele = (i) => daten.map(z => String(z[i] ?? '').trim()).filter(Boolean).slice(0, 3);
+
+  const zeichne = () => {
+    const sf = spalteFeld();
+    const fehlt = o.fehlendePflicht(zu);
+    const pflicht = pflichtNamen.map(p => {
+      const ok = !fehlt.includes(p);
+      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:12px;border:1px solid ${ok ? 'var(--border)' : 'var(--danger,#b42318)'};color:${ok ? 'var(--text-main)' : 'var(--danger,#b42318)'};">${ok ? '✓' : '○'} ${esc(p)}</span>`;
+    }).join('');
+    const optionen = (aktiv) => `<option value="">— nicht übernehmen —</option>` + Object.entries(felder)
+      .map(([f, l]) => `<option value="${f}" ${f === aktiv ? 'selected' : ''}>${esc(l)}</option>`).join('');
+    const reihen = kopf.map((h, i) => {
+      const f = sf[i] || '';
+      const bsp = beispiele(i);
+      const markierung = f && auto[f] === i ? ' <span style="font-size:11px;font-weight:500;color:var(--text-muted);">· erkannt</span>' : '';
+      return `
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border);${f ? '' : 'opacity:.72;'}">
+          <div style="min-width:0;">
+            <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h || `Spalte ${i + 1}`)}${markierung}</div>
+            <div style="font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${bsp.length ? bsp.map(esc).join(' · ') : 'leer'}</div>
+          </div>
+          <div aria-hidden="true" style="color:var(--text-muted);text-align:center;">→</div>
+          <div style="display:flex;align-items:center;min-width:0;">
+            <select data-spalte="${i}" aria-label="Feld für Spalte ${esc(h)}" style="width:100%;min-width:0;padding:7px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;">${optionen(f)}</select>
+          </div>
+        </div>`;
+    }).join('');
+    const anzahl = Object.keys(zu).length;
+    inhalt.innerHTML = `
+      <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);line-height:1.5;">
+        Ordnen Sie jede Spalte Ihrer Datei einem Feld zu. ${anzahl} von ${kopf.length} Spalten sind schon zugeordnet — bitte kurz prüfen.
+      </p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;">${pflicht}</div>
+      <div>${reihen}</div>
+      <p style="font-size:12px;color:var(--text-muted);margin:10px 0 16px;">Nicht zugeordnete Spalten werden nicht übernommen. ${esc(o.hinweis || '')}</p>`;
+    inhalt.querySelectorAll('select[data-spalte]').forEach(sel => sel.addEventListener('change', () => {
+      const i = Number(sel.dataset.spalte);
+      for (const [f, idx] of Object.entries(zu)) if (idx === i) delete zu[f];   // Spalte war vorher woanders
+      if (sel.value) zu[sel.value] = i;                                       // Feld nur einmal vergeben
+      zeichne();
+    }));
+    fuss.innerHTML = `
+      <button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>
+      <button type="button" class="btn-primary" data-pi="weiter" style="${BTN}${fehlt.length ? 'opacity:.45;cursor:not-allowed;' : ''}" ${fehlt.length ? `disabled title="Erst zuordnen: ${esc(fehlt.join(', '))}"` : ''}>Weiter zur Vorschau</button>`;
+    fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', o.zurueck);
+    fuss.querySelector('[data-pi="weiter"]').addEventListener('click', () => {
+      try { localStorage.setItem(merkKey, JSON.stringify(zu)); } catch { /* egal */ }
+      o.weiter({ ...zu }, zeichne);
+    });
+  };
+  zeichne();
+}
 
 /**
  * Öffnet den Import-Dialog.
- * @param {{ supabase, ownerId: string, bestehende: () => object[], showToast: Function, nachImport: (anzahl:number) => Promise<void>|void }} d
+ * @param {{ supabase, ownerId: string, bestehende: () => object[], showToast: Function, nachImport: (anzahl:number) => Promise<void>|void, zuVerordnungen?: Function }} d
+ *   `zuVerordnungen`: öffnet den Verordnungs-Import (verordnung-import.js) — als
+ *   Rückruf, damit die beiden Module sich nicht gegenseitig importieren.
  */
 export function oeffnePatientenImport(d) {
   document.getElementById('patientenImportModal')?.remove();
@@ -349,9 +432,11 @@ export function oeffnePatientenImport(d) {
         <input type="file" accept=".csv,.txt,text/csv" data-pi="datei" style="display:none;" />
         <span style="font-weight:600;">CSV-Datei auswählen</span>
       </label>
-      <p style="margin:12px 0 16px;font-size:13px;"><a href="#" data-pi="vorlage">Vorlage herunterladen</a></p>`;
+      <p style="margin:12px 0 16px;font-size:13px;"><a href="#" data-pi="vorlage">Vorlage herunterladen</a>${d.zuVerordnungen
+        ? ' · <a href="#" data-pi="vo">Offene Verordnungen importieren (Podologie) →</a>' : ''}</p>`;
     fuss.innerHTML = `<button type="button" class="btn-ghost" data-pi="abbr" style="${BTN}">Abbrechen</button>`;
     fuss.querySelector('[data-pi="abbr"]').addEventListener('click', schliessen);
+    inhalt.querySelector('[data-pi="vo"]')?.addEventListener('click', (e) => { e.preventDefault(); schliessen(); d.zuVerordnungen(); });
     inhalt.querySelector('[data-pi="vorlage"]').addEventListener('click', (e) => {
       e.preventDefault();
       const a = document.createElement('a');
@@ -372,69 +457,17 @@ export function oeffnePatientenImport(d) {
     });
   };
 
-  // Zwischenschritt: jede Spalte der Datei einem Feld zuordnen. Vorbelegt aus
-  // der Überschrift; die letzte Zuordnung zu gleichen Überschriften wird gemerkt
-  // (nur Spaltennamen, keine Inhalte — localStorage dieses Browsers).
   const zuordnen = (text) => {
     const [kopf = [], ...daten] = leseCsv(text);
     if (!kopf.length || !daten.length) { schritt2(pruefeImport(text, [])); return; }
-    const merkKey = 'praxura.import.zuordnung.' + kopf.map(norm).join('|');
-    let zu = ordneSpaltenZu(kopf);
-    try { const alt = JSON.parse(localStorage.getItem(merkKey) || 'null'); if (alt) zu = alt; } catch { /* ohne Merken */ }
-    const auto = ordneSpaltenZu(kopf);
-    // Spalte → Feld (Umkehrung), damit jede Zeile ein Auswahlfeld hat
-    const spalteFeld = () => Object.fromEntries(Object.entries(zu).map(([f, i]) => [i, f]));
-    const beispiele = (i) => daten.map(z => String(z[i] ?? '').trim()).filter(Boolean).slice(0, 3);
-
-    const zeichne = () => {
-      const sf = spalteFeld();
-      const fehlt = fehlendePflicht(zu);
-      const pflicht = ['Nachname', 'Vorname', 'Geburtsdatum'].map(p => {
-        const ok = !fehlt.includes(p);
-        return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:12px;border:1px solid ${ok ? 'var(--border)' : 'var(--danger,#b42318)'};color:${ok ? 'var(--text-main)' : 'var(--danger,#b42318)'};">${ok ? '✓' : '○'} ${p}</span>`;
-      }).join('');
-      const optionen = (aktiv) => `<option value="">— nicht übernehmen —</option>` + Object.entries(FELDER)
-        .map(([f, l]) => `<option value="${f}" ${f === aktiv ? 'selected' : ''}>${esc(l)}</option>`).join('');
-      const reihen = kopf.map((h, i) => {
-        const f = sf[i] || '';
-        const bsp = beispiele(i);
-        const markierung = f && auto[f] === i ? ' <span style="font-size:11px;font-weight:500;color:var(--text-muted);">· erkannt</span>' : '';
-        return `
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border);${f ? '' : 'opacity:.72;'}">
-            <div style="min-width:0;">
-              <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h || `Spalte ${i + 1}`)}${markierung}</div>
-              <div style="font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${bsp.length ? bsp.map(esc).join(' · ') : 'leer'}</div>
-            </div>
-            <div aria-hidden="true" style="color:var(--text-muted);text-align:center;">→</div>
-            <div style="display:flex;align-items:center;min-width:0;">
-              <select data-spalte="${i}" aria-label="Feld für Spalte ${esc(h)}" style="width:100%;min-width:0;padding:7px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;">${optionen(f)}</select>
-            </div>
-          </div>`;
-      }).join('');
-      const anzahl = Object.keys(zu).length;
-      inhalt.innerHTML = `
-        <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);line-height:1.5;">
-          Ordnen Sie jede Spalte Ihrer Datei einem Feld zu. ${anzahl} von ${kopf.length} Spalten sind schon zugeordnet — bitte kurz prüfen.
-        </p>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;">${pflicht}</div>
-        <div>${reihen}</div>
-        <p style="font-size:12px;color:var(--text-muted);margin:10px 0 16px;">Nicht zugeordnete Spalten werden nicht übernommen. Ein „Name komplett" wird automatisch in Vor- und Nachname geteilt.</p>`;
-      inhalt.querySelectorAll('select[data-spalte]').forEach(sel => sel.addEventListener('change', () => {
-        const i = Number(sel.dataset.spalte);
-        for (const [f, idx] of Object.entries(zu)) if (idx === i) delete zu[f];   // Spalte war vorher woanders
-        if (sel.value) zu[sel.value] = i;                                       // Feld nur einmal vergeben
-        zeichne();
-      }));
-      fuss.innerHTML = `
-        <button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>
-        <button type="button" class="btn-primary" data-pi="weiter" style="${BTN}${fehlt.length ? 'opacity:.45;cursor:not-allowed;' : ''}" ${fehlt.length ? 'disabled title="Erst Nachname, Vorname und Geburtsdatum zuordnen"' : ''}>Weiter zur Vorschau</button>`;
-      fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', schritt1);
-      fuss.querySelector('[data-pi="weiter"]').addEventListener('click', () => {
-        try { localStorage.setItem(merkKey, JSON.stringify(zu)); } catch { /* egal */ }
-        schritt2(pruefeImport(text, d.bestehende() || [], { ...zu }), () => zeichne());
-      });
-    };
-    zeichne();
+    zuordnungsSchritt({
+      inhalt, fuss, kopf, daten,
+      felder: FELDER, spalten: SPALTEN, fehlendePflicht, pflichtNamen: ['Nachname', 'Vorname', 'Geburtsdatum'],
+      merkPraefix: 'praxura.import.zuordnung.',
+      hinweis: 'Ein „Name komplett" wird automatisch in Vor- und Nachname geteilt.',
+      zurueck: schritt1,
+      weiter: (zu, wiederZeigen) => schritt2(pruefeImport(text, d.bestehende() || [], zu), wiederZeigen),
+    });
   };
 
   const schritt2 = (erg, zurZuordnung = null) => {

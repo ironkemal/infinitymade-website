@@ -771,7 +771,9 @@ export function nutzlastAusMaske(v) {
  */
 /**
  * Schickt den Rumpf zum Server — gemeinsame Stelle fuer ANLEGEN
- * (`POST /rezept/confirm`) und AENDERN (`PATCH /rezept/:id`, Ops #289).
+ * (`POST /rezept/confirm`) und AENDERN (`PATCH /rezept/:id`, Ops #289) —
+ * und seit 20.10.2026 der Verordnungs-Import (module/verordnung-import.js),
+ * der `apiBasis` selbst mitgibt, weil er die Maske nicht öffnet.
  * Beide brauchen dieselbe Session-/Adress-Pruefung und denselben Fehlerpfad;
  * eine zweite Kopie hiesse, dass eine kuenftige Korrektur (z.B. Timeout,
  * anderer Fehlertext) nur in einer der beiden Routen ankommt.
@@ -780,10 +782,10 @@ export function nutzlastAusMaske(v) {
  * nicht „gespeichert" melden — sonst tippt die Praxis eine Verordnung ab,
  * die nirgends steht. (onprem O-44, Auflage 3.)
  */
-async function sendeAnServer(supabase, { methode, pfad, rumpf }) {
+export async function sendeAnServer(supabase, { methode, pfad, rumpf, apiBasis = null }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Nicht angemeldet');
-  const basis = _bruecke?.apiBasis;
+  const basis = apiBasis || _bruecke?.apiBasis;
   if (!basis) throw new Error('Keine API-Adresse angemeldet (setzeMaskeBruecke)');
 
   const antwort = await fetch(`${basis}${pfad}`, {

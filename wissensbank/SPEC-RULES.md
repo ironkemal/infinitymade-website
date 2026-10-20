@@ -1992,7 +1992,9 @@
   Abrechnungsfall (Verordnungsblatt): 10,00 Euro") · UE Korrekturverfahren 13.02.2025 Frage 1-2
   (`:77-103`, VKZ 02 yalnız fatura anında var olan Anspruch için; Original kasada).
 - **Geçerlilik:** 20.11.2006 / 16.06.2025 / 01.10.2025 (TA V21)
-- **Kodda:** uygulanmamış — Import özelliği yok (Vorarbeit 20.10.2026). `POST /api/rezept/confirm`
+- **Kodda:** Fall D (hiç Einheit erbracht değil) uygulandı 20.10.2026 — `module/verordnung-import.js`
+  (`zeileZuVerordnung`: erbracht > 0 / abgerechnet / § 15 Frist / Unterschrift → ret; Pflicht-Checkbox
+  „Altsystem rechnet nicht ab"). Fall B/C (erbrachte Tage) uygulanmamış. `POST /api/rezept/confirm`
   (`api-backend/server.js:2473`) Behandlung taşımaz; `podologie_behandlungen` tek INSERT yolu
   `module/podologie-abrechnung.js` (db/REGISTER.md „kein zweiter Schreibweg").
 - **Kapsam:** Podologie (Anlage 3 p); § 7 Abs. 1 ve EHE kuralı tüm Heilmittel
