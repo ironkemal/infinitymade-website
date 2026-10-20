@@ -110,6 +110,7 @@ import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.j
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
+import { blockInhalt } from './module/kalender-block.js?v=20261020';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
 import { renderWoche } from './module/kalender-woche.js?v=20261001e';
 import { renderMonat } from './module/kalender-monat.js?v=20261001e';
@@ -1699,121 +1700,10 @@ async function loadActivityFeed() {
   }
 }
 
-// Render the inner HTML for a calendar booking block. Physio-friendly:
-//   line 1 — "Nachname, Vorname"
-//   line 2 — Heilmittel · DG     (n/total)
-//   icons  — Hausbesuch, Dringend, Blanko, Notiz
+// Inhalt eines Terminblocks — seit 20.10.2026 in module/kalender-block.js
+// (Kalender-Entwurf: Patient · Leistung, darunter Zeit · Therapiezeit · DG).
 function renderBookingSlotInner(b, childBookings = []) {
-  // Right-aligned icon strip (clickable parent already wired)
-  const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
-  const rx   = sess?.prescriptions || null;
-  const icons = [
-    b.hausbesuch    ? `<span title="Hausbesuch" style="width:13px;height:13px;display:inline-flex;">${ICON.car}</span>` : '',
-    rx?.is_dringend ? `<span title="Dringend" style="color:#fbbf24;width:13px;height:13px;display:inline-flex;">${ICON.warning}</span>` : '',
-    rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
-    rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
-    b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
-  ].filter(Boolean).join(' ');
-
-  const heilmittel = rx?.heilmittel || b.services?.code || '';
-  const hmColor = (() => {
-    const hm = (heilmittel || '').toUpperCase();
-    if (hm.startsWith('KG') || hm.startsWith('MT')) return '#60a5fa';
-    if (hm.startsWith('VO') || hm.startsWith('KT')) return '#a78bfa';
-    if (hm.startsWith('ET') || hm.startsWith('ERGO')) return '#34d399';
-    if (hm.startsWith('LOG') || hm.startsWith('SP')) return '#f472b6';
-    if (hm.startsWith('PO') || hm.startsWith('PODO')) return '#fb923c';
-    if (rx?.is_dringend) return '#fbbf24';
-    return null;
-  })();
-  const hmBorder = hmColor ? `border-left:3px solid ${hmColor};padding-left:4px;` : '';
-
-  if (b.is_group) {
-    const count = childBookings.length;
-    const capacity = b.group_capacity || 5;
-    
-    // Glassmorphic styling based on fill status
-    let badgeColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12)';
-    let textColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 1)';
-    let borderColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.22)';
-    
-    if (count >= capacity) {
-      badgeColor = 'rgba(34, 197, 94, 0.1)';
-      textColor = 'rgb(34, 197,  green-color)';
-      textColor = '#22c55e';
-      borderColor = 'rgba(34, 197, 94, 0.25)';
-    } else if (count === 0) {
-      badgeColor = 'rgba(156, 163, 175, 0.1)';
-      textColor = 'var(--text-muted)';
-      borderColor = 'rgba(156, 163, 175, 0.2)';
-    }
-    
-    const badge = `
-      <span class="group-capacity-badge" style="background: ${badgeColor}; color: ${textColor}; border: 1px solid ${borderColor}; border-radius: 6px; padding: 1px 5px; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; backdrop-filter: blur(4px);">
-        👥 ${count}/${capacity}
-      </span>
-    `;
-    
-    const partNames = childBookings.map(cb => {
-      const name = cb.customer_name || 'Teilnehmer';
-      return name.split(',')[0].trim();
-    }).join(', ');
-    
-    const subtitle = partNames ? escapeHtml(partNames) : '<span style="opacity: 0.6; font-style: italic;">Freier Gruppenslot</span>';
-    
-    return `<div style="height:100%;${hmBorder}">
-      <div class="dv-booking-name" style="font-weight:700;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
-        ${terminZeitLabel(b)}
-        <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.services?.title || 'Gruppe')}</span>
-        ${badge}
-      </div>
-      <div class="dv-booking-subtitle" style="font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-        ${subtitle}
-      </div>
-      ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-    </div>`;
-  }
-
-  // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
-  // already comma-formatted strings pass through.
-  const raw = (parseNameMitGeburt(b.customer_name).name || b.services?.title || 'Termin').trim();
-  let displayName = raw;
-  if (raw.includes(',')) {
-    displayName = raw;
-  } else {
-    const parts = raw.split(/\s+/);
-    if (parts.length >= 2) {
-      const ln = parts[parts.length - 1];
-      const vn = parts.slice(0, -1).join(' ');
-      displayName = ln + ', ' + vn;
-    }
-  }
-
-  const dg = rx?.diagnosegruppe || '';
-  const counter = (sess?.session_number && rx?.anzahl_einheiten)
-    ? `(${sess.session_number}/${rx.anzahl_einheiten})`
-    : '';
-  const isReadyBadge = rx?.abrechnung_status === 'bereit' ? '<span title="Abrechnungsbereit" style="color:#15803d;">●</span>' : '';
-
-  const subtitle = [
-    heilmittel ? escapeHtml(heilmittel) : '',
-    dg ? `<span style="opacity:0.75;">${escapeHtml(dg)}</span>` : '',
-  ].filter(Boolean).join(' · ');
-
-  return `<div style="height:100%;${hmBorder}">
-    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;display:flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
-      ${terminZeitLabel(b)}
-      <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(displayName)}</span>
-      ${isReadyBadge}
-    </div>
-    ${subtitle || counter
-      ? `<div class="dv-booking-subtitle" style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;">
-           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subtitle}</span>
-           ${counter ? `<span style="font-variant-numeric:tabular-nums;flex-shrink:0;">${counter}</span>` : ''}
-         </div>`
-      : ''}
-    ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-  </div>`;
+  return blockInhalt(b, childBookings, { ICON, escapeHtml, katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] });
 }
 
 (function setupCalTimeTooltip() {
@@ -2410,7 +2300,7 @@ async function renderDayView(dateStr) {
     // Live "Jetzt"-Linie (nur heute, innerhalb der Tagesansicht 08–20)
     if (isToday && nowMin >= 8 * 60 && nowMin < 20 * 60) {
       const nowLine = document.createElement('div');
-      nowLine.className = 'dv-now-line';
+      nowLine.className = 'dv-now-line'; nowLine.dataset.zeit = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
       nowLine.style.top = (((nowMin - 8 * 60) / 30) * 56) + 'px';
       slotWrap.appendChild(nowLine);
     }
