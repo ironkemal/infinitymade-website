@@ -1976,6 +1976,29 @@
 
 ---
 
+### Podologie: Übernahme offener VOs aus Altsoftware — eine VO, ein Abrechner, erbrachte Tage mit Datum
+- **Kural:** Bir Verordnung yazılım değişiminde **bölünmez**: ya tamamı Altsystem'den ya tamamı
+  Praxura'dan, **bir kez**, bittikten sonra faturalanır. Praxura'ya „offen" olarak yalnız
+  Original-Verordnung'u hâlâ praxis'te olan ve **hiç eingereicht edilmemiş** VO alınır. Altsystem'de
+  zaten erbracht edilmiş Behandlung'lar alınacaksa **her Leistungstag tarih + HPNR ile** alınır —
+  yalnız „3 von 6 erledigt" sayacı yetmez, çünkü SLLA'da her Leistungstag ayrı EHE ister ve fiyat
+  Leistungsdatum'a göre çözülür. Altsystem'de eingereicht edilmiş VO (Original kasada) Praxura'da
+  açık VO olamaz; kalan Einheiten için yeni Verordnung gerekir.
+- **Kaynak:** Richtlinien § 302 i.d.F. 20.11.2006 § 7 Abs. 1 (`Richtlinien-Text_061120.txt:249-255`,
+  „vollständig erbracht … abzurechnen") · Podologie Anlage 3 i.d.F. 16.06.2025 lit. p
+  (`:689-694`, „nach Beendigung der entsprechenden Verordnung") · Anlage 1 TP5 V21 Kap. 5.5.3.3
+  SLLA B EHE (`Anlage_1_TP5_V21_20260115.txt:3120-3140`, „für jeden Tag der Leistungserbringung
+  ein eigenes EHE-Segment") · aynı belge GZF (`:3587-3600`, „Pauschaler Zuzahlungsbetrag je
+  Abrechnungsfall (Verordnungsblatt): 10,00 Euro") · UE Korrekturverfahren 13.02.2025 Frage 1-2
+  (`:77-103`, VKZ 02 yalnız fatura anında var olan Anspruch için; Original kasada).
+- **Geçerlilik:** 20.11.2006 / 16.06.2025 / 01.10.2025 (TA V21)
+- **Kodda:** uygulanmamış — Import özelliği yok (Vorarbeit 20.10.2026). `POST /api/rezept/confirm`
+  (`api-backend/server.js:2473`) Behandlung taşımaz; `podologie_behandlungen` tek INSERT yolu
+  `module/podologie-abrechnung.js` (db/REGISTER.md „kein zweiter Schreibweg").
+- **Kapsam:** Podologie (Anlage 3 p); § 7 Abs. 1 ve EHE kuralı tüm Heilmittel
+
+---
+
 ## Doğrulama kuyruğu
 
 `gkv-302` ajanının ilk turlarında kapatılacak açık noktalar:
