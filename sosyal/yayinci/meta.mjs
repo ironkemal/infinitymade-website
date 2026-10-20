@@ -122,6 +122,30 @@ export class MetaClient {
   }
 }
 
+/**
+ * Kennzahlen eines Instagram-Beitrags (braucht instagram_manage_insights).
+ * Meta benennt Metriken gelegentlich um — fällt der volle Satz durch, wird der kleinste gemeinsame versucht.
+ * → { reichweite, aufrufe, gespeichert, likes, kommentare, geteilt, wiedergabeMs }
+ */
+MetaClient.prototype.igKennzahlen = async function (mediaId, istVideo) {
+  const saetze = [
+    ['reach', 'views', 'saved', 'likes', 'comments', 'shares', ...(istVideo ? ['ig_reels_avg_watch_time'] : [])],
+    ['reach', 'saved', 'likes', 'comments'],
+  ];
+  let letzter;
+  for (const metric of saetze) {
+    try {
+      const { data } = await this.graph(`${mediaId}/insights`, { params: { metric: metric.join(',') } });
+      const w = Object.fromEntries(data.map(d => [d.name, d.total_value?.value ?? d.values?.[0]?.value ?? null]));
+      return {
+        reichweite: w.reach ?? null, aufrufe: w.views ?? null, gespeichert: w.saved ?? null, likes: w.likes ?? null,
+        kommentare: w.comments ?? null, geteilt: w.shares ?? null, wiedergabeMs: w.ig_reels_avg_watch_time ?? null,
+      };
+    } catch (e) { letzter = e; }
+  }
+  throw letzter;
+};
+
 /** Plattform-Funktionen für den Veröffentlicher: (tagesInhalt) → { id, link? } */
 export function metaPlattformen(client) {
   return {

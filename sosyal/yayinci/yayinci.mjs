@@ -72,6 +72,7 @@ async function einmal(z, id, telegram, text, log) {
 /** Postet einen Tag auf alle noch offenen Plattformen. */
 export async function poste(key, t, { z, cfg, plattformen, telegram, log }) {
   z.tage[key] ||= {};
+  z.tage[key].art = t.medien.art; z.tage[key].hook = t.hook.slice(0, 160); // für Wochenbericht + Log
   for (const p of cfg.plattformen) {
     const st = z.tage[key][p] || {};
     if (st.id || (st.versuche || 0) >= MAX_VERSUCHE) continue;
@@ -132,6 +133,46 @@ export async function zaehleVorrat(laden, jetzt, max) {
   return n;
 }
 
+/** Tage, die vor genau `n` Tagen (Berlin) lagen oder früher, als "JJJJ-MM-TT". */
+const tageAlt = (key, jetzt) => (new Date(`${berlin(jetzt).jahr}-${berlin(jetzt).tag}T12:00:00Z`) - new Date(`${key}T12:00:00Z`)) / 86400000;
+
+export const kurzZahl = n => (n == null ? '–' : n >= 10000 ? `${Math.round(n / 1000)}k` : n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')}k` : String(n));
+export const kennzahlText = k => [
+  `Reichweite ${kurzZahl(k.reichweite)}`, k.aufrufe != null && `Aufrufe ${kurzZahl(k.aufrufe)}`,
+  `gespeichert ${kurzZahl(k.gespeichert)}`, k.geteilt != null && `geteilt ${kurzZahl(k.geteilt)}`,
+  k.wiedergabeMs != null && `Ø ${(k.wiedergabeMs / 1000).toFixed(1).replace('.', ',')} s`,
+].filter(Boolean).join(' · ');
+
+/** Nach 7 Tagen: Instagram-Kennzahlen einsammeln (höchstens 3 Beiträge pro Durchlauf, je 3 Versuche). */
+async function kennzahlenSammeln({ z, jetzt, kennzahlen, log }) {
+  if (!kennzahlen) return;
+  let n = 0;
+  for (const [key, tag] of Object.entries(z.tage)) {
+    const ig = tag.instagram;
+    if (!ig?.id || ig.kennzahlen || (ig.kzVersuche || 0) >= 3 || tageAlt(key, jetzt) < 7 || n >= 3) continue;
+    n++;
+    try { ig.kennzahlen = { ...await kennzahlen(ig.id, tag.art === 'video'), stand: new Date().toISOString() }; }
+    catch (e) { ig.kzVersuche = (ig.kzVersuche || 0) + 1; log(`Kennzahlen ${key}: ${e.message}`); }
+  }
+}
+
+/** Sonntags abends: was hat in der Woche (Beiträge mit 7-Tage-Kennzahlen) am besten funktioniert. */
+async function wochenbericht({ z, jetzt, telegram, log }) {
+  const h = berlin(jetzt), key = `${h.jahr}-${h.tag}`;
+  const sonntag = new Date(`${key}T12:00:00Z`).getUTCDay() === 0;
+  if (!sonntag || z.wochenbericht?.[key]) return;
+  (z.wochenbericht ||= {})[key] = new Date().toISOString();
+  const woche = Object.entries(z.tage)
+    .filter(([k, t]) => t.instagram?.kennzahlen && tageAlt(k, jetzt) >= 7 && tageAlt(k, jetzt) < 14)
+    .map(([k, t]) => ({ tag: k.slice(5), art: t.art, hook: t.hook || '', ...t.instagram.kennzahlen }))
+    .sort((a, b) => (b.reichweite ?? 0) - (a.reichweite ?? 0));
+  if (!woche.length) return;
+  const summe = woche.reduce((s, w) => s + (w.reichweite ?? 0), 0);
+  const zeilen = woche.map((w, i) => `${i === 0 ? '🏆' : '·'} ${w.tag} ${w.art === 'video' ? '🎬' : '🖼'} ${kennzahlText(w)}`);
+  const text = `📊 Wochenbericht (Beiträge von vor 7–13 Tagen)\nReichweite gesamt ${kurzZahl(summe)}\n\n${zeilen.join('\n')}\n\nBester Hook: ${woche[0].hook.slice(0, 120)}`;
+  log(text); await telegram.sende(text).catch(e => log(`Telegram: ${e.message}`));
+}
+
 /** Ein Durchlauf. Reine Funktion über den Zustand — testbar ohne Netz. */
 export async function tick(ctx) {
   const { z, cfg, jetzt, laden, telegram, log } = ctx;
@@ -162,7 +203,9 @@ export async function tick(ctx) {
         await einmal(z, `${key}:vorrat`, telegram, `📦 Nur noch ${vorrat} Tage Inhalt auf Vorrat. Zeit für die nächste Runde.`, log);
       }
     }
+    await wochenbericht(ctx).catch(e => log(`Wochenbericht: ${e.message}`));
   }
+  await kennzahlenSammeln(ctx).catch(e => log(`Kennzahlen: ${e.message}`));
   return z;
 }
 
@@ -176,9 +219,11 @@ async function main() {
   const telegram = trocken && !args.includes('--dienst')
     ? { sende: async t => log(`(Telegram) ${t}`), sendeBild: async (_, t) => log(`(Telegram+Bild) ${t}`), befehle: async o => ({ offset: o, befehle: [] }) }
     : new Telegram(cfg.telegram);
+  const meta = trocken ? null : new MetaClient(cfg.meta);
   const plattformen = trocken
     ? Object.fromEntries(cfg.plattformen.map(p => [p, async t => { log(`(trocken) ${p}: ${t.tag} ${t.medien.art} — ${t.hook}`); return { id: 'trocken' }; }]))
-    : metaPlattformen(new MetaClient(cfg.meta));
+    : metaPlattformen(meta);
+  const kennzahlen = meta && cfg.plattformen.includes('instagram') ? (id, video) => meta.igKennzahlen(id, video) : null;
   if (trocken) {
     // eigener Zustand: ein Trockenlauf darf keinen Tag als "gepostet" markieren
     cfg.daten = path.join(cfg.daten, 'trocken');
@@ -212,7 +257,7 @@ async function main() {
     return;
   }
 
-  const ctxBasis = { cfg, laden, telegram, plattformen, log };
+  const ctxBasis = { cfg, laden, telegram, plattformen, kennzahlen, log };
   const p = args.indexOf('--posten');
   if (p >= 0) {
     const z = await ladeZustand(cfg.daten), key = schluessel(args[p + 1], new Date()), { jahr, tag } = teile(key);

@@ -18,6 +18,7 @@ yayinci/*.mjs        ─┘   (ssh)         19:00 → yarının önizlemesi → 
 - **Her gün yalnız bir kez atar.** Durum dosyası (`/var/lib/praxura-sosyal/zustand.json`) neyin atıldığını tutar. Sunucu yeniden başlasa da aynı gün iki kez atılmaz.
 - **Hata olursa** en fazla 3 kez dener. İlk ve son hatada Telegram'a mesaj gelir.
 - **Sunucu 12:15'te kapalıysa** açıldığı ilk dakikada o günün içeriğini yine atar.
+- **Her postun 7. gününde** Instagram istatistiklerini (erişim, izlenme, kaydetme, paylaşım, ortalama izlenme süresi) çeker. **Her pazar 19:00'da** haftanın sıralaması Telegram'a gelir: en iyi post ve hook'u.
 - **Stok azalırsa** (7 günden az içerik kaldığında) Telegram'a "yeni tur üret" uyarısı gelir.
 
 ## Telegram komutları (günlük kullanım)
@@ -45,7 +46,7 @@ Her akşam 19:00'da yarının kapağı ve hook'u gelir. Bir şey yapmazsan ertes
 3. business.facebook.com → **Ayarlar → Kullanıcılar → Sistem kullanıcıları** → „Yönetici" rolünde bir sistem kullanıcısı ekle (örn. `praxura-yayinci`).
 4. Bu sistem kullanıcısına **varlık ekle**: Facebook sayfası ve Instagram hesabı, „tam kontrol".
 5. **Token oluştur:** uygulamayı seç, süre „Hiçbir zaman", izinler:
-   `pages_show_list, pages_read_engagement, pages_manage_posts, instagram_basic, instagram_content_publish, business_management`
+   `pages_show_list, pages_read_engagement, pages_manage_posts, instagram_basic, instagram_content_publish, instagram_manage_insights, business_management`
 6. Bu token'dan **sayfa token'ını** al (tarayıcıda açılabilir):
    `https://graph.facebook.com/v23.0/me/accounts?access_token=<SİSTEM_TOKENI>`
    → listede sayfanın `access_token` (= **META_PAGE_TOKEN**) ve `id` (= **META_PAGE_ID**) değeri var.
@@ -72,6 +73,9 @@ node --env-file=sosyal/yayinci/.env sosyal/yayinci/yayinci.mjs --verbindung   # 
 node sosyal/yayinci/yayinci.mjs --pruefe 30                                    # önümüzdeki 30 günün stoku
 bash sosyal/yayinci/yukle.sh                                                   # merkez VPS'e yükle + başlat
 ```
+
+## Kayda sonuçları işlemek
+`bash sosyal/yayinci/bericht.sh` → sunucudaki durumu çeker, `SOSYAL-LOG.md`'de her günün durumunu (`Yayında` + Instagram linki) ve 7 günlük sonucunu yazar. Yeni tur planlanmadan önce çalıştırılır: iyi giden format ve hook'lar oradan okunur.
 
 ## Yeni içerik turu bitince
 1. Render: `node sosyal/erzeuge.mjs <günler>`

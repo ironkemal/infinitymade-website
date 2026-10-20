@@ -150,3 +150,58 @@ test('Datum: Berlin-Zeit, Jahreswechsel und DST', () => {
   assert.equal(schluessel('01-02', new Date('2026-12-20T10:00:00Z')), '2027-01-02');
   assert.equal(schluessel('12-24', new Date('2026-12-20T10:00:00Z')), '2026-12-24');
 });
+
+// ---------- Kennzahlen, Wochenbericht, Log ----------
+import { aktualisiere } from './log-aktualisieren.mjs';
+
+test('Kennzahlen: fällt der volle Metrik-Satz durch, wird der kleine versucht', async () => {
+  const gefragt = [];
+  const client = new MetaClient({ token: 'T', igUserId: 'IG', pageId: 'PG', warte: async () => {}, fetch: async url => {
+    const metric = new URL(url).searchParams.get('metric'); gefragt.push(metric);
+    if (metric.includes('views')) return { ok: false, status: 400, json: async () => ({ error: { message: 'unsupported metric' } }) };
+    return { ok: true, json: async () => ({ data: [{ name: 'reach', values: [{ value: 420 }] }, { name: 'saved', total_value: { value: 7 } }] }) };
+  } });
+  const k = await client.igKennzahlen('m1', true);
+  assert.equal(gefragt.length, 2);
+  assert.equal(k.reichweite, 420); assert.equal(k.gespeichert, 7); assert.equal(k.aufrufe, null);
+});
+
+test('Kennzahlen werden erst ab Tag 7 geholt, danach nicht erneut', async () => {
+  const z = leer(); let geholt = 0;
+  z.tage['2026-10-14'] = { art: 'video', instagram: { id: 'alt' } };   // 7 Tage vor 21.10.
+  z.tage['2026-10-15'] = { art: 'bild', instagram: { id: 'jung' } };   // 6 Tage
+  const ctx = { z, cfg: { ...cfg, plattformen: [] }, jetzt: MITTAG, laden: async () => null, telegram: tg(), plattformen: {},
+    kennzahlen: async (id, video) => { geholt++; assert.equal(id, 'alt'); assert.equal(video, true); return { reichweite: 100 }; }, log: () => {} };
+  await tick(ctx); await tick(ctx);
+  assert.equal(geholt, 1);
+  assert.equal(z.tage['2026-10-14'].instagram.kennzahlen.reichweite, 100);
+});
+
+test('Wochenbericht: sonntags abends, einmal, bester Beitrag zuerst', async () => {
+  const z = leer(), telegram = tg();
+  z.tage['2026-10-16'] = { art: 'bild', hook: 'Schwach', instagram: { id: 'a', kennzahlen: { reichweite: 50, gespeichert: 1 } } };
+  z.tage['2026-10-17'] = { art: 'video', hook: 'Stark', instagram: { id: 'b', kennzahlen: { reichweite: 1500, gespeichert: 30, aufrufe: 4000 } } };
+  const sonntagAbend = new Date('2026-10-25T19:00:00Z'); // 20:00 MEZ
+  const ctx = { z, cfg, jetzt: sonntagAbend, laden: async () => null, telegram, plattformen: {}, log: () => {} };
+  await tick(ctx); await tick(ctx);
+  const bericht = telegram.gesendet.filter(t => t.startsWith('📊'));
+  assert.equal(bericht.length, 1);
+  assert.match(bericht[0], /🏆 10-17 🎬 Reichweite 1,5k/);
+  assert.match(bericht[0], /Bester Hook: Stark/);
+});
+
+test('Log: Durum → Yayında mit Link, Sonuç → Kennzahlen; fremde Zeilen bleiben', () => {
+  const log = [
+    '| 10-21 | Post | wissen | Ortak | „Hook" | Quelle | Taslak | |',
+    '| 10-22 | Video | POV | Ortak | „Hook2" | Quelle | Taslak | |',
+    'Freitext | mit | Pipes',
+  ].join('\n');
+  const { text, geaendert } = aktualisiere(log, { tage: {
+    '2026-10-21': { instagram: { id: '1', link: 'https://instagram.com/p/x', kennzahlen: { reichweite: 1234, gespeichert: 12 } }, facebook: { id: '2' } },
+  } });
+  assert.equal(geaendert, 1);
+  const [z1, z2, z3] = text.split('\n');
+  assert.equal(z1, '| 10-21 | Post | wissen | Ortak | „Hook" | Quelle | Yayında [IG](https://instagram.com/p/x) FB | Reichweite 1,2k · gespeichert 12 |');
+  assert.equal(z2, '| 10-22 | Video | POV | Ortak | „Hook2" | Quelle | Taslak | |');
+  assert.equal(z3, 'Freitext | mit | Pipes');
+});

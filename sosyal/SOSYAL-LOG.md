@@ -162,7 +162,7 @@ WAV'lar git'te değil, gerekirse yeniden üretilir: `python sosyal/musik/komponi
 4. **Kontrol listesi:** ☐ A2'nin 8 maddesi ☐ fiyat yok ☐ olmayan özellik yok ☐ alan rotasyonu ☐ caption ilk satırı = hook
 5. **Onay:** `node sosyal/galerie.mjs` → `sosyal/ausgabe/<yıl>/galerie.html` (bütün günler tek sayfada). Kemal bakar → `Onay`, düzeltme gerekirse `Revize`.
 6. **Yayın:** `sosyal/yayinci/` (merkez VPS, systemd `praxura-sosyal`) her gün 12:15'te bugünün dosyasını Instagram + Facebook'a atar; 19:00'da yarının önizlemesi Telegram'a gelir, `/stopp AA-GG` ile durdurulur. Yeni tur: render → `bash sosyal/yayinci/yukle.sh`. Kurulum: `sosyal/yayinci/KURULUM.md`. → `Yayında` + link.
-7. **Ölçüm:** 7 gün sonra izlenme, kaydetme ve izlenme süresi kayda yazılır. Ay sonunda iyi giden format ve hook'lar çoğaltılır, kötü gidenler bırakılır.
+7. **Ölçüm:** yayıncı her postun 7. gününde Instagram istatistiklerini kendisi çeker, pazar akşamı Telegram'a haftalık sıralama gönderir. Kayda işlemek için `bash sosyal/yayinci/bericht.sh` (Durum → `Yayında` + link, Sonuç → rakamlar). Ay sonunda iyi giden format ve hook'lar çoğaltılır, kötü gidenler bırakılır.
 
 ---
 
