@@ -94,6 +94,7 @@ import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { risikoKopie, risikoZeilen, befundRisikoHinweis } from './anamnese-formulare.js?v=20261001r';
 import { WAGNER_OPTIONEN, WAGNER_TEXT, wagnerWert } from './podo-wagner.js?v=20261001z';
 import { emit } from './signal.js?v=20260813';
+import { alsBerlinDatum } from './berlin-datum.js';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 
@@ -502,6 +503,25 @@ function collectBefund() {
 
 /** Neuester Termin oben — wie die Terminlisten der Patientenakte (Podoloji-Reform S5, 01.10.2026).
  *  Vorher „nächstgelegen zu jetzt": Vergangenheit und Zukunft wechselten sich ab, die Liste wirkte ungeordnet. */
+/**
+ * Welcher Termin ist vorgewählt? Der heutige (bei mehreren der zeitlich
+ * nächste), sonst der letzte vergangene — nie ein künftiger: der Befund
+ * bekommt das Termindatum, und ein vorgewählter Termin im Dezember datierte
+ * ihn unbemerkt in die Zukunft (canli-test 20.10.2026). Ohne passenden
+ * Termin: null → „ohne Termin" mit heutigem Datum.
+ * @param {{id:string,start_time:string}[]} liste
+ * @param {Date} [jetzt]
+ */
+export function vorauswahlTermin(liste, jetzt = new Date()) {
+  const heute = alsBerlinDatum(jetzt);
+  const heutige = (liste || []).filter(t => alsBerlinDatum(new Date(t.start_time)) === heute);
+  if (heutige.length) {
+    return heutige.reduce((a, b) => Math.abs(new Date(a.start_time) - jetzt) <= Math.abs(new Date(b.start_time) - jetzt) ? a : b);
+  }
+  const vergangen = (liste || []).filter(t => new Date(t.start_time) < jetzt);
+  return vergangen.reduce((a, b) => (!a || new Date(b.start_time) > new Date(a.start_time) ? b : a), null);
+}
+
 function sortiereTermine(liste) {
   return [...liste].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
 }
@@ -701,10 +721,12 @@ async function patientGewaehlt(leadId) {
     geladenerKontext = lauf; syncSpeichern();
     renderTerminAuswahl();
 
-    // Der zeitlich nächste Termin ist die Vorauswahl — das ist der Griff, den
-    // der Podologe sonst jedes Mal selbst machen müsste.
-    if (sel && termine.length) {
-      sel.value = termine[0].id;
+    // Heutiger bzw. letzter vergangener Termin ist die Vorauswahl — das ist der
+    // Griff, den der Podologe sonst jedes Mal selbst machen müsste. Nie ein
+    // künftiger (vorauswahlTermin).
+    const vorwahl = vorauswahlTermin(termine);
+    if (sel && vorwahl) {
+      sel.value = vorwahl.id;
       terminGewaehlt();
     } else {
       if (sel) sel.value = '__ohne__';
