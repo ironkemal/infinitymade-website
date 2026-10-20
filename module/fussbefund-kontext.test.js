@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { alsBerlinDatum } from './berlin-datum.js';
 
 const source = fs.readFileSync(process.env.PRAXURA_FUSSBEFUND_TEST_SOURCE || new URL('./fussbefund.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
@@ -24,7 +25,7 @@ function fixture({ read = async () => ({ data: [], error: null }), risk = async 
   const context = vm.createContext({ console, structuredClone, document: { getElementById: id => nodes.get(id) || null, querySelectorAll: () => [] },
     ladeAktuelle: (_,id) => risk(id), risikoKopie: row => row ? { patient_id:row.patient_id } : null,
     risikoZeilen: () => [], befundRisikoHinweis: () => '', wagnerWert: v => v === '' || v == null ? null : Number(v),
-    emit() {}, WAGNER_OPTIONEN:[], WAGNER_TEXT:{}, resolveSector: x => x });
+    emit() {}, WAGNER_OPTIONEN:[], WAGNER_TEXT:{}, resolveSector: x => x, alsBerlinDatum });
   vm.runInContext(source, context);
   context.testCtx = { supabase:sb, ownerId:()=>'owner',userId:()=>'user',showToast:m=>messages.push(m) };
   vm.runInContext(`ctx=testCtx; globalThis.api={patientGewaehlt,speichern,neuerBefund,
