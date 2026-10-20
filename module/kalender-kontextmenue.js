@@ -34,6 +34,7 @@
  */
 
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
+import { verdrahteAuswahl } from './kalender-auswahl.js?v=20261020';
 
 /** Behälter der drei Ansichten. Sie bleiben über das Neuzeichnen bestehen. */
 const BEHAELTER_IDS = ['dvColsWrap', 'wvColsWrap', 'monthGrid'];
@@ -230,6 +231,10 @@ export function verdrahteKontextmenue(aktionen) {
       oeffne(termin, k.left + k.width / 2, k.top + k.height / 2, aktionen);
     });
   }
+
+  // Markierung des geöffneten Termins — hängt hier, weil hier die eine Liste
+  // der Behälter und des Termin-Selektors steht (kalender-auswahl.js).
+  verdrahteAuswahl({ selektor: TERMIN_SELEKTOR, behaelterIds: BEHAELTER_IDS });
 
   if (globalVerdrahtet) return;
   globalVerdrahtet = true;

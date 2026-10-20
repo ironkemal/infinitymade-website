@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-17",
- "dateien": 445,
- "funktionen": 3561,
+ "erzeugt": "2026-10-20",
+ "dateien": 446,
+ "funktionen": 3565,
  "module": [
   "abrechnung",
   "anamnese",
@@ -44000,7 +44000,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "(datei) module/kalender-auswahl.js"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -114063,6 +114065,186 @@
    "uiPfad": []
   },
   {
+   "name": "panelOffen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/kalender-auswahl.js",
+   "start": 31,
+   "end": 33,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "verdrahteAuswahl"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "markiere",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/kalender-auswahl.js",
+   "start": 39,
+   "end": 47,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "anwenden",
+    "auswahlAufheben",
+    "mountFarbwahl",
+    "oeffne",
+    "verdrahteAuswahl",
+    "verordnungenListeLaden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "verdrahteAuswahl",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/kalender-auswahl.js",
+   "start": 54,
+   "end": 85,
+   "lines": 32,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "anwenden",
+    "markiere",
+    "panelOffen"
+   ],
+   "calledBy": [
+    "verdrahteKontextmenue"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "anwenden",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/kalender-auswahl.js",
+   "start": 60,
+   "end": 74,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "markiere"
+   ],
+   "calledBy": [
+    "mountLeistungsart",
+    "verdrahteAuswahl"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "mitDeckkraft",
    "kind": "function",
    "lang": "js",
@@ -114221,8 +114403,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 51,
-   "end": 69,
+   "start": 52,
+   "end": 70,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -114283,8 +114465,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 91,
-   "end": 96,
+   "start": 92,
+   "end": 97,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -114347,8 +114529,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 98,
-   "end": 100,
+   "start": 99,
+   "end": 101,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -114410,8 +114592,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 102,
-   "end": 110,
+   "start": 103,
+   "end": 111,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -114434,8 +114616,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 119,
-   "end": 177,
+   "start": 120,
+   "end": 178,
    "lines": 59,
    "spiegelHinweis": null,
    "tables": [],
@@ -114503,8 +114685,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 179,
-   "end": 189,
+   "start": 180,
+   "end": 190,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -114567,9 +114749,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-kontextmenue.js",
-   "start": 205,
-   "end": 254,
-   "lines": 50,
+   "start": 206,
+   "end": 259,
+   "lines": 54,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -114580,7 +114762,8 @@
     "aufLangenDruck",
     "bewege",
     "oeffne",
-    "schliesse"
+    "schliesse",
+    "verdrahteAuswahl"
    ],
    "calledBy": [
     "(datei) dashboard.js"
@@ -122530,9 +122713,11 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "anwenden",
     "auswahlAufheben",
     "mountFarbwahl",
     "oeffne",
+    "verdrahteAuswahl",
     "verordnungenListeLaden"
    ],
    "modules": [
@@ -141561,7 +141746,8 @@
     "zeilenSteuerVon"
    ],
    "calledBy": [
-    "mountLeistungsart"
+    "mountLeistungsart",
+    "verdrahteAuswahl"
    ],
    "modules": [
     "abrechnung",
@@ -166341,9 +166527,11 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "anwenden",
     "auswahlAufheben",
     "mountFarbwahl",
     "oeffne",
+    "verdrahteAuswahl",
     "verordnungenListeLaden"
    ],
    "modules": [
@@ -197788,6 +197976,15 @@
    "aynalar": []
   },
   {
+   "name": "markiere",
+   "orte": [
+    "module/kalender-auswahl.js:39",
+    "module/leistung-farbwahl.js:47",
+    "module/verordnung-liste.js:253"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "n",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:31",
@@ -197808,7 +198005,7 @@
   {
    "name": "oeffne",
    "orte": [
-    "module/kalender-kontextmenue.js:119",
+    "module/kalender-kontextmenue.js:120",
     "module/leistungen-liste.js:190",
     "module/verordnung-liste.js:219"
    ],
@@ -197932,6 +198129,14 @@
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:45",
     "module/verordnung-maske.js:705"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "anwenden",
+   "orte": [
+    "module/kalender-auswahl.js:60",
+    "module/rechnung-steuer.js:262"
    ],
    "aynalar": []
   },
@@ -198410,14 +198615,6 @@
    "aynalar": []
   },
   {
-   "name": "markiere",
-   "orte": [
-    "module/leistung-farbwahl.js:47",
-    "module/verordnung-liste.js:253"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "matchIcdToDg",
    "orte": [
     "api-backend/ai/validators/icdDgRules.js:84",
@@ -198663,7 +198860,7 @@
    "name": "schliesse",
    "orte": [
     "api-backend/server.js:3857",
-    "module/kalender-kontextmenue.js:91"
+    "module/kalender-kontextmenue.js:92"
    ],
    "aynalar": []
   },

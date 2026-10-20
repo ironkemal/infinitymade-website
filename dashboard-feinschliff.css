@@ -1,0 +1,321 @@
+/* ============================================================================
+   dashboard-feinschliff.css — ruhigere, professionellere Oberfläche
+   ============================================================================
+
+   Warum es das gibt
+   ─────────────────
+   Kemal, 20.10.2026: Der Terminkalender soll so aussehen wie der freigegebene
+   Entwurf „Praxura (Logo-Farben + Kundenwünsche)" — die anderen Bildschirme
+   bleiben, wie sie sind, nur Knöpfe, Schrift und linke Leiste werden
+   nüchterner. Die Struktur ändert sich NICHT: kein HTML, keine Logik.
+
+   Darum eine eigene Datei, die NACH dashboard.css geladen wird, statt Regeln
+   in dashboard.css umzuschreiben:
+     • zurücknehmen = eine <link>-Zeile entfernen,
+     • jede Regel hier ist ein bewusster Eingriff mit Grund, nicht ein
+       Treffer irgendwo in 8.000 Zeilen.
+
+   Farben kommen aus dem Logo (logo.png, gemessen): Espresso #4F4136,
+   Bronze #A48565, Champagner #C4A381, Creme #F3E4D2. Die Leistungsfarben der
+   Terminblöcke bleiben unangetastet — die wählt die Praxis selbst
+   (module/kalender-farben.js).
+
+   `!important` steht hier nur dort, wo dashboard.js oder ein späterer Block
+   (Inline-Stil, `<style>` in dashboard.html, die „premium"-Regeln am Ende von
+   dashboard.css) sonst gewinnen würde. Jede Stelle sagt, wogegen.
+   ========================================================================== */
+
+/* ── 1. Farben und Maße ─────────────────────────────────────────────────── */
+/* `:not([data-theme="dark"])`: das dunkle Thema in dashboard.css steht unter
+   [data-theme="dark"] — gleiche Spezifität wie :root, und diese Datei kommt
+   später. Ohne den Ausschluss würden die hellen Werte das dunkle Thema
+   überschreiben. */
+:root {
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+:root:not([data-theme="dark"]) {
+  --bg-main: #F7F4EF;
+  --bg-card: #FFFFFF;
+  --bg-card-solid: #FFFFFF;
+  --bg-sidebar: #F6F1EA;
+  --bg-topbar: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-hover: rgba(43, 35, 28, 0.05);
+  --primary: #4F4136;
+  --primary-hover: #3B3028;
+  --primary-dim: rgba(79, 65, 54, 0.10);
+  --text-main: #2B231C;
+  /* vorher #7A6F61 — auf dem Hintergrund knapp unter 4,5:1 */
+  --text-muted: #6E6255;
+  --border: rgba(43, 35, 28, 0.09);
+  --border-strong: rgba(43, 35, 28, 0.17);
+
+  --nav-active: #EADFD0;
+  --focus-ring: #A48565;
+  --today: #B4532A;
+  --grid-hour: rgba(43, 35, 28, 0.10);
+  --grid-half: rgba(43, 35, 28, 0.05);
+  --grid-quarter: rgba(43, 35, 28, 0.035);
+}
+
+[data-theme="dark"] {
+  --bg-card: #201C15;
+  --bg-sidebar: #17140F;
+  --bg-topbar: #17140F;
+  --bg-input: #1A1712;
+  --primary: #C9AB8F;
+  --primary-hover: #DCC4A8;
+  --primary-dim: rgba(201, 171, 143, 0.16);
+  --nav-active: rgba(201, 171, 143, 0.16);
+  --focus-ring: #C9AB8F;
+  --today: #E08A63;
+  --grid-hour: rgba(245, 240, 230, 0.10);
+  --grid-half: rgba(245, 240, 230, 0.05);
+  --grid-quarter: rgba(245, 240, 230, 0.03);
+}
+
+/* Körnung über der ganzen Seite: kostet Kontrast und liest sich als Effekt. */
+body::before { display: none; }
+
+/* Glas-Unschärfe hinter Leiste und Kopf: bei festen Flächen ohne Nutzen. */
+.sidebar, .topbar { backdrop-filter: none; }
+
+/* ── 2. Schrift ─────────────────────────────────────────────────────────── */
+/* Überschriften in der Textschrift statt der Serifenschrift: ruhiger,
+   und Zahlen/Namen in Tabellen und Köpfen sehen gleich aus. */
+h1, h2, h3, .dashboard-title, .modal-title, .page-title {
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--primary); }
+
+.panel-header { margin-bottom: 18px; }
+.panel-header h2 { font-size: 20px; font-weight: 600; }
+
+/* ── 3. Knöpfe ──────────────────────────────────────────────────────────── */
+.btn-primary {
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  box-shadow: none;
+  transition: transform 120ms var(--ease-out), background-color 140ms ease;
+}
+.btn-primary:hover { transform: none; box-shadow: none; }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-ghost {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  transition: transform 120ms var(--ease-out), background-color 140ms ease, border-color 140ms ease;
+}
+.btn-ghost:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.btn-ghost:active, .btn-icon:active, .btn-danger:active { transform: scale(0.98); }
+
+.btn-danger, .btn-icon, .btn-sm { border-radius: var(--radius-sm); }
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── 4. Linke Leiste ────────────────────────────────────────────────────── */
+.sidebar nav { padding: 10px 8px; gap: 1px; }
+
+/* Gegen das <style> „Grouped sidebar navigation" in dashboard.html, das NACH
+   dieser Datei kommt — daher die höhere Spezifität über #sidebarNav. */
+#sidebarNav .nav-group-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+  padding: 7px 10px 5px;
+  border-radius: var(--radius-sm);
+}
+#sidebarNav .nav-group-header:hover { background: var(--bg-hover); color: var(--text-main); }
+#sidebarNav .nav-group-items { padding: 0 0 4px 0; }
+
+.sidebar-item {
+  gap: 10px;
+  padding: 6px 10px;
+  min-height: 32px;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  transition: color 140ms ease;
+}
+.sidebar-item .icon, .sidebar-item .icon svg { width: 16px; height: 16px; }
+.sidebar-item .icon { color: var(--text-muted); }
+
+/* Die Fläche hinter dem Eintrag: kein Federn/Skalieren mehr, nur Farbe. */
+.sidebar-item::before {
+  inset: 0;
+  border-radius: var(--radius-sm);
+  transform: none;
+  transition: opacity 140ms ease, background-color 140ms ease;
+}
+.sidebar-item:hover::before { transform: none; opacity: 1; background: var(--bg-hover); }
+
+/* Gegen `.sidebar-item:hover { transform: translateX(3px) !important }` am
+   Ende von dashboard.css: Einträge, die beim Überfahren springen, wirken
+   unruhig, wenn man sie zwanzigmal am Tag ansteuert. */
+.sidebar-item:hover { transform: none !important; }
+.sidebar-item:active { transform: scale(0.99) !important; }
+
+/* Gegen `.sidebar-item.active { color: var(--primary) !important }`. */
+#sidebarNav .sidebar-item.active { color: var(--text-main) !important; font-weight: 600; }
+#sidebarNav .sidebar-item.active::before { opacity: 1; background: var(--nav-active); }
+#sidebarNav .sidebar-item.active .icon { color: var(--primary); }
+
+.nav-badge { background: var(--primary); color: var(--bg-card-solid); }
+
+/* Der Einklappknopf trägt Gold und Schatten inline (dashboard.html). */
+#sidebarCollapseBtn {
+  background: var(--bg-sidebar) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ── 5. Terminkalender ──────────────────────────────────────────────────── */
+.cal-view-toolbar { gap: 8px; margin-bottom: 12px; }
+.cal-view-nav { gap: 4px; }
+.cal-view-date { font-size: 15px; min-width: 170px; }
+
+#dayViewPrev, #dayViewNext {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+}
+
+#calTodayBtn { height: 30px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-sm); }
+
+/* Tag | Woche | Monat als eine zusammenhängende Gruppe. */
+.cal-view-toggle {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0;
+  overflow: hidden;
+}
+.cal-view-toggle .cal-view-btn {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 0;
+  font-size: 13px;
+  color: var(--text-main);
+  transition: background-color 140ms ease;
+}
+.cal-view-toggle .cal-view-btn + .cal-view-btn { border-left: 1px solid var(--border-strong); }
+.cal-view-toggle .cal-view-btn:hover { background: var(--bg-hover); }
+.cal-view-toggle .cal-view-btn.active { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+
+/* „+ Termin" ist die Haupthandlung dieses Bildschirms. */
+#calAddBookingBtn {
+  background: var(--primary);
+  color: var(--bg-card-solid);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+#calAddBookingBtn:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+.day-view-grid, .week-view-grid {
+  background: var(--bg-card-solid);
+  border-radius: var(--radius);
+}
+.dv-time-col { background: var(--bg-card-solid); }
+.dv-time-label { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Raster: volle Stunde kräftiger, halbe Stunde leiser, Viertelstunde als
+   Hauch in der Mitte jeder Zeile. Die Zeilen werden in Reihenfolge ab 08:00
+   angehängt — ungerade Zeile endet bei :30, gerade bei :00. */
+.dv-slot { border-bottom-color: var(--grid-hour); }
+.dv-col-slots > .dv-slot:nth-child(odd),
+.dv-time-col > .dv-slot:nth-child(odd) { border-bottom-color: var(--grid-half); }
+.dv-col-slots > .dv-slot {
+  background-image: linear-gradient(to bottom,
+    transparent calc(50% - 0.5px), var(--grid-quarter) calc(50% - 0.5px),
+    var(--grid-quarter) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+}
+
+.dv-col-header { font-size: 13px; border-bottom-color: var(--border); }
+.dv-col-highlight { background: rgba(164, 133, 101, 0.04); }
+.dv-col-highlight .dv-col-header { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+
+/* Terminblöcke: Leistungsfarbe als ruhige Fläche, ohne Rahmen. Den Rand setzt
+   dashboard.js inline (borderColor + 3px borderLeft für den Mitarbeiter).
+   In der Tagesansicht ist die Spalte schon der Mitarbeiter — der Streifen ist
+   dort doppelt und fällt weg. In der Woche bleibt er, schmaler, weil er dort
+   die einzige Mitarbeiterunterscheidung ist. */
+.dv-booking-block, .wv-booking-block { border-radius: 5px; }
+.day-view-grid .dv-booking-block {
+  border: 0 !important;
+  box-shadow: inset 0 0 0 1px rgba(43, 35, 28, 0.06);
+  padding: 5px 8px;
+}
+.week-view-grid .wv-booking-block, .week-view-grid .dv-booking-block { border-left-width: 2px !important; }
+
+/* Gegen den „premium"-Hover am Ende von dashboard.css (Anheben + Schatten +
+   Aufhellen — auf hellen Flächen wurde der Block dabei fast weiß). */
+.dv-booking-block:hover {
+  transform: none !important;
+  box-shadow: inset 0 0 0 1px rgba(43, 35, 28, 0.10) !important;
+  filter: brightness(0.97) !important;
+}
+[data-theme="dark"] .dv-booking-block:hover { filter: brightness(1.12) !important; }
+
+/* Der zuletzt geöffnete Termin (module/kalender-auswahl.js). */
+.termin-gewaehlt {
+  box-shadow: 0 0 0 2px var(--primary), 0 6px 14px -6px rgba(43, 35, 28, 0.35) !important;
+  z-index: 5 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Jetzt-Linie: ohne Leuchten und Pulsieren — sie läuft den ganzen Tag. */
+.dv-now-line { border-top-color: var(--today); }
+.dv-now-line::before { background: var(--today); box-shadow: none; animation: none; }
+
+.dv-ghost { border-radius: 5px; }
+
+/* Monat */
+.month-cell { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.month-cell:hover { border-color: var(--border-strong); background: var(--bg-card-solid); }
+.month-cell--today { border-color: var(--border-strong) !important; }
+.month-cell--today .month-cell-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--today);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+.month-event-pill { border-radius: 4px; font-size: 11px; padding: 1px 6px; }
+
+/* ── 6. Seitenbereich „Termin" (#bkActionModal) ─────────────────────────── */
+/* Die Karten tragen ihren Rahmen inline (dashboard.html) — deshalb !important.
+   Aus Kästen in Kästen werden Abschnitte mit einer Trennlinie. */
+#bkActionModal { box-shadow: -16px 0 32px -26px rgba(43, 35, 28, 0.45); }
+#bkActionModal .modal-header { border-bottom: 1px solid var(--border); }
+#bkActionModal .modal-title { font-size: 15px; }
+#bkActionModal :is(#bkDetailCard, #bkPatientCard, #bkVerlaufCard, #bkAnamneseCard, #bkPatNotesCard) {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}
+#bkActionModal #bkDetailCard { padding: 4px 2px 14px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-item::before, .cal-view-toggle .cal-view-btn, .btn-primary, .btn-ghost { transition: none; }
+}
