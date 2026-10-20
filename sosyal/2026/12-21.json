@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Wie viele Einheiten passen auf eine Verordnung? Das legt der Heilmittelkatalog je Indikation als Höchstmenge fest.\n\nDie orientierende Behandlungsmenge ist dagegen keine Grenze: Reicht sie nicht, sind weitere Verordnungen im selben Verordnungsfall möglich (HeilM-RL § 7 Abs. 4, 5).\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #GKV #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "frage", "dauer": 3, "kicker": "Wissen Sie es?", "titel": "Wie viele <em>Einheiten</em> passen auf eine Verordnung?", "antwort": "Die Höchstmenge je Indikation steht im Heilmittelkatalog.", "antwortLabel": "Antwort", "antwortBei": 1.6, "quelle": "Heilmittel-Richtlinie § 7 Abs. 5" },
+    { "typ": "aussage", "dauer": 3, "kicker": "Und die orientierende Menge?", "titel": "Keine <em>Grenze.</em> Nur eine Orientierung.", "quelle": "Heilmittel-Richtlinie § 7 Abs. 2" },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Reicht sie nicht?", "titel": "Weitere Verordnungen im <em>selben</em> Fall.", "quelle": "Heilmittel-Richtlinie § 7 Abs. 4" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Heilmittel.</em>", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

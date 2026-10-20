@@ -118,3 +118,8 @@ wissensbank/gemeinsam/heilmittel-richtlinie/KBV_ITA_VGEX_Technisches_Handbuch_BF
 # W-08/W-09/W-10 (DGUV): Handlungsanleitung traegt ausdruecklichen Vervielfaeltigungsvorbehalt
 # (Impressum), Gebuehrenverzeichnisse ohne Lizenz. Nur Metadaten im Repo, Quelle bleibt lokal.
 wissensbank/gemeinsam/unfallversicherung-dguv/*.txt
+
+sosyal/ausgabe/
+sosyal/musik/*.wav
+sosyal/yayinci/.daten/
+sosyal/yayinci/.env

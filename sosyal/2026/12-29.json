@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Zwei eingewachsene Nägel: Wie viele Verordnungen?\n\nDie Nagelspangenbehandlung bezieht sich auf einen Nagel. Für jeden zu behandelnden Nagel stellt die Ärztin oder der Arzt eine eigene Verordnung aus (HeilM-RL § 28 Abs. 1). Gilt für Unguis incarnatus Stadium 1 bis 3 (UI1/UI2).\n\nMehr Praxiswissen für Podolog:innen: praxura.de\n\n#Podologie #Heilmittel #Praxisalltag #GKV",
+  "szenen": [
+    { "typ": "frage", "dauer": 3.4, "kicker": "Podolog:innen, aufgepasst", "titel": "Zwei Nägel mit Spange. <em>Wie viele</em> Verordnungen?", "antwort": "Zwei. Eine pro Nagel.", "antwortLabel": "Antwort", "antwortBei": 1.8 },
+    { "typ": "aussage", "dauer": 3.2, "kicker": "Die Regel", "titel": "Jeder Nagel braucht <em>seine</em> Verordnung.", "quelle": "Heilmittel-Richtlinie § 28 Abs. 1" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Stadium 1 bis 3", "titel": "Unguis incarnatus: <em>UI1</em> oder UI2." },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Podologie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

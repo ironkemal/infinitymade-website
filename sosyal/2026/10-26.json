@@ -1,0 +1,39 @@
+{
+  "art": "video",
+  "caption": "Montag, 7:58. Drei Hausbesuche heute.\n\nDer Fußbefund mit einem Tipp auf den Fuß, die Fahrt im digitalen Fahrtenbuch. Am Mittag ist alles dokumentiert.\n\nPodolog:innen, so soll sich Praxisalltag anfühlen. Mehr auf praxura.de\n\n#Podologie #Heilmittel #Praxisalltag #Therapeutenleben #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Montag, 7:58",
+      "titel": "Drei <em>Hausbesuche</em> heute."
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.8,
+      "kicker": "Beim ersten Patienten",
+      "titel": "Fußbefund? Ein Tipp auf den Fuß.",
+      "tempo": 20
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Unterwegs",
+      "titel": "Kilometer? Im digitalen <em>Fahrtenbuch.</em>"
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.8,
+      "kicker": "Montag, 12:30",
+      "titel": "Alles dokumentiert. Mittagspause.",
+      "tempo": 20
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Podologie.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

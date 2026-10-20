@@ -1,0 +1,36 @@
+{
+  "art": "video",
+  "caption": "3 Gründe, warum die Kasse absetzt.\n\nZu spät begonnen, eine Pflichtangabe fehlt, oder die Verordnung wurde ohne neue Unterschrift geändert. Alle drei lassen sich prüfen, bevor die Kasse sie sieht (Heilmittel-Richtlinie §§ 13, 15, 16).\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #GKV #Praxisalltag #Therapiepraxis #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Heilmittelpraxen, aufgepasst",
+      "titel": "3 Gründe, warum die Kasse <em>absetzt.</em>"
+    },
+    {
+      "typ": "countdown",
+      "dauer": 6.6,
+      "kicker": "Heilmittel-Richtlinie",
+      "punkte": [
+        "Zu <em>spät</em> begonnen",
+        "Angabe <em>fehlt</em>",
+        "Änderung <em>ohne</em> Unterschrift"
+      ]
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Gut zu wissen",
+      "titel": "Alle drei lassen sich <em>vorher</em> prüfen.",
+      "quelle": "Heilmittel-Richtlinie §§ 13, 15, 16"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Fehler sehen, <em>bevor</em> die Kasse sie sieht.",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

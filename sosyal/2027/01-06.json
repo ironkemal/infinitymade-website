@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "POV: MLD-45 verordnet, der Patient hat nur 30 Minuten.\n\nMLD-45 heißt 45 Minuten Therapiezeit an der Patientin oder dem Patienten. Welche Therapiezeit gilt, entscheidet grundsätzlich die Verordnerin oder der Verordner (Heilmittel-Richtlinie § 18 Abs. 2 Nr. 7). Gut, wenn der Termin dazu passt.\n\nMehr auf praxura.de\n\n#Physiotherapie #Heilmittel #Praxisalltag #Therapeutenleben",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.6, "kicker": "POV", "titel": "MLD-45 verordnet. Der Patient hat <em>30 Minuten.</em>" },
+    { "typ": "aussage", "dauer": 3, "kicker": "Was MLD-45 heißt", "titel": "<em>45</em> Minuten Therapiezeit.", "quelle": "Heilmittel-Richtlinie § 18 Abs. 2 Nr. 7" },
+    { "typ": "aussage", "dauer": 3, "ton": "dunkel", "kicker": "Wer entscheidet?", "titel": "Grundsätzlich der <em>Verordner.</em>", "quelle": "Heilmittel-Richtlinie § 18 Abs. 2 Nr. 7" },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Terminplanung für <em>Therapie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

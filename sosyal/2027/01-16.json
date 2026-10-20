@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Dienstag, 14:10. Eine Verordnung, zwei Behandlungszeiten.\n\nIn der Stimm-, Sprech-, Sprach- und Schlucktherapie dürfen bis zu drei Behandlungszeiten oder Einzel- und Gruppenbehandlungen kombiniert werden. Die Aufteilung muss auf der Verordnung stehen. Praxura weist auf fehlende Angaben hin, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Logopädie #Therapiepraxis #Praxisalltag #Heilmittel",
+  "szenen": [
+    { "typ": "tippen", "dauer": 2.6, "kicker": "Dienstag, 14:10", "titel": "Eine Verordnung. Zwei Behandlungszeiten." },
+    { "typ": "frage", "dauer": 3.4, "kicker": "Logopädie-Praxen", "titel": "Erlaubt oder <em>nicht?</em>", "antwort": "Erlaubt. Bis zu drei Zeiten pro Verordnung.", "quelle": "Heilmittel-Richtlinie, § 12 Abs. 2" },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Aber", "titel": "Die Aufteilung steht <em>auf</em> der Verordnung." },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Fehlende Angaben sehen, <em>bevor</em> Sie behandeln.", "cta": "Mehr auf praxura.de" }
+  ]
+}

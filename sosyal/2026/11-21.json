@@ -1,0 +1,32 @@
+{
+  "art": "video",
+  "caption": "Fehler sehen, bevor die Kasse sie sieht. Praxura prüft Verordnungen anhand der Heilmittel-Richtlinie auf formale Fehler, bevor Sie behandeln.\n\nWir zeigen nicht alles. Mehr auf praxura.de\n\n#Heilmittel #Praxissoftware #GKV #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "enthuellung",
+      "dauer": 3,
+      "ton": "dunkel",
+      "kicker": "Wir zeigen nicht alles",
+      "titel": "Fehler sehen, bevor die <em>Kasse</em> sie sieht."
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Nur so viel",
+      "titel": "Die Verordnung wird <em>vor</em> der Behandlung geprüft."
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Nicht erst später",
+      "titel": "Formfehler <em>sofort</em> sichtbar."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Therapie.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

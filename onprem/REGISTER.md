@@ -6418,3 +6418,16 @@ Değişiklik: `installieren/install.ps1` `EinrichtungsLink` (durum WSL içinden 
 **Tek görüş (veto değil) — port 80/443 ön kontrolünün atlanması:** gerekçe doğru (yeniden çalıştırmada portları kutunun kendisi tutar, `Fehler` kurulumu yanlışlıkla durdururdu). Ama `.env` var + kutu düşmüş + portu başka program (IIS/Skype) kapmış durumunda teşhis tamamen kaybolur; sonuç sessizce `/health` 120 sn beklemesine ve "evtl. noch nicht bereit" uyarısına döner — sebep söylenmez. Öneri: `$boxSchonDa` iken kontrolü atlamak yerine **`Fehler` → `Warn`** (program adıyla), ya da `wslrelay`/WSL süreçlerini süzüp kalanı uyarmak. Sahip: bu değişikliğin commit'i (builder); yapılmazsa da kabul edilebilir, yeni madde açılmadı.
 
 Yeni madde yok, mevcut maddelerde durum değişikliği yok.
+
+## 7BB — `sosyal/yayinci/` merkez VPS'e (20.10.2026 ön kontrol + systemd güncellemesi, bildirim)
+
+### O-205 — Pazarlama yayıncısı (`praxura-sosyal`) merkez VPS'te: ürün dışı, kutuya girmez ⚪ **unkritisch**
+
+| Alan | |
+|---|---|
+| **Ne** | Praxura'nın kendi Instagram/Facebook hesaplarına içerik atan Node servisi, merkez VPS'te systemd birimi `praxura-sosyal.service` (20.10.2026'dan beri çalışıyor, deneme modunda, token yok) |
+| **Nerede** | `sosyal/yayinci/` (birim dosyası `sosyal/yayinci/praxura-sosyal.service`, dağıtım `yukle.sh` ssh+tar); `.vercelignore:138` `sosyal/` |
+| **Tip** | G (merkez tarafı, pazarlama — K3) + F (servis içi 5 dk döngü, cron yok) |
+| **Kutuda ne olur** | Hiçbir şey: kutu paketine, image'a, migration zincirine girmez; hasta verisi yok (G1 temiz), n8n yok (G3/G8 temiz), sırlar (`META_PAGE_TOKEN`, `TELEGRAM_BOT_TOKEN`) yalnız merkezde `/etc/praxura-sosyal/sosyal.env` (root:sosyal 0640) (G2 temiz). Yalnız giden bağlantı (graph/graph-video/rupload.facebook.com, api.telegram.org), port/Traefik yok |
+| **Çözüm** | `unkritisch` — K3 pazarlamayı merkeze koyar. 20.10'daki ilk tasarım Docker'dı; merkezde Docker kurulu olmadığı için merkezin kendi kalıbıyla systemd'ye çevrildi, Docker kurulmadı. Yalıtım: `User=sosyal` (system, nologin), kod `/opt/praxura-sosyal/{app,inhalt,medien}` root sahibi, durum `StateDirectory=/var/lib/praxura-sosyal` (0700), `ProtectSystem=strict`, `NoNewPrivileges`. Kaynak sınırı şartı (aynı makinedeki jeton/ad/IP/ACME-DNS servisleri aç kalmasın) `MemoryMax=160M` + `CPUQuota=50%` ile karşılandı. VPS drift (§8 kuralı): `/opt/praxura-sosyal/` ve `/etc/praxura-sosyal/` git'in görmediği yüzeyler — elle SSH değişikliği yapılmaz, kaynak her zaman `sosyal/yayinci/` + `yukle.sh` |
+| **Durum** | `unkritisch` (20.10.2026, aynı gün systemd'ye göre güncellendi). Deneme modunda çalışıyor; Meta/Telegram hesapları henüz kurulmadı |

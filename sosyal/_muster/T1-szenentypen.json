@@ -1,0 +1,12 @@
+{
+  "art": "video",
+  "szenen": [
+    { "typ": "tippen", "dauer": 2.2, "kicker": "Montag, 7:58", "titel": "Erster Patient. Die Verordnung ist …" },
+    { "typ": "frage", "dauer": 3, "kicker": "Wissen Sie es?", "titel": "Wie lange gilt eine <em>Verordnung?</em>", "antwort": "28 Kalendertage bis Behandlungsbeginn." },
+    { "typ": "vergleich", "dauer": 3, "titel": "Was alle <em>denken</em>", "links": { "label": "Mythos", "text": "Ohne Internet steht die Praxis." }, "rechts": { "label": "Fakt", "text": "Router aus. Praxis läuft weiter." } },
+    { "typ": "countdown", "dauer": 3.6, "kicker": "3 Zeitfresser", "punkte": ["Zuzahlung <em>nachlaufen</em>", "Verordnung <em>prüfen</em>", "Kilometer <em>notieren</em>"] },
+    { "typ": "enthuellung", "dauer": 2.4, "ton": "dunkel", "kicker": "Bald", "titel": "Ihre Praxissoftware. <em>Ihre</em> Daten." },
+    { "typ": "hook", "dauer": 2, "uebergang": "schnitt", "titel": "Diese Verordnung ist <em>gültig.</em>", "stempel": "GÜLTIG", "stempelGut": true, "stempelBei": 0.4 },
+    { "typ": "outro", "dauer": 2, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Therapie.</em>", "cta": "Folgen für mehr" }
+  ]
+}

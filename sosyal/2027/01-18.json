@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "POV: Die Kasse schickt eine Absetzung. Für eine Behandlung von vor drei Monaten.\n\nRuhig bleiben: Bei einer beanstandeten Rechnung läuft die Korrektur über die Korrekturrechnung (VKZ 4), die Urbelege gehen zusätzlich zum Datensatz an die Kasse. Steht im Absetzungsschreiben nicht, welcher Termin gekürzt wurde, fragen Sie dort nach.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #GKV #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "POV", "titel": "Die Kasse schickt eine <em>Absetzung.</em>" },
+    { "typ": "aussage", "dauer": 2.4, "ton": "dunkel", "uebergang": "schnitt", "kicker": "Für eine Behandlung", "titel": "Von vor <em>drei Monaten.</em>" },
+    { "typ": "aussage", "dauer": 3, "kicker": "Was jetzt?", "titel": "Korrektur mit <em>VKZ 4.</em> Urbeleg dazu.", "quelle": "Umsetzungsempfehlungen Korrekturverfahren, Frage 3 und 4" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Termin unklar?", "titel": "Bei der Kasse <em>nachfragen.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Abrechnung vorbereiten. <em>Ohne</em> Provision.", "cta": "Mehr auf praxura.de" }
+  ]
+}

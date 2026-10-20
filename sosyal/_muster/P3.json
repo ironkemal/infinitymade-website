@@ -1,0 +1,29 @@
+{
+  "art": "post",
+  "layout": "liste",
+  "rubrik": "Für Podologie-Praxen",
+  "seite": "Überblick",
+  "titel": "Was Praxura im Praxisalltag <em>übernimmt.</em>",
+  "punkte": [
+    [
+      "Termine & Hausbesuche",
+      "Teamkalender, Serientermine"
+    ],
+    [
+      "Fußbefund & DFS-Dokumentation",
+      "grafisch, direkt am Patienten"
+    ],
+    [
+      "Verordnung per Barcode einlesen",
+      "das Bild verlässt den Rechner nicht"
+    ],
+    [
+      "§302-Dateien vorbereiten",
+      "provisionsfrei, mit eigenem Zertifikat"
+    ],
+    [
+      "Fahrtenbuch für Hausbesuche",
+      ""
+    ]
+  ]
+}

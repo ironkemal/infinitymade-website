@@ -133,3 +133,6 @@ merkez/
 
 # Private local M4 execution artifacts; not a web asset.
 .local-m4-work/
+
+# Social-Media-Vorlagen und Entwürfe (Stand 2026-10-20)
+sosyal/

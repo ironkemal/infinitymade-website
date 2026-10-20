@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "3 Fehler auf Logopädie-Verordnungen, die Geld kosten: Diagnosegruppe fehlt, das Heilmittel passt nicht zur Diagnosegruppe, die Anzahl der Behandlungseinheiten fehlt. Korrigieren darf das nur der Arzt, mit neuer Unterschrift und Datum (Heilmittel-Richtlinie, Anlage 3).\n\nPraxura prüft die Verordnung, bevor Sie behandeln. Mehr auf praxura.de\n\n#Logopädie #Heilmittel #Praxisalltag #GKV #Therapiepraxis",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Logopädie-Praxen", "titel": "3 Fehler, die <em>Geld</em> kosten." },
+    { "typ": "countdown", "dauer": 5.4, "kicker": "Auf der Verordnung", "punkte": ["Diagnosegruppe <em>fehlt</em>", "Heilmittel passt <em>nicht</em> zur Gruppe", "Behandlungseinheiten <em>fehlen</em>"] },
+    { "typ": "aussage", "dauer": 3.2, "kicker": "Wer korrigiert?", "titel": "Nur der <em>Arzt.</em> Mit neuer Unterschrift.", "quelle": "Heilmittel-Richtlinie, Anlage 3" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Prüft, <em>bevor</em> Sie behandeln.", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

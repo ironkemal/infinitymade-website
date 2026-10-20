@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "Wie lange müssen Sie Patientenakten aufbewahren? Die Behandlungsdokumentation mindestens 10 Jahre nach Abschluss der Behandlung (§ 630f Abs. 3 BGB). Das gilt auch für die digitale Akte.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Therapiepraxis #Praxisalltag #Praxisinhaber",
+  "szenen": [
+    { "typ": "hook", "dauer": 2.6, "kicker": "Heilmittelpraxen, aufgepasst", "titel": "Wie lange bleibt eine Akte <em>Pflicht?</em>", "muster": "AKTE", "datum": "Abgeschlossen", "stempel": "ARCHIV", "stempelBei": 0.55 },
+    { "typ": "zaehler", "dauer": 3, "kicker": "Die Frist läuft", "praefix": "Jahr", "von": 1, "bis": 10, "text": "nach Abschluss der Behandlung." },
+    { "typ": "aussage", "dauer": 3, "kicker": "Die Regel", "titel": "Mindestens <em>10 Jahre</em> aufbewahren.", "quelle": "§ 630f Abs. 3 BGB" },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Auch digital", "titel": "Änderungen bleiben <em>nachvollziehbar.</em>" },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Ihre Akten bleiben <em>bei Ihnen.</em>", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

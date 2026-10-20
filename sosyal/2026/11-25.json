@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Podolog:innen: Wie lange dauert Ihr Fußbefund? Bei uns reicht ein Tipp auf den Fuß: grafisch dokumentiert, direkt in der Patientenakte.\n\nMehr auf praxura.de\n\n#Podologie #Praxissoftware #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "frage", "dauer": 3.6, "kicker": "Podolog:innen", "titel": "Wie lange dauert Ihr <em>Fußbefund?</em>", "antwortLabel": "Unsere Antwort", "antwort": "Ein Tipp auf den Fuß.", "antwortBei": 1.6 },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Grafischer Fußbefund", "titel": "Stelle antippen. <em>Befund</em> steht.", "text": "Direkt in der Patientenakte." },
+    { "typ": "enthuellung", "dauer": 2.4, "ton": "dunkel", "kicker": "Mehr davon", "titel": "Gebaut für <em>Podologie.</em>" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Befund mit einem <em>Tipp.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

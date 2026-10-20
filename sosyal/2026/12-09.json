@@ -1,0 +1,41 @@
+{
+  "art": "video",
+  "caption": "Ergo-Blanko: Wer bestimmt die Anzahl der Einheiten?\n\nBei der Blankoverordnung entscheiden Ergotherapeut:innen über Heilmittel, Menge und Frequenz und tragen dafür auch die wirtschaftliche Verantwortung (HeilM-RL § 13a). Ob eine Blankoverordnung ausgestellt wird, entscheidet weiterhin die verordnende Praxis.\n\nWie läuft das bei Ihnen? Schreiben Sie es in die Kommentare.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Ergotherapie #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "frage",
+      "dauer": 4,
+      "kicker": "Ergo-Blanko · Wissen Sie es?",
+      "titel": "Wer bestimmt die <em>Anzahl</em> der Einheiten?",
+      "antwort": "Sie selbst. Nicht die Verordnerin.",
+      "antwortBei": 2,
+      "quelle": "HeilM-RL § 13a Abs. 1"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Bei der Blankoverordnung",
+      "titel": "Verordner:innen stellen die <em>Diagnose.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Sie entscheiden über",
+      "titel": "Heilmittel, <em>Menge</em> und Frequenz.",
+      "quelle": "KBV Praxiswissen Heilmittel 2026"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Das gehört dazu",
+      "titel": "Die wirtschaftliche <em>Verantwortung.</em>"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Therapie.</em>",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

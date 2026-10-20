@@ -1,0 +1,40 @@
+{
+  "art": "video",
+  "caption": "Der Zettel im Handschuhfach: Wann haben Sie ihn zuletzt gefunden?\n\nIm digitalen Fahrtenbuch tragen Sie die Kilometer direkt zum Hausbesuch ein, jede Änderung wird protokolliert. Hausbesuch? Kilometer sind schon drin.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #Therapeutenleben #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Wo stehen Ihre Kilometer?",
+      "titel": "Auf dem Zettel im <em>Handschuhfach.</em>"
+    },
+    {
+      "typ": "vergleich",
+      "dauer": 4,
+      "titel": "Zwei <em>Wege</em>",
+      "links": {
+        "label": "Zettel",
+        "text": "Später nachtragen. Vielleicht verloren.",
+        "weg": true
+      },
+      "rechts": {
+        "label": "Digitales Fahrtenbuch",
+        "text": "Direkt zum Hausbesuch eingetragen."
+      }
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Der Ablauf",
+      "titel": "Start. Ankunft. <em>Ende.</em>",
+      "text": "Änderungen werden protokolliert."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Hausbesuch? Kilometer sind schon <em>drin.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

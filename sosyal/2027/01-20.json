@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Ein Code. Eine Einrichtung. Fertig.\n\nPraxura Lokal installieren Sie mit einem Befehl und Ihrem persönlichen Einrichtungscode. Der Rest läuft von allein.\n\nWir zeigen nicht alles. Mehr auf praxura.de\n\n#Praxissoftware #Heilmittel #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "enthuellung", "dauer": 2.6, "ton": "dunkel", "kicker": "Neue Praxissoftware?", "titel": "Ein <em>Code.</em>" },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Ihr Einrichtungscode", "titel": "Eine <em>Einrichtung.</em>" },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Auf Ihrem Rechner", "titel": "Ihre Daten bleiben <em>bei Ihnen.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Einrichten. <em>Fertig.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

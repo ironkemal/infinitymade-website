@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Ergotherapeut:innen, wenn auf der Verordnung die Leitsymptomatik fehlt: Keine Panik. Laut Heilmittel-Richtlinie (Anlage 3) lässt sie sich im Einvernehmen mit dem Verordner ergänzen, ohne dass er neu unterschreibt. Praxura weist auf fehlende Angaben hin, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Ergotherapie #Heilmittel #Praxisalltag #Therapeutenleben",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.8, "kicker": "POV", "titel": "Erster Patient. Auf der Verordnung fehlt die <em>Leitsymptomatik.</em>" },
+    { "typ": "frage", "dauer": 3.4, "uebergang": "schnitt", "kicker": "Ergotherapeut:innen", "titel": "Neue Arztunterschrift <em>nötig?</em>", "antwort": "Nein. Im Einvernehmen mit dem Verordner ergänzbar.", "quelle": "Heilmittel-Richtlinie, Anlage 3" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Der Trick", "titel": "Ein Anruf. <em>Keine</em> neue Unterschrift." },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Fehlende Angaben sehen, <em>bevor</em> Sie behandeln.", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

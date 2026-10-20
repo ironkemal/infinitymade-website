@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Offene Zuzahlungen? Praxura behält sie im Blick.\n\nMahnwesen und Zuzahlungsverwaltung gehören zu Praxura Lokal. Mehr zeigen wir in einer der nächsten Folgen.\n\nFragen? Schreiben Sie uns: kontakt@praxura.de\n\n#Heilmittel #Praxissoftware #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Wir zeigen nicht alles", "titel": "Offene <em>Zuzahlungen?</em>" },
+    { "typ": "enthuellung", "dauer": 2.8, "ton": "dunkel", "kicker": "Nur so viel", "titel": "Praxura <em>vergisst</em> sie nicht." },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Teil 2 kommt", "titel": "Zuzahlung und <em>Mahnwesen.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Weniger <em>nachlaufen.</em>", "cta": "Folgen — Teil 2 kommt" }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "art": "video",
+  "caption": "Physios: Wie lange darf die Behandlung pausieren? Bis zu 14 Kalendertage. Wird länger unterbrochen, verliert die Verordnung ohne angemessene Begründung ihre Gültigkeit (HeilM-RL § 16 Abs. 4). Begründete Unterbrechungen gehören auf die Verordnung.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Physiotherapie #Heilmittel #GKV #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "frage",
+      "dauer": 4,
+      "kicker": "Physios, aufgepasst",
+      "titel": "Wie lange darf die Behandlung <em>pausieren?</em>",
+      "antwort": "Bis zu 14 Kalendertage.",
+      "antwortLabel": "Antwort"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Länger?",
+      "titel": "Nur mit <em>Begründung.</em>",
+      "text": "Auf der Verordnung dokumentiert.",
+      "quelle": "Heilmittel-Richtlinie § 16 Abs. 4"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Sonst",
+      "titel": "Verliert die Verordnung ihre <em>Gültigkeit.</em>"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Erkennt Pausen <em>vor</em> der Abrechnung.",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}
