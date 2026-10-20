@@ -21,6 +21,7 @@
 import { normalisiereGeschlecht } from './geschlecht.js?v=20260816';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
+import { trennePlzOrt } from './verordnung-an-backend.js?v=20261006b';
 import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261020imp';
 
 // ── CSV lesen ───────────────────────────────────────────────────────────
@@ -149,13 +150,6 @@ function versicherungsart(roh, hatKasse) {
   return hatKasse ? 'gkv' : null;
 }
 
-/** Plz + Ort in einer Spalte („53721 Siegburg")? */
-function trennePlzOrt(plz, ort) {
-  if (plz || !ort) return { plz, ort };
-  const m = String(ort).match(/^(\d{5})\s+(.+)$/);
-  return m ? { plz: m[1], ort: m[2] } : { plz, ort };
-}
-
 /**
  * Eine CSV-Zeile → leads-Felder + Fehler/Hinweise.
  * Fehler = Zeile wird nicht importiert. Hinweise = wird importiert, prüfen.
@@ -194,7 +188,8 @@ export function zeileZuPatient(werte, zuordnung) {
   const versichertenstatus = /^[1359]\d{4}$/.test(vs) ? vs : null;
   if (vs && !versichertenstatus && zuordnung.versichertenstatus != null) hinweise.push(`Versichertenstatus „${vs}" ungewöhnlich`);
 
-  const { plz, ort } = trennePlzOrt(w('plz'), w('ort'));
+  let plz = w('plz') || null, ort = w('ort') || null;
+  if (!plz && ort) ({ plz, city: ort } = trennePlzOrt(ort));   // „53721 Siegburg" in einer Spalte
   const krankenkasse = w('krankenkasse') || null;
 
   const patient = {
@@ -271,6 +266,21 @@ export function insertDatensatz(z, ownerId, batchId) {
 
 export const VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Geschlecht;Straße;PLZ;Ort;Telefon;Handy;E-Mail;Krankenkasse;IK;Versichertennummer;Versichertenstatus;Patientennummer;Bemerkung\n'
   + 'Muster;Erika;01.02.1950;w;Hauptstraße 1;53721;Siegburg;02241 12345;0170 1234567;;AOK Rheinland/Hamburg;104212505;A123456780;10000;4711;\n';
+
+/** false = unbenutzt · Text = was es schon gibt · null = Prüfung gescheitert */
+async function istSchonBenutzt(supabase, ids) {
+  const pruefen = [['bookings', 'lead_id', 'Termine'], ['prescriptions', 'patient_id', 'Verordnungen'],
+    ['pat_fussbefund', 'lead_id', 'Befunde'], ['patient_notes', 'lead_id', 'Notizen']];
+  for (let i = 0; i < ids.length; i += 200) {
+    const teil = ids.slice(i, i + 200);
+    for (const [tabelle, spalte, name] of pruefen) {
+      const { count, error } = await supabase.from(tabelle).select('id', { count: 'exact', head: true }).in(spalte, teil);
+      if (error) return null;
+      if (count) return name;
+    }
+  }
+  return false;
+}
 
 // ── Oberfläche ──────────────────────────────────────────────────────────
 
@@ -387,20 +397,22 @@ export function oeffnePatientenImport(d) {
     const batchId = crypto.randomUUID();
     const daten = erg.zeilen.filter(z => !z.fehler.length && !z.dublette).map(z => insertDatensatz(z, d.ownerId, batchId));
     let ok = 0;
+    const ids = [];
     for (let i = 0; i < daten.length; i += 100) {
-      const { error } = await d.supabase.from('leads').insert(daten.slice(i, i + 100));
+      const { data, error } = await d.supabase.from('leads').insert(daten.slice(i, i + 100)).select('id');
       if (error) {
         // Inhalt nicht loggen (Patientendaten) — nur, dass es scheiterte.
         d.showToast(`Import nach ${ok} Patienten abgebrochen. Bitte erneut versuchen — bereits übernommene werden dann übersprungen.`, 'error');
         break;
       }
+      ids.push(...(data || []).map(r => r.id));
       ok += Math.min(100, daten.length - i);
     }
     if (ok) await d.nachImport(ok);
-    schritt3(ok, batchId);
+    schritt3(ok, batchId, ids);
   };
 
-  const schritt3 = (ok, batchId) => {
+  const schritt3 = (ok, batchId, ids) => {
     inhalt.innerHTML = `<p style="margin:0 0 16px;font-size:15px;"><b>${ok}</b> Patient${ok === 1 ? '' : 'en'} übernommen.</p>`;
     fuss.innerHTML = `
       ${ok ? `<button type="button" class="btn-ghost" data-pi="rueck" style="${BTN}">Rückgängig machen</button>` : ''}
@@ -408,6 +420,13 @@ export function oeffnePatientenImport(d) {
     fuss.querySelector('[data-pi="fertig"]').addEventListener('click', schliessen);
     fuss.querySelector('[data-pi="rueck"]')?.addEventListener('click', async (e) => {
       e.currentTarget.disabled = true;
+      // Löschen kaskadiert (Fußbefund, Notizen, Befreiung) bzw. trennt Termine und
+      // Verordnungen. Wurde ein übernommener Patient schon benutzt: nicht anfassen.
+      const benutzt = await istSchonBenutzt(d.supabase, ids);
+      if (benutzt !== false) {
+        d.showToast(benutzt ? `Rückgängig nicht möglich — für übernommene Patienten gibt es schon ${benutzt}.` : 'Rückgängig nicht möglich — Prüfung fehlgeschlagen.', 'error');
+        return;
+      }
       const { error } = await d.supabase.from('leads').delete()
         .eq('owner_id', d.ownerId).eq('metadata->>import_batch', batchId);
       if (error) {
