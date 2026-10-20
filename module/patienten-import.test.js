@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, VORLAGE_CSV } from './patienten-import.js';
+import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, fehlendePflicht, VORLAGE_CSV } from './patienten-import.js';
 import { findePatientDublette } from './patient-dublette.js';
 
 test('leseCsv: Semikolon, Anführungszeichen, BOM, CRLF, Umbruch im Feld', () => {
@@ -84,4 +84,20 @@ test('findePatientDublette: KVNR schlägt Name', () => {
   const b = [{ id: 1, first_name: 'X', last_name: 'Y', versichertennummer: 'A123456780' }];
   assert.equal(findePatientDublette({ first_name: 'Erika', last_name: 'Muster', versichertennummer: 'a123456780' }, b)?.id, 1);
   assert.equal(findePatientDublette({ first_name: 'Erika', last_name: 'Muster' }, b), null);
+});
+
+test('Zuordnung von Hand: abweichende Überschriften, Hausnummer getrennt', () => {
+  const csv = 'Pat-Name;Geb.;Str.;Hausnr;Kuerzel\nMuster, Erika;01.02.1950;Hauptstraße;1;XY\n';
+  const auto = ordneSpaltenZu(leseCsv(csv)[0]);
+  assert.equal(auto.vollname, 0); assert.equal(auto.geburtsdatum, 1);
+  const e = pruefeImport(csv, [], { vollname: 0, geburtsdatum: 1, strasse: 2, hausnummer: 3, notizen: 4 });
+  assert.equal(e.neu, 1);
+  assert.equal(e.zeilen[0].patient.street, 'Hauptstraße 1');
+  assert.equal(e.zeilen[0].patient.notes, 'XY');
+});
+
+test('fehlendePflicht: Name komplett ersetzt Vor- und Nachname', () => {
+  assert.deepEqual(fehlendePflicht({ vollname: 0, geburtsdatum: 1 }), []);
+  assert.deepEqual(fehlendePflicht({ nachname: 0 }), ['Geburtsdatum']);
+  assert.deepEqual(fehlendePflicht({}), ['Nachname', 'Vorname', 'Geburtsdatum']);
 });

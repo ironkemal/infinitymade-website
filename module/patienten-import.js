@@ -77,13 +77,14 @@ const norm = (s) => String(s ?? '').trim().toLowerCase()
 export const SPALTEN = {
   vorname: ['vorname', 'firstname', 'rufname'],
   nachname: ['nachname', 'name', 'familienname', 'lastname', 'zuname'],
-  vollname: ['patient', 'patientenname', 'vollername', 'namevorname', 'vornamename'],
-  geburtsdatum: ['geburtsdatum', 'gebdatum', 'geboren', 'geburtstag', 'dob', 'birthdate', 'gebdat'],
+  vollname: ['patient', 'patientenname', 'patname', 'patientname', 'vollername', 'namevorname', 'vornamename', 'nachnamevorname'],
+  geburtsdatum: ['geburtsdatum', 'gebdatum', 'geboren', 'geburtstag', 'dob', 'birthdate', 'gebdat', 'geb', 'gebam'],
   geschlecht: ['geschlecht', 'anrede', 'sex', 'gender'],
   strasse: ['strasse', 'str', 'strassehausnummer', 'anschrift', 'adresse', 'street'],
+  hausnummer: ['hausnummer', 'hausnr', 'hnr'],
   plz: ['plz', 'postleitzahl', 'zip'],
-  ort: ['ort', 'wohnort', 'stadt', 'city'],
-  telefon: ['telefon', 'tel', 'telefonnummer', 'festnetz', 'phone', 'telefonprivat'],
+  ort: ['ort', 'wohnort', 'stadt', 'city', 'plzort', 'postleitzahlort'],
+  telefon: ['telefon', 'tel', 'telefonnummer', 'festnetz', 'phone', 'telefonprivat', 'telefonpriv', 'telpriv', 'telprivat'],
   handy: ['handy', 'mobil', 'mobilnummer', 'mobiltelefon', 'mobile'],
   email: ['email', 'mail', 'emailadresse'],
   krankenkasse: ['krankenkasse', 'kasse', 'kostentraeger', 'versicherung'],
@@ -94,6 +95,27 @@ export const SPALTEN = {
   altsystem_nr: ['patientennummer', 'patnr', 'patientennr', 'nummer', 'nr', 'id', 'kundennummer'],
   notizen: ['notiz', 'notizen', 'bemerkung', 'bemerkungen', 'hinweis'],
 };
+
+/** Beschriftung der Zielfelder für die Zuordnung von Hand. Reihenfolge = Liste. */
+export const FELDER = {
+  nachname: 'Nachname', vorname: 'Vorname', vollname: 'Name komplett (Vor- + Nachname)',
+  geburtsdatum: 'Geburtsdatum', geschlecht: 'Geschlecht / Anrede',
+  strasse: 'Straße', hausnummer: 'Hausnummer', plz: 'PLZ', ort: 'Ort (auch „PLZ Ort")',
+  telefon: 'Telefon', handy: 'Handy', email: 'E-Mail',
+  krankenkasse: 'Krankenkasse (Name)', krankenkasse_ik: 'IK der Krankenkasse',
+  versichertennummer: 'Versichertennummer', versichertenstatus: 'Versichertenstatus',
+  versicherungsart: 'Versicherungsart (GKV/privat)', altsystem_nr: 'Patientennummer (alt)',
+  notizen: 'Bemerkung',
+};
+
+/** Welche Pflichtangaben fehlen in einer Zuordnung? */
+export function fehlendePflicht(zuordnung) {
+  const fehlt = [];
+  if (zuordnung.nachname == null && zuordnung.vollname == null) fehlt.push('Nachname');
+  if (zuordnung.vorname == null && zuordnung.vollname == null && zuordnung.nachname == null) fehlt.push('Vorname');
+  if (zuordnung.geburtsdatum == null) fehlt.push('Geburtsdatum');
+  return fehlt;
+}
 
 /** @returns {Object<string, number>} Feld → Spaltenindex */
 export function ordneSpaltenZu(kopf) {
@@ -198,7 +220,7 @@ export function zeileZuPatient(werte, zuordnung) {
     title: `${vor} ${nach}`.trim(),
     geburtsdatum,
     geschlecht,
-    street: w('strasse') || null,
+    street: [w('strasse'), w('hausnummer')].filter(Boolean).join(' ') || null,
     plz: plz || null,
     city: ort || null,
     phone: w('telefon') || null,
@@ -221,14 +243,13 @@ export function zeileZuPatient(werte, zuordnung) {
 /**
  * @param {string} text CSV-Inhalt
  * @param {object[]} bestehende vorhandene leads des Owners
+ * @param {Object<string, number>} [zuordnung] von Hand gewählt; sonst aus der Kopfzeile geraten
  * @returns {{ zuordnung, fehltSpalte: string[], zeilen: object[], neu: number, dubletten: number, fehlerhaft: number }}
  */
-export function pruefeImport(text, bestehende = []) {
+export function pruefeImport(text, bestehende = [], zuordnungVonHand = null) {
   const [kopf = [], ...daten] = leseCsv(text);
-  const zuordnung = ordneSpaltenZu(kopf);
-  const fehltSpalte = [];
-  if (zuordnung.nachname == null && zuordnung.vollname == null) fehltSpalte.push('Nachname');
-  if (zuordnung.geburtsdatum == null) fehltSpalte.push('Geburtsdatum');
+  const zuordnung = zuordnungVonHand || ordneSpaltenZu(kopf);
+  const fehltSpalte = fehlendePflicht(zuordnung);
 
   const gesehen = new Map();
   const zeilen = daten.map((werte, i) => {
@@ -320,8 +341,8 @@ export function oeffnePatientenImport(d) {
     inhalt.innerHTML = `
       <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px;line-height:1.5;">
         Exportieren Sie den Patientenstamm aus Ihrer bisherigen Software als CSV (Excel: „Speichern unter → CSV").
-        Nötig sind <b>Nachname, Vorname, Geburtsdatum</b>; alle anderen Spalten werden erkannt, wenn die Überschrift passt
-        (z. B. Straße, PLZ, Ort, Telefon, Handy, E-Mail, Krankenkasse, IK, Versichertennummer).
+        Nötig sind <b>Nachname, Vorname, Geburtsdatum</b>. Die Spalten ordnen Sie im nächsten Schritt zu —
+        passende Überschriften (Straße, PLZ, Telefon, Krankenkasse, IK …) erkennt Praxura selbst.
         Patienten, die es schon gibt, werden übersprungen. Verordnungen werden nicht übernommen.
       </p>
       <label style="display:block;border:1px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;">
@@ -347,11 +368,76 @@ export function oeffnePatientenImport(d) {
       if (text.includes('�')) {
         try { text = new TextDecoder('windows-1252').decode(await f.arrayBuffer()); } catch { /* bleibt UTF-8 */ }
       }
-      schritt2(pruefeImport(text, d.bestehende() || []));
+      zuordnen(text);
     });
   };
 
-  const schritt2 = (erg) => {
+  // Zwischenschritt: jede Spalte der Datei einem Feld zuordnen. Vorbelegt aus
+  // der Überschrift; die letzte Zuordnung zu gleichen Überschriften wird gemerkt
+  // (nur Spaltennamen, keine Inhalte — localStorage dieses Browsers).
+  const zuordnen = (text) => {
+    const [kopf = [], ...daten] = leseCsv(text);
+    if (!kopf.length || !daten.length) { schritt2(pruefeImport(text, [])); return; }
+    const merkKey = 'praxura.import.zuordnung.' + kopf.map(norm).join('|');
+    let zu = ordneSpaltenZu(kopf);
+    try { const alt = JSON.parse(localStorage.getItem(merkKey) || 'null'); if (alt) zu = alt; } catch { /* ohne Merken */ }
+    const auto = ordneSpaltenZu(kopf);
+    // Spalte → Feld (Umkehrung), damit jede Zeile ein Auswahlfeld hat
+    const spalteFeld = () => Object.fromEntries(Object.entries(zu).map(([f, i]) => [i, f]));
+    const beispiele = (i) => daten.map(z => String(z[i] ?? '').trim()).filter(Boolean).slice(0, 3);
+
+    const zeichne = () => {
+      const sf = spalteFeld();
+      const fehlt = fehlendePflicht(zu);
+      const pflicht = ['Nachname', 'Vorname', 'Geburtsdatum'].map(p => {
+        const ok = !fehlt.includes(p);
+        return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:12px;border:1px solid ${ok ? 'var(--border)' : 'var(--danger,#b42318)'};color:${ok ? 'var(--text-main)' : 'var(--danger,#b42318)'};">${ok ? '✓' : '○'} ${p}</span>`;
+      }).join('');
+      const optionen = (aktiv) => `<option value="">— nicht übernehmen —</option>` + Object.entries(FELDER)
+        .map(([f, l]) => `<option value="${f}" ${f === aktiv ? 'selected' : ''}>${esc(l)}</option>`).join('');
+      const reihen = kopf.map((h, i) => {
+        const f = sf[i] || '';
+        const bsp = beispiele(i);
+        const markierung = f && auto[f] === i ? ' <span style="font-size:11px;font-weight:500;color:var(--text-muted);">· erkannt</span>' : '';
+        return `
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border);${f ? '' : 'opacity:.72;'}">
+            <div style="min-width:0;">
+              <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h || `Spalte ${i + 1}`)}${markierung}</div>
+              <div style="font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${bsp.length ? bsp.map(esc).join(' · ') : 'leer'}</div>
+            </div>
+            <div aria-hidden="true" style="color:var(--text-muted);text-align:center;">→</div>
+            <div style="display:flex;align-items:center;min-width:0;">
+              <select data-spalte="${i}" aria-label="Feld für Spalte ${esc(h)}" style="width:100%;min-width:0;padding:7px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;">${optionen(f)}</select>
+            </div>
+          </div>`;
+      }).join('');
+      const anzahl = Object.keys(zu).length;
+      inhalt.innerHTML = `
+        <p style="margin:0 0 10px;font-size:14px;color:var(--text-muted);line-height:1.5;">
+          Ordnen Sie jede Spalte Ihrer Datei einem Feld zu. ${anzahl} von ${kopf.length} Spalten sind schon zugeordnet — bitte kurz prüfen.
+        </p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;">${pflicht}</div>
+        <div>${reihen}</div>
+        <p style="font-size:12px;color:var(--text-muted);margin:10px 0 16px;">Nicht zugeordnete Spalten werden nicht übernommen. Ein „Name komplett" wird automatisch in Vor- und Nachname geteilt.</p>`;
+      inhalt.querySelectorAll('select[data-spalte]').forEach(sel => sel.addEventListener('change', () => {
+        const i = Number(sel.dataset.spalte);
+        for (const [f, idx] of Object.entries(zu)) if (idx === i) delete zu[f];   // Spalte war vorher woanders
+        if (sel.value) zu[sel.value] = i;                                       // Feld nur einmal vergeben
+        zeichne();
+      }));
+      fuss.innerHTML = `
+        <button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>
+        <button type="button" class="btn-primary" data-pi="weiter" style="${BTN}${fehlt.length ? 'opacity:.45;cursor:not-allowed;' : ''}" ${fehlt.length ? 'disabled title="Erst Nachname, Vorname und Geburtsdatum zuordnen"' : ''}>Weiter zur Vorschau</button>`;
+      fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', schritt1);
+      fuss.querySelector('[data-pi="weiter"]').addEventListener('click', () => {
+        try { localStorage.setItem(merkKey, JSON.stringify(zu)); } catch { /* egal */ }
+        schritt2(pruefeImport(text, d.bestehende() || [], { ...zu }), () => zeichne());
+      });
+    };
+    zeichne();
+  };
+
+  const schritt2 = (erg, zurZuordnung = null) => {
     if (erg.fehltSpalte.length || !erg.zeilen.length) {
       inhalt.innerHTML = `<p style="margin:0 0 16px;font-size:14px;">${erg.zeilen.length
         ? `Diese Spalten wurden nicht gefunden: <b>${esc(erg.fehltSpalte.join(', '))}</b>. Bitte die Überschriften anpassen (Vorlage) und erneut versuchen.`
@@ -385,9 +471,10 @@ export function oeffnePatientenImport(d) {
       ${erg.zeilen.length > 200 ? `<p style="font-size:13px;color:var(--text-muted);">… und ${erg.zeilen.length - 200} weitere Zeilen.</p>` : ''}
       <p style="font-size:13px;color:var(--text-muted);margin:12px 0 16px;">Fehlerhafte und vorhandene Zeilen werden nicht übernommen. Die Übernahme lässt sich danach rückgängig machen, solange die Patienten noch nicht verwendet wurden.</p>`;
     fuss.innerHTML = `
-      <button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>
-      <button type="button" class="btn-primary" data-pi="los" style="${BTN}" ${erg.neu ? '' : 'disabled'}>${erg.neu} Patient${erg.neu === 1 ? '' : 'en'} importieren</button>`;
-    fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', schritt1);
+      ${zurZuordnung ? `<button type="button" class="btn-ghost" data-pi="zuordnung" style="${BTN}">Zuordnung ändern</button>` : `<button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>`}
+      <button type="button" class="btn-primary" data-pi="los" style="${BTN}${erg.neu ? '' : 'opacity:.45;cursor:not-allowed;'}" ${erg.neu ? '' : 'disabled'}>${erg.neu} Patient${erg.neu === 1 ? '' : 'en'} importieren</button>`;
+    fuss.querySelector('[data-pi="zurueck"]')?.addEventListener('click', schritt1);
+    fuss.querySelector('[data-pi="zuordnung"]')?.addEventListener('click', zurZuordnung);
     fuss.querySelector('[data-pi="los"]').addEventListener('click', (e) => importiere(erg, e.currentTarget));
   };
 
