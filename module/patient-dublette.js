@@ -35,9 +35,14 @@ export function findePatientDublette(p, bestehende) {
   const k = kvnr(p);
   const s = nameGeburtSchluessel(p);
   if (!k && !s) return null;
-  for (const b of bestehende || []) {
-    if (k && kvnr(b) === k) return b;
-    if (s && nameGeburtSchluessel(b) === s) return b;
+  const geb = p?.geburtsdatum || null;
+  // Name + Geburtsdatum zuerst. Die KVNR allein reicht nicht: live sind
+  // Nummern doppelt vergeben (Tippfehler, Familienversicherung) — canli-test
+  // 21.10.2026 fand so eine Verordnung beim falschen Patienten.
+  if (s) for (const b of bestehende || []) if (nameGeburtSchluessel(b) === s) return b;
+  if (k) for (const b of bestehende || []) {
+    const bGeb = b?.geburtsdatum || b?.metadata?.geburtsdatum || null;
+    if (kvnr(b) === k && (!geb || !bGeb || geb === bGeb)) return b;
   }
   return null;
 }

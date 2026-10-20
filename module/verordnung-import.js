@@ -20,8 +20,9 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261020vo';
-import { findePatientDublette } from './patient-dublette.js?v=20261020imp';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021b';
+import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
+import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
 import { behandlungsbeginnFrist } from './heilmittel-fristen.js?v=20261004m113';
@@ -63,7 +64,7 @@ export const VO_SPALTEN = {
   zuzahlung_befreit: ['zuzahlungsbefreit', 'zuzahlungsbefreitjanein', 'befreit', 'zuzahlungsfrei'],
   nagel: ['nagel', 'nagelzb', 'nagelzbu1links', 'zeh'],
   wagner_grad: ['wagner', 'wagnergrad'],
-  erbracht: ['erbracht', 'einheitenerbracht', 'bereitserbracht', 'behandelt'],
+  erbracht: ['erbracht', 'einheitenerbracht', 'einheitenschonerbracht', 'schonerbracht', 'bereitserbracht', 'behandelt', 'erbrachteeinheiten'],
   abgerechnet: ['abgerechnet', 'imaltsystemabgerechnet', 'imaltsystemabgerechnetjanein', 'eingereicht'],
 };
 
@@ -148,9 +149,16 @@ export function zeileZuVerordnung(werte, zu, k) {
   if ((!vor || !nach) && w('vollname')) ({ vor, nach } = teileName(w('vollname')));
   const geburtsdatum = leseDatum(w('geburtsdatum'));
   const kvnrRoh = w('versichertennummer');
-  const patient = findePatientDublette(
-    { first_name: vor, last_name: nach, geburtsdatum, versichertennummer: kvnrRoh }, k.patienten);
-  if (!patient) fehler.push('Patient nicht im Patientenstamm — zuerst Patienten importieren');
+  // Nur Name + Geburtsdatum ordnet zu — nie die KVNR allein (canli-test
+  // 21.10.2026: KVNR-Treffer schlug einen exakten Namenstreffer, die VO wäre
+  // beim falschen Patienten gelandet).
+  const sNeu = nameGeburtSchluessel({ first_name: vor, last_name: nach, geburtsdatum });
+  const treffer = sNeu ? (k.patienten || []).filter(p => nameGeburtSchluessel(p) === sNeu) : [];
+  const patient = treffer.length === 1 ? treffer[0] : null;
+  if (treffer.length > 1) fehler.push('Mehrere Patienten mit gleichem Namen und Geburtsdatum — bitte von Hand anlegen');
+  else if (!patient) fehler.push('Patient nicht im Patientenstamm (Name + Geburtsdatum) — zuerst Patienten importieren');
+  const aktenKvnr = String(patient?.versichertennummer ?? '').replace(/\s+/g, '').toUpperCase();
+  if (kvnrRoh && aktenKvnr && aktenKvnr !== kvnrRoh.replace(/\s+/g, '').toUpperCase()) hinweise.push('Versichertennummer weicht von der Akte ab (Kassenwechsel?)');
 
   // Versicherung: Zeile, sonst Patientenakte
   const kvnr = pruefeKvnr(kvnrRoh || patient?.versichertennummer || '');
@@ -417,6 +425,15 @@ export function oeffneVerordnungImport(d) {
       try {
         await sendeAnServer(d.supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf: voRumpf(z.verordnung, heute), apiBasis: d.apiBasis });
         ok++;
+        // Leere Akten-Felder (KVNR, Kasse, IK, Status) aus der Zeile nachtragen —
+        // der Server rührt leads bei mitgeschickter patient_id nicht an. Gleicher
+        // Weg wie die Maske; Abweichungen werden im Stapel nie überschrieben.
+        const v = z.verordnung, p = v.patient;
+        await verordnungPatientenAbgleich({ supabase: d.supabase, showConfirmModal: async () => false }, {
+          ownerId: d.ownerId, patientId: p.id, lead: p, vorname: p.first_name, nachname: p.last_name,
+          versichertennummer: v.kvnr, krankenkasse: v.kasse, versichertenstatus: v.versichertenstatus,
+          strasse: '', ort: '', geburtsdatum: '', krankenkasseIk: v.ik,
+        }).catch(() => { /* Nachtrag ist Komfort — die VO steht */ });
       } catch (err) {
         // Nur Zeilennummer + Servertext — keine Patientendaten ins Log.
         fehlgeschlagen.push({ nr: z.nr, grund: err?.message || 'Fehler' });

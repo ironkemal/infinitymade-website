@@ -331,7 +331,11 @@ function berlinDayBoundsUTC(dateStr) {
 function berlinLocalToUTC(dateStr, timeStr) {
   const probe = new Date(`${dateStr}T12:00:00Z`);
   const offsetMin = berlinOffsetMin(probe);
-  const naiveMs = new Date(`${dateStr}T${timeStr}:00Z`).getTime();
+  // Postgres liefert `time` als HH:MM:SS. Unverändert angehängt wurde daraus
+  // „10:00:00:00Z" → Invalid Date → 500 beim Bestätigen einer Terminanfrage,
+  // deren Uhrzeit der Inhaber nicht angefasst hat (canli-test 20.10.2026).
+  const hhmm = String(timeStr ?? '').slice(0, 5);
+  const naiveMs = new Date(`${dateStr}T${hhmm}:00Z`).getTime();
   return new Date(naiveMs - offsetMin * 60000);
 }
 

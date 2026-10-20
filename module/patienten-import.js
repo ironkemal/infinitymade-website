@@ -22,7 +22,7 @@ import { normalisiereGeschlecht } from './geschlecht.js?v=20260816';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
 import { trennePlzOrt } from './verordnung-an-backend.js?v=20261006b';
-import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261020imp';
+import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 
 // ── CSV lesen ───────────────────────────────────────────────────────────
 
@@ -426,7 +426,7 @@ export function oeffnePatientenImport(d) {
         Exportieren Sie den Patientenstamm aus Ihrer bisherigen Software als CSV (Excel: „Speichern unter → CSV").
         Nötig sind <b>Nachname, Vorname, Geburtsdatum</b>. Die Spalten ordnen Sie im nächsten Schritt zu —
         passende Überschriften (Straße, PLZ, Telefon, Krankenkasse, IK …) erkennt Praxura selbst.
-        Patienten, die es schon gibt, werden übersprungen. Verordnungen werden nicht übernommen.
+        Patienten, die es schon gibt, werden übersprungen. Offene Verordnungen übernehmen Sie danach im zweiten Schritt (Link unten).
       </p>
       <label style="display:block;border:1px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;">
         <input type="file" accept=".csv,.txt,text/csv" data-pi="datei" style="display:none;" />

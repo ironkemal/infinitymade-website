@@ -80,3 +80,24 @@ test('Hilfen: Nagel und ja/nein', () => {
   assert.equal(leseNagel('Zeh'), null);
   assert.equal(janein('X'), true); assert.equal(janein('nein'), false); assert.equal(janein('vielleicht'), null);
 });
+
+test('Zuordnung nur über Name + Geburtsdatum, nie KVNR allein (canli-test 21.10.2026)', () => {
+  const zwei = [
+    { id: 'falsch', first_name: 'Anna', last_name: 'Andere', geburtsdatum: '1960-01-01', versichertennummer: 'A123456780' },
+    { id: 'richtig', first_name: 'Erna', last_name: 'Import', geburtsdatum: '1955-05-05', versichertennummer: '' },
+  ];
+  const csv = 'Nachname;Vorname;Geburtsdatum;Versichertennummer;Krankenkasse;Ausstellungsdatum;LANR;DG;Leitsymptomatik;Anzahl\n'
+    + 'Import;Erna;05.05.1955;A123456780;AOK;15.10.2026;123456601;DF;a;6\n'
+    + 'Unbekannt;Hans;01.01.1950;A123456780;AOK;15.10.2026;123456601;DF;a;6\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ patienten: zwei }));
+  assert.equal(e.zeilen[0].verordnung.patient.id, 'richtig');
+  assert.match(e.zeilen[1].fehler.join(), /Patientenstamm/);
+});
+
+test('Jede Spalte der eigenen Vorlage wird erkannt', () => {
+  const kopf = leseCsv(VO_VORLAGE_CSV)[0];
+  const zu = zuVon(VO_VORLAGE_CSV);
+  const zugeordnet = new Set(Object.values(zu));
+  const fehlt = kopf.filter((_, i) => !zugeordnet.has(i));
+  assert.deepEqual(fehlt, []);
+});

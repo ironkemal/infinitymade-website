@@ -322,6 +322,7 @@
     "updateStatus",
     "upload",
     "vorschau",
+    "w",
     "weiter",
     "wendePresetAn",
     "widerrufen",
@@ -2704,6 +2705,7 @@
     "togglePopover",
     "tokenBeschaffen",
     "vergleiche",
+    "w",
     "wechsleZuUnbestaetigt",
     "zaaRueckmeldungAnwenden",
     "zeigeBestaetigungsDialog",
@@ -7579,6 +7581,7 @@
     "verifyOAuthState",
     "verordnungStatusInfo",
     "versucheBereich",
+    "w",
     "zaaRueckmeldungAnwenden",
     "zeigeBestaetigungsDialog",
     "zeileDetailHtml",
@@ -22270,6 +22273,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -28121,7 +28125,8 @@
     "parseOriginalDtaMessage",
     "pruefeEmpfaenger",
     "validateCommonProof",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -34158,8 +34163,8 @@
    "lang": "js",
    "file": "api-backend/server.js",
    "start": 331,
-   "end": 336,
-   "lines": 6,
+   "end": 340,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -34183,8 +34188,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 338,
-   "end": 342,
+   "start": 342,
+   "end": 346,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -34250,8 +34255,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 347,
-   "end": 357,
+   "start": 351,
+   "end": 361,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -34275,8 +34280,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 518,
-   "end": 529,
+   "start": 522,
+   "end": 533,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [
@@ -34299,8 +34304,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 800,
-   "end": 1060,
+   "start": 804,
+   "end": 1064,
    "lines": 261,
    "spiegelHinweis": null,
    "tables": [
@@ -34343,8 +34348,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1457,
-   "end": 1462,
+   "start": 1461,
+   "end": 1466,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -34367,8 +34372,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1581,
-   "end": 1699,
+   "start": 1585,
+   "end": 1703,
    "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
@@ -34395,8 +34400,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1583,
-   "end": 1699,
+   "start": 1587,
+   "end": 1703,
    "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
@@ -34424,8 +34429,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1598,
-   "end": 1613,
+   "start": 1602,
+   "end": 1617,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -34450,8 +34455,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1599,
-   "end": 1613,
+   "start": 1603,
+   "end": 1617,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -34476,8 +34481,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1803,
-   "end": 1851,
+   "start": 1807,
+   "end": 1855,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [
@@ -34509,8 +34514,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1851,
-   "end": 1851,
+   "start": 1855,
+   "end": 1855,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -34534,8 +34539,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1852,
-   "end": 1852,
+   "start": 1856,
+   "end": 1856,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -34557,8 +34562,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1863,
-   "end": 1867,
+   "start": 1867,
+   "end": 1871,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -34579,8 +34584,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1912,
-   "end": 1989,
+   "start": 1916,
+   "end": 1993,
    "lines": 78,
    "spiegelHinweis": null,
    "tables": [],
@@ -34609,8 +34614,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2000,
-   "end": 2046,
+   "start": 2004,
+   "end": 2050,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -34639,8 +34644,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2167,
-   "end": 2183,
+   "start": 2171,
+   "end": 2187,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -34664,8 +34669,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2459,
-   "end": 2463,
+   "start": 2463,
+   "end": 2467,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -34684,8 +34689,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3348,
-   "end": 3356,
+   "start": 3352,
+   "end": 3360,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -34709,8 +34714,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3358,
-   "end": 3362,
+   "start": 3362,
+   "end": 3366,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -34733,8 +34738,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3364,
-   "end": 3376,
+   "start": 3368,
+   "end": 3380,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -34757,8 +34762,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3397,
-   "end": 3411,
+   "start": 3401,
+   "end": 3415,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -34781,8 +34786,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3578,
-   "end": 3587,
+   "start": 3582,
+   "end": 3591,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -34803,8 +34808,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3580,
-   "end": 3593,
+   "start": 3584,
+   "end": 3597,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -34827,8 +34832,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3593,
-   "end": 3595,
+   "start": 3597,
+   "end": 3599,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -34852,8 +34857,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3857,
-   "end": 3867,
+   "start": 3861,
+   "end": 3871,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -34923,8 +34928,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3869,
-   "end": 3883,
+   "start": 3873,
+   "end": 3887,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -34948,8 +34953,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4003,
-   "end": 4009,
+   "start": 4007,
+   "end": 4013,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -34972,8 +34977,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4214,
-   "end": 4268,
+   "start": 4218,
+   "end": 4272,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -34998,8 +35003,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4216,
-   "end": 4216,
+   "start": 4220,
+   "end": 4220,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -35070,8 +35075,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4446,
-   "end": 4449,
+   "start": 4450,
+   "end": 4453,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -37864,6 +37869,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -42221,6 +42227,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -44530,6 +44537,7 @@
     "updateStatus",
     "upload",
     "vorschau",
+    "w",
     "weiter",
     "wendePresetAn",
     "widerrufen",
@@ -59539,6 +59547,7 @@
     "togglePopover",
     "tokenBeschaffen",
     "vergleiche",
+    "w",
     "wechsleZuUnbestaetigt",
     "zaaRueckmeldungAnwenden",
     "zeigeBestaetigungsDialog",
@@ -74197,6 +74206,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -74396,6 +74406,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -76794,6 +76805,7 @@
     "verifyOAuthState",
     "verordnungStatusInfo",
     "versucheBereich",
+    "w",
     "zaaRueckmeldungAnwenden",
     "zeigeBestaetigungsDialog",
     "zeileDetailHtml",
@@ -79647,6 +79659,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -81597,6 +81610,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -83699,6 +83713,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -86931,6 +86946,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -87099,6 +87115,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -89779,6 +89796,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -89926,7 +89944,8 @@
     "(datei) module/einwilligung-texte.js",
     "oeffneStatusDialog",
     "oeffneVerordnungImport",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -93357,6 +93376,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -97208,6 +97228,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -97775,6 +97796,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -100399,6 +100421,7 @@
     "tagesgrenzen",
     "terminDatum",
     "terminStartenPodo",
+    "w",
     "zeichnePodoEinheiten"
    ],
    "modules": [
@@ -101968,6 +101991,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -105513,6 +105537,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -117473,6 +117498,7 @@
     "requestKiTask",
     "scanneRezeptLokal",
     "schritt1",
+    "w",
     "zxing"
    ],
    "modules": [
@@ -118198,6 +118224,7 @@
     "updateStatus",
     "upload",
     "vorschau",
+    "w",
     "weiter",
     "wendePresetAn",
     "widerrufen",
@@ -121457,6 +121484,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -125657,7 +125685,9 @@
    "calledBy": [
     "findePatientDublette",
     "klein",
-    "pruefeImport"
+    "pruefeImport",
+    "w",
+    "zeileZuVerordnung"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -125691,8 +125721,8 @@
    "lang": "js",
    "file": "module/patient-dublette.js",
    "start": 34,
-   "end": 43,
-   "lines": 10,
+   "end": 48,
+   "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -125704,9 +125734,7 @@
     "nameGeburtSchluessel"
    ],
    "calledBy": [
-    "pruefeImport",
-    "w",
-    "zeileZuVerordnung"
+    "pruefeImport"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -127221,6 +127249,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -128927,6 +128956,7 @@
     "pruefeImport",
     "pruefeVerordnungen",
     "schritt1",
+    "w",
     "zuordnen"
    ],
    "modules": [],
@@ -129445,6 +129475,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -129533,6 +129564,7 @@
     "oeffnePatientenImport",
     "oeffneVerordnungImport",
     "schritt1",
+    "w",
     "zuordnen"
    ],
    "modules": [],
@@ -129917,6 +129949,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -130007,7 +130040,8 @@
    ],
    "calledBy": [
     "oeffnePatientenImport",
-    "oeffneVerordnungImport"
+    "oeffneVerordnungImport",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -130133,7 +130167,8 @@
     "schritt2",
     "setupKapisi",
     "speichereAuftragsdatei",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -130446,6 +130481,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -133340,6 +133376,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -145735,6 +145772,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -146371,6 +146409,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -150572,6 +150611,7 @@
     "togglePopover",
     "tokenBeschaffen",
     "vergleiche",
+    "w",
     "wechsleZuUnbestaetigt",
     "zaaRueckmeldungAnwenden",
     "zeigeBestaetigungsDialog",
@@ -163213,6 +163253,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -163527,7 +163568,8 @@
     "stripeRequest",
     "trennePlzOrt",
     "ueberSeiteStarten",
-    "updateStatus"
+    "updateStatus",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -163727,7 +163769,8 @@
     "(datei) module/verordnung-import.js",
     "bereichFn",
     "schreibeVerordnung",
-    "voRumpf"
+    "voRumpf",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -164760,9 +164803,49 @@
    "calledBy": [
     "verordnungPatientenAbgleich"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "ohneStornierte",
@@ -167493,6 +167576,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -168121,6 +168205,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -168235,8 +168320,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 86,
-   "end": 96,
+   "start": 87,
+   "end": 97,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -168255,8 +168340,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 106,
-   "end": 112,
+   "start": 107,
+   "end": 113,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -168280,8 +168365,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 115,
-   "end": 118,
+   "start": 116,
+   "end": 119,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -168303,8 +168388,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 121,
-   "end": 134,
+   "start": 122,
+   "end": 135,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -168328,9 +168413,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 142,
-   "end": 223,
-   "lines": 82,
+   "start": 143,
+   "end": 231,
+   "lines": 89,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -168339,7 +168424,6 @@
    "storage": [],
    "calls": [
     "behandlungsbeginnFrist",
-    "findePatientDublette",
     "has",
     "isValidLanr",
     "janein",
@@ -168347,13 +168431,15 @@
     "leitBuchstabe",
     "leseDatum",
     "leseNagel",
+    "nameGeburtSchluessel",
     "normDgCode",
     "pruefeKvnr",
     "teileName",
     "w"
    ],
    "calledBy": [
-    "pruefeVerordnungen"
+    "pruefeVerordnungen",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -168364,28 +168450,52 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 143,
-   "end": 221,
-   "lines": 79,
+   "start": 144,
+   "end": 455,
+   "lines": 312,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "prescriptions"
+   ],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
    "calls": [
+    "alsBerlinDatum",
     "behandlungsbeginnFrist",
-    "findePatientDublette",
+    "berlinHeute",
+    "decode",
+    "esc",
+    "get",
     "has",
     "isValidLanr",
     "janein",
     "kartenIkNormalisieren",
     "leitBuchstabe",
+    "leseCsv",
     "leseDatum",
     "leseNagel",
+    "nameGeburtSchluessel",
     "normDgCode",
+    "oeffneVerordnungImport",
     "pruefeKvnr",
-    "teileName"
+    "pruefeVerordnungen",
+    "schliessen",
+    "schritt1",
+    "sendeAnServer",
+    "senden",
+    "set",
+    "showToast",
+    "status",
+    "teileName",
+    "text",
+    "verordnungFuerBackend",
+    "verordnungPatientenAbgleich",
+    "voRumpf",
+    "vorschau",
+    "zeileZuVerordnung",
+    "zuordnungsSchritt"
    ],
    "calledBy": [
     "zeileZuPatient",
@@ -168400,8 +168510,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 226,
-   "end": 238,
+   "start": 234,
+   "end": 246,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -168418,7 +168528,8 @@
    ],
    "calledBy": [
     "oeffneVerordnungImport",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -168429,8 +168540,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 241,
-   "end": 274,
+   "start": 249,
+   "end": 282,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
@@ -168443,7 +168554,8 @@
    ],
    "calledBy": [
     "oeffneVerordnungImport",
-    "senden"
+    "senden",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -168494,8 +168606,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 281,
-   "end": 284,
+   "start": 289,
+   "end": 292,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -168526,7 +168638,8 @@
     "parseOriginalDtaMessage",
     "pruefeEmpfaenger",
     "validateCommonProof",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -168577,9 +168690,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 286,
-   "end": 437,
-   "lines": 152,
+   "start": 294,
+   "end": 454,
+   "lines": 161,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -168601,12 +168714,14 @@
     "showToast",
     "status",
     "text",
+    "verordnungPatientenAbgleich",
     "voRumpf",
     "vorschau",
     "zuordnungsSchritt"
    ],
    "calledBy": [
-    "(datei) dashboard.js"
+    "(datei) dashboard.js",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -168617,8 +168732,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 306,
-   "end": 306,
+   "start": 314,
+   "end": 314,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -168651,6 +168766,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -168702,8 +168818,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 307,
-   "end": 307,
+   "start": 315,
+   "end": 315,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -168724,8 +168840,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 312,
-   "end": 355,
+   "start": 320,
+   "end": 363,
    "lines": 44,
    "spiegelHinweis": null,
    "tables": [],
@@ -168743,7 +168859,8 @@
    ],
    "calledBy": [
     "oeffnePatientenImport",
-    "oeffneVerordnungImport"
+    "oeffneVerordnungImport",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -168754,8 +168871,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 357,
-   "end": 408,
+   "start": 365,
+   "end": 416,
    "lines": 52,
    "spiegelHinweis": null,
    "tables": [
@@ -168776,7 +168893,8 @@
    "calledBy": [
     "oeffneVerordnungImport",
     "oeffneZuzahlungKorrektur",
-    "schritt1"
+    "schritt1",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -168787,8 +168905,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 367,
-   "end": 383,
+   "start": 375,
+   "end": 391,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -168847,7 +168965,8 @@
     "schritt2",
     "setupKapisi",
     "speichereAuftragsdatei",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -168898,9 +169017,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 410,
-   "end": 434,
-   "lines": 25,
+   "start": 418,
+   "end": 451,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -168910,13 +169029,15 @@
    "calls": [
     "esc",
     "sendeAnServer",
+    "verordnungPatientenAbgleich",
     "voRumpf"
    ],
    "calledBy": [
     "(datei) module/einwilligung-texte.js",
     "oeffneStatusDialog",
     "oeffneVerordnungImport",
-    "vorschau"
+    "vorschau",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -171429,7 +171550,8 @@
     "bereichFn",
     "oeffneVerordnungImport",
     "schreibeVerordnung",
-    "senden"
+    "senden",
+    "w"
    ],
    "modules": [
     "abrechnung",
@@ -171988,11 +172110,54 @@
    "calledBy": [
     "(datei) api-backend/server.js",
     "(datei) module/verordnung-an-backend.js",
-    "saveRezept"
+    "oeffneVerordnungImport",
+    "saveRezept",
+    "senden",
+    "w"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "$",
@@ -177400,6 +177565,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -179930,6 +180096,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -180315,6 +180482,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -180582,6 +180750,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -180834,6 +181003,7 @@
     "speichern",
     "taste",
     "togglePopover",
+    "w",
     "zeigeBanner"
    ],
    "modules": [
@@ -180993,7 +181163,8 @@
    "calledBy": [
     "oeffneVerordnungImport",
     "oeffneZuzahlungKorrektur",
-    "schritt1"
+    "schritt1",
+    "w"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -184984,6 +185155,7 @@
     "vkz01AusnahmeHtml",
     "vorschau",
     "vorschlag",
+    "w",
     "wagnerRozetHtml",
     "withTimeout",
     "zeichne",
@@ -197232,8 +197404,48 @@
        "writes": [
         "leads:update"
        ],
-       "modules": [],
-       "uiPfad": []
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
       }
      ]
     },
@@ -200471,7 +200683,7 @@
     "module/patienten-import.js:417",
     "module/rechnung-zahlungseingang.js:555",
     "module/verordnung-feldmarker.js:240",
-    "module/verordnung-import.js:306",
+    "module/verordnung-import.js:314",
     "module/zuzahlung-befreiung.js:151",
     "module/zuzahlung-korrektur.js:209"
    ],
@@ -200581,7 +200793,7 @@
     "api-backend/ai/validators/standardRules.js:42",
     "api-backend/billing/api/mahnwesen.routes.js:47",
     "api-backend/billing/zuzahlung/zu-beleg.js:15",
-    "api-backend/server.js:338"
+    "api-backend/server.js:342"
    ],
    "aynalar": []
   },
@@ -200776,7 +200988,7 @@
    "orte": [
     "api-backend/dsgvo/fristen.js:97",
     "api-backend/merkez-istemci/ip-abgleich.js:257",
-    "api-backend/server.js:3869",
+    "api-backend/server.js:3873",
     "dashboard.js:13086"
    ],
    "aynalar": []
@@ -201004,7 +201216,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4216",
+    "api-backend/server.js:4220",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:115"
    ],
@@ -201140,7 +201352,7 @@
    "name": "berlinHeute",
    "orte": [
     "api-backend/lib/berlin-tag.js:14",
-    "module/verordnung-import.js:281"
+    "module/verordnung-import.js:289"
    ],
    "aynalar": []
   },
@@ -201821,7 +202033,7 @@
   {
    "name": "schliesse",
    "orte": [
-    "api-backend/server.js:3857",
+    "api-backend/server.js:3861",
     "module/kalender-kontextmenue.js:92"
    ],
    "aynalar": []
@@ -201838,7 +202050,7 @@
    "name": "schritt1",
    "orte": [
     "module/patienten-import.js:423",
-    "module/verordnung-import.js:312"
+    "module/verordnung-import.js:320"
    ],
    "aynalar": []
   },
@@ -201854,7 +202066,7 @@
    "name": "senden",
    "orte": [
     "module/abrechnungsstatus.js:634",
-    "module/verordnung-import.js:410"
+    "module/verordnung-import.js:418"
    ],
    "aynalar": []
   },
@@ -201950,7 +202162,7 @@
    "name": "status",
    "orte": [
     "module/patienten-import.js:482",
-    "module/verordnung-import.js:367"
+    "module/verordnung-import.js:375"
    ],
    "aynalar": []
   },
@@ -202021,7 +202233,7 @@
   {
    "name": "vorschau",
    "orte": [
-    "module/verordnung-import.js:357",
+    "module/verordnung-import.js:365",
     "module/zuzahlung-korrektur.js:238"
    ],
    "aynalar": []
@@ -202030,7 +202242,7 @@
    "name": "w",
    "orte": [
     "module/patienten-import.js:180",
-    "module/verordnung-import.js:143"
+    "module/verordnung-import.js:144"
    ],
    "aynalar": []
   },

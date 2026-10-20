@@ -161,7 +161,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `importiere()` — [module/patienten-import.js:514](module/patienten-import.js#L514-L533) · 20 satır · leads:insert
 - `schritt3()` — [module/patienten-import.js:535](module/patienten-import.js#L535-L561) · 27 satır · leads:delete
 
-**Yol 6 — `verordnungPatientenAbgleich()`** · Ekran: _UI yolu çözülemedi_
+**Yol 6 — `verordnungPatientenAbgleich()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `verordnungPatientenAbgleich()` — [module/verordnung-patient-abgleich.js:19](module/verordnung-patient-abgleich.js#L19-L98) · 80 satır · leads:update
 
 **Yol 7 — `beantworteAltbestand()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
@@ -452,7 +452,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `$` — attendance.js:10 · module/anamnese.js:43 · module/branding-ui.js:31 · module/kiosk.js:72 · module/rechnung-zahlungseingang.js:455 · module/ueber.js:52 · module/verordnung-podo.js:83 · module/verordnung-pruefen-knopf.js:42 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
 - `fmtDate` — api-backend/billing/dta/encoding.js:85 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:990 · ops/app.js:84
 - `g` — dashboard.js:13729 · dashboard.js:13742 · dashboard.js:13915 · module/rezept-barcode-bestaetigung.js:4 · module/rezept-barcode-dialog.js:6 · module/rezept-in-maske.js:40 · module/rezept-patientenkopf.js:4 · module/verordnung-anlegen.js:28 · module/verordnung-maske.js:434 · module/verordnung-nachweis.js:28
-- `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/patienten-import.js:417 · module/rechnung-zahlungseingang.js:555 · module/verordnung-feldmarker.js:240 · module/verordnung-import.js:306 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
+- `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/patienten-import.js:417 · module/rechnung-zahlungseingang.js:555 · module/verordnung-feldmarker.js:240 · module/verordnung-import.js:314 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `init` — attendance.js:299 · booking-request.js:1420 · booking.js:64 · cookie-consent.js:139 · dashboard.js:14648 · kalender.js:130 · onboarding.js:77 · setup.js:218
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:22 · api-backend/billing/api/zuzahlung.routes.js:47
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · merkez/db.js:125
@@ -461,7 +461,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
 - `zeichne` — module/abrechnung-auswahl.js:767 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:27 · module/patienten-einwilligung.js:541 · module/patienten-import.js:341 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:416
 - `zeile` — module/branding-ui.js:39 · module/einrichtung-ring.js:40 · module/rechnung-druck.js:33 · module/verordnung-detail.js:274 · module/verordnung-detail.js:403 · module/verordnung-detail.js:460 · module/verordnung-pruefen-knopf.js:116
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:338
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:342
 - `cleanup` — dashboard.js:6215 · dashboard.js:6302 · dashboard.js:18072 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:81 · module/bestaetigungs-dialog.js:20
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:231 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:703
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
@@ -479,7 +479,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `loadServices` — booking-request.js:529 · booking.js:176 · dashboard.js:8357 · kalender.js:643
 - `norm` — katalog-suche.js:414 · module/patienten-import.js:72 · module/termin-aktionen.js:608 · ops/tools/regroup.mjs:59
 - `onEsc` — dashboard.js:6309 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
-- `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:3869 · dashboard.js:13086
+- `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:3873 · dashboard.js:13086
 - `v` — dashboard.js:12094 · dashboard.js:12116 · dashboard.js:12136 · dashboard.js:14434
 - `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223
