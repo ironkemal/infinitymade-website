@@ -21,7 +21,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20261005a" />
-  <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261020" />
+  <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261020b" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -4833,7 +4833,7 @@
   <div id="bkActionModal" style="position:fixed;top:56px;right:0;bottom:0;width:440px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:400;overflow-y:auto;display:none;flex-direction:column;">
     <div class="modal-header" style="position:sticky;top:0;z-index:1;background:var(--bg-card-solid,#1f2937);flex-direction:column;align-items:stretch;gap:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="modal-title">Termin-Aktionen</span>
+        <span class="bk-kopf"><span class="modal-title" id="bkKopfTitel">Termin-Aktionen</span><span class="bk-kopf-meta" id="bkKopfMeta"></span></span>
         <button class="modal-close" data-modal="bkActionModal">✕</button>
       </div>
       <!-- Patient wählen — ganz oben, weil hier auch der Name steht.
@@ -4976,6 +4976,10 @@
           <div id="bkActionHbRoute" class="hb-info-route"></div>
         </div>
 
+        <!-- Fuss des Seitenbereichs: Status- und Handlungsknöpfe, unten angeheftet
+             (Kalender-Entwurf, Kemal 20.10.2026). Nur ein Rahmen um die
+             bestehenden Gruppen — ids und Verdrahtung unverändert. -->
+        <div class="bk-fuss" id="bkFuss">
         <!-- STATE: null → Fahrt Starten -->
         <div class="form-group" id="bkActionFahrtStartedGroup" hidden>
           <button class="btn-primary" id="bkActionFahrtStartBtn" style="width:100%;justify-content:center;background:#1c4d8f;">
@@ -5074,6 +5078,7 @@
             <button class="btn-ghost bk-akt-btn" id="bkActionFussbefundBtn" type="button" role="menuitem" hidden>🦶 Fußbefund</button>
           </div>
         </div>
+        </div><!-- /bkFuss -->
 
         <!-- Rezeptinfo und „Aktive Verordnung" stehen bewusst als Paar ganz
              unten, in dieser Reihenfolge. Vorher stand die Rezeptinfo weit

@@ -185,7 +185,9 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 /* ── 5. Terminkalender ──────────────────────────────────────────────────── */
 .cal-view-toolbar { gap: 8px; margin-bottom: 12px; }
 .cal-view-nav { gap: 4px; }
-.cal-view-date { font-size: 15px; min-width: 170px; }
+/* Das Datum ist die Überschrift des Tages (Entwurf) — nicht nur ein Etikett
+   zwischen den Pfeilen. */
+.cal-view-date { font-size: 19px; letter-spacing: -0.01em; min-width: 220px; text-align: left; padding: 0 6px; }
 
 #dayViewPrev, #dayViewNext {
   width: 30px;
@@ -315,6 +317,84 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
   border-radius: 0 !important;
 }
 #bkActionModal #bkDetailCard { padding: 4px 2px 14px !important; }
+
+/* ── 7. Seitenbereich in der Reihenfolge des Kalender-Entwurfs ─────────────
+   Kopf: der Patientenname als Überschrift (module/termin-aktionen.js,
+   setzeAktionsKopf). Danach: Termin → Rezeptinfo/Verordnung (mit Zuzahlung)
+   → Patient → Notizen. Die Knöpfe stehen im angehefteten Fuss (#bkFuss).
+
+   Umgeordnet wird mit `order`, nicht im HTML: die Kommentare dort erklären
+   die Blöcke, und jede id bleibt, wo die Verdrahtung sie sucht.
+   Rezeptinfo und „Aktive Verordnung" bleiben ein Paar direkt untereinander
+   (Kemal, 31.08.2026: „dass man beide in einem Blick sieht") — sie rücken
+   nur gemeinsam nach oben. */
+#bkActionModal .modal-body { display: flex; flex-direction: column; }
+#bkActionModal #bkDetailCard       { order: 1; }
+#bkActionModal #bkBookingNotesCard { order: 2; }
+#bkActionModal #bkActionHbInfo     { order: 3; }
+#bkActionModal #bkVeroPanelWrap    { order: 4; }
+#bkActionModal #bkRxInfoCard       { order: 5; }
+#bkActionModal #bkRxSessionsPanel  { order: 6; }
+#bkActionModal #bkPatientCard      { order: 7; }
+#bkActionModal #bkAnamneseCard     { order: 8; }
+#bkActionModal #bkPatNotesCard     { order: 9; }
+#bkActionModal #bkVerlaufCard      { order: 10; }
+#bkActionModal #bkFuss             { order: 99; }
+
+.bk-kopf { display: flex; flex-direction: column; min-width: 0; }
+#bkActionModal #bkKopfTitel {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bk-kopf-meta { font-size: 12px; color: var(--text-muted); }
+.bk-kopf-meta:empty { display: none; }
+#bkActionModal #bkActPatSearch { font-size: 12px !important; color: var(--text-muted); }
+
+/* Rezeptinfo: Goldkasten → ruhiger Abschnitt. Die Farben stehen inline. */
+#bkActionModal #bkRxInfoCard {
+  border: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}
+#bkActionModal #bkRxInfoCard > div:first-child {
+  background: transparent !important;
+  border-bottom-color: var(--border) !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+#bkActionModal #bkRxGeldZeile { border-bottom-color: var(--border) !important; padding-left: 2px !important; }
+#bkActionModal #bkRxRemainingBar { background: var(--grid-hour) !important; height: 6px !important; }
+#bkActionModal #bkRxRemainingFill { background: var(--primary) !important; }
+#bkActionModal #bkRxRemainingText { font-size: 12px !important; color: var(--text-main) !important; font-weight: 600; }
+#bkActionModal #bkRxSessionsPanel { border-top-width: 1px !important; margin-top: 4px !important; }
+
+/* Angehefteter Fuss mit den Knöpfen. */
+.bk-fuss {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 8px -20px -20px;
+  padding: 12px 20px;
+  background: var(--bg-card-solid);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -10px 20px -18px rgba(43, 35, 28, 0.35);
+}
+.bk-fuss > .form-group { margin-bottom: 8px; }
+.bk-fuss .btn-primary { min-height: 38px; }
+.bk-fuss .bk-akt-leiste { margin-bottom: 0; gap: 6px; }
+
+/* Am Bildschirm mit Maus: drei Knöpfe je Zeile und flacher — der Fuss soll
+   nicht die halbe Höhe des Panels belegen. Auf dem Tablet bleiben es zwei
+   Spalten mit 44 px Tippziel (Grund in dashboard.css bei .bk-akt-btn). */
+@media (hover: hover) and (pointer: fine) {
+  .bk-fuss .bk-akt-leiste { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bk-fuss .bk-akt-btn { min-height: 34px; padding: 6px 8px; font-size: 12.5px; }
+  .bk-fuss .bk-akt-mehr { min-height: 32px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar-item::before, .cal-view-toggle .cal-view-btn, .btn-primary, .btn-ghost { transition: none; }
