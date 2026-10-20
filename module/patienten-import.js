@@ -1,0 +1,425 @@
+/**
+ * patienten-import.js — Patientenstamm aus einer CSV-Datei übernehmen.
+ *
+ * Warum (20.10.2026): Beim Wechsel der Praxissoftware ist die Datenübernahme
+ * die größte Hürde (Recherche podoloji: 64 % nennen sie zuerst). Bisher gab es
+ * hier nur den „CSV importieren"-Knopf aus der Google-Maps-Zeit, der Leads mit
+ * title/rating anlegte — ohne Vorname, Geburtsdatum, Dublettenprüfung. Dieser
+ * Import ersetzt ihn auf demselben Knopf.
+ *
+ * Ablauf: Datei wählen → Vorschau (neu / schon vorhanden / fehlerhaft) →
+ * importieren. Jede Übernahme bekommt eine Kennung in `metadata.import_batch`,
+ * damit sie rückgängig gemacht werden kann, solange die Patienten nicht
+ * benutzt wurden (Einwilligung, Verordnung …). Die Altsystem-Nummer landet in
+ * `metadata.altsystem_nr`, NICHT in `patientennummer` — die vergibt ein Trigger
+ * fortlaufend (db-ustasi, 20.10.2026).
+ *
+ * Bewusst nicht: Verordnungen (eigener Schreibweg über /api/rezept/confirm),
+ * Speichern der Datei, Zeileninhalte in Logs (onprem O-207).
+ */
+
+import { normalisiereGeschlecht } from './geschlecht.js?v=20260816';
+import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
+import { pruefeKvnr } from './kvnr.js?v=20260814';
+import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261020imp';
+
+// ── CSV lesen ───────────────────────────────────────────────────────────
+
+/** Trennzeichen aus der Kopfzeile raten (außerhalb von Anführungszeichen). */
+function trennzeichen(text) {
+  const zeile = text.split(/\r?\n/, 1)[0] || '';
+  const zaehl = { ';': 0, ',': 0, '\t': 0 };
+  let inQ = false;
+  for (const c of zeile) {
+    if (c === '"') inQ = !inQ;
+    else if (!inQ && c in zaehl) zaehl[c]++;
+  }
+  return Object.entries(zaehl).sort((a, b) => b[1] - a[1])[0][1] > 0
+    ? Object.entries(zaehl).sort((a, b) => b[1] - a[1])[0][0]
+    : ';';
+}
+
+/**
+ * CSV nach RFC 4180 lesen: Anführungszeichen, "" als Escape, Zeilenumbrüche
+ * im Feld, BOM, ; , oder Tab (Excel-DE speichert mit ;).
+ * @returns {string[][]} Zeilen inkl. Kopfzeile, leere Zeilen entfernt
+ */
+export function leseCsv(text) {
+  const t = String(text ?? '').replace(/^﻿/, '');
+  const sep = trennzeichen(t);
+  const zeilen = [];
+  let zeile = [], feld = '', inQ = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inQ) {
+      if (c === '"' && t[i + 1] === '"') { feld += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else feld += c;
+    } else if (c === '"') inQ = true;
+    else if (c === sep) { zeile.push(feld); feld = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && t[i + 1] === '\n') i++;
+      zeile.push(feld); zeilen.push(zeile); zeile = []; feld = '';
+    } else feld += c;
+  }
+  if (feld !== '' || zeile.length) { zeile.push(feld); zeilen.push(zeile); }
+  return zeilen.filter(z => z.some(f => f.trim() !== ''));
+}
+
+// ── Spalten zuordnen ────────────────────────────────────────────────────
+
+const norm = (s) => String(s ?? '').trim().toLowerCase()
+  .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+  .replace(/[^a-z0-9]/g, '');
+
+/** Feld → mögliche Spaltenüberschriften (normalisiert). Reihenfolge = Vorrang. */
+export const SPALTEN = {
+  vorname: ['vorname', 'firstname', 'rufname'],
+  nachname: ['nachname', 'name', 'familienname', 'lastname', 'zuname'],
+  vollname: ['patient', 'patientenname', 'vollername', 'namevorname', 'vornamename'],
+  geburtsdatum: ['geburtsdatum', 'gebdatum', 'geboren', 'geburtstag', 'dob', 'birthdate', 'gebdat'],
+  geschlecht: ['geschlecht', 'anrede', 'sex', 'gender'],
+  strasse: ['strasse', 'str', 'strassehausnummer', 'anschrift', 'adresse', 'street'],
+  plz: ['plz', 'postleitzahl', 'zip'],
+  ort: ['ort', 'wohnort', 'stadt', 'city'],
+  telefon: ['telefon', 'tel', 'telefonnummer', 'festnetz', 'phone', 'telefonprivat'],
+  handy: ['handy', 'mobil', 'mobilnummer', 'mobiltelefon', 'mobile'],
+  email: ['email', 'mail', 'emailadresse'],
+  krankenkasse: ['krankenkasse', 'kasse', 'kostentraeger', 'versicherung'],
+  krankenkasse_ik: ['ik', 'kassenik', 'iknummer', 'krankenkasseik', 'kostentraegerik'],
+  versichertennummer: ['versichertennummer', 'versnr', 'kvnr', 'krankenversichertennummer', 'versichertennr'],
+  versichertenstatus: ['versichertenstatus', 'status', 'versstatus'],
+  versicherungsart: ['versicherungsart', 'gkvprivat', 'kassenart', 'abrechnungsart'],
+  altsystem_nr: ['patientennummer', 'patnr', 'patientennr', 'nummer', 'nr', 'id', 'kundennummer'],
+  notizen: ['notiz', 'notizen', 'bemerkung', 'bemerkungen', 'hinweis'],
+};
+
+/** @returns {Object<string, number>} Feld → Spaltenindex */
+export function ordneSpaltenZu(kopf) {
+  const k = (kopf || []).map(norm);
+  const out = {};
+  const vergeben = new Set();
+  for (const [feld, namen] of Object.entries(SPALTEN)) {
+    for (const n of namen) {
+      const i = k.findIndex((h, idx) => h === n && !vergeben.has(idx));
+      if (i >= 0) { out[feld] = i; vergeben.add(i); break; }
+    }
+  }
+  return out;
+}
+
+// ── Werte umwandeln ─────────────────────────────────────────────────────
+
+/** 31.12.1950 · 31.12.50 · 1950-12-31 · 31/12/1950 → '1950-12-31' oder null */
+export function leseDatum(roh) {
+  const s = String(roh ?? '').trim();
+  let j, m, t;
+  let r = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (r) [, j, m, t] = r;
+  else if ((r = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})$/))) {
+    [, t, m, j] = r;
+    if (j.length === 2) {
+      // Zweistellig: Geburtsjahre in der Zukunft gibt es nicht.
+      const jetzt = new Date().getFullYear() % 100;
+      j = (Number(j) > jetzt ? '19' : '20') + j;
+    }
+  } else return null;
+  const d = new Date(Date.UTC(+j, +m - 1, +t));
+  if (d.getUTCFullYear() !== +j || d.getUTCMonth() !== +m - 1 || d.getUTCDate() !== +t) return null;
+  if (d > new Date() || +j < 1900) return null;
+  return `${j}-${String(m).padStart(2, '0')}-${String(t).padStart(2, '0')}`;
+}
+
+/** „Müller, Anna" oder „Anna Müller" → { vor, nach } */
+function teileName(voll) {
+  const s = String(voll ?? '').trim().replace(/\s+/g, ' ');
+  if (!s) return { vor: '', nach: '' };
+  if (s.includes(',')) {
+    const [nach, ...rest] = s.split(',');
+    return { vor: rest.join(',').trim(), nach: nach.trim() };
+  }
+  const teile = s.split(' ');
+  return teile.length < 2 ? { vor: '', nach: s } : { vor: teile.slice(0, -1).join(' '), nach: teile.at(-1) };
+}
+
+function versicherungsart(roh, hatKasse) {
+  const s = norm(roh);
+  if (/^(gkv|gesetzlich|kasse|kassenpatient|k)$/.test(s)) return 'gkv';
+  if (/^(privat|pkv|p|privatpatient|selbstzahler|sz)$/.test(s)) return 'privat';
+  return hatKasse ? 'gkv' : null;
+}
+
+/** Plz + Ort in einer Spalte („53721 Siegburg")? */
+function trennePlzOrt(plz, ort) {
+  if (plz || !ort) return { plz, ort };
+  const m = String(ort).match(/^(\d{5})\s+(.+)$/);
+  return m ? { plz: m[1], ort: m[2] } : { plz, ort };
+}
+
+/**
+ * Eine CSV-Zeile → leads-Felder + Fehler/Hinweise.
+ * Fehler = Zeile wird nicht importiert. Hinweise = wird importiert, prüfen.
+ */
+export function zeileZuPatient(werte, zuordnung) {
+  const w = (f) => (zuordnung[f] != null ? String(werte[zuordnung[f]] ?? '').trim() : '');
+  const fehler = [], hinweise = [];
+
+  let vor = w('vorname'), nach = w('nachname');
+  if ((!vor || !nach) && w('vollname')) ({ vor, nach } = teileName(w('vollname')));
+  else if (!vor && nach && zuordnung.vorname == null) ({ vor, nach } = teileName(nach));
+  if (!nach) fehler.push('Nachname fehlt');
+  if (!vor) fehler.push('Vorname fehlt');
+
+  const gebRoh = w('geburtsdatum');
+  const geburtsdatum = leseDatum(gebRoh);
+  if (!gebRoh) fehler.push('Geburtsdatum fehlt');
+  else if (!geburtsdatum) fehler.push(`Geburtsdatum „${gebRoh}" nicht lesbar`);
+
+  const gRoh = w('geschlecht');
+  const geschlecht = normalisiereGeschlecht(gRoh);
+  if (gRoh && !geschlecht && !/^(herr|frau)\b/i.test(gRoh)) hinweise.push(`Geschlecht „${gRoh}" unbekannt`);
+
+  const ikRoh = w('krankenkasse_ik');
+  const krankenkasse_ik = kartenIkNormalisieren(ikRoh);
+  if (ikRoh && !krankenkasse_ik) hinweise.push('IK nicht 9-stellig — leer gelassen');
+
+  let versichertennummer = null;
+  if (w('versichertennummer')) {
+    const k = pruefeKvnr(w('versichertennummer'));
+    versichertennummer = k.normalisiert || null;
+    if (!k.ok) hinweise.push('Versichertennummer auffällig');
+  }
+
+  const vs = w('versichertenstatus');
+  const versichertenstatus = /^[1359]\d{4}$/.test(vs) ? vs : null;
+  if (vs && !versichertenstatus && zuordnung.versichertenstatus != null) hinweise.push(`Versichertenstatus „${vs}" ungewöhnlich`);
+
+  const { plz, ort } = trennePlzOrt(w('plz'), w('ort'));
+  const krankenkasse = w('krankenkasse') || null;
+
+  const patient = {
+    first_name: vor,
+    last_name: nach,
+    title: `${vor} ${nach}`.trim(),
+    geburtsdatum,
+    geschlecht,
+    street: w('strasse') || null,
+    plz: plz || null,
+    city: ort || null,
+    phone: w('telefon') || null,
+    handy: w('handy') || null,
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(w('email')) ? w('email') : null,
+    krankenkasse,
+    krankenkasse_ik,
+    versichertennummer,
+    versichertenstatus,
+    insurance_type: versicherungsart(w('versicherungsart'), !!(krankenkasse || krankenkasse_ik)),
+    notes: w('notizen') || null,
+  };
+  if (w('email') && !patient.email) hinweise.push('E-Mail ungültig — leer gelassen');
+  if (patient.plz && !/^\d{5}$/.test(patient.plz)) hinweise.push('PLZ nicht 5-stellig');
+  return { patient, fehler, hinweise, altsystemNr: w('altsystem_nr') || null };
+}
+
+// ── Gesamtprüfung ───────────────────────────────────────────────────────
+
+/**
+ * @param {string} text CSV-Inhalt
+ * @param {object[]} bestehende vorhandene leads des Owners
+ * @returns {{ zuordnung, fehltSpalte: string[], zeilen: object[], neu: number, dubletten: number, fehlerhaft: number }}
+ */
+export function pruefeImport(text, bestehende = []) {
+  const [kopf = [], ...daten] = leseCsv(text);
+  const zuordnung = ordneSpaltenZu(kopf);
+  const fehltSpalte = [];
+  if (zuordnung.nachname == null && zuordnung.vollname == null) fehltSpalte.push('Nachname');
+  if (zuordnung.geburtsdatum == null) fehltSpalte.push('Geburtsdatum');
+
+  const gesehen = new Map();
+  const zeilen = daten.map((werte, i) => {
+    const z = { nr: i + 2, ...zeileZuPatient(werte, zuordnung), dublette: null };
+    if (!z.fehler.length) {
+      const vorhanden = findePatientDublette(z.patient, bestehende);
+      if (vorhanden) z.dublette = 'vorhanden';
+      else {
+        const s = nameGeburtSchluessel(z.patient);
+        if (s && gesehen.has(s)) z.dublette = `doppelt in Datei (Zeile ${gesehen.get(s)})`;
+        else if (s) gesehen.set(s, z.nr);
+      }
+    }
+    return z;
+  });
+  return {
+    zuordnung,
+    fehltSpalte,
+    zeilen,
+    neu: zeilen.filter(z => !z.fehler.length && !z.dublette).length,
+    dubletten: zeilen.filter(z => z.dublette).length,
+    fehlerhaft: zeilen.filter(z => z.fehler.length).length,
+  };
+}
+
+/** Datensatz für leads.insert */
+export function insertDatensatz(z, ownerId, batchId) {
+  const metadata = { import_batch: batchId, import_am: new Date().toISOString().slice(0, 10) };
+  if (z.altsystemNr) metadata.altsystem_nr = z.altsystemNr;
+  if (z.patient.krankenkasse) metadata.krankenkasse = z.patient.krankenkasse;
+  if (z.patient.versichertennummer) metadata.krankenkassennummer = z.patient.versichertennummer;
+  if (z.patient.versichertenstatus) metadata.versichertenstatus = z.patient.versichertenstatus;
+  return { owner_id: ownerId, status: 'new', ...z.patient, metadata };
+}
+
+export const VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Geschlecht;Straße;PLZ;Ort;Telefon;Handy;E-Mail;Krankenkasse;IK;Versichertennummer;Versichertenstatus;Patientennummer;Bemerkung\n'
+  + 'Muster;Erika;01.02.1950;w;Hauptstraße 1;53721;Siegburg;02241 12345;0170 1234567;;AOK Rheinland/Hamburg;104212505;A123456780;10000;4711;\n';
+
+// ── Oberfläche ──────────────────────────────────────────────────────────
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const BTN = 'padding:9px 16px;border-radius:6px;font-size:14px;cursor:pointer;';
+
+/**
+ * Öffnet den Import-Dialog.
+ * @param {{ supabase, ownerId: string, bestehende: () => object[], showToast: Function, nachImport: (anzahl:number) => Promise<void>|void }} d
+ */
+export function oeffnePatientenImport(d) {
+  document.getElementById('patientenImportModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'patientenImportModal';
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="piTitel" style="background:var(--bg-card-solid);color:var(--text-main);border:1px solid var(--border);border-radius:12px;max-width:760px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-sizing:border-box;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 12px;">
+        <h3 id="piTitel" style="margin:0;font-size:18px;">Patienten importieren</h3>
+        <button type="button" data-pi="zu" aria-label="Schließen" style="background:none;border:none;font-size:22px;color:var(--text-muted);cursor:pointer;">✕</button>
+      </div>
+      <div data-pi="inhalt" style="padding:0 24px;overflow:auto;flex:1;"></div>
+      <div data-pi="fuss" style="display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);"></div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  const inhalt = modal.querySelector('[data-pi="inhalt"]');
+  const fuss = modal.querySelector('[data-pi="fuss"]');
+  const schliessen = () => { modal.remove(); document.removeEventListener('keydown', esc_); };
+  const esc_ = (e) => { if (e.key === 'Escape') schliessen(); };
+  document.addEventListener('keydown', esc_);
+  modal.querySelector('[data-pi="zu"]').addEventListener('click', schliessen);
+  modal.addEventListener('click', (e) => { if (e.target === modal) schliessen(); });
+
+  const schritt1 = () => {
+    inhalt.innerHTML = `
+      <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px;line-height:1.5;">
+        Exportieren Sie den Patientenstamm aus Ihrer bisherigen Software als CSV (Excel: „Speichern unter → CSV").
+        Nötig sind <b>Nachname, Vorname, Geburtsdatum</b>; alle anderen Spalten werden erkannt, wenn die Überschrift passt
+        (z. B. Straße, PLZ, Ort, Telefon, Handy, E-Mail, Krankenkasse, IK, Versichertennummer).
+        Patienten, die es schon gibt, werden übersprungen. Verordnungen werden nicht übernommen.
+      </p>
+      <label style="display:block;border:1px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;">
+        <input type="file" accept=".csv,.txt,text/csv" data-pi="datei" style="display:none;" />
+        <span style="font-weight:600;">CSV-Datei auswählen</span>
+      </label>
+      <p style="margin:12px 0 16px;font-size:13px;"><a href="#" data-pi="vorlage">Vorlage herunterladen</a></p>`;
+    fuss.innerHTML = `<button type="button" class="btn-ghost" data-pi="abbr" style="${BTN}">Abbrechen</button>`;
+    fuss.querySelector('[data-pi="abbr"]').addEventListener('click', schliessen);
+    inhalt.querySelector('[data-pi="vorlage"]').addEventListener('click', (e) => {
+      e.preventDefault();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([VORLAGE_CSV], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'praxura-patienten-vorlage.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+    inhalt.querySelector('[data-pi="datei"]').addEventListener('change', async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      let text = await f.text();
+      // Ältere Praxissoftware exportiert Windows-1252 — dann stehen Ersatzzeichen statt Umlauten.
+      if (text.includes('�')) {
+        try { text = new TextDecoder('windows-1252').decode(await f.arrayBuffer()); } catch { /* bleibt UTF-8 */ }
+      }
+      schritt2(pruefeImport(text, d.bestehende() || []));
+    });
+  };
+
+  const schritt2 = (erg) => {
+    if (erg.fehltSpalte.length || !erg.zeilen.length) {
+      inhalt.innerHTML = `<p style="margin:0 0 16px;font-size:14px;">${erg.zeilen.length
+        ? `Diese Spalten wurden nicht gefunden: <b>${esc(erg.fehltSpalte.join(', '))}</b>. Bitte die Überschriften anpassen (Vorlage) und erneut versuchen.`
+        : 'Die Datei enthält keine Patientenzeilen.'}</p>`;
+      fuss.innerHTML = `<button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>`;
+      fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', schritt1);
+      return;
+    }
+    const status = (z) => z.fehler.length
+      ? `<span style="color:var(--danger,#b42318);">${esc(z.fehler.join(' · '))}</span>`
+      : z.dublette ? `<span style="color:var(--text-muted);">übersprungen — ${esc(z.dublette === 'vorhanden' ? 'schon vorhanden' : z.dublette)}</span>`
+      : z.hinweise.length ? `<span style="color:var(--warning,#b54708);">neu · ${esc(z.hinweise.join(' · '))}</span>`
+      : 'neu';
+    const zeilen = erg.zeilen.slice(0, 200).map(z => `
+      <tr style="border-top:1px solid var(--border);">
+        <td style="padding:6px 8px;color:var(--text-muted);">${z.nr}</td>
+        <td style="padding:6px 8px;white-space:nowrap;">${esc(z.patient.last_name)}, ${esc(z.patient.first_name)}</td>
+        <td style="padding:6px 8px;white-space:nowrap;">${esc(z.patient.geburtsdatum ? z.patient.geburtsdatum.split('-').reverse().join('.') : '')}</td>
+        <td style="padding:6px 8px;">${status(z)}</td>
+      </tr>`).join('');
+    inhalt.innerHTML = `
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;">
+        <span><b>${erg.neu}</b> neu</span>
+        <span style="color:var(--text-muted);"><b>${erg.dubletten}</b> schon vorhanden / doppelt</span>
+        <span style="color:${erg.fehlerhaft ? 'var(--danger,#b42318)' : 'var(--text-muted)'};"><b>${erg.fehlerhaft}</b> fehlerhaft</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="text-align:left;color:var(--text-muted);"><th style="padding:6px 8px;">Zeile</th><th style="padding:6px 8px;">Name</th><th style="padding:6px 8px;">Geboren</th><th style="padding:6px 8px;">Ergebnis</th></tr></thead>
+        <tbody>${zeilen}</tbody>
+      </table>
+      ${erg.zeilen.length > 200 ? `<p style="font-size:13px;color:var(--text-muted);">… und ${erg.zeilen.length - 200} weitere Zeilen.</p>` : ''}
+      <p style="font-size:13px;color:var(--text-muted);margin:12px 0 16px;">Fehlerhafte und vorhandene Zeilen werden nicht übernommen. Die Übernahme lässt sich danach rückgängig machen, solange die Patienten noch nicht verwendet wurden.</p>`;
+    fuss.innerHTML = `
+      <button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>
+      <button type="button" class="btn-primary" data-pi="los" style="${BTN}" ${erg.neu ? '' : 'disabled'}>${erg.neu} Patient${erg.neu === 1 ? '' : 'en'} importieren</button>`;
+    fuss.querySelector('[data-pi="zurueck"]').addEventListener('click', schritt1);
+    fuss.querySelector('[data-pi="los"]').addEventListener('click', (e) => importiere(erg, e.currentTarget));
+  };
+
+  const importiere = async (erg, knopf) => {
+    knopf.disabled = true;
+    knopf.textContent = 'Wird importiert …';
+    const batchId = crypto.randomUUID();
+    const daten = erg.zeilen.filter(z => !z.fehler.length && !z.dublette).map(z => insertDatensatz(z, d.ownerId, batchId));
+    let ok = 0;
+    for (let i = 0; i < daten.length; i += 100) {
+      const { error } = await d.supabase.from('leads').insert(daten.slice(i, i + 100));
+      if (error) {
+        // Inhalt nicht loggen (Patientendaten) — nur, dass es scheiterte.
+        d.showToast(`Import nach ${ok} Patienten abgebrochen. Bitte erneut versuchen — bereits übernommene werden dann übersprungen.`, 'error');
+        break;
+      }
+      ok += Math.min(100, daten.length - i);
+    }
+    if (ok) await d.nachImport(ok);
+    schritt3(ok, batchId);
+  };
+
+  const schritt3 = (ok, batchId) => {
+    inhalt.innerHTML = `<p style="margin:0 0 16px;font-size:15px;"><b>${ok}</b> Patient${ok === 1 ? '' : 'en'} übernommen.</p>`;
+    fuss.innerHTML = `
+      ${ok ? `<button type="button" class="btn-ghost" data-pi="rueck" style="${BTN}">Rückgängig machen</button>` : ''}
+      <button type="button" class="btn-primary" data-pi="fertig" style="${BTN}">Fertig</button>`;
+    fuss.querySelector('[data-pi="fertig"]').addEventListener('click', schliessen);
+    fuss.querySelector('[data-pi="rueck"]')?.addEventListener('click', async (e) => {
+      e.currentTarget.disabled = true;
+      const { error } = await d.supabase.from('leads').delete()
+        .eq('owner_id', d.ownerId).eq('metadata->>import_batch', batchId);
+      if (error) {
+        d.showToast('Rückgängig nicht möglich — einige Patienten werden schon verwendet (z. B. Einwilligung).', 'error');
+        return;
+      }
+      await d.nachImport(0);
+      inhalt.innerHTML = '<p style="margin:0 0 16px;font-size:15px;">Import rückgängig gemacht.</p>';
+      fuss.innerHTML = `<button type="button" class="btn-primary" data-pi="fertig" style="${BTN}">Fertig</button>`;
+      fuss.querySelector('[data-pi="fertig"]').addEventListener('click', schliessen);
+    });
+  };
+
+  schritt1();
+}

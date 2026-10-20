@@ -56,7 +56,7 @@ import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './modu
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261006m';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261020imp';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
@@ -213,7 +213,7 @@ const T = {
     btn_leave_cancel: 'Abbrechen', btn_leave_save: 'Speichern',
     lbl_other: 'Andere',
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
-    copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
+    copied: 'Kopiert!',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
     nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
     doctors_sub: 'Verordnende Ärzte und ihre Zuweisungen', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
@@ -376,13 +376,13 @@ const T = {
 
 const PLAN_FEATURES = {
   starter: {
-    de: ['Online-Terminbuchung 24/7', 'Automatische Erinnerungen', 'Warteliste-Automation', 'Eigene Praxura Buchungsseite', 'DSGVO-konform'],
+    de: ['Online-Terminbuchung 24/7', 'Online-Anfragen & Warteliste', 'Eigene Praxura Buchungsseite', 'Digitale Patientenakte', 'DSGVO-konform'],
   },
   professional: {
-    de: ['Alles aus Starter', 'Reaktivierungskampagne', 'Upsell-Vorschläge', 'Auslastungs-Dashboard', 'Mitarbeiter-Routing'],
+    de: ['Alles aus Starter', 'Verordnung prüfen', 'Abrechnung vorbereiten (§302)', 'Ausfallrechnung & Mahnwesen', 'Mitarbeiter & Rollen'],
   },
   klinik: {
-    de: ['Alles aus Professional', 'Digitales Anamnese-Formular', 'Verpasster Anruf → Assistent', 'Medizinische Erinnerungen', 'Rezept-Workflow'],
+    de: ['Alles aus Professional', 'Digitale Einwilligung & Anamnese', 'Mehrere Standorte', 'Fahrtenbuch für Hausbesuche', 'Rezept-Workflow'],
   },
   mitarbeiter: {
     de: ['Online-Terminbuchung', 'Kalender-Synchronisation', 'Arbeitszeiten-Verwaltung', 'DSGVO-konform'],
@@ -8342,49 +8342,12 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('csvImportBtn').addEventListener('click', () => {
-  document.getElementById('csvFile').click();
-});
-document.getElementById('csvFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const ownerId = getOwnerId();
-  try {
-    let rows = [];
-    if (file.name.endsWith('.json')) {
-      rows = JSON.parse(text);
-    } else {
-      const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      rows = lines.slice(1).map(line => {
-        const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        return Object.fromEntries(headers.map((h, i) => [h, vals[i]]));
-      });
-    }
-    const inserts = rows.filter(r => r.title || r.name).map(r => ({
-      owner_id: ownerId,
-      title: r.title || r.name || '—',
-      phone: r.phone || r.phoneNumber || null,
-      email: r.email || null,
-      website: r.website || null,
-      city: r.city || r['address.city'] || null,
-      country_code: r.country_code || r.country || null,
-      total_score: parseFloat(r.rating || r.totalScore) || null,
-      reviews_count: parseInt(r.reviews_count || r.reviewsCount) || null,
-      google_url: r.google_url || r.url || null,
-      status: 'new'
-    }));
-    if (inserts.length === 0) throw new Error('empty');
-    await supabase.from('leads').insert(inserts);
-    emit('leads:changed', { anzahl: inserts.length });
-    await loadLeads();
-    showToast(t('csv_imported') + inserts.length);
-  } catch (err) {
-    showToast(t('csv_error') + err.message, 'error');
-  }
-  e.target.value = '';
-});
+// Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
+// Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.
+document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePatientenImport({
+  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast,
+  nachImport: async (anzahl) => { verwerfeKassenCache(); emit('leads:changed', { anzahl }); await loadLeads(); },
+}));
 
 // Apify/Google-Maps-Suche (b2b + Ärzte "In der Nähe finden") → module/lead-suche.js
 // (O-09, onprem/REGISTER.md — On-Prem-Box entfernt diese Knoten statt sie zu laden)
