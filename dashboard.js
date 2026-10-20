@@ -49,7 +49,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021c';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021d';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -94,14 +94,14 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261011c';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261010zf';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021d';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc';
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zc';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261010zc';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261011c';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021d';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261010zc';
@@ -122,7 +122,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
-import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
+import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261021d';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -134,8 +134,8 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261020';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261010zc'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+} from './module/termin-aktionen.js?v=20261021d';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021d'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20261014fix1';
@@ -2884,10 +2884,9 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         rx, erbracht: current, zahler: 'gkv',
         position: findeRxPosition(rx, { katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] }),
       });
-      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur)
-                   : (gerechnet.unbekannt ? null : gerechnet.gesamt);
-      const befreit = !!rx.zuzahlung_befreit;
-      const bezahlt = !!rx.zuzahlung_kassiert_am;
+      const befreit = !!rx.zuzahlung_befreit, bezahlt = !!rx.zuzahlung_kassiert_am, podoRx = rx.therapie_bereich === 'podo';
+      // Podologie: Zuzahlung nur auf ERBRACHTE Behandlungen (Podologie-Vertrag § 8 Abs. 1; gkv-302 21.10.2026). Offen kassiert allein die Geldzeile (ladePodoZuzahlung) — diese Zeile rechnete die ganze VO und buchte zu viel. Kassiert: Betrag vom Beleg.
+      const betrag = podoRx ? (bezahlt ? Number(rx.zuzahlung_kassiert_eur ?? gerechnet.gesamt ?? 0) : null) : rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : (gerechnet.unbekannt ? null : gerechnet.gesamt);
 
       if (befreit || betrag != null) {
         rzgWarnEl.hidden = false;

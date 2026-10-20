@@ -58,7 +58,7 @@
  */
 export const RX_FELDER = 'id,rezeptart,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
   + 'anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,'
-  + 'zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
+  + 'zuzahlung_kassiert_am,zuzahlung_kassiert_eur,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
   + 'abrechnung_status,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'
   + 'leitsymptomatik,diagnose_freitext,icd10_2,ergaenzendes_heilmittel,ergaenzend_einheiten,'
   + 'vorrangig_einheiten,therapie_bereich,hausbesuch,doctor_lanr,doctor_bsnr,heilmittel_items,'
