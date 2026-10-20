@@ -30,6 +30,7 @@ import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20260918';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261006b';
 import { sendeAnServer } from './verordnung-maske.js?v=20261017seven1';
+import { alsBerlinDatum } from './berlin-datum.js';
 
 // ── Spalten ─────────────────────────────────────────────────────────────
 
@@ -277,7 +278,7 @@ export const VO_VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Versichertennumm
 
 // ── Oberfläche ──────────────────────────────────────────────────────────
 
-const berlinHeute = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date());
+const berlinHeute = () => alsBerlinDatum(new Date());
 
 /**
  * @param {{ supabase, ownerId: string, apiBasis: string, bestehende: () => object[], showToast: Function, nachImport: (anzahl:number) => Promise<void>|void }} d
