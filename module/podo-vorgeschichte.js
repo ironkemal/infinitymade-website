@@ -43,6 +43,21 @@ export function vorgeschichteAlsBehandlungen(lead) {
 }
 
 /**
+ * Vorgeschichte des Patienten laden und gleich in Pseudo-Behandlungen umsetzen.
+ * Eine Abfrage für alle vier Historien-Lader (Abrechnung, Rezeptmaske, Termin-Einheiten,
+ * Befundungsvorschlag) — fonksiyon-ustasi 21.10.2026: nur einer sah die Vorgeschichte,
+ * die anderen boten dem Altsystem-Patienten weiter 78040 an.
+ * @returns {Promise<Array>} [] ohne Patient/Treffer
+ */
+export async function ladeVorgeschichte(sb, { ownerId, leadId }) {
+  if (!sb || !ownerId || !leadId) return [];
+  const { data } = await sb.from('leads')
+    .select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel')
+    .eq('id', leadId).eq('owner_id', ownerId).maybeSingle();
+  return vorgeschichteAlsBehandlungen(data);
+}
+
+/**
  * Prüft und normalisiert Eingaben für die Vorgeschichte (Import, Formular).
  * @returns {{werte: object, fehler: string[]}}  `werte` nur mit gültigen Feldern
  */

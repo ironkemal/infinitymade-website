@@ -271,6 +271,7 @@ test('Podologie: lange Pause löst einen Unterbrechungs-HINWEIS mit Quellenhinwe
   assert.equal(r.ok, false);
   assert.equal(r.befund.urteil, 'unterbrechung');
   assert.match(r.meldung, /Podologie-Vertrag \(§ 7 Abs\. 7\)/);
+  assert.doesNotMatch(r.meldung, /bei der Kasse nachfragen|HeilM-RL/);
 });
 
 // Storno/no_show zählen für Podologie genauso wenig als Nachbar wie im

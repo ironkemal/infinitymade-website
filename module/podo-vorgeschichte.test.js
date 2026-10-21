@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { vorgeschichteAlsBehandlungen, pruefeVorgeschichte } from './podo-vorgeschichte.js';
+import { vorgeschichteAlsBehandlungen, pruefeVorgeschichte, ladeVorgeschichte } from './podo-vorgeschichte.js';
 import { darf78040, darf78100, darfErstbefundungNagel } from './eingangsbefundung-regel.js';
 
 const lead = {
@@ -31,4 +31,15 @@ test('pruefeVorgeschichte: Zukunft, unbekannter Nagel, falscher Code', () => {
   const { werte, fehler } = pruefeVorgeschichte({ ersteBeh: '2024-03-01', am78040: '2099-01-01', naegel: { 'U9 links': {}, 'U1 links': { erstbefundung: { code: '78010', am: '2026-01-01' } } } }, '2026-10-21');
   assert.equal(werte.podo_vorgeschichte_erste_beh_am, '2024-03-01');
   assert.equal(fehler.length, 3);
+});
+
+test('ladeVorgeschichte: filtert auf die Praxis und liefert Pseudo-Behandlungen', async () => {
+  const filter = [];
+  const sb = { from: () => { const q = { select: () => q, eq: (k, v) => { filter.push([k, v]); return q; },
+    maybeSingle: async () => ({ data: { podo_vorgeschichte_78040_am: '2025-03-01' } }) }; return q; } };
+  const r = await ladeVorgeschichte(sb, { ownerId: 'o1', leadId: 'l1' });
+  assert.deepEqual(filter, [['id', 'l1'], ['owner_id', 'o1']]);
+  assert.equal(darf78040(r, '2026-10-21').erlaubt, false);
+  assert.deepEqual(r.map(b => b.hpnr_codes), [['78040']]);
+  assert.deepEqual(await ladeVorgeschichte(sb, { ownerId: 'o1', leadId: null }), []);
 });

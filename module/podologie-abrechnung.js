@@ -60,7 +60,7 @@
  * Aufruf.
  */
 
-import { vorgeschichteAlsBehandlungen } from './podo-vorgeschichte.js?v=20261021s'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021u';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021v';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -118,7 +118,7 @@ import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit,
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261021c';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261021t';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261021v';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -245,7 +245,8 @@ async function podPatientBehandlungen(vord) {
     .eq('therapie_bereich', 'podo');
   q = vord.lead_id ? q.eq('patient_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
   const { data: allVords } = await q;
-  if (!allVords?.length) return vord.lead_id ? vorgeschichteAlsBehandlungen((await ctx.supabase.from('leads').select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel').eq('id', vord.lead_id).maybeSingle()).data) : [];
+  const vorgeschichte = ladeVorgeschichte(ctx.supabase, { ownerId: ctx.getOwnerId(), leadId: vord.lead_id });
+  if (!allVords?.length) return vorgeschichte;
 
   // Eine Abfrage für alle Sperren — hpnr_codes wird von den Regeln
   // ausgewertet, nicht per `.contains()` gefiltert, sonst braeuchte jede
@@ -260,11 +261,7 @@ async function podPatientBehandlungen(vord) {
   const nagelJeVord = new Map(allVords.map(v => [v.id, v.nagel || null]));
   // Vorgeschichte aus dem Altsystem (Migration 0086) als Pseudo-Behandlungen — nur Lesen,
   // keine Zeilen in podologie_behandlungen (module/podo-vorgeschichte.js).
-  const { data: lead } = vord.lead_id
-    ? await ctx.supabase.from('leads').select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel')
-      .eq('id', vord.lead_id).maybeSingle()
-    : { data: null };
-  return [...(behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null })), ...vorgeschichteAlsBehandlungen(lead)];
+  return [...(behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null })), ...(await vorgeschichte)];
 }
 
 /**
@@ -1025,9 +1022,9 @@ async function loadPodologieBilling() {
     });
   });
 
-  // Vorgeschichte aus dem Altsystem (nur bei übernommenen VOs) — module/podo-vorgeschichte-form.js.
+  // Vorgeschichte aus dem Altsystem (übernommene VO oder Patient) — module/podo-vorgeschichte-form.js.
   { const vgVord = findVord(_podState.selectedVordId);
-    if (istAltsystemVerordnung(vgVord)) montiereVorgeschichte({ sb: ctx.supabase, ownerId: ctx.getOwnerId(), leadId: vgVord?.lead_id, nagel: vgVord?.nagel, wrap: document.getElementById('podVgWrap') }).catch(() => {}); }
+    montiereVorgeschichte({ sb: ctx.supabase, ownerId: ctx.getOwnerId(), leadId: vgVord?.lead_id, nagel: vgVord?.nagel, immer: istAltsystemVerordnung(vgVord), wrap: document.getElementById('podVgWrap') }).catch(() => {}); }
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;

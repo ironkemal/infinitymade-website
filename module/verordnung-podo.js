@@ -41,6 +41,7 @@ import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fri
 import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261003a';
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
 import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261021f';
 
@@ -878,7 +879,10 @@ async function podoHistorie(supabase, ctx, patientId) {
   // sind — ohne ihn kaemen Physio-Verordnungen mit in die Liste.
   const { data: vords } = await supabase.from(TOPF).select('id')
     .eq('owner_id', ownerId).eq('therapie_bereich', 'podo').eq('patient_id', patientId);
-  if (!vords?.length) { _behsCache = { patientId, werte: [] }; return []; }
+  // Vorgeschichte aus dem Altsystem zählt mit (module/podo-vorgeschichte.js) — sonst
+  // zeigt der Sitzungsplan 78040, die die Abrechnung dann sperrt.
+  const vorgeschichte = await ladeVorgeschichte(supabase, { ownerId, leadId: patientId });
+  if (!vords?.length) { _behsCache = { patientId, werte: vorgeschichte }; return vorgeschichte; }
 
   const { data: behs } = await supabase.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes')
@@ -887,7 +891,7 @@ async function podoHistorie(supabase, ctx, patientId) {
     .in('verordnung_id', vords.map(v => v.id))
     .order('behandlungsdatum', { ascending: true });
 
-  _behsCache = { patientId, werte: behs || [] };
+  _behsCache = { patientId, werte: [...(behs || []), ...vorgeschichte] };
   return _behsCache.werte;
 }
 

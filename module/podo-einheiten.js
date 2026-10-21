@@ -46,6 +46,7 @@
  */
 
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
 import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261021f';
@@ -422,15 +423,17 @@ async function ladeVerordnung(sb, { ownerId, leadId, vordId }) {
 /** Alle dokumentierten Behandlungen des Patienten über ALLE seine Verordnungen. */
 async function ladeBehandlungen(sb, { ownerId, leadId }) {
   if (!leadId) return [];
+  // Vorgeschichte aus dem Altsystem ohne verordnung_id — belegt keine Einheit (podoBelegung filtert).
+  const vorgeschichte = await ladeVorgeschichte(sb, { ownerId, leadId });
   const { data: vords } = await sb.from('prescriptions').select('id')
     .eq('owner_id', ownerId).eq('patient_id', leadId).eq('therapie_bereich', 'podo');
-  if (!vords?.length) return [];
+  if (!vords?.length) return vorgeschichte;
   const { data } = await sb.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes, verordnung_id')
     // Stornierte Behandlungen verbrauchen keine Einheit (Migration 0026).
     .is('storniert_am', null)
     .eq('owner_id', ownerId).in('verordnung_id', vords.map(v => v.id));
-  return data || [];
+  return [...(data || []), ...vorgeschichte];
 }
 
 async function ladeAltbestand(sb, { ownerId, leadId }) {

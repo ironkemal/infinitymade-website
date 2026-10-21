@@ -11,7 +11,7 @@
  * (Hinweis im Block) — sonst sperrt sich die eigene 78040/Erstbefundung selbst.
  */
 
-import { pruefeVorgeschichte, NAEGEL } from './podo-vorgeschichte.js?v=20261021s';
+import { pruefeVorgeschichte, NAEGEL } from './podo-vorgeschichte.js?v=20261021v';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const FELD = 'padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:13px;';
@@ -46,13 +46,19 @@ export function vorgeschichteFormHtml(lead, nagel) {
 
 /**
  * Block füllen und Speichern verdrahten.
- * @param {{ sb, ownerId:string, leadId:string, nagel:?string, wrap:HTMLElement, nachSpeichern?:Function }} o
+ * Sichtbar, wenn die VO übernommen wurde (`immer`) ODER der Patient aus dem Altsystem
+ * stammt (Patienten-Import: metadata.import_batch/altsystem_nr) ODER schon eine
+ * Vorgeschichte hat — podoloji 21.10.2026 (PE-009): sonst fehlt der Block, sobald ein
+ * übernommener Patient mit einer NEUEN Praxura-VO kommt, und 78040 wird doppelt abgerechnet.
+ * @param {{ sb, ownerId:string, leadId:string, nagel:?string, wrap:HTMLElement, immer?:boolean, nachSpeichern?:Function }} o
  */
-export async function montiereVorgeschichte({ sb, ownerId, leadId, nagel, wrap, nachSpeichern }) {
+export async function montiereVorgeschichte({ sb, ownerId, leadId, nagel, wrap, immer = false, nachSpeichern }) {
   if (!wrap || !leadId) return;
   const { data: lead } = await sb.from('leads')
-    .select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel, podo_vorgeschichte_erfasst_am')
+    .select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel, podo_vorgeschichte_erfasst_am, metadata')
     .eq('id', leadId).eq('owner_id', ownerId).maybeSingle();
+  const ausAltsystem = !!(lead?.metadata?.import_batch || lead?.metadata?.altsystem_nr || lead?.podo_vorgeschichte_erfasst_am);
+  if (!immer && !ausAltsystem) { wrap.innerHTML = ''; return; }
   wrap.innerHTML = vorgeschichteFormHtml(lead || {}, nagel || '');
   const $ = (id) => wrap.querySelector('#' + id);
   $('podVgSpeichern')?.addEventListener('click', async () => {

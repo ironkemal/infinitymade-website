@@ -20,7 +20,7 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021s';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021v';
 import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
@@ -30,7 +30,7 @@ import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20260918';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261006b';
-import { sendeAnServer } from './verordnung-maske.js?v=20261021g';
+import { sendeAnServer } from './verordnung-maske.js?v=20261021v';
 import { alsBerlinDatum } from './berlin-datum.js';
 
 // ── Spalten ─────────────────────────────────────────────────────────────

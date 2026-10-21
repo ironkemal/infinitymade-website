@@ -25,10 +25,10 @@
  */
 
 import { alsDatetimeLocal } from './datum.js?v=20261001a';
-import { sollAbstand } from './frequenz-pruefung.js?v=20261021t';
+import { sollAbstand } from './frequenz-pruefung.js?v=20261021v';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261003a';
-import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261010zc';
+import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261021v';
 import { RX_FELDER } from './termin-laden.js?v=20261021s';
 
 /** Ohne lesbare Frequenz: eine Woche — die Zeile, die die Serienplanung auch nimmt. */
