@@ -37333,6 +37333,7 @@
     "einrichtungFortschritt",
     "enumerateDay",
     "euro",
+    "euroZustand",
     "exportEuerJSON",
     "f",
     "feedbackWindow",
@@ -90764,6 +90765,7 @@
     "(datei) module/kiosk.js",
     "(datei) module/termin-panel.js",
     "boardNotice",
+    "euroZustand",
     "frageBestaetigung",
     "podoSperren",
     "todoForm",
@@ -154801,8 +154803,8 @@
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
    "start": 268,
-   "end": 329,
-   "lines": 62,
+   "end": 338,
+   "lines": 71,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -154810,7 +154812,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "fmt"
+    "fmt",
+    "round",
+    "zu"
    ],
    "calledBy": [
     "rendereGeldzeile"
@@ -154864,9 +154868,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 348,
-   "end": 391,
-   "lines": 44,
+   "start": 357,
+   "end": 401,
+   "lines": 45,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -154934,9 +154938,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 359,
-   "end": 390,
-   "lines": 32,
+   "start": 368,
+   "end": 400,
+   "lines": 33,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -155001,8 +155005,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 416,
-   "end": 506,
+   "start": 426,
+   "end": 516,
    "lines": 91,
    "spiegelHinweis": null,
    "tables": [
@@ -155083,8 +155087,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 426,
-   "end": 440,
+   "start": 436,
+   "end": 450,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -155164,8 +155168,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezeptinfo-geld.js",
-   "start": 442,
-   "end": 482,
+   "start": 452,
+   "end": 492,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [
@@ -204080,7 +204084,7 @@
     "module/patienten-einwilligung.js:541",
     "module/patienten-import.js:350",
     "module/praxis-standort.js:115",
-    "module/rezeptinfo-geld.js:426"
+    "module/rezeptinfo-geld.js:436"
    ],
    "aynalar": []
   },
@@ -204423,7 +204427,7 @@
    "orte": [
     "module/abrechnung-auswahl.js:983",
     "module/fussbefund.js:307",
-    "module/rezeptinfo-geld.js:359"
+    "module/rezeptinfo-geld.js:368"
    ],
    "aynalar": []
   },

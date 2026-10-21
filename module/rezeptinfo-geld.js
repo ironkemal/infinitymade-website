@@ -312,8 +312,16 @@ export function euroZustand(rx, stand, lead) {
     // (z. B. vor dem 21.10.2026 die ganze VO kassiert), muss das sichtbar sein —
     // zu viel Kassiertes ist zu erstatten (Podologie-Vertrag § 8 Abs. 4).
     const ist = stand.kassiert, abw = ist != null && !stand.unbekannt && Math.abs(ist - stand.gesamt) > 0.005;
+    // Rest offen (weitere Behandlungen nach dem ersten Kassieren): den Rest kassieren — der
+    // Server lässt höchstens Soll − schon kassiert zu (belegliste POST, Vertrag § 8 Abs. 1).
+    if (abw && ist < stand.gesamt) {
+      const rest = Math.round((stand.gesamt - ist) * 100) / 100;
+      return { ton: 'offen', text: `Rest ${fmt(rest)}`, label: 'Zuzahlung', aktion: 'kassieren', betrag: rest,
+               titel: `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(rest)} nachkassieren und quittieren` };
+    }
+    // Zu viel kassiert: Erstattung GoBD-sauber über Storno des Belegs + neues Kassieren des richtigen Betrags.
     return { ton: 'bezahlt', text: fmt(ist ?? stand.gesamt), label: 'Zuzahlung', aktion: 'beleg',
-             titel: abw ? `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${ist > stand.gesamt ? 'zu viel kassiert, Differenz erstatten' : 'Rest offen'} · Beleg öffnen`
+             titel: abw ? `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(Math.round((ist - stand.gesamt) * 100) / 100)} zu viel: Beleg im Zahlungsjournal stornieren (Betrag zurückgeben) und ${fmt(stand.gesamt)} neu kassieren`
                         : 'Bereits kassiert — Beleg öffnen' };
   }
   if (stand.unbekannt) {
@@ -325,7 +333,8 @@ export function euroZustand(rx, stand, lead) {
              titel: 'Für diese Verordnung fällt keine Zuzahlung an' };
   }
   return { ton: 'offen', text: fmt(stand.gesamt), label: 'Zuzahlung', aktion: 'kassieren',
-           titel: `${fmt(stand.gesamt)} kassieren und quittieren` };
+           titel: `${fmt(stand.gesamt)} kassieren und quittieren`
+                + (stand.altsystem > 0 ? ` (fällig ${fmt(stand.gesamtSoll)} abzüglich ${fmt(stand.altsystem)} im Altsystem kassiert)` : '') };
 }
 
 const TON_FARBE = {
@@ -386,7 +395,8 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   const knopf = el.querySelector('#bkRxEuroBtn');
   if (knopf) {
     knopf.disabled = !aktiv;
-    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, stand);
+    // `betrag` (Rest nachkassieren) ersetzt den Gesamtbetrag nur für diesen Klick.
+    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, zz.betrag != null ? { ...stand, gesamt: zz.betrag } : stand);
   }
 }
 
