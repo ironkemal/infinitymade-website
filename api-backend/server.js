@@ -13,7 +13,7 @@ import { createAiRouter } from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
-import { leadAusAnfrage } from './booking/lead-aus-anfrage.js';
+import { leadAusAnfrage, findeLeadNachNameGeburt } from './booking/lead-aus-anfrage.js';
 import { cancelRequestBookings } from './booking/cancel-request.js';
 import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
 import { validateAuthenticatedService, validateExistingBookingTherapist } from './booking/auth-guards.js';
@@ -2525,14 +2525,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     // gesucht: sonst widerspricht der Speicherweg dem, was der Anwender
     // gerade auf dem Bildschirm gelesen hat.
     if (!patientId && !patientIstNeu && dob && (fn || ln)) {
-      const { data: matches } = await supabase
-        .from('leads')
-        .select('id, krankenkasse_ik')
-        .eq('owner_id', tenantId)
-        .eq('geburtsdatum', dob)
-        .ilike('first_name', fn || '%')
-        .ilike('last_name', ln || '%')
-        .limit(1);
+      // Gemeinsamer Abgleich (booking/lead-aus-anfrage.js): beide Namen Pflicht, keine
+      // Platzhalter, mehrdeutig = kein Treffer → neue Akte statt falscher (fonksiyon-ustasi 21.10.2026).
+      const treffer = await findeLeadNachNameGeburt(supabase, { ownerId: tenantId, vorname: fn, nachname: ln, geburtsdatum: dob });
+      const matches = treffer && treffer !== 'mehrdeutig' ? [treffer] : [];
 
       if (matches && matches.length) {
         patientId = matches[0].id;

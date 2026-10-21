@@ -43,3 +43,13 @@ test('mehrdeutig oder unvollständig → keine Akte', async () => {
   assert.equal(await leadAusAnfrage(fake([]), { ownerId: 'o', patient: { ...P, geburtsdatum: null } }), null);
   assert.equal(await leadAusAnfrage(fake([]), { ownerId: 'o', patient: null }), null);
 });
+
+test('findeLeadNachNameGeburt: ohne Vornamen kein Treffer, Platzhalter wirken nicht, mehrdeutig erkannt', async () => {
+  const { findeLeadNachNameGeburt } = await import('./lead-aus-anfrage.js');
+  const leads = [{ id: 'x', owner_id: 'o', first_name: 'Anna', last_name: 'Muster', geburtsdatum: '1950-01-01' }];
+  assert.equal(await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: '', nachname: 'Muster', geburtsdatum: '1950-01-01' }), null);
+  assert.equal(await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: '%', nachname: 'Muster', geburtsdatum: '1950-01-01' }), null);
+  assert.equal((await findeLeadNachNameGeburt(fake(leads), { ownerId: 'o', vorname: 'anna', nachname: 'muster', geburtsdatum: '1950-01-01' })).id, 'x');
+  const zwei = [...leads, { ...leads[0], id: 'y' }];
+  assert.equal(await findeLeadNachNameGeburt(fake(zwei), { ownerId: 'o', vorname: 'Anna', nachname: 'Muster', geburtsdatum: '1950-01-01' }), 'mehrdeutig');
+});

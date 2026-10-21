@@ -49,7 +49,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021s';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021t';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -104,7 +104,7 @@ import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereL
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021s';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261010zc';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261021t';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -134,8 +134,8 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261021s';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021s'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+} from './module/termin-aktionen.js?v=20261021t';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021t'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();

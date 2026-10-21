@@ -39,8 +39,11 @@
  * ⚠️ Reform S1.9 (29.09.2026), Korrektur einer falsch herum gelesenen Quelle:
  * Nr. 11 sagt „unter 12 Wochen bleibt die Verordnung gültig" — sie sagt NICHT
  * das Gegenteil, dass eine LÄNGERE Unterbrechung die podologische Verordnung
- * ungültig macht. Diese Datei tat bis dahin genau das. Für Podologie wird die
- * 12-Wochen-Unterbrechung deshalb gar nicht mehr geprüft; die Frequenz­warnung
+ * ungültig macht. Diese Datei tat bis dahin genau das. Für Podologie wurde die
+ * 12-Wochen-Unterbrechung deshalb nicht mehr geprüft.
+ * ⚠ 21.10.2026: Der inzwischen archivierte Podologie-Vertrag § 7 Abs. 7 nennt die
+ * 12-Wochen-Grenze doch (gkv-302, Konflikt mit HeilM-RL § 16 offen). Kemal: bis zur
+ * Klärung wieder als HINWEIS mit Quellenangabe, nie als Sperre. Die Frequenz­warnung
  * (die ±2-Werktage-Schwelle) bleibt unverändert ein Warn-, kein Block-Hinweis.
  *
  * Physio/Ergo/Logo behalten die 12-Wochen-Schwelle vorerst unverändert — sie
@@ -322,7 +325,9 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     if (!treffer) continue;
     const kt = Math.abs(kalendertage(treffer.datum, neu));
     const wt = werktageZwischen(treffer.datum, neu);
-    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, !istPodo) });
+    // Podologie: 12-Wochen-Pause wieder als HINWEIS (Kemal 21.10.2026) — Podologie-Vertrag § 7 Abs. 7 nennt sie,
+    // HeilM-RL § 16 Abs. 4 S. 5 nicht (gkv-302, Quellenkonflikt offen). Gesperrt wird bei der Frequenz nie.
+    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, true) });
   }
 
   const problem = seiten.find(s => s.urteil !== 'ok');
@@ -333,7 +338,10 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     titel: problem.urteil === 'unterbrechung'
       ? 'Behandlungspause über 12 Wochen'
       : 'Frequenz der Verordnung',
-    meldung: baueMeldung({ soll, seiten, problem, neu }),
+    meldung: baueMeldung({ soll, seiten, problem, neu })
+      + (istPodo && problem.urteil === 'unterbrechung'
+        ? ' Hinweis Podologie: Der Podologie-Vertrag (§ 7 Abs. 7) lässt die Verordnung nach 12 Wochen Pause ungültig werden, die Heilmittel-Richtlinie nicht — bitte im Zweifel bei der Kasse nachfragen.'
+        : ''),
     befund: { soll, seiten, urteil: problem.urteil },
   };
 }

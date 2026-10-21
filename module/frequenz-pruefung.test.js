@@ -260,13 +260,17 @@ test('Podologie: ohne ownerId keine Abfrage, also keine Warnung', async () => {
 // Der eigentliche Fehler, den Reform S1.9 behebt: eine >12-Wochen-Pause darf
 // in der Podologie NICHT automatisch als „Verordnung ungültig" gemeldet
 // werden — FAK Nr. 11 sagt nur, was bei WENIGER als 12 Wochen gilt.
-test('Podologie: lange Pause allein löst KEINE Unterbrechungswarnung aus', async () => {
+// Geändert 21.10.2026 (Kemal): Podologie-Vertrag § 7 Abs. 7 nennt die 12-Wochen-Grenze, HeilM-RL nicht
+// (gkv-302, Quellenkonflikt) — bis zur Klärung ein HINWEIS, nie eine Sperre.
+test('Podologie: lange Pause löst einen Unterbrechungs-HINWEIS mit Quellenhinweis aus', async () => {
   const supabase = doppelPodo([podoBooking('b1', '2026-05-04T09:00:00Z')]); // > 12 Wochen vor dem Zieldatum
   const rx = { id: 'rx-podo-2', frequenz: 'nach Bedarf', therapie_bereich: 'podo' }; // kein Sollabstand
   const r = await pruefeFrequenz({
     supabase, rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
   });
-  assert.equal(r.ok, true);
+  assert.equal(r.ok, false);
+  assert.equal(r.befund.urteil, 'unterbrechung');
+  assert.match(r.meldung, /Podologie-Vertrag \(§ 7 Abs\. 7\)/);
 });
 
 // Storno/no_show zählen für Podologie genauso wenig als Nachbar wie im

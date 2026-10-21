@@ -27,20 +27,35 @@ const wortlich = (s) => String(s ?? '').trim().replace(/[\\%_]/g, (c) => '\\' + 
  * @param {?string} [a.krankenkasse]  Freitext der Anfrage
  * @returns {Promise<?string>} lead_id oder null (Patient unvollständig / mehrdeutig / Fehler)
  */
+/**
+ * Die eine Akte zu Name + Geburtsdatum in dieser Praxis — oder null. Gemeinsam für
+ * Anfrage-Annahme und POST /api/rezept/confirm (fonksiyon-ustasi 21.10.2026: dort
+ * stand `.ilike('first_name', fn || '%')` — fehlte der Vorname, passte jeder, und
+ * `%`/`_` im Namen wirkten als Platzhalter).
+ * @returns {Promise<{id:string, krankenkasse_ik:?string}|null|'mehrdeutig'>}
+ */
+export async function findeLeadNachNameGeburt(supabase, { ownerId, vorname, nachname, geburtsdatum }) {
+  const vor = String(vorname ?? '').trim();
+  const nach = String(nachname ?? '').trim();
+  if (!ownerId || !vor || !nach || !geburtsdatum) return null;
+  const { data: treffer, error } = await supabase.from('leads')
+    .select('id, krankenkasse_ik')
+    .eq('owner_id', ownerId).eq('geburtsdatum', geburtsdatum)
+    .ilike('first_name', wortlich(vor)).ilike('last_name', wortlich(nach))
+    .limit(2);
+  if (error || !treffer?.length) return null;
+  return treffer.length > 1 ? 'mehrdeutig' : treffer[0];
+}
+
 export async function leadAusAnfrage(supabase, { ownerId, patient, paymentType = null, krankenkasse = null } = {}) {
   const vor = String(patient?.vorname ?? '').trim();
   const nach = String(patient?.nachname ?? '').trim();
   const geb = patient?.geburtsdatum || null;
   if (!ownerId || !vor || !nach || !geb) return null;
 
-  const { data: treffer, error } = await supabase.from('leads')
-    .select('id')
-    .eq('owner_id', ownerId).eq('geburtsdatum', geb)
-    .ilike('first_name', wortlich(vor)).ilike('last_name', wortlich(nach))
-    .limit(2);
-  if (error) return null;
-  if (treffer?.length === 1) return treffer[0].id;
-  if (treffer?.length > 1) return null;   // mehrdeutig — lieber ohne Akte als in der falschen
+  const treffer = await findeLeadNachNameGeburt(supabase, { ownerId, vorname: vor, nachname: nach, geburtsdatum: geb });
+  if (treffer === 'mehrdeutig') return null;   // mehrdeutig — lieber ohne Akte als in der falschen
+  if (treffer) return treffer.id;
 
   const { data: neu, error: anlegeFehler } = await supabase.from('leads')
     .insert({
