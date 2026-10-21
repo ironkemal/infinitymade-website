@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
  "dateien": 455,
- "funktionen": 3655,
+ "funktionen": 3656,
  "module": [
   "abrechnung",
   "anamnese",
@@ -53461,6 +53461,7 @@
     "loadPatientDetailRezepte",
     "loadPatientDetailTermine",
     "loadPatientDetailUeberweisung",
+    "montiereVorgeschichte",
     "openModal",
     "renderPatientenkarte",
     "setzeAkteReiter",
@@ -137798,19 +137799,16 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/podo-vorgeschichte-form.js",
-   "start": 16,
-   "end": 45,
-   "lines": 30,
+   "start": 17,
+   "end": 25,
+   "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [
-    "datum",
-    "vorgeschichteFormHtml"
-   ],
+   "calls": [],
    "calledBy": [
     "$",
     "$$",
@@ -138000,13 +137998,77 @@
    ]
   },
   {
+   "name": "zeilenFuer",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 21,
+   "end": 25,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "$",
+    "montiereVorgeschichte",
+    "vorgeschichteFormHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "vorgeschichteFormHtml",
    "kind": "function",
    "lang": "js",
    "file": "module/podo-vorgeschichte-form.js",
-   "start": 20,
-   "end": 45,
-   "lines": 26,
+   "start": 28,
+   "end": 65,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -138015,10 +138077,10 @@
    "storage": [],
    "calls": [
     "datum",
-    "esc"
+    "esc",
+    "zeilenFuer"
    ],
    "calledBy": [
-    "esc",
     "montiereVorgeschichte"
    ],
    "modules": [
@@ -138070,8 +138132,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/podo-vorgeschichte-form.js",
-   "start": 22,
-   "end": 22,
+   "start": 30,
+   "end": 30,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -138139,9 +138201,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podo-vorgeschichte-form.js",
-   "start": 55,
-   "end": 86,
-   "lines": 32,
+   "start": 79,
+   "end": 112,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [
     "leads"
@@ -138154,10 +138216,12 @@
    "storage": [],
    "calls": [
     "pruefeVorgeschichte",
-    "vorgeschichteFormHtml"
+    "vorgeschichteFormHtml",
+    "zeilenFuer"
    ],
    "calledBy": [
-    "loadPodologieBilling"
+    "loadPodologieBilling",
+    "openPatientDetailModal"
    ],
    "modules": [
     "abrechnung",
@@ -138208,9 +138272,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/podo-vorgeschichte-form.js",
-   "start": 63,
-   "end": 87,
-   "lines": 25,
+   "start": 88,
+   "end": 113,
+   "lines": 26,
    "spiegelHinweis": null,
    "tables": [
     "leads"
@@ -138222,7 +138286,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "pruefeVorgeschichte"
+    "pruefeVorgeschichte",
+    "zeilenFuer"
    ],
    "calledBy": [],
    "modules": [],
@@ -199029,9 +199094,9 @@
       {
        "name": "montiereVorgeschichte",
        "file": "module/podo-vorgeschichte-form.js",
-       "start": 55,
-       "end": 86,
-       "lines": 32,
+       "start": 79,
+       "end": 112,
+       "lines": 34,
        "writes": [
         "leads:update"
        ],
@@ -199086,9 +199151,9 @@
       {
        "name": "$",
        "file": "module/podo-vorgeschichte-form.js",
-       "start": 63,
-       "end": 87,
-       "lines": 25,
+       "start": 88,
+       "end": 113,
+       "lines": 26,
        "writes": [
         "leads:update"
        ],
@@ -203582,7 +203647,7 @@
     "module/patienten-import.js:317",
     "module/patientenkarte.js:44",
     "module/podo-einheiten.js:380",
-    "module/podo-vorgeschichte-form.js:16",
+    "module/podo-vorgeschichte-form.js:17",
     "module/rechnung-zahlungseingang.js:225",
     "module/termin-hinweise.js:37",
     "module/ueber.js:26",
@@ -203671,7 +203736,7 @@
     "module/anamnese.js:43",
     "module/branding-ui.js:31",
     "module/kiosk.js:72",
-    "module/podo-vorgeschichte-form.js:63",
+    "module/podo-vorgeschichte-form.js:88",
     "module/rechnung-zahlungseingang.js:455",
     "module/ueber.js:52",
     "module/verordnung-podo.js:84",
@@ -204123,7 +204188,7 @@
    "orte": [
     "module/abrechnung-artefakte.js:24",
     "module/arzt-register.js:549",
-    "module/podo-vorgeschichte-form.js:22"
+    "module/podo-vorgeschichte-form.js:30"
    ],
    "aynalar": []
   },

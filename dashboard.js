@@ -49,8 +49,8 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021w';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021x';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021x';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -3439,9 +3439,9 @@ async function renderBkActionFahrtState(booking, isOwn) {
   }
 
   const s = booking.fahrt_status;
-  if (s == null) {
-    fahrtStartGroup.hidden = false;
-    startTerminGroup.hidden = true;
+  if (s == null && booking.status === 'completed') startTerminGroup.hidden = true;   // abgeschlossen ohne Fahrt: kein „Fahrt Starten" (canli-test P3 21.10.2026)
+  else if (s == null) {
+    fahrtStartGroup.hidden = false; startTerminGroup.hidden = true;
   } else if (s === 'fahrt_started') {
     arrivedGroup.hidden = false;
     startTerminGroup.hidden = true;
@@ -7217,7 +7217,7 @@ async function openPatientDetailModal(lead) {
     loadMessreihen(leadId);
   }
   if (isPodo) {
-    zeigeFussbefundArchiv(leadId);
+    zeigeFussbefundArchiv(leadId); montiereVorgeschichte({ sb: supabase, ownerId: getOwnerId(), leadId, nagel: null, immer: true, wrap: document.getElementById('pdVorgeschichteHost') }).catch(() => {});   // alle Nägel, einmal je Patient (PE-009)
   }
   loadPatientDetailRechnungen(leadId);
   loadPatientDetailTermine(leadId);
