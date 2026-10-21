@@ -19,11 +19,11 @@
 // (`compliance/LEGAL_DECISIONS.md`, "Tool, kein Abrechnungsdienstleister")
 // und K4 in `ABRECHNUNG_ECHTBETRIEB_PLAN.md` ausdrücklich ausschließen.
 //
-// Bis die IK von der ARGE·IK erteilt ist, bleibt der Wert `null` — die
-// Sperre unten ist dann ein No-Op (kein Absender-IK ist `null`). Sobald die
-// IK vergeben wird, wird sie HIER eingetragen (ein Wertetausch, kein neuer
-// Code) und die Sperre greift ab dem nächsten Deploy automatisch.
-export const SOFTWARE_HERSTELLER_IK = null;
+// Von der ARGE·IK erteilt (Mitteilung an Kemal, eingetragen 21.10.2026) —
+// ab hier greift die Sperre unten. Prüfziffer gültig; `ikKlassifikation()`
+// liest die 59 als 'kostentraeger', daher kommt im Preflight F:01004 als
+// Warnung, wenn diese IK im Testverfahren als Absender steht (bewusst offen).
+export const SOFTWARE_HERSTELLER_IK = '590537440';
 
 /**
  * Reine Prüfung, unabhängig von der Modul-Konstante — testbar, ohne die

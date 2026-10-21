@@ -16,8 +16,14 @@ function test(name, fn) {
 
 console.log('software-hersteller-ik');
 
-test('Konstante ist heute null — Antrag noch nicht erteilt', () => {
-  assert.equal(SOFTWARE_HERSTELLER_IK, null);
+test('Konstante trägt die erteilte IK (21.10.2026)', () => {
+  assert.equal(SOFTWARE_HERSTELLER_IK, '590537440');
+});
+
+test('Echtdatei mit der erteilten IK als Absender wird abgewiesen, Testdatei nicht', () => {
+  assert.throws(() => assertNichtSoftwareHerstellerIkAlsAbsender({ kind: 'echt', absenderIk: '590537440' }));
+  assert.doesNotThrow(() => assertNichtSoftwareHerstellerIkAlsAbsender({ kind: 'test', absenderIk: '590537440' }));
+  assert.doesNotThrow(() => assertNichtSoftwareHerstellerIkAlsAbsender({ kind: 'erprobung', absenderIk: '590537440' }));
 });
 
 test('No-Op solange softwareHerstellerIk nicht gesetzt (Standardverhalten)', () => {
