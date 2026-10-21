@@ -25,3 +25,7 @@ test('HTML maskiert und ist ohne Hinweis leer', () => {
   assert.equal(terminHinweiseHtml({}), '');
   assert.match(terminHinweiseHtml({ hausbesuch: true }), /termin-hinweis--hausbesuch/);
 });
+
+test('Podologie: Positionsnummer in gkv_position_nr, Kürzel als Code → „Ohne VO" (canli-test 21.10.2026)', () => {
+  assert.deepEqual(keys({ services: { code: 'pod. Beh. kl.', gkv_position_nr: '78010' } }), ['ohne-vo']);
+});

@@ -3314,7 +3314,9 @@ async function podoZuzahlungSoll(rx, tenantId) {
     sessions, patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
     behandlungsende: letzte ? letzte.done_at : new Date(), verordnung_zuzahlungsfrei: rx.zuzahlung_befreit,
   });
-  return Number.isFinite(Number(totals?.gesZuzahlung)) ? Number(totals.gesZuzahlung) : null;
+  if (!Number.isFinite(Number(totals?.gesZuzahlung))) return null;
+  // Übernommene VO: im Altsystem schon kassiert (Migration 0086) zählt mit — hier darf nur der Rest kassiert werden.
+  return Math.max(0, Number(totals.gesZuzahlung) - (Number(rx.zuzahlung_altsystem_eur) || 0));
 }
 
 router.post('/belegliste', async (req, res) => {
@@ -3402,7 +3404,7 @@ router.post('/belegliste', async (req, res) => {
     // Browser — die alte Terminzeile buchte so die ganze VO (canli-test 20.10.2026).
     if (type === 'zuzahlung' && prescription_id) {
       const { data: rxSoll } = await supabase.from('prescriptions')
-        .select('id, owner_id, therapie_bereich, zuzahlung_befreit, ausstellungsdatum, leads:patient_id (geburtsdatum)')
+        .select('id, owner_id, therapie_bereich, zuzahlung_befreit, zuzahlung_altsystem_eur, ausstellungsdatum, leads:patient_id (geburtsdatum)')
         .eq('id', prescription_id).eq('owner_id', tenantId).maybeSingle();
       let soll = null;
       try { soll = rxSoll ? await podoZuzahlungSoll(rxSoll, tenantId) : null; } catch { soll = null; }

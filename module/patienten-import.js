@@ -23,6 +23,7 @@ import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
 import { trennePlzOrt } from './verordnung-an-backend.js?v=20261006b';
 import { alsBerlinDatum } from './berlin-datum.js';
+import { pruefeVorgeschichte } from './podo-vorgeschichte.js?v=20261021s';
 import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 
 // ── CSV lesen ───────────────────────────────────────────────────────────
@@ -95,6 +96,9 @@ export const SPALTEN = {
   versicherungsart: ['versicherungsart', 'gkvprivat', 'kassenart', 'abrechnungsart'],
   altsystem_nr: ['patientennummer', 'patnr', 'patientennr', 'nummer', 'nr', 'id', 'kundennummer'],
   notizen: ['notiz', 'notizen', 'bemerkung', 'bemerkungen', 'hinweis'],
+  vg_erste_beh: ['erstebehandlung', 'erstebehandlungaltsystem', 'ersteberhandlungam', 'erstebehandlungam', 'patientseit'],
+  vg_78040: ['eingangsbefundung78040am', 'eingangsbefundungam', '78040am', '78040'],
+  vg_78100: ['letzte78100am', '78100am', 'letzteerstbefundunggross', '78100'],
 };
 
 /** Beschriftung der Zielfelder für die Zuordnung von Hand. Reihenfolge = Liste. */
@@ -107,6 +111,7 @@ export const FELDER = {
   versichertennummer: 'Versichertennummer', versichertenstatus: 'Versichertenstatus',
   versicherungsart: 'Versicherungsart (GKV/privat)', altsystem_nr: 'Patientennummer (alt)',
   notizen: 'Bemerkung',
+  vg_erste_beh: 'Podologie: erste Behandlung (Altsystem)', vg_78040: 'Podologie: Eingangsbefundung 78040 am', vg_78100: 'Podologie: letzte 78100 am',
 };
 
 /** Welche Pflichtangaben fehlen in einer Zuordnung? */
@@ -236,7 +241,10 @@ export function zeileZuPatient(werte, zuordnung) {
   };
   if (w('email') && !patient.email) hinweise.push('E-Mail ungültig — leer gelassen');
   if (patient.plz && !/^\d{5}$/.test(patient.plz)) hinweise.push('PLZ nicht 5-stellig');
-  return { patient, fehler, hinweise, altsystemNr: w('altsystem_nr') || null };
+  // Vorgeschichte aus dem Altsystem (Migration 0086) — nur Daten abgerechneter VOs (gkv-302).
+  const vg = pruefeVorgeschichte({ ersteBeh: leseDatum(w('vg_erste_beh')) || w('vg_erste_beh'), am78040: leseDatum(w('vg_78040')) || w('vg_78040'), am78100: leseDatum(w('vg_78100')) || w('vg_78100') });
+  hinweise.push(...vg.fehler.map(f => `Vorgeschichte: ${f} — leer gelassen`));
+  return { patient, fehler, hinweise, altsystemNr: w('altsystem_nr') || null, vorgeschichte: vg.werte };
 }
 
 // ── Gesamtprüfung ───────────────────────────────────────────────────────
@@ -283,7 +291,7 @@ export function insertDatensatz(z, ownerId, batchId) {
   if (z.patient.krankenkasse) metadata.krankenkasse = z.patient.krankenkasse;
   if (z.patient.versichertennummer) metadata.krankenkassennummer = z.patient.versichertennummer;
   if (z.patient.versichertenstatus) metadata.versichertenstatus = z.patient.versichertenstatus;
-  return { owner_id: ownerId, status: 'new', ...z.patient, metadata };
+  return { owner_id: ownerId, status: 'new', ...z.patient, ...(z.vorgeschichte || {}), metadata };
 }
 
 export const VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Geschlecht;Straße;PLZ;Ort;Telefon;Handy;E-Mail;Krankenkasse;IK;Versichertennummer;Versichertenstatus;Patientennummer;Bemerkung\n'

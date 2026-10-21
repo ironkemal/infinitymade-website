@@ -28,9 +28,10 @@ test('Ablehnung: Frist abgelaufen, schon erbracht, abgerechnet, ohne Unterschrif
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;DF;b;6;nein;0;nein\n' // ohne Unterschrift
     + 'Fremd;Hans;01.01.1960;15.10.2026;123456601;DF;a;6;ja;0;nein\n';    // Patient fehlt
   const e = pruefeVerordnungen(csv, zuVon(csv), k());
-  assert.equal(e.ok, 0);
+  assert.equal(e.ok, 1);
   assert.match(e.zeilen[0].fehler.join(), /Beginnfrist/);
-  assert.match(e.zeilen[1].fehler.join(), /Schon behandelt/);
+  assert.deepEqual(e.zeilen[1].fehler, []);   // Schritt 2: teilweise erbracht wird übernommen
+  assert.ok(e.zeilen[1].hinweise.some(h => /Teilweise erbracht/.test(h)));
   assert.match(e.zeilen[2].fehler.join(), /abgerechnet/);
   assert.match(e.zeilen[3].fehler.join(), /Unterschrift/);
   assert.match(e.zeilen[4].fehler.join(), /Patientenstamm/);
@@ -100,4 +101,18 @@ test('Jede Spalte der eigenen Vorlage wird erkannt', () => {
   const zugeordnet = new Set(Object.values(zu));
   const fehlt = kopf.filter((_, i) => !zugeordnet.has(i));
   assert.deepEqual(fehlt, []);
+});
+
+test('Fall B: Frist am ersten Behandlungstag, Menge, Zuzahlungs-Vermerk (gkv-302 21.10.2026)', () => {
+  const csv = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;DG;Leitsymptomatik;Anzahl;Erbracht;Erster Behandlungstag;Zuzahlung bereits kassiert (EUR)\n'
+    + 'Muster;Erika;01.02.1950;01.07.2026;123456601;DF;c;6;3;20.07.2026;12,50\n'   // Frist 29.07., erster Tag davor → ok, obwohl heute später
+    + 'Muster;Erika;01.02.1950;02.07.2026;123456601;DF;c;6;3;15.08.2026;\n'      // erster Tag nach Frist
+    + 'Muster;Erika;01.02.1950;03.07.2026;123456601;DF;c;6;7;;\n';               // mehr erbracht als verordnet
+  const e = pruefeVerordnungen(csv, zuVon(csv), k());
+  assert.deepEqual(e.zeilen[0].fehler, []);
+  assert.equal(e.zeilen[0].verordnung.zuzahlungAlt, 12.5);
+  assert.equal(e.zeilen[0].verordnung.erbracht, 3);
+  assert.match(e.zeilen[1].fehler.join(), /nach der Beginnfrist/);
+  assert.match(e.zeilen[2].fehler.join(), /Mehr Einheiten erbracht/);
+  assert.match(voRumpf(e.zeilen[0].verordnung, '2026-10-21').parsed.rezept.therapieziele, /Teilweise im Altsystem erbracht: 3/);
 });

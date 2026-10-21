@@ -26,7 +26,7 @@
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261010zc';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
-import { RX_FELDER } from './termin-laden.js?v=20261021d';
+import { RX_FELDER } from './termin-laden.js?v=20261021s';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 

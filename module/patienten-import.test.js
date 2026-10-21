@@ -101,3 +101,12 @@ test('fehlendePflicht: Name komplett ersetzt Vor- und Nachname', () => {
   assert.deepEqual(fehlendePflicht({ nachname: 0 }), ['Geburtsdatum']);
   assert.deepEqual(fehlendePflicht({}), ['Nachname', 'Vorname', 'Geburtsdatum']);
 });
+
+test('Vorgeschichte-Spalten (0086) landen geprüft im Datensatz', () => {
+  const zuo = ordneSpaltenZu(['Nachname', 'Vorname', 'Geburtsdatum', 'Eingangsbefundung 78040 am', 'Erste Behandlung']);
+  const z = zeileZuPatient(['A', 'B', '01.01.1950', '05.03.2024', '01.03.2024'], zuo);
+  const d = insertDatensatz(z, 'o', 'b');
+  assert.equal(d.podo_vorgeschichte_78040_am, '2024-03-05');
+  assert.equal(d.podo_vorgeschichte_erste_beh_am, '2024-03-01');
+  assert.ok(d.podo_vorgeschichte_erfasst_am);
+});

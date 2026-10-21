@@ -20,7 +20,7 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021j';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021s';
 import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
@@ -64,6 +64,10 @@ export const VO_SPALTEN = {
   zuzahlung_befreit: ['zuzahlungsbefreit', 'zuzahlungsbefreitjanein', 'befreit', 'zuzahlungsfrei'],
   nagel: ['nagel', 'nagelzb', 'nagelzbu1links', 'zeh'],
   wagner_grad: ['wagner', 'wagnergrad'],
+  erster_tag: ['ersterbehandlungstag', 'erstebehandlung', 'behandlungsbeginn', 'beginn'],
+  zuzahlung_alt: ['zuzahlungbereitskassiert', 'zuzahlungkassiert', 'zuzahlungkassierteur', 'zuzahlungbereitskassierteur', 'kassiertezuzahlung'],
+  zuzahlung_alt_am: ['zuzahlungkassiertam', 'kassiertam'],
+  zuzahlung_alt_beleg: ['zuzahlungbeleg', 'zuzahlungbelegnr', 'belegnr', 'quittungsnr'],
   erbracht: ['erbracht', 'einheitenerbracht', 'einheitenschonerbracht', 'schonerbracht', 'bereitserbracht', 'behandelt', 'erbrachteeinheiten'],
   abgerechnet: ['abgerechnet', 'imaltsystemabgerechnet', 'imaltsystemabgerechnetjanein', 'eingereicht'],
 };
@@ -79,7 +83,7 @@ export const VO_FELDER = {
   anzahl: 'Anzahl Einheiten', frequenz: 'Frequenz',
   hausbesuch: 'Hausbesuch (ja/nein)', dringlich: 'Dringlich (ja/nein)', bericht: 'Therapiebericht angefordert',
   zuzahlung_befreit: 'Zuzahlungsbefreit (ja/nein)', nagel: 'Nagel (z. B. U1 links)', wagner_grad: 'Wagner-Grad',
-  erbracht: 'Einheiten schon erbracht', abgerechnet: 'Im Altsystem abgerechnet', altsystem_vo_nr: 'VO-Nr. (alt)',
+  erbracht: 'Einheiten schon erbracht', erster_tag: 'Erster Behandlungstag', zuzahlung_alt: 'Zuzahlung bereits kassiert (EUR)', zuzahlung_alt_am: 'Zuzahlung kassiert am', zuzahlung_alt_beleg: 'Zuzahlung Beleg-Nr. (alt)', abgerechnet: 'Im Altsystem abgerechnet', altsystem_vo_nr: 'VO-Nr. (alt)',
 };
 
 const PFLICHT = ['Name', 'Geburtsdatum', 'Ausstellungsdatum', 'LANR', 'Diagnosegruppe', 'Heilmittel', 'Anzahl'];
@@ -206,13 +210,29 @@ export function zeileZuVerordnung(werte, zu, k) {
   const wagner = /^[0-5]$/.test(wRoh) ? Number(wRoh) : null;
   if (wRoh && wagner == null) hinweise.push('Wagner-Grad nicht 0–5');
 
-  // Schritt 1: nur unbehandelte, nirgends abgerechnete Verordnungen
+  // Schritt 1 (keine Einheit erbracht) und Schritt 2 (teilweise im Altsystem erbracht, nirgends
+  // abgerechnet — gkv-302 21.10.2026 „Fall B/C"). Abgerechnete VOs bleiben im Altsystem.
   const dringlich = janein(w('dringlich')) === true;
-  const erbracht = Number.parseInt(w('erbracht'), 10);
-  if (erbracht > 0) fehler.push('Schon behandelt — halb behandelte Verordnungen folgen in einem späteren Schritt');
+  const erbrachtRoh = Number.parseInt(w('erbracht'), 10);
+  const erbracht = Number.isInteger(erbrachtRoh) && erbrachtRoh > 0 ? erbrachtRoh : 0;
   if (janein(w('abgerechnet')) === true) fehler.push('Im Altsystem schon abgerechnet — nicht übernehmen');
+  if (erbracht && Number.isInteger(anzahl) && erbracht > anzahl) fehler.push(`Mehr Einheiten erbracht (${erbracht}) als verordnet (${anzahl})`);
   const frist = ausstellungsdatum ? behandlungsbeginnFrist(ausstellungsdatum, dringlich) : null;
-  if (frist && k.heute > frist) fehler.push(`Beginnfrist am ${frist.split('-').reverse().join('.')} abgelaufen (HeilM-RL § 15)`);
+  const ersterTag = leseDatum(w('erster_tag'));
+  if (w('erster_tag') && !ersterTag) fehler.push('Erster Behandlungstag nicht lesbar');
+  if (!erbracht) {
+    if (frist && k.heute > frist) fehler.push(`Beginnfrist am ${frist.split('-').reverse().join('.')} abgelaufen (HeilM-RL § 15)`);
+  } else {
+    // Frist am ersten erbrachten Tag, nicht an heute (Vertrag § 6 Abs. 3-4).
+    if (ersterTag && frist && ersterTag > frist) fehler.push(`Erster Behandlungstag nach der Beginnfrist (${frist.split('-').reverse().join('.')})`);
+    if (ersterTag && ausstellungsdatum && ersterTag < ausstellungsdatum) fehler.push('Erster Behandlungstag vor dem Ausstellungsdatum');
+    if (!ersterTag) hinweise.push('Ohne „Erster Behandlungstag" — die Beginnfrist prüft Praxura beim Nachtragen der Tage');
+    hinweise.push(`Teilweise erbracht (${erbracht}) — Tage danach je Tag mit „Aus Altsystem übernommen" nachtragen`);
+  }
+  const zzRoh = w('zuzahlung_alt').replace(/[^\d,.-]/g, '').replace(',', '.');
+  const zuzahlungAlt = zzRoh ? Number(zzRoh) : null;
+  if (zzRoh && !(zuzahlungAlt >= 0)) fehler.push('Zuzahlung (Altsystem) ist kein Betrag');
+  if (erbracht && zuzahlungAlt == null && !janein(w('zuzahlung_befreit'))) hinweise.push('Im Altsystem kassierte Zuzahlung fehlt — sonst fordert Praxura sie erneut');
 
   // Schon vorhanden?
   const schluessel = patient && ausstellungsdatum ? `${patient.id}|${ausstellungsdatum}|${lanr}|${dg}` : null;
@@ -222,7 +242,8 @@ export function zeileZuVerordnung(werte, zu, k) {
     patient, csvName: [nach, vor].filter(Boolean).join(', '), ausstellungsdatum, lanr, bsnr: bsnr || null, arztName: w('arztname') || null,
     dg, buchstabe, heilmittel, icd10, icd10_2: w('icd10_2').toUpperCase() || null, diagnoseText,
     anzahl: Number.isInteger(anzahl) ? anzahl : null, frequenz: w('frequenz') || null,
-    hausbesuch: janein(w('hausbesuch')) === true, dringlich,
+    hausbesuch: janein(w('hausbesuch')) === true, dringlich, erbracht, ersterTag,
+    zuzahlungAlt: Number.isFinite(zuzahlungAlt) ? Math.round(zuzahlungAlt * 100) / 100 : null, zuzahlungAltAm: leseDatum(w('zuzahlung_alt_am')), zuzahlungAltBeleg: w('zuzahlung_alt_beleg') || null,
     bericht: janein(w('bericht')) === true, befreit: janein(w('zuzahlung_befreit')) === true,
     nagel, wagner, ik, kasse, kvnr: kvnr.normalisiert || null, versichertenstatus: vsRoh || null,
     altNr: w('altsystem_vo_nr') || null,
@@ -271,7 +292,8 @@ export function voRumpf(v, heute) {
       unterschrift_vorhanden: true,   // ohne Unterschrift wird die Zeile vorher abgelehnt
       nagel: v.nagel,
       wagner_grad: v.wagner,
-      hinweise: `Aus Altsystem übernommen am ${heute.split('-').reverse().join('.')}${v.altNr ? ` (VO-Nr. ${v.altNr})` : ''}.`,
+      hinweise: `Aus Altsystem übernommen am ${heute.split('-').reverse().join('.')}${v.altNr ? ` (VO-Nr. ${v.altNr})` : ''}.`
+        + (v.erbracht ? ` Teilweise im Altsystem erbracht: ${v.erbracht} Einheit(en) — Tage nachtragen.` : ''),
     },
     patientFelder: {
       rzPatVorname: p.first_name || '', rzPatName: p.last_name || '',
@@ -281,8 +303,8 @@ export function voRumpf(v, heute) {
   });
 }
 
-export const VO_VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Versichertennummer;Versichertenstatus;Krankenkasse;IK Krankenkasse;Ausstellungsdatum;LANR;BSNR;Arzt;Arztstempel/Unterschrift vorhanden;Diagnosegruppe;ICD-10;Diagnose;Leitsymptomatik;Anzahl Einheiten;Frequenz;Hausbesuch;Dringlich;Therapiebericht angefordert;Zuzahlungsbefreit;Nagel;Einheiten schon erbracht;Im Altsystem abgerechnet;VO-Nr\n'
-  + 'Muster;Erika;01.02.1950;A123456780;10000;AOK Rheinland/Hamburg;104212505;15.10.2026;123456601;123456700;Dr. Beispiel;ja;DF;E11.74;;c;6;1x in 4-6 Wochen;nein;nein;nein;nein;;0;nein;4711\n';
+export const VO_VORLAGE_CSV = '﻿Nachname;Vorname;Geburtsdatum;Versichertennummer;Versichertenstatus;Krankenkasse;IK Krankenkasse;Ausstellungsdatum;LANR;BSNR;Arzt;Arztstempel/Unterschrift vorhanden;Diagnosegruppe;ICD-10;Diagnose;Leitsymptomatik;Anzahl Einheiten;Frequenz;Hausbesuch;Dringlich;Therapiebericht angefordert;Zuzahlungsbefreit;Nagel;Einheiten schon erbracht;Erster Behandlungstag;Zuzahlung bereits kassiert (EUR);Im Altsystem abgerechnet;VO-Nr\n'
+  + 'Muster;Erika;01.02.1950;A123456780;10000;AOK Rheinland/Hamburg;104212505;15.10.2026;123456601;123456700;Dr. Beispiel;ja;DF;E11.74;;c;6;1x in 4-6 Wochen;nein;nein;nein;nein;;0;;;nein;4711\n';
 
 // ── Oberfläche ──────────────────────────────────────────────────────────
 
@@ -320,8 +342,9 @@ export function oeffneVerordnungImport(d) {
   const schritt1 = () => {
     inhalt.innerHTML = `
       <p style="margin:0 0 10px;color:var(--text-muted);font-size:14px;line-height:1.5;">
-        Übernommen werden nur Verordnungen, auf die <b>noch keine Behandlung</b> erbracht wurde und die Ihre bisherige Software
-        <b>nicht abrechnet</b>. Halb behandelte Verordnungen rechnen Sie bitte im Altsystem zu Ende ab.
+        Übernommen werden Verordnungen, die Ihre bisherige Software <b>nicht abrechnet</b> — auch angefangene. Bei angefangenen
+        tragen Sie danach jeden schon erbrachten Tag mit „Aus Altsystem übernommen" nach (Datum + Position) und geben die dort
+        schon kassierte Zuzahlung an, damit Praxura nur den Rest fordert.
       </p>
       <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px;line-height:1.5;">
         Die Patienten müssen schon in Praxura sein (zuerst <i>Patienten importieren</i>). Pro Verordnung nötig:
@@ -398,8 +421,9 @@ export function oeffneVerordnungImport(d) {
       ${erg.zeilen.length > 200 ? `<p style="font-size:13px;color:var(--text-muted);">… und ${erg.zeilen.length - 200} weitere Zeilen.</p>` : ''}
       <label style="display:flex;gap:10px;align-items:flex-start;margin:16px 0;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.5;cursor:pointer;">
         <input type="checkbox" data-pi="bestaetigt" style="margin-top:3px;" />
-        <span>Ich bestätige: Auf keine dieser Verordnungen wurde schon eine Behandlung erbracht. Jede trägt Arztstempel und Unterschrift.
-        Meine bisherige Software rechnet sie <b>nicht</b> ab — abgerechnet wird nur noch über Praxura (sonst Doppelabrechnung).</span>
+        <span>Ich bestätige: Jede dieser Verordnungen trägt Arztstempel und Unterschrift; für schon erbrachte Tage steht die
+        Unterschrift des Patienten auf der Rückseite. Meine bisherige Software rechnet sie <b>nicht</b> ab — abgerechnet wird nur
+        noch über Praxura (sonst Doppelabrechnung).</span>
       </label>`;
     fuss.innerHTML = `
       <button type="button" class="btn-ghost" data-pi="zuordnung" style="${BTN}">Zuordnung ändern</button>
@@ -423,8 +447,16 @@ export function oeffneVerordnungImport(d) {
     for (const [i, z] of zeilen.entries()) {
       inhalt.innerHTML = `<p style="font-size:15px;margin:0 0 16px;">Übernehme Verordnung ${i + 1} von ${zeilen.length} …</p>`;
       try {
-        await sendeAnServer(d.supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf: voRumpf(z.verordnung, heute), apiBasis: d.apiBasis });
+        const antwort = await sendeAnServer(d.supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf: voRumpf(z.verordnung, heute), apiBasis: d.apiBasis });
         ok++;
+        // Im Altsystem schon kassierte Zuzahlung als Vermerk (Migration 0086) — Praxura kassiert nur den Rest.
+        if (z.verordnung.zuzahlungAlt != null && antwort?.prescription_id) {
+          await d.supabase.from('prescriptions').update({
+            zuzahlung_altsystem_eur: z.verordnung.zuzahlungAlt,
+            zuzahlung_altsystem_am: z.verordnung.zuzahlungAltAm || null,
+            zuzahlung_altsystem_beleg: z.verordnung.zuzahlungAltBeleg || null,
+          }).eq('id', antwort.prescription_id).eq('owner_id', d.ownerId);
+        }
         // Leere Akten-Felder (KVNR, Kasse, IK, Status) aus der Zeile nachtragen —
         // der Server rührt leads bei mitgeschickter patient_id nicht an. Gleicher
         // Weg wie die Maske; Abweichungen werden im Stapel nie überschrieben.

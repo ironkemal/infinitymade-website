@@ -23,7 +23,8 @@ export function terminHinweise(b) {
   const out = [];
   const rx = b.prescription_sessions?.[0]?.prescriptions || null;
   if (b.hausbesuch) out.push({ key: 'hausbesuch', text: 'Hausbesuch', titel: 'Hausbesuch — Fahrt einplanen' });
-  const kassenleistung = /^\d{5}$/.test(String(b.services?.code || '').trim());
+  // Positionsnummer steht bei Podologie in gkv_position_nr, der Code ist ein Kürzel (canli-test 21.10.2026).
+  const kassenleistung = [b.services?.gkv_position_nr, b.services?.code].some(c => /^\d{5}$/.test(String(c || '').trim()));
   if (kassenleistung && !b.verordnung_id && !rx && !KEINE_VO_NOETIG.has(String(b.rezeptart || '').toLowerCase())) {
     out.push({ key: 'ohne-vo', text: 'Ohne VO', titel: 'Kassenleistung ohne zugeordnete Verordnung' });
   }

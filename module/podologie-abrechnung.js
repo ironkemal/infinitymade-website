@@ -60,6 +60,7 @@
  * Aufruf.
  */
 
+import { vorgeschichteAlsBehandlungen } from './podo-vorgeschichte.js?v=20261021s';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -117,7 +118,7 @@ import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit,
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261021c';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261021k';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261021s';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -227,6 +228,11 @@ function podDiagRoot(diagCode) {
  * @param {object} vord  Zeile im podologischen Wortschatz (verordnung-topf.js), braucht lead_id ODER patient_name
  * @returns {Promise<Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, nagel:?string}>>}
  */
+/** Kam die Verordnung aus dem Altsystem-Import (module/verordnung-import.js setzt den Hinweis)? */
+export function istAltsystemVerordnung(vord) {
+  return /Aus Altsystem übernommen/.test(String(vord?.hinweise || ''));
+}
+
 async function podPatientBehandlungen(vord) {
   if (!vord || !(vord.lead_id || vord.patient_name)) return [];
 
@@ -239,7 +245,7 @@ async function podPatientBehandlungen(vord) {
     .eq('therapie_bereich', 'podo');
   q = vord.lead_id ? q.eq('patient_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
   const { data: allVords } = await q;
-  if (!allVords?.length) return [];
+  if (!allVords?.length) return vord.lead_id ? vorgeschichteAlsBehandlungen((await ctx.supabase.from('leads').select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel').eq('id', vord.lead_id).maybeSingle()).data) : [];
 
   // Eine Abfrage für alle Sperren — hpnr_codes wird von den Regeln
   // ausgewertet, nicht per `.contains()` gefiltert, sonst braeuchte jede
@@ -252,7 +258,13 @@ async function podPatientBehandlungen(vord) {
     .order('behandlungsdatum', { ascending: true });
 
   const nagelJeVord = new Map(allVords.map(v => [v.id, v.nagel || null]));
-  return (behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null }));
+  // Vorgeschichte aus dem Altsystem (Migration 0086) als Pseudo-Behandlungen — nur Lesen,
+  // keine Zeilen in podologie_behandlungen (module/podo-vorgeschichte.js).
+  const { data: lead } = vord.lead_id
+    ? await ctx.supabase.from('leads').select('podo_vorgeschichte_erste_beh_am, podo_vorgeschichte_78040_am, podo_vorgeschichte_78100_am, podo_vorgeschichte_naegel')
+      .eq('id', vord.lead_id).maybeSingle()
+    : { data: null };
+  return [...(behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null })), ...vorgeschichteAlsBehandlungen(lead)];
 }
 
 /**
@@ -883,6 +895,10 @@ async function loadPodologieBilling() {
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_notizen')}</label>
           <textarea id="podBehNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
         </div>
+        ${istAltsystemVerordnung(selectedVord) ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer;color:var(--text-main);">
+          <input type="checkbox" id="podAltsystem" style="margin-top:2px;">
+          <span><b>Aus Altsystem übernommen</b> — diese Behandlung wurde im bisherigen Programm erbracht; die Unterschrift des Patienten für diesen Tag steht auf der Rückseite der Verordnung.</span>
+        </label>` : ''}
         <div id="podBehError" style="color:#ef4444;font-size:13px;display:none;"></div>
         <button id="podSaveBehBtn" class="btn-primary" style="width:fit-content;">${ctx.t('pod_save_behandlung')}</button>
 
@@ -1016,6 +1032,10 @@ async function loadPodologieBilling() {
     const lokalFrei = (document.getElementById('podLokalisation')?.value || '').trim();
     const notiz   = document.getElementById('podBehNotizen').value.trim();
     const errEl   = document.getElementById('podBehError');
+    // Nachtrag eines im Altsystem erbrachten Tages (VO-Import Schritt 2, gkv-302 21.10.2026):
+    // derselbe Speicherweg, aber ohne Therapiezeit-Pflicht, ohne Anamnese-Rückfrage, ohne
+    // Fahrt/Folgetermin; herkunft='altsystem', employee_id NULL (nicht hier behandelt).
+    const altsystem = !!document.getElementById('podAltsystem')?.checked;
 
     // ICD-Regeln sicherstellen, BEVOR geprüft wird: _icdMatchesDgRule()
     // ist bei fehlenden Regeln absichtlich nachsichtig (nur Hinweis-Text), für
@@ -1079,7 +1099,7 @@ async function loadPodologieBilling() {
           + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}“ — bitte 78010 zzgl. 78030 verwenden.`;
     else if (isUIx && !lokal) err = ctx.t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
     // Konsey S0 2b: bei c) Komplexbehandlung ist die Therapiezeit Pflicht, die Position folgt daraus (78010 ≤ 20 < 78020).
-    else if (therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))
+    else if (!altsystem && therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))
       err = therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value });
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
@@ -1188,7 +1208,7 @@ async function loadPodologieBilling() {
     // Eingangsbefundung ohne Anamnese (gkv-302, 30.09.2026): Rückfrage, KEINE Sperre —
     // sie darf auch auf Papier erhoben sein. Frisch gelesen (kann seit dem Rendern
     // nachgetragen sein); nur bei 78040, sonst keine Abfrage. „Zurück" = nichts gespeichert.
-    if (checks.includes(POD_EINGANGSBEFUNDUNG) && vord?.lead_id) {
+    if (!altsystem && checks.includes(POD_EINGANGSBEFUNDUNG) && vord?.lead_id) {
       const hat = await hatAnamnese(ctx.supabase, vord.lead_id);
       if (frageAnamnese78040({ checks, hatAnamnese: hat })) {
         const erhoben = await ctx.showConfirmModal({ ...ANAMNESE_78040_FRAGE });
@@ -1205,7 +1225,8 @@ async function loadPodologieBilling() {
       lokalisation: lokal || null,
       notizen: notiz || null,
       therapiezeit_min: therapiezeitFuerSpeichern(podVordMassnahme(vord), document.getElementById('podTherapiezeit')?.value),   // Konsey S0 2b; NULL außerhalb c)
-      employee_id: ctx.getSessionUserId?.() || null,   // Ops #252 — wer hat behandelt
+      employee_id: altsystem ? null : (ctx.getSessionUserId?.() || null),   // Ops #252 — wer hat behandelt
+      ...(altsystem ? { herkunft: 'altsystem' } : {}),   // Migration 0086 — nur gesetzt, wenn angekreuzt
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
 
@@ -1252,6 +1273,7 @@ async function loadPodologieBilling() {
 
     const bookingIdVorLaden = _podState.fahrtBookingId;
     await loadPodologieBilling();
+    if (altsystem) return;   // Nachtrag: keine Fahrt, kein Folgetermin
     const fahrtOffen = await zeigeFahrtHinweis();
     // Folgetermin-Frage (Konsey S0, 1b). Hausbesuch: ERST die Fahrt beenden, dann fragen —
     // die Frage wartet dann auf `onFertig` in fahrtBeendenKlick.

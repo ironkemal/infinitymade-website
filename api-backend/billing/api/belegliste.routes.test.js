@@ -235,3 +235,17 @@ test('Podologie: Kassieren über die Zuzahlung der erbrachten Behandlungen wird 
   const r2 = await passt.call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur: 18.47, zahlart: 'bar', prescription_id: 'rx-podo', patient_id: 'p' } });
   assert.equal(r2.status, 201);
 });
+
+test('Podologie: im Altsystem kassierte Zuzahlung (Vermerk, 0086) wird vom Soll abgezogen', async () => {
+  const ctx = {
+    ladeErbrachteSitzungen: async () => ({ podo: true, sitzungen: [{ id: 's1', code: '78010', done_at: '2026-10-10' }] }),
+    resolvePreis: () => ({ preis_eur: 30, zuzahlung_eur: 3, position_frei: false }),
+    abrechnungscodeFuer: () => '71',
+    calcAbrechnungsfallZuzahlung: () => ({ gesZuzahlung: 18.47 }),
+  };
+  const rx = { id: 'rx-alt', owner_id: 'owner', therapie_bereich: 'podo', zuzahlung_befreit: false, zuzahlung_altsystem_eur: 10 };
+  const zuviel = fixture([rx], { ctx });
+  assert.equal((await zuviel.call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur: 9, zahlart: 'bar', prescription_id: 'rx-alt', patient_id: 'p' } })).status, 422);
+  const rest = fixture([rx], { ctx });
+  assert.equal((await rest.call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur: 8.47, zahlart: 'bar', prescription_id: 'rx-alt', patient_id: 'p' } })).status, 201);
+});

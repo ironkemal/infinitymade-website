@@ -51,7 +51,7 @@ import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './veror
 import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261021f';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261021k';
-import { rxGeschlossen } from './termin-verordnung.js?v=20261021d';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261021s';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({

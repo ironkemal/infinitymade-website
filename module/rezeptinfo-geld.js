@@ -247,6 +247,11 @@ export async function ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen })
   await Promise.all([...new Set(behs.map(b => tag(b.behandlungsdatum)))]
     .map(async t => karten.set(t, await ladePodoPositionen(t).catch(() => null))));
   const summe = zuzahlungFuerPodoVerordnung(rx, behs, (code, datum) => karten.get(tag(datum))?.get?.(String(code)) || null);
+  // Übernommene VO: im Altsystem schon kassiert (Migration 0086) — Praxura fordert nur den Rest (Vertrag § 8).
+  const altsystem = Number(rx?.zuzahlung_altsystem_eur) || 0;
+  if (altsystem > 0 && Number.isFinite(Number(summe?.gesamt))) {
+    return { ...summe, gesamtSoll: summe.gesamt, altsystem, gesamt: Math.max(0, Math.round((summe.gesamt - altsystem) * 100) / 100), behandlungen: behs.length };
+  }
   return { ...summe, behandlungen: behs.length };
 }
 
