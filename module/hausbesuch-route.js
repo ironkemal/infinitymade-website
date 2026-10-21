@@ -64,3 +64,25 @@ export function hausbesuchRouteAusblenden(doc = globalThis.document) {
 }
 
 if (IST_KUTU) hausbesuchRouteAusblenden();
+
+/**
+ * Fahrzeit beim Speichern selbst holen statt zu sperren. Vorher meldete das
+ * Speichern „Bitte zuerst ‚Entfernung berechnen' klicken" — ein Pflichtklick
+ * mit ~6 s Wartezeit bei jedem neuen Hausbesuchspatienten (canli-test
+ * 20.10.2026). Jetzt löst Speichern denselben Knopf aus (gleiche Berechnung,
+ * gleicher Cache in `leads`) und wartet höchstens `maxMs`.
+ *
+ * @param {{duration_min:?number}} lead   das Objekt, das der Knopf-Handler aktualisiert
+ * @returns {Promise<boolean>} true, wenn die Fahrzeit danach vorliegt
+ */
+export async function holeFahrzeitBeimSpeichern(lead, { doc = globalThis.document, maxMs = 10000, schritt = 200 } = {}) {
+  if (!lead || lead.duration_min != null) return !!lead;
+  const btn = doc?.getElementById('bkHbBerechnenBtn');
+  if (!btn) return false;
+  if (!btn.disabled) btn.click();
+  for (let t = 0; t < maxMs; t += schritt) {
+    await new Promise(r => setTimeout(r, schritt));
+    if (lead.duration_min != null) return true;
+  }
+  return false;
+}

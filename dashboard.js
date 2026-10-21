@@ -14,7 +14,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import './module/hausbesuch-route.js?v=20261007a'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
@@ -5213,7 +5213,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const selLead = getSelectedBkLead();
     if (!selLead) { terminFehler('Bitte zuerst den Patienten auswählen.'); return; }
     if (!selLead.street || !selLead.plz || !selLead.city) { terminFehler('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.'); return; }
-    if (selLead.duration_min == null && !IST_KUTU) { terminFehler('Bitte zuerst "Entfernung berechnen" klicken.'); return; }
+    if (selLead.duration_min == null && !IST_KUTU && !await holeFahrzeitBeimSpeichern(selLead)) showToast('Fahrzeit konnte nicht berechnet werden — Termin ohne Fahrzeit gespeichert.', 'warning');
     totalBlockMin = Number(selLead.duration_min || 0) * 2 + dur + HAUSBESUCH_BUFFER_MIN; // Box: keine Routenberechnung (K-5) → ohne Fahrtzeit, canli-test 02.10.
   }
 

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
  "dateien": 453,
- "funktionen": 3641,
+ "funktionen": 3642,
  "module": [
   "abrechnung",
   "anamnese",
@@ -114325,6 +114325,28 @@
    ],
    "calledBy": [
     "(datei) module/hausbesuch-route.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "holeFahrzeitBeimSpeichern",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/hausbesuch-route.js",
+   "start": 78,
+   "end": 88,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "(datei) dashboard.js"
    ],
    "modules": [],
    "gemeinsam": false,
