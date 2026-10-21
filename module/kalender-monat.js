@@ -215,7 +215,8 @@ export async function renderMonat({
       const uhr = (d) => new Date(d).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
       const wer = anzeigeName(parseNameMitGeburt(b.customer_name).name || b.customer_name) || b.services?.title || 'Termin';
       pille.textContent = `${uhr(b.start_time)} ${wer}`;
-      pille.title = [b.end_time ? `${uhr(b.start_time)}–${uhr(b.end_time)}` : uhr(b.start_time), b.customer_name, b.services?.title].filter(Boolean).join(' · ');
+      // `wer` statt `customer_name`: dort hängt das ISO-Geburtsdatum am Namen (canli-test Regression 3).
+      pille.title = [b.end_time ? `${uhr(b.start_time)}–${uhr(b.end_time)}` : uhr(b.start_time), wer, b.services?.title].filter(Boolean).join(' · ');
       // Die Pille zeigt einen konkreten Termin — dann soll sie ihn auch öffnen,
       // statt nur in den Tag zu springen.
       pille.addEventListener('click', (ev) => {

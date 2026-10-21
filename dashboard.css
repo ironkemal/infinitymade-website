@@ -7415,10 +7415,15 @@ textarea:focus-visible,
   padding: 1px 5px;
   border-radius: 3px;
   color: #fff;
-  white-space: nowrap;
+  /* Bei offenem Seitenbereich ist die Zelle ~100 px breit — eine Zeile kürzte
+     schon den Nachnamen („10:00 TEST…"). Zwei Zeilen, dann erst Ellipse. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
+  overflow-wrap: anywhere;
   max-width: 100%;
-  text-overflow: ellipsis;
 }
 
 /* ── Termin-Anfragen Panel ─────────────────────────────────────── */
