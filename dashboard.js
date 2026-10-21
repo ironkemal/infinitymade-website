@@ -138,7 +138,7 @@ import {
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021k'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
-import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
+import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021q'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
@@ -1356,12 +1356,12 @@ async function loadScheduleBookings(date) {
   colsWrap.innerHTML = '';
 
   const SLOT_H = 48;
-  let DAY_START = 8;
+  let DAY_START = 8; const OV_BIS = rasterStunden(displayBookings).bis;   // Termine nach 20 Uhr nicht abschneiden
   if (isToday) {
     const now = new Date();
     DAY_START = Math.max(8, now.getHours());
   }
-  for (let h = DAY_START; h < 20; h++) {
+  for (let h = DAY_START; h < OV_BIS; h++) {
     for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');
       slot.className = 'dv-slot';
@@ -1424,7 +1424,7 @@ async function loadScheduleBookings(date) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h = DAY_START; h < 20; h++) {
+    for (let h = DAY_START; h < OV_BIS; h++) {
       for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
@@ -1472,7 +1472,7 @@ async function loadScheduleBookings(date) {
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
 
-      block.innerHTML = renderBookingSlotInner(b, childBookings);
+      block.innerHTML = renderBookingSlotInner(b, childBookings) + terminHinweiseHtml(b);   // Hausbesuch / Ohne VO / Zuzahlung offen (module/termin-hinweise.js)
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);

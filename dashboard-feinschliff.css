@@ -483,3 +483,9 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 .month-cell { min-width: 0; overflow: hidden; }
 .month-cell-events { min-width: 0; }
 .month-event-pill { font-variant-numeric: tabular-nums; }
+
+/* Hinweise an Terminen der Tagesübersicht (module/termin-hinweise.js). */
+.termin-hinweise { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.termin-hinweis { font-size: 10px; line-height: 1.5; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border-strong, var(--border)); color: var(--text-muted); background: var(--bg-card-solid); white-space: nowrap; }
+.termin-hinweis--ohne-vo, .termin-hinweis--zuzahlung { border-color: var(--warning, #b54708); color: var(--warning-text, #b54708); }
+.dv-booking-block--compact .termin-hinweise { display: none; }
