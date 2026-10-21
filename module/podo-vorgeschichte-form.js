@@ -88,7 +88,10 @@ export async function montiereVorgeschichte({ sb, ownerId, leadId, nagel, wrap, 
   const $ = (id) => wrap.querySelector('#' + id);
   $('podVgSpeichern')?.addEventListener('click', async () => {
     const meldung = $('podVgMeldung');
-    const naegel = { ...(lead?.podo_vorgeschichte_naegel || {}) };
+    // Frisch lesen: Akte und Behandlungsbildschirm schreiben dasselbe JSON — sonst
+    // überschreibt der später gespeicherte Bildschirm die Nägel des anderen (fonksiyon-ustasi).
+    const { data: frisch } = await sb.from('leads').select('podo_vorgeschichte_naegel').eq('id', leadId).eq('owner_id', ownerId).maybeSingle();
+    const naegel = { ...((frisch || lead)?.podo_vorgeschichte_naegel || {}) };
     zeilenFuer(welche).forEach((ng, i) => {
       const code = $(`podVgNagelCode_${i}`)?.value, am = $(`podVgNagelAm_${i}`)?.value, ab = $(`podVgNagel78520_${i}`)?.value;
       const eintrag = { ...(code && am ? { erstbefundung: { code, am } } : {}), ...(ab ? { abschluss_78520_am: ab } : {}) };

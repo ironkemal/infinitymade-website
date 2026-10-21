@@ -60,7 +60,7 @@
  * Aufruf.
  */
 
-import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021x';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { pauseLage, pauseMeldung } from './podo-unterbrechung.js?v=20261021y'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021y';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -1106,6 +1106,11 @@ async function loadPodologieBilling() {
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
+
+    // 12-Wochen-Pause (Podologie-Vertrag § 7 Abs. 7, gkv-302 21.10.2026): nach mehr als
+    // 84 Tagen seit der letzten Behandlung gehört der Tag auf eine neue VO — module/podo-unterbrechung.js.
+    { const pause = pauseLage(await podBehandlungenDerVerordnung(_podState.selectedVordId), datum);
+      if (pause.ungueltig) { errEl.textContent = pauseMeldung(pause); errEl.style.display = 'block'; return; } }
 
     // 78040 gehört einmalig VOR die erste podologische Leistung des Patienten —
     // begründet in podEingangsbefundungLage(). Zwei getrennte Sperren, damit die

@@ -3,7 +3,7 @@
 > Üretim: 2026-10-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3656 fonksiyon** (3541 JS · 88 bash · 27 ps1) · 455 dosya · 42 sidebar modülü
+**3659 fonksiyon** (3544 JS · 88 bash · 27 ps1) · 456 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -84,10 +84,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `schritt3()` — [module/patienten-import.js:544](module/patienten-import.js#L544-L570) · 27 satır · leads:delete
 
 **Yol 7 — `montiereVorgeschichte()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
-- `montiereVorgeschichte()` — [module/podo-vorgeschichte-form.js:79](module/podo-vorgeschichte-form.js#L79-L112) · 34 satır · leads:update
+- `montiereVorgeschichte()` — [module/podo-vorgeschichte-form.js:79](module/podo-vorgeschichte-form.js#L79-L115) · 37 satır · leads:update
 
 **Yol 8 — `$()`** · Ekran: _UI yolu çözülemedi_
-- `$()` — [module/podo-vorgeschichte-form.js:88](module/podo-vorgeschichte-form.js#L88-L113) · 26 satır · leads:update
+- `$()` — [module/podo-vorgeschichte-form.js:88](module/podo-vorgeschichte-form.js#L88-L116) · 29 satır · leads:update
 
 **Yol 9 — `verordnungPatientenAbgleich()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `verordnungPatientenAbgleich()` — [module/verordnung-patient-abgleich.js:19](module/verordnung-patient-abgleich.js#L19-L98) · 80 satır · leads:update
@@ -369,7 +369,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 1 — `loadPodologieBilling()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `behandlungStornieren()` — [module/podo-storno.js:91](module/podo-storno.js#L91-L166) · 76 satır · podologie_behandlungen:update
-- `loadPodologieBilling()` — [module/podologie-abrechnung.js:501](module/podologie-abrechnung.js#L501-L1288) · 788 satır · podologie_behandlungen:insert
+- `loadPodologieBilling()` — [module/podologie-abrechnung.js:501](module/podologie-abrechnung.js#L501-L1293) · 793 satır · podologie_behandlungen:insert
 
 **Yol 2 — `behandlungenVerknuepfen()`** · Ekran: _UI yolu çözülemedi_
 - `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:194](module/rechnung-bruecke.js#L194-L223) · 30 satır · podologie_behandlungen:update
