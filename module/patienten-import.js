@@ -22,6 +22,7 @@ import { normalisiereGeschlecht } from './geschlecht.js?v=20260816';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
 import { trennePlzOrt } from './verordnung-an-backend.js?v=20261006b';
+import { alsBerlinDatum } from './berlin-datum.js';
 import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 
 // ── CSV lesen ───────────────────────────────────────────────────────────
@@ -277,7 +278,7 @@ export function pruefeImport(text, bestehende = [], zuordnungVonHand = null) {
 
 /** Datensatz für leads.insert */
 export function insertDatensatz(z, ownerId, batchId) {
-  const metadata = { import_batch: batchId, import_am: new Date().toISOString().slice(0, 10) };
+  const metadata = { import_batch: batchId, import_am: alsBerlinDatum(new Date()) };   // Berliner Tag, nicht UTC (canli-test 21.10.2026)
   if (z.altsystemNr) metadata.altsystem_nr = z.altsystemNr;
   if (z.patient.krankenkasse) metadata.krankenkasse = z.patient.krankenkasse;
   if (z.patient.versichertennummer) metadata.krankenkassennummer = z.patient.versichertennummer;
