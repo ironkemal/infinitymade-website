@@ -138,7 +138,7 @@ import {
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021k'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
-import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
+import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
@@ -3496,19 +3496,19 @@ async function openFahrtStartModal() {
     err.textContent = 'Noch kein Fahrzeug vorhanden. Bitte zuerst eines anlegen.';
     err.style.display = '';
   }
-  openModal('fahrtStartModal');
+  vorbelegeStartKm(supabase, sel); openModal('fahrtStartModal');   // letzter Kilometerstand des Fahrzeugs (module/fahrt-km.js)
 }
 
 async function saveFahrtStartHandler() {
   const vehicleId = document.getElementById('fsVehicleSelect').value;
   const startKmRaw = document.getElementById('fsStartKm').value;
   const startKm = parseInt(startKmRaw, 10);
-  const err = document.getElementById('fsError');
-  err.style.display = 'none';
+  const err = document.getElementById('fsError'); err.style.display = 'none';
   if (!vehicleId) { err.textContent = 'Bitte ein Fahrzeug wählen.'; err.style.display = ''; return; }
   if (!Number.isFinite(startKm) || startKm < 0) {
     err.textContent = 'Bitte einen gültigen Start-KM eingeben.'; err.style.display = ''; return;
   }
+  const kmFehler = startKmFehler(startKm, await letzterKmStand(supabase, vehicleId).catch(() => null)); if (kmFehler) { err.textContent = kmFehler; err.style.display = ''; return; }
   const b = bkActionBookingCache;
   if (!b || !b.id) { err.textContent = 'Buchung nicht gefunden. Bitte Modal neu öffnen.'; err.style.display = ''; return; }
 

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
- "dateien": 451,
- "funktionen": 3630,
+ "dateien": 452,
+ "funktionen": 3635,
  "module": [
   "abrechnung",
   "anamnese",
@@ -48378,7 +48378,8 @@
    "storage": [],
    "calls": [
     "loadVehiclesForPicker",
-    "openModal"
+    "openModal",
+    "vorbelegeStartKm"
    ],
    "calledBy": [
     "saveVehicleEditCore"
@@ -48412,8 +48413,10 @@
     "closeModal",
     "error",
     "leadIdFuerFahrt",
+    "letzterKmStand",
     "renderBkActionFahrtState",
-    "showToast"
+    "showToast",
+    "startKmFehler"
    ],
    "calledBy": [],
    "modules": [],
@@ -77378,6 +77381,7 @@
     "fuelleFormular",
     "get",
     "getAvailableSlots",
+    "hole",
     "horizonDays",
     "icdSpeicherHinweise",
     "inArbeitszeit",
@@ -77391,6 +77395,7 @@
     "ladePodoZuzahlung",
     "ladeVerlauf",
     "lauf",
+    "letzterKmStand",
     "load",
     "loadAbrechnung",
     "loadActivityFeed",
@@ -106961,6 +106966,130 @@
    "calls": [],
    "calledBy": [
     "saveFahrtStartHandler"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "letzterKmStand",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/fahrt-km.js",
+   "start": 13,
+   "end": 21,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "all",
+    "hole"
+   ],
+   "calledBy": [
+    "fuelle",
+    "saveFahrtStartHandler",
+    "vorbelegeStartKm"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "hole",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/fahrt-km.js",
+   "start": 15,
+   "end": 24,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "all",
+    "startKmFehler"
+   ],
+   "calledBy": [
+    "letzterKmStand"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "startKmFehler",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/fahrt-km.js",
+   "start": 24,
+   "end": 29,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "hole",
+    "saveFahrtStartHandler"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "vorbelegeStartKm",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/fahrt-km.js",
+   "start": 37,
+   "end": 55,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fuelle",
+    "letzterKmStand"
+   ],
+   "calledBy": [
+    "openFahrtStartModal"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fuelle",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/fahrt-km.js",
+   "start": 40,
+   "end": 47,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "letzterKmStand"
+   ],
+   "calledBy": [
+    "vorbelegeStartKm"
    ],
    "modules": [],
    "gemeinsam": false,
