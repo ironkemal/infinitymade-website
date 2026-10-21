@@ -327,57 +327,61 @@
   Ziff. 4.1: *„keine Behandlungseinheit im Sinne der Heilmittel-Richtlinie"* (yukarıdaki
   78040 kaydı).
 
-### Podologie: Behandlungsunterbrechung macht die Verordnung NICHT ungültig — keine 12-Wochen-Grenze
-- **Kural:** Podolojide seanslar arasındaki kesinti — süresi ne olursa olsun — Verordnung'u
-  **geçersiz kılmaz.** HeilM-RL § 16 Abs. 4'ün genel kuralı (Satz 1: gerekçesiz >14 Kalendertage
-  kesinti → Verordnung düşer; Satz 2: gerekçeli kesinti Verordnung'a yazılır) Podologie'ye
-  **uygulanmaz** (Satz 5). Kesinti Verordnung'a dokümante edilmek zorunda da değildir.
-  Yazılım podolojide kesinti yüzünden ne blok ne "ungültig" uyarısı üretir; ±2 Werktage
-  frekans sapması uyarısı (FAK Nr. 11 ilk cümlesi) bundan ayrıdır ve uyarı olarak kalır.
-- **Kaynak:** HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 16 Abs. 4 Satz 5 — *„Abweichend von
-  Satz 1 und 2 führen Behandlungsunterbrechungen bei Maßnahmen der Podologischen Therapie sowie
-  der Ernährungstherapie nicht zur Ungültigkeit der Verordnung."*
-  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:698-704`,
-  S. 17 — Satz 1/2 `:698-700`, Satz 5 `:702-704`; kapak „in Kraft getreten am 5. August 2025"
-  `:14`). Tamamlayıcı, norm değil: GKV-SV FAK Podologie Stand 24.05.2023 Nr. 11 — *„Wird die
-  Behandlung kürzer als 12 Wochen unterbrochen (z.B. wegen Krankheit oder Urlaub), bleibt die
-  Verordnung gültig. Unterbrechungen brauchen nicht auf der VO dokumentiert werden. (vgl. § 16
-  Abs. 4 Satz 5 Heilmittel-Richtlinie)"* (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:92-110`)
-  · Nr. 34 (Therapiefrequenz Nagelspangenbehandlung) — *„Verliert eine Verordnung auch dann ihre
-  Gültigkeit, wenn zwischen zwei Spangenanlagen zwar mehr als 12 Wochen liegen, in der
-  Zwischenzeit (z. B. nach 6 Wochen) aber eine Kontrolle stattfand? …"* → *„Nein"* (`:295-303`).
-  Tüm satırlar 29.09.2026'da orijinale karşı okundu.
-- ⚠️ **Ters okuma tuzağı (eski hata, `dbd79f0`'da düzeltildi):** FAK Nr. 11 yalnız "<12 hafta →
-  geçerli kalır" der; **">12 hafta → geçersiz"** demez. Bunu çıkarımla 84 günlük geçersizlik
-  sınırına çevirmek HeilM-RL Satz 5'e aykırıdır — FAK'ın kendisi Satz 5'e atıf yapıyor ve
-  Satz 5'te süre yok. Nr. 34 ">12 hafta"da da geçersizliği reddediyor; ancak soru araya
-  Kontrolle girmiş vakayı soruyor, "Kontrolle olmadan da Nein" diye **ayrıca** yazmıyor —
-  dayanak her durumda FAK değil Satz 5'tir.
-- **Geçerlilik:** 05.08.2025 (HeilM-RL Fassung 15.05.2025) · FAK Stand 24.05.2023
-- **Kodda:** ✅ `module/frequenz-pruefung.js:263` `pruefeFrequenz` → `:273` `istPodo` →
-  `:325` `bewerteAbstand(kt, wt, soll, !istPodo)`; `bewerteAbstand` `:230-231`
-  (`pruefeUnterbrechung=false` iken `'unterbrechung'` hükmü hiç verilmez). Commit `dbd79f0`
-  (Reform S1.9, 29.09.2026). Test: `module/frequenz-pruefung.test.js`.
-  - ✅ **Atıf düzeltildi (11.10.2026 ölçüldü) — değer hâlâ `offen` (sahip `builder`, Physio ince ayarı, Ops → Teknik):**
-    `module/frequenz-pruefung.js` `UNTERBRECHUNG_TAGE = 12 * 7` — yorum artık *„keine Quelle — Physio-Grenze laut
-    HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16)"*. Eski metin: ~~`// § 16 Abs. 4 Satz 5 HeilM-RL`~~
-    — Satz 5 süre içermez (podoloji istisnasıdır), 84 gün **hiçbir** HeilM-RL satırında yok.
-    Sabit bugün yalnız Physio/Ergo/Logo dalında çalışıyor; oranın dayanağı Satz 1 =
-    **14 Kalendertage ohne angemessene Begründung**'dur (`:698-699`), 12 hafta değil. Kod
-    yorumu (`:43-51`) bunu "Physio-Feinabstimmung'a ertelendi" diye kaydetmiş; `:66`'daki
-    atıf düzeltilmemiş. Podolojiyi etkilemez.
-- **Kapsam:** Podologie (DF/NF/QF/UI1/UI2 — Nagelspange dahil). Ernährungstherapie de Satz 5
-  kapsamında (bizim kapsam dışı). Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2 geçerli**, bu kural
-  onlara taşınmaz.
-- 🔴 **ÇELİŞKİ (21.10.2026, gkv-302) — Vertrag 12 Kalenderwochen diyor:** Vertrag nach § 125
-  Abs. 1 SGB V Podologie i.d.F. bis 16.06.2025 § 7 Abs. 7
-  (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt:628-630`): *„Die Verordnung
-  verliert bei einer Unterbrechung von 12 Kalenderwochen nach dem Tag der letzten Behandlung
-  (bei Nagelspangenbehandlungen auch Kontrolltermin) ihre Gültigkeit."* Bu kural yazılırken
-  Vertrag arşivde yoktu (W-11, 21.10.2026). HeilM-RL Satz 5 ile Vertrag § 7 Abs. 7 açıkça
-  çelişiyor; FAK Nr. 11/34 Vertrag okumasıyla da uyumlu. **Karar bekliyor (Kemal)** — kasa
-  pratiği Vertrag'ı uygular varsayımıyla, çözülene kadar >12 Kalenderwochen boşluğu en az
-  **uyarı** olmalı; kod (`frequenz-pruefung.js`) podolojide bugün hiç uyarmıyor.
+### Podologie: 12 Kalenderwochen Unterbrechung → Verordnung ungültig (Vertrag § 7 Abs. 7) — 14-Tage-Regel gilt NICHT
+- **Kural:** Podolojide son Behandlung'dan (Nagelspange'de **Kontrolltermin 78510 dahil**) sonra
+  **12 Kalenderwochen** içinde yeni bir Behandlung olmazsa Verordnung **geçersizdir**; o tarihten
+  sonraki seanslar bu VO üzerinden **abgewiesen/abgesetzt** edilir. Prüfmaßstab **Vertrag § 7
+  Abs. 7**'dir. HeilM-RL § 16 Abs. 4 Satz 5 yalnız genel **14-Tage-Regel'i (Satz 1) ve
+  Dokumentationspflicht'i (Satz 2)** podolojiden kaldırır; Satz 4 „Das Nähere hierzu regeln die
+  Vertragspartner nach § 125 SGB V" ile ayrıntıyı Vertrag'a bırakır. İki metin çelişmez:
+  14 gün yok, dokümantasyon yok, **dış sınır 12 Kalenderwochen**. Kesinti gerekçesi önemsiz
+  (Krankheit/Urlaub da sayılır). ±2 Werktage frekans sapması (Vertrag § 7 Abs. 6, FAK Nr. 11)
+  ayrı kuraldır ve uyarı olarak kalır.
+- **Kaynak:**
+  - Vertrag nach § 125 Abs. 1 SGB V Podologie i.d.F. 30.11.2020 inkl. Änderungen bis 16.06.2025
+    (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt`):
+    § 7 Abs. 7 (Z.628-630) *„Die Verordnung verliert bei einer Unterbrechung von 12
+    Kalenderwochen nach dem Tag der letzten Behandlung (bei Nagelspangenbehandlungen auch
+    Kontrolltermin) ihre Gültigkeit."* · § 1 Abs. 5 (Z.153-156) *„Die Bestimmungen dieses
+    Vertrages und der Heilmittel-Richtlinie … sind … zwingend zu beachten und anzuwenden."* ·
+    § 18 Abs. 2 (Z.1014-1015) *„Abrechnungen, die den Richtlinien nach § 302 SGB V und/oder
+    diesem Vertrag nicht entsprechen, werden von den Krankenkassen abgewiesen."*
+  - HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 16 Abs. 4
+    (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:698-704`):
+    Satz 1 (14 Kalendertage), Satz 4 *„Das Nähere hierzu regeln die Vertragspartner nach § 125
+    SGB V."*, Satz 5 *„Abweichend von Satz 1 und 2 führen Behandlungsunterbrechungen bei
+    Maßnahmen der Podologischen Therapie … nicht zur Ungültigkeit der Verordnung."*
+  - FAK Podologie Stand 24.05.2023 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt`)
+    Nr. 11 (Z.92-110, „kürzer als 12 Wochen … bleibt gültig") ve Nr. 34 (Z.295-303,
+    Kontrolle arada → „Nein", geçerliliği kaybetmez) — ikisi de Vertrag okumasıyla uyumlu.
+  - Tüm satırlar 21.10.2026'da orijinale karşı okundu (gkv-302).
+- **Sayım:** Süre letzte Behandlung'un **ertesi günü** başlar; 84 gün boyunca Behandlung
+  yoksa kesinti tamamlanmıştır → `abstandTage > 84` geçersiz, `= 84` hâlâ geçerli. ⚠️ Sınır
+  günü (84/85) kasa pratiğine karşı **doğrulanmadı**; 84. günde de uyarı verilir.
+- **Eski hata (29.09–21.10.2026):** bu başlık „keine 12-Wochen-Grenze" diyordu — Vertrag
+  arşivde yoktu (W-11 21.10.2026'da girdi), Satz 5 tek dayanak sanıldı, Satz 4 okunmamıştı.
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (iK 01.07.2025) · HeilM-RL 05.08.2025
+- **Kodda:**
+  - 🟡 Termin: `module/frequenz-pruefung.js:328-330` → `bewerteAbstand(kt, wt, soll, true)`;
+    meldung `:408-414`. Uyarı (blok değil) — Termin yeni VO ile meşru olabilir, bu doğru.
+    ⚠️ `:273` UI1/UI2'de erken `return { ok: true }` → Nagelspange'de 12-Wochen hiç
+    kontrol edilmiyor; kontrol bu return'ün **önüne** alınmalı (yalnız frekans uyarısı
+    atlanır). Ayrıca `:270` yorumu UI'yı „venöse/arterielle Ulcera" diye açıklıyor —
+    UI = Unguis incarnatus (Nagelspange).
+  - 🔴 Abrechnung: `api-backend/billing/dta/preflight.js:576-593` **S:01010** her bereichte
+    >14 Tage'yi **hart** hata sayıyor (`regel-schwere.js:138`) — podolojide Satz 5'e aykırı,
+    4-6 haftalık normal podo frekansında **dosya hiç üretilmez** (`builder.js:710-715`).
+    Podo için eşik 84 gün olmalı (son Behandlung incl. 78510'a göre), hata metni Vertrag § 7
+    Abs. 7. `:620-627` **S:01012** (Ausstellung + 84 gün, `regel-schwere.js:140` „HeilM-RL
+    Gültigkeit 84 Tage") **kaynaksız** (`module/heilmittel-fristen.js:7` aynı tespiti
+    yapıyor) ve uzun podo VO'larını meşru seanslarda bloklar — podo için kaldırılmalı.
+  - ⬜ Behandlung kaydı: `module/podologie-abrechnung.js` (`podErstbefundungGrossLage`
+    `:366-375` yanındaki kapı kalıbı) — 84 gün aşılmışsa seans **eski VO'ya bağlanamaz**,
+    dokümantasyon serbest; „neue Verordnung zuordnen" yolu gösterilir. Uygulanmamış.
+- **Kapsam:** Podologie DF/NF/QF/UI1/UI2. Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2**
+  (14 Kalendertage ohne Begründung) geçerli, bu kural onlara taşınmaz;
+  `module/frequenz-pruefung.js:69` `UNTERBRECHUNG_TAGE = 12 * 7` oralar için kaynaksız
+  (Physio ince ayarı, Ops → Teknik).
 
 ### Behandlungsbeginn-Frist: 28 Kalendertage, dringlich 14 — kaçarsa Verordnung geçersiz
 - **Kural:** Tedavi Verordnungsdatum'dan itibaren **28 Kalendertage** içinde başlamalıdır;

@@ -27,7 +27,7 @@ export function vorgeschichteFormHtml(lead, nagel) {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">
       ${datum('podVgErste', lead?.podo_vorgeschichte_erste_beh_am, 'Erste Behandlung')}
       ${datum('podVg78040', lead?.podo_vorgeschichte_78040_am, 'Eingangsbefundung 78040')}
-      ${datum('podVg78100', lead?.podo_vorgeschichte_78100_am, 'Letzte 78100')}
+      ${datum('podVg78100', lead?.podo_vorgeschichte_78100_am, 'Letzte Erstbefundung groß (78100) — gleich an welchem Nagel')}
     </div>
     ${NAEGEL.includes(nagel) ? `<div style="margin-top:10px;font-size:12px;color:var(--text-muted);">Nagel ${esc(nagel)}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:4px;">

@@ -60,7 +60,7 @@
  * Aufruf.
  */
 
-import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021v';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021w';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -118,7 +118,7 @@ import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit,
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261021c';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261021v';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261021w';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -892,7 +892,7 @@ async function loadPodologieBilling() {
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_notizen')}</label>
           <textarea id="podBehNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
         </div>
-        ${istAltsystemVerordnung(selectedVord) ? '<div id="podVgWrap"></div>' : ''}
+        <div id="podVgWrap"></div>
         ${istAltsystemVerordnung(selectedVord) ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer;color:var(--text-main);">
           <input type="checkbox" id="podAltsystem" style="margin-top:2px;">
           <span><b>Aus Altsystem übernommen</b> — diese Behandlung wurde im bisherigen Programm erbracht; die Unterschrift des Patienten für diesen Tag steht auf der Rückseite der Verordnung.</span>

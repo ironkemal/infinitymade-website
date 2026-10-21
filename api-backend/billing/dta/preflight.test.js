@@ -602,6 +602,25 @@ test('E11.7- mit icdTerminal {"E11.7": false} -> genau eine V:01016 Warnung', ()
   assert.equal(hasErr(r, 'V:01002'), false);
 });
 
+// ── S:01010/S:01012 Podologie (gkv-302 21.10.2026): 12 Kalenderwochen statt 14 Tage,
+//    kein Ablauf ab Ausstellung (Podologie-Vertrag § 7 Abs. 7; HeilM-RL § 16 Abs. 4 S. 5) ──
+const podoPause = (daten) => {
+  const i = podoFall({ icd10: 'E11.74', ausstellungsdatum: '2026-01-02' }, daten.map(d => [d, '78010']));
+  i.prescriptions[0].tarif.abrechnungscode = '71';
+  return preflight(i);
+};
+test('S:01010 Podologie: 6 Wochen Abstand ist zulässig, kein Ablauf ab Ausstellung', () => {
+  const r = podoPause(['2026-01-05', '2026-02-16', '2026-03-30', '2026-05-11']);
+  assert.ok(!hasErr(r, 'S:01010'), JSON.stringify(r.errors));
+  assert.ok(!hasErr(r, 'S:01012'), JSON.stringify(r.errors));
+});
+test('S:01010 Podologie: genau 84 Tage gültig, 85 Tage ungültig', () => {
+  assert.ok(!hasErr(podoPause(['2026-01-05', '2026-03-30']), 'S:01010'));
+  const r = podoPause(['2026-01-05', '2026-03-31']);
+  assert.ok(hasErr(r, 'S:01010'));
+  assert.match(r.errors.find(e => e.code === 'S:01010').message || JSON.stringify(r.errors), /Podologie-Vertrag § 7 Abs\. 7/);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
 
@@ -611,3 +630,4 @@ test('ICD-10 Kennzeichen/Strich hinter den Zusätzen gültig (cold review 01.10.
   for (const k of ['E†11.40', 'E11.40††', 'M54.5-X', 'E11.4-0'])
     assert.equal(isValidIcd10(k), false, k);
 });
+

@@ -489,3 +489,13 @@ test('freier Text ohne Wochenangabe liefert nichts', () => {
   assert.equal(sitzungenProWoche('10 Einheiten'), null);
   assert.equal(sitzungenProWoche('nach Bedarf'), null);
 });
+
+// gkv-302 21.10.2026: Vertrag § 7 Abs. 7 nennt Nagelspangen ausdrücklich — die
+// 12-Wochen-Pause gilt auch bei UI1/UI2, nur die Frequenzwarnung entfällt.
+test('Podologie UI1: keine Frequenzwarnung, aber 12-Wochen-Hinweis', async () => {
+  const rx = { id: 'rx-ui-podo', frequenz: '1x wöchentlich', diagnosegruppe: 'UI1', therapie_bereich: 'podo' };
+  const nah = await pruefeFrequenz({ supabase: doppelPodo([podoBooking('b1', '2026-08-09T09:00:00Z')]), rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1' });
+  assert.equal(nah.ok, true);
+  const weit = await pruefeFrequenz({ supabase: doppelPodo([podoBooking('b1', '2026-05-04T09:00:00Z')]), rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1' });
+  assert.equal(weit.befund?.urteil, 'unterbrechung');
+});

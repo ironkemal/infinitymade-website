@@ -25,7 +25,7 @@
  */
 
 import { alsDatetimeLocal } from './datum.js?v=20261001a';
-import { sollAbstand } from './frequenz-pruefung.js?v=20261021v';
+import { sollAbstand } from './frequenz-pruefung.js?v=20261021w';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261003a';
 import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261021v';
