@@ -322,6 +322,23 @@ export function resetVerordnungFelder() {
   zeigeDienstleistungsfeld(true);
 }
 
+/** Fünf aktive Vorschläge plus bestehende aktive Bindung, für Maske und Aktionspanel. */
+export async function ladeAktiveVerordnungenFuerTermin(sb, { leadId, verordnungId } = {}) {
+  const felder = `${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`;
+  const { data, error } = await sb.from('prescriptions').select(felder)
+    .eq('patient_id', leadId)
+    .not('status', 'in', '("completed","billed","cancelled")')
+    .order('created_at', { ascending: false }).limit(5);
+  if (error || !verordnungId || data?.some(rx => rx.id === verordnungId)) return { data, error };
+
+  // Eine bestehende Bindung darf nicht wegen der Fünfergrenze verschwinden.
+  // Gleicher Patient und gleiche Aktivitätsregel wie bei der Vorschlagsliste.
+  const direkt = await sb.from('prescriptions').select(felder)
+    .eq('patient_id', leadId).eq('id', verordnungId)
+    .not('status', 'in', '("completed","billed","cancelled")').maybeSingle();
+  return { data: direkt.data ? [direkt.data, ...(data || [])] : data, error: direkt.error };
+}
+
 /**
  * Lädt die aktiven Verordnungen eines Patienten in das Termin-Fenster und
  * wählt bei Bedarf die zum Termin gehörende Verordnung vor.
@@ -351,13 +368,7 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
     vordId = data?.verordnung_id ?? null;
   }
 
-  const { data: rxs } = await sb
-    .from('prescriptions')
-    .select(`${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`)
-    .eq('patient_id', leadId)
-    .not('status', 'in', '("completed","billed","cancelled")')
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const { data: rxs } = await ladeAktiveVerordnungenFuerTermin(sb, { leadId, verordnungId: vordId });
 
   const renderFn = deps.rendereVeroKarten || rendereVeroKarten;
   renderFn({

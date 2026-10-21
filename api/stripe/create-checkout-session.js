@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 // POST /api/stripe/create-checkout-session
 // Two flows:
 //   1. Authenticated existing user: Authorization: Bearer <jwt>  (no pending_id)
@@ -5,11 +6,11 @@
 // Returns: { url } (Stripe Checkout URL)
 
 import { getAuthedUser, adminFetch, json } from '../_lib/auth.js';
-import { stripeRequest, priceIdFor } from '../_lib/stripe.js';
+import { stripeRequest, priceIdFor, publicBaseUrl } from '../_lib/stripe.js';
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://app.praxura.de';
+const PUBLIC_URL = publicBaseUrl();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   const { pending_id, planSlug, interval, consents, reactivate } = req.body || {};
@@ -154,3 +155,5 @@ export default async function handler(req, res) {
 
   return json(res, 200, { url: data.url, sessionId: data.id });
 }
+
+export default withServerlessTelemetry('stripe/create-checkout-session', handler);

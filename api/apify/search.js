@@ -1,8 +1,9 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 import { getAuthedUser, json } from '../_lib/auth.js';
 
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   const { user, error: authErr } = await getAuthedUser(req);
@@ -49,3 +50,5 @@ export default async function handler(req, res) {
     return json(res, 500, { error: e.message || 'Apify request failed' });
   }
 }
+
+export default withServerlessTelemetry('apify/search', handler);

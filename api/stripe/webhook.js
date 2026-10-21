@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 // POST /api/stripe/webhook
 // Receives Stripe events. Verifies signature with STRIPE_WEBHOOK_SECRET.
 // Updates profile.plan_status, trial_ends_at, current_period_end on:
@@ -83,7 +84,7 @@ async function updateProfileBySubscription(sub, overrides = {}) {
   return { ok, httpStatus, data };
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   let event;
@@ -355,3 +356,5 @@ export default async function handler(req, res) {
     return json(res, 500, { error: 'Handler error', message: err.message });
   }
 }
+
+export default withServerlessTelemetry('stripe/webhook', handler);

@@ -140,6 +140,8 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Anahtar bölümler:**
   - 5 AUFBAU UND STRUKTUR DER NUTZDATEN
   - 5.5 Nachrichtenaufbau und -inhalte
+  - #290-0, gezielt 21.10.2026 gelesen: SLLA B/Heilmittel ZHE7/8/9 TXT:3352–3383;
+    SKZ TXT:3506–3539 (Seiten 72–73). TXT:2876 ist Hilfsmittel, kein Heilmittelbeleg.
   - 6 FEHLERVERFAHREN
   - 7 RECHNUNGEN IM KORREKTURVERFAHREN
   - 9 SCHLÜSSELVERZEICHNISSE
@@ -572,6 +574,20 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** belirtilmemiş
 - **Ne zaman lazım:** Podoloji reçetelerinin geçerliliğini ve eksiksizliğini denetleme, düzeltme prosedürlerini yürütme ve fatura kesintilerini (Nullretaxation) önleme durumlarında.
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
+
+### wissensbank/podologie/20231030_Podologie_Aenderungsvereinbarung.txt (yerel; W-11)
+- **Ne:** Änderungsvereinbarung vom 20.10.2023; kaynak edinimi Ops #243, 18.10.2026 tamamlandı. Tarihsel metin, güncel fiyat kaynağı değil.
+- **Orijinal / kaynak:** aynı adlı PDF; resmi URL ve SHA256 REGISTER W-11. TXT `pdftotext -enc UTF-8 -layout` ile 18.10.2026 üretildi; 5 satırlık metadata içerir, PDF otoritedir.
+- **Anahtar bölümler:** Artikel 1 / Anlage 1a (TXT:62), Teil 2 Nr.4.1 Eingangsbefundung (TXT:132–176); Artikel 2 / Anlage 1b (TXT:208); Artikel 3 / Anlage 2 (TXT:280–342); Artikel 4 yürürlük (TXT:346–348).
+- **Sürüm:** kapak 20.10.2023 · **Anzuwenden ab:** 01.11.2023 (Artikel 4).
+- **İçerdiği fiyat/pozisyon numarası var mı:** evet. Sayılar dönüştürülmedi/doğrulanmadı; bu TXT'den fiyat aktarılmaz. Güncel Anlage 1a/2 ayrıca okunur.
+
+### wissensbank/podologie/20250617_vertrag_125_podologie_vertrag_lesefassung.txt (yerel; W-12)
+- **Ne:** §125 Podologie ana sözleşmesi vom 30.11.2020, tüm değişiklikler 16.06.2025'e kadar konsolide; Z-17 eksik ana metin artık mevcut.
+- **Orijinal / kaynak:** aynı adlı PDF; resmi URL ve SHA256 REGISTER W-12. TXT 18.10.2026 `pdftotext -enc UTF-8 -layout` + 5 metadata satırı; PDF otoritedir.
+- **Anahtar bölümler:** §3a Nagelspange (TXT:350), §3b geçiş ve yeni kurallar (TXT:453), §7 Durchführung/Beendigung (TXT:598), §18 Abrechnung (TXT:1052), §21 Inkrafttreten/Kündigung (TXT:1324).
+- **Sürüm:** kapak einschließlich Änderungen bis 16.06.2025. Temel yürürlük 01.01.2021 (§21); §3b reçete tarihi eşiği ayrıca 01.10.2025. Tek bir yeni genel yürürlük günü kapakta belirtilmemiş.
+- **Ne zaman lazım:** tarihsel 2023 değişikliği ile güncel ana sözleşmeyi ayırmak; fatura/tedavi kuralını orijinal bölümle doğrulamak. 78040 girişi §3a değildir, W-11 Artikel 1'e bakılır.
 
 ### wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung.txt
 - **Ne:** Änderungsvereinbarung zum Vertrag nach § 125 Abs. 1 SGB V über die Versorgung mit Leistungen der Podologie und deren Vergütung vom 30.11.2020.

@@ -2,15 +2,23 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { pruefeAbrechnungssperre, korrigiereNoShow } from './booking-status-korrektur.js';
 
-function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null, links = null, freieSitzungen = [] } = {}) {
+function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null, links = null,
+  freieSitzungen = [], rezepte = {}, liveSitzungen = [], snapshotSitzungen,
+  lesefehler = null, termin = {}, fehlendeVerordnung = false } = {}) {
   const geschrieben = { bookings: [], sessions: [], korrekturen: [], gebunden: [] };
-  // `update().eq()` endet meistens hier — bei der Rueckbindung einer einzelnen
-  // Sitzungszeile geht die Kette aber noch ueber `.is().select()` weiter
-  // (module/termin-nicht-erschienen.js). Deshalb ist die Kette `then`-faehig
-  // statt an einer festen Stelle ein Promise zu liefern.
   const kette = (tabelle, istUpdate = false) => {
     const f = {};
     const ergebnis = () => {
+      if (!istUpdate) {
+        if (lesefehler === tabelle) return { data: null, error: { message: 'Lesefehler' } };
+        if (tabelle === 'bookings') return { data: { id: 'b1', owner_id: 'o1', status: 'no_show',
+          verordnung_id: null, no_show_session_links: links, ...termin }, error: null };
+        if (tabelle === 'prescriptions') return { data: fehlendeVerordnung ? null
+          : { therapie_bereich: 'podo', abrechnung_status: Object.hasOwn(rezepte, f.id) ? rezepte[f.id] : abrechnungStatus }, error: null };
+        if (tabelle === 'sessions') return { data: f.ids
+          ? (snapshotSitzungen ?? (links || []).map(l => ({ id: l.session_id, prescription_id: l.prescription_id })))
+          : liveSitzungen, error: null };
+      }
       if (istUpdate && tabelle === 'sessions' && f.id) {
         const frei = freieSitzungen.includes(f.id);
         if (frei) geschrieben.gebunden.push(f.id);
@@ -21,14 +29,11 @@ function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null, links =
     const k = {
       select: () => k,
       eq: (spalte, wert) => { f[spalte] = wert; return k; },
+      in: (spalte, wert) => { f.ids = wert; return k; },
       neq: () => k,
+      not: () => k,
       is: (spalte, wert) => { f[spalte] = wert; return k; },
-      maybeSingle: () => Promise.resolve({
-        data: abrechnungStatus === null && links === null
-          ? null
-          : { abrechnung_status: abrechnungStatus, no_show_session_links: links },
-        error: null,
-      }),
+      maybeSingle: () => Promise.resolve(ergebnis()),
       update: (patch) => { geschrieben[tabelle].push(patch); return kette(tabelle, true); },
       insert: (row) => { geschrieben[tabelle].push(row); return Promise.resolve({ error: null }); },
       then: (ok, fehler) => Promise.resolve(ergebnis()).then(ok, fehler),
@@ -37,7 +42,7 @@ function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null, links =
   };
   return {
     supabase: {
-      from: (t) => kette(t === 'bookings' ? 'bookings' : t === 'prescription_sessions' ? 'sessions' : 'korrekturen'),
+      from: (t) => kette(t === 'prescription_sessions' ? 'sessions' : t === 'booking_status_korrekturen' ? 'korrekturen' : t),
       auth: { getSession: () => Promise.resolve({ data: { session: { user: { id: 'u-1' } } } }) },
     },
     geschrieben,
@@ -58,19 +63,19 @@ test('kein verordnung_id, keine prescription_sessions -> nicht gesperrt', async 
 });
 
 test('Podologie: bereits abgerechnete Verordnung sperrt', async () => {
-  const { supabase } = supabaseDoppel({ abrechnungStatus: 'abgerechnet' });
+  const { supabase } = supabaseDoppel({ abrechnungStatus: 'abgerechnet', termin: { verordnung_id: 'rx-1' } });
   const r = await pruefeAbrechnungssperre(supabase, { id: 'b1', verordnung_id: 'rx-1' });
   assert.equal(r.gesperrt, true);
 });
 
 test('Podologie: aktive Verordnung sperrt nicht', async () => {
-  const { supabase } = supabaseDoppel({ abrechnungStatus: 'aktiv' });
+  const { supabase } = supabaseDoppel({ abrechnungStatus: 'aktiv', termin: { verordnung_id: 'rx-1' } });
   const r = await pruefeAbrechnungssperre(supabase, { id: 'b1', verordnung_id: 'rx-1' });
   assert.equal(r.gesperrt, false);
 });
 
 test('Physio: gebilltes prescription_sessions sperrt', async () => {
-  const { supabase } = supabaseDoppel({ abrechnungStatus: 'billed' });
+  const { supabase } = supabaseDoppel({ abrechnungStatus: 'billed', liveSitzungen: [{ id: 's2', prescription_id: 'rx-2' }] });
   const r = await pruefeAbrechnungssperre(supabase, {
     id: 'b1', prescription_sessions: [{ prescription_id: 'rx-2' }],
   });
@@ -80,7 +85,7 @@ test('Physio: gebilltes prescription_sessions sperrt', async () => {
 // --- korrigiereNoShow ---
 
 test('gesperrte Verordnung: bookings.status bleibt unangetastet', async () => {
-  const { supabase, geschrieben } = supabaseDoppel({ abrechnungStatus: 'abgerechnet' });
+  const { supabase, geschrieben } = supabaseDoppel({ abrechnungStatus: 'abgerechnet', termin: { verordnung_id: 'rx-1' } });
   const t = toast();
   const ok = await korrigiereNoShow({ supabase, showToast: t.fn }, {
     id: 'b1', owner_id: 'o1', status: 'no_show', verordnung_id: 'rx-1',
@@ -127,4 +132,75 @@ test('Schreibfehler auf bookings wird gemeldet, nicht geworfen', async () => {
   const ok = await korrigiereNoShow({ supabase, showToast: t.fn }, { id: 'b1', owner_id: 'o1', status: 'no_show' });
   assert.equal(ok, false);
   assert.match(t.calls[0].msg, /rls/);
+});
+
+for (const status of ['in_abrechnung', 'gesendet', 'accepted', 'paid', 'rejected', 'teilabsetzung',
+  'abgerechnet', 'billed', 'abgesetzt', 'storniert', 'archiviert', 'unbekannt']) {
+  test(`Abrechnungssperre ${status}: keinerlei Schreibzugriff`, async () => {
+    const { supabase, geschrieben } = supabaseDoppel({ abrechnungStatus: status, termin: { verordnung_id: 'rx-1' } });
+    const t = toast();
+    assert.equal(await korrigiereNoShow({ supabase, showToast: t.fn }, { id: 'b1' }), false);
+    assert.deepEqual(geschrieben, { bookings: [], sessions: [], korrekturen: [], gebunden: [] });
+    assert.equal(t.calls[0].art, 'error');
+  });
+}
+
+for (const status of [null, '', 'aktiv', 'bereit', 'abrechenbar']) {
+  test(`Offener Status ${String(status)} bleibt korrigierbar`, async () => {
+    const { supabase } = supabaseDoppel({ abrechnungStatus: status, termin: { verordnung_id: 'rx-1' } });
+    assert.equal(await korrigiereNoShow({ supabase, showToast: toast().fn }, { id: 'b1' }), true);
+  });
+}
+
+test('Alle live verknüpften Verordnungen werden geprüft, nicht nur erste', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ liveSitzungen: [
+    { id: 's1', prescription_id: 'rx1' }, { id: 's2', prescription_id: 'rx2' },
+  ], rezepte: { rx1: null, rx2: 'paid' } });
+  assert.equal(await korrigiereNoShow({ supabase, showToast: toast().fn }, {
+    id: 'b1', prescription_sessions: [{ prescription_id: 'rx1' }],
+  }), false);
+  assert.equal(geschrieben.bookings.length, 0);
+});
+
+test('Frischer Termin ersetzt veralteten Client-Snapshot und verordnung_id', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ termin: { verordnung_id: 'rx2' }, rezepte: { rx2: 'gesendet' } });
+  assert.equal(await korrigiereNoShow({ supabase, showToast: toast().fn }, {
+    id: 'b1', verordnung_id: 'rx1', no_show_session_links: [],
+  }), false);
+  assert.equal(geschrieben.bookings.length, 0);
+});
+
+test('Snapshot ohne prescription_id löst session_id frisch auf und sperrt', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ links: [{ session_id: 's1' }],
+    snapshotSitzungen: [{ id: 's1', prescription_id: 'rx2' }], rezepte: { rx2: 'accepted' } });
+  assert.equal(await korrigiereNoShow({ supabase, showToast: toast().fn }, { id: 'b1' }), false);
+  assert.equal(geschrieben.sessions.length, 0);
+});
+
+test('Zweite Snapshot-Verordnung sperrt auch bei offener erster Verordnung', async () => {
+  const { supabase } = supabaseDoppel({ links: [{ session_id: 's1', prescription_id: 'rx1' },
+    { session_id: 's2', prescription_id: 'rx2' }], rezepte: { rx1: null, rx2: 'paid' } });
+  assert.equal((await pruefeAbrechnungssperre(supabase, { id: 'b1' })).gesperrt, true);
+});
+
+for (const optionen of [
+  { lesefehler: 'bookings' }, { lesefehler: 'sessions' },
+  { lesefehler: 'prescriptions', termin: { verordnung_id: 'rx1' } },
+  { fehlendeVerordnung: true, termin: { verordnung_id: 'rx1' } },
+  { links: [{ session_id: 'fehlt' }], snapshotSitzungen: [] },
+  { liveSitzungen: [{ id: 's1' }] }, { links: [{}] }, { links: {} },
+]) {
+  test(`Unvollständige oder fehlerhafte Prüfung blockiert: ${JSON.stringify(optionen)}`, async () => {
+    const { supabase, geschrieben } = supabaseDoppel(optionen);
+    const t = toast();
+    assert.equal(await korrigiereNoShow({ supabase, showToast: t.fn }, { id: 'b1' }), false);
+    assert.equal(geschrieben.bookings.length + geschrieben.sessions.length + geschrieben.korrekturen.length, 0);
+    assert.equal(t.calls[0].art, 'error');
+  });
+}
+
+test('Inzwischen korrigierter Termin wird nicht erneut geschrieben', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ termin: { status: 'completed' } });
+  assert.equal(await korrigiereNoShow({ supabase, showToast: toast().fn }, { id: 'b1', status: 'no_show' }), false);
+  assert.equal(geschrieben.bookings.length, 0);
 });

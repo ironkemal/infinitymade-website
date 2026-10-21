@@ -807,3 +807,26 @@
     Zeile ohne Kode das „Was wurde gemacht" nur in den Notizen).
   - **→ `legal-de`:** medizinische Behandlung ohne ärztliche Verordnung bei Selbstzahlern — nicht Sache der
     Software-Sperre, nicht bewertet.
+
+
+### Online-Anfrage-Widget (12.10.2026): vierte Anliegen-Karte, Wochentage + Tageszeit statt Datum
+- **Karar:**
+  1. **Vierte Karte „Etwas anderes oder ich bin unsicher"** (alle Zahlungsarten, kein Heilmittel-Feld)
+     in `module/anfrage-anliegen.js`. Gilt damit auch für `booking-request.html`. Inhaberwunsch
+     „Beratung, Fuß … und weiteres": die drei vorhandenen Karten bleiben, weil an ihnen die erlaubten
+     Zahlungsarten hängen; „weiteres" fängt die vierte ab.
+  2. **Das Widget fragt keine Uhrzeit und kein Datum**, sondern Wochentage (Mo–Fr), Tageszeit
+     (Vormittag 8–12, Nachmittag 12–16, später ab 16), „Ich bin zeitlich flexibel" und freiwillig
+     „Wie bald". Die Praxis legt Datum und Uhrzeit beim Bestätigen selbst fest; der Server lehnt das
+     Bestätigen ohne Datum ab.
+  3. **Zwei freiwillige Kurztexte** (Mitteilung 140, Erreichbarkeit 80 Zeichen) und die Ein-Tap-Frage
+     „Waren Sie schon einmal bei uns?". Alles in `booking_requests.notizen`, vom Server aus festen
+     Optionen gebaut. Kein Diagnosefeld.
+  4. Versicherung steht in Schritt 1 direkt unter dem Anliegen (das Anliegen filtert die Optionen).
+- **Neden:**
+  - Eine exakte Uhrzeit täuscht Genauigkeit vor, die es nicht gibt: die Praxis vergibt den Termin ohnehin.
+  - „Wie bald" fehlt der Praxis ohne Wunschdatum am häufigsten (podoloji-Einschätzung, **nicht mit
+    Beta-1/Beta-2 validiert**).
+- **Offen:** Telefonnummer der Praxis auf der Statusseite (braucht Backend-Feld); Annehmen
+  vorgeschlagener Termine direkt im Widget statt per E-Mail-Link.
+

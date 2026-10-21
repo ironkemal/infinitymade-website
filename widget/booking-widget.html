@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Terminanfrage</title>
+  <link rel="stylesheet" href="booking-widget.css?v=20261012">
+</head>
+<body class="bw-page">
+  <main class="bw" id="bw" aria-labelledby="bw-title">
+    <header class="bw__top">
+      <p class="bw__praxis" id="bw-title">Terminanfrage an <span data-bw="praxis-name">die Praxis</span></p>
+      <p class="bw__count" id="bw-count">Schritt 1 von 4</p>
+    </header>
+    <ol class="bw__seg" aria-hidden="true">
+      <li data-bw-seg="1"></li><li data-bw-seg="2"></li><li data-bw-seg="3"></li><li data-bw-seg="4"></li>
+    </ol>
+
+    <div class="bw__banner" id="bw-banner" role="alert" tabindex="-1" hidden></div>
+
+    <form id="bw-form" novalidate autocomplete="on">
+      <div class="bw__body">
+        <div class="bw__main">
+
+          <!-- Schritt 1: Anliegen und Versicherung -->
+          <section class="bw__panel" data-bw-panel="1" aria-labelledby="bw-h1">
+            <h1 class="bw__h1" id="bw-h1" tabindex="-1">Was möchten Sie?</h1>
+
+            <div data-bw="anliegen-block">
+              <p class="bw__lead">Wählen Sie, was am besten passt.</p>
+              <p class="bw__akut">Offene Wunde, Rötung, Schwellung oder Fieber am Fuß? Bitte nicht online anfragen, sondern die Praxis anrufen oder Ihre Ärztin bzw. Ihren Arzt aufsuchen.</p>
+              <fieldset class="bw__set" aria-describedby="bw-anliegen-error">
+                <legend class="bw__sr-only">Anliegen</legend>
+                <div class="bw__opts" id="bw-anliegen-opts"></div>
+              </fieldset>
+              <p class="bw__error" id="bw-anliegen-error" hidden></p>
+            </div>
+
+            <fieldset class="bw__set bw__gap" aria-describedby="bw-zahlart-error">
+              <legend class="bw__h2">Wie sind Sie versichert?</legend>
+              <div class="bw__opts" id="bw-zahlart-opts"></div>
+            </fieldset>
+            <p class="bw__error" id="bw-zahlart-error" hidden></p>
+
+            <label class="bw__switch bw__gap" for="bw-hausbesuch">
+              <span>Ich brauche einen Hausbesuch</span>
+              <input type="checkbox" id="bw-hausbesuch" role="switch">
+              <i aria-hidden="true"></i>
+            </label>
+
+            <div class="bw__field bw__gap">
+              <label class="bw__label" for="bw-mitteilung">Möchten Sie uns noch etwas mitteilen? <span class="bw__opt">freiwillig</span></label>
+              <textarea class="bw__input bw__input--area" id="bw-mitteilung" maxlength="140" rows="3" aria-describedby="bw-mitteilung-hint"
+                placeholder="z. B. Termin für zwei Personen, erstes Mal Nagelspange"></textarea>
+              <p class="bw__meta" id="bw-mitteilung-hint">
+                <span>Ein Stichpunkt genügt. Alles Weitere besprechen wir persönlich. Bei akuten Beschwerden rufen Sie uns bitte an.</span>
+                <span id="bw-mitteilung-count">0 von 140 Zeichen</span>
+              </p>
+            </div>
+          </section>
+
+          <!-- Schritt 2: Zeiten -->
+          <section class="bw__panel" data-bw-panel="2" aria-labelledby="bw-h2" hidden>
+            <h1 class="bw__h1" id="bw-h2" tabindex="-1">Wann haben Sie Zeit?</h1>
+            <p class="bw__lead">Wählen Sie alle Tage und Zeiten, die grundsätzlich passen. Die Praxis schlägt Ihnen daraus einen Termin vor.</p>
+
+            <label class="bw__opt-row" for="bw-flexibel" id="bw-flexibel-row">
+              <input type="checkbox" id="bw-flexibel">
+              <span class="bw__opt-text"><b>Ich bin zeitlich flexibel</b><small>Jeder Werktag und jede Tageszeit passt</small></span>
+              <i class="bw__mark" aria-hidden="true"></i>
+            </label>
+
+            <fieldset class="bw__set bw__gap" aria-describedby="bw-zeit-error">
+              <legend class="bw__h2">An welchen Tagen?</legend>
+              <div class="bw__days" id="bw-tage"></div>
+            </fieldset>
+
+            <fieldset class="bw__set bw__gap" aria-describedby="bw-zeit-error">
+              <legend class="bw__h2">Zu welcher Tageszeit?</legend>
+              <div class="bw__opts bw__opts--3" id="bw-zeiten"></div>
+            </fieldset>
+            <p class="bw__error" id="bw-zeit-error" hidden></p>
+
+            <fieldset class="bw__set bw__gap">
+              <legend class="bw__h2">Wie bald soll es sein? <span class="bw__opt">freiwillig</span></legend>
+              <div class="bw__opts bw__opts--3" id="bw-dringlichkeit"></div>
+            </fieldset>
+
+            <div class="bw__field bw__gap">
+              <label class="bw__label" for="bw-anmerkung">Anmerkung zur Erreichbarkeit <span class="bw__opt">freiwillig</span></label>
+              <textarea class="bw__input bw__input--area" id="bw-anmerkung" maxlength="80" rows="2" placeholder="z. B. telefonisch ab 16 Uhr"></textarea>
+              <p class="bw__meta"><span></span><span id="bw-anmerkung-count">0 von 80 Zeichen</span></p>
+            </div>
+          </section>
+
+          <!-- Schritt 3: Person und Kontakt -->
+          <section class="bw__panel" data-bw-panel="3" aria-labelledby="bw-h3" hidden>
+            <h1 class="bw__h1" id="bw-h3" tabindex="-1">Ihre Angaben</h1>
+
+            <fieldset class="bw__set">
+              <legend class="bw__h2">Für wen ist der Termin?</legend>
+              <div class="bw__row">
+                <div class="bw__field">
+                  <label class="bw__label" for="bw-vorname">Vorname</label>
+                  <input class="bw__input" id="bw-vorname" autocomplete="given-name" maxlength="60" aria-describedby="bw-vorname-error">
+                  <p class="bw__error" id="bw-vorname-error" hidden></p>
+                </div>
+                <div class="bw__field">
+                  <label class="bw__label" for="bw-nachname">Nachname</label>
+                  <input class="bw__input" id="bw-nachname" autocomplete="family-name" maxlength="60" aria-describedby="bw-nachname-error">
+                  <p class="bw__error" id="bw-nachname-error" hidden></p>
+                </div>
+              </div>
+
+              <fieldset class="bw__set bw__field" aria-describedby="bw-geburtsdatum-error">
+                <legend class="bw__label">Geburtsdatum</legend>
+                <div class="bw__dob">
+                  <div><label class="bw__sub" for="bw-tag">Tag</label>
+                    <input class="bw__input" id="bw-tag" inputmode="numeric" autocomplete="bday-day" maxlength="2" placeholder="TT" aria-describedby="bw-geburtsdatum-error"></div>
+                  <div><label class="bw__sub" for="bw-monat">Monat</label>
+                    <input class="bw__input" id="bw-monat" inputmode="numeric" autocomplete="bday-month" maxlength="2" placeholder="MM" aria-describedby="bw-geburtsdatum-error"></div>
+                  <div><label class="bw__sub" for="bw-jahr">Jahr</label>
+                    <input class="bw__input" id="bw-jahr" inputmode="numeric" autocomplete="bday-year" maxlength="4" placeholder="JJJJ" aria-describedby="bw-geburtsdatum-error"></div>
+                </div>
+                <p class="bw__error" id="bw-geburtsdatum-error" hidden></p>
+              </fieldset>
+
+              <fieldset class="bw__set bw__field">
+                <legend class="bw__label">Waren Sie schon einmal bei uns? <span class="bw__opt">freiwillig</span></legend>
+                <div class="bw__opts" id="bw-erstbesuch"></div>
+              </fieldset>
+
+              <label class="bw__check bw__field" for="bw-andere">
+                <input type="checkbox" id="bw-andere">
+                <span>Ich mache die Angaben für eine andere Person (z. B. mein Kind) und bin dazu berechtigt.</span>
+              </label>
+            </fieldset>
+
+            <fieldset class="bw__set bw__gap">
+              <legend class="bw__h2">Wie erreichen wir Sie?</legend>
+              <div class="bw__row">
+                <div class="bw__field">
+                  <label class="bw__label" for="bw-telefon">Telefon</label>
+                  <input class="bw__input" type="tel" id="bw-telefon" autocomplete="tel" inputmode="tel" maxlength="30" aria-describedby="bw-kontakt-hint bw-kontakt-error bw-telefon-error">
+                  <p class="bw__error" id="bw-telefon-error" hidden></p>
+                </div>
+                <div class="bw__field">
+                  <label class="bw__label" for="bw-email">E-Mail</label>
+                  <input class="bw__input" type="email" id="bw-email" autocomplete="email" inputmode="email" maxlength="120" aria-describedby="bw-kontakt-hint bw-kontakt-error bw-email-error">
+                  <p class="bw__error" id="bw-email-error" hidden></p>
+                </div>
+              </div>
+              <p class="bw__hint" id="bw-kontakt-hint">Telefon oder E-Mail genügt, damit die Praxis Sie erreichen kann.</p>
+              <p class="bw__error" id="bw-kontakt-error" hidden></p>
+            </fieldset>
+          </section>
+
+          <!-- Schritt 4: Prüfen und senden -->
+          <section class="bw__panel" data-bw-panel="4" aria-labelledby="bw-h4" hidden>
+            <h1 class="bw__h1" id="bw-h4" tabindex="-1">Prüfen und senden</h1>
+            <p class="bw__lead">Bitte kontrollieren Sie Ihre Angaben.</p>
+            <dl class="bw__review" id="bw-review"></dl>
+
+            <p class="bw__privacy" id="bw-notice">
+              Ihre Angaben verarbeitet <span data-bw="praxis-name">die Praxis</span> zur Bearbeitung Ihrer Terminanfrage und zur Vorbereitung Ihrer Behandlung.
+              Bereits die Anfrage bei einer Heilmittelpraxis kann eine Angabe zu Ihrer Gesundheit sein; sie wird nur hierfür verwendet und unterliegt der beruflichen Schweigepflicht.
+              Damit Sie den Stand Ihrer Anfrage abrufen können, speichert Ihr Browser bis zum Schließen dieses Fensters eine zufällige Kennung – keine Cookies, kein Tracking.
+              Näheres in den <a class="bw__link" id="bw-privacy-link" href="#datenschutzhinweise">Datenschutzhinweisen</a>.
+            </p>
+
+            <!-- Honeypot: Menschen sehen und fuellen das nicht -->
+            <div class="bw__trap" aria-hidden="true">
+              <label for="bw-website">Website</label>
+              <input id="bw-website" name="website" type="text" tabindex="-1" autocomplete="off">
+            </div>
+          </section>
+
+          <!-- Status -->
+          <section class="bw__panel" data-bw-panel="5" aria-labelledby="bw-h5" hidden>
+            <h1 class="bw__sr-only" id="bw-h5" tabindex="-1">Status Ihrer Anfrage</h1>
+            <div class="bw__status" id="bw-status" aria-live="polite">
+              <span class="bw__badge" id="bw-status-badge"></span>
+              <h2 class="bw__status-title" id="bw-status-title"></h2>
+              <p class="bw__status-text" id="bw-status-text"></p>
+            </div>
+            <div class="bw__actions bw__actions--solo">
+              <button type="button" class="bw__btn bw__btn--sec" id="bw-new" hidden>Neue Anfrage</button>
+            </div>
+          </section>
+        </div>
+
+        <aside class="bw__side" id="bw-side" aria-label="Ihre Anfrage">
+          <h2 class="bw__side-title">Ihre Anfrage</h2>
+          <span class="bw__badge">Entwurf</span>
+          <dl class="bw__side-list" id="bw-side-list"></dl>
+          <p class="bw__side-note"><b>Noch kein Termin</b>Die Praxis meldet sich und schlägt Ihnen einen Termin vor.</p>
+        </aside>
+      </div>
+
+      <footer class="bw__foot" id="bw-foot">
+        <button type="button" class="bw__btn bw__btn--sec" id="bw-back" hidden>Zurück</button>
+        <button type="submit" class="bw__btn bw__btn--main" id="bw-next">Weiter</button>
+      </footer>
+    </form>
+
+    <dialog class="bw__dialog" id="bw-dialog" aria-labelledby="bw-dialog-title">
+      <h2 class="bw__dialog-title" id="bw-dialog-title" tabindex="-1"></h2>
+      <div id="bw-dialog-body"></div>
+      <div class="bw__actions">
+        <button type="button" class="bw__btn bw__btn--main" id="bw-dialog-close">Schließen</button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="booking-widget.js?v=20261012"></script>
+</body>
+</html>

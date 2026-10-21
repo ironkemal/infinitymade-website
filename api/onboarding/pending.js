@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 // POST /api/onboarding/pending
 // Stores onboarding data in pending_signups table before Stripe checkout.
 // Body: { email, password, onboarding_data: object }
@@ -5,7 +6,7 @@
 
 import { adminFetch, adminRpc, json } from '../_lib/auth.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   const { email, password, onboarding_data } = req.body || {};
@@ -52,3 +53,5 @@ export default async function handler(req, res) {
 
   return json(res, 200, { pending_id: pendingId });
 }
+
+export default withServerlessTelemetry('onboarding/pending', handler);

@@ -4,6 +4,7 @@ import {
   FAHRT_ZWECK,
   PATIENTENVERZEICHNIS_HINWEIS,
   fahrtReferenz,
+  fahrtZeilenReferenz,
   fahrtZweckUndZiel,
   fahrtenbuchCsv,
   aenderungsprotokollCsv,
@@ -12,8 +13,8 @@ import {
 } from './fahrtenbuch-regeln.js';
 
 test('fahrtReferenz: Normalfall, Grossschreibung, Bindestriche entfernen', () => {
-  assert.equal(fahrtReferenz('12345678-abcd-1234-5678-1234567890ab'), 'P-12345678');
-  assert.equal(fahrtReferenz('abcdef12-3456-7890-abcd-ef1234567890'), 'P-ABCDEF12');
+  assert.equal(fahrtReferenz('12345678-abcd-1234-5678-1234567890ab'), 'P-12345678ABCD123456781234567890AB');
+  assert.equal(fahrtReferenz('abcdef12-3456-7890-abcd-ef1234567890'), 'P-ABCDEF1234567890ABCDEF1234567890');
   assert.equal(fahrtReferenz('ABCDEF12'), 'P-ABCDEF12');
   assert.equal(fahrtReferenz('a1-b2-c3-d4'), 'P-A1B2C3D4');
 });
@@ -34,7 +35,7 @@ test('fahrtZweckUndZiel: anonymisiert mit Referenz, kein Name, kein Komma/Strass
   const bookingId = 'e3b0c442-98fc-1c14-9afe-463a3df005ca';
   const res = fahrtZweckUndZiel(bookingId);
   assert.equal(res.zweck, FAHRT_ZWECK);
-  assert.equal(res.zielort, 'Patientenbesuch (s. Verzeichnis Nr. P-E3B0C442)');
+  assert.equal(res.zielort, 'Patientenbesuch (s. Verzeichnis Nr. P-E3B0C44298FC1C149AFE463A3DF005CA)');
   assert.match(res.zielort, /P-E3B0C442/);
   assert.doesNotMatch(res.zielort, /Max|Muster/i);
   assert.doesNotMatch(res.zielort, /,|Straße|Strasse/i);
@@ -329,4 +330,59 @@ test('Datum: TT.MM.JJJJ in Berliner Zeit (spaete UTC-Stunde = naechster Tag)', (
   const csv = fahrtenbuchCsv([{ fahrt_started_at: '2026-09-30T22:30:00Z' }, { fahrt_started_at: '2026-03-05T08:00:00Z' }]);
   const daten = csv.split('\n').slice(1).map(l => l.split(';')[1]);
   assert.deepEqual(daten, ['"01.10.2026"', '"05.03.2026"']);
+});
+
+
+const COLLISION_A = '12345678-1111-4111-8111-111111111111';
+const COLLISION_B = '12345678-2222-4222-8222-222222222222';
+const neueFahrt = (booking_id, id = booking_id) => ({
+  id, booking_id, lead_id: 'synthetisch', ...fahrtZweckUndZiel(booking_id),
+  leads: { first_name: 'QA', last_name: 'Test' }
+});
+
+test('neue Fahrten mit gleichem UUID-Präfix erhalten verschiedene vollständige Referenzen', () => {
+  assert.notEqual(fahrtReferenz(COLLISION_A), fahrtReferenz(COLLISION_B));
+  assert.equal(fahrtReferenz(COLLISION_A).length, 34);
+  assert.equal(fahrtReferenz(COLLISION_A.toUpperCase()), fahrtReferenz(COLLISION_A));
+  const rows = [neueFahrt(COLLISION_A), neueFahrt(COLLISION_B)];
+  for (const row of rows) {
+    assert.equal(fahrtZeilenReferenz(row), fahrtReferenz(row.booking_id));
+    assert.equal(fahrtAnzeigeText(row).zielort, row.zielort);
+  }
+  const fb = fahrtenbuchCsv(rows).split('\n').slice(1).map(line => line.split(';')[0]);
+  const pv = patientenverzeichnisCsv(rows).split('\n').slice(1).map(line => line.split(';')[0]);
+  assert.deepEqual(fb, pv);
+  assert.notEqual(fb[0], fb[1]);
+  const log = aenderungsprotokollCsv(rows.map(row => ({
+    fahrt_id: row.id, op: 'UPDATE', alt: { end_km: 1 }, neu: { end_km: 2 }
+  })), { referenzen: Object.fromEntries(rows.map(row => [row.id, row])) });
+  assert.deepEqual(log.split('\n').slice(1).map(line => line.split(';')[5]), fb);
+});
+
+test('gespeicherte Kurzreferenz bleibt in Anzeige und allen Exporten identisch', () => {
+  const row = { ...neueFahrt(COLLISION_A, 'legacy'), zielort: 'Patientenbesuch (s. Verzeichnis Nr. P-12345678)' };
+  assert.equal(fahrtZeilenReferenz(row), 'P-12345678');
+  assert.equal(fahrtAnzeigeText(row).zielort, row.zielort);
+  assert.equal(fahrtenbuchCsv([row]).split('\n')[1].split(';')[0], '"P-12345678"');
+  assert.equal(patientenverzeichnisCsv([row]).split('\n')[1].split(';')[0], '"P-12345678"');
+  const log = aenderungsprotokollCsv([{ fahrt_id: row.id, alt: { end_km: 1 }, neu: { end_km: 2 } }], { referenzen: { legacy: row } });
+  assert.equal(log.split('\n')[1].split(';')[5], '"P-12345678"');
+});
+
+test('historische Adresszeilen behalten alte Referenz; fremde gespeicherte Referenzen werden nicht übernommen', () => {
+  assert.equal(fahrtZeilenReferenz({ booking_id: COLLISION_A, zielort: 'QA-Straße 1' }), 'P-12345678');
+  assert.equal(fahrtZeilenReferenz({ booking_id: COLLISION_A, zielort: fahrtZweckUndZiel(COLLISION_B).zielort }), 'P-12345678');
+  assert.equal(fahrtZeilenReferenz({ booking_id: COLLISION_A, zielort: 'Patientenbesuch (s. Verzeichnis Nr. P-12345678) QA Name' }), 'P-12345678');
+  assert.equal(fahrtReferenz('12345678garbage'), '');
+  assert.equal(fahrtReferenz('123456789'), '');
+});
+
+test('alle Exporte sperren mehrdeutige historische Referenzen statt sie umzubenennen', () => {
+  const rows = [COLLISION_A, COLLISION_B].map(id => ({ ...neueFahrt(id), zielort: 'Patientenbesuch (s. Verzeichnis Nr. P-12345678)' }));
+  assert.throws(() => fahrtenbuchCsv(rows), /Export gesperrt.*P-12345678.*mehreren Terminen/);
+  assert.throws(() => patientenverzeichnisCsv(rows), /Export gesperrt/);
+  assert.throws(() => aenderungsprotokollCsv([], { referenzen: Object.fromEntries(rows.map(row => [row.id, row])) }), /Export gesperrt/);
+  assert.doesNotThrow(() => fahrtenbuchCsv([rows[0], { ...rows[0], id: 'zweite-fahrt' }]));
+  assert.doesNotThrow(() => fahrtenbuchCsv([rows[0], neueFahrt(COLLISION_B)]));
+  assert.throws(() => fahrtenbuchCsv(rows.map(row => ({ ...row, zielort: 'Historische Adresse' }))), /Export gesperrt/);
 });

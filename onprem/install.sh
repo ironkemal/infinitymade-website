@@ -1152,25 +1152,29 @@ RESOLVE_VAL="${HOST_PART}:443:127.0.0.1"
 # auf jeder Installation, RLS filtert für `anon` auf eine leere Liste ([]),
 # aber der HTTP-Status beweist weiterhin exakt das, was O-60 wissen will.
 TESTPFAD="${SITE_URL}/rest/v1/profiles?limit=1"
-# K2b.3 (08.10.2026, WSL-Testbox gemessen): im acmedns-Modus holt Caddy das Zertifikat erst
-# nach dem Start (DNS-01, gemessen 20 s). Bis dahin scheitert schon der TLS-Handshake (HTTP 000)
-# und der Schlüsseltest unten fiele durch, obwohl der Schlüssel stimmt. Darum hier bis zu
-# 5 Minuten auf das erste Zertifikat warten — -k bleibt, gemessen wird der Schlüssel, nicht TLS.
-if [ "$CADDY_TLS_MODUS_VALUE" = "acmedns" ]; then
-  log "  Warte auf das Let's-Encrypt-Zertifikat (bis zu 5 Minuten) ..."
-  zert_da=0
-  for _ in $(seq 1 60); do
-    if [ "$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || true)" != "000" ]; then
-      zert_da=1; break
-    fi
-    sleep 5
-  done
-  [ "$zert_da" -eq 1 ] || fail "Kein Zertifikat erhalten" "nach 5 Minuten noch kein TLS auf ${HOST_PART}" "Let's-Encrypt-Zertifikat per DNS-01" \
-    "'docker compose logs caddy' prüfen (DNS-01 über den Praxura-Namensdienst). Internet der Box und Port 53 ausgehend prüfen, dann 'sudo bash install.sh' erneut."
-  ok "Zertifikat vorhanden"
+# Caddy kann bereits gesund sein, während die Zertifikatsausstellung läuft.
+# Alle Modi begrenzt prüfen; öffentliche CA strikt, interne CA mit eigener Root.
+tls_pruef_args=()
+if [ "$CADDY_TLS_MODUS_VALUE" = "klassisch" ] && [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
+  tls_pruef_args=(--cacert "${CA_DIR}/root.crt")
 fi
-ohne_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || echo 000)"
-mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
+log "  Warte auf ein vertrauenswürdiges HTTPS-Zertifikat (bis zu 5 Minuten) ..."
+zert_da=0
+zert_deadline=$((SECONDS + 300))
+for _ in $(seq 1 60); do
+  [ "$SECONDS" -ge "$zert_deadline" ] && break
+  if curl --connect-timeout 3 --max-time 5 -fsS "${tls_pruef_args[@]}" "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null "${SITE_URL}/login.html"; then
+    zert_da=1; break
+  fi
+  [ "$SECONDS" -ge "$zert_deadline" ] && break
+  sleep 5
+done
+[ "$zert_da" -eq 1 ] || fail "HTTPS-Zertifikat kann nicht bestätigt werden" "TLS-Prüfung innerhalb der Frist fehlgeschlagen" "gültige Zertifikatskette für die Boxadresse" \
+  "DNS, Uhrzeit und Zertifikat prüfen. Bei eigener CA die Root-Datei prüfen; nicht mit -k umgehen."
+ok "HTTPS-Zertifikatskette bestätigt; Vertrauen weiterer Kundengeräte separat prüfen"
+
+ohne_key="$(curl --connect-timeout 3 --max-time 5 -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || echo 000)"
+mit_key="$(curl --connect-timeout 3 --max-time 5 -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
 # Verfälschter Schlüssel — NUR im Authorization-Header, apikey bleibt echt:
 # Kongs key-auth prüft ausschliesslich den apikey-Header als Zeichenkette
 # gegen sein eigenes kong.yml (aus demselben .env erzeugt) und würde einen
@@ -1180,7 +1184,7 @@ mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}'
 # erreicht die Anfrage wirklich PostgREST, wo O-60s eigentliche Sorge liegt
 # (3. Gegenlesen-Runde, 11.09.2026 — 2. Runde hatte beide Header verfälscht
 # und damit am Kong-Layer gemessen, nicht am PostgREST-Layer).
-mit_kaputtem_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}x" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
+mit_kaputtem_key="$(curl --connect-timeout 3 --max-time 5 -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}x" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
 
 if [ "$mit_key" != "200" ]; then
   fail "Abgeleiteter Schlüssel wird nicht akzeptiert" "HTTP ${mit_key} mit apikey" "HTTP 200" \
@@ -1197,7 +1201,7 @@ ok "ANON_KEY akzeptiert (200), verfälschter Schlüssel abgelehnt, kein Schlüss
 
 # SERVICE_ROLE_KEY separat pruefen — eine falsch abgeleitete Signatur waere
 # sonst erst im Assistenten (Phase 2.2, service_role-Aufrufe) aufgefallen.
-mit_service_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "apikey: ${SERVICE_ROLE_KEY}" "$TESTPFAD" || echo 000)"
+mit_service_key="$(curl --connect-timeout 3 --max-time 5 -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "apikey: ${SERVICE_ROLE_KEY}" "$TESTPFAD" || echo 000)"
 if [ "$mit_service_key" != "200" ]; then
   fail "SERVICE_ROLE_KEY wird nicht akzeptiert" "HTTP ${mit_service_key}" "HTTP 200" \
     "Wie beim ANON_KEY — 'bash install.sh --neu' erneut versuchen."

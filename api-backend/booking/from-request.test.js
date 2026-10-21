@@ -244,3 +244,31 @@ test('ohne Wunschzeit wird nicht geprueft, der Termin entsteht trotzdem', async 
   assert.equal(result.conflict, undefined);
   assert.equal(supabase.inserts.length, 1);
 });
+
+
+test('atomare Bestätigung plant zuerst und schreibt ausschließlich über Commit', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({ supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: allSlotsFree });
+  let calls = 0;
+  const result = await create({ ...baseRequest, verordnung_sitzungen: 3, frequenz: '1x/Woche' }, 'owner-1', 'therapeut-1', 'QA', {
+    commit: async (rows, metadata) => {
+      calls++;
+      assert.equal(supabase.inserts.length, 0);
+      assert.equal(rows.length, 3);
+      assert.equal(metadata.sessions_created, 3);
+      assert.equal(rows[2].user_id, 'therapeut-1');
+      return { booking_id: 'atomic-1', booking_ids: ['atomic-1', 'atomic-2', 'atomic-3'] };
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.booking_id, 'atomic-1');
+});
+
+test('fehlgeschlagener atomarer Commit erzeugt keinen nichtatomaren Fallback', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({ supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: allSlotsFree });
+  await assert.rejects(create(baseRequest, 'owner-1', 'therapeut-1', 'QA', {
+    commit: async () => { throw new Error('RPC fehlt'); },
+  }), /RPC fehlt/);
+  assert.equal(supabase.inserts.length, 0);
+});

@@ -10,11 +10,12 @@
  * (gleiches Muster wie module/lead-suche.js): `#bkHbBerechnenBtn` hat genau
  * einen Listener (dashboard.js, invokeFahrtenbuchFn) — ohne Knopf ist der Weg tot.
  *
- * 07.10.2026 (K2b.15, K-19 c): an seine Stelle tritt „Route öffnen" — ein Link
- * zur Kartenansicht mit der Patientenadresse als Ziel, ohne API, ohne Start
- * (das Gerät nimmt seinen Standort). Die Adresse verlässt die Box nicht: erst
- * der Klick im Browser des Nutzers öffnet die Karte. km bleibt Handeintrag im
- * Fahrtenbuch.
+ * 07.10.2026 (K2b.15, K-19 c): an seine Stelle tritt „Route öffnen".
+ * Erst ein Klick öffnet Google Maps im Browser des Nutzers. Dabei wird die
+ * Zieladresse als URL-Parameter an Google übertragen; kein Name, keine
+ * Diagnose und kein Startpunkt werden durch dieses Modul ergänzt.
+ * Ein Startpunkt kann anschließend in Google Maps gewählt werden.
+ * km bleibt Handeintrag im Fahrtenbuch.
  *
  * Läuft beim Import (ES-Module laufen nach dem Parsen des Dokuments) — so
  * braucht dashboard.js nur eine Importzeile und wächst nicht (Konsey 2026-08-13).

@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from './_lib/telemetry.js';
 /**
  * POST /api/contact
  * Sends contact form submission to info@praxura.de
@@ -5,6 +6,8 @@
 
 import nodemailer from 'nodemailer';
 import { json } from './_lib/auth.js';
+import { allowMailRequest } from './_lib/mail-rate-limit.js';
+import { escHtml } from './_lib/mail-html.js';
 
 const RECIPIENT = 'info@praxura.de';
 const FROM      = 'Praxura Website <noreply@praxura.de>';
@@ -22,8 +25,9 @@ function sanitize(str) {
   return String(str || '').trim().slice(0, 2000);
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+  if (!allowMailRequest(req, res, 'contact')) return;
 
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
@@ -52,10 +56,10 @@ export default async function handler(req, res) {
       <p style="color:#6B5538;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Praxura · Kontaktformular</p>
       <h2 style="font-size:20px;font-weight:600;color:#1A1611;margin-bottom:20px">Neue Kontaktanfrage</h2>
       <table style="width:100%;border-collapse:collapse;font-size:14px;color:#1A1611">
-        <tr><td style="padding:8px 0;color:#6E6458;width:130px;vertical-align:top">Name</td><td style="padding:8px 0"><strong>${vorname} ${nachname}</strong></td></tr>
-        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">Firma</td><td style="padding:8px 0">${firma || '—'}</td></tr>
-        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">E-Mail</td><td style="padding:8px 0"><a href="mailto:${email}" style="color:#6B5538">${email}</a></td></tr>
-        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">Nachricht</td><td style="padding:8px 0;white-space:pre-wrap">${nachricht}</td></tr>
+        <tr><td style="padding:8px 0;color:#6E6458;width:130px;vertical-align:top">Name</td><td style="padding:8px 0"><strong>${escHtml(vorname)} ${escHtml(nachname)}</strong></td></tr>
+        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">Firma</td><td style="padding:8px 0">${escHtml(firma || '—')}</td></tr>
+        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">E-Mail</td><td style="padding:8px 0"><a href="mailto:${escHtml(email)}" style="color:#6B5538">${escHtml(email)}</a></td></tr>
+        <tr><td style="padding:8px 0;color:#6E6458;vertical-align:top">Nachricht</td><td style="padding:8px 0;white-space:pre-wrap">${escHtml(nachricht)}</td></tr>
       </table>
       <hr style="border:none;border-top:1px solid #e8e0d0;margin:24px 0">
       <p style="font-size:11px;color:#6E6458">Eingegangen über praxura.de/kontakt.html · ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}</p>
@@ -76,3 +80,5 @@ export default async function handler(req, res) {
     return json(res, 500, { error: 'E-Mail konnte nicht gesendet werden.' });
   }
 }
+
+export default withServerlessTelemetry('contact', handler);

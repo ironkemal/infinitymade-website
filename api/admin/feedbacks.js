@@ -1,6 +1,7 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 import { getAuthedUser, adminFetch, isAdmin, json } from '../_lib/auth.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { user, error: authErr } = await getAuthedUser(req);
   if (authErr || !user) return json(res, 401, { error: 'Unauthorized' });
   if (!(await isAdmin(user.id))) return json(res, 403, { error: 'Forbidden' });
@@ -28,3 +29,5 @@ export default async function handler(req, res) {
 
   return json(res, 405, { error: 'Method not allowed' });
 }
+
+export default withServerlessTelemetry('admin/feedbacks', handler);

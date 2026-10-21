@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 import { getAuthedUser, adminFetch, adminRpc, isAdmin, json } from '../_lib/auth.js';
 import { aiCallCostEUR, planMonthlyEUR, PRICING_META } from '../_lib/pricing.js';
 
@@ -27,7 +28,7 @@ async function countRows(path) {
   return 0;
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
   const { user, error: authErr } = await getAuthedUser(req);
   if (authErr || !user) return json(res, 401, { error: 'Unauthorized' });
@@ -203,3 +204,5 @@ export default async function handler(req, res) {
   // aller Praxen mit Patientenbezug an das Admin-Panel, das sie nie anzeigte.
   return json(res, 400, { error: 'Unknown type' });
 }
+
+export default withServerlessTelemetry('admin/data', handler);

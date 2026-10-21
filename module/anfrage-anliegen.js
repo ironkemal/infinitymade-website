@@ -17,6 +17,9 @@ export const ANLIEGEN = [
   { key: 'rezept', titel: 'Behandlung mit Rezept', hinweis: 'Rezept liegt vor oder wird vom Arzt noch ausgestellt — bitte zum Termin mitbringen', zahlung: ['gkv', 'pkv', 'bg'] },
   { key: 'nagelspange', titel: 'Nagelspange', hinweis: 'Eingewachsener Nagel — mit oder ohne Rezept', zahlung: ['gkv', 'pkv', 'selbstzahler'] },
   { key: 'ohne_rezept', titel: 'Ohne Rezept – Fußpflege / Beratung', hinweis: 'Ich zahle selbst oder bin privat versichert', zahlung: ['selbstzahler', 'pkv'] },
+  // Vierte Karte (12.10.2026, Inhaberwunsch „weiteres“): fängt alle ab, die sich in keiner der drei
+  // erkennen — statt dass jemand die falsche Karte wählt. Alle Zahlungsarten, kein Heilmittel-Feld.
+  { key: 'unsicher', titel: 'Etwas anderes oder ich bin unsicher', hinweis: 'Die Praxis klärt das mit Ihnen', zahlung: ['gkv', 'pkv', 'selbstzahler', 'bg'] },
 ];
 
 /** Fester Hinweis ueber den Karten: Akutfaelle gehoeren nicht in eine Online-Anfrage. */

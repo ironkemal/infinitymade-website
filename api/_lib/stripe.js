@@ -97,3 +97,15 @@ export function priceIdFor(planSlug, interval) {
   const envVar = map[planSlug]?.[interval];
   return envVar ? process.env[envVar] : null;
 }
+
+// Öffentliche Basis-URL für Stripe-Rücksprünge. Whitespace und abschließende Slashes
+// werden entfernt; ungültige Werte (kein http/https) fallen auf den Standard zurück.
+export function publicBaseUrl(raw = process.env.NEXT_PUBLIC_URL) {
+  const fallback = 'https://app.praxura.de';
+  const v = String(raw ?? '').trim().replace(/\/+$/, '');
+  if (!v) return fallback;
+  try {
+    const u = new URL(v);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? v : fallback;
+  } catch { return fallback; }
+}

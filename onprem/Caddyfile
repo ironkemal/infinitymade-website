@@ -75,7 +75,21 @@
 
 	encode gzip
 
-	header {
+	# Einbettbares Termin-Widget (widget/): genau EINE Seite darf in fremde Seiten — eigener
+	# Matcher statt Ueberschreiben, damit je Antwort genau ein Wert steht (siehe A-19 unten).
+	# guvenlik S-52 / onprem O-190: frame-ancestors https:, eigene enge CSP, kein Supabase.
+	@widgetseite path /widget/booking-widget.html
+	@kein_widget not path /widget/booking-widget.html
+	header @widgetseite {
+		X-Content-Type-Options "nosniff"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), serial=()"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age={$HSTS_MAX_AGE}; includeSubDomains"
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; frame-ancestors https:;"
+		-Server
+	}
+
+	header @kein_widget {
 		X-Frame-Options "SAMEORIGIN"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
@@ -99,7 +113,7 @@
 	# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
 	# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
 	@geo path /dashboard.html /attendance.html
-	@nogeo not path /dashboard.html /attendance.html
+	@nogeo not path /dashboard.html /attendance.html /widget/booking-widget.html
 	header @geo Permissions-Policy "camera=(self), microphone=(), geolocation=(self), serial=(self)"
 	header @nogeo Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
 

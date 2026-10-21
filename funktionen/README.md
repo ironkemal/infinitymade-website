@@ -116,6 +116,40 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 11.10.2026 · Einbettbares Termin-Anfrage-Widget (`widget/`) + `/api/booking-request/status|praxis` (noch nicht committet)
+- `widget/` (booking-widget.js/.logic.js/.mock.js, embed.js) — Termin-Anfrage als Script-Tag auf der Website der
+  Praxis, ohne Login, **ohne Supabase-Client im Browser**. Niye: `booking-request.html` hängt an `supabase-config`
+  und ist nicht einbettbar. Zuerst gedacht für Beta-Praxen (Podologie zuerst); SaaS über `praxura.de/widget/embed.js`,
+  Box über eigene Adresse. ⚠️ **`widget/` steht nicht in `SCAN_ROOTS` von `tools/funktionskarte.mjs` — die Karte
+  sieht diese Dateien heute nicht** (nur die Backend-Hälfte ist erfasst).
+- Bewusst **nicht** wiederverwendet: `calendar-widget.js` (Dark-Theme, Fremdseite braucht Eigenständigkeit),
+  `booking-request.js` (Supabase-Importe). Wiederverwendet: `module/einwilligung-texte.js` `renderTerminDatenschutz`.
+- `api-backend/booking/status.js` `requestToken` / `tokenMatches` — **derselbe HMAC wie Storno-Link und
+  cancel-Prüfung** (ein Mechanismus Anfrage↔Patient). `toPublicStatus` — bewusst knappe Antwort (legal-de 11.10.,
+  Art. 5(1)(c)). `berlinLocal` — UTC → Berliner „YYYY-MM-DDTHH:mm".
+- `api-backend/booking/html-escape.js` `escHtml` / `mailBetreff` — guvenlik S-53: Patientenangaben aus öffentlichen
+  Formularen nie roh in Mail-HTML/Betreff. Erste Nutzung: Auto-Approve- und Praxis-Benachrichtigungsmail in
+  `/booking-request/create`.
+- `/booking-request/create` mit `source: 'widget'`: nie Auto-Approve (S-54), Tagesdeckel 100/Praxis (S-55),
+  Antwort trägt jetzt `token` (für beide Quellen).
+- **Offene Dubletten-Fragen (fonksiyon-ustasi 11.10.2026, Entscheidung beim Nutzer):** (1) `requestToken` neben drei
+  Inline-HMAC-Kopien in server.js, Vergleich einmal `timingSafeEqual`, einmal `!==`; (2) `/praxis`-Abbildung ist
+  eine Inline-Kopie von `module/termin-rechtstexte.js` `praxisAngabenAus` (inkl. „vollständig"-Regel), mit
+  schwächerer https-Prüfung als `httpsUrl`; (3) Eingabe-Regeln nur clientseitig und zwischen Widget und
+  `booking-request.js` verschieden; (4) Kleinkram: `NICHT_EINGERICHTET` wortgleich kopiert, `berlinLocal` gehört
+  neben `lib/berlin-tag.js`, `UUID_RE` (10. Kopie, nicht lohnend).
+- **Nachtrag 12.10.2026 · Widget-Erweiterung (noch nicht committet).** Niye: Inhaber wollte Anliegen-Auswahl,
+  Wochentage + Tageszeit statt Datum, freiwillige Texte; **die Praxis legt den Termin erst beim Bestätigen fest.**
+  `widget/booking-widget.logic.js` (Schritte, `pruefeSchritt1-3`, `buildPayload`, `validateName`/`validateContact`),
+  `api-backend/booking/widget-guards.js` (`pruefeWidgetAnfrage`, `baueWidgetNotiz`, `bereinigeFreitext` — Server baut
+  die Notiz nur aus festen Optionen), `module/anfrage-anliegen.js` vierte Karte `unsicher`. `server.js`:
+  `/create` speichert bei `source: 'widget'` `preferred_date/_time = null`; `/approve` lehnt ohne Datum+Uhrzeit mit
+  400 ab (sonst legte `createBookingsFromRequest` den Termin auf „jetzt"); `/praxis` neu. Erste Nutzung: Widget.
+  **Dubletten (Entscheidung beim Nutzer):** `ANLIEGEN`/`TAGE`/`TAGESZEITEN` doppelt in `widget-guards.js` (Server,
+  Objekte) vs. `module/anfrage-anliegen.js` + `logic.js` (Arrays) — Parität nur per
+  `widget/widget-listen-parity.test.js`; `validateName`/`validateContact`/E-Mail-Regex in `logic.js` und
+  `widget-guards.js` (gleiche Regex) und abweichend in `booking-request.js` (schwächere Regex, ohne `<>`).
+
 ### 10.10.2026 · KHS 10. tur a–d — Zähler = dokumentierte Einheit, Kasse/VersNr nur auf Kassenbelegen, RX_FELDER überall, Speichern-Text (c6afd9ae)
 - `module/verordnung-termine.js` `podoBelegung(verordnet, termine, behandlungen, alsTag)` + `ladeVerordnungsBehandlungen`.
   Niye: gkv-302 hükmü — **verbraucht = dokümante Einheit, termin değil** (T33: kart 0/2, Akte 1/2 gösteriyordu).
@@ -972,3 +1006,49 @@ verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Aus
 - Funktionenkarte bei dieser Nachmeldung: erzeugt 08.10.2026, 3192 Einträge. Gezielte
   Karten- und Quellenprüfung bestätigt genannte Integrationsstellen. Diese Intentmeldung
   bestätigt weder abgeschlossene QA noch externe Provider-, Rechts- oder Produktionsfreigabe.
+
+### Intentmeldung 14.10.2026 — Dashboard-QA-Fixes
+
+- `booking/auth-guards.js`: bestehende Termin-Schreibwege prüfen Mitarbeiter und Leistungen vor Inserts gegen Praxiszugehörigkeit; historische inaktive Mitarbeiter bleiben für Statusänderungen zulässig.
+- `booking/series.js` und `module/serien-termine.js`: gleiche Serienregeln im Backend und Vorschau; kein Termin vor Startdatum.
+- `module/rechnung-zahlungseingang.js`: Eingaben vor Auth-Aufruf einfrieren, laufende Buchung sperren, unklaren Ausgang über Neuladen behalten. Browsersperre ersetzt keine serverseitige Idempotenz.
+- `openInvEditor`/`loadInvPatients`: Zustand vor asynchronem Laden zurücksetzen, Editor erst nach vollständiger Initialisierung öffnen; verhindert private Rechnungen mit GKV-Summe.
+
+### Intentmeldung 14.10.2026 — Kundenstartschutz
+
+- `module/app-start.js`: gemeinsamer begrenzter Configloader und sichtbarer Startfehler mit Reload; erster Einsatz in `supabase-config.js` und Dashboard-Boot. Verhindert Clientinitialisierung mit leerer Config, künstliche Ownerrolle und Login-Schleifen.
+- `loadModulePermissions`/`hasModuleAccess`: Inhaber benötigen keine Businesszeile; Mitarbeiter brauchen bestätigten Standort und gespeicherte Rechte. Fehlender Kontext bleibt gesperrt, keine erfundene Legacyfreigabe.
+- `tools/test-browser-config.mjs`: ausschließlich Node-Frontendtests beantworten `/api/config` synthetisch; Produktcode behält strikte Prüfung.
+- Backend-CORS normalisiert `SITE_URL` zum HTTP(S)-Origin; keine Änderung realer Umgebungswerte.
+
+### Intentmeldung 15.10.2026 — Notizen, Warteliste, Mahnungen und Fahrtenreferenzen
+
+- `module/patient-notizen.js`: bearbeitbare Felder gehören stets zum erfolgreich geladenen Patienten und Inhaber. Generationen verwerfen verspätete Antworten; Speichern nutzt festen Snapshot und Einzelsperre. Erster Einsatz: Dashboard-Notizen einschließlich Entwurf, Vorschau und Navigation.
+- `module/warteliste-zeitfenster.js` und Backend-Spiegel `booking/warteliste-zeitfenster.js`: optionale Zeitgrenzen streng prüfen; bei zwei Grenzen muss Beginn vor Ende liegen. Erster Einsatz: Dashboard-Neuanlage/Bearbeitung und API-Neuanlage. Lokale Pickerbindung löscht veraltete Patienten-ID auch beim ersten Bearbeiten und bei Ladefehlern.
+- `fahrtZeilenReferenz`: neue Fahrten erhalten volle UUID-Referenz; gespeicherte historische Referenzen bleiben in Tabelle, Zieltext und Export konsistent. Mehrdeutige alte Referenzen sperren CSV-Export. Gelöschte Fahrten werden im Änderungsprotokoll aus Audit-Snapshots zugeordnet; Abschluss prüft vorhandene Referenz vor Schreibbeginn.
+- Mahn-POST nutzt bestehende `istZuzahlungBezahlt`-/`saldoJeRezept`-Regeln unmittelbar vor Insert und fordert nur offenen Rest. Keine atomare DB-Sperre gegenüber gleichzeitig eintreffenden Zahlungen; diese Grenze bleibt offen.
+
+### Intentmeldung 16.10.2026 — sechs weitere Fehlerkorrekturen
+
+- `module/zahlungsjournal-laden.js` / `erstelleZahlungsjournalLader`: bisheriger Dashboard-Loader als enges Modul; nur neueste Filtergeneration darf Zeilen, Leerzustand und Fehlermeldung setzen. Erster Einsatz `dashboard.js` → `loadBelegliste`.
+- `pruefeAbrechnungssperre` erweitert: aktuellen Termin, alle verbundenen Sitzungen und alle Snapshot-Sitzungen frisch prüfen; bei unbekanntem Status, fehlender zugeordneter Verordnung oder Lesefehler keine Korrektur. `korrigiereNoShow` verwendet geprüften Terminstand.
+- `createBookingsFromRequestFactory` behält bestehende Aufrufer und bietet optionalen atomaren Commit für manuelle Anfragebestätigung. Migration `0080` verknüpft Terminanlage und Anfrageabschluss mit Zeilensperre; fehlende RPC erzeugt 503 ohne nichtatomaren Fallback.
+- `ausfall_status_buchen` (Migration `0079`): AF-Status und Journalbuchung in gemeinsamer DB-Transaktion, damit Journalfehler keinen bezahlten Halbzustand hinterlassen. API verwendet ausschließlich RPC für Statuswechsel.
+- `billing/ausfall/faelligkeit.js`: gemeinsamer Resolver für eingefrorenes `faellig_am` in Ausstellung, Nachdruck und Mahnung. Altbelege ohne belegte Frist werden nicht automatisch gemahnt; Druckersatzwert ausdrücklich als unbestätigt ausgewiesen.
+- Status dieser Meldung: lokal geschrieben/getestet, Migrationen noch nicht in SaaS angewandt; keine Livefreigabe. Bestehende mehrstufige No-show-Schreibkette bleibt außerhalb atomarer RPCs.
+
+### Intentmeldung 18.10.2026 — gebundene Verordnung trotz Vorschlagsgrenze
+
+- `module/termin-verordnung.js` / `ladeAktiveVerordnungenFuerTermin`: bestehende aktive Terminbindung bleibt sichtbar, auch wenn sie außerhalb der fünf neuesten Vorschläge liegt. Gemeinsamer patientengefilterter Direktnachschlag; abgeschlossene, abgerechnete und stornierte Verordnungen bleiben ausgeschlossen. Erster Einsatz: `zeigeVerordnungenFuerTermin` und Dashboard `openBookingActionModal`. Keine Änderung der Bindung durch den Loader.
+
+### Intentmeldung 21.10.2026 — begrenzte Ops-Stabilisierung
+
+- `module/blanko-hinweis.js` / `renderBlankoHinweis`: ersetzt unbestätigte Vergütungsampel in `loadPatientDetailRezepte`; Datum, Fristsignal und dokumentierte Sitzungen bleiben, keine Behauptung über Vergütungszone oder Budgetverbrauch.
+- `cookie-consent.js` / `praxuraUmamiVorSenden`: flüchtige Versandfreigabe beendet nach Widerruf auch bereits geladene Messung; Reload nur nach gespeichertem Widerruf. Alter Opt-in wird bei nicht schreibbarem Speicher nicht aktiviert. Erster Einsatz: vorhandene Umami-Einbindung auf Marketingseiten.
+- `api/_lib/mail-rate-limit.js`: zusätzliche kurze, größenbegrenzte Instanzbremse vor Kontaktmail und Demo-Buchung/-Verschiebung; flüchtige HMAC-Schlüssel. Keine globale WAF-Zusage. `mail-html.js` dupliziert bewusst nur den kleinen Backend-Escapevertrag, weil Vercel und Backend getrennte Deploymentgrenzen besitzen; Paritätstest vorhanden.
+- `api/_lib/telemetry.js`: optionale technische Ereignisse für elf bestehende Vercel-Handler, ohne neue Funktion. Feste Route/Code/Status; endgültiges Envelope erneut bereinigt, keine fremden Anhänge/Kontexte. Ohne explizite Konfiguration keine Initialisierung. SDK-/Transportfehler dürfen Geschäftsantwort nicht beschädigen.
+- `tools/diskcheck.mjs`: eigenständige lesende Block-/Inodeprüfung für spätere Betreiberüberwachung. UNKNOWN ist eigener Fehlerstatus. Keine Alarmzustellung, Installation oder Bereinigung; WSL-Grenze ausdrücklich dokumentiert.
+
+Kartenumfang: `tools/` ist kein JavaScript-Scanroot des bestehenden Generators.
+Die drei exportierten Diskcheck-Funktionen sind daher hier absichtlich dokumentiert,
+aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergänzung.

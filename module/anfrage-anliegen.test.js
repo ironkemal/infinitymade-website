@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, HEILMITTEL_WORTLAUT } from './anfrage-anliegen.js';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, HEILMITTEL_WORTLAUT, patientenLeistungen } from './anfrage-anliegen.js';
 import { slugAusKennung, kennungAusSuche, ladeOwnerId, ladeKennung } from './public-owner.js';
 
 test('Anliegen nur fuer Podologie, drei Karten', () => {
-  assert.equal(anliegenFuerBereich('podologie').length, 3);
-  assert.equal(anliegenFuerBereich('Podologie').length, 3);
+  assert.equal(anliegenFuerBereich('podologie').length, 4);
+  assert.equal(anliegenFuerBereich('Podologie').length, 4);
   assert.deepEqual(anliegenFuerBereich('physiotherapie'), []);
   assert.deepEqual(anliegenFuerBereich(null), []);
-  assert.deepEqual(ANLIEGEN.map(a => a.key), ['rezept', 'nagelspange', 'ohne_rezept']);
+  assert.deepEqual(ANLIEGEN.map(a => a.key), ['rezept', 'nagelspange', 'ohne_rezept', 'unsicher']);
 });
 
 test('Zahlungsarten je Anliegen', () => {
@@ -138,4 +138,10 @@ test('patientenLeistungen: ohne Rezept nur privat/selbstzahler; Nagelspange/Reze
   assert.deepEqual(patientenLeistungen(liste, 'nagelspange'), []);
   assert.deepEqual(patientenLeistungen(liste, 'rezept'), []);
   assert.equal(patientenLeistungen(liste, null).length, 6);
+});
+
+test('unsicher: alle Zahlungsarten, keine Heilmittel-Frage, keine Leistungsauswahl', () => {
+  assert.deepEqual(zahlungsartenFuer('unsicher'), ['gkv', 'pkv', 'selbstzahler', 'bg']);
+  assert.equal(heilmittelFrage('unsicher', 'gkv'), null);
+  assert.deepEqual(patientenLeistungen([{ id: 1 }], 'unsicher'), []);
 });

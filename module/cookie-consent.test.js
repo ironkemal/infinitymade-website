@@ -22,9 +22,13 @@ const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const QUELLE = fs.readFileSync(path.join(WURZEL, 'cookie-consent.js'), 'utf8');
 
 /** Minimales DOM — nur das, was das Skript wirklich anfasst. */
-function lauf(gespeichert = {}, hash = '') {
+function lauf(gespeichert = {}, hash = '', schreibbar = true, fehler = {}, cookies = {}) {
   const speicher = { ...gespeichert };
   const geladeneSkripte = [];
+  let reloads = 0;
+  const events = {};
+  const entfernungen = [];
+  const cookieSchreibungen = [];
 
   const machElement = (tag) => {
     const el = {
@@ -47,8 +51,19 @@ function lauf(gespeichert = {}, hash = '') {
 
   const body = machElement('body');
   globalThis.localStorage = {
-    getItem: (k) => (k in speicher ? speicher[k] : null),
-    setItem: (k, v) => { speicher[k] = v; },
+    getItem: (k) => {
+      if (fehler.lesen?.(k)) throw new Error('read blocked');
+      return k in speicher ? speicher[k] : null;
+    },
+    setItem: (k, v) => {
+      if (!schreibbar || fehler.schreiben?.(k, v)) throw new Error('storage blocked');
+      speicher[k] = v;
+    },
+    removeItem: (k) => {
+      entfernungen.push(k);
+      if (fehler.entfernen?.(k)) throw new Error('remove blocked');
+      delete speicher[k];
+    },
   };
   globalThis.document = {
     readyState: 'complete', body, head: machElement('head'),
@@ -57,14 +72,37 @@ function lauf(gespeichert = {}, hash = '') {
     getElementById: (id) => body.children.find((c) => c.id === id) || null,
     addEventListener: () => {},
   };
-  globalThis.window = { addEventListener: () => {} };
-  globalThis.location = { hash };
+  Object.defineProperty(globalThis.document, 'cookie', {
+    get() {
+      if (fehler.cookieLesen) throw new Error('cookie read blocked');
+      return Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
+    },
+    set(wert) {
+      cookieSchreibungen.push(wert);
+      if (fehler.cookieSchreiben) throw new Error('cookie write blocked');
+      if (fehler.cookieIgnorieren) return;
+      const [paar] = wert.split(';');
+      const [k, v] = paar.split('=');
+      if (/Max-Age=0(?:;|$)/i.test(wert)) delete cookies[k];
+      else cookies[k] = v;
+    },
+  });
+  globalThis.window = { addEventListener: (typ, fn) => { events[typ] = fn; } };
+  globalThis.location = { hash, reload: () => { reloads++; } };
 
   new Function(QUELLE)();
 
+  const fenster = globalThis.window;
+  const doc = globalThis.document;
   const banner = () => body.children.find((c) => c.id === 'cookie-banner') || null;
   return {
-    speicher, geladeneSkripte, banner,
+    speicher, cookies, entfernungen, cookieSchreibungen, geladeneSkripte, banner,
+    pagehide: () => events.pagehide?.(),
+    storage: () => events.storage?.(),
+    einstellungen: () => fenster.praxuraCookieEinstellungen(),
+    reloads: () => reloads,
+    vorSenden: (payload) => fenster.praxuraUmamiVorSenden('event', payload),
+    skriptAttribute: () => doc.head.children[0]?.attrs,
     knopf: (name) => {
       const b = banner();
       return b && b.children.find((c) => c.tagName === 'button' && c.textContent === name);
@@ -76,6 +114,39 @@ function lauf(gespeichert = {}, hash = '') {
     },
   };
 }
+
+test('Widerruf beendet die laufende Messung vor dem Reload und überlebt Seitenneuladung', () => {
+  const l = lauf();
+  l.knopf('Akzeptieren')._click();
+  assert.deepEqual(l.vorSenden({ url: '/synthetisch' }), { url: '/synthetisch' });
+  assert.equal(l.skriptAttribute()['data-before-send'], 'praxuraUmamiVorSenden');
+  window.praxuraCookieEinstellungen();
+  l.knopf('Ablehnen')._click();
+  assert.equal(l.vorSenden({ url: '/weiter' }), false);
+  assert.equal(l.reloads(), 1);
+  const danach = lauf(l.speicher);
+  assert.equal(danach.geladeneSkripte.length, 0);
+  assert.equal(danach.vorSenden({ url: '/weiter' }), false);
+});
+
+test('Widerruf bleibt bei blockierter Speicherung wirksam und lädt kein altes accepted neu', () => {
+  const l = lauf();
+  l.knopf('Akzeptieren')._click();
+  window.praxuraCookieEinstellungen();
+  globalThis.localStorage.setItem = () => { throw new Error('storage blocked'); };
+  l.knopf('Ablehnen')._click();
+  assert.equal(l.speicher.cookie_consent, undefined);
+  assert.equal(l.vorSenden({ event: 'manuell' }), false);
+  assert.equal(l.reloads(), 1);
+  assert.equal(lauf(l.speicher).geladeneSkripte.length, 0);
+});
+
+test('altes accepted wird ohne schreibbaren Speicher nicht erneut aktiviert', () => {
+  const l = lauf({ cookie_consent: 'accepted', cookie_consent_zeitpunkt: String(Date.now()) }, '', false);
+  assert.equal(l.geladeneSkripte.length, 0);
+  assert.ok(l.banner());
+  assert.equal(l.vorSenden({ event: 'auto' }), false);
+});
 
 test('ohne Entscheidung wird nichts geladen, der Banner erscheint', () => {
   const u = lauf({});
@@ -163,4 +234,177 @@ test('zweimal Akzeptieren hängt das Messskript nicht doppelt ein', () => {
   globalThis.window.praxuraCookieEinstellungen();
   u.knopf('Akzeptieren')._click();
   assert.equal(u.geladeneSkripte.length, 1, 'doppelt eingehängt');
+});
+
+const ACCEPTED = () => ({ cookie_consent: 'accepted', cookie_consent_zeitpunkt: String(Date.now()) });
+const MARKER = '__Host-praxura_consent_widerruf';
+
+for (const blockiert of [null, 'cookie_consent', 'cookie_consent_zeitpunkt']) {
+  test(`fehlgeschlagener Widerruf entfernt beide Schlüssel unabhängig (${blockiert})`, () => {
+    const fehler = {};
+    const l = lauf(ACCEPTED(), '', true, fehler);
+    fehler.schreiben = () => true;
+    fehler.entfernen = (k) => k === blockiert;
+    l.einstellungen();
+    l.knopf('Ablehnen')._click();
+    assert.deepEqual(l.entfernungen, ['cookie_consent', 'cookie_consent_zeitpunkt']);
+    assert.equal(l.vorSenden({}), false);
+    assert.equal(lauf(l.speicher, '', true, {}, l.cookies).geladeneSkripte.length, 0);
+    assert.equal(l.cookies[MARKER], undefined, 'kein Fallback bei nachgewiesener Invalidierung');
+  });
+}
+
+test('beide Löschungen blockiert: verifizierter Host-Cookie sperrt stale accepted vor jedem Opt-in', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.schreiben = () => true;
+  fehler.entfernen = () => true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  assert.equal(l.speicher.cookie_consent, 'accepted');
+  assert.equal(l.cookies[MARKER], '1');
+  assert.ok(l.cookieSchreibungen.some((v) => v === `${MARKER}=1; Path=/; Secure; SameSite=Lax; Max-Age=31536000`));
+  assert.equal(l.reloads(), 1);
+  const neu = lauf(l.speicher, '', true, {}, l.cookies);
+  assert.equal(neu.geladeneSkripte.length, 0);
+  assert.equal(neu.vorSenden({}), false);
+  neu.einstellungen();
+  neu.knopf('Akzeptieren')._click();
+  assert.equal(neu.cookies[MARKER], undefined);
+  assert.equal(neu.geladeneSkripte.length, 1, 'frischer expliziter Opt-in erlaubt');
+});
+
+for (const phase of ['zeitpunkt', 'readback']) {
+  test(`Teilfehler ${phase}: Widerruf wird invalidiert statt als gespeichert gemeldet`, () => {
+    const fehler = {};
+    const l = lauf(ACCEPTED(), '', true, fehler);
+    if (phase === 'zeitpunkt') fehler.schreiben = (k) => k === 'cookie_consent_zeitpunkt';
+    else fehler.lesen = () => true;
+    l.einstellungen();
+    l.knopf('Ablehnen')._click();
+    assert.deepEqual(l.entfernungen, ['cookie_consent', 'cookie_consent_zeitpunkt']);
+    assert.equal(l.speicher.cookie_consent, undefined);
+    assert.equal(lauf(l.speicher, '', true, {}, l.cookies).geladeneSkripte.length, 0);
+  });
+}
+
+for (const cookieFehler of ['cookieSchreiben', 'cookieIgnorieren', 'cookieLesen']) {
+  test(`alle dauerhaften Wege unbestätigt (${cookieFehler}): Dokument gesperrt, kein Reload`, () => {
+    const fehler = {};
+    const l = lauf(ACCEPTED(), '', true, fehler);
+    fehler.schreiben = () => true;
+    fehler.entfernen = () => true;
+    fehler[cookieFehler] = true;
+    l.einstellungen();
+    l.knopf('Ablehnen')._click();
+    assert.equal(l.vorSenden({}), false);
+    assert.equal(l.reloads(), 0);
+  });
+}
+
+test('pagehide versucht offenen Widerruf erneut, sobald Speicher wieder funktioniert', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.schreiben = () => true;
+  fehler.entfernen = () => true;
+  fehler.cookieSchreiben = true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  delete fehler.schreiben;
+  delete fehler.entfernen;
+  l.pagehide();
+  assert.equal(l.speicher.cookie_consent, 'declined');
+  assert.equal(l.vorSenden({}), false);
+  assert.equal(lauf(l.speicher).geladeneSkripte.length, 0);
+});
+
+test('frischer Opt-in nach rein dokumentlokalem Widerruf beendet ausstehenden Retry', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.schreiben = () => true;
+  fehler.entfernen = () => true;
+  fehler.cookieSchreiben = true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  delete fehler.schreiben;
+  l.einstellungen();
+  l.knopf('Akzeptieren')._click();
+  l.pagehide();
+  assert.equal(l.speicher.cookie_consent, 'accepted');
+  assert.deepEqual(l.vorSenden({ ok: true }), { ok: true });
+});
+
+test('Marker bleibt aktiv, wenn expliziter Opt-in ihn nicht löschen kann', () => {
+  const l = lauf(ACCEPTED(), '', true, { cookieIgnorieren: true }, { [MARKER]: '1' });
+  l.einstellungen();
+  l.knopf('Akzeptieren')._click();
+  assert.equal(l.geladeneSkripte.length, 0);
+  assert.equal(l.vorSenden({}), false);
+});
+
+test('Regression: Speicher erholt sich vor Navigation, stale accepted darf nicht starten', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.schreiben = () => true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  const neu = lauf(l.speicher, '', true, {}, l.cookies);
+  assert.equal(neu.geladeneSkripte.length, 0);
+});
+
+test('vollständiger Storage-Ausfall plus Cookie-Ausfall hält laufenden Tracker gesperrt', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.lesen = () => true;
+  fehler.schreiben = () => true;
+  fehler.entfernen = () => true;
+  fehler.cookieSchreiben = true;
+  fehler.cookieLesen = true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  l.pagehide();
+  assert.equal(l.vorSenden({}), false);
+  assert.equal(l.reloads(), 0);
+});
+
+test('Marker wird nach verifiziertem pagehide-Widerruf entfernt', () => {
+  const fehler = {};
+  const l = lauf(ACCEPTED(), '', true, fehler);
+  fehler.schreiben = () => true;
+  fehler.entfernen = () => true;
+  l.einstellungen();
+  l.knopf('Ablehnen')._click();
+  assert.equal(l.cookies[MARKER], '1');
+  delete fehler.schreiben;
+  l.pagehide();
+  assert.equal(l.cookies[MARKER], undefined);
+  assert.equal(l.speicher.cookie_consent, 'declined');
+});
+
+for (const unlesbar of ['cookie_consent', 'cookie_consent_zeitpunkt']) {
+  test(`Invalidierung bleibt nachweisbar bei einzelnem Lesefehler (${unlesbar})`, () => {
+    const fehler = {};
+    const l = lauf(ACCEPTED(), '', true, fehler);
+    fehler.schreiben = () => true;
+    fehler.lesen = (k) => k === unlesbar;
+    l.einstellungen();
+    l.knopf('Ablehnen')._click();
+    assert.equal(l.reloads(), 1);
+    assert.equal(l.cookies[MARKER], undefined);
+    assert.equal(lauf(l.speicher).geladeneSkripte.length, 0);
+  });
+}
+
+test('unlesbarer Cookie sperrt gespeicherten Opt-in vor Skript-Injektion', () => {
+  const l = lauf(ACCEPTED(), '', true, { cookieLesen: true });
+  assert.equal(l.geladeneSkripte.length, 0);
+  assert.ok(l.banner());
+});
+
+test('Widerruf in anderem Tab stoppt laufende Messung dieses Tabs (storage-Ereignis)', () => {
+  const l = lauf(ACCEPTED());
+  assert.deepEqual(l.vorSenden({ url: '/a' }), { url: '/a' });
+  l.speicher.cookie_consent = 'declined'; // anderer Tab hat abgelehnt
+  l.storage();
+  assert.equal(l.vorSenden({ url: '/b' }), false);
 });

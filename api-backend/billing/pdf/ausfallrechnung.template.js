@@ -61,9 +61,9 @@ export function renderAusfallrechnung(opts) {
     : 14;
 
   const rechnungDatum = rechnung.datum ? new Date(rechnung.datum) : new Date();
-  const faelligkeit = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
-    ? new Date(rechnungDatum.getTime() + days * 24 * 60 * 60 * 1000)
-    : (rechnung.faelligkeit ? new Date(rechnung.faelligkeit) : new Date(rechnungDatum.getTime() + days * 24 * 60 * 60 * 1000));
+  const faelligkeit = rechnung.faelligkeit
+    ? new Date(rechnung.faelligkeit)
+    : new Date(rechnungDatum.getTime() + days * 24 * 60 * 60 * 1000);
 
   const footerText = vorlage?.fusszeile || invoiceFooterText;
 

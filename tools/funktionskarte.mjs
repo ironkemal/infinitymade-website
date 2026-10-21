@@ -33,7 +33,7 @@ const SKIP_DIRS = new Set([
 // haritanın kör noktası tam da büyümesi beklenen yer olurdu.
 // 'merkez' — Merkez-VPS (Lizenz/Namen/KI-Jeton, 08.10.2026); bis 10.10.2026 fehlte es, die
 // Karte kannte die Gegenseite von api-backend/merkez-istemci nicht (fonksiyon-ustasi 09.10).
-const SCAN_ROOTS = ['.', 'module', 'api', 'api-backend', 'ops', 'lib', 'merkez'];
+const SCAN_ROOTS = ['.', 'module', 'api', 'api-backend', 'ops', 'lib', 'merkez', 'widget'];
 
 function walk(dir, acc = [], isFile = null, skipExtra = null) {
   let entries;

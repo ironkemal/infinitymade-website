@@ -20,6 +20,7 @@
 
 warte_auf_gesundheit() {
   timeout_sek="${1:-180}"
+  deadline=$((SECONDS + timeout_sek))
   versuche=$(( timeout_sek / 2 ))
   [ "$versuche" -ge 1 ] || versuche=1
 
@@ -50,10 +51,14 @@ warte_auf_gesundheit() {
       fi
     done
     if [ "$alle_da" -eq 1 ] && [ "$gesund" -eq "$ERWARTETE_DIENSTE" ]; then
-      ok "Alle ${ERWARTETE_DIENSTE} Container da und gesund"
-      return 0
+      # Liveness reicht nicht: fehlgeschlagene Migrationen lassen /health grün.
+      # Intern prüfen; Ready-Antwort enthält Diagnosedetails und bleibt unveröffentlicht.
+      if docker compose exec -T api node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health/ready',{signal:AbortSignal.timeout(5000)}).then(async r=>process.exit(r.ok&&(await r.json()).status==='ready'?0:1)).catch(()=>process.exit(1))" >/dev/null 2>&1; then
+        ok "Alle ${ERWARTETE_DIENSTE} Container gesund; API betriebsbereit"
+        return 0
+      fi
     fi
-    if [ "$i" -eq "$versuche" ]; then
+    if [ "$i" -eq "$versuche" ] || [ "$SECONDS" -ge "$deadline" ]; then
       return 1
     fi
     sleep 2

@@ -7459,6 +7459,7 @@ textarea:focus-visible,
 .anfragen-detail { display: flex; flex-direction: column; gap: 10px; }
 .detail-row { display: flex; gap: 12px; font-size: 14px; }
 .detail-label { color: var(--text-sub); min-width: 140px; flex-shrink: 0; }
+.detail-row > span:last-child { white-space: pre-line; overflow-wrap: anywhere; }
 
 /* Nav badge for anfragen */
 .nav-badge {

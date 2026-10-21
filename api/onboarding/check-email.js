@@ -1,10 +1,11 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 // GET /api/onboarding/check-email?email=...
 // Returns { exists: true/false } — used by onboarding to block duplicate registrations.
 // Uses service-role to query profiles.email (avoids leaking auth internals).
 
 import { adminFetch, json } from '../_lib/auth.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
 
   const email = (req.query.email || '').trim().toLowerCase();
@@ -20,3 +21,5 @@ export default async function handler(req, res) {
 
   return json(res, 200, { exists: Array.isArray(data) && data.length > 0 });
 }
+
+export default withServerlessTelemetry('onboarding/check-email', handler);

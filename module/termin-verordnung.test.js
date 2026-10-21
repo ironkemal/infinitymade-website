@@ -6,7 +6,7 @@
 // jemand auch nur die Notiz aenderte. Diese Tests halten beide Richtungen fest.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, resetVerordnungFelder, aktualisiereBindungBeimSpeichern } from './termin-verordnung.js';
+import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, ladeAktiveVerordnungenFuerTermin, zeigeVerordnungenFuerTermin, resetVerordnungFelder, aktualisiereBindungBeimSpeichern } from './termin-verordnung.js';
 
 /** Minimales DOM: nur das eine versteckte Feld, an dem alles haengt. */
 function mitFeld(startwert = '') {
@@ -216,28 +216,12 @@ function erstelleSbMock({ bookingVerordnungId = null, rxs = [] } = {}) {
         };
       }
       if (table === 'prescriptions') {
-        return {
-          select() {
-            return {
-              eq() {
-                return {
-                  not() {
-                    return {
-                      order() {
-                        return {
-                          async limit() {
-                            rxAbfrage++;
-                            return { data: rxs, error: null };
-                          },
-                        };
-                      },
-                    };
-                  },
-                };
-              },
-            };
-          },
+        const qb = {
+          select: () => qb, eq: () => qb, not: () => qb, order: () => qb,
+          async limit() { rxAbfrage++; return { data: rxs, error: null }; },
+          async maybeSingle() { return { data: null, error: null }; },
         };
+        return qb;
       }
       throw new Error('Unbekannte Tabelle in Mock: ' + table);
     },
@@ -373,6 +357,94 @@ test('zeigeVerordnungenFuerTermin: unbekannte oder archivierte Verordnungs-ID wi
 
 
 // ── aktualisiereBindungBeimSpeichern (S1.2) ────────────────────────────────
+
+function aktiveAuswahlMock(zeilen, { lookupError = null, listError = null } = {}) {
+  const abfragen = [];
+  return {
+    abfragen,
+    from(tabelle) {
+      assert.equal(tabelle, 'prescriptions');
+      const filter = {};
+      let ausschluss = [];
+      const qb = {
+        select() { return qb; },
+        eq(key, value) { filter[key] = value; return qb; },
+        not(key, op, value) {
+          assert.equal(key, 'status'); assert.equal(op, 'in');
+          ausschluss = JSON.parse(`[${value.slice(1, -1)}]`);
+          return qb;
+        },
+        order() { return qb; },
+        async limit(n) {
+          abfragen.push({ ...filter, n });
+          return { data: listError ? null : treffer().slice(0, n), error: listError };
+        },
+        async maybeSingle() {
+          abfragen.push({ ...filter });
+          return { data: lookupError ? null : treffer()[0] || null, error: lookupError };
+        },
+      };
+      function treffer() {
+        return zeilen.filter(rx => Object.entries(filter).every(([k, v]) => rx[k] === v)
+          && !ausschluss.includes(rx.status));
+      }
+      return qb;
+    },
+  };
+}
+
+const siebenAktive = () => Array.from({ length: 7 }, (_, i) => ({
+  id: `rx-${i + 1}`, patient_id: 'lead-1', status: 'active', prescription_sessions: [{ id: `s-${i + 1}` }],
+}));
+
+test('ältere gebundene aktive Verordnung bleibt neben fünf Vorschlägen sichtbar und vorgewählt', async () => {
+  setupWaehleDom();
+  const sb = aktiveAuswahlMock(siebenAktive());
+  let karten;
+  let gewaehlt;
+  await zeigeVerordnungenFuerTermin(sb, { leadId: 'lead-1', bekannteVerordnungId: 'rx-7' }, {
+    veroSection: {}, rendereVeroKarten: ({ rxs }) => { karten = rxs; },
+    onSelect: (rx, sessions) => { gewaehlt = { rx, sessions }; },
+  });
+  assert.deepEqual(karten.map(rx => rx.id), ['rx-7', 'rx-1', 'rx-2', 'rx-3', 'rx-4', 'rx-5']);
+  assert.equal(gewaehlt.rx.id, 'rx-7');
+  assert.deepEqual(gewaehlt.sessions, [{ id: 's-7' }]);
+  assert.equal(window._bkUrspruenglicheVordId, 'rx-7');
+  assert.deepEqual(sb.abfragen[1], { patient_id: 'lead-1', id: 'rx-7' });
+});
+
+test('bestehende Karte und Termin ohne Bindung brauchen keinen zweiten Abruf', async () => {
+  for (const verordnungId of ['rx-2', null, undefined]) {
+    const sb = aktiveAuswahlMock(siebenAktive());
+    const { data } = await ladeAktiveVerordnungenFuerTermin(sb, { leadId: 'lead-1', verordnungId });
+    assert.equal(data.length, 5);
+    assert.equal(new Set(data.map(rx => rx.id)).size, 5);
+    assert.equal(sb.abfragen.length, 1);
+  }
+});
+
+test('Direktnachschlag übernimmt weder fremde Patienten noch inaktive oder fehlende Verordnungen', async () => {
+  for (const zusatz of [
+    { id: 'gebunden', patient_id: 'fremd', status: 'active' },
+    ...['completed', 'billed', 'cancelled'].map(status => ({ id: 'gebunden', patient_id: 'lead-1', status })),
+    null,
+  ]) {
+    const sb = aktiveAuswahlMock([...siebenAktive(), ...(zusatz ? [zusatz] : [])]);
+    const { data } = await ladeAktiveVerordnungenFuerTermin(sb, { leadId: 'lead-1', verordnungId: 'gebunden' });
+    assert.deepEqual(data.map(rx => rx.id), ['rx-1', 'rx-2', 'rx-3', 'rx-4', 'rx-5']);
+  }
+});
+
+test('Abfragefehler liefern keine erfundene Bindung und bleiben als Fehler erkennbar', async () => {
+  const fehler = { message: 'synthetischer Abfragefehler' };
+  const sb = aktiveAuswahlMock(siebenAktive(), { lookupError: fehler });
+  const result = await ladeAktiveVerordnungenFuerTermin(sb, { leadId: 'lead-1', verordnungId: 'rx-7' });
+  assert.equal(result.error, fehler);
+  assert.equal(result.data.some(rx => rx.id === 'rx-7'), false);
+  const kaputt = aktiveAuswahlMock(siebenAktive(), { listError: fehler });
+  assert.equal((await ladeAktiveVerordnungenFuerTermin(kaputt, { leadId: 'lead-1', verordnungId: 'rx-7' })).error, fehler);
+  assert.equal(kaputt.abfragen.length, 1);
+});
 
 function sbMitUpdates(protokoll) {
   return {

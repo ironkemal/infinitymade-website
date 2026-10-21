@@ -1,13 +1,14 @@
+import { withServerlessTelemetry } from '../_lib/telemetry.js';
 // POST /api/stripe/portal-session
 // Auth: Bearer <supabase_user_jwt>
 // Returns: { url } to Stripe Customer Portal (manage card, cancel, invoices)
 
 import { getAuthedUser, adminFetch, json } from '../_lib/auth.js';
-import { stripeRequest } from '../_lib/stripe.js';
+import { stripeRequest, publicBaseUrl } from '../_lib/stripe.js';
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://app.praxura.de';
+const PUBLIC_URL = publicBaseUrl();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
   const { user, error: authErr } = await getAuthedUser(req);
@@ -31,3 +32,5 @@ export default async function handler(req, res) {
 
   return json(res, 200, { url: data.url });
 }
+
+export default withServerlessTelemetry('stripe/portal-session', handler);

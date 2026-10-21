@@ -7,7 +7,10 @@
 // POST   /api/warteliste/match    — find suitable waiting-list candidates for a freed booking slot
 
 import express from 'express';
+import { validateLead } from '../../booking/public-guards.js';
+import { getCanonicalOwnerId, validateAuthenticatedService } from '../../booking/auth-guards.js';
 import { createClient } from '@supabase/supabase-js';
+import { wartelisteZeitfensterGueltig } from '../../booking/warteliste-zeitfenster.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -40,6 +43,41 @@ async function resolveAuth(req, res) {
   return { user: u.user, profile, tenantId };
 }
 
+// Never hydrate service-role joins: historical rows can contain foreign references.
+async function hydrateTenantLinks(entries, tenantId, includeServices = false) {
+  const leadIds = [...new Set(entries.map(entry => entry.lead_id).filter(Boolean))];
+  const serviceIds = includeServices
+    ? [...new Set(entries.map(entry => entry.service_id).filter(Boolean))] : [];
+  const leads = new Map();
+  const services = new Map();
+  // Begrenzte IN-Listen halten auch große Wartelisten unter HTTP-URL-Limits.
+  for (let offset = 0; offset < leadIds.length; offset += 100) {
+    const { data, error } = await supabase.from('leads')
+      .select('id, first_name, last_name, phone, email')
+      .eq('owner_id', tenantId).in('id', leadIds.slice(offset, offset + 100));
+    if (error) throw error;
+    for (const { id, ...contact } of data || []) leads.set(id, contact);
+  }
+  for (let offset = 0; offset < serviceIds.length; offset += 100) {
+    const ids = serviceIds.slice(offset, offset + 100);
+    // Canonical ownership is owner_id ?? user_id, including legacy services.
+    const owned = await supabase.from('services').select('id, title, duration_minutes')
+      .eq('owner_id', tenantId).in('id', ids);
+    if (owned.error) throw owned.error;
+    const legacy = await supabase.from('services').select('id, title, duration_minutes')
+      .is('owner_id', null).eq('user_id', tenantId).in('id', ids);
+    if (legacy.error) throw legacy.error;
+    for (const { id, ...service } of [...(owned.data || []), ...(legacy.data || [])]) {
+      services.set(id, service);
+    }
+  }
+  return entries.map(entry => ({
+    ...entry,
+    leads: leads.get(entry.lead_id) || null,
+    ...(includeServices ? { services: services.get(entry.service_id) || null } : {}),
+  }));
+}
+
 // ============================================================================
 // GET /api/warteliste
 // Returns all 'waiting' entries for the authenticated tenant, joined with the
@@ -59,9 +97,7 @@ router.get('/', async (req, res) => {
         id, owner_id, lead_id, service_id,
         preferred_days, preferred_time_from, preferred_time_to,
         notes, priority, status, matched_booking_id, notified_at,
-        created_at, updated_at,
-        leads:lead_id (first_name, last_name, phone, email),
-        services:service_id (title, duration_minutes)
+        created_at, updated_at
       `)
       .eq('owner_id', tenantId)
       .eq('status', statusFilter)
@@ -69,7 +105,7 @@ router.get('/', async (req, res) => {
       .order('created_at', { ascending: true });
 
     if (error) return res.status(500).json({ error: error.message });
-    return res.json(data || []);
+    return res.json(await hydrateTenantLinks(data || [], tenantId, true));
   } catch (e) {
     console.error('[warteliste/GET]', e);
     return res.status(500).json({ error: e.message || 'Server error' });
@@ -97,6 +133,19 @@ router.post('/', async (req, res) => {
       notes,
       priority,
     } = req.body || {};
+
+    if (!wartelisteZeitfensterGueltig(preferred_time_from, preferred_time_to)) {
+      return res.status(400).json({ error: 'Ungültiges Zeitfenster. Die Endzeit muss nach der Startzeit liegen.' });
+    }
+
+    for (const [field, value] of [['lead_id', lead_id], ['service_id', service_id]]) {
+      if (value == null || value === '') continue;
+      if (typeof value !== 'string') return res.status(400).json({ error: `Ungültige Referenz: ${field}` });
+      const result = field === 'lead_id'
+        ? await validateLead(supabase, value, tenantId)
+        : await validateAuthenticatedService(supabase, value, tenantId);
+      if (!result.ok) return res.status(result.status).json({ error: result.error });
+    }
 
     const payload = {
       owner_id: tenantId,
@@ -152,6 +201,16 @@ router.patch('/:id', async (req, res) => {
     if (fetchErr || !existing) return res.status(404).json({ error: 'Warteliste entry not found' });
     if (existing.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
+    if (matched_booking_id != null) {
+      if (typeof matched_booking_id !== 'string' || !matched_booking_id) {
+        return res.status(400).json({ error: 'Ungültige Buchung' });
+      }
+      const { data: booking, error: bookingError } = await supabase.from('bookings')
+        .select('id, owner_id, user_id').eq('id', matched_booking_id).maybeSingle();
+      if (bookingError) return res.status(500).json({ error: 'Interner Serverfehler' });
+      if (!booking || getCanonicalOwnerId(booking) !== tenantId) return res.status(400).json({ error: 'Ungültige Buchung' });
+    }
+
     const updates = {};
     if (status !== undefined)              updates.status              = status;
     if (matched_booking_id !== undefined)  updates.matched_booking_id  = matched_booking_id;
@@ -165,6 +224,7 @@ router.patch('/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('warteliste')
       .update(updates)
+      .eq('owner_id', tenantId)
       .eq('id', req.params.id)
       .select()
       .single();
@@ -214,6 +274,7 @@ router.delete('/:id', async (req, res) => {
     const { error } = await supabase
       .from('warteliste')
       .delete()
+      .eq('owner_id', tenantId)
       .eq('id', req.params.id);
 
     if (error) return res.status(500).json({ error: error.message });
@@ -279,8 +340,7 @@ router.post('/match', async (req, res) => {
       .select(`
         id, lead_id, service_id, preferred_days,
         preferred_time_from, preferred_time_to,
-        notes, priority, created_at,
-        leads:lead_id (first_name, last_name, phone, email)
+        notes, priority, created_at
       `)
       .eq('owner_id', tenantId)
       .eq('status', 'waiting')
@@ -330,7 +390,7 @@ router.post('/match', async (req, res) => {
         weekday: germanDay,
         time: bookingTimeStr,
       },
-      candidates: matched,
+      candidates: await hydrateTenantLinks(matched, tenantId),
       total: matched.length,
     });
   } catch (e) {

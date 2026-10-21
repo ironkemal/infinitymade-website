@@ -326,7 +326,7 @@ Karar: `compliance/LEGAL_DECISIONS.md` son blok (legal-de + gkv-302, §147 Abs. 
 - [ ] **n8n API anahtarı:** n8n → Settings → n8n API: Haziran 2026'dan önce oluşturulmuş anahtar varsa sil/yenile (eski anahtar public repo geçmişinde duruyor — guvenlik S-08). Kod tarafının yenisini kullandığını kontrol et (`n8n` MCP, VPS env).
 - [ ] **Kutu test ortamı:** canlı VPS'e (n8n/backend, 2 vCPU / 3,7 GB, swap yok) **kurma** — ayrı küçük bir Hetzner sunucu (CX22, ~6 €/ay, Ubuntu 24.04) + Windows laptop.
 - [ ] **Steuerberater:** Kassenbuch/TSE yeterli mi (#223) · Fahrtenbuch'ta ayrı "Patientenverzeichnis" yeterli mi · saklama 6 mı 8 yıl mı.
-- [ ] **78040 Änderungsvereinbarung 20.10.2023** GKV-SV'den indir → `wissensbank` ajanına ver (#243).
+- [x] **78040 Änderungsvereinbarung 20.10.2023** — 18.10.2026 lokal vom offiziellen Herausgeber aufgenommen und durch `wissensbank` registriert (W-11); konsolidierter Hauptvertrag bis 16.06.2025 zusätzlich W-12. Quellenaufnahme #243 erledigt, keine Preis-/Runtimeänderung und kein Abrechnungsnachweis. Original/TXT bleiben lokal.
 - [ ] **GoDaddy mail DPA** / VVT (#179) — `legal-de` ile.
 - [ ] **Beta-1'e bilgi:** barkod kart okuyucunun yerini tutmaz (#330). Ayrıca `PODOLOGIE_REFORM_SPRINT.md` S0'daki bekleyen sorular.
 - [ ] **Melih için erişim** (#10): ortak parola kasası, Stripe restricted key.
@@ -338,7 +338,7 @@ Karar: `compliance/LEGAL_DECISIONS.md` son blok (legal-de + gkv-302, §147 Abs. 
 - [ ] **K-20 — belgeler (legal-de ile):** Portal-AVV „KI-Zusatzmodul" eki · praksisin hasta bilgilendirmesi için Art. 13 şablonu · VVT/DSFA/TOM · `VVT.md`/`AVV.md`'deki „Zero Data Retention" cümlesi silinir.
 - [ ] **Mail sağlayıcı ölçümü** (Ops #335 öncesi): ~50 podoloji praksis sitesinin MX kaydı + Beta-1/Beta-2'ye "hangi mail" sorusu.
 - [x] **(✅ 09.10 legal-de kararı + uygulandı, K2b.15 satırı)** **Kutu sayfalarında Impressum/Datenschutz 404 (K2b.15, §3b'de karar yok):** `login.html`, `employee-signup.html`, `confirm.html`, `booking.html`, `booking-request.html` → `/impressum.html` `/datenschutz.html` kutu imajında yok. Praxura'nın metni kutuya uymaz (işleten praksis). `legal-de`'ye soru: kutuda praksisin kendi Impressum/Datenschutz'u mu (Branding sayfasına URL alanı?), yoksa linkler kutuda gizlenir mi? Karar gelince kod küçük.
-- [ ] **VVT/Datenschutz (K2b.15, onprem notu):** Hausbesuch „Route öffnen" tıklanınca hasta adresi Google Maps'e gider (kullanıcının tarayıcısından, yalnız tıklamada). `legal-de`: praksis Datenschutz/VVT metnine cümle gerekir mi; OSM alternatifi istenir mi?
+- [ ] **VVT/Datenschutz (K2b.15, onprem notu):** Hausbesuch „Route öffnen" tıklanınca hasta adresi Google Maps'e gider (kullanıcının tarayıcısından, yalnız tıklamada). **18.10.2026: technische Bestandsaufnahme in `compliance/VVT.md` ergänzt, irreführenden Codekommentar berichtigt (legal-de konsultiert); offen bleibt Praxis-Datenschutzprüfung/Hinweis, keine rechtliche Gesamtfreigabe.**
 - [ ] **IKK Nordrhein** (104001441) yeni IK — sıradaki Kostenträger dosyası çözerse gerek yok (`gkv-302`).
 
 ---
@@ -569,3 +569,19 @@ Aşama bitince §6 adımlarını uygula; Hat M bitti — §0'ı güncelle ve K3'
 **Sprint sonrası, betalardan önce (K-19 l/m, A9):** Kemal kutuyu kendisi test eder → depo bölünür (mevcut depo private: backend/onprem/planlar/siciller; yeni küçük public depo: tanıtım sitesi + indirme sayfası → Vercel) → GHCR imajlarının **public kaldığını** kontrol et (private'a dönerse kutu güncellemesi sessizce durur) → betalar kendi kutularına (kendi Hetzner hesabı / kendi PC) → `app.praxura.de` kapanır.
 
 **Ops'ta kalan (kutu testinden sonra / launch / diğer alanlar):** #109 ortaklık + alt kartlar · #121 Stripe · #123 launch · #124 ertelenenler · #116 eGK/TI · #122 görünürlük/mail · #119'dan #33/#34/#41 · #120'den #29/#30 · #115'ten #8/#31 · #242 test hesapları · #248 sigorta · #150 Beta-1 canlı deneme · #117/#26 mobil (podoloji dışı)/PWA · #168/#170 veri katmanı · #184 · Physio/Ergo/Logo (#127, #128, #131, #132, #202, #251, #290, #291) · #214 · #125 · K-11 satın alma hesabı + lisans (launch öncesi, yeni kart).
+
+
+## Lokaler Nachtrag 18.10.2026 — Arbeiten ohne Testbox
+
+- **P3 aus §6 (10. Runde): lokal korrigiert.** Ältere bereits zugeordnete aktive Verordnung
+  bleibt außerhalb der fünf neuesten Vorschläge sichtbar und vorgewählt. Gemeinsamer Loader
+  `ladeAktiveVerordnungenFuerTermin` für Terminmaske/Aktionspanel; patientengefilterter
+  Direktnachschlag, bestehender Statusfilter. Panel verwendet `wunschRx` für Sitzungsbindung
+  und Patientenmodus. Inaktive Bindungen nicht neu freigegeben.
+- Frische lokale Prüfung: Frontend 1991/1991, Backend 1337/1337, Tools 204/204,
+  Merkez 107/107, Branding 23/23, Setup 10/10, Barcode 39/39, KI-UI 22/22,
+  Widget 55/55; Typecheck/Funktionskarte/Diffprüfung bestanden. Browserproben in
+  Teilläufen bestanden; neue Verordnungskorrektur auch im echten DOM bei 390 px geprüft.
+- **Keine Gesamt-/Live-/Boxabnahme.** M1/M2/M3/M4-Einschränkungen, K3, Release/Stable und
+  externe Freigaben bleiben bestehen. Freitext-Cold-FAIL unverändert.
+- Details, Testgrenzen und Auswahl der lokalen Aufgaben: `fortschritte/2026-10-18.md`.

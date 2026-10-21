@@ -199,7 +199,7 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (27) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (29) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 4 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
   assert.equal(AUSNAHMEN.length, 5);
   const erwarteteAusnahmen = [
@@ -214,8 +214,8 @@ test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (27) und BEKANNTE_ALTLASTEN (6
     assert.ok(typeof eintrag.grund === 'string' && eintrag.grund.length > 10, 'Begruendung fehlt fuer Ausnahme: ' + name);
   }
 
-  // PROTECTED: 8 urspruengliche + 4 Trigger-Funktionen aus 0003 und 0021 + 0052 + 0054 + 0055 (2) + 0059 + 0060 (7 artefakt_*) + 0061 (zaa_fehler_anwenden) + 0063 (artefakt_registriere_veroeffentlicht) + 0078 (set_invoice_nummer) = 27
-  assert.equal(PROTECTED.length, 27);
+  // 27 bestehende Funktionen + zwei Referenzprüfungen aus 0081.
+  assert.equal(PROTECTED.length, 29);
   const erwarteteProtected = [
     'get_gmail_token',
     'set_gmail_token',
@@ -231,6 +231,8 @@ test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (27) und BEKANNTE_ALTLASTEN (6
     'audit_write_log',
     'fahrten_aenderung_protokollieren',
     'prescriptions_mandant_pruefen',
+    'warteliste_referenzen_pruefen',
+    'rechnung_zahlung_storno_referenz_pruefen',
     'auth_sitzungen_beenden',
     'mitarbeiter_zuordnen',
     'podologie_empfangsnachweis_append',

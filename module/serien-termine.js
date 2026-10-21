@@ -27,8 +27,21 @@
 
 const WOCHENTAG_KURZ = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
+export function isStrictInteger(v) {
+  if (typeof v === 'number') return Number.isInteger(v);
+  if (typeof v === 'string') return /^\d+$/.test(v.trim());
+  return false;
+}
+
+export function isValidCalendarDate(ds) {
+  if (typeof ds !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return false;
+  const d = new Date(ds + 'T12:00:00Z');
+  if (Number.isNaN(d.getTime())) return false;
+  return d.toISOString().substring(0, 10) === ds;
+}
+
 /** `YYYY-MM-DD` plus n Tage, wieder als `YYYY-MM-DD`. */
-function plusTage(ds, tage) {
+export function plusTage(ds, tage) {
   const d = new Date(ds + 'T12:00:00Z');
   d.setUTCDate(d.getUTCDate() + tage);
   return d.toISOString().substring(0, 10);
@@ -42,7 +55,7 @@ function plusTage(ds, tage) {
  * Zuordnung Tag→Wochentag muss trotzdem über Berlin laufen, sonst kippt sie an
  * den Rändern der Sommerzeit.
  */
-function wochentag(ds) {
+export function wochentag(ds) {
   const probe = new Date(ds + 'T12:00:00Z');
   return WOCHENTAG_KURZ[new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe)];
 }
@@ -58,48 +71,71 @@ function wochentag(ds) {
  * @param {number[]} args.wochentage  0=So … 6=Sa; leer → der Wochentag des Starts
  * @returns {string[]} `YYYY-MM-DD`, aufsteigend
  */
-export function serienDaten({ startDatum, anzahl, intervalDays = 7, taeglich = false, wochentage = [] }) {
-  const zahl = parseInt(anzahl, 10) || 0;
-  if (!startDatum || zahl < 1) return [];
+export function serienDaten({
+  startDatum,
+  startDate,
+  anzahl,
+  count,
+  intervalDays,
+  taeglich = false,
+  recurrence,
+  wochentage,
+  weekdays,
+} = {}) {
+  const rawStart = startDatum || startDate;
+  if (!isValidCalendarDate(rawStart)) return [];
 
-  const schritt = taeglich ? 1 : (parseInt(intervalDays, 10) || 7);
-  const tage = wochentage.length ? [...new Set(wochentage)] : [wochentag(startDatum)];
-  tage.sort((a, b) => a - b);
+  const rawCount = anzahl ?? count;
+  if (!isStrictInteger(rawCount)) return [];
+  const zahl = parseInt(rawCount, 10);
+  if (zahl < 1) return [];
 
-  // „täglich" heisst jeden Tag — und nur hier weicht diese Datei bewusst von
-  // der alten `computeSeriesPreview()` ab. Die lief auch bei „täglich" durch
-  // die Wochentag-Schleife und zeigte deshalb WÖCHENTLICHE Tage an, während
-  // `batch-create` anschliessend wirklich Tag für Tag anlegte. Die Vorschau log
-  // also genau in dem Fall, in dem sie am meisten Termine ankündigt. Die
-  // Wochentag-Kästchen sind bei „täglich" ohnehin ausgeblendet
-  // (`bkSeriesWeekdayWrap`), ihr Inhalt ist dort ein Rest von vorher.
-  if (taeglich) {
-    return Array.from({ length: zahl }, (_, i) => plusTage(startDatum, i));
+  const isDaily = taeglich === true || recurrence === 'daily';
+  if (isDaily) {
+    return Array.from({ length: zahl }, (_, i) => plusTage(rawStart, i));
   }
 
-  // Ausgangspunkt ist der Sonntag der Startwoche — von dort werden die
-  // angekreuzten Wochentage abgezählt.
-  //
-  // ⚠️ Damit kann der erste Treffer VOR dem Startdatum liegen (Start Mittwoch,
-  // angekreuzt ist Montag). Das sieht nach einem Fehler aus und wird hier
-  // trotzdem NICHT gefiltert: `POST /api/booking/batch-create` rechnet Zeile
-  // für Zeile dasselbe (api-backend/server.js). Würde die Vorschau hier
-  // aufräumen, zeigte sie andere Tage, als gleich darauf angelegt werden — und
-  // eine Vorschau, der man nicht glauben kann, ist schlimmer als gar keine.
-  // Wenn das geändert wird, dann an beiden Stellen zugleich.
-  //
-  // Zweiter bekannter Unterschied, ebenfalls unverändert übernommen: der Server
-  // fügt den Wochentag des Starts der Menge IMMER hinzu, die Vorschau nicht.
-  let woche = plusTage(startDatum, -wochentag(startDatum));
+  let schritt;
+  const parsedStep = parseInt(intervalDays, 10);
+  if (isStrictInteger(intervalDays) && parsedStep >= 7 && parsedStep <= 84 && parsedStep % 7 === 0) {
+    schritt = parsedStep;
+  } else if (recurrence === 'biweekly') {
+    schritt = 14;
+  } else {
+    schritt = 7;
+  }
+
+  const rawWd = (Array.isArray(wochentage) && wochentage.length > 0)
+    ? wochentage
+    : (Array.isArray(weekdays) && weekdays.length > 0 ? weekdays : (wochentage ?? weekdays));
+
+  let tage;
+  if (Array.isArray(rawWd)) {
+    if (rawWd.length === 0) {
+      tage = [wochentag(rawStart)];
+    } else {
+      const allValid = rawWd.every(n => isStrictInteger(n) && Number(n) >= 0 && Number(n) <= 6);
+      if (!allValid) return [];
+      tage = Array.from(new Set(rawWd.map(Number))).sort((a, b) => a - b);
+    }
+  } else if (rawWd === undefined || rawWd === null) {
+    tage = [wochentag(rawStart)];
+  } else {
+    return [];
+  }
+
+  const startWd = wochentag(rawStart);
+  let woche = plusTage(rawStart, -startWd);
   const raus = [];
-  // Obergrenze statt `while (true)`: ein Wochentag, der nie trifft, liesse die
-  // Schleife ewig laufen — im Browser heisst das eingefrorene Maske ohne
-  // Fehlermeldung. Zwei Jahre reichen für jede Verordnung.
-  for (let runde = 0; runde < 104 && raus.length < zahl; runde++) {
+  const maxRunden = Math.max(104, zahl * 20);
+
+  for (let runde = 0; runde < maxRunden && raus.length < zahl; runde++) {
     for (const tagNr of tage) {
       if (raus.length >= zahl) break;
       const kandidat = plusTage(woche, tagNr);
-      if (wochentag(kandidat) === tagNr) raus.push(kandidat);
+      if (wochentag(kandidat) === tagNr && kandidat >= rawStart) {
+        raus.push(kandidat);
+      }
     }
     woche = plusTage(woche, schritt);
   }

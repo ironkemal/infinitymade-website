@@ -2,6 +2,9 @@ import { chromium } from 'playwright';
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const fehler = [];
+page.on('pageerror', e => fehler.push(String(e.message)));
+page.on('console', m => { if (m.type() === 'error') fehler.push(m.text()); });
 await page.goto('http://localhost:8081/tools/browser-probe/layout-probe.html', { waitUntil: 'networkidle' });
 
 const mess = async (kompakt) => {
@@ -47,7 +50,11 @@ const kompakt = await mess(true);
 await browser.close();
 
 const zeile = (t, w) => console.log('   ' + t.padEnd(34) + w);
-const pruef = (t, ok, zusatz = '') => console.log(`   ${ok ? '✓' : '✗'} ${t}${zusatz ? '  — ' + zusatz : ''}`);
+let schlecht = 0;
+const pruef = (t, ok, zusatz = '') => {
+  if (!ok) schlecht++;
+  console.log(`   ${ok ? '✓' : '✗'} ${t}${zusatz ? '  — ' + zusatz : ''}`);
+};
 
 console.log('\n══ NORMAL');
 zeile('Woche · Slot Zeitleiste', normal.wocheZeitSlot + ' px');
@@ -88,3 +95,8 @@ pruef('body.compact-mode verstellt die Tagesansicht nicht',
 pruef('body.compact-mode verstellt die Woche nicht',
   kompakt.wocheSpaltenSlot === normal.wocheSpaltenSlot,
   `${kompakt.wocheSpaltenSlot} vs ${normal.wocheSpaltenSlot}`);
+if (fehler.length) {
+  console.log('\n   Konsolenfehler:');
+  [...new Set(fehler)].forEach(f => console.log('     · ' + f.slice(0, 200)));
+}
+if (schlecht || fehler.length) process.exitCode = 1;

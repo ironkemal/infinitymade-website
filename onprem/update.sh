@@ -825,6 +825,8 @@ docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || ilk_up_basarili=0
 
 # ── Schritt 10 — Sağlık ──────────────────────────────────────────────────────
 log "[10/11] Sağlık kontrolü (lib-health.sh)"
+# Bundlekopie ersetzt die Datei, nicht die bereits geladene Shellfunktion.
+source "$SCRIPT_DIR/lib-health.sh"
 if [ "$ilk_up_basarili" -eq 1 ] && warte_auf_gesundheit 180; then
   sonuc="ok"
 else

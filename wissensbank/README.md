@@ -32,7 +32,8 @@ okunduğunda kayıt açılır.
 | `ergotherapie/` | Yalnız ergoterapiye özel | Ergo Anlage 2 Vergütungsvereinbarung |
 | `logopaedie/` | Yalnız logopediye özel (`sssst` = Stimm-, Sprech-, Sprach-, Schlucktherapie) | sssst Anlage 2 |
 | `_archiv/` | Düşmüş · kapsam dışı · mükerrer | Ernährungstherapie, Rettungsdienst-Anhang, duplikatlar |
-| `sitzungen/` | ⚠️ **Belge değil** — kendi oturum notlarımız (tek istisna, bkz. aşağıdaki „Buraya girmeyen") | `2026-09-21_ops-302_komplex-suche-78020.md` |
+| `sitzungen/` | ⚠️ **Belge değil** — kendi oturum notlarımız (istisna, bkz. aşağıdaki „Buraya girmeyen") | `2026-09-21_ops-302_komplex-suche-78020.md` |
+| `conflict/` | ⚠️ **Belge değil** — açık çakışmalar / netleştirilecekler ve çözüm yolu (ikinci istisna) | `conflict.md` |
 
 `gemeinsam/` içindeki alt bölümler:
 
@@ -54,7 +55,9 @@ hatadır (fazladan bir kişi görür); ortak belgeyi alan klasörüne koymak pah
 görüntüsü — bunlar `Podoloji/`, `module/`, `compliance/` gibi kendi yerlerinde kalır.
 Ölçüt basit: **dışarıdan mı indirdik?** Hayırsa buraya girmez.
 
-**Tek, sınırlı istisna (21.09.2026, Melih kararı): `sitzungen/`.** Çalışma oturumlarının
+**İki sınırlı istisna (21.09.2026, Melih kararı): `sitzungen/` ve `conflict/`.**
+`conflict/conflict.md` açık çakışmaları (Git, Migrationsnummern, canlı uygulama) ve çözüm
+yolunu tutar; o da **kaynak değildir**, çözülünce tarihle işaretlenir. Çalışma oturumlarının
 notları (ne bulundu, niye böyle karar verildi, ne açık kaldı). Bunlar **belge değil, kaynak
 değil**: `REGISTER.md`/`INDEX.md`'ye girmezler, hiçbir Fatura-/hukuk iddiası yalnız onlara
 dayanmaz, „bunu indirmiş miydik" sorusu onlara bakılarak cevaplanmaz. Kurallar ve liste:

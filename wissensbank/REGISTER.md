@@ -154,6 +154,18 @@ gidiyor. Bu bir hata değil **durum tespiti**: uygulama Podoloji bitene kadar bi
 ertelendi (Ops #290). Kaynak atıfları `wissensbank` tarafından orijinal `.txt`'lere karşı
 satır satır doğrulandı (17.09.2026), `gkv-302`'nin raporu olduğu gibi devralınmadı.
 
+**21.10.2026, #290-0 — Quellenkorrektur / weiterhin kein Codeabschluss:** Der frühere
+SKZ-Verweis auf A1 TXT:2876–2881 lag im Hilfsmittelteil. Korrekt für Heilmittel:
+A1 V21 SLLA B TXT:3506–3535, Seiten 72–73. A3 V21 §8.1.17 enthält B2 auch für
+HeilM-RL Zahnärzte §7 Abs.1; LHB/BVB und Verordnungsart04 begründen allein keine
+SKZ-Pflicht. `SPEC-RULES.md` Abschnitt jetzt „Heilmittel-Kostenzusage / Genehmigung
+(SKZ)“. Beide Mapper weiterhin ohne neuen Datenvertrag; aktueller Writer
+`billing/dta/builder.js:529–543,583–589` → `segments.js:284–330,349–358`.
+Quellen-, API-/Speicherentwurf und ausdrücklich blockierte Rechte-/Freezeentscheidungen:
+`konsey/tutanak/2026-10-21-ops-290-datenvertrag.md`. Keine Migration/Implementierung.
+Öffentliche GKV-/G-BA-Veröffentlichungsindizes bestätigen die hier verwendeten V21-
+bzw. HMR-Stände; kein neuer Originaldownload oder PDF-Bytevergleich. Z-02 ebenfalls betroffen.
+
 **Z-01 iki ek dala sahip (10.09.2026'dan beri)** — Anlage 1'in kendisi değil, ona bağlı Anhang'lar:
 ```
 wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831   (ab 01.09.2017)  → W-02
@@ -565,8 +577,7 @@ wissensbank/podologie/20240725_Anlage_1a_…txt  Teil 1 Nr. 2 (Z.80-84) · 4.1 (
 bu kart ve SPEC-RULES `Kodda:` satırları doldurulur; dolmadan sprint maddesi kapanmış sayılmaz.
 ⚠️ **offen — Sahip DAS-Termin (`project_das_ik_registrierung`):** Erprobungsdatei (UNB 0035 = 1) ödeme
 tetikler mi — Anhang 2 § 6 sessiz, çıkarım: zweigleisig (§ 9 Abs. 2) → konvansiyonel fatura paralel.
-⚠️ **offen — elle indirme:** Podologie Rahmenvertrag § 125 ana metni (i.d.F. 30.11.2020 / 20.10.2023)
-arşivde yok — § 7 Abs. 1 „soweit in Verträgen nichts anderes" istisnası ve 78040 § 3a buna bağlı.
+✅ **Kaynak edinimi kapandı (18.10.2026; Ops #243 kapsamı):** 20.10.2023 Änderungsvereinbarung → **W-11**; ayrıca 16.06.2025 değişikliklerini içeren güncel konsolide §125 ana sözleşme → **W-12**. İki orijinal + yerel TXT mevcut. 78040 kaynağı W-11 Artikel 1 (Anlage 1a Teil 2 Nr. 4.1) ve Artikel 3'tür; §3a Nagelspange bölümüdür. Z-17/S1.12'nin kural yorumu ve kod kanıtı bu indirmeyle kapanmaz — sahibi `gkv-302` / `builder`.
 **Bei neuer Anlage 3 Podologie:** lit. c/p/q neu lesen. **Bei neuem Korrekturverfahren-Stand:** Frage 1/2.
 **Bei Anlage 1 V22-Nachfolger (TA):** Kap. 3, Kap. 6, UNB S002, FKT-IK-Felder.
 
@@ -1408,6 +1419,36 @@ sayıyı düzeltir.
 - **Format kararı:** PDF → `.txt` (78 satır). Başka türev yok.
 - **⛔ Bu `.txt` fiyat okumak için KULLANILMAZ.** `-layout` çıkarımında Bezeichnung, Leistungs-Nr. ve Preis sütunları **birbirine göre kaymış** (ör. txt'de „11.1" satırında „sensomotorischen/perzeptiven" yazıyor; orijinalde 11.1 = motorisch-funktionell). `-raw` çıkarımı sırayı doğru veriyor ama o da türevdir. Kural 2'nin canlı örneği — fiyat/Ziffer eşlemesi **yalnız PDF'ten**. TXT yalnız „bu belgede X geçiyor mu" araması için.
 - **Kontrol (10.10.2026):** başlık + geçerlilik paragrafı PDF'e karşı okundu; kayma `-raw` ile karşılaştırılarak tespit edildi. Podologie pozisyonu **yok**.
+
+---
+
+### W-11 · Podologie Änderungsvereinbarung vom 20.10.2023 — historische Quelle zu 78040 (Ops #243)
+- **Dosya:** `wissensbank/podologie/20231030_Podologie_Aenderungsvereinbarung.pdf` + `.txt` (yalnız yerel).
+- **Herkunft:** https://www.gkv-heilmittel.de/media/dokumente/heilmittel_vertraege/vertraege_podologie/20231030_Podologie_Aenderungsvereinbarung.pdf · **İndirme:** 18.10.2026 · **İndiren:** `wissensbank` ajanı. Eski gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/podologie/ adresi aynı dosya için HTTP 404 döndürdü; çalışan URL resmi sözleşme listesinden alındı.
+- **Yayıncı:** GKV-Spitzenverband ve podoloji sözleşme tarafları (kapak).
+- **Sürüm / Stand:** kapak „Vom 20.10.2023“; dosya adındaki 30.10.2023 sürüm tarihi değildir.
+- **Anzuwenden ab:** 01.11.2023 (Artikel 4; TXT:348) · **Düşer:** belge genelinde belirtilmemiş; daha yeni Anlage 1a / Anlage 2 metinleri bulunduğundan güncel fiyat otoritesi değildir.
+- **Durum:** REFERANS — tarihsel değişiklik belgesi; güncel hükümler W-12 ve ilgili güncel Anlagen ile birlikte değerlendirilir.
+- **Neyi besler:** orijinal → deterministik yerel TXT → Ops #243 kaynak edinimi / S1.12 yorumu için danışma. Runtime, fiyat listesi veya DB değiştirilmedi. 78040 için Artikel 1 / Anlage 1a Teil 2 Nr. 4.1 ve Artikel 3; §3a değildir.
+- **Tazelik kontrolü:** https://www.gkv-heilmittel.de/fuer_heilmittelerbringer/vertraege/vertraege.jsp → Podologie; 18.10.2026 resmi listede doğrulandı. Elle `wissensbank`, **01.01.2027** veya bu kurallar değiştirilmeden önce. Tarihsel orijinal yeni sürümle üzerine yazılmaz.
+- **Yeniden dağıtım:** şüpheli / izin durumu belirtilmemiş; yeni lisans hükmü verilmedi. Bu işte yalnız yerel saklama kararı: PDF `*.pdf`, TXT tam yolu `.gitignore` ile dışarıda; `.vercelignore` → `wissensbank/` tamamını dışlar. Yayın talebi olursa sahip `legal-de`.
+- **Yedek:** git hayır (PDF/TXT); sicil, INDEX, URL ve SHA izlenebilir. Ayrı yedek bu işte doğrulanmadı.
+- **Bütünlük:** SHA256 `3bef8cf0fe3796a21e5dae0bd6f7653dad6b2921a28833445101c5eb465e9c00`; 322562 bayt; 10 sayfa; 426 çıkarılmış metin satırı + 5 metadata satırı.
+- **Format / kontrol:** `pdftotext -enc UTF-8 -layout`, 18.10.2026. Kapak + Artikel 4 okundu; PDF'ten bağımsız tekrar çıkarılan 1/2/3/6/10. sayfalar tam metindeki karşılıklarıyla eşleşti. Fiyat tablosu dönüştürülmedi, doğrulanmadı, koda alınmadı; TXT yalnız arama içindir.
+
+### W-12 · Podologie §125 Hauptvertrag — konsolidierte Lesefassung bis 16.06.2025
+- **Dosya:** `wissensbank/podologie/20250617_vertrag_125_podologie_vertrag_lesefassung.pdf` + `.txt` (yalnız yerel).
+- **Herkunft:** https://www.gkv-heilmittel.de/media/dokumente/heilmittel_vertraege/vertraege_podologie/20250617_vertrag_125_podologie_vertrag_lesefassung.pdf · **İndirme:** 18.10.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** GKV-Spitzenverband ve podoloji sözleşme tarafları (kapak).
+- **Sürüm / Stand:** kapak: Vertrag vom 30.11.2020, einschließlich Änderungsvereinbarungen bis 16.06.2025. Web/PDF iç başlıklarında kalan 2023 dosya etiketi esas alınmadı.
+- **Anzuwenden ab:** temel sözleşme 01.01.2021 (§21 Abs.1; TXT:1325). Konsolide metnin tamamı için tek yeni yürürlük günü kapakta belirtilmemiş; §3b, 01.10.2025'ten itibaren düzenlenen Nagelspange reçetelerini ayrıca ayırır (TXT:454). · **Düşer:** açık uçlu (§21).
+- **Durum:** GEÇERLİ — 18.10.2026 yayıncı Podologie listesinde güncel ana sözleşme olarak sunuluyor. Bu kayıt kendi başına ürün uyumluluğu kanıtı değildir.
+- **Neyi besler:** orijinal → yerel TXT → Z-17 ana sözleşme kaynak boşluğunun kapanması. §3a/§3b, §7 ve §18 hedefli okumaya hazır. Yeni runtime/DB bağı eklenmedi; uygulama ve fatura yorumu `gkv-302` / `builder` sorumluluğunda.
+- **Tazelik kontrolü:** https://www.gkv-heilmittel.de/fuer_heilmittelerbringer/vertraege/vertraege.jsp → Podologie ana sözleşme Stand ve değişiklik bağlantıları; elle `wissensbank`, **01.01.2027** ve sözleşmeye bağlı kod değişmeden önce.
+- **Yeniden dağıtım:** şüpheli / izin durumu belirtilmemiş; yalnız yerel saklama, yeni lisans kararı yok. PDF `*.pdf`, TXT tam yolu `.gitignore` içinde; `.vercelignore` → `wissensbank/`. Yayın talebi: `legal-de`.
+- **Yedek:** git hayır (PDF/TXT); metaveri + kaynak/SHA sicilde. Harici yedek doğrulanmadı.
+- **Bütünlük:** SHA256 `7498edc138ac56d2ad89247a367613fc20eddabf2a0f1be5f7361baf5efb93ad`; 353032 bayt; 30 sayfa; 1500 çıkarılmış metin satırı + 5 metadata satırı.
+- **Format / kontrol:** `pdftotext -enc UTF-8 -layout`, 18.10.2026; kapak, §3b geçişi ve §21 okundu. Bağımsız tekrar çıkarılan 1/7/9/20/26. sayfalar metinle eşleşti. md/csv/kod türevi yok; mevcut 2025 Anlage 2/3 ve Änderungsvereinbarung değiştirilmedi.
 
 ---
 

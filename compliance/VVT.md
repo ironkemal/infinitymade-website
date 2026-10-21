@@ -98,6 +98,22 @@ InfinityMade tritt **doppelt** in Erscheinung:
 
 ---
 
+## Verarbeitung 6 — Online-Terminanfragen (Widget und Anfrageseite)
+
+| Feld | Inhalt |
+|---|---|
+| **Bezeichnung** | Online-Terminanfrage von Patient*innen und Interessent*innen (`booking-request.html`, einbettbares Widget `widget/`) |
+| **Rolle** | Auftragsverarbeiter (SaaS) · in der Kundenbox keine Rolle des Herstellers |
+| **Zwecke** | Entgegennahme einer Terminanfrage, Terminvereinbarung, Vorbereitung der Behandlung |
+| **Rechtsgrundlage** | Art. 6 Abs. 1 lit. b DSGVO; Gesundheitsbezug (Anliegen, Freitext): Art. 9 Abs. 2 lit. h, Abs. 3 DSGVO i. V. m. § 22 Abs. 1 Nr. 1 lit. b BDSG. Keine Einwilligung (legal-de 09.10.2026, K2b.15) |
+| **Datenkategorien** | Vor- und Nachname, Geburtsdatum, Telefon und/oder E-Mail, Versicherungsart, Anliegen (feste Auswahl), Hausbesuch ja/nein, Wochentage und Tageszeiten der Verfügbarkeit, Dringlichkeit, Erstbesuch ja/nein, zwei freiwillige Kurztexte (höchstens 140 und 80 Zeichen), Hinweis „für andere Person" |
+| **Betroffene** | Anfragende Personen (Patient*innen, Interessent*innen), ggf. gesetzliche Vertreter; Besucher von Webseiten der Praxis mit eingebettetem Formular (Verbindungsdaten) |
+| **Empfänger** | Die Praxis. Benachrichtigungs-E-Mail an die Praxis enthält bei Widget-Anfragen keinen Freitext, nur einen Hinweis auf das Dashboard |
+| **Drittland-Übermittlung** | Keine. Das Widget lädt keine Drittanbieter-Inhalte, setzt keine Cookies, nutzt keinen Tracker |
+| **Speicherdauer** | Nicht angenommene Anfragen: so lange erforderlich, spätestens 6 Monate (`api-backend/dsgvo/fristen.js`). Kommt eine Behandlung zustande: Patientendokumentation, 10 Jahre (§ 630f Abs. 3 BGB). Im Browser nur Anfrage-ID und Token in `sessionStorage` bis zum Schließen des Fensters |
+| **TOM-Verweis** | siehe TOM.md; guvenlik S-52 bis S-56 (Header, Mail-Escaping, Tagesdeckel, Token) |
+| **Offen** | Ob der Löschjob auf dem Produktivsystem läuft, ist nicht geprüft (legal-de 12.10.2026) |
+
 ## Auftragsverarbeiter / Sub-Prozessoren
 
 | Anbieter | Zweck | Sitz / Region | AVV vorhanden | Drittland |
@@ -138,3 +154,24 @@ standardmäßig deaktiviert, Aktivierung durch den Auftraggeber."
 Ergänzend für die Verarbeitungsbeschreibung: ohne Standort (Funktion aus, Einwilligung im
 Gerät verweigert, keine Praxiskoordinate) wird der Check-in trotzdem erfasst und als
 „nicht geprüft" gekennzeichnet — die Zeiterfassung hängt nicht am Standort.
+
+### Interner Ergänzungsbedarf für das Praxis-VVT — Hausbesuchsroute (18.10.2026)
+
+**Status: technische Bestandsaufnahme für die Kundenbox.** Die Praxis entscheidet
+über den Einsatz des Kartenanbieters. Dieser Abschnitt ist keine zusätzliche
+Verarbeitungstätigkeit von InfinityMade als Verantwortlichem und ergänzt nicht
+die Hersteller-Subprozessorenliste. Er ist kein fertiger Datenschutzhinweis.
+
+Bei „Route öffnen“ öffnet erst der Klick des Praxisnutzers eine externe Google-Maps-Seite.
+Die Zieladresse wird dabei als URL-Parameter übertragen. Das Modul ergänzt weder
+Patientenname noch Diagnose oder Startpunkt. Vor dem Klick stellt dieses Modul keine
+Verbindung zu Google Maps her. Kilometer werden weiterhin manuell im Fahrtenbuch erfasst.
+
+Technische Nachweise: `module/hausbesuch-route.js`, `routeLink()` und Klick-Handler;
+bestehende Produktentscheidung K-19(c), KHS §5 ORG. Der frühere Codekommentar
+„Die Adresse verlässt die Box nicht“ wurde berichtigt; das Laufzeitverhalten blieb gleich.
+
+Vor Nutzung mit echten Patientenadressen bleibt durch die Praxis mit ihrer
+Datenschutzberatung zu klären: Rechtsgrundlage und Gesundheitsbezug, Empfänger und
+Drittlandbezug, Information der Betroffenen und Anpassung des Praxis-VVT.
+Die technische Dokumentation schließt diese Prüfung nicht ab.

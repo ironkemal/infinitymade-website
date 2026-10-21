@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import * as guards from './public-guards.js';
+import { requestToken } from './status.js';
+import { escHtml, mailBetreff } from './html-escape.js';
+import { pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz } from './widget-guards.js';
+import { patientenNameMuster } from './patienten-namensabgleich.js';
 
 const serverSrc = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const extract = (s, e) => serverSrc.slice(serverSrc.indexOf(s), serverSrc.indexOf(e));
@@ -10,6 +14,7 @@ const bookingCode = extract("app.post('/api/booking/create'", '// 5. Verify Comp
 const requestCode = extract("app.post('/api/booking-request/create'", '// GET /api/booking-request/list');
 
 let bookingHandler, requestHandler, currentDb, lastAuditOwner;
+let lastMail = null;
 let slotsCounter = 0, mailCounter = 0, calendarCounter = 0, approvedCounter = 0, logAccessCounter = 0;
 
 const mockSupabase = {
@@ -25,6 +30,7 @@ const mockSupabase = {
         }
         return b;
       },
+      gte: () => b,
       forUpdate: () => b,
       maybeSingle: () => b.then(),
       single: () => b.then(),
@@ -51,6 +57,7 @@ const mockSupabase = {
 
 const ctx = vm.createContext({
   ...guards,
+  requestToken, escHtml, mailBetreff, pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz, patientenNameMuster, ANFRAGEN_TAGESDECKEL: 100,
   app: {
     post(path, ...m) {
       const fn = m[m.length - 1];
@@ -74,9 +81,9 @@ const ctx = vm.createContext({
   logAccess: (_supabase, entry) => { logAccessCounter++; lastAuditOwner = entry.ownerId; },
   createBookingsFromRequest: () => { approvedCounter++; throw new Error('approved helper called'); },
   createBookingsFromRequestFactory: () => () => { approvedCounter++; throw new Error('approved helper called'); },
-  createSMTPTransport: () => ({ sendMail: () => { mailCounter++; return Promise.resolve(); } }),
+  createSMTPTransport: () => ({ sendMail: (m) => { lastMail = m; mailCounter++; return Promise.resolve(); } }),
   getMailFrom: () => 'synthetic@example.invalid', appBaseUrl: () => 'https://synthetic.invalid',
-  process: { env: { SMTP_HOST: 'synthetic.invalid' } },
+  process: { env: { SMTP_HOST: 'synthetic.invalid', SUPABASE_SERVICE_ROLE_KEY: 'test-secret' } },
   console, Date, Error, Math, parseInt, parseFloat, String, Number, Boolean, Object, Array, Promise, JSON
 });
 
@@ -92,7 +99,7 @@ const F = {
 };
 
 function resetDb(overrides = {}) {
-  lastAuditOwner = undefined; slotsCounter = 0; mailCounter = 0; calendarCounter = 0; approvedCounter = 0; logAccessCounter = 0;
+  lastMail = null; lastAuditOwner = undefined; slotsCounter = 0; mailCounter = 0; calendarCounter = 0; approvedCounter = 0; logAccessCounter = 0;
   currentDb = {
     tables: {
       profiles: [F.owner, F.therapist],
@@ -287,6 +294,51 @@ describe('Public Booking Handlers Guard & Honeypot Suite', () => {
     assert.equal(currentDb.writes[0].table, 'booking_requests');
     assert.equal(approvedCounter, 0);
     assert.equal(mailCounter, 0); assert.equal(calendarCounter, 0);
+  });
+
+  it('Widget-Anfrage: kein Auto-Annehmen, Token, Notiz vom Server, Praxis-Mail ohne Freitext', async () => {
+    const owner = { ...F.owner, email: 'praxis@example.invalid', booking_auto_approve: true, booking_auto_approve_types: ['selbstzahler'] };
+    resetDb({ tables: { profiles: [owner, F.therapist] } });
+    const res = mockRes();
+    await requestHandler({ body: {
+      source: 'widget', owner_id: 'O', payment_type: 'selbstzahler', employee_id: 'T',
+      patient: { vorname: "O'Brien", nachname: 'Muster', geburtsdatum: '1980-02-03', telefon: '0123456' },
+      notizen: '<img src=x onerror=alert(1)>',
+      widget: { anliegen: 'ohne_rezept', hausbesuch: false, flexibel: true, mitteilung: 'Hallo <b>Welt</b>' },
+    } }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.status, 'pending');
+    assert.match(res.body.token, /^[0-9a-f]{32}$/);
+    assert.equal(approvedCounter, 0);
+    const gespeichert = currentDb.writes.find((w) => w.table === 'booking_requests').data;
+    assert.equal(gespeichert.notizen, 'Anliegen: Ohne Rezept – Fußpflege / Beratung\nZeit: flexibel\nMitteilung: Hallo Welt');
+    assert.equal(gespeichert.preferred_date, null);
+    assert.equal(gespeichert.preferred_time, null);
+    assert.equal(mailCounter, 1);
+    assert.ok(!/Hallo|img|Notiz:/.test(lastMail.html), 'Freitext gehoert nicht in die Praxis-Mail');
+    assert.ok(lastMail.html.includes('Dashboard'));
+  });
+
+  it('Widget-Anfrage ohne Kontakt wird serverseitig abgelehnt (direkter POST)', async () => {
+    const res = mockRes();
+    await requestHandler({ body: {
+      source: 'widget', owner_id: 'O', payment_type: 'selbstzahler',
+      patient: { vorname: 'Max', nachname: 'Muster', geburtsdatum: '1980-02-03' },
+      widget: { anliegen: 'rezept', flexibel: true },
+    } }, res);
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body.error, /E-Mail oder Telefon/);
+    assert.equal(currentDb.writes.length, 0);
+  });
+
+  it('Mehrere E-Mail-Adressen werden auch OHNE source=widget abgelehnt (S-56)', async () => {
+    const res = mockRes();
+    await requestHandler({ body: {
+      owner_id: 'O', payment_type: 'selbstzahler',
+      patient: { vorname: 'Max', nachname: 'Muster', geburtsdatum: '1980-02-03', email: 'a@x.de, b@y.de' },
+    } }, res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(currentDb.writes.length, 0);
   });
 
   it('Database error 500 returns Interner Serverfehler with no effects on both routes', async () => {

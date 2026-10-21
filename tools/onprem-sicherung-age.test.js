@@ -128,7 +128,7 @@ test('Caddyfile acmedns: ohne Ausbreitungsprüfung, mit Pause', () => {
 
 test('install.sh: TLS-Wartezeit vor dem Schlüsseltest, --neu-Port nur eigene Box, caddy_data bleibt mit Namensdienst', () => {
   const s = lies('onprem', 'install.sh');
-  const iWarte = s.indexOf("Warte auf das Let's-Encrypt-Zertifikat");
+  const iWarte = s.indexOf("Warte auf ein vertrauenswürdiges HTTPS-Zertifikat");
   const iTest = s.indexOf('mit_key="$(curl');
   assert.ok(iWarte > 0 && iWarte < iTest, 'erst Zertifikat, dann Schlüsseltest');
   assert.match(s, /docker compose port caddy "\$port"/, 'nur der eigene Compose-Port wird übersprungen');

@@ -133,3 +133,9 @@ merkez/
 
 # Private local M4 execution artifacts; not a web asset.
 .local-m4-work/
+
+# Termin-Widget (11.10.2026): booking-widget.html/.css/.js, .logic.js und embed.js sind
+# ABSICHTLICH oeffentlich. Mock, Tests und Doku nicht.
+widget/booking-widget.mock.js
+widget/*.test.js
+widget/docs/

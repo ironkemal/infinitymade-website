@@ -435,14 +435,14 @@ export async function sha256Hex(text) {
 // v2: „spätestens nach sechs Monaten" — seit dsgvo/fristen.js nicht angenommene Anfragen löscht (O-182).
 // -------------------------------------------------------------------
 export const TERMIN_DATENSCHUTZ = Object.freeze({
-  version: 'termin-datenschutz-v2-2026-10-09',
+  version: 'termin-datenschutz-v3-2026-10-12',
   titel: 'Datenschutzhinweise zur Online-Terminvereinbarung',
   absaetze: [
     { ueberschrift: 'Verantwortlich',
       text: 'Verantwortlich für die Verarbeitung Ihrer Daten ist {{praxis_name}}{{inhaber_satz}}, {{praxis_anschrift}}.{{praxis_kontakt}}{{dsb_satz}}' },
     { ueberschrift: 'Zweck und Rechtsgrundlage',
       text: 'Wir verarbeiten die Angaben, die Sie bei der Online-Terminbuchung oder Terminanfrage machen (z. B. Name, '
-        + 'Geburtsdatum, Kontaktdaten, gewünschter Termin, Art der Kostenübernahme), um Ihren Termin zu vereinbaren und '
+        + 'Geburtsdatum, Kontaktdaten, Anliegen, zeitliche Verfügbarkeit, gewünschter Termin, Art der Kostenübernahme), um Ihren Termin zu vereinbaren und '
         + 'Ihre Behandlung vorzubereiten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Durchführung vorvertraglicher '
         + 'Maßnahmen auf Ihre Anfrage bzw. Erfüllung des Behandlungsvertrags).\n'
         + 'Soweit Sie Angaben zu Ihrer Gesundheit machen (z. B. Diagnose, Angaben zur ärztlichen Verordnung, Krankenkasse, '

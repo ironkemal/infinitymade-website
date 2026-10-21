@@ -3,9 +3,9 @@
   "dateien": [
     { "yol": "docker-compose.yml", "sha256": "af27c4b4b27c4a3855c0e680b280239d9a567d037194a185fbd4c8dc9bc0d53e" },
     { "yol": ".env.template", "sha256": "e9efcfaabd22dba1818ef435a81271e2b6a202fc0b7c028d237beec5ee360ce3" },
-    { "yol": "install.sh", "sha256": "a52ebf9483d6d9c4e345c9b5087a64068235ffcda0aa210eb4f230c0fc2a27e6" },
-    { "yol": "update.sh", "sha256": "cb7e653ce359c815d793f6027ff386529916fdd1b5ed86e6e5a410d10567823f" },
-    { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
+    { "yol": "install.sh", "sha256": "adb9415fe494bcdbecae79995bd77e3660c2171fee22ec8254e480089ca88679" },
+    { "yol": "update.sh", "sha256": "fc8180ed644650c965da59df8f7571095d008667abeff6fce462ecb37f347f05" },
+    { "yol": "lib-health.sh", "sha256": "94facfd7350629e60b677f7a7ef37ccee03d89e286591fb9c8471edfa7e74e3f" },
     { "yol": "lib-ip.sh", "sha256": "3e01908849fbe18da0c5a64250404c20935f6fe47046f67e210f0f0227b70db8" },
     { "yol": "lib-setup-jeton.sh", "sha256": "17d41626ecb01aac61cf253100bea4c73a4631d8b6f96189fa1df927fd72f5f5" },
     { "yol": "ip-melden.sh", "sha256": "171770d40ee6c1d3713fa32b9c2876cffbdf6dc0a11a672776e8ca7562077316" },

@@ -5,9 +5,14 @@ const fehler = [];
 page.on('pageerror', e => fehler.push(String(e.message)));
 page.on('console', m => { if (m.type() === 'error') fehler.push(m.text()); });
 await page.goto('http://localhost:8081/tools/browser-probe/render-probe.html', { waitUntil: 'networkidle' });
-await page.waitForFunction(() => document.title === 'fertig', null, { timeout: 15000 }).catch(() => {});
+await page.waitForFunction(() => document.title === 'fertig', null, { timeout: 15000 })
+  .catch(e => fehler.push(`Renderprobe nicht abgeschlossen: ${e.message}`));
 
-const p = (t, ok, z='') => console.log(`   ${ok ? '✓' : '✗'} ${t}${z ? '  — ' + z : ''}`);
+let schlecht = 0;
+const p = (t, ok, z='') => {
+  if (!ok) schlecht++;
+  console.log(`   ${ok ? '✓' : '✗'} ${t}${z ? '  — ' + z : ''}`);
+};
 
 const d = await page.evaluate(() => {
   const q = (s) => document.querySelectorAll(s);
@@ -166,6 +171,46 @@ const ev4 = await page.evaluate(() => window.__ereignisse);
 p('der Klick meldet sich', ev4.some(e => e.was === 'vk-anlegen' && e.lage === 'voll'),
   ev4.filter(e => e.was === 'vk-anlegen').map(e => e.lage).join(',') || '— nichts');
 
+// Bestehende aktive Bindung darf auch jenseits der fünf Vorschläge sichtbar bleiben.
+const bindung = await page.evaluate(async () => {
+  const { zeigeVerordnungenFuerTermin } = await import('../../module/termin-verordnung.js?v=20261018a');
+  const rxs = Array.from({ length: 7 }, (_, i) => ({
+    id: `lokale-rx-${i + 1}`, patient_id: 'synthetischer-patient', status: 'active',
+    heilmittel: `Testverordnung ${i + 1}`, anzahl_einheiten: 6, prescription_sessions: [],
+  }));
+  const sb = { from() {
+    const filter = {};
+    const qb = {
+      select: () => qb, not: () => qb, order: () => qb,
+      eq(key, value) { filter[key] = value; return qb; },
+      async limit(n) { return { data: rxs.filter(rx => rx.patient_id === filter.patient_id).slice(0, n) }; },
+      async maybeSingle() { return { data: rxs.find(rx => rx.id === filter.id && rx.patient_id === filter.patient_id) }; },
+    };
+    return qb;
+  } };
+  const section = document.createElement('section');
+  section.id = 'vkBestehendeBindung';
+  document.body.appendChild(section);
+  let gewaehlt = null;
+  await zeigeVerordnungenFuerTermin(sb, { leadId: 'synthetischer-patient', bekannteVerordnungId: 'lokale-rx-7' }, {
+    veroSection: section, veroCards: section, resetFelder: () => {},
+    onSelect: rx => { gewaehlt = rx.id; },
+  });
+  return { ids: [...section.querySelectorAll('.bk-vero-card')].map(c => c.dataset.rxId), gewaehlt };
+});
+const bindungOk = bindung.ids.length === 6 && bindung.ids[0] === 'lokale-rx-7'
+  && new Set(bindung.ids).size === 6 && bindung.gewaehlt === 'lokale-rx-7';
+p('Siebte aktive Verordnung bleibt im echten DOM sichtbar und vorgewählt', bindungOk, JSON.stringify(bindung));
+if (!bindungOk) throw new Error('Bestehende Verordnungsbindung fehlt im Browser');
+await page.click('#vkBestehendeBindung .bk-vero-card');
+await page.setViewportSize({ width: 390, height: 844 });
+const mobilOk = await page.locator('#vkBestehendeBindung').evaluate(section =>
+  [...section.querySelectorAll('.bk-vero-card')].every(card =>
+    card.getBoundingClientRect().right <= window.innerWidth));
+p('Verordnungskarten passen bei 390 px in den Bildschirm', mobilOk);
+if (!mobilOk) throw new Error('Verordnungskarten laufen auf schmalem Bildschirm über');
+
 await browser.close();
 if (fehler.length) { console.log('\n   ⚠ Konsolenfehler:'); [...new Set(fehler)].forEach(f => console.log('     · ' + f.slice(0,200))); }
 else console.log('\n   keine Konsolenfehler');
+if (schlecht || fehler.length) process.exitCode = 1;

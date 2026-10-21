@@ -1645,3 +1645,36 @@ tutarlı ve doğru.
 **Aksiyon:** `builder`'a üçüncü düzeltme turu **gönderilmedi** (gerek yok). Kalıcı ders
 metodoloji tarafında: client-side JS regresyon testleri artık taze `open`/`goto` ile yapılmalı,
 aynı kalıcı sekmede `switchPanel()` ile değil.
+
+### Öffentliche Seiten / Login — Live-Test 2026-10-17
+
+**Erwartet:** Öffentliche Einstiegsseiten laden ohne Anmeldung; ungültige Buchungslinks zeigen verständliche Fehler. Dashboard ohne Sitzung leitet zum Login. Login bleibt auf Mobilgeräten nutzbar; Passwortanzeige meldet ihren Zustand korrekt.
+
+**Letzter Test:** 2026-10-17, ca. 20:00–20:02 Berlin — **TEILWEISE / KALDI**. Eigener anonymer T3-Browser, 1280×800 und 390×844, keine Formularsendungen und keine DB-Schreibzugriffe. **Bestanden im geprüften Umfang:** Backend `/api/krankenkassen` 200 mit JSON; Dashboard ohne Sitzung → `login.html`, keine Patientendaten sichtbar; Login deutsch, Passwortanzeige schaltet, Passworthilfe zeigt Supporttext; `booking.html` ohne Kennung zeigt „Unternehmen nicht gefunden“, `booking-request.html` ohne Kennung „Ungültiger Link“; Landing ohne horizontalen Seitenüberlauf, geladene Bilder intakt, interne Hash-Ziele vorhanden, mobiles Menü öffnet. Keine beobachteten Konsolenfehler in diesen Ansichten. **Nicht geprüft:** erfolgreiche Anmeldung, Kamera, authentifizierte Patientenabläufe, Speichern/Persistenz, Abrechnung und Zahlungen.
+
+**Offen — P2, Login-Layout:** `login.html` bei 390×844: Footer rechts neben Formular, Hauptbereich nur 198.375 px und E-Mail-Eingabe 145.1875 px breit. Bei 1280×800 ebenfalls seitlicher Footer. Quelle `login.html:22–23` (`body` Flex ohne Spaltenrichtung; live computed `flex-direction: row`) und Footer `:432–437`. Erwartet: Rechtslinks unter Formular und mobile Formularbreite. Keine Korrektur in diesem Testtur.
+
+**Offen — P3, Passwort-Toggle:** Klick „Passwort anzeigen“ ändert `input.type` auf `text`, aber `aria-label` bleibt „Passwort anzeigen“. Quelle `login.html:423–429`; Handler ändert Typ und CSS-Klasse, kein Zustandslabel. Keine Korrektur in diesem Testtur.
+
+**Evidenz:** `Claude outputs/2026-10-17-audit/PUBLIC.md`; dort verknüpfte Screenshots für Login 390×844 und 1280×800 sowie JSON-Messwerte mit URL/Zeit. Live-Login lädt `login.js?v=20261015`; Befunde wurden direkt live gemessen, keine Aussage über Auslieferung des lokalen Änderungspakets.
+
+**Lokaler Nachtest Login (Paket „sieben Fixes“):** 2026-10-17, ca. 20:56 Berlin — **LOKAL GEÇTİ / PASS**. Release-Checkout `/tmp/praxura-release-20261016`, `http://127.0.0.1:8081/login.html`, synthetische API-Konfiguration, eigener anonymer T3-Browser. 390×844 / 768×1024 / 1280×800: Formularbreite 358 / 460 / 460 px; Eingabebreite 304.8125 / 406.8125 / 374.8125 px; Footer beginnt jeweils unter Main; kein horizontaler Seitenüberlauf, computed `flex-direction: column`. Alle drei Passwort-Toggles schalten ein und wieder aus: `type=text` + „Passwort verbergen“ + `aria-pressed=true`, danach `type=password` + „Passwort anzeigen“ + `aria-pressed=false`. Recoveryfelder ausschließlich lokal per DOM sichtbar gemacht; kein Recovery-Token, keine Anmeldung, keine Passwortänderung oder Persistenzprüfung. Keine beobachteten Konsolen-/Netzwerkfehler. **Live unverändert und Fix dort nicht nachgeprüft; obige Live-Anomalien bleiben bis Live-Regressionsnachweis offen.** Evidenz: `Claude outputs/2026-10-17-sieben-fixes/LOGIN-NACHPRUEFUNG.md` und `login-390.png`, `login-768.png`, `login-1280.png` im selben Ordner. Keine Produktänderungen durch diese Nachprüfung.
+
+### Launch-Smoke #24 (Matrix `konsey/tutanak/2026-10-21-ops-24-smoke-matrix.md`) — Live-Test 2026-10-21
+
+**Stand:** live, Stand Deploy — `dashboard.js?v=20261021zf` (lokaler Arbeitsbaum `…ops1`, nicht deployt; Ergebnisse gelten NICHT für den lokalen Stand). `origin/main` = `37a611b9`. Backend `/api/krankenkassen` 200 JSON. QA-Praxis „Podologie Nord“, Zugang = **Mitarbeiter-Konto** (einziger lokal vorhandener Zugang; Owner-Zugang `PRAXURA_QA_*` weder in Env noch `.env.local`). Headless Playwright (eigenes Profil), keine Zahlung/kein Versand/nichts gelöscht. Doppelslash in Redirect-/Request-URLs: in keinem Schritt beobachtet.
+
+| Zeile | Ergebnis | Notiz |
+|---|---|---|
+| Anmeldung | **PASS** | dashboard → login.html → Login → dashboard.html; 0 Konsolenfehler, 0 4xx/5xx; nur bekannte `#calendarEl`-Warnung |
+| Kalender/Termin | **PASS (mit Hinweis)** | Kalender-Panel für Mitarbeiterrolle nicht sichtbar; Termin über Patientenakte „+ Termin“ mit Verordnung angelegt (QA-Patient „Haupt“, 27.10.2026 09:15, Podologische Behandlung). Warnung „Außerhalb der Arbeitszeit — kein Arbeitstag“ an JEDEM Wochentag 26.–30.10. → QA-Mitarbeiter hat keine Arbeitszeiten (Datenstand). Nach Neuladen in Akte „27.10.2026 · 09:15 Bestätigt“ ✓. Synthetischer QA-Termin bleibt bestehen (nicht gelöscht) |
+| Verordnung-Maske | nicht prüfbar (Panel) | `verordnungen` für Mitarbeiterrolle gesperrt; Owner-Zugang fehlt |
+| Behandlung | nicht prüfbar | Owner-Zugang fehlt; Akte zeigt bestehende Behandlung-Einträge, 0 Fehler |
+| Abrechnung bis DTA-Entwurf | nicht prüfbar | `podologie-billing` für Mitarbeiterrolle gesperrt; Owner-Zugang fehlt |
+| Rechnungen-Liste | **PASS** | Panel lädt, Liste + „Ansehen“/„Zahlung“, 0 Fehler; Rechnung öffnen/Zahlung nicht ausgeführt |
+| Datenschutz/Cookie | **PASS** | praxura.de: Ablehnen → `cookie_consent=declined`, nach Reload 0 Tracker-Requests; Link „Cookie-Einstellungen“ vorhanden (Widerruf-Dialog nicht durchgeklickt); app `datenschutz.html` lädt, 0 Fehler |
+| Public-Buchung `booking.html?u=praxura-de` | **FAIL (Daten)** | Praxis wird aufgelöst, Personenwahl (2) ok, danach für beide „Keine Dienstleistungen verfügbar.“ — `employee_services` 200 mit **0 Zeilen** (gleicher Datenstand wie bei `test-podologie-qa` 30.09.). Kein Codefehler beobachtet, aber Ablauf bis vor Absenden nicht erreichbar. `booking-request.html?u=praxura-de` lädt „Schritt 1 von 7“, 0 Fehler (nicht weiter durchlaufen) |
+
+**Beobachtung P3 (QA-Stammdaten):** Fußzeile Public-Seiten „Harrichstr. 5 33, 53721 Nürnberg“ — Hausnummer doppelt, PLZ 53721 passt nicht zu Nürnberg. Synthetische QA-Daten, kein Produktfehler belegt.
+
+**Offen für vollständigen #24-Lauf:** Owner-Zugang der QA-Praxis lokal bereitstellen (Verordnung/Behandlung/Abrechnung); `employee_services` + `working_hours` für QA-Praxis seeden (db-ustasi).

@@ -1,3 +1,4 @@
+import { withServerlessTelemetry } from './_lib/telemetry.js';
 /**
  * Demo Booking API — single function, dispatches via ?action=
  *
@@ -10,6 +11,8 @@
 
 import { adminFetch, json } from './_lib/auth.js';
 import nodemailer from 'nodemailer';
+import { allowMailRequest } from './_lib/mail-rate-limit.js';
+import { escHtml } from './_lib/mail-html.js';
 
 const OWNER_EMAIL = 'ironkemal5@gmail.com';
 const FROM        = 'Praxura <noreply@praxura.de>';
@@ -137,7 +140,7 @@ function buildICS(booking, meetLink) {
     'SUMMARY:Analysegespräch – Praxura',
     `DESCRIPTION:${desc}`,
     'ORGANIZER;CN=Praxura:mailto:kontakt@praxura.de',
-    `ATTENDEE;CN=${booking.name};RSVP=FALSE:mailto:${booking.email}`,
+    `ATTENDEE;CN="${String(booking.name).replace(/[\r\n"]/g, ' ')}";RSVP=FALSE:mailto:${String(booking.email).replace(/[\r\n]/g, '')}`,
     meetLink ? `URL:${meetLink}` : null,
     'END:VEVENT',
     'END:VCALENDAR',
@@ -157,29 +160,29 @@ function cardHtml(inner) {
 async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
   if (!process.env.SMTP_HOST) return;
   const dateStr = fmtDE(booking.booking_date);
-  const rescheduleUrl = `${BASE_URL}/demo-booking.html?reschedule=${rescheduleToken}`;
-  const meetRow = meetLink ? `<p style="margin:12px 0 4px"><a href="${meetLink}" style="color:#6B5538;font-weight:600">→ Google Meet Link</a></p>` : '';
+  const rescheduleUrl = `${BASE_URL}/demo-booking.html?reschedule=${encodeURIComponent(rescheduleToken)}`;
+  const meetRow = meetLink ? `<p style="margin:12px 0 4px"><a href="${escHtml(meetLink)}" style="color:#6B5538;font-weight:600">→ Google Meet Link</a></p>` : '';
 
   const bookerHtml = cardHtml(`
     <p style="color:#6B5538;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Praxura · Analysegespräch</p>
     <h1 style="font-size:24px;font-weight:400;color:#1A1611;margin-bottom:4px">Ihre Buchung ist bestätigt</h1>
-    <p style="color:#4A4036;margin-bottom:24px">Wir freuen uns auf unser Gespräch, ${booking.name}.</p>
+    <p style="color:#4A4036;margin-bottom:24px">Wir freuen uns auf unser Gespräch, ${escHtml(booking.name)}.</p>
     <div style="background:#F1E9D6;border-radius:8px;padding:16px 20px;margin-bottom:24px">
-      <p style="margin:4px 0;color:#1A1611"><strong>Datum:</strong> ${dateStr}</p>
-      <p style="margin:4px 0;color:#1A1611"><strong>Uhrzeit:</strong> ${booking.booking_time} Uhr (Europe/Berlin)</p>
+      <p style="margin:4px 0;color:#1A1611"><strong>Datum:</strong> ${escHtml(dateStr)}</p>
+      <p style="margin:4px 0;color:#1A1611"><strong>Uhrzeit:</strong> ${escHtml(booking.booking_time)} Uhr (Europe/Berlin)</p>
       <p style="margin:4px 0;color:#1A1611"><strong>Dauer:</strong> 30 Minuten · Video-Call</p>
       ${meetRow}
     </div>
-    <p><a href="${rescheduleUrl}" style="color:#6B5538;font-size:13px">Termin verschieben</a></p>`);
+    <p><a href="${escHtml(rescheduleUrl)}" style="color:#6B5538;font-size:13px">Termin verschieben</a></p>`);
 
   const ownerHtml = cardHtml(`
     <h2 style="font-size:18px;font-weight:600;color:#1A1611;margin-bottom:16px">Neues Analysegespräch gebucht</h2>
-    <p><strong>Name:</strong> ${booking.name}</p>
-    <p><strong>E-Mail:</strong> <a href="mailto:${booking.email}">${booking.email}</a></p>
-    <p><strong>Unternehmen:</strong> ${booking.company || '—'}</p>
-    <p><strong>Nachricht:</strong> ${booking.message || '—'}</p>
-    <p style="margin-top:12px"><strong>Datum:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
-    ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
+    <p><strong>Name:</strong> ${escHtml(booking.name)}</p>
+    <p><strong>E-Mail:</strong> <a href="mailto:${escHtml(booking.email)}">${escHtml(booking.email)}</a></p>
+    <p><strong>Unternehmen:</strong> ${escHtml(booking.company || '—')}</p>
+    <p><strong>Nachricht:</strong> ${escHtml(booking.message || '—')}</p>
+    <p style="margin-top:12px"><strong>Datum:</strong> ${escHtml(dateStr)} ${escHtml(booking.booking_time)} Uhr</p>
+    ${meetLink ? `<p><a href="${escHtml(meetLink)}">Google Meet beitreten</a></p>` : ''}`);
 
   const icsContent = buildICS(booking, meetLink);
   const icsMime = { contentType: 'text/calendar; method=REQUEST; charset=UTF-8', content: Buffer.from(icsContent, 'utf-8') };
@@ -195,25 +198,25 @@ async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
 async function sendRescheduleEmails(booking, meetLink) {
   if (!process.env.SMTP_HOST) return;
   const dateStr = fmtDE(booking.booking_date);
-  const meetRow = meetLink ? `<p style="margin:12px 0 4px"><a href="${meetLink}" style="color:#6B5538;font-weight:600">→ Google Meet Link</a></p>` : '';
+  const meetRow = meetLink ? `<p style="margin:12px 0 4px"><a href="${escHtml(meetLink)}" style="color:#6B5538;font-weight:600">→ Google Meet Link</a></p>` : '';
 
   const bookerHtml = cardHtml(`
     <p style="color:#6B5538;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Praxura · Analysegespräch</p>
     <h1 style="font-size:24px;font-weight:400;color:#1A1611;margin-bottom:4px">Termin verschoben</h1>
-    <p style="color:#4A4036;margin-bottom:24px">Ihr Gespräch wurde erfolgreich neu terminiert, ${booking.name}.</p>
+    <p style="color:#4A4036;margin-bottom:24px">Ihr Gespräch wurde erfolgreich neu terminiert, ${escHtml(booking.name)}.</p>
     <div style="background:#F1E9D6;border-radius:8px;padding:16px 20px;margin-bottom:24px">
-      <p style="margin:4px 0;color:#1A1611"><strong>Neues Datum:</strong> ${dateStr}</p>
-      <p style="margin:4px 0;color:#1A1611"><strong>Uhrzeit:</strong> ${booking.booking_time} Uhr (Europe/Berlin)</p>
+      <p style="margin:4px 0;color:#1A1611"><strong>Neues Datum:</strong> ${escHtml(dateStr)}</p>
+      <p style="margin:4px 0;color:#1A1611"><strong>Uhrzeit:</strong> ${escHtml(booking.booking_time)} Uhr (Europe/Berlin)</p>
       <p style="margin:4px 0;color:#1A1611"><strong>Dauer:</strong> 30 Minuten · Video-Call</p>
       ${meetRow}
     </div>`);
 
   const ownerHtml = cardHtml(`
     <h2 style="font-size:18px;font-weight:600;color:#1A1611;margin-bottom:16px">Analysegespräch verschoben</h2>
-    <p><strong>Name:</strong> ${booking.name}</p>
-    <p><strong>E-Mail:</strong> <a href="mailto:${booking.email}">${booking.email}</a></p>
-    <p style="margin-top:12px"><strong>Neuer Termin:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
-    ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
+    <p><strong>Name:</strong> ${escHtml(booking.name)}</p>
+    <p><strong>E-Mail:</strong> <a href="mailto:${escHtml(booking.email)}">${escHtml(booking.email)}</a></p>
+    <p style="margin-top:12px"><strong>Neuer Termin:</strong> ${escHtml(dateStr)} ${escHtml(booking.booking_time)} Uhr</p>
+    ${meetLink ? `<p><a href="${escHtml(meetLink)}">Google Meet beitreten</a></p>` : ''}`);
 
   const icsContent = buildICS(booking, meetLink);
   const icsMime = { contentType: 'text/calendar; method=REQUEST; charset=UTF-8', content: Buffer.from(icsContent, 'utf-8') };
@@ -243,7 +246,10 @@ async function handleCreate(req, res) {
   catch { return json(res, 400, { error: 'Invalid JSON' }); }
 
   const { name, email, company, message, booking_date, booking_time } = body || {};
+  if (typeof name !== 'string' || typeof email !== 'string') return json(res, 400, { error: 'Ungültige Eingabe' });
   if (!name?.trim() || !email?.trim() || !booking_date || !booking_time) return json(res, 400, { error: 'Pflichtfelder fehlen' });
+  if (email.trim().length > 254 || !/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(email.trim())) return json(res, 400, { error: 'Ungültige E-Mail-Adresse' });
+  if (name.length > 200 || (company && String(company).length > 200) || (message && String(message).length > 2000)) return json(res, 400, { error: 'Eingabe zu lang' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(booking_date)) return json(res, 400, { error: 'Ungültiges Datum' });
   if (!/^\d{2}:\d{2}$/.test(booking_time)) return json(res, 400, { error: 'Ungültige Uhrzeit' });
 
@@ -317,9 +323,9 @@ async function handleReschedule(req, res) {
 }
 
 function handleSetupCalendar(req, res) {
-  if (req.query.secret !== process.env.SETUP_SECRET) return json(res, 403, { error: 'Forbidden' });
+  if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) return json(res, 403, { error: 'Forbidden' });
   const params = new URLSearchParams({
-    client_id: clientId,
+    client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: CAL_REDIRECT,
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
@@ -352,15 +358,18 @@ async function handleCalendarCallback(req, res) {
   res.end(`<!DOCTYPE html><html><body style="font-family:monospace;padding:40px;max-width:600px">
     <h2>✅ Google Calendar verbunden</h2>
     <p>Füge diesen Wert als <strong>GOOGLE_DEMO_CALENDAR_REFRESH_TOKEN</strong> in Vercel ein:</p>
-    <textarea style="width:100%;height:80px;padding:8px;background:#f5f5f5;border:1px solid #ccc">${tokens.refresh_token || 'ERROR: No refresh_token'}</textarea>
+    <textarea style="width:100%;height:80px;padding:8px;background:#f5f5f5;border:1px solid #ccc">${escHtml(tokens.refresh_token || 'ERROR: No refresh_token')}</textarea>
     <p style="color:#666;font-size:12px">Vercel → Settings → Environment Variables → Add new → Redeploy</p>
   </body></html>`);
 }
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { action } = req.query;
+  if (req.method === 'POST' && (action === 'create' || action === 'reschedule')) {
+    if (!allowMailRequest(req, res, `demo-${action}`)) return;
+  }
 
   if (action === 'availability' && req.method === 'GET') return handleAvailability(req, res);
   if (action === 'create'       && req.method === 'POST') return handleCreate(req, res);
@@ -370,3 +379,5 @@ export default async function handler(req, res) {
 
   return json(res, 400, { error: 'Unknown action' });
 }
+
+export default withServerlessTelemetry('demo-booking', handler);

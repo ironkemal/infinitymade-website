@@ -243,3 +243,11 @@ Im Repo liegen unter `supabase/migrations/` nur **10** Dateien; die Datenbank
 kennt **195**. Der Rest wurde direkt über MCP oder den SQL-Editor angewendet.
 `supabase/migrations/` ist deshalb **keine** verlässliche Quelle für den
 Schemastand — diese Dateien hier sind es.
+
+## Lokal vorbereitete Migrationen (16.10.2026, noch nicht SaaS-angewandt)
+
+`0079_ausfall_zahlung_faelligkeit.sql` ergänzt ein bei Ausstellung festgeschriebenes `ausfallrechnungen.faellig_am` und atomare Status-/Journalbuchung. `0080_request_approve_atomic.sql` ergänzt die atomare manuelle Anfragebestätigung. Beide RPCs sind ausschließlich für `service_role` freigegeben. Lokale PostgreSQL-Nachweise und Releasevoraussetzungen stehen im Prüfbericht unter `Claude outputs/2026-10-16-sechs-fixes/`.
+
+Die obigen Live-Snapshots bleiben auf dem ausgewiesenen Stand; sie behaupten keine bereits angewandte Änderung. Vor SaaS-Backend-Release müssen neue Migrationen autorisiert angewandt, PostgREST aktualisiert und beide Strukturdokumente aus der tatsächlichen Datenbank neu erzeugt werden. Aktuelles `/health/ready` allein weist neue RPCs nicht nach. Keine manuelle Änderung historischer Migrationsdateien.
+
+`0081_warteliste_referenzen_abrechnungsrechte.sql` ergänzt die Mandantenprüfung verknüpfter Wartelistendaten und standortbezogene Abrechnungsrechte für Rechnungen und Zahlungszeilen. Änderungen an Gruppenrechten und individuellen Freigaben bleiben dem Inhaber vorbehalten; Stornos werden an die Originalbuchung derselben Rechnung gebunden. Ebenfalls nur lokal vorbereitet: Die SaaS-Snapshots oben bleiben unverändert. Aktive Mitarbeiter benötigen ein ausdrücklich bestätigtes Abrechnungsrecht am Rechnungsstandort; Rechnungen ohne Standortzuordnung bleiben dem Inhaber zugänglich. Anwendung auf SaaS und anschließender Schemaexport sind eigene Releaseschritte.

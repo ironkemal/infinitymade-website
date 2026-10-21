@@ -1249,10 +1249,14 @@
     `6` bu geçiş boyunca **her ikisini birden** karşılar (Anlage 3 §8.1.2.1 Hinweis).
   - `ZHE` alan 7 **Verordnungsbesonderheiten** Feldart **K**'dır ama koşullu bağlayıcıdır:
     *„Sofern ein Sachverhalt aus 8.1.11 zutrifft, ist der entsprechende Schlüssel zwingend
-    anzugeben."* Heilmittel'de pratikte **üç değer** uygulanır: **`1`** Zahnarzt-/KFO-
+    anzugeben."* Bisheriger enger Produktvorschlag: **`1`** Zahnarzt-/KFO-
     Verordnung · **`2`** Schwangerschaft/Entbindung · **`4`** Entlassmanagement
-    (hastane, taburculuktan sonra **7 takvim gününe kadar** reçete eder — HeilM-RL § 16a
-    Abs. 1/3).
+    (HeilM-RL §16a Abs.1/3: Versorgungszeitraum bis sieben Kalendertage;
+    Behandlungsbeginn binnen sieben, Abschluss binnen zwölf Kalendertagen nach
+    Entlassung. Keine Aussage, das Krankenhaus dürfe bis sieben Tage nach Entlassung
+    noch Verordnungen ausstellen; Original-TXT :737–760).
+    Die Originalschlüsseltabelle nennt außerdem `7` und `9`; der engere Vorschlag
+    ist keine vollständige normative Menge und keine neue Implementierungsfreigabe.
 - **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3348-3393`
   (Kap. 5.5.3.3 „SLLA: B (Heilmittel)", s. 70 — alan sırası ve Feldart'lar) ·
   `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:316-343` (§8.1.2
@@ -1275,7 +1279,7 @@
   yazıyor; **gövdede** aynı başlıklar §8.1.2.1, §8.1.11 ve §8.1.17'de duruyor. Bu dosyadaki
   bütün § atıfları **gövde numaralandırmasına** göredir (mevcut „Verordnungsart §8.1.12"
   kaydıyla da tutarlı). İçindekilerden atıf verilmez.
-- ⚠️ **7 / 8 / 9 değerleri Heilmittel'e uygulanmaz** — `8` için gerekçe belgede yazılı
+- ⚠️ **`8` ist ausdrücklich Hilfsmittel; `7/9` bleiben Produkt-/Anwendbarkeitsfrage** — `8` için gerekçe belgede yazılı
   (*„nur Hilfsmittel"*, §8.1.11). `7` (Terminservicestellen) ve `9` (Modellvorhaben
   § 64d SGB V) için belge bir Leistungsbereich kısıtı **yazmıyor**; bunlar `gkv-302`'nin
   değerlendirmesidir, kaynaktan alıntı değildir. Koda girerken bu ayrım korunur.
@@ -1299,37 +1303,44 @@
   üretiminden önce kesilmeli (preflight'ın işi — `api-backend/billing/dta/preflight.js`).
 - **Kapsam:** tüm Heilmittelerbringer
 
-### LHB Genehmigungskennzeichen (SKZ) yalnız § 8 Abs. 3 vakasında dolar
-- **Kural:** Langfristiger Heilmittelbedarf'ta (LHB/BVB) **kural, SKZ'nin boş olmasıdır.**
-  HeilM-RL **§ 8 Abs. 2**: Anlage-2 listesindeki tanı + ilgili Diagnosegruppe birleşiminde
-  langfristiger Heilmittelbedarf **varsayılır** ve *„Ein Antrags- und Genehmigungsverfahren
-  findet nicht statt."* → Genehmigungskennzeichen boş kalır ve bu **doğrudur**; vakaların
-  ezici çoğunluğu budur. SKZ segmenti yalnız **§ 8 Abs. 3** istisnasında zorunludur:
-  tanı Anlage 2'de **yok**, hasta kasaya **kendi** başvurmuş ve kasa genehmigung vermiştir.
-  O hâlde `SKZ` üç alanını taşır — Genehmigungskennzeichen (..20 AN), Datum der Genehmigung
-  (8 N), Art der Genehmigung (2 AN). **Art der Genehmigung Heilmittel'de sabit `B2`'dir**
-  („Genehmigung gem. § 8 Abs. 3 HeilM-RL"); aynı Leistungsbereich'te **`B1` nicht belegt**,
-  yani Heilmittel'de asla yazılmaz.
-- **Kaynak:** `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:453-461`
-  (§ 8 Abs. 2 ve Abs. 3) · `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:2876-2881`
-  (Kap. 5.5.3.3, SKZ segmenti, s. 72-73 — *„Das Segment ist je Abrechnungsfall einmal zu
-  übermitteln, wenn eine Kostenzusage/Genehmigung vorliegt."*) ·
-  `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:1279-1305` (§8.1.17
-  Art der Genehmigung: `B1 = nicht belegt`, `B2 = Genehmigung gem. § 8 Abs. 3`)
-- **Geçerlilik:** 01.10.2025 (Anlage 1/3 V21) · HeilM-RL iK 05.08.2025
-- **Kodda:** ⚠️ **yazıcı taraf hazır, veri kaynağı yok.** `api-backend/billing/dta/builder.js:210-216`
-  (`if (verordnung.genehmigung) { buildSLLA_SKZ(...) }`) →
-  `api-backend/billing/dta/segments.js:318-328`. Ama `verordnung.genehmigung`'u kuran
-  **hiçbir yer yok** → SKZ bugün hiç üretilmiyor. Eksik olan iki DB kolonu:
-  `genehmigungsnummer`, `genehmigungsdatum` (`art` sabit `B2` olduğu için üçüncü kolon
-  gerekmez). `prescription_documents.art='lhb_genehmigung'` bu vakayı **zaten tanıyor**
-  (`db/SCHEMA.sql:2055` CHECK · yükleyen yol `module/verordnung-nachweis.js:116,128`) —
-  yani belge ekleniyor, ama numarası DTA'ya taşınmıyor.
-- **Kapsam:** tüm Heilmittelerbringer, Verordnungsart `04` (§ 7 Abs. 6 HeilM-RL)
-- 🟠 **Önerilen kapı (uygulanmadı, Ops #290):** `rezept_typ='lhb_bvb'` **ve** ekli bir
-  `lhb_genehmigung` belgesi var **ve** SKZ boşsa → DTA üretiminden **önce uyarı**. Sert ret
-  değil uyarı, çünkü § 8 Abs. 2 vakasında boş SKZ doğrudur — sert ret meşru dosyayı
-  keserdi. Amaç sessiz Absetzung riskini görünür kılmak.
+### Heilmittel-Kostenzusage / Genehmigung (SKZ)
+- **Regel:** Liegt eine Kostenzusage/Genehmigung vor, ist SKZ einmal je Abrechnungsfall
+  zu übermitteln; ohne entsprechenden Sachverhalt entfällt das Segment. Innerhalb
+  eines vorhandenen SKZ sind Kennzeichen/Aktenzeichen (1–20 AN), Genehmigungsdatum
+  (JJJJMMTT, 8 N) und Genehmigungsart (2 AN) Pflicht. Ein LHB-/BVB-Flag allein belegt
+  keine Genehmigung und begründet keine pauschale SKZ-Pflicht.
+- **Heilmittel-Schlüssel:** `B1` ist unbelegt. `B2` bezeichnet Genehmigung nach
+  § 8 Abs. 3 HeilM-RL Ärzte **oder § 7 Abs. 1 HeilM-RL Zahnärzte**. Fälle ohne passenden
+  Heilmittel-Schlüssel nicht durch geratenen Wert oder Hilfsmittel-Schlüssel ersetzen.
+  HeilM-RL § 8 Abs. 2 sieht für dort erfasste Fälle kein Antrags-/Genehmigungsverfahren
+  vor; Abs. 3 regelt individuelle Entscheidung auf Antrag. Kein unbelegtes
+  Mehrheitsargument und keine Gleichsetzung aller BVB-Fälle mit § 8 Abs. 2.
+- **Originalquellen:**
+  `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3506-3535`
+  (Kap. 5.5.3.3 SLLA B/Heilmittel, Seiten 72–73; Häufigkeit auch :3013–3015) ·
+  `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:1279-1305`
+  (§ 8.1.17, vollständiger B2-Bezug) ·
+  `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:453-461`
+  (§ 8 Abs. 2/3). Frühere A1-Stelle :2876–2881 gehört zu **Hilfsmittel** und wurde
+  am 21.10.2026 nach GKV-/Wissensbank-Beratung korrigiert.
+- **Version:** Anlage 1/3 TP5 V21, anzuwenden ab 01.10.2025; HeilM-RL iK 05.08.2025.
+  Veröffentlichungsindex am 21.10.2026 gegen offizielle GKV-/G-BA-Seiten geprüft;
+  kein neuer Originaldownload oder vollständiger PDF-Bytevergleich.
+- **Codebezug, lokal 21.10.2026:** bestehender Writer
+  `api-backend/billing/dta/builder.js:583-589` → `dta/segments.js:349-358`;
+  Standard-/Podologiemapper `api-backend/billing/api/abrechnung.routes.js:646-677,3724-3750`
+  liefern diesen Datenvertrag noch nicht. `prescription_documents` kennt bereits
+  `lhb_genehmigung`; ein Dokumenttyp ersetzt keine bestätigten DTA-Feldwerte.
+  Persistenzform und Zahl neuer Spalten sind **nicht beschlossen**.
+- **Umfang:** Heilmittel-SLLA-B. Genehmigung nicht pauschal mit Verordnungsart `04`
+  gleichsetzen; bestehender Helper `dta/zhe-kennzeichen.js:41-44` priorisiert bei
+  Blankoverordnung `05`. Mehrfachbesonderheiten und nicht abgebildete Genehmigungsfälle
+  benötigen ausdrückliche Klärung vor Implementierung.
+- **Geplante Prüfung, nicht implementiert:** Dokument-/LHB-Hinweise bei fehlenden
+  bestätigten Genehmigungswerten zur Prüfung anzeigen; kein pauschaler harter Fehler
+  allein wegen LHB/BVB oder Anhang. Unvollständiges ausdrücklich erfasstes SKZ gezielt
+  zurückweisen. Datenvertrag und offene Entscheidungen:
+  `konsey/tutanak/2026-10-21-ops-290-datenvertrag.md`.
 
 ### Abrechnungscode 20 Podologie'yi kapsamaz
 - **Kural:** Kostenträgerdatei-Routing'inde Gruppenschlüssel 20 yalnız Abrechnungscode 21-29'u

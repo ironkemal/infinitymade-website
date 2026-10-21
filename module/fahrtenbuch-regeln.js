@@ -15,9 +15,9 @@
  * Patientendaten in das reguläre Fahrtenbuch einzumischen.
  *
  * Referenzbildung:
- * Die Referenz (z. B. "P-A1B2C3D4") wird deterministisch aus `booking_id` abgeleitet:
- * Sie ist je Fahrt eindeutig (UNIQUE), bereits beim Anlegen des Termins bekannt,
- * absolut stabil und erfordert keine zusätzliche Spalte in der Datenbank.
+ * Neue Referenzen enthalten die vollständige Buchungs-ID (32 Hex-Zeichen).
+ * Gespeicherte Kurzreferenzen und Altzeilen bleiben kompatibel; mehrdeutige
+ * Kurzreferenzen blockieren den Export statt historische Zuordnungen umzubenennen.
  */
 
 export const FAHRT_ZWECK = 'Patientenbesuch';
@@ -25,20 +25,41 @@ export const FAHRT_ZWECK = 'Patientenbesuch';
 export const PATIENTENVERZEICHNIS_HINWEIS =
   'Das Patientenverzeichnis enthält Gesundheitsdaten (Patientennamen und Anschriften) und wird nur auf Anforderung des Finanzamts herausgegeben.';
 
-/**
- * Leitet die Patientenreferenz deterministisch aus bookingId ab:
- * 'P-' + erste 8 Hex-Zeichen (Großbuchstaben).
- * Ungültige oder zu kurze Werte liefern einen leeren String.
- * @param {string|null|undefined} bookingId
- * @returns {string}
- */
+/** Vollständige UUID für neue Fahrten; achtstellige Legacy-IDs bleiben gültig. */
 export function fahrtReferenz(bookingId) {
   if (typeof bookingId !== 'string') return '';
-  const clean = bookingId.replace(/-/g, '').trim();
-  if (clean.length < 8) return '';
-  const first8 = clean.slice(0, 8);
-  if (!/^[0-9a-fA-F]{8}$/.test(first8)) return '';
-  return 'P-' + first8.toUpperCase();
+  const clean = bookingId.trim().replace(/-/g, '').toUpperCase();
+  if (!/^(?:[0-9A-F]{8}|[0-9A-F]{32})$/.test(clean)) return '';
+  return 'P-' + clean;
+}
+
+/**
+ * Einheitliche Referenz für gespeicherte Fahrten, Anzeige und alle Exporte.
+ * Nur zur Buchungs-ID passende gespeicherte Referenzen werden übernommen.
+ * Altzeilen ohne gespeicherte Referenz behalten ihre historische Kurzreferenz.
+ */
+export function fahrtZeilenReferenz(row) {
+  const full = fahrtReferenz(row?.booking_id);
+  if (!full) return '';
+  const legacy = full.slice(0, 10);
+  const saved = /^Patientenbesuch \(s\. Verzeichnis Nr\. (P-(?:[0-9A-F]{8}|[0-9A-F]{32}))\)$/i
+    .exec(String(row?.zielort || '').trim())?.[1]?.toUpperCase();
+  return saved === full || saved === legacy ? saved : legacy;
+}
+
+/** Verhindert mehrdeutige Verzeichnisse, ohne bestehende Referenzen umzubenennen. */
+function pruefeReferenzZuordnung(rows) {
+  const buchungen = new Map();
+  for (const row of rows) {
+    const ref = fahrtZeilenReferenz(row);
+    const booking = fahrtReferenz(row?.booking_id);
+    if (!ref || !booking) continue;
+    if (buchungen.has(ref) && buchungen.get(ref) !== booking) {
+      throw new Error('Export gesperrt: Die alte Fahrtenreferenz ' + ref +
+        ' gehört zu mehreren Terminen. Bitte die historische Zuordnung vor dem Export klären.');
+    }
+    buchungen.set(ref, booking);
+  }
 }
 
 /**
@@ -64,7 +85,8 @@ export function fahrtZweckUndZiel(bookingId) {
  */
 export function fahrtAnzeigeText(row) {
   if (row && (row.lead_id || /^Hausbesuch\b/i.test(String(row.zweck || '')))) {
-    return fahrtZweckUndZiel(row.booking_id);
+    const ref = fahrtZeilenReferenz(row);
+    return { zweck: FAHRT_ZWECK, zielort: ref ? 'Patientenbesuch (s. Verzeichnis Nr. ' + ref + ')' : FAHRT_ZWECK };
   }
   return { zweck: row?.zweck || '', zielort: row?.zielort || '' };
 }
@@ -170,6 +192,7 @@ export const GEAENDERT_JA = 'ja (s. Änderungsprotokoll)';
  */
 export function fahrtenbuchCsv(rows, aenderungen) {
   const list = Array.isArray(rows) ? rows : [];
+  pruefeReferenzZuordnung(list);
   const lines = [KOPFZEILE_FAHRTENBUCH];
   const geaendert = Array.isArray(aenderungen)
     ? new Set(aenderungen.map(a => a && a.fahrt_id).filter(Boolean))
@@ -177,7 +200,7 @@ export function fahrtenbuchCsv(rows, aenderungen) {
 
   for (const row of list) {
     if (!row) continue;
-    const ref = fahrtReferenz(row.booking_id);
+    const ref = fahrtZeilenReferenz(row);
     const datum = formatiereDatum(row.fahrt_started_at);
     const kennzeichen = row.kennzeichen_snapshot || '';
     const fahrer = row._therapist || '';
@@ -243,8 +266,8 @@ const ZEIT_FELDER = new Set(['fahrt_started_at', 'fahrt_arrived_at', 'fahrt_ende
  * Patientenschutz wie im Fahrtenbuch: Altzeilen „Hausbesuch <Name>" werden
  * maskiert, Notizen werden nie im Klartext ausgegeben.
  * @param {Array<object>} aenderungen Zeilen aus fahrten_aenderungen
- * @param {{namen?:Object<string,string>, referenzen?:Object<string,string>}} [opts]
- *   namen: userId → Anzeigename · referenzen: fahrt_id → booking_id
+ * @param {{namen?:Object<string,string>, referenzen?:Object<string,string|object>}} [opts]
+ *   namen: userId → Anzeigename · referenzen: fahrt_id → Fahrtzeile (booking_id-Strings bleiben legacy-kompatibel)
  * @returns {string}
  */
 export function aenderungsprotokollCsv(aenderungen, opts = {}) {
@@ -254,6 +277,9 @@ export function aenderungsprotokollCsv(aenderungen, opts = {}) {
     .filter(Boolean)
     .slice()
     .sort((a, b) => String(a.geaendert_am || '').localeCompare(String(b.geaendert_am || '')));
+  const referenzZeilen = Object.values(referenzen).map(value =>
+    typeof value === 'string' ? { booking_id: value } : value).filter(Boolean);
+  pruefeReferenzZuordnung(referenzZeilen);
   const lines = [KOPFZEILE_AENDERUNGSPROTOKOLL];
   const person = (id) => (id ? (namen[id] || 'Benutzer ' + String(id).slice(0, 8)) : 'System');
 
@@ -272,7 +298,8 @@ export function aenderungsprotokollCsv(aenderungen, opts = {}) {
       csvZelle(loeschung ? 'Löschung' : 'Änderung'),
       csvZelle(formatiereDatum(alt.fahrt_started_at)),
       csvZelle(alt.kennzeichen_snapshot || ''),
-      csvZelle(fahrtReferenz(referenzen[a.fahrt_id]))
+      csvZelle(fahrtZeilenReferenz(typeof referenzen[a.fahrt_id] === 'string'
+        ? { booking_id: referenzen[a.fahrt_id] } : referenzen[a.fahrt_id]))
     ];
     for (const [k, label] of geaenderteFelder) {
       // Fahrzeug-ID nur, wenn das Kennzeichen sie nicht schon zeigt
@@ -331,6 +358,7 @@ const KOPFZEILE_PATIENTENVERZEICHNIS = 'Referenz;Datum;Patientenname;Anschrift';
  */
 export function patientenverzeichnisCsv(rows) {
   const list = Array.isArray(rows) ? rows : [];
+  pruefeReferenzZuordnung(list);
   const lines = [KOPFZEILE_PATIENTENVERZEICHNIS];
 
   for (const row of list) {
@@ -341,7 +369,7 @@ export function patientenverzeichnisCsv(rows) {
     const name = ermittleName(row.leads, row.bookings);
     if (!name) continue;
 
-    const ref = fahrtReferenz(row.booking_id);
+    const ref = fahrtZeilenReferenz(row);
     const datum = formatiereDatum(row.fahrt_started_at);
     const anschrift = ermittleAnschrift(row.leads);
 

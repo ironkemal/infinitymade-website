@@ -33,6 +33,10 @@ export const PROTECTED = [
   // 0054 (02.10.2026, guvenlik S-18): Mandanten-Pruefung prescriptions <-> Patient/Arzt.
   // DEFINER, damit sie nicht an der RLS des Aufrufers haengt; drei REVOKEs.
   'prescriptions_mandant_pruefen',
+  // 0081: Wartelisten-Referenzen werden unabhängig von der Aufrufer-RLS geprüft.
+  // Triggerfunktion, kein öffentlich aufrufbarer RPC.
+  'warteliste_referenzen_pruefen',
+  'rechnung_zahlung_storno_referenz_pruefen',
   // 0055 (02.10.2026, guvenlik S-38): Sitzungen fremder Nutzer loeschen bzw.
   // Konten einem Inhaber zuordnen — per RPC fuer authenticated waere beides
   // Konto-Uebernahme. Nur service_role.

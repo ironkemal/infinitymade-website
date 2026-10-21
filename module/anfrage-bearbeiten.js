@@ -138,6 +138,11 @@ function formularHtml(req, team, leistungen) {
       ${therapeuten}
     </select>
 
+    ${zeitwunschAus(req.notizen) ? `
+    <div id="anfZeitwunsch" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--bg-hover,rgba(0,0,0,.05));font-size:13px;line-height:1.5">
+      <strong>Wunsch des Patienten</strong><br>${escapeHtml(zeitwunschAus(req.notizen)).replace(/\n/g, '<br>')}
+    </div>` : ''}
+
     <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
       <div style="flex:1;min-width:140px">
         <label class="form-label" for="anfDatum">Datum</label>
@@ -164,6 +169,16 @@ function formularHtml(req, team, leistungen) {
     <label class="form-label" for="anfNotiz" style="margin-top:12px">Interne Notiz</label>
     <textarea id="anfNotiz" class="form-input" rows="2" maxlength="500" style="width:100%;resize:vertical">${escapeHtml(req.notizen || '')}</textarea>
   `;
+}
+
+/**
+ * Zeitwunsch aus der Notiz einer Widget-Anfrage („Zeit: Mo, Mi · Vormittag“, „Wie bald: …“).
+ * Das Widget fragt kein Datum; die Praxis muss es hier festlegen und braucht den Wunsch dabei vor Augen.
+ */
+export function zeitwunschAus(notizen) {
+  return String(notizen || '').split('\n')
+    .filter((z) => /^(Zeit|Wie bald|Erreichbarkeit):/.test(z))
+    .join('\n');
 }
 
 /** Nur die tatsächlich geänderten Felder einsammeln. */

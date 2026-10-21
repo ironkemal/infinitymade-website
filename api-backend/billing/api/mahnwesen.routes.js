@@ -10,6 +10,7 @@ import { renderMahnung } from '../pdf/mahnung.template.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { pruefeStufe, LEVEL_DAYS } from '../mahnwesen/stufe.js';
+import { gespeicherteAusfallFaelligkeit, ausfallIstFaellig } from '../ausfall/faelligkeit.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -49,8 +50,6 @@ function addDays(date, days) {
   return d;
 }
 
-// Zahlungsziel der Ausfallrechnung — identisch zu ausfall.routes.js.
-const AUSFALL_ZAHLUNGSZIEL_TAGE = 14;
 
 // ============================================================================
 // GET /api/billing/mahnwesen/offene
@@ -118,19 +117,14 @@ router.get('/mahnwesen/offene', async (req, res) => {
     const { data: afRows, error: afErr } = await supabase
       .from('ausfallrechnungen')
       .select(`
-        id, rechnung_nr, amount_eur, status, created_at, leistung_datum, service_name,
+        id, rechnung_nr, amount_eur, status, created_at, faellig_am, leistung_datum, service_name,
         leads:patient_id (first_name, last_name, street, plz, city)
       `)
       .eq('owner_id', tenantId)
       .eq('status', 'offen');
     if (afErr) return res.status(500).json({ error: 'ausfallrechnungen: ' + afErr.message });
 
-    const jetzt = Date.now();
-    const afFaellig = (afRows || []).filter(af => {
-      if (!af.created_at) return false;
-      const faellig = addDays(new Date(af.created_at), AUSFALL_ZAHLUNGSZIEL_TAGE);
-      return faellig.getTime() <= jetzt;
-    });
+    const afFaellig = (afRows || []).filter(af => ausfallIstFaellig(af));
 
     // 4. Bisherige Mahnungen zu beiden Forderungsarten
     const afIds = afFaellig.map(a => a.id);
@@ -248,7 +242,7 @@ router.post('/mahnwesen/create', async (req, res) => {
       const { data, error } = await supabase
         .from('ausfallrechnungen')
         .select(`
-          id, owner_id, patient_id, amount_eur, status, created_at, rechnung_nr,
+          id, owner_id, patient_id, amount_eur, status, created_at, faellig_am, rechnung_nr,
           leads:patient_id (first_name, last_name, street, plz, city)
         `)
         .eq('id', ausfallrechnungId)
@@ -258,13 +252,17 @@ router.post('/mahnwesen/create', async (req, res) => {
       if (data.status !== 'offen') {
         return res.status(400).json({ error: 'Diese Ausfallrechnung ist nicht mehr offen.' });
       }
+      if (!gespeicherteAusfallFaelligkeit(data)) {
+        return res.status(409).json({ error: 'Altbeleg: ursprüngliches Zahlungsziel nicht nachgewiesen. Keine automatische Mahnung möglich.' });
+      }
+      if (!ausfallIstFaellig(data)) return res.status(400).json({ error: 'Diese Ausfallrechnung ist noch nicht überfällig.' });
       af = data; patientRow = data.leads; quelleId = data.id;
     } else {
       const { data, error: rxErr } = await supabase
         .from('prescriptions')
         .select(`
           id, owner_id, patient_id, zuzahlung_eur, zuzahlung_befreit,
-          abrechnung_id, ausstellungsdatum,
+          abrechnung_id, ausstellungsdatum, zuzahlung_kassiert_am,
           leads:patient_id (first_name, last_name, street, plz, city, versichertennummer)
         `)
         .eq('id', prescriptionId)
@@ -282,11 +280,12 @@ router.post('/mahnwesen/create', async (req, res) => {
     // 1b. Mahnstufe gegen die Historie prüfen. Vorher bestimmte der Aufrufer sie
     //     frei — Stufe 3 ("letzte Mahnung", kündigt das Inkassobüro an) liess
     //     sich als allererste Mahnung verschicken.
-    const { data: bisherige } = await supabase
+    const { data: bisherige, error: historieErr } = await supabase
       .from('mahnungen')
       .select('level')
       .eq('owner_id', tenantId)
       .eq(istAusfall ? 'ausfallrechnung_id' : 'prescription_id', quelleId);
+    if (historieErr) return res.status(500).json({ error: 'mahnungen: ' + historieErr.message });
 
     const stufenPruefung = pruefeStufe(level, bisherige || []);
     if (!stufenPruefung.ok) return res.status(400).json({ error: stufenPruefung.fehler });
@@ -309,18 +308,49 @@ router.post('/mahnwesen/create', async (req, res) => {
     const neue_faelligkeit = addDays(now, daysToAdd);
 
     // Ursprüngliche Fälligkeit und Rechnungsnummer je Forderungsart.
-    // Zuzahlung: Ausstellungsdatum + 14 Tage, Nummer wie in der
-    // Zuzahlungsrechnung. Ausfall: Rechnungsdatum + 14 Tage, Nummer AF-xxxx
-    // wie in ausfall.routes.js.
+    // Zuzahlung: Ausstellungsdatum + 14 Tage. Ausfall: ausschließlich die
+    // bei Ausstellung gespeicherte Fälligkeit, unabhängig von aktuellen Vorlagen.
     const original_faelligkeit = istAusfall
-      ? addDays(new Date(af.created_at), AUSFALL_ZAHLUNGSZIEL_TAGE)
+      ? gespeicherteAusfallFaelligkeit(af)
       : (rx.ausstellungsdatum ? addDays(new Date(rx.ausstellungsdatum), 14) : now);
 
     const original_rechnung_nr = istAusfall
       ? `AF-${String(af.rechnung_nr).padStart(4, '0')}`
       : `ZU-${rx.id.slice(0, 8).toUpperCase()}`;
 
-    const betrag = istAusfall ? Number(af.amount_eur) : rx.zuzahlung_eur;
+    let betrag = istAusfall ? Number(af.amount_eur) : Number(rx.zuzahlung_eur);
+    if (!istAusfall) {
+      // Direkt vor dem Schreiben erneut prüfen: Zwischen Auswahl und Erstellung
+      // kann bereits kassiert worden sein. Ohne gemeinsame DB-Transaktion bleibt
+      // eine parallele Zahlung nach dieser Prüfung weiterhin möglich.
+      const { data: aktuell, error: aktuellErr } = await supabase
+        .from('prescriptions')
+        .select('id, zuzahlung_eur, zuzahlung_befreit, abrechnung_id, zuzahlung_kassiert_am')
+        .eq('owner_id', tenantId)
+        .eq('id', rx.id)
+        .maybeSingle();
+      if (aktuellErr) return res.status(500).json({ error: 'prescriptions: ' + aktuellErr.message });
+      if (!aktuell) return res.status(404).json({ error: 'Prescription not found' });
+      if (!aktuell.abrechnung_id || aktuell.zuzahlung_befreit || !(aktuell.zuzahlung_eur > 0)) {
+        return res.status(400).json({ error: 'No unpaid Zuzahlung on this prescription' });
+      }
+      const { data: belege, error: belegErr } = await supabase
+        .from('belegliste')
+        .select('prescription_id, amount_eur')
+        .eq('owner_id', tenantId)
+        .in('type', ['zuzahlung', 'storno'])
+        .in('prescription_id', [rx.id]);
+      if (belegErr) return res.status(500).json({ error: 'belegliste: ' + belegErr.message });
+      const saldo = saldoJeRezept(belege || []).get(rx.id) || 0;
+      if (istZuzahlungBezahlt({
+        zuzahlungEur: aktuell.zuzahlung_eur,
+        kassiertAm: aktuell.zuzahlung_kassiert_am,
+        saldo,
+      })) {
+        return res.status(400).json({ error: 'Diese Zuzahlung ist bereits bezahlt.' });
+      }
+      betrag = Math.round((Number(aktuell.zuzahlung_eur) - saldo) * 100) / 100;
+    }
 
     // 4. Insert into mahnungen (mahnung_nr auto-assigned via DB trigger → insert null/0)
     const { data: mahnungRow, error: insErr } = await supabase

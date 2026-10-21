@@ -91,7 +91,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, buchungskonten')
+    .select('id, role, owner_id, is_active')
     .eq('id', u.user.id)
     .maybeSingle();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -100,20 +100,67 @@ async function resolveAuth(req, res) {
     ? profile.owner_id
     : profile.id;
 
-  return { user: u.user, profile, tenantId };
+  return { user: u.user, profile, tenantId, token };
+}
+
+/** Beide Zahlungswege prüfen dieselbe Rechnung und deren verbindlichen Standort. */
+async function rechnungFuer(req, res, auth) {
+  if (!['owner', 'employee'].includes(auth.profile.role)
+      || (auth.profile.role === 'employee'
+        && (!auth.profile.owner_id || auth.profile.is_active !== true))) {
+    res.status(403).json({ error: 'Forbidden' });
+    return null;
+  }
+
+  const { data: inv, error } = await supabase
+    .from('invoices')
+    .select('id, owner_id, business_id, total_patient, status, payment_status, invoice_number, patient_name, prescription_id, verordnung_id')
+    .eq('id', req.params.id)
+    .eq('owner_id', auth.tenantId)
+    .maybeSingle();
+  if (error) { res.status(500).json({ error: error.message }); return null; }
+  if (!inv || inv.owner_id !== auth.tenantId) {
+    res.status(404).json({ error: 'Rechnung nicht gefunden' });
+    return null;
+  }
+  if (auth.profile.role === 'owner' && inv.owner_id === auth.user.id) return inv;
+
+  if (!inv.business_id) { res.status(403).json({ error: 'Forbidden' }); return null; }
+  const { data: owner, error: ownerErr } = await supabase
+    .from('profiles').select('role').eq('id', inv.owner_id).maybeSingle();
+  const { data: business, error: businessErr } = await supabase
+    .from('businesses').select('id, owner_id')
+    .eq('id', inv.business_id).eq('owner_id', inv.owner_id).maybeSingle();
+  if (ownerErr || owner?.role !== 'owner' || businessErr
+      || business?.id !== inv.business_id || business?.owner_id !== inv.owner_id) {
+    res.status(403).json({ error: 'Forbidden' });
+    return null;
+  }
+
+  // get_my_permissions wertet auth.uid() aus und vereinigt Gruppen + Overrides.
+  // Deshalb zwingend Nutzer-JWT statt Service-Role-Kontext verwenden.
+  const userClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { headers: { Authorization: `Bearer ${auth.token}` } },
+  });
+  const { data: permissions, error: permissionErr } = await userClient
+    .rpc('get_my_permissions', { p_business_id: inv.business_id });
+  if (permissionErr || !Array.isArray(permissions)
+      || !permissions.some(p => p?.module === 'abrechnung' && p.has_access === true)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return null;
+  }
+  return inv;
 }
 
 /**
  * Der Kontenrahmen des Mandanten. Beim Angestellten hängt er am Inhaber, nicht
- * am eigenen Profil — deshalb wird bei Bedarf nachgeladen.
+ * am eigenen Profil. Laden erst nach erfolgreicher Rechnungs- und Rechteprüfung.
  */
 async function kontenFuer(auth) {
-  let roh = auth.profile.buchungskonten;
-  if (auth.tenantId !== auth.profile.id) {
-    const { data } = await supabase
-      .from('profiles').select('buchungskonten').eq('id', auth.tenantId).maybeSingle();
-    roh = data?.buchungskonten;
-  }
+  const { data } = await supabase
+    .from('profiles').select('buchungskonten').eq('id', auth.tenantId).maybeSingle();
+  const roh = data?.buchungskonten;
   const eigene = Array.isArray(roh)
     ? roh
       .filter(k => k && typeof k === 'object')
@@ -149,14 +196,8 @@ router.get('/rechnungen/:id/zahlungen', async (req, res) => {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
 
-    const { data: inv, error: invErr } = await supabase
-      .from('invoices')
-      .select('id, owner_id, total_patient, status, payment_status, invoice_number, patient_name, prescription_id, verordnung_id')
-      .eq('id', req.params.id)
-      .maybeSingle();
-    if (invErr) return res.status(500).json({ error: invErr.message });
-    if (!inv) return res.status(404).json({ error: 'Rechnung nicht gefunden' });
-    if (inv.owner_id !== auth.tenantId) return res.status(403).json({ error: 'Forbidden' });
+    const inv = await rechnungFuer(req, res, auth);
+    if (!inv) return;
 
     const { data: zeilen, error: zErr } = await supabase
       .from('rechnung_zahlungen')
@@ -203,6 +244,8 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
+    const inv = await rechnungFuer(req, res, auth);
+    if (!inv) return;
 
     const {
       eingegangener_betrag,
@@ -246,8 +289,8 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
     const zahlart = ZAHLART_JE_KATEGORIE[gegenkonto.kategorie] || 'sonstiges';
 
     const { data, error } = await supabase.rpc('rechnung_zahlung_buchen', {
-      p_invoice_id: req.params.id,
-      p_owner_id: auth.tenantId,
+      p_invoice_id: inv.id,
+      p_owner_id: inv.owner_id,
       p_created_by: auth.user.id,
       p_betrag_eur: betrag,
       p_zahlungsdatum: zahlungsdatum || null,

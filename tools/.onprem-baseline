@@ -72,7 +72,11 @@ onprem_image=9
 # Kapı bu dosyaya ilk kez bakıyor; hedef sıfır DEĞİL — SaaS'ın kendi bulut
 # adresleri orada meşru. Amaç sessiz büyümeyi yakalamak, listeyi boşaltmak
 # değil. onprem/Caddyfile bu listeyi KOPYALAMAZ, kendi dar CSP'sini tutar.
-csp_host=53
+# ⚠️ 11.10.2026 — 53→55, BİLİNÇLİ (O-190, Termin-Widget). Artan 2 satır: iki CSP-Kuralı
+# (vercel.json, praxura.de'ye ait / başka host) `connect-src` içinde SaaS backend adresini
+# taşıyor — widget iframe'i apiBase'e doğrudan fetch ediyor. Kutuda adres 'self' (Caddyfile).
+# onprem 11.10.2026 değerlendirmesi: meşru SaaS adresi, kutuya sızmıyor.
+csp_host=55
 
 # Koda gömülü gönderen mail adresi (api-backend/). Hedef 1 (bilinçli fallback).
 # 11.09.2026 gecesi O-51/O-66 kapatıldı: altı yer artık api-backend/lib/mail.js

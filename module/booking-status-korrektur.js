@@ -1,3 +1,4 @@
+import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { emit } from './signal.js?v=20260813';
 import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260916b';
 
@@ -28,36 +29,61 @@ import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260916b
  * jemand tippen muss.
  */
 
-// Podologie zählt Einheiten über `bookings.verordnung_id` + eigene
-// Leistungsnachweise (podologie_behandlungen), Physio/Ergo/Logo über
-// `prescriptions.abrechnung_status`. Zwei Vokabulare, siehe
-// module/abrechnungsstatus.js — deshalb eine Blacklist der "raus"-Werte
-// statt einer Whitelist, die beide Vokabulare kennen müsste.
-const EINGEREICHT_STATUS = new Set([
-  'abgerechnet', 'teilabsetzung', 'abgesetzt',   // Podologie
-  'billed', 'rejected',                           // Physio/Ergo/Logo
-]);
+// Nur offene, bekannte Zustände dürfen Behandlungen zurückbuchen. Unbekannte
+// Werte dürfen nicht über statusAusTopf()s Anzeige-Fallback zu „aktiv“ werden.
+const OFFENE_STATUS = new Set([null, '', 'aktiv', 'abrechenbar', 'bereit']);
 
-/**
- * Ist die Verordnung hinter diesem Termin schon bei der Kasse eingereicht?
- * `null` als prescriptionId heisst: kein Fund, gilt als nicht gesperrt —
- * ein Termin ohne verknüpfte Verordnung kann nichts falsch abrechnen.
- */
+/** Prüft alle aktuellen Verknüpfungen; Lesefehler sperren vor jedem Schreibzugriff. */
 export async function pruefeAbrechnungssperre(supabase, booking) {
-  let prescriptionId = booking.verordnung_id || null;
-  if (!prescriptionId) {
-    const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
-    prescriptionId = ps?.prescription_id || ps?.prescriptions?.id || null;
+  try {
+    if (!booking?.id) throw new Error('Termin fehlt.');
+    let abfrage = supabase.from('bookings')
+      .select('id, owner_id, status, verordnung_id, no_show_session_links').eq('id', booking.id);
+    if (booking.owner_id) abfrage = abfrage.eq('owner_id', booking.owner_id);
+    const { data: aktuell, error: terminFehler } = await abfrage.maybeSingle();
+    if (terminFehler || !aktuell) throw new Error('Termin konnte nicht geprüft werden.');
+    const ids = new Set();
+    if (aktuell.verordnung_id) ids.add(aktuell.verordnung_id);
+    const { data: sitzungen, error: sitzungsFehler } = await supabase
+      .from('prescription_sessions').select('id, prescription_id').eq('booking_id', booking.id);
+    if (sitzungsFehler || !Array.isArray(sitzungen)) throw new Error('Sitzungen konnten nicht geprüft werden.');
+    for (const s of sitzungen) {
+      if (!s.prescription_id) throw new Error('Verknüpfte Verordnung fehlt.');
+      ids.add(s.prescription_id);
+    }
+    const links = aktuell.no_show_session_links;
+    if (links != null && !Array.isArray(links)) throw new Error('Sitzungsverknüpfungen sind ungültig.');
+    const sessionIds = [...new Set((links || []).map(l => l?.session_id))];
+    if (sessionIds.some(id => !id)) throw new Error('Sitzungsverknüpfung fehlt.');
+    if (sessionIds.length) {
+      const { data: freigegebene, error } = await supabase.from('prescription_sessions')
+        .select('id, prescription_id').in('id', sessionIds);
+      if (error || !Array.isArray(freigegebene)
+          || sessionIds.some(id => !freigegebene.some(s => s.id === id && s.prescription_id))) {
+        throw new Error('Freigegebene Sitzungen konnten nicht geprüft werden.');
+      }
+      const rezepte = new Map(freigegebene.map(s => [s.id, s.prescription_id]));
+      for (const l of links) {
+        if (l.prescription_id) ids.add(l.prescription_id);
+        ids.add(rezepte.get(l.session_id));
+      }
+      // Rückbindung und Fortschrittsprüfung verwenden ebenfalls den frischen FK.
+      aktuell.no_show_session_links = links.map(l => ({ ...l, prescription_id: rezepte.get(l.session_id) }));
+    }
+    for (const id of ids) {
+      let rezeptAbfrage = supabase.from('prescriptions').select('abrechnung_status').eq('id', id);
+      if (aktuell.owner_id) rezeptAbfrage = rezeptAbfrage.eq('owner_id', aktuell.owner_id);
+      const { data, error } = await rezeptAbfrage.maybeSingle();
+      if (error || !data) throw new Error('Verknüpfte Verordnung konnte nicht geprüft werden.');
+      const status = data.abrechnung_status ?? null;
+      if (!OFFENE_STATUS.has(status) || !['aktiv', 'abrechenbar'].includes(statusAusTopf(status))) {
+        return { gesperrt: true, status };
+      }
+    }
+    return { gesperrt: false, booking: aktuell };
+  } catch (error) {
+    return { gesperrt: true, fehler: error?.message || 'Abrechnungsprüfung fehlgeschlagen.' };
   }
-  if (!prescriptionId) return { gesperrt: false };
-
-  const { data, error } = await supabase
-    .from('prescriptions')
-    .select('abrechnung_status')
-    .eq('id', prescriptionId)
-    .maybeSingle();
-  if (error || !data) return { gesperrt: false };
-  return { gesperrt: EINGEREICHT_STATUS.has(data.abrechnung_status), status: data.abrechnung_status };
 }
 
 /**
@@ -71,13 +97,18 @@ export async function korrigiereNoShow(ctx, booking) {
   const sperre = await pruefeAbrechnungssperre(supabase, booking);
   if (sperre.gesperrt) {
     showToast(
-      'Diese Verordnung ist schon bei der Kasse eingereicht — Korrektur nur über „Verordnungen" → Abrechnungsstatus.',
+      sperre.fehler || 'Diese Verordnung ist für freie Korrekturen gesperrt — bitte „Verordnungen" → Abrechnungsstatus prüfen.',
       'error'
     );
     return false;
   }
 
-  const alterStatus = booking.status;
+  const aktuelleBuchung = sperre.booking;
+  if (aktuelleBuchung.status !== 'no_show') {
+    showToast('Termin ist nicht mehr als nicht erschienen markiert. Bitte neu laden.', 'error');
+    return false;
+  }
+  const alterStatus = aktuelleBuchung.status;
   const neuerStatus = 'completed';
 
   const { error: bkErr } = await supabase.from('bookings')
@@ -97,11 +128,11 @@ export async function korrigiereNoShow(ctx, booking) {
   //     stillschweigend wirkungslos — der Termin stuende auf `completed`, die
   //     Einheit bliebe unerbracht.
   await supabase.from('prescription_sessions').update({ status: 'done' }).eq('booking_id', booking.id);
-  await rebindeNoShowSitzungen(supabase, booking);
+  await rebindeNoShowSitzungen(supabase, aktuelleBuchung);
 
   const { data: sess } = await supabase.auth.getSession();
   const { error: logErr } = await supabase.from('booking_status_korrekturen').insert({
-    owner_id: booking.owner_id,
+    owner_id: aktuelleBuchung.owner_id,
     booking_id: booking.id,
     alter_status: alterStatus,
     neuer_status: neuerStatus,

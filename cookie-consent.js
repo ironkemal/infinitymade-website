@@ -38,39 +38,99 @@
   var KEY = 'cookie_consent';
   var ZEIT_KEY = 'cookie_consent_zeitpunkt';
   var GUELTIG_TAGE = 365;
+  var WIDERRUF_COOKIE = '__Host-praxura_consent_widerruf';
+  var widerrufAusstehend = false;
   var DS_LINK = '/datenschutz.html#reichweitenmessung';
   var geladen = false;
+  var messungErlaubt = false;
+
+  // Umami >= 2.18: auch bereits registrierte Tracker-Listener müssen nach
+  // Widerruf verstummen, selbst wenn Browser-Speicherung inzwischen fehlschlägt.
+  // https://docs.umami.is/docs/tracker-configuration#data-before-send
+  function praxuraUmamiVorSenden(_typ, payload) {
+    return messungErlaubt && widerrufMarker() === false ? payload : false;
+  }
+  window.praxuraUmamiVorSenden = praxuraUmamiVorSenden;
 
   function injectUmami() {
-    if (geladen) return;              // doppeltes Einhängen verhindern
+    if (geladen || !messungErlaubt || widerrufMarker() !== false) return;              // doppeltes Einhängen verhindern
     geladen = true;
     var s = document.createElement('script');
     s.defer = true;
     s.src = SRC;
     s.setAttribute('data-website-id', WEBSITE_ID);
+    s.setAttribute('data-before-send', 'praxuraUmamiVorSenden');
     document.head.appendChild(s);
+  }
+
+  // Ausschließlich notwendige Widerrufssperre: fester Wert, kein Bezeichner,
+  // host-only (__Host-, kein Domain), höchstens die bestehende Consent-Laufzeit.
+  // null heißt: nicht lesbar, also keine Messung. Schreibversuche werden geprüft.
+  function widerrufMarker(aktion) {
+    try {
+      if (aktion === 'loeschen' && widerrufMarker() === false) return true;
+      if (aktion) {
+        document.cookie = WIDERRUF_COOKIE + '=1; Path=/; Secure; SameSite=Lax; Max-Age='
+          + (aktion === 'setzen' ? GUELTIG_TAGE * 86400 : 0);
+      }
+      var aktiv = document.cookie.split(';').some(function (teil) {
+        return teil.trim() === WIDERRUF_COOKIE + '=1';
+      });
+      return aktion ? aktiv === (aktion === 'setzen') : aktiv;
+    } catch (_) { return null; }
+  }
+
+  // Beide Löschungen unabhängig versuchen, auch nach Teilwrites/Lesefehlern.
+  // Ein nachweislich fehlender Schlüssel reicht, um altes accepted zu entwerten.
+  function invalidiereZustimmung() {
+    try { localStorage.removeItem(KEY); } catch (_) { /* zweiten Schlüssel versuchen */ }
+    try { localStorage.removeItem(ZEIT_KEY); } catch (_) { /* unabhängig prüfen */ }
+    var ungueltig = false;
+    try { ungueltig = localStorage.getItem(KEY) !== 'accepted'; } catch (_) { /* unbestätigt */ }
+    try { ungueltig = localStorage.getItem(ZEIT_KEY) === null || ungueltig; } catch (_) { /* unbestätigt */ }
+    if (ungueltig) {
+      widerrufMarker('loeschen');
+      return true;
+    }
+    return widerrufMarker('setzen') === true;
   }
 
   // localStorage kann werfen (privater Modus, blockierte Website-Daten).
   // Im Zweifel gilt: keine Entscheidung, also keine Messung.
   function lesen() {
+    var sperre = widerrufMarker();
+    if (sperre !== false) return sperre === true ? 'declined' : null;
     try {
       var wert = localStorage.getItem(KEY);
       if (wert !== 'accepted' && wert !== 'declined') return null;
       var ts = parseInt(localStorage.getItem(ZEIT_KEY) || '0', 10);
       if (!ts) return null;                                   // Altbestand → neu fragen
       if (Date.now() - ts > GUELTIG_TAGE * 86400000) return null;  // abgelaufen → neu fragen
+      // Ein alter Opt-in darf nicht aktiviert werden, wenn der Browser dessen
+      // Widerruf nicht mehr speichern könnte. Keine Verlängerung des Zeitpunkts.
+      localStorage.setItem(KEY, wert);
       return wert;
     } catch (_) {
       return null;
     }
   }
 
+  // Rückgabe: dauerhaft sicher für Navigation, nicht zwingend „declined gespeichert“.
   function speichern(wert) {
+    if (wert === 'declined') widerrufAusstehend = true;
     try {
+      var zeitpunkt = String(Date.now());
       localStorage.setItem(KEY, wert);
-      localStorage.setItem(ZEIT_KEY, String(Date.now()));
-    } catch (_) { /* privater Modus: Entscheidung gilt nur für diese Sitzung */ }
+      localStorage.setItem(ZEIT_KEY, zeitpunkt);
+      if (localStorage.getItem(KEY) === wert && localStorage.getItem(ZEIT_KEY) === zeitpunkt) {
+        if (wert === 'declined') {
+          widerrufAusstehend = false;
+          widerrufMarker('loeschen'); // altes accepted nachweislich ersetzt
+        }
+        return true;
+      }
+    } catch (_) { /* Teilwrite und fehlgeschlagenes Readback ebenfalls invalidieren. */ }
+    return wert === 'declined' ? invalidiereZustimmung() : false;
   }
 
   function schliessen() {
@@ -118,13 +178,19 @@
 
     var ablehnen = knopf('Ablehnen', false);
     ablehnen.addEventListener('click', function () {
-      speichern('declined');
+      messungErlaubt = false;
+      var dauerhaftSicher = speichern('declined');
       schliessen();
+      // Reload nur nach verifizierter Ablehnung, Invalidierung oder Cookie-Sperre.
+      if (geladen && dauerhaftSicher) location.reload();
     });
 
     var annehmen = knopf('Akzeptieren', true);
     annehmen.addEventListener('click', function () {
       speichern('accepted');
+      // Nur ein frischer expliziter Opt-in darf die Widerrufssperre überstimmen.
+      widerrufAusstehend = false;
+      messungErlaubt = widerrufMarker('loeschen') === true;
       injectUmami();
       schliessen();
     });
@@ -137,8 +203,17 @@
   }
 
   function init() {
+    // Best effort: pagehide ist nicht garantiert. Keine Zusage über Navigation,
+    // wenn sowohl Storage als auch Cookies sämtliche Änderungen verweigern.
+    window.addEventListener('pagehide', function () {
+      if (widerrufAusstehend) speichern('declined');
+    });
+    // Widerruf in einem anderen Tab beendet die Messung auch hier (ab dem nächsten Ereignis).
+    window.addEventListener('storage', function () {
+      if (messungErlaubt && lesen() !== 'accepted') messungErlaubt = false;
+    });
     var entscheidung = lesen();
-    if (entscheidung === 'accepted') injectUmami();
+    if (entscheidung === 'accepted') { messungErlaubt = true; injectUmami(); }
     else if (entscheidung === null) zeigeBanner();
     // 'declined' → nichts tun, nicht erneut fragen (bis zum Ablauf)
 
