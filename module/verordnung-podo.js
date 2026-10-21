@@ -1020,7 +1020,7 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
         </label>
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
-        Wird beim Auswählen dauerhaft am Patienten gespeichert (Ops #244).
+        Wird beim Auswählen dauerhaft am Patienten gespeichert.
       </div>
     </div>` : '';
 

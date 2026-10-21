@@ -18,7 +18,7 @@ test('Latest filter owns table when old response arrives last',async()=>{
  assert.equal(f.requests[1].url.searchParams.get('type'),'zuzahlung');
  f.requests[1].resolve(response([row('zuzahlung',2)]));await current;
  f.requests[0].resolve(response([row('ausfall',1)]));await old;
- assert.equal(f.rows.length,1);assert.ok(f.rows[0].innerHTML.includes('zuzahlung'));assert.ok(!f.rows[0].innerHTML.includes('ausfall'));
+ assert.equal(f.rows.length,1);assert.ok(f.rows[0].innerHTML.includes('Zuzahlung'));assert.ok(!f.rows[0].innerHTML.includes('Ausfall'));
 });
 test('Stale empty response cannot hide current table',async()=>{
  const f=fixture();const old=f.load();await tick();const current=f.load();await tick();f.requests[1].resolve(response([row('zuzahlung',2)]));await current;f.requests[0].resolve(response([]));await old;assert.equal(f.dom.beleglisteEmpty.hidden,true);assert.equal(f.rows.length,1);

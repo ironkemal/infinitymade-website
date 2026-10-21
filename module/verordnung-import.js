@@ -30,7 +30,7 @@ import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20260918';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261006b';
-import { sendeAnServer } from './verordnung-maske.js?v=20261021f';
+import { sendeAnServer } from './verordnung-maske.js?v=20261021g';
 import { alsBerlinDatum } from './berlin-datum.js';
 
 // ── Spalten ─────────────────────────────────────────────────────────────

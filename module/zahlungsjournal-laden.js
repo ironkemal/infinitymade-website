@@ -1,3 +1,6 @@
+/** Anzeige der Belegart (belegliste.type, CHECK in db/SCHEMA.sql) — vorher stand „zuzahlung" roh da (canli-test 20.10.2026). */
+const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'Storno', ausfall: 'Ausfallhonorar', rechnung: 'Rechnung' };
+
 /** Latest filter request owns the rendered journal; stale responses never append. */
 export function erstelleZahlungsjournalLader({ document, supabase, API, location, fetch,
   escapeHtml, zahlartLabel, fmtEur, getUserId, showToast, triggerStorno }) {
@@ -61,7 +64,7 @@ return async function loadBelegliste() {
       tr.innerHTML = `
         <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
         <td style="color:var(--text-main);">${dateStr}</td>
-        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
+        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${escapeHtml(BELEGART[r.type] || r.type)}</span></td>
         <td style="color:var(--text-muted);">${r.zahlart ? escapeHtml(zahlartLabel(r.zahlart)) : '—'}</td>
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
