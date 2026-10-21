@@ -3,7 +3,7 @@
 > Üretim: 2026-10-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3620 fonksiyon** (3505 JS · 88 bash · 27 ps1) · 450 dosya · 42 sidebar modülü
+**3622 fonksiyon** (3507 JS · 88 bash · 27 ps1) · 450 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -479,12 +479,12 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `loadServices` — booking-request.js:529 · booking.js:176 · dashboard.js:8356 · kalender.js:643
 - `norm` — katalog-suche.js:414 · module/patienten-import.js:72 · module/termin-aktionen.js:608 · ops/tools/regroup.mjs:59
 - `onEsc` — dashboard.js:6308 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
+- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/termin-folge.js:148 · module/termin-heute.js:86
 - `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:3873 · dashboard.js:13085
 - `v` — dashboard.js:12093 · dashboard.js:12115 · dashboard.js:12135 · dashboard.js:14433
 - `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
-- `applyLang` — kalender.js:67 · login.js:53 · setup.js:86
 
 ## Shell (onprem/)
 
