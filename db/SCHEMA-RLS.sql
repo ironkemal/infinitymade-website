@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261021101246 0085_request_approve_lead
--- EXPORTED AT:        2026-10-21T10:15:00.000Z
+-- LAST MIGRATION:     20261021104136 0086_altsystem_uebernahme
+-- EXPORTED AT:        2026-10-21T10:45:00.000Z
 -- ERZEUGT AM:         2026-10-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1399
+--   table_columns:       1408
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
@@ -3557,6 +3557,7 @@ begin
   or new.betrag_gkv        is distinct from old.betrag_gkv
   or new.owner_id          is distinct from old.owner_id
   or new.created_at        is distinct from old.created_at
+  or new.herkunft          is distinct from old.herkunft
   then
     raise exception 'Dokumentierte Behandlung ist unveraenderlich (§ 630f Abs. 1 S. 2 BGB). Eine Korrektur erfolgt durch Stornierung mit Grund und eine neue Behandlungszeile.';
   end if;

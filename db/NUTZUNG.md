@@ -658,7 +658,7 @@ Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 
 
 ### `leads`
 
-47 Spalten · Status: aktiv
+52 Spalten · Status: aktiv
 Warum: **Das ist die Patientenakte.** Der Name stammt aus der Akquise-Zeit (daher `title`, `google_url`, `reviews_count`) und ist geblieben, weil ein Umbenennen jede Abfrage im Projekt anfasst.
 
 **Schreibt (10):** `beantworteAltbestand()` [update] — module/verordnung-podo.js:919 · `handleDirectAusfallrechnung()` [update] — dashboard.js:3838 · `importiere()` [insert] — module/patienten-import.js:515 · `initSchnellerfassung()` [insert] — dashboard.js:16585 · `kontoLoeschenIntern()` [delete/update] — api-backend/dsgvo/loeschen.js:75 · `leadAusAnfrage()` [insert] — api-backend/booking/lead-aus-anfrage.js:30 · `maybeOfferAppointmentConfirmEmail()` [update] — dashboard.js:6600 · `oeffnePatientenImport()` [delete/insert] — module/patienten-import.js:399 · `schritt3()` [delete] — module/patienten-import.js:536 · `verordnungPatientenAbgleich()` [update] — module/verordnung-patient-abgleich.js:19
@@ -766,7 +766,7 @@ Warum: Zwischen „Formular ausgefüllt" und „bezahlt" existiert der Account n
 
 ### `podologie_behandlungen`
 
-16 Spalten · Status: aktiv
+17 Spalten · Status: aktiv
 Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 
 **Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:194 · `behandlungStornieren()` [update] — module/podo-storno.js:91 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:492
@@ -839,7 +839,7 @@ Warum: Prüfergebnis der Rezeptvalidierung samt Übersteuerung. Getrennt von `pr
 
 ### `prescriptions`
 
-90 Spalten · Status: aktiv
+93 Spalten · Status: aktiv
 Warum: Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, Logopädie UND (seit 04.09.2026) Podologie. `therapie_bereich` unterscheidet; Podologie-Zeilen tragen zusätzlich neun aus `verordnungen` übernommene Spalten (`patient_name`, `wagner_grad`, `versichertennummer`, `behandlungsanlass`, `absetzung_*`, `storno_*`, `rezeptart`).
 
 **Schreibt (11):** `betragNullsetzen()` [update] — module/zuzahlung-befreiung.js:292 · `downloadDmrzForInvoice()` [update] — module/rechnung-dmrz.js:109 · `flipAbrechnungStatus()` [update] — dashboard.js:7548 · `kassiereZuzahlung()` [update] — dashboard.js:6330 · `kontoLoeschenIntern()` [delete] — api-backend/dsgvo/loeschen.js:75 · `kostentraegerIkZurueckschreiben()` [update] — api-backend/billing/utils/kostentraeger-frisch.js:114 · `pruefeVerordnungsfortschritt()` [update] — module/sitzungsfortschritt.js:128 · `speichereEinheiten()` [update] — module/verordnung-einheiten.js:126 · `storniereZuzahlung()` [update] — dashboard.js:6405 · `triggerStorno()` [update] — dashboard.js:16036 · `zaehler()` [update] — module/sitzungsfortschritt.js:131

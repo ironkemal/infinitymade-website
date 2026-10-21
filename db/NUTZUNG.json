@@ -10631,7 +10631,7 @@
   },
   {
    "name": "leads",
-   "spalten": 47,
+   "spalten": 52,
    "fkRaus": [
     "aerzte",
     "businesses",
@@ -14025,7 +14025,7 @@
   },
   {
    "name": "podologie_behandlungen",
-   "spalten": 16,
+   "spalten": 17,
    "fkRaus": [
     "profiles",
     "invoices",
@@ -15790,7 +15790,7 @@
   },
   {
    "name": "prescriptions",
-   "spalten": 90,
+   "spalten": 93,
    "fkRaus": [
     "abrechnung",
     "auth.users",

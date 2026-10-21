@@ -369,6 +369,15 @@
 - **Kapsam:** Podologie (DF/NF/QF/UI1/UI2 — Nagelspange dahil). Ernährungstherapie de Satz 5
   kapsamında (bizim kapsam dışı). Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2 geçerli**, bu kural
   onlara taşınmaz.
+- 🔴 **ÇELİŞKİ (21.10.2026, gkv-302) — Vertrag 12 Kalenderwochen diyor:** Vertrag nach § 125
+  Abs. 1 SGB V Podologie i.d.F. bis 16.06.2025 § 7 Abs. 7
+  (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt:628-630`): *„Die Verordnung
+  verliert bei einer Unterbrechung von 12 Kalenderwochen nach dem Tag der letzten Behandlung
+  (bei Nagelspangenbehandlungen auch Kontrolltermin) ihre Gültigkeit."* Bu kural yazılırken
+  Vertrag arşivde yoktu (W-11, 21.10.2026). HeilM-RL Satz 5 ile Vertrag § 7 Abs. 7 açıkça
+  çelişiyor; FAK Nr. 11/34 Vertrag okumasıyla da uyumlu. **Karar bekliyor (Kemal)** — kasa
+  pratiği Vertrag'ı uygular varsayımıyla, çözülene kadar >12 Kalenderwochen boşluğu en az
+  **uyarı** olmalı; kod (`frequenz-pruefung.js`) podolojide bugün hiç uyarmıyor.
 
 ### Behandlungsbeginn-Frist: 28 Kalendertage, dringlich 14 — kaçarsa Verordnung geçersiz
 - **Kural:** Tedavi Verordnungsdatum'dan itibaren **28 Kalendertage** içinde başlamalıdır;
@@ -1999,6 +2008,54 @@
   `module/podologie-abrechnung.js` (db/REGISTER.md „kein zweiter Schreibweg").
 - **Kapsam:** Podologie (Anlage 3 p); § 7 Abs. 1 ve EHE kuralı tüm Heilmittel
 
+### Podologie: Übernahme teilweise erbrachter VOs (Fall B/C) — Vorgeschichte, nachgetragene Tage, Zuzahlung (21.10.2026)
+- **Kural (Vorgeschichte):** Altsystem'de **zaten abgerechnet** VO'lardan gelen geçmiş, Behandlung
+  kaydı olmadan hasta düzeyinde tutulabilir; kural fonksiyonları yalnız `{behandlungsdatum,
+  hpnr_codes}` okur. Gereken alanlar: **(a)** hasta: *erste podologische Behandlung in der Praxis*
+  (Datum) — `darf78040` yalnız önceki 78040'a değil **her önceki Behandlung**'a bakar
+  („vor der ersten Abgabe"); bu alan 01.11.2023 Altbestand açığını da taşınan hastalar için
+  kapatır. **(b)** hasta: Datum der 78040 (varsa). **(c)** hasta: Datum der letzten 78100 —
+  takvim yılı sınırı **hasta** başınadır, nagel başına değil. **(d)** her nagel (`prescriptions.nagel`
+  değer seti, U1–U5 links/rechts): Datum der letzten Erstbefundung (78100 **veya** 78110, hangisi
+  olduğu ile) **ve** Datum des letzten 78520 Behandlungsabschluss — 78520 olmadan seri açık mı
+  kapalı mı bilinemez. Übernommen edilen VO'nun **kendi** günleri Vorgeschichte'ye yazılmaz,
+  Tag olarak nachgetragen edilir (aksi hâlde kendi 78040/78100'ünü kilitler).
+- **Kural (nachgetragene Tage):** Her gün: Datum + HPNR (+ Hausbesuch/km varsa). Therapiezeit,
+  Fußbefund ve Verlaufsdokumentation DTA alanı **değildir** (EHE = Positionsnummer, Anzahl,
+  Einzelbetrag, Leistungsdatum, Zuzahlung, km); Verlaufsdokumentation Vertrag § 3 Abs. 12 gereği
+  Altsystem'de durur. Absetzung üreten içerik kuralları (78040+78030 aynı gün, 78030 UI1/UI2'de yok,
+  78020 yalnız Komplexbehandlung, UI'de Lokalisation, gün başına bir Behandlung) **gevşetilmez**.
+  Versicherten-Unterschrift **her gün için** kağıt VO arkasında, o gün atılmış olmalı; import
+  sırasında toplu/geriye dönük imza **yasak**. 78040 Empfangsnachweis-Prüflog'u mevcut yoldan
+  (Inhaber bestätigt) geçer, atlanmaz.
+- **Kural (Zuzahlung):** DTA'daki Zuzahlung (EHE + GZF) **Soll**'dür, tahsil durumundan bağımsız.
+  Altsystem'de kassierte tutar Praxura'nın tahsil edeceği **kalan**ı düşürür; 10 € Blattgebühr
+  ilk Behandlungstag'a bağlıdır ve Altsystem'de alındıysa ikinci kez alınmaz.
+- **Kural (Ablehnung):** Bkz. aşağıdaki liste — Gün < VO-Datum · Gün > heute · ilk Gün Beginnfrist
+  dışında · Einheit toplamı > verordnete Menge · aynı gün iki Behandlung · 78040 hakkı yokken
+  78040 · seri içinde ikinci Erstbefundung · aynı DG için daha sonraki VO zaten başlamış ·
+  günler arasında > 12 Kalenderwochen (⚠️ çelişki, aşağıda) · Abschluss + 9 Kalendermonate geçmiş.
+- **Kaynak:** Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 2 (Z.80-84, „vor der ersten Abgabe") + Teil 1
+  Nr. 3 (Z.123-128 Verlaufsdokumentation) + Nr. 3 Komplexbehandlung (Z.167-171, 20 Min.) ·
+  Anlage 1c i.d.F. 01.07.2025 Teil 1 Nr. 5 I.1 (Z.236-239) · Änderungsvereinbarung 16.06.2025
+  § 3b lit. a (Z.57-59) · Vertrag § 125 Abs. 1 Podologie i.d.F. bis 16.06.2025
+  (`20250617_Podologie_Vertrag-Lesefassung.txt`): § 3 Abs. 12 (Z.317-323), § 5 Abs. 1
+  (Z.511-521, *„unmittelbar nach Erbringung … Bestätigungen im Voraus oder Globalunterschriften …
+  unzulässig"*), § 6 Abs. 3-4 (Z.560-572), § 7 Abs. 5 (Z.618-620), § 7 Abs. 7 (Z.628-630),
+  § 8 Abs. 1-4 (Z.632-656), § 17 Abs. 2 (Z.979-988, *„Abrechnungen … ausschließlich unter diesem
+  IK"*), § 18 Abs. 5 (Z.1039-1044, 9 Kalendermonate) · Podologie Anlage 3 i.d.F. 16.06.2025 lit. o
+  (Z.630-656, Unterschrift *„vor Einreichung der Abrechnung"*) · Anlage 1 TP5 V21 §5.5.3.3 EHE
+  (Z.3120-3185)
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (iK 01.07.2025) · TA V21 ab 01.10.2025
+- **Kodda:** uygulanmamış. Değişecek yerler: `module/verordnung-import.js:212` (erbracht > 0 ret) ·
+  `:214-215` (Beginnfrist `heute`'ye göre — B/C'de **ilk erbrachter Tag**'a göre ölçülmeli) ·
+  `module/eingangsbefundung-regel.js:67` `darf78040` / `:333` `darf78100` / `:449`
+  `darfErstbefundungNagel` (Vorgeschichte'yi pseudo-Behandlung olarak almalı) ·
+  `module/podologie-abrechnung.js:1082` (Therapiezeit-Pflicht Altsystem-Tag'da düşer) ·
+  `api-backend/billing/utils/podo-empfangsnachweis.js` (değişmez).
+- **Kapsam:** Podologie DF/NF/QF/UI1/UI2, yalnız Fall B/C (Original praxis'te, hiç eingereicht
+  edilmemiş, **aynı IK**)
+
 ---
 
 ### Zuzahlung = nur auf ERBRACHTE Leistungen; Vorab-Kassieren der ganzen VO unzulässig
@@ -2032,6 +2089,8 @@
 
 `gkv-302` ajanının ilk turlarında kapatılacak açık noktalar:
 
+- [ ] 🔴 **Podologie 12-Wochen-Unterbrechung — HeilM-RL § 16 Abs. 4 S. 5 vs. Vertrag § 7 Abs. 7.**
+      İki kaynak çelişiyor (21.10.2026). Karar Kemal'de; GKV-SV/Verband teyidi istenmeli.
 - [x] ~~Podologie Blankoverordnung 40 hafta — §125a sözleşmesi yürürlükte mi?~~ **KAPANDI 2026-08-05:**
       sözleşme yok, 40 hafta ileriye dönük hüküm. Konsey kararı → guard eklenecek, tablo yapılmayacak.
 - [ ] 🔴 **Ergotherapie Blanko desteklenmiyor** — sözleşme 01.04.2024'ten beri var, kod reddediyor.
