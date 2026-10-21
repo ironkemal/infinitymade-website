@@ -31,7 +31,7 @@ function fixture(rpcResult) {
   vm.runInNewContext(code, {
     app: { post: (_path, _auth, _limiter, fn) => { handler = fn; } }, requireAuthAI: () => {}, bookingRequestApprovalLimiter: () => {},
     supabase, gehoertZurPraxis: async () => true, anfrageKorrekturenPruefen: async () => ({ aenderungen: {} }),
-    createBookingsFromRequest, console: { error: () => {} },
+    createBookingsFromRequest, leadAusAnfrage: async () => 'lead-qa', console: { error: () => {} },
   });
   const res = { statusCode: 200, status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } };
   return { writes, rpcCalls, res, run: () => handler({ auth: { userId: 'owner' }, body: { request_id: 'request', owner_id: 'owner' } }, res) };

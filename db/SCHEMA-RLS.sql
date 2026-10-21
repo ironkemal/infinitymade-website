@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261017225700 0084_belegliste_storno_bindung
--- EXPORTED AT:        2026-10-18T07:30:00.000Z
--- ERZEUGT AM:         2026-10-17
+-- LAST MIGRATION:     20261021101246 0085_request_approve_lead
+-- EXPORTED AT:        2026-10-21T10:15:00.000Z
+-- ERZEUGT AM:         2026-10-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -1743,6 +1743,7 @@ DECLARE
   v_id uuid;
   v_ids jsonb := '[]'::jsonb;
   v_service_id uuid;
+  v_lead_id uuid;
 BEGIN
   IF p_actor_id IS DISTINCT FROM p_owner_id OR NOT EXISTS (
     SELECT 1 FROM public.profiles WHERE id = p_owner_id AND role = 'owner'
@@ -1785,9 +1786,17 @@ BEGIN
       OR v_row->>'start_time' IS NULL OR v_row->>'end_time' IS NULL THEN
       RAISE EXCEPTION 'Ungültiger Termin' USING ERRCODE = '22023';
     END IF;
-    INSERT INTO public.bookings(user_id, owner_id, service_id, customer_name, start_time, end_time, status)
+    -- 0085: optionale Patientenakte. Nur eine Akte DIESER Praxis (Mandantengrenze,
+    -- wie pruefeLeadId in server.js); NULL bleibt erlaubt — alter Code läuft weiter.
+    v_lead_id := NULLIF(v_row->>'lead_id', '')::uuid;
+    IF v_lead_id IS NOT NULL AND NOT EXISTS (
+      SELECT 1 FROM public.leads WHERE id = v_lead_id AND owner_id = p_owner_id
+    ) THEN
+      RAISE EXCEPTION 'Fremde Patientenakte' USING ERRCODE = '42501';
+    END IF;
+    INSERT INTO public.bookings(user_id, owner_id, service_id, customer_name, start_time, end_time, status, lead_id)
       VALUES (p_employee_id, p_owner_id, v_service_id, v_row->>'customer_name',
-        (v_row->>'start_time')::timestamptz, (v_row->>'end_time')::timestamptz, 'confirmed')
+        (v_row->>'start_time')::timestamptz, (v_row->>'end_time')::timestamptz, 'confirmed', v_lead_id)
       RETURNING id INTO v_id;
     v_ids := v_ids || jsonb_build_array(v_id);
   END LOOP;

@@ -13,6 +13,7 @@ import { createAiRouter } from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
+import { leadAusAnfrage } from './booking/lead-aus-anfrage.js';
 import { cancelRequestBookings } from './booking/cancel-request.js';
 import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
 import { validateAuthenticatedService, validateExistingBookingTherapist } from './booking/auth-guards.js';
@@ -4116,9 +4117,10 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
     if (autoConfig?.booking_auto_approve && autoTypes.includes(payment_type)
         && employee_id && await gehoertZurPraxis(employee_id, owner_id)) {
       const { data: pat } = resolvedPatientId
-        ? await supabase.from('patients').select('email, vorname, nachname').eq('id', resolvedPatientId).maybeSingle()
+        ? await supabase.from('patients').select('email, vorname, nachname, geburtsdatum, telefon').eq('id', resolvedPatientId).maybeSingle()
         : { data: null };
       const patName = pat ? `${pat.vorname} ${pat.nachname}` : 'Patient';
+      const autoLeadId = await leadAusAnfrage(supabase, { ownerId: owner_id, patient: pat, paymentType: payment_type, krankenkasse: krankenkasse || null });
 
       const autoResult = await createBookingsFromRequest({
         service_id: service_id || null,
@@ -4126,7 +4128,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         preferred_time: preferred_time || null,
         verordnung_sitzungen: verordnung_sitzungen || null,
         frequenz: frequenz || null,
-      }, owner_id, employee_id, patName);
+      }, owner_id, employee_id, patName, { leadId: autoLeadId });
 
       // Wunschtermin inzwischen belegt: NICHT automatisch bestaetigen, sondern die
       // Anfrage offen lassen — sonst haette der Patient eine Zusage ohne Termin.
@@ -4281,7 +4283,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     if (profile?.id !== owner_id) return res.status(403).json({ error: 'Nur der Praxisinhaber kann Anfragen bestätigen' });
 
     const { data: bookReq, error: reqErr } = await supabase.from('booking_requests')
-      .select('*, patients(vorname, nachname, email)')
+      .select('*, patients(vorname, nachname, email, geburtsdatum, telefon)')
       .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
     if (reqErr || !bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Anfrage wurde bereits bearbeitet' });
@@ -4304,7 +4306,9 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     const anfrage = { ...bookReq, ...aenderungen, employee_id: empId };
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
+    const leadId = await leadAusAnfrage(supabase, { ownerId: owner_id, patient: bookReq.patients, paymentType: bookReq.payment_type, krankenkasse: bookReq.krankenkasse });
     const result = await createBookingsFromRequest(anfrage, owner_id, empId, patName, {
+      leadId,
       commit: async (rows, metadata) => {
         const { data, error } = await supabase.rpc('approve_booking_request_atomic', {
           p_request_id: request_id, p_owner_id: owner_id, p_actor_id: userId,
@@ -4592,7 +4596,7 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
   }
   try {
     const { data: bookReq } = await supabase.from('booking_requests')
-      .select('*, patients(vorname, nachname, email)')
+      .select('*, patients(vorname, nachname, email, geburtsdatum, telefon)')
       .eq('id', request_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
 
@@ -4613,9 +4617,10 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
     // Der Vorschlag kann inzwischen selbst belegt sein — dieselbe Pruefung wie beim
     // Bestaetigen, damit auch dieser Weg keine Doppelbuchung erzeugen kann.
+    const angebotLeadId = await leadAusAnfrage(supabase, { ownerId: bookReq.owner_id, patient: bookReq.patients, paymentType: bookReq.payment_type, krankenkasse: bookReq.krankenkasse });
     const result = await createBookingsFromRequest(
       { ...bookReq, preferred_date: gewaehlt.date, preferred_time: gewaehlt.time },
-      bookReq.owner_id, gewaehlt.employee_id, patName,
+      bookReq.owner_id, gewaehlt.employee_id, patName, { leadId: angebotLeadId },
     );
     if (result.conflict) {
       return res.status(409).json({ error: 'Dieser Termin ist inzwischen leider vergeben. Bitte melden Sie sich bei der Praxis.' });

@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261017225700 0084_belegliste_storno_bindung
--- EXPORTED AT:        2026-10-18T07:30:00.000Z
--- ERZEUGT AM:         2026-10-17
+-- LAST MIGRATION:     20261021101246 0085_request_approve_lead
+-- EXPORTED AT:        2026-10-21T10:15:00.000Z
+-- ERZEUGT AM:         2026-10-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):

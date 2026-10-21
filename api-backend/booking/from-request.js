@@ -36,7 +36,11 @@ export function createBookingsFromRequestFactory({
     // Nur die manuelle Bestätigung übergibt commit: vor dem RPC werden keine
     // Termine geschrieben. Die bisherigen Auto-/Alternativwege bleiben unverändert.
     const plannedRows = [];
-    const insertBooking = async (row) => {
+    // Patientenakte (lead-aus-anfrage.js) an jeden Termin — ohne sie fehlte der
+    // Patient unter „Patienten" (canli-test 21.10.2026). NULL bleibt erlaubt.
+    const mitAkte = (row) => (options.leadId ? { ...row, lead_id: options.leadId } : row);
+    const insertBooking = async (zeile) => {
+      const row = mitAkte(zeile);
       if (options.commit) {
         plannedRows.push(row);
         return { data: { id: `planned-${plannedRows.length}` }, error: null };
