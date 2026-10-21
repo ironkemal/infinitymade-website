@@ -89,7 +89,7 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261021z';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261021zb';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -326,7 +326,7 @@ const T = {
     kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
     kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges', kass_paypal: 'PayPal',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
-    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
+    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung kassiert', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
     sitz_leer_kein_termin: 'Keine Verordnung zugeordnet.', sitz_leer_keine_vo: 'Für diesen Patienten ist keine aktive Verordnung hinterlegt.',
@@ -6327,7 +6327,7 @@ function openKassierenDialog({ betragEur, patientName, titel }) {
 }
 
 // Kassiert die Zuzahlung eines Rezepts. Gibt true zurück, wenn gebucht wurde.
-async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur, rest = false }) {   // rest: Nachkassieren — VO ist schon kassiert, kein Anspruch/Rückbau (Server begrenzt auf Soll)
   const betrag = Number(betragEur);
   if (!(betrag > 0)) { showToast(t('kass_err_betrag'), 'error'); return false; }
 
@@ -6339,7 +6339,7 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   // erzeugen so keinen zweiten Beleg — wichtig, weil die belegliste per Trigger
   // unveränderlich ist und ein Fehlbeleg nur noch storniert, nie gelöscht werden
   // kann (database_v27_gobd_belegliste.sql).
-  const { data: claimed, error: claimErr } = await supabase
+  const { data: claimed, error: claimErr } = rest ? { data: [{ id: rxId }], error: null } : await supabase
     .from('prescriptions')
     .update({
       zuzahlung_kassiert_am: new Date().toISOString(),
@@ -6378,7 +6378,7 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   } catch (err) {
     // Beleg gescheitert → Anspruch zurücknehmen. Sonst gälte die Zuzahlung als
     // kassiert, ohne dass sie im Kassenbuch steht.
-    await supabase.from('prescriptions')
+    if (!rest) await supabase.from('prescriptions')
       .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
       .eq('id', rxId);
     showToast(`${t('kass_err_beleg')} ${err.message}`, 'error');

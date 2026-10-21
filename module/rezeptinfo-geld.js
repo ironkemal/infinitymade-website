@@ -396,7 +396,7 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   if (knopf) {
     knopf.disabled = !aktiv;
     // `betrag` (Rest nachkassieren) ersetzt den Gesamtbetrag nur für diesen Klick.
-    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, zz.betrag != null ? { ...stand, gesamt: zz.betrag } : stand);
+    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, zz.betrag != null ? { ...stand, gesamt: zz.betrag, rest: true } : stand);
   }
 }
 
@@ -487,6 +487,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
       patientId: rx.patient_id || booking?.lead_id || null,
       patientName,
       betragEur: stand.gesamt,
+      rest: !!stand.rest,   // Nachkassieren: VO ist schon als kassiert markiert (canli-test P1 21.10.2026)
     });
     if (ok) await nachKassieren(rx.id);
   }
