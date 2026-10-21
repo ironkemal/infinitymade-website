@@ -2722,17 +2722,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
 
-    const resolvedSessions = doneSessions.map(s => {
-      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
-        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: s.code,
-        datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(preisBereich),
-      });
-      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
-      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
-    });
+    const resolvedSessions = loeseSitzungenAuf(rx, erbracht, preisBereich);
     // position_frei haengt an der Position/dem Abrechnungscode UND am Preis-
     // fenster (ein Code kann in einem Fenster frei sein, im naechsten nicht —
     // O-101-Nachtrag, gkv-302-Fund 14.09.2026) — deshalb PRO SITZUNG, nicht
@@ -3088,17 +3078,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
-    const resolvedSessions = doneSessions.map(s => {
-      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
-        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: s.code,
-        datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(preisBereich),
-      });
-      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
-      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
-    });
+    const resolvedSessions = loeseSitzungenAuf(rx, erbracht, preisBereich);
     // Pro Sitzung, nicht von der ersten auf alle uebertragen — O-101-Nachtrag,
     // gleiche Begruendung wie in der Zuzahlungsrechnung oben.
     const zuzahlungBefreitVerordnung = !!rx.zuzahlung_befreit;
@@ -3296,6 +3276,47 @@ router.get('/belegliste', async (req, res) => {
 });
 
 // POST /api/billing/belegliste - Insert a transaction record
+/**
+ * Erbrachte Sitzungen → Preis + Zuzahlung je Sitzung an ihrem EIGENEN
+ * Leistungsdatum (O-97). Vorher zweimal wörtlich in den Routen dieser Datei;
+ * seit 21.10.2026 zusätzlich von der Soll-Prüfung beim Kassieren genutzt.
+ */
+function loeseSitzungenAuf(rx, erbracht, preisBereich) {
+  return erbracht.sitzungen.map(s => {
+    const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+    const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
+      bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: s.code,
+      datum: dateStr,
+      abrechnungscode: abrechnungscodeFuer(preisBereich),
+    });
+    // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
+    return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
+  });
+}
+
+/**
+ * Gesetzliche Zuzahlung einer PODOLOGIE-Verordnung auf die bisher erbrachten
+ * Behandlungen (Podologie-Vertrag § 8 Abs. 1: höchstens auf die erbrachte
+ * Therapie; gkv-302 21.10.2026). Gleiche Rechnung wie die Zuzahlungsrechnung.
+ * @returns {Promise<?number>} Euro, oder null wenn nicht podologisch / nicht ermittelbar
+ */
+async function podoZuzahlungSoll(rx, tenantId) {
+  if (rx?.therapie_bereich !== 'podo') return null;
+  const erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId });
+  if (!erbracht.podo) return null;
+  const befreit = !!rx.zuzahlung_befreit;
+  const sessions = loeseSitzungenAuf(rx, erbracht, 'podologie').map(({ preis_eur, zuzahlung_eur, position_frei }) => ({
+    preis_eur, zuzahlung_eur_position: (befreit || position_frei) ? 0 : zuzahlung_eur, position_frei: befreit || position_frei,
+  }));
+  const letzte = erbracht.sitzungen[erbracht.sitzungen.length - 1];
+  const totals = calcAbrechnungsfallZuzahlung({
+    sessions, patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
+    behandlungsende: letzte ? letzte.done_at : new Date(), verordnung_zuzahlungsfrei: rx.zuzahlung_befreit,
+  });
+  return Number.isFinite(Number(totals?.gesZuzahlung)) ? Number(totals.gesZuzahlung) : null;
+}
+
 router.post('/belegliste', async (req, res) => {
   try {
     // ---- Auth scoping ----
@@ -3374,6 +3395,25 @@ router.post('/belegliste', async (req, res) => {
     const validation = validateBelegEntry(type, amount_eur, zahlart);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
+    }
+
+    // Podologie: nie mehr kassieren als die Zuzahlung der ERBRACHTEN Behandlungen
+    // (Vertrag § 8 Abs. 1). Vorher übernahm diese Route den Betrag ungeprüft vom
+    // Browser — die alte Terminzeile buchte so die ganze VO (canli-test 20.10.2026).
+    if (type === 'zuzahlung' && prescription_id) {
+      const { data: rxSoll } = await supabase.from('prescriptions')
+        .select('id, owner_id, therapie_bereich, zuzahlung_befreit, ausstellungsdatum, leads:patient_id (geburtsdatum)')
+        .eq('id', prescription_id).eq('owner_id', tenantId).maybeSingle();
+      let soll = null;
+      try { soll = rxSoll ? await podoZuzahlungSoll(rxSoll, tenantId) : null; } catch { soll = null; }
+      if (soll != null) {
+        const { data: bisher } = await supabase.from('belegliste').select('amount_eur')
+          .eq('owner_id', tenantId).eq('prescription_id', prescription_id).in('type', ['zuzahlung', 'storno']);
+        const ist = (bisher || []).reduce((s, r) => s + Number(r.amount_eur || 0), 0);
+        if (Math.round((ist + Number(amount_eur)) * 100) > Math.round(soll * 100)) {
+          return res.status(422).json({ error: `Mehr als die Zuzahlung der erbrachten Behandlungen (${soll.toFixed(2).replace('.', ',')} €, bereits kassiert ${ist.toFixed(2).replace('.', ',')} €). Bitte Betrag prüfen.` });
+        }
+      }
     }
 
     // ---- Database Insert ----

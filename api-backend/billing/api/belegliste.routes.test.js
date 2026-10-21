@@ -9,7 +9,7 @@ import { berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 // PostgREST adapter. No production credentials, HTTP requests or database writes.
 const source = fs.readFileSync(new URL('./abrechnung.routes.js', import.meta.url), 'utf8');
 const routeSource = source.slice(source.indexOf("router.get('/belegliste',"), source.indexOf('// POST /api/billing/abrechnung/preflight'));
-function fixture(initialRows = [], { employee = false, queryError = null, insertError = null } = {}) {
+function fixture(initialRows = [], { employee = false, queryError = null, insertError = null, ctx = {} } = {}) {
   const rows = structuredClone(initialRows);
   const handlers = {};
   const calls = [];
@@ -39,7 +39,7 @@ function fixture(initialRows = [], { employee = false, queryError = null, insert
       return q;
     },
   };
-  vm.runInNewContext(routeSource, { supabase, validateBelegEntry, generateCsvString, berlinTagesgrenzen, Buffer, console: { error() {} }, router: {
+  vm.runInNewContext(routeSource, { ...ctx, supabase, validateBelegEntry, generateCsvString, berlinTagesgrenzen, Buffer, console: { error() {} }, router: {
     get(path, fn) { handlers['GET ' + path] = fn; }, post(path, fn) { handlers['POST ' + path] = fn; },
   } });
   return { rows, calls, async call(key, { query = {}, body = {}, token = 'synthetic' } = {}) {
@@ -217,4 +217,21 @@ test('GET: durch Rezept-Saldo-Storno ausgeglichene Zuzahlung gilt als storniert,
   const out = await f.call('GET /belegliste');
   const flag = Object.fromEntries(out.output.map(r => [r.id, r.bereits_storniert]));
   assert.deepEqual(flag, { z1: true, s1: false, z2: false, z3: false });
+});
+
+test('Podologie: Kassieren über die Zuzahlung der erbrachten Behandlungen wird abgelehnt (gkv-302, 21.10.2026)', async () => {
+  const ctx = {
+    ladeErbrachteSitzungen: async () => ({ podo: true, sitzungen: [{ id: 's1', code: '78010', done_at: '2026-10-10' }] }),
+    resolvePreis: () => ({ preis_eur: 30, zuzahlung_eur: 3, position_frei: false }),
+    abrechnungscodeFuer: () => '71',
+    calcAbrechnungsfallZuzahlung: () => ({ gesZuzahlung: 18.47 }),
+  };
+  const rx = { id: 'rx-podo', owner_id: 'owner', therapie_bereich: 'podo', zuzahlung_befreit: false };
+  const zuviel = fixture([rx], { ctx });
+  const r1 = await zuviel.call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur: 31.66, zahlart: 'bar', prescription_id: 'rx-podo', patient_id: 'p' } });
+  assert.equal(r1.status, 422);
+  assert.match(r1.output.error, /18,47/);
+  const passt = fixture([rx], { ctx });
+  const r2 = await passt.call('POST /belegliste', { body: { type: 'zuzahlung', amount_eur: 18.47, zahlart: 'bar', prescription_id: 'rx-podo', patient_id: 'p' } });
+  assert.equal(r2.status, 201);
 });
