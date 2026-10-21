@@ -3,7 +3,7 @@
 > Üretim: 2026-10-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3635 fonksiyon** (3520 JS · 88 bash · 27 ps1) · 452 dosya · 42 sidebar modülü
+**3636 fonksiyon** (3521 JS · 88 bash · 27 ps1) · 452 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -67,7 +67,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:75](api-backend/dsgvo/loeschen.js#L75-L760) · 686 satır · profiles:update
 
 **Yol 2 — `openStripePortal()`** · Ekran: _UI yolu çözülemedi_
-- `openStripePortal()` — [dashboard.js:1806](dashboard.js#L1806-L1916) · 111 satır · profiles:update
+- `openStripePortal()` — [dashboard.js:1805](dashboard.js#L1805-L1915) · 111 satır · profiles:update
 
 **Yol 3 — `ensureClinicLocation()`** · Ekran: _UI yolu çözülemedi_
 - `ensureClinicLocation()` — [dashboard.js:4960](dashboard.js#L4960-L4986) · 27 satır · profiles:update

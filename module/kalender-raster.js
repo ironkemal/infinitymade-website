@@ -134,3 +134,24 @@ export function slotSpanHinweis(startISO, endISO, slotMinutes) {
   const slots = Math.round(spanMin / slotMinutes);
   return `${spanMin} Minuten ausgewählt (${slots} Zeitraster durch Ziehen) — Endzeit bitte prüfen.`;
 }
+
+/**
+ * Stundenbereich der Tagesansicht: Standard 08–20, aber so weit gedehnt, dass
+ * jeder Termin des Tages drinliegt. Vorher hing ein Termin um 21:00 unter dem
+ * Raster ohne Zeitachse (canli-test 20.10.2026). Ortszeit des Browsers, wie
+ * die Blockposition in `renderDayView`.
+ *
+ * @param {Array<{start_time:string,end_time?:string}>} termine
+ * @returns {{von:number, bis:number}} volle Stunden, 0 ≤ von < bis ≤ 24
+ */
+export function rasterStunden(termine, von = 8, bis = 20) {
+  for (const t of termine || []) {
+    const s = new Date(t.start_time);
+    if (Number.isNaN(s.getTime())) continue;
+    const e = t.end_time ? new Date(t.end_time) : new Date(s.getTime() + 30 * 60000);
+    von = Math.min(von, s.getHours());
+    const endeMin = (e.getDate() !== s.getDate() ? 24 * 60 : e.getHours() * 60 + e.getMinutes());
+    bis = Math.max(bis, Math.ceil(endeMin / 60));
+  }
+  return { von: Math.max(0, von), bis: Math.min(24, Math.max(bis, von + 1)) };
+}

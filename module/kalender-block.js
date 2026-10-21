@@ -26,7 +26,7 @@
  * Parameter — so bleibt das Modul ohne DOM und ohne dashboard.js prüfbar.
  */
 
-import { terminZeitLabel } from './kalender-raster.js?v=20260830';
+import { terminZeitLabel } from './kalender-raster.js?v=20261021p';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 
 /** „Vorname Nachname" → „Nachname, Vorname". Schon mit Komma oder ein Wort: unverändert. */

@@ -109,11 +109,11 @@ import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
-import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
-import { blockInhalt } from './module/kalender-block.js?v=20261020';
+import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
+import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261001e';
-import { renderMonat } from './module/kalender-monat.js?v=20261021l';
+import { renderWoche } from './module/kalender-woche.js?v=20261021p';
+import { renderMonat } from './module/kalender-monat.js?v=20261021p';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
@@ -1726,8 +1726,7 @@ function renderBookingSlotInner(b, childBookings = []) {
     const relY = e.clientY - rect.top;
     const totalH = rect.height;
     if (relY < 0 || relY > totalH) { tip.style.display = 'none'; return; }
-    const startHour = 8;
-    const endHour = 20;
+    const startHour = Number(grid.dataset.von) || 8, endHour = Number(grid.dataset.bis) || 20;   // rasterStunden() in renderDayView
     const minuteOfDay = startHour * 60 + Math.round((relY / totalH) * (endHour - startHour) * 60 / 15) * 15;
     const hh = String(Math.floor(minuteOfDay / 60)).padStart(2, '0');
     const mm = String(minuteOfDay % 60).padStart(2, '0');
@@ -2204,18 +2203,6 @@ async function renderDayView(dateStr) {
   const isToday = dateStr === toISODate(_now);
   const nowMin = _now.getHours() * 60 + _now.getMinutes();
 
-  for (let h = 8; h < 20; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const slot = document.createElement('div');
-      slot.className = 'dv-slot';
-      if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
-      const label = document.createElement('div');
-      label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      slot.appendChild(label);
-      timeFrag.appendChild(slot);
-    }
-  }
 
   const ownerId = getOwnerId();
   const dStart = new Date(dateStr + 'T00:00:00').toISOString();
@@ -2229,6 +2216,19 @@ async function renderDayView(dateStr) {
 
   const empIds = emps.map(e => e.id);
   const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
+  const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
+  for (let h = DV_VON; h < DV_BIS; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const slot = document.createElement('div');
+      slot.className = 'dv-slot';
+      if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
+      const label = document.createElement('div');
+      label.className = 'dv-time-label';
+      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      slot.appendChild(label);
+      timeFrag.appendChild(slot);
+    }
+  }
 
   emps.forEach((emp) => {
     const col = document.createElement('div');
@@ -2243,7 +2243,7 @@ async function renderDayView(dateStr) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h = 8; h < 20; h++) {
+    for (let h = DV_VON; h < DV_BIS; h++) {
       for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
@@ -2297,11 +2297,11 @@ async function renderDayView(dateStr) {
       }
     }
 
-    // Live "Jetzt"-Linie (nur heute, innerhalb der Tagesansicht 08–20)
-    if (isToday && nowMin >= 8 * 60 && nowMin < 20 * 60) {
+    // Live "Jetzt"-Linie (nur heute, innerhalb des Rasters DV_VON–DV_BIS)
+    if (isToday && nowMin >= DV_VON * 60 && nowMin < DV_BIS * 60) {
       const nowLine = document.createElement('div');
       nowLine.className = 'dv-now-line'; nowLine.dataset.zeit = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      nowLine.style.top = (((nowMin - 8 * 60) / 30) * 56) + 'px';
+      nowLine.style.top = (((nowMin - DV_VON * 60) / 30) * 56) + 'px';
       slotWrap.appendChild(nowLine);
     }
 
@@ -2313,7 +2313,7 @@ async function renderDayView(dateStr) {
       const e = new Date(b.end_time);
       const sMin = s.getHours() * 60 + s.getMinutes();
       const eMin = e.getHours() * 60 + e.getMinutes();
-      const dayStartMin = 8 * 60;
+      const dayStartMin = DV_VON * 60;
       const topPx = ((sMin - dayStartMin) / 30) * 56;
       const hPx = ((eMin - sMin) / 30) * 56;
 
