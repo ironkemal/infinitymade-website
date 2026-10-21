@@ -3,7 +3,7 @@
 > Üretim: 2026-10-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3626 fonksiyon** (3511 JS · 88 bash · 27 ps1) · 450 dosya · 42 sidebar modülü
+**3630 fonksiyon** (3515 JS · 88 bash · 27 ps1) · 451 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -16,8 +16,9 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `cancelRequestBookings()` — [api-backend/booking/cancel-request.js:3](api-backend/booking/cancel-request.js#L3-L16) · 14 satır · bookings:update
 
 **Yol 2 — `createBookingsFromRequestFactory()`** · Ekran: _UI yolu çözülemedi_
-- `createBookingsFromRequestFactory()` — [api-backend/booking/from-request.js:17](api-backend/booking/from-request.js#L17-L131) · 115 satır · bookings:insert
-- `insertBooking()` — [api-backend/booking/from-request.js:39](api-backend/booking/from-request.js#L39-L45) · 7 satır · bookings:insert
+- `createBookingsFromRequestFactory()` — [api-backend/booking/from-request.js:17](api-backend/booking/from-request.js#L17-L135) · 119 satır · bookings:insert
+- `mitAkte()` — [api-backend/booking/from-request.js:41](api-backend/booking/from-request.js#L41-L49) · 9 satır · bookings:insert
+- `insertBooking()` — [api-backend/booking/from-request.js:42](api-backend/booking/from-request.js#L42-L49) · 8 satır · bookings:insert
 
 **Yol 3 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:75](api-backend/dsgvo/loeschen.js#L75-L760) · 686 satır · bookings:delete
@@ -142,29 +143,32 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 9 — `betragNullsetzen()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `betragNullsetzen()` — [module/zuzahlung-befreiung.js:292](module/zuzahlung-befreiung.js#L292-L303) · 12 satır · prescriptions:update
 
-### `leads` — 7 bağımsız yazma yolu
+### `leads` — 8 bağımsız yazma yolu
 
-**Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
+**Yol 1 — `leadAusAnfrage()`** · Ekran: _UI yolu çözülemedi_
+- `leadAusAnfrage()` — [api-backend/booking/lead-aus-anfrage.js:30](api-backend/booking/lead-aus-anfrage.js#L30-L63) · 34 satır · leads:insert
+
+**Yol 2 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:75](api-backend/dsgvo/loeschen.js#L75-L760) · 686 satır · leads:delete, leads:update
 
-**Yol 2 — `handleDirectAusfallrechnung()`** · Ekran: _UI yolu çözülemedi_
+**Yol 3 — `handleDirectAusfallrechnung()`** · Ekran: _UI yolu çözülemedi_
 - `handleDirectAusfallrechnung()` — [dashboard.js:3838](dashboard.js#L3838-L3984) · 147 satır · leads:update
 
-**Yol 3 — `maybeOfferAppointmentConfirmEmail()`** · Ekran: _UI yolu çözülemedi_
+**Yol 4 — `maybeOfferAppointmentConfirmEmail()`** · Ekran: _UI yolu çözülemedi_
 - `maybeOfferAppointmentConfirmEmail()` — [dashboard.js:6600](dashboard.js#L6600-L6687) · 88 satır · leads:update
 
-**Yol 4 — `initSchnellerfassung()`** · Ekran: _UI yolu çözülemedi_
+**Yol 5 — `initSchnellerfassung()`** · Ekran: _UI yolu çözülemedi_
 - `initSchnellerfassung()` — [dashboard.js:16585](dashboard.js#L16585-L16706) · 122 satır · leads:insert
 
-**Yol 5 — `oeffnePatientenImport()`** · Ekran: _UI yolu çözülemedi_
+**Yol 6 — `oeffnePatientenImport()`** · Ekran: _UI yolu çözülemedi_
 - `oeffnePatientenImport()` — [module/patienten-import.js:399](module/patienten-import.js#L399-L565) · 167 satır · leads:insert, leads:delete
 - `importiere()` — [module/patienten-import.js:515](module/patienten-import.js#L515-L534) · 20 satır · leads:insert
 - `schritt3()` — [module/patienten-import.js:536](module/patienten-import.js#L536-L562) · 27 satır · leads:delete
 
-**Yol 6 — `verordnungPatientenAbgleich()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
+**Yol 7 — `verordnungPatientenAbgleich()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `verordnungPatientenAbgleich()` — [module/verordnung-patient-abgleich.js:19](module/verordnung-patient-abgleich.js#L19-L98) · 80 satır · leads:update
 
-**Yol 7 — `beantworteAltbestand()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
+**Yol 8 — `beantworteAltbestand()`** · Ekran: ortak yardımcı — 37 modülden çağrılıyor
 - `beantworteAltbestand()` — [module/verordnung-podo.js:919](module/verordnung-podo.js#L919-L932) · 14 satır · leads:update
 
 ### `businesses` — 6 bağımsız yazma yolu
@@ -400,10 +404,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ## En çok yazılan tablolar
 
 - `profiles` — 29 ayrı fonksiyon yazıyor
-- `bookings` — 18 ayrı fonksiyon yazıyor
+- `bookings` — 19 ayrı fonksiyon yazıyor
 - `prescriptions` — 11 ayrı fonksiyon yazıyor
+- `leads` — 10 ayrı fonksiyon yazıyor
 - `document_vorlagen` — 10 ayrı fonksiyon yazıyor
-- `leads` — 9 ayrı fonksiyon yazıyor
 - `prescription_sessions` — 8 ayrı fonksiyon yazıyor
 - `ops_todos` — 8 ayrı fonksiyon yazıyor
 - `businesses` — 7 ayrı fonksiyon yazıyor
@@ -461,7 +465,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
 - `zeichne` — module/abrechnung-auswahl.js:767 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:27 · module/patienten-einwilligung.js:541 · module/patienten-import.js:342 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:421
 - `zeile` — module/branding-ui.js:39 · module/einrichtung-ring.js:40 · module/rechnung-druck.js:33 · module/verordnung-detail.js:274 · module/verordnung-detail.js:403 · module/verordnung-detail.js:460 · module/verordnung-pruefen-knopf.js:116
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:342
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:343
 - `cleanup` — dashboard.js:6214 · dashboard.js:6301 · dashboard.js:18071 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:81 · module/bestaetigungs-dialog.js:20
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:232 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:703
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
@@ -480,7 +484,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `norm` — katalog-suche.js:414 · module/patienten-import.js:73 · module/termin-aktionen.js:608 · ops/tools/regroup.mjs:59
 - `onEsc` — dashboard.js:6308 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/termin-folge.js:194 · module/termin-heute.js:86
-- `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:3873 · dashboard.js:13085
+- `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:3874 · dashboard.js:13085
 - `v` — dashboard.js:12093 · dashboard.js:12115 · dashboard.js:12135 · dashboard.js:14433
 - `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223

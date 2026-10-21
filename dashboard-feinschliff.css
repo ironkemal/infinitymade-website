@@ -474,3 +474,12 @@ h1 em, h2 em, h3 em { font-style: normal; font-weight: inherit; color: var(--pri
 @media (prefers-reduced-motion: reduce) {
   .sidebar-item::before, .cal-view-toggle .cal-view-btn, .btn-primary, .btn-ghost { transition: none; }
 }
+
+/* Monatsansicht: Kopf und Zellen teilen exakt dieselben Spalten. Mit `1fr`
+   (= minmax(auto,1fr)) dehnte eine lange, nicht umbrechende Termin-Pille ihre
+   Spalte — bei offenem Seitenbereich standen die Wochentage nicht mehr über
+   den Zellen, Sa/So rutschten unter das Panel (canli-test 21.10.2026). */
+.month-grid-header, .month-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); column-gap: 2px; }
+.month-cell { min-width: 0; overflow: hidden; }
+.month-cell-events { min-width: 0; }
+.month-event-pill { font-variant-numeric: tabular-nums; }
