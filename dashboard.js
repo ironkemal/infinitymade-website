@@ -3430,7 +3430,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
     fahrt_return_pending: 'Termin läuft / Rückkehr offen',
     fahrt_completed: 'Abgeschlossen'
   };
-  statusBadge.textContent = statusLabels[booking.fahrt_status] || statusLabels.null;
+  statusBadge.textContent = (booking.status === 'completed' && !booking.fahrt_status) ? 'Termin abgeschlossen (ohne Fahrt)' : (statusLabels[booking.fahrt_status] || statusLabels.null);
 
   if (!isOwn) {
     // Başka terapistin Hausbesuch'u — sadece bilgi göster, aksiyon yok
