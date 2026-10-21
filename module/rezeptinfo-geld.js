@@ -64,6 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
+import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { preisAusService, offeneBehandlungen, zeilenAusBehandlungen } from './rechnung-bruecke.js?v=20261010zc';
 import { ladeRechnungZurVerordnung } from './rechnung-zur-verordnung.js?v=20261010zc';
 
@@ -357,7 +358,11 @@ const TON_FARBE = {
 export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   if (!el) return;
   const zz = euroZustand(rx, stand, lead);
-  const st = verordnungStatusInfo('physio', rx?.status);
+  // Podologie hat ihre eigene Statusachse (abrechnung_status); `status` ist die Physio-Spalte
+  // und blieb bei Podo-VOs auf „Bestätigt — Serie noch nicht begonnen" (canli-test 21.10.2026).
+  const st = rx?.therapie_bereich === 'podo'
+    ? verordnungStatusInfo('podologie', statusAusTopf(rx?.abrechnung_status))
+    : verordnungStatusInfo('physio', rx?.status);
   const aktiv = zz.aktion !== 'keine';
 
   // Beim Privatpatienten sind Summe und Forderung dieselbe Zahl — sie zweimal

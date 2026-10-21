@@ -317,3 +317,13 @@ test('euroZustand: Rest nachkassieren, zu viel kassiert, Altsystem-Abzug im Tite
   const alt = euroZustand({}, { zahler: 'gkv', gesamt: 12.22, gesamtSoll: 17.22, altsystem: 5 }, {});
   assert.match(alt.titel, /abzüglich 5,00/);
 });
+
+// canli-test 21.10.2026: Podo-VO mit Behandlungen zeigte „Bestätigt — Serie noch nicht begonnen"
+// (Physio-Spalte `status`). Podologie liest ihre eigene Achse `abrechnung_status`.
+test('rendereGeldzeile: Podologie zeigt den Podo-Status, nicht die Physio-Spalte', () => {
+  const el = { innerHTML: '', querySelector: () => null };
+  const rx = { therapie_bereich: 'podo', status: 'confirmed', abrechnung_status: null, anzahl_einheiten: 6 };
+  rendereGeldzeile(el, { rx, stand: ermittleGeldstand({ rx, erbracht: 2, zahler: 'gkv', position: POS }) });
+  assert.ok(!el.innerHTML.includes('Bestätigt'), el.innerHTML);
+  assert.ok(el.innerHTML.includes('In Behandlung') || el.innerHTML.includes('Aktiv'), el.innerHTML);
+});

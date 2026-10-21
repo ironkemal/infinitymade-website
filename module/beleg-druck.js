@@ -129,7 +129,8 @@ function hinweisHtml(fehlend) {
  * @param {Function} deps.showToast
  * @param {Function} deps.gehZuEinstellung   (sectionId, focusId) => void
  * @param {string} [deps.popupFehlerText]
- * @returns {Promise<boolean>} ob das Fenster aufging
+ * @returns {Promise<?boolean>} ob das Fenster aufging; `null` = Hinweis auf fehlende
+ *          Rechnungsdaten gezeigt (kein Popup-Problem — canli-test 21.10.2026)
  */
 export async function oeffneBelegDruck(
   { rxId, typ = 'quittung_zuzahlung', drucken = false, stillBeiFehler = false },
@@ -151,7 +152,7 @@ export async function oeffneBelegDruck(
           confirmText: 'Zu den Rechnungsdaten',
           onConfirm: () => { gehZuEinstellung('settingsBillingSection', 'setIban'); },
         });
-        return false;
+        return null;
       }
     }
   }
