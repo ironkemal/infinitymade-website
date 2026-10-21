@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261006m';
+import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021f';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';

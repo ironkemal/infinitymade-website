@@ -48,7 +48,7 @@
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
-import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261011c';
+import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261021f';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261014fix1';
 import { rxGeschlossen } from './termin-verordnung.js?v=20261021d';

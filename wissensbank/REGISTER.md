@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 21.10.2026 (**W-11 Podologie-Vertrag § 125 Lesefassung girdi** — `gkv-302`’nin 21.10.2026 Zuzahlung kuralının (SPEC-RULES „Zuzahlung = nur auf ERBRACHTE Leistungen") kaynağı. Yayıncıdan `curl` ile indirildi, SHA-256 `gkv-302`’nin okuduğu kopyayla birebir; yayıncı sayfası aynı gün tarandı, daha yeni sürüm yok. Z-17’deki „elle indirme" maddesi kapandı.)
+> Önceki: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
 > Önceki: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
 > **W-08** Handlungsanleitung Heilmittel (Ausgabe Januar 2026) · **W-09** Gebührenverzeichnis Physiotherapie
 > (ab 01.01.2026) · **W-10** Gebührenverzeichnis Ergotherapie (ab 01.09.2026); zincir **Z-19** (BG fatura dalı,
@@ -59,13 +60,13 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 43 (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
-| Arşivdeki PDF | **57** (11.10.2026 `find` ile sayıldı; W-07 PDF bu checkout'ta yok). 41'inin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
+| Kayıtlı kaynak belge (INDEX'te) | 44 (39 mevcut arşiv kaydı — +W-11 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
+| Arşivdeki PDF | **58** (11.10.2026 `find` ile sayıldı: 57; +W-11 21.10.2026; W-07 PDF bu checkout'ta yok). 42'sinin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 19 (Z-01…Z-19) |
-| Tam kimlik kartı yazılmış kaynak | 10 (**W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Tam kimlik kartı yazılmış kaynak | 11 (**W-11** Podologie-Vertrag § 125 Lesefassung + **W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
 | Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 5 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta; W-08/W-09/W-10 — `gemeinsam/unfallversicherung-dguv/`, PDF `*.pdf` ile, TXT `.gitignore:119` ile dışarıda) |
-| **Herkunft (indirme URL'i) kayıtlı** | **10 / 43 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
+| **Herkunft (indirme URL'i) kayıtlı** | **11 / 44 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -574,8 +575,11 @@ wissensbank/podologie/20240725_Anlage_1a_…txt  Teil 1 Nr. 2 (Z.80-84) · 4.1 (
 bu kart ve SPEC-RULES `Kodda:` satırları doldurulur; dolmadan sprint maddesi kapanmış sayılmaz.
 ⚠️ **offen — Sahip DAS-Termin (`project_das_ik_registrierung`):** Erprobungsdatei (UNB 0035 = 1) ödeme
 tetikler mi — Anhang 2 § 6 sessiz, çıkarım: zweigleisig (§ 9 Abs. 2) → konvansiyonel fatura paralel.
-⚠️ **offen — elle indirme:** Podologie Rahmenvertrag § 125 ana metni (i.d.F. 30.11.2020 / 20.10.2023)
-arşivde yok — § 7 Abs. 1 „soweit in Verträgen nichts anderes" istisnası ve 78040 § 3a buna bağlı.
+✅ **KAPANDI 21.10.2026 — elle indirme:** Podologie Rahmenvertrag § 125 ana metni artık arşivde (kart **W-11**,
+`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt`, i.d.F. 30.11.2020 inkl. Änderungen bis 16.06.2025).
+Bakılacak yerler: § 3a Nagelspange (Z.335-437) · § 7 Durchführung/Beendigung (Z.575-630) · § 18 Abrechnungsregelungen
+(Z.999-1182). ⬜ Richtlinien § 7 Abs. 1 „soweit in Verträgen nichts anderes" istisnasının bu metinde karşılığı var mı
+— **yorum `gkv-302`’nin**, henüz okunmadı; Z-17 kod satırları dolarken birlikte yapılır.
 **Bei neuer Anlage 3 Podologie:** lit. c/p/q neu lesen. **Bei neuem Korrekturverfahren-Stand:** Frage 1/2.
 **Bei Anlage 1 V22-Nachfolger (TA):** Kap. 3, Kap. 6, UNB S002, FKT-IK-Felder.
 
@@ -716,6 +720,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
 | `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) · **Z-16** (lit. e) · **Z-17** (lit. c/p/q) |
+| `wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung` | i.d.F. 30.11.2020 inkl. Änderungen bis 16.06.2025 | ✅ GEÇERLİ | **kart W-11** · SPEC-RULES Zuzahlung (§ 8) · Z-17 (§ 3a/§ 7/§ 18) |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı · **Z-16** (Nr. 11/34, yorum — norm değil) |
@@ -1424,6 +1429,27 @@ sayıyı düzeltir.
 - **⛔ Bu `.txt` fiyat okumak için KULLANILMAZ.** `-layout` çıkarımında Bezeichnung, Leistungs-Nr. ve Preis sütunları **birbirine göre kaymış** (ör. txt'de „11.1" satırında „sensomotorischen/perzeptiven" yazıyor; orijinalde 11.1 = motorisch-funktionell). `-raw` çıkarımı sırayı doğru veriyor ama o da türevdir. Kural 2'nin canlı örneği — fiyat/Ziffer eşlemesi **yalnız PDF'ten**. TXT yalnız „bu belgede X geçiyor mu" araması için.
 - **Kontrol (10.10.2026):** başlık + geçerlilik paragrafı PDF'e karşı okundu; kayma `-raw` ile karşılaştırılarak tespit edildi. Podologie pozisyonu **yok**.
 
+### W-11 · Podologie-Vertrag nach § 125 Abs. 1 SGB V — Lesefassung inkl. Änderungen bis 16.06.2025
+- **Dosya:** `wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.pdf` (`.gitignore` `*.pdf` — git dışı) + `.txt` (1360 satır, `pdftotext -enc UTF-8 -layout`, 21.10.2026, git'te izlenir — diğer Podologie Lesefassung `.txt`'leriyle aynı)
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/podologie/20250617_Podologie_Vertrag-Lesefassung.pdf · **İndirme:** 21.10.2026 · **İndiren:** `wissensbank` ajanı (`curl`, HTTP 200). `gkv-302`’nin aynı gün okuduğu kopya (scratchpad, „unverifiziert") ile **SHA-256 birebir**.
+- **Yayıncı:** GKV-Spitzenverband (Vertragspartner: VDP e. V. · ZFD e. V. · Bundesverband für Podologie e. V.)
+- **Sürüm / Stand:** kapak + sayfa başlığı „i. d. F. vom 30.11.2020 einschließlich aller Änderungen bis zum 16.06.2025"; Änderungsvereinbarungen 13.06.2022 · 19.06.2023 · 20.10.2023 · 17.06.2024 · 16.06.2025 (kapak). 30 sayfa. Dosya adındaki 20250617 yayın tarihidir.
+- **Anzuwenden ab:** Vertrag 01.01.2021 (§ 21 Abs. 1, txt Z.1252); bu Lesefassung'un son katmanı 01.07.2025 (`20250617_Podologie_Aenderungsvereinbarung.txt:126-127`, Art. 5) · **Düşer:** açık uçlu — unbestimmte Zeit, Kündigung 3 Monate zum Jahresende (§ 21 Abs. 1), yeni Vertrag/Schiedsfestsetzung'a kadar fortgeltend (§ 21 Abs. 6).
+- **Durum:** GEÇERLİ
+- **Neyi besler:**
+  `20250617_Podologie_Vertrag-Lesefassung.txt` § 8 Abs. 1-4 (Z.632-656, S.13; Abs. 5/6 Z.663-670, S.14)
+  → `wissensbank/SPEC-RULES.md` „Zuzahlung = nur auf ERBRACHTE Leistungen; Vorab-Kassieren der ganzen VO unzulässig"
+  → `module/rezeptinfo-geld.js` `ladePodoZuzahlung()` (Geldzeile — Podologie-Zuzahlung aus nicht stornierten `podologie_behandlungen`)
+  → `dashboard.js` Zuzahlungszeile (`bkRxZuzahlungWarn`, Kommentar „Podologie-Vertrag § 8 Abs. 1; gkv-302 21.10.2026" — commit f575c8d8)
+  → Backend ZU-Beleg + DTA laut SPEC-RULES-Eintrag (`abrechnung.routes.js` `ladeErbrachteSitzungen`, `dta/builder.js`)
+  → DB: keine eigene Tabelle; liest `podologie_behandlungen`, schreibt `prescriptions.zuzahlung_kassiert_*`
+  Außerdem Fundstelle für Z-17 (§ 3a Nagelspange, § 7, § 18 Abrechnung).
+- **Tazelik kontrolü:** yayıncı sayfası https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_podo/125_podologie.jsp → „Vereinbarungen nach § 125 SGB V" ilk satır başlığındaki „Änderungen bis zum TT.MM.JJJJ" ≠ 16.06.2025 mı, ya da „Änderungsvereinbarungen" altında 16.06.2025'ten yeni satır var mı. Elle, `wissensbank`; ritim: her Ocak + her Temmuz (son iki değişiklik Haziran'da imzalandı, Temmuz'da yürürlüğe girdi). Son bakış **21.10.2026: daha yeni yok** (sayfa „zuletzt aktualisiert 20.07.2026"). Yeni sürüm gelirse: § 8 yeniden okunur → SPEC-RULES kaydı → `ladePodoZuzahlung` → dashboard satırı, sırayla.
+- **Yeniden dağıtım:** şüpheli — GKV Lesefassung, W-A07 hâlâ `offen`. Yayın yüzeyi kapalı (`.vercelignore` `wissensbank/`), `.txt` diğer Lesefassung'lar gibi public depoda. Yeni karar gerekmedi; W-A07 kapanınca bu kayıt da kapanır.
+- **Yedek:** PDF hayır (`.gitignore` `*.pdf`, W-A05); `.txt` evet. PDF SHA-256 `7498edc138ac56d2ad89247a367613fc20eddabf2a0f1be5f7361baf5efb93ad` (353.032 bayt, 30 sayfa).
+- **Format kararı:** PDF → `.txt` + INDEX bölüm haritası. md yapılmadı — düzyazı sözleşme, atıf satır numarasıyla yapılıyor; türev kazanç getirmez. Sayı tablosu içermiyor (fiyat Anlage 2'de, Z-04).
+- **Kontrol (21.10.2026):** kapak, İçindekiler (§ 1-§ 22), § 8 ve § 21 txt üzerinden okundu; „Seite N von 30" başlıkları 30 sayfayla tutarlı.
+
 ---
 
 ## 4. Açık maddeler
@@ -1431,7 +1457,7 @@ sayıyı düzeltir.
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
 yoksa `offen` kalır ve her raporda tekrar görünür.
 
-### W-A01 · Herkunft (indirme URL'i) 43 kaydın 33'ünde yok — `offen`
+### W-A01 · Herkunft (indirme URL'i) 44 kaydın 33'ünde yok — `offen`
 Belgelerin nereden indirildiği hiçbir yerde yazılı değil. Bir sürüm düştüğünde yenisinin
 nereden alınacağı her seferinde yeniden araştırılıyor. Tek istisna Z-06 (fiyat XML'i,
 URL script başlığında).

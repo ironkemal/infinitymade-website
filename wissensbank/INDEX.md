@@ -3,7 +3,7 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-10-11 (temizlik turu: Kostenträgerdatei durumu 01.10 sonrasına çekildi, Anhang 01'deki GGT atfı, HPNR halef notu, `sitzungen/` notu) · önceki 2026-10-10 · **43 belge kayıtlı** (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
+> Son güncelleme: 2026-10-11 (temizlik turu: Kostenträgerdatei durumu 01.10 sonrasına çekildi, Anhang 01'deki GGT atfı, HPNR halef notu, `sitzungen/` notu) · önceki 2026-10-10 · **44 belge kayıtlı** (39 mevcut arşiv kaydı — +Podologie-Vertrag § 125 Lesefassung 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
 > (10.10.2026: **DGUV / gesetzliche Unfallversicherung** — Handlungsanleitung Heilmittel (Januar 2026) +
 >  Gebührenverzeichnis Physiotherapie (ab 01.01.2026) + Ergotherapie (ab 01.09.2026). Yeni klasör
 >  `gemeinsam/unfallversicherung-dguv/`. BG fatura dalının (PE-006 B) kaynağı; Podologie üçünde de **geçmiyor**.)
@@ -576,6 +576,15 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** belirtilmemiş
 - **Ne zaman lazım:** Podoloji reçetelerinin geçerliliğini ve eksiksizliğini denetleme, düzeltme prosedürlerini yürütme ve fatura kesintilerini (Nullretaxation) önleme durumlarında.
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
+
+### wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt
+- **Ne:** Vertrag nach § 125 Absatz 1 SGB V über die Versorgung mit Leistungen der Podologie und deren Vergütung — ana sözleşme metni (Lesefassung), GKV-SV ↔ VDP · ZFD · Bundesverband für Podologie. Anlagen 1a-3 bu sözleşmenin ekleridir.
+- **Kapsam:** Begriffsbestimmungen · § 1 Geltungsbereich · § 3/§ 3a/§ 3b Grundsätze (Nagelspange) · § 4 Hausbesuche · § 5 Bestätigung · § 6 Beginn · § 7 Durchführung/Beendigung · **§ 8 Gesetzliche Zuzahlung** · § 11 Zulassung · § 12 Praxisanforderungen · § 14 QS · § 16 Vergütung · § 17 IK · § 18 Abrechnungsregelungen · § 19 Vertragsverstöße · § 21 Inkrafttreten.
+- **Anahtar bölümler (txt satırı):** § 3a Z.335 · § 3b Z.438 · § 4 Z.477 · § 6 Z.540 · § 7 Z.575 (Abs. 7: 12 Wochen Unterbrechung Z.628-630) · **§ 8 Z.632-670 — Abs. 1 Z.634 (höchstens Kosten der *erbrachten* Therapie, § 43c nur in dieser Höhe) · Abs. 2 Z.639 (ab 18; Zeitpunkt der Leistungserbringung; VO-Gebühr erster Behandlungstag; Einzug durch Kasse nach schriftl. Aufforderung) · Abs. 3 Z.648 (Verzicht nur mit Befreiungsbescheinigung, Jahreswechsel neu prüfen) · Abs. 4 Z.653 (zu viel einbehalten → erstatten, Quittung ändern)** · Abs. 5/6 Z.663-670 · § 17 IK Z.964 · § 18 Abrechnung Z.999-1182 · § 21 Z.1250.
+- **Sürüm:** i. d. F. vom 30.11.2020 einschließlich aller Änderungen bis zum 16.06.2025
+- **Geçerlilik:** Vertrag seit 01.01.2021; Stand 16.06.2025 in Kraft 01.07.2025 (Änderungsvereinbarung Art. 5); unbefristet
+- **Ne zaman lazım:** Zuzahlung (wann, wie viel, Erstattung, Befreiung), Behandlungsbeginn/-abbruch, Hausbesuch, Nagelspange-Grundsätze und vertragliche Abrechnungsregeln der Podologie. Sicil: REGISTER W-11.
+- **İçerdiği fiyat/pozisyon numarası var mı:** hayır (Preise → Anlage 2)
 
 ### wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung.txt
 - **Ne:** Änderungsvereinbarung zum Vertrag nach § 125 Abs. 1 SGB V über die Versorgung mit Leistungen der Podologie und deren Vergütung vom 30.11.2020.

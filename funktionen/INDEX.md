@@ -1,6 +1,6 @@
 # Funktionskarte
 
-> Üretim: 2026-10-20 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-21 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
 **3617 fonksiyon** (3502 JS · 88 bash · 27 ps1) · 450 dosya · 42 sidebar modülü
@@ -434,7 +434,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 - `istEchteUebersetzung()` — [api-backend/billing/zaa/anwenden.js:15](api-backend/billing/zaa/anwenden.js#L15-L18) — identisch mit dem Dateitext (z
 - `kartenIkNormalisieren()` — [module/krankenkasse-suche.js:169](module/krankenkasse-suche.js#L169-L172) — Spiegel von `kartenIkNormalisieren()` in `api-backend/lib/rezept-felder
 - `leitsymptomatikAlsBitmaske()` — [api-backend/billing/dta/leitsymptomatik.js:58](api-backend/billing/dta/leitsymptomatik.js#L58-L96) — Spiegel von `leitsymptomatikListe()` in `module/verordnung-pruefung
-- `leitsymptomatikListe()` — [module/verordnung-pruefung.js:113](module/verordnung-pruefung.js#L113-L125) — Spiegel von `api-backend/billing/dta/leitsymptomatik
+- `leitsymptomatikListe()` — [module/verordnung-pruefung.js:115](module/verordnung-pruefung.js#L115-L127) — Spiegel von `api-backend/billing/dta/leitsymptomatik
 - `pruefTitel()` — [module/verordnung-uebersicht.js:510](module/verordnung-uebersicht.js#L510-L516) — Spiegel von `pruefTitel` in module/verordnung-liste
 - `t()` — [api-backend/lib/rechnung-snapshot.js:14](api-backend/lib/rechnung-snapshot.js#L14-L31) — Spiegel von `module/branding
 - `zuVieleBehandlungenJeTag()` — [module/podo-behandlungstag-regel.js:79](module/podo-behandlungstag-regel.js#L79-L94) — Spiegel von behandlungstageJeDatum/TAGESHOECHSTZAHL in api-backend/billing/utils/behandlungstage
@@ -467,7 +467,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:95 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:422
 - `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:31 · module/mail-entwurf.js:41 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
-- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:98
+- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `ok` — installieren/install.sh:20 · onprem/backup.sh:48 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60

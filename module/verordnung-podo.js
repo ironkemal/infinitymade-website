@@ -42,7 +42,7 @@ import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261003
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
-import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261006n';
+import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261021f';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende
 // Menge je Diagnosegruppe stehen zentral in `verordnung-regeln.js` — dort

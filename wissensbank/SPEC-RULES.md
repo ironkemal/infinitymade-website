@@ -2009,8 +2009,8 @@
   Prozentanteil richtet sich nach dem Zeitpunkt der Leistungserbringung, die 10 € nach dem ersten
   Behandlungstag. Schriftliche Aufforderung (→ § 43c / VKZ 03) erst „nach Ende der Behandlungsserie".
 - **Kaynak:** Vertrag § 125 Abs. 1 Podologie i. d. F. 30.11.2020 „einschließlich aller Änderungen bis
-  zum 16.06.2025" (GKV-SV `20250617_Podologie_Vertrag-Lesefassung.pdf`, § 8 Abs. 1, 2, 4 — Seite 13;
-  **noch nicht in wissensbank abgelegt**, an `wissensbank` übergeben 21.10.2026) · § 32 Abs. 2 i. V. m.
+  zum 16.06.2025" (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt:632-656`, § 8 Abs. 1, 2, 4 — Seite 13;
+  REGISTER W-11, abgelegt 21.10.2026, SHA-256 geprüft) · § 32 Abs. 2 i. V. m.
   § 61 Satz 3 SGB V („10 vom Hundert der Kosten sowie 10 Euro je Verordnung") · Anlage 1 TP5 V21
   §5.5.3.3 EHE „Betrag der Zuzahlung … je Abrechnungsposition" + GZF Berechnungsregel
   (`Anlage_1_TP5_V21_20260115.txt:3168-3185`, `:3583-3600`)
@@ -2018,10 +2018,11 @@
 - **Kodda:** ✅ richtig: `module/rezeptinfo-geld.js:217-221` (Geldzeile, podo aus
   `podologie_behandlungen`), Backend ZU-Beleg `api-backend/billing/api/abrechnung.routes.js:2718-2730`
   (`ladeErbrachteSitzungen`), DTA `api-backend/billing/dta/builder.js:355-369`.
-  ❌ falsch: `dashboard.js:2884-2895` (`bkRxZuzahlungWarn` → „Kassieren"-Knopf) ruft
-  `ermittleGeldstand` ohne `podo`; `erbracht` kommt aus `prescription_sessions` (Podo: 0) →
-  `module/zuzahlung-rechnen.js:63-67` fällt auf `anzahl_einheiten` (ganze VO) zurück
-  (canli-test 20.10.2026: Panel 18,47 € vs. gebucht 31,66 € = 6 × 3,61 € + 10 €).
+  ✅ behoben f575c8d8 (21.10.2026): `dashboard.js` `bkRxZuzahlungWarn` kassiert für Podo nicht
+  mehr selbst (vorher `ermittleGeldstand` ohne `podo` → ganze VO; canli-test 20.10.2026: Panel
+  18,47 € vs. gebucht 31,66 €); offen kassiert nur die Geldzeile. Offen: Backend-Soll-Prüfung
+  in `POST /billing/belegliste` (type zuzahlung) und Rest-/Erstattungsweg für Podo
+  (`zuzahlung.routes.js:110` `rx.heilmittel_position`).
 - **Kapsam:** Podologie (Vertrag § 8); § 61 S. 3 SGB V + EHE/GZF-Regel gelten für alle Heilmittel —
   Physio/Ergo/Logo-Verträge vor Übernahme je eigenen § prüfen
 

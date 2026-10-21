@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-10-20",
+ "erzeugt": "2026-10-21",
  "dateien": 450,
  "funktionen": 3617,
  "module": [
@@ -121631,6 +121631,7 @@
    "calledBy": [
     "attachKvnrPruefung",
     "parseMuster13Barcode",
+    "pruefeVerordnung",
     "pruefen",
     "w",
     "zeileZuPatient",
@@ -122157,7 +122158,8 @@
     "isValidLanr"
    ],
    "calledBy": [
-    "podoArztHinweise"
+    "podoArztHinweise",
+    "pruefeVerordnung"
    ],
    "modules": [
     "abrechnung",
@@ -175342,8 +175344,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 81,
-   "end": 84,
+   "start": 83,
+   "end": 86,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -175404,8 +175406,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 88,
-   "end": 90,
+   "start": 90,
+   "end": 92,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -175467,8 +175469,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 92,
-   "end": 96,
+   "start": 94,
+   "end": 98,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -175532,8 +175534,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 98,
-   "end": 102,
+   "start": 100,
+   "end": 104,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -175612,8 +175614,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 113,
-   "end": 125,
+   "start": 115,
+   "end": 127,
    "lines": 13,
    "spiegelHinweis": "Spiegel von `api-backend/billing/dta/leitsymptomatik",
    "tables": [],
@@ -175676,8 +175678,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 136,
-   "end": 153,
+   "start": 138,
+   "end": 155,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
@@ -175739,9 +175741,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 170,
-   "end": 411,
-   "lines": 242,
+   "start": 172,
+   "end": 426,
+   "lines": 255,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -175757,12 +175759,14 @@
     "heilmittelGegenLeitsymptomatik",
     "heuteIso",
     "istIsoDatum",
+    "lanrPruefzifferWarnung",
     "leer",
     "leitsymptomatikListe",
     "matchIcdToDg",
     "melde",
     "parseIcdList",
-    "passendeUnterkodes"
+    "passendeUnterkodes",
+    "pruefeKvnr"
    ],
    "calledBy": [
     "(datei) module/verordnung-pruefung.js",
@@ -175821,8 +175825,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 176,
-   "end": 180,
+   "start": 178,
+   "end": 182,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -175886,8 +175890,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 414,
-   "end": 418,
+   "start": 429,
+   "end": 433,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -175951,8 +175955,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 425,
-   "end": 429,
+   "start": 440,
+   "end": 444,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -176017,8 +176021,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 440,
-   "end": 446,
+   "start": 455,
+   "end": 461,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -176080,8 +176084,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-pruefung.js",
-   "start": 468,
-   "end": 510,
+   "start": 483,
+   "end": 525,
    "lines": 43,
    "spiegelHinweis": null,
    "tables": [],
@@ -200958,7 +200962,7 @@
     "module/fahrtenbuch-regeln.js:315",
     "module/fussbefund-archiv.js:199",
     "module/sitzungsplan.js:114",
-    "module/verordnung-pruefung.js:98"
+    "module/verordnung-pruefung.js:100"
    ],
    "aynalar": []
   },
@@ -201576,7 +201580,7 @@
    "name": "deDatum",
    "orte": [
     "module/heilmittel-fristen.js:102",
-    "module/verordnung-pruefung.js:92"
+    "module/verordnung-pruefung.js:94"
    ],
    "aynalar": []
   },
@@ -201634,7 +201638,7 @@
    "name": "erstePositionAusItems",
    "orte": [
     "module/verordnung-maske.js:409",
-    "module/verordnung-pruefung.js:425"
+    "module/verordnung-pruefung.js:440"
    ],
    "aynalar": []
   },
@@ -201788,7 +201792,7 @@
    "name": "heilmittelAusItems",
    "orte": [
     "module/verordnung-maske.js:401",
-    "module/verordnung-pruefung.js:440"
+    "module/verordnung-pruefung.js:455"
    ],
    "aynalar": []
   },
@@ -202449,8 +202453,8 @@
   {
    "name": "leitsymptomatikListe",
    "file": "module/verordnung-pruefung.js",
-   "start": 113,
-   "end": 125,
+   "start": 115,
+   "end": 127,
    "hinweis": "Spiegel von `api-backend/billing/dta/leitsymptomatik"
   },
   {

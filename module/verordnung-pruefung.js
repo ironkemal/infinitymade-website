@@ -44,6 +44,8 @@ import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260918';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
+import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';
+import { pruefeKvnr } from './kvnr.js?v=20260814';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };
@@ -196,6 +198,19 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
   const anzahl = Number(vo?.anzahl);
   if (!Number.isFinite(anzahl) || anzahl <= 0) {
     melde(SCHWERE.blocker, 'PFLICHT_ANZAHL', 'Anzahl der Behandlungseinheiten fehlt oder ist ungültig.', 'anzahl', QUELLE_PFLICHT);
+  }
+
+  // Prüfziffern von LANR und Versichertennummer — nur Warnung (TA V21 fordert
+  // keine Prüfziffernprüfung; hart gesperrt wird erst vor der Abgabe). Vorher
+  // meldete der Knopf „passen zusammen" und erst Speichern nannte die LANR
+  // (canli-test 20.10.2026).
+  if (istGkv) {
+    const lanrHinweis = lanrPruefzifferWarnung(vo?.arztLanr);
+    if (lanrHinweis) melde(SCHWERE.warnung, 'PRUEFZIFFER_LANR', lanrHinweis, 'arztLanr', QUELLE_PFLICHT);
+    if (!leer(vo?.versichertennummer)) {
+      const kv = pruefeKvnr(vo.versichertennummer);
+      if (!kv.ok) melde(SCHWERE.warnung, 'PRUEFZIFFER_KVNR', kv.hinweis, 'versichertennummer', QUELLE_PFLICHT);
+    }
   }
 
   // Der ICD ist nur dort Pflicht, wo die Diagnosegruppe an ihm hängt
