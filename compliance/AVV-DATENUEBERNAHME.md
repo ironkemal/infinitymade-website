@@ -2,7 +2,7 @@
 
 **Leistungsbeschreibung (Dienstvertrag, § 611 BGB) · Auftragsverarbeitung (Art. 28 DSGVO) · Verpflichtung zur Verschwiegenheit (§ 203 StGB)**
 
-> **ENTWURF legal-de, 21.10.2026 — vor dem ersten verkauften Paket von Kemal freizugeben.**
+> **ENTWURF legal-de, 21.10.2026 — abschließend geprüft 21.10.2026 (Werkzeug TeamViewer, Praxura-Lizenz); vor dem ersten verkauften Paket von Kemal freizugeben.**
 > Grundlage: `compliance/LEGAL_DECISIONS.md` Eintrag 20.10.2026 „Datenübernahme-Paket",
 > `LEGAL_ONPREM_REQUIREMENTS.md` §5 (E3), Playbook K10 (Ausnahme 20.10.2026).
 > Diese Vereinbarung gilt **nur** für die begleitete Sitzung. Sie ersetzt nicht den
@@ -49,13 +49,14 @@ E-Mail: kontakt@praxura.de
 
 a) **Patientenstamm** (Name, Geburtsdatum, Anschrift, Kontakt, Krankenkasse und IK, Versichertennummer, Versichertenstatus, Zuzahlungsbefreiung);
 
-b) **offene Verordnungen**, auf die noch keine Einheit erbracht wurde, sowie Verordnungen, die im bisherigen System **teilweise erbracht, aber noch nicht abgerechnet** sind — mit den Verordnungsangaben (u. a. Ausstellungsdatum, verordnende/r Ärztin/Arzt mit LANR/BSNR, ICD-10-Code und Diagnose, Diagnosegruppe, Leitsymptomatik, Heilmittel, Anzahl, Frequenz, Hausbesuch, Therapiebericht);
+b) **offene Verordnungen**, auf die noch keine Einheit erbracht wurde, sowie Verordnungen, die im bisherigen System **teilweise erbracht, aber noch nicht abgerechnet** sind — mit den Verordnungsangaben (u. a. Ausstellungsdatum, verordnende/r Ärztin/Arzt mit LANR/BSNR, ICD-10-Code und Diagnose, Diagnosegruppe, Leitsymptomatik, Heilmittel, Anzahl, Frequenz, Hausbesuch, Therapiebericht; in der Podologie zusätzlich betroffener Nagel und Wagner-Grad);
 
 c) zu teilweise erbrachten Verordnungen die **bereits erbrachten Behandlungstage** (Datum und Leistung) mit dem Kennzeichen „aus Altsystem übernommen" sowie ein **Vermerk über bereits kassierte Zuzahlungen** (Betrag, Datum, Beleg-Nr. des bisherigen Systems);
 
 d) die **Vorgeschichte** je Patient/in, soweit für Fristen- und Einmaligkeitsregeln erforderlich (Datum früherer Leistungen, ggf. betroffener Nagel).
 
 > Fachbereich: b)–d) heute nur Podologie (`module/verordnung-import.js`, `module/podo-vorgeschichte.js`). Für Physio/Ergo/Logo bis zur Freigabe des jeweiligen Fachbereichs nur a).
+> Wagner-Grad (21.10.2026 ergänzt): `verordnung-import.js` liest die Spalte (`wagner_grad`); in der VVT stand sie schon, in § 1 fehlte sie. Einzelnes Indikationsmerkmal der Verordnung, keine Befunddokumentation — Abs. 3 bleibt unberührt.
 
 (3) **Nicht** Gegenstand sind: Befunde, Behandlungsnotizen und sonstige Behandlungsdokumentation über die in Abs. 2 genannten Angaben hinaus, Bilder/Dokumente, Rechnungen, Mahnungen, Kassenbuch und Buchhaltung sowie bereits abgerechnete Verordnungen. Diese verbleiben im bisherigen System der Praxis.
 
@@ -75,7 +76,7 @@ Die Praxis
 
 a) stellt vor der Sitzung den Export aus der bisherigen Software und eine lauffähige Praxura-Installation bereit;
 
-b) baut die Verbindung selbst auf (Einladung/Code durch die Praxis) und gibt **nur die Ansicht** frei — keine Fernsteuerung, keine Dateiübertragung, keine Zwischenablage;
+b) startet das von Praxura benannte Verbindungsprogramm selbst (bei TeamViewer: „QuickSupport", ohne Installation und ohne dauerhaften Zugang) und teilt Praxura die Sitzungs-ID und das einmalige Kennwort erst zu Beginn der Sitzung mit; eine Verbindung kommt nur mit diesen Angaben der Praxis zustande. Freigegeben wird **nur die Ansicht** — keine Fernsteuerung, keine Dateiübertragung, keine Zwischenablage;
 
 c) sorgt dafür, dass während der Sitzung nur die für die Übernahme nötigen Fenster sichtbar sind, und schließt andere Anwendungen mit Patientendaten nach Möglichkeit;
 
@@ -117,20 +118,28 @@ e) prüft die übernommenen Daten nach der Sitzung stichprobenartig gegen das bi
 
 (3) **Technische und organisatorische Maßnahmen (lit. c, Art. 32 DSGVO):**
 
-a) Nur-Ansicht-Modus; Praxura fordert keine Fernsteuerung an und nimmt sie nicht an;
-b) keine Aufzeichnung (Video, Ton, Bildschirmfoto, Fotografie des Monitors), keine Dateiübertragung, keine geteilte Zwischenablage, keine Mitschrift von Patientendaten;
+a) Nur-Ansicht-Modus, auf Seiten von Praxura im Werkzeug fest eingestellt; Praxura fordert keine Fernsteuerung an und nimmt sie nicht an; kein unbeaufsichtigter oder dauerhafter Zugang, das Gerät der Praxis wird im Werkzeug nicht gespeichert;
+b) keine Aufzeichnung (Video, Ton, Bildschirmfoto, Fotografie des Monitors), keine Dateiübertragung, keine geteilte Zwischenablage, keine Mitschrift von Patientendaten (auch nicht in Sitzungskommentaren des Werkzeugs); KI-Zusatzfunktionen des Werkzeugs sind ausgeschaltet;
 c) Endgerät von Praxura: Festplattenverschlüsselung, aktuelle Updates, automatische Bildschirmsperre, Benachrichtigungen/Bildschirmspiegelung aus, keine Hintergrund-Aufzeichnungs- oder Cloud-Screenshot-Funktion;
 d) Sitzung aus einem geschlossenen Raum ohne Dritte, Ton über Kopfhörer;
-e) Werkzeug ohne Klartextzugriff des Anbieters (Ende-zu-Ende-verschlüsselt), mit Sitz und Verarbeitung in der EU; keine US-Konferenzdienste;
+e) Werkzeug ohne Klartextzugriff des Anbieters (Ende-zu-Ende-verschlüsselt), Anbieter mit Sitz in der EU, der personenbezogene Daten nur unter den Voraussetzungen der Art. 44 ff. DSGVO in Drittländer übermittelt; keine US-Konferenzdienste;
 f) Beendigung der Freigabe durch die Praxis jederzeit; Praxura beendet die Sitzung von sich aus, sobald ihr eine Steuerung oder Datei angeboten wird oder Unbefugte im Raum sind.
 
-(4) **Unterauftragsverarbeiter (lit. d):** Praxura setzt keine Unterauftragsverarbeiter mit Zugriff auf Inhalte ein. Verwendet die Sitzung das Fernwartungswerkzeug der Praxis, ist dessen Anbieter Dienstleister der Praxis. Stellt Praxura das Werkzeug über eine eigene Lizenz bereit, ist der Anbieter Unterauftragsverarbeiter ausschließlich für Verbindungsdaten:
+(4) **Unterauftragsverarbeiter (lit. d):** Praxura setzt keine Unterauftragsverarbeiter mit Zugriff auf Inhalte ein. Verwendet die Sitzung das Fernwartungswerkzeug der Praxis, ist dessen Anbieter Dienstleister der Praxis. Stellt Praxura das Werkzeug über eine eigene Lizenz bereit, ist der Anbieter Unterauftragsverarbeiter ausschließlich für Verbindungsdaten (Geräte-IDs, IP-Adressen, Zeitpunkte und Dauer der Verbindung, Konto des Praxura-Teilnehmers):
 
 | Anbieter | Zweck | Sitz / Verarbeitungsort | Inhaltszugriff |
 |---|---|---|---|
-| ____________ (nur falls Praxura-Lizenz) | Verbindungsaufbau Bildschirmfreigabe | EU | nein (E2E) |
+| TeamViewer Germany GmbH, Bahnhofsplatz 2, 73033 Göppingen, Deutschland (Lizenz von Praxura) | Vermittlung des Verbindungsaufbaus der Bildschirmfreigabe | Sitz: Deutschland. Verbindungsdaten: Rechenzentren und Vermittlungsserver des Anbieters; Übermittlung in Drittländer nur unter den Voraussetzungen der Art. 44 ff. DSGVO (Auftragsverarbeitungsvertrag des Anbieters, Ziff. 2.13, 3.3). Weitere Unterauftragsverarbeiter: Liste des Anbieters (Anlage 3 zu dessen Auftragsverarbeitungsvertrag), auf Anfrage | nein — Sitzungsinhalte Ende-zu-Ende verschlüsselt (RSA 4096 / AES 256); Vermittlungsserver können sie nach Angabe des Anbieters nicht entschlüsseln |
 
-> Intern: Vor dem ersten Einsatz einer eigenen Lizenz AVV des Anbieters abschließen, Sitz/Region und E2E-Aussage aus dessen Unterlagen belegen; sonst Werkzeug der Praxis verwenden (dann keine Zeile). Kein selbst gehostetes Jitsi auf dem Merkez-VPS (Entscheidung 20.10.2026).
+> Intern (Stand 21.10.2026, aus Primärquellen des Anbieters):
+> - **Vertragspartner:** Webshop-Bestellung → TeamViewer Germany GmbH, Bahnhofsplatz 2, 73033 Göppingen (teamviewer.com/en/legal/contracting-entities). **Nur über den Webshop kaufen.** Bei Bestellung über ein Angebot/Reseller kann laut derselben Seite TeamViewer UK Ltd., TeamViewer US, Inc. oder 1E Limited Vertragspartner sein → dann ist die Zeile falsch und lit. e neu zu prüfen.
+> - **DPA:** wird nicht gesondert unterschrieben. EULA A.4: „By using the Products, Customer accepts … that TeamViewer acts as its data processor under the DPA"; beim Download erscheint ein Fenster zum Anzeigen/Speichern von EULA und DPA. DPA-Version 02.02.2026; Annex 1 und 3 Stand 27.07.2026. Am Kauftag DPA + Annex 1–3 als PDF in `vertraege/` (Drive) ablegen = Nachweis nach Art. 28 Abs. 4.
+> - **Warum nicht mehr „Verarbeitung in der EU":** Der Anbieter sagt nur, dass Server mit „sensitive data" in DE/AT stehen (Security Statement, Stand 29.05.2026). Einen Router-Standort sichert er nicht zu; eine Festlegung der Vermittlungsserver bietet er nur für die USA an (Tensor „US Regional Restricted Access"), nicht für die EU. DPA Ziff. 2.13/3.3 binden Drittlandübermittlungen an Art. 44 ff. Deshalb lit. e auf „Sitz EU + Art. 44 ff." umgestellt — haltbar, weil Inhalte E2E-verschlüsselt sind und nur Verbindungsdaten (keine Patientendaten) betroffen sein können.
+> - **Annex 3 (Unterauftragsverarbeiter) selbst gelesen? Nein** — das PDF ließ sich hier nicht auslesen; Inhalt der Vorversion (17.03.2025) nur über Suchauszug: Hosting bei Anexia (AT), AWS (LU), Microsoft (IE), Google (IE), Schwarz IT (DE), Wartung/Entwicklung TeamViewer GR/PT/AT. Vor Ersteinsatz die aktuelle Fassung lesen; nennt sie eine Stelle mit Zugriff auf Sitzungsinhalte → Werkzeugentscheidung neu aufrollen.
+> - **§ 203 StGB:** TeamViewer ist keine mitwirkende Person (kein Zugang zu Geheimnissen, nur Verbindungsdaten) → keine Verschwiegenheitsverpflichtung des Anbieters nötig.
+> - **Lizenz:** Free-Version nur „personal and non-commercial" (EULA B.1.1.2) → unzulässig. „Remote Access" = nur bis 3 eigene Geräte → passt nicht. Mindestens **„Business"** (Verbindung zu beliebig vielen Geräten). Ob Richtlinien zentral über die Management Console verteilt werden können, hängt von der Stufe ab — sonst dieselben Einstellungen lokal im Client (Optionen) setzen. Preise stehen nicht in diesem Dokument.
+> - **Einstellungen (Richtlinie/Optionen des Praxura-Clients):** Zugriffssteuerung ausgehende Verbindungen = „View and show" (bzw. Custom: Fernsteuerung, Dateiübertragung, Zwischenablage, Remote-Druck, VPN = verweigert); automatische Sitzungsaufzeichnung = aus; KI-/Sitzungsauswertungsfunktionen = aus (EULA B.7.2: KI-Inhalte können durch Dritte verarbeitet werden); Gerät nicht unter „Computer & Kontakte" speichern; nach der Sitzung Verbindungskommentar ohne Patientendaten oder leer.
+> - Kein selbst gehostetes Jitsi auf dem Merkez-VPS (Entscheidung 20.10.2026).
 
 (5) **Betroffenenrechte (lit. e):** Da Praxura keine Daten speichert, unterstützt sie die Praxis durch Auskunft über Ablauf und Inhalt der Sitzung anhand des Protokolls.
 

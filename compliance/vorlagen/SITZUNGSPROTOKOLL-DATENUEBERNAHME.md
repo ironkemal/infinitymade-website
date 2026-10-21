@@ -2,7 +2,7 @@
 
 **Anlage 1 zur Vereinbarung „Datenübernahme-Paket" (`compliance/AVV-DATENUEBERNAHME.md`)**
 
-> **Vorlage (legal-de, 21.10.2026).** Je Sitzung eine Kopie ausfüllen. Ausgefüllte Protokolle
+> **Vorlage (legal-de, 21.10.2026; Werkzeug TeamViewer ergänzt 21.10.2026).** Je Sitzung eine Kopie ausfüllen. Ausgefüllte Protokolle
 > **nicht** in dieses (öffentliche) Repository legen — Ablage im gemeinsamen Ordner
 > (`vertraege/`), Kopie an die Praxis.
 > **In dieses Protokoll gehören keine Patientendaten:** keine Namen, Geburtsdaten,
@@ -30,13 +30,15 @@
 
 | Feld | Eintrag |
 |---|---|
-| Werkzeug (Produkt) | |
-| Lizenz | ☐ der Praxis ☐ von Praxura (Anbieter mit AVV, Sitz EU) |
-| Verbindung aufgebaut durch | ☐ Praxis (Einladung/Code der Praxis) |
+| Werkzeug (Produkt) | ☐ TeamViewer ☐ anderes: ____________ |
+| Lizenz | ☐ von Praxura (TeamViewer Germany GmbH, Auftragsverarbeitungsvertrag abgeschlossen) ☐ der Praxis |
+| Verbindung aufgebaut durch | ☐ Praxis startet QuickSupport und teilt Sitzungs-ID + Einmal-Kennwort mit |
 | Modus | ☐ nur Ansicht — Fernsteuerung **aus** |
 | Dateiübertragung | ☐ deaktiviert |
 | Zwischenablage-Freigabe | ☐ deaktiviert |
 | Aufzeichnung (beide Seiten) | ☐ aus |
+| KI-Zusatzfunktionen des Werkzeugs | ☐ aus |
+| Gerät der Praxis im Werkzeug gespeichert / unbeaufsichtigter Zugang | ☐ nein |
 
 ## 3. Teilnehmende
 
@@ -86,14 +88,14 @@ _______________________________________________________________
 Praxura bestätigt:
 
 - ☐ Es wurde **keine Aufzeichnung** angefertigt (kein Video, kein Ton, kein Bildschirmfoto, keine Fotografie des Monitors).
-- ☐ Es wurde **keine Datei** empfangen und **keine Kopie** von Patientendaten angefertigt, auch keine handschriftliche Notiz.
+- ☐ Es wurde **keine Datei** empfangen und **keine Kopie** von Patientendaten angefertigt, auch keine handschriftliche Notiz und kein Sitzungskommentar im Werkzeug mit Patientendaten.
 - ☐ Die Sitzung wurde aus einem geschlossenen Raum ohne Dritte geführt.
-- ☐ Die Verbindung ist beendet; ein erneuter Zugriff ist ohne neue Einladung der Praxis nicht möglich.
+- ☐ Die Verbindung ist beendet; das Gerät der Praxis ist im Werkzeug nicht gespeichert, ein erneuter Zugriff ist ohne neue Sitzungs-ID und neues Kennwort der Praxis nicht möglich.
 
 Die Praxis bestätigt:
 
 - ☐ Die Sitzung wurde wie oben beschrieben durchgeführt.
-- ☐ Die Verbindung ist beendet (Werkzeug geschlossen, Zugangscode ungültig bzw. geändert).
+- ☐ Die Verbindung ist beendet (QuickSupport bzw. Werkzeug geschlossen, Einmal-Kennwort damit ungültig).
 
 ---
 
