@@ -2941,15 +2941,15 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     // 'no_show' / 'planned'); er war seit jeher unsichtbar.
   }
 
-  // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter
-  // dem Knopf "Verlauf" in der Patientenkarte und oeffnet die Patientenakte.
-  // Verdrahtet wird der Knopf weiter unten, sobald der Lead bekannt ist.
+  // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter dem Knopf "Verlauf"
+  // in der Patientenkarte und oeffnet die Patientenakte. Verdrahtet wird er weiter unten, sobald der Lead bekannt ist.
 
   // Alles ab hier bis zur Patientenkarte setzt einen konkreten Termin voraus.
   const isOwn = !!booking && booking.user_id === currentSession.user.id;
   if (booking) {
-    document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
-    document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+    const abgeschlossen = ['completed', 'no_show', 'cancelled'].includes(booking.status);   // abgeschlossen: kein rotes „Nicht erschienen" mehr (canli-test 20.10.2026)
+    document.getElementById('bkActionNoShowBtn').hidden = !isOwn || abgeschlossen;
+    document.getElementById('bkActionNoShowHint').hidden = !isOwn || abgeschlossen;
 
     const ausfallBtn = document.getElementById('bkActionAusfallBtn');
     if (ausfallBtn) ausfallBtn.hidden = !(['no_show', 'cancelled'].includes(booking.status) && ausfallBizForBooking(booking));   // erst NACH No-Show/Absage — sonst verdrängte er „Nicht erschienen" (P1 canli-test 01.10.2026)
