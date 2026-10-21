@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
  "dateien": 450,
- "funktionen": 3617,
+ "funktionen": 3620,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1863,6 +1863,7 @@
     "getToken",
     "invalidate",
     "json",
+    "min",
     "raceSignal",
     "resolve",
     "resolveTarget",
@@ -3551,6 +3552,7 @@
     "invalidate",
     "isLocked",
     "kilitBitisMs",
+    "min",
     "performRefresh",
     "pruefeKiBericht",
     "quotaError",
@@ -4100,6 +4102,7 @@
     "handleReportOutcome",
     "isLocked",
     "kilitBitisMs",
+    "min",
     "quotaError",
     "raceSignal",
     "report",
@@ -6418,7 +6421,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "scanneReste"
    ],
@@ -6873,7 +6878,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "isProtected"
+    "isProtected",
+    "min"
    ],
    "calledBy": [
     "maskMessages",
@@ -6938,7 +6944,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "resolveSpans"
    ],
@@ -9093,7 +9101,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "hmLabel",
     "run"
@@ -9445,6 +9455,7 @@
     "add",
     "executeKiTask",
     "has",
+    "min",
     "report"
    ],
    "calledBy": [
@@ -11549,7 +11560,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "mapPrescriptionToDtaShape",
     "mapVerordnungToDtaShape"
@@ -16623,6 +16636,7 @@
    "storage": [],
    "calls": [
     "calcSessionZuzahlung",
+    "min",
     "num",
     "parseVkz03Session",
     "r2"
@@ -17554,6 +17568,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "nichts"
    ],
    "calledBy": [],
@@ -18467,6 +18482,7 @@
     "istGueltigerLegs",
     "json",
     "laenge",
+    "min",
     "parseDate",
     "preflight",
     "pruefeLaenge",
@@ -18566,6 +18582,7 @@
     "istGueltigerLegs",
     "json",
     "laenge",
+    "min",
     "parseDate",
     "preflight",
     "pruefeLaenge",
@@ -18661,6 +18678,7 @@
     "istGueltigerLegs",
     "json",
     "laenge",
+    "min",
     "parseDate",
     "pruefeLaenge",
     "r2",
@@ -18866,6 +18884,7 @@
    "storage": [],
    "calls": [
     "E",
+    "min",
     "round"
    ],
    "calledBy": [
@@ -20115,6 +20134,7 @@
     "has",
     "istStichtag",
     "komponentenTrennen",
+    "min",
     "parseGermanAmount",
     "pruefeDatenstrom",
     "round",
@@ -24335,6 +24355,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "r2"
    ],
    "calledBy": [
@@ -25948,6 +25969,7 @@
    "calls": [
     "calcSessionZuzahlung",
     "isUnter18",
+    "min",
     "r2"
    ],
    "calledBy": [
@@ -26270,6 +26292,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "r2"
    ],
    "calledBy": [
@@ -34329,6 +34352,7 @@
     "berlinDayBoundsUTC",
     "berlinDayOfWeek",
     "error",
+    "min",
     "minsToTime",
     "newOAuthClient",
     "timeToMins",
@@ -34383,6 +34407,7 @@
    "storage": [],
    "calls": [
     "berlinDayOfWeek",
+    "min",
     "pad",
     "parseSeriesFeedback",
     "resolveDay",
@@ -34412,6 +34437,7 @@
    "calls": [
     "berlinDayOfWeek",
     "fbFmtDM",
+    "min",
     "pad",
     "resolveDay",
     "search"
@@ -34501,6 +34527,7 @@
     "berlinLocalToUTC",
     "get",
     "has",
+    "min",
     "set",
     "timeToMinsLocal"
    ],
@@ -34597,6 +34624,7 @@
     "berlinDayOfWeek",
     "get",
     "has",
+    "min",
     "minsToTimeLocal",
     "round",
     "set",
@@ -34628,6 +34656,7 @@
     "feedbackWindow",
     "get",
     "has",
+    "min",
     "minsToTimeLocal",
     "round",
     "timeToMinsLocal"
@@ -35371,7 +35400,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -39613,6 +39644,7 @@
    "calls": [
     "clearAllErrors",
     "currentLogicalStep",
+    "min",
     "onStepEnter",
     "showStep",
     "validateCurrentStep"
@@ -44994,6 +45026,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round"
    ],
    "calledBy": [
@@ -45060,6 +45093,7 @@
    "calls": [
     "f",
     "k",
+    "min",
     "round",
     "toHex"
    ],
@@ -45126,6 +45160,7 @@
    "storage": [],
    "calls": [
     "f",
+    "min",
     "round",
     "shiftColorForTime",
     "toHex"
@@ -45195,6 +45230,7 @@
    "storage": [],
    "calls": [
     "k",
+    "min",
     "round",
     "shiftColorForTime",
     "toHex"
@@ -45335,7 +45371,8 @@
    "storage": [],
    "calls": [
     "hexToHSL",
-    "hslToHex"
+    "hslToHex",
+    "min"
    ],
    "calledBy": [
     "f",
@@ -45401,11 +45438,297 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "error"
+    "berlin",
+    "error",
+    "fmt",
+    "min"
    ],
    "calledBy": [
     "renderGaps",
     "renderGapsForDate"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "min",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "dashboard.js",
+   "start": 1140,
+   "end": 1140,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "(datei) api-backend/billing/api/statistik.routes.js",
+    "(datei) api-backend/server.js",
+    "(datei) api-backend/start.mjs",
+    "(datei) api/apify/search.js",
+    "(datei) ops/vendor/supabase-js.js",
+    "E",
+    "W",
+    "_exitAnsichtEditMode",
+    "_resizeVorlagenIframe",
+    "attachAutocomplete",
+    "attachPatientSearch",
+    "begrenzeAnzahl",
+    "berechneZuzahlungAusPosten",
+    "berlin",
+    "betraegeFuerVerordnung",
+    "calcAbrechnungsfallTotals",
+    "calcAbrechnungsfallZuzahlung",
+    "createJetonClient",
+    "enumerateDay",
+    "erstelleApp",
+    "executeTransport",
+    "f",
+    "fbFmtDM",
+    "feedbackWindow",
+    "findGaps",
+    "fmt",
+    "fmtDate",
+    "fmtDateTime",
+    "frequenzToDigit",
+    "getAvailableSlots",
+    "gruppiereBefunde",
+    "hexToHSL",
+    "horizonDays",
+    "hslToHex",
+    "importiere",
+    "initLeadSuche",
+    "inline",
+    "isProtected",
+    "k",
+    "karteHtml",
+    "kiJeton",
+    "loadNotizen",
+    "loadPatientDetailRezepte",
+    "loadScheduleBookings",
+    "makeBar",
+    "maskSnippet",
+    "md",
+    "mountBarcodeBestaetigung",
+    "moveVersatzMinuten",
+    "nextStep",
+    "oeffne",
+    "oeffnePatientenImport",
+    "openVorlagenAnsicht",
+    "parseOriginalDtaMessage",
+    "parseSeriesFeedback",
+    "performRefresh",
+    "positioniertPopover",
+    "preflight",
+    "pruefeTrustAnchorFrische",
+    "r2",
+    "renderBkActionFahrtState",
+    "renderMessreihenChart",
+    "resolveSpans",
+    "ringStrich",
+    "run",
+    "sanitizeField",
+    "scanneRezeptLokal",
+    "setzeZeilenService",
+    "shiftColorForTime",
+    "sollAbstand",
+    "verrechnungsBetrag",
+    "verteileWochentage",
+    "werktageZwischen",
+    "zaehleBarcode",
+    "zielGroesse"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "berlin",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "dashboard.js",
+   "start": 1141,
+   "end": 1150,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fmt",
+    "min"
+   ],
+   "calledBy": [
+    "findGaps",
+    "fmt"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "fmt",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "dashboard.js",
+   "start": 1142,
+   "end": 1150,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "berlin",
+    "min"
+   ],
+   "calledBy": [
+    "berlin",
+    "euroZustand",
+    "findGaps",
+    "loadEmpUrlaubSection",
+    "loadUeberblickBirthdays",
+    "loadUeberblickDeadlines",
+    "loadUeberblickNoShows",
+    "loadUeberblickVacations",
+    "loadUrlaubListe",
+    "openInvView",
+    "renderBefreiungCard",
+    "renderOverviewWeekly",
+    "rendereGeldzeile",
+    "schemaZaehlerUebersetzen",
+    "showSdConflictModal",
+    "terminZeitLabel"
    ],
    "modules": [
     "abrechnung",
@@ -45572,6 +45895,7 @@
    "calls": [
     "add",
     "getOwnerId",
+    "min",
     "mitDeckkraft",
     "openBookingActionModal",
     "renderBookingSlotInner",
@@ -47832,6 +48156,7 @@
    "calls": [
     "getOwnerId",
     "log",
+    "min",
     "parseNameMitGeburt"
    ],
    "calledBy": [
@@ -53059,6 +53384,7 @@
     "kasseAbrechnungsbereit",
     "kassiereZuzahlung",
     "makeBar",
+    "min",
     "openZuzahlungsrechnung",
     "renderBefreiungCard",
     "round",
@@ -53133,6 +53459,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round"
    ],
    "calledBy": [
@@ -53408,7 +53735,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -53765,6 +54094,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round",
     "xOf",
     "yOf"
@@ -56256,7 +56586,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -56570,7 +56902,9 @@
     "deleteEmpTimeOff"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -56942,6 +57276,7 @@
     "makeKiUiDependencies",
     "makeShape",
     "markActiveShape",
+    "min",
     "minPasswortLaenge",
     "mitarbeiterAnlegen",
     "mitarbeiterEntfernen",
@@ -57017,7 +57352,9 @@
     "zeigeEinrichtungscode"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -60245,6 +60582,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round"
    ],
    "calledBy": [
@@ -60319,6 +60657,7 @@
     "getOwnerId",
     "getVorlagenSampleHtml",
     "loadVorlagenPanel",
+    "min",
     "showToast"
    ],
    "calledBy": [
@@ -60483,7 +60822,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "_enterAnsichtEditMode",
     "closeModal",
@@ -62413,6 +62754,7 @@
     "invalidate",
     "load",
     "loadPatientNotes",
+    "min",
     "patientMatchesQuery",
     "renderList",
     "resolve",
@@ -63432,7 +63774,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -69828,7 +70172,9 @@
     "openPatRxDetail"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -70178,7 +70524,9 @@
     "round"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -70325,7 +70673,9 @@
     "round"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -70471,7 +70821,9 @@
     "loadUeberblickVacations"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -70617,7 +70969,9 @@
     "escapeHtml"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -74485,6 +74839,7 @@
     "abholen",
     "closeDropdown",
     "codeTeil",
+    "min",
     "oeffneAuswahl",
     "positionDropdown",
     "renderItems",
@@ -77855,6 +78210,7 @@
     "klassifiziereIpv4",
     "leseSignaturKopf",
     "lesen",
+    "min",
     "monatsSchluessel",
     "naechsterMonatsanfangBerlin",
     "nameErlaubt",
@@ -78624,6 +78980,7 @@
     "json",
     "jsonBody",
     "kiBerichtHash",
+    "min",
     "monatsSchluessel",
     "naechsterMonatsanfangBerlin",
     "pruefeKiBericht",
@@ -105301,7 +105658,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "mountEinrichtungRing",
     "zeichne"
@@ -108006,6 +108365,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round",
     "zahl"
    ],
@@ -108202,6 +108562,7 @@
    "storage": [],
    "calls": [
     "add",
+    "min",
     "round"
    ],
    "calledBy": [
@@ -108225,7 +108586,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "pruefeFrequenz"
    ],
@@ -111869,6 +112232,7 @@
    "calls": [
     "get",
     "has",
+    "min",
     "set"
    ],
    "calledBy": [
@@ -115110,6 +115474,7 @@
     "eintraegeElemente",
     "eintraegeFuer",
     "fuehreAus",
+    "min",
     "schliesse"
    ],
    "calledBy": [
@@ -115727,7 +116092,9 @@
     "moveVersatzMinuten"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -115801,6 +116168,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round"
    ],
    "calledBy": [
@@ -122562,6 +122930,7 @@
     "json",
     "loadB2B",
     "loadDoctors",
+    "min",
     "renderB2B",
     "renderCurrent",
     "renderDocTable",
@@ -129961,6 +130330,7 @@
     "insertDatensatz",
     "istSchonBenutzt",
     "leseCsv",
+    "min",
     "pruefeImport",
     "schliessen",
     "schritt1",
@@ -130303,6 +130673,7 @@
    "storage": [],
    "calls": [
     "insertDatensatz",
+    "min",
     "schritt3",
     "showToast"
    ],
@@ -141084,7 +141455,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -147422,6 +147795,7 @@
     "entferneBarcodeBestaetigung",
     "g",
     "markiereBarcodeMaskeVeraendert",
+    "min",
     "refresh",
     "snapshot",
     "val"
@@ -149008,6 +149382,7 @@
     "has",
     "leseLeinwand",
     "lesen",
+    "min",
     "neueLeinwand",
     "parseMuster13Barcode",
     "render",
@@ -149242,7 +149617,8 @@
    "storage": [],
    "calls": [
     "hasOwn",
-    "ladeZaehler"
+    "ladeZaehler",
+    "min"
    ],
    "calledBy": [
     "initBarcodeDialog",
@@ -151804,7 +152180,9 @@
     "escapeHtml"
    ],
    "calledBy": [
+    "berlin",
     "euroZustand",
+    "findGaps",
     "loadEmpUrlaubSection",
     "loadUeberblickBirthdays",
     "loadUeberblickDeadlines",
@@ -154936,6 +155314,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "round"
    ],
    "calledBy": [
@@ -158940,7 +159319,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "fuegeZeileHinzu",
     "ladeLeistungen",
@@ -159078,7 +159459,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "begrenzeAnzahl"
+    "begrenzeAnzahl",
+    "min"
    ],
    "calledBy": [
     "(datei) module/termin-leistungen.js",
@@ -168362,7 +168744,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "min"
+   ],
    "calledBy": [
     "neuPositionieren",
     "togglePopover"
@@ -178339,6 +178723,7 @@
     "druckenMenueHtml",
     "esc",
     "istKasse",
+    "min",
     "pruefTitel",
     "rezeptartLabel",
     "round"
@@ -181594,6 +181979,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "min",
     "r2"
    ],
    "calledBy": [
@@ -185588,7 +185974,8 @@
    "calls": [
     "esc",
     "inline",
-    "md"
+    "md",
+    "min"
    ],
    "calledBy": [
     "(datei) api-backend/billing/pdf/rechnung.template.js",
@@ -185687,7 +186074,8 @@
    "calls": [
     "esc",
     "inline",
-    "md"
+    "md",
+    "min"
    ],
    "calledBy": [
     "boardNotice",
@@ -185754,7 +186142,8 @@
    "storage": [],
    "calls": [
     "esc",
-    "inline"
+    "inline",
+    "min"
    ],
    "calledBy": [
     "(datei) api-backend/billing/zuzahlung/zu-beleg.js",
@@ -185828,7 +186217,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "esc"
+    "esc",
+    "min"
    ],
    "calledBy": [
     "fmtDate",
@@ -194351,6 +194741,7 @@
     "escHtml",
     "items",
     "loadLeads",
+    "min",
     "oeffneListe",
     "off",
     "on",
@@ -200672,6 +201063,7 @@
    "name": "fmt",
    "orte": [
     "api-backend/setup/router.js:122",
+    "dashboard.js:1142",
     "dashboard.js:7592",
     "dashboard.js:9362",
     "dashboard.js:9639",

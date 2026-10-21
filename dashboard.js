@@ -1134,21 +1134,21 @@ function shiftColorForTime(hex, hour) {
 }
 
 function findGaps(whStart, whEnd, bookings) {
+  // Minuten statt Uhrzeit-Strings, Termine auf die Arbeitszeit gekappt: vorher endete eine Lücke an
+  // einem Termin NACH Feierabend (21:00 statt 18:00) und ein über Mitternacht reichendes Ende lag am Vortag (canli-test 20.10.2026).
   try {
-    let current = (whStart || '09:00:00').substring(0, 5);
-    const end = (whEnd || '18:00:00').substring(0, 5);
-    if (!current || !end) return [];
-    const gaps = [];
-    const sorted = [...bookings].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-    for (const b of sorted) {
-      const bStart = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
-      const durMin = b.services?.duration_minutes || 30;
-      const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + durMin * 60000);
-      const bEnd = bEndRaw.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
-      if (bStart > current) gaps.push({ start: current, end: bStart });
-      if (bEnd > current) current = bEnd;
+    const min = (s) => { const [h, m] = String(s || '').slice(0, 5).split(':').map(Number); return h * 60 + m; };
+    const berlin = (d) => min(d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' }));
+    const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    const start = min(whStart || '09:00'), end = min(whEnd || '18:00'); if (!(end > start)) return [];
+    const gaps = []; let current = start;
+    for (const b of [...bookings].sort((x, y) => new Date(x.start_time) - new Date(y.start_time))) {
+      const s = new Date(b.start_time), e = b.end_time ? new Date(b.end_time) : new Date(s.getTime() + (b.services?.duration_minutes || 30) * 60000);
+      const bs = Math.max(start, Math.min(end, berlin(s))), be = Math.max(start, Math.min(end, e - s >= 86400000 || berlin(e) < berlin(s) ? end : berlin(e)));
+      if (bs > current) gaps.push({ start: fmt(current), end: fmt(bs) });
+      if (be > current) current = be;
     }
-    if (current < end) gaps.push({ start: current, end });
+    if (current < end) gaps.push({ start: fmt(current), end: fmt(end) });
     return gaps;
   } catch (e) { console.error('[findGaps]', e); return []; }
 }
@@ -1342,9 +1342,9 @@ async function loadScheduleBookings(date) {
     displayBookings = displayBookings.filter(b => b.start_time >= nowIso);
   }
   if (isToday) {
-    const countToday = currentProfile.role === 'owner'
-      ? displayBookings.length
-      : displayBookings.filter(b => b.user_id === currentSession.user.id).length;
+    const countToday = currentProfile.role === 'owner'   // ganzer Tag ohne Absagen — die Liste darunter zeigt nur die kommenden
+      ? (bookings || []).length
+      : (bookings || []).filter(b => b.user_id === currentSession.user.id).length;
     document.getElementById('kpi-today').textContent = countToday;
   }
 
