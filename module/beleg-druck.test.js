@@ -3,35 +3,23 @@ import assert from 'node:assert/strict';
 import { fehlendePflichtangaben, istRechnungsartig, belegDruckUrl } from './beleg-druck.js';
 
 // --- fehlendePflichtangaben --------------------------------------------------
-// Wörtlich die Regel des Servers (§ 14 Abs. 4 UStG). Weicht eine Seite ab,
-// blockiert entweder der Server einen durchgelassenen Druck oder das Dashboard
-// warnt ohne Anlass — genau die beiden Fehler, die diese Änderung behebt.
+// Zuzahlungsbeleg = Kleinbetragsrechnung (§ 33 UStDV, legal-de 21.10.2026): Name + Anschrift
+// Pflicht; Steuernummer erst über 250 €; IBAN nie. Wörtlich die Regel des Servers.
+const VOLL = { business_name: 'Praxis Muster', street: 'Hauptstr. 1', zip: '53721', city: 'Siegburg' };
 
-test('vollständiges Profil hat keine fehlenden Angaben', () => {
-  assert.deepEqual(fehlendePflichtangaben({ iban: 'DE12', steuernummer: '220/5070/0815' }), []);
+test('Name + Anschrift genügen — ohne IBAN und Steuernummer', () => {
+  assert.deepEqual(fehlendePflichtangaben(VOLL), []);
 });
 
-test('USt-IdNr. allein genügt — Steuernummer ist dann nicht nötig', () => {
-  assert.deepEqual(fehlendePflichtangaben({ iban: 'DE12', ust_id: 'DE123456789' }), []);
-});
-
-test('fehlende IBAN wird benannt', () => {
-  assert.deepEqual(fehlendePflichtangaben({ steuernummer: '220/5070/0815' }), ['Bankverbindung (IBAN)']);
-});
-
-test('weder Steuernummer noch USt-IdNr. fehlt als eine Angabe', () => {
-  assert.deepEqual(fehlendePflichtangaben({ iban: 'DE12' }), ['Steuernummer oder USt-IdNr.']);
-});
-
-test('leeres Profil meldet beides, kippt aber nicht', () => {
-  assert.equal(fehlendePflichtangaben({}).length, 2);
+test('fehlender Name und unvollständige Anschrift werden benannt', () => {
+  assert.deepEqual(fehlendePflichtangaben({ ...VOLL, business_name: '', zip: '' }), ['Praxisname', 'Praxisanschrift (Straße, PLZ, Ort)']);
   assert.equal(fehlendePflichtangaben(null).length, 2);
 });
 
-// Leerstring ist kein Wert: ein geleertes Eingabefeld speichert '' und würde
-// sonst als „vorhanden" durchgehen.
-test('Leerstrings zählen nicht als Angabe', () => {
-  assert.equal(fehlendePflichtangaben({ iban: '', steuernummer: '', ust_id: '' }).length, 2);
+test('über 250 € kommt Steuernummer oder USt-IdNr. dazu', () => {
+  assert.deepEqual(fehlendePflichtangaben(VOLL, { betrag: 250 }), []);
+  assert.deepEqual(fehlendePflichtangaben(VOLL, { betrag: 250.01 }), ['Steuernummer oder USt-IdNr. (Beleg über 250 €)']);
+  assert.deepEqual(fehlendePflichtangaben({ ...VOLL, ust_id: 'DE123456789' }, { betrag: 300 }), []);
 });
 
 // --- istRechnungsartig -------------------------------------------------------

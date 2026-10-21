@@ -435,12 +435,14 @@ function buildBankverbindung(profile) {
   ].filter(Boolean).join('\n');
 }
 
-// Pflichtangaben für rechnungsartige Belege (§ 14 Abs. 4 UStG).
-// Steuernummer ODER USt-IdNr. genügt — eine von beiden muss vorhanden sein.
-function fehlendePflichtangaben(profile) {
+// Pflichtangaben des Zuzahlungsbelegs — Kleinbetragsrechnung (§ 33 UStDV, legal-de 21.10.2026):
+// Name + Anschrift der Praxis; Steuernummer/USt-IdNr. erst über 250 €; IBAN nie Pflicht (F7: Soll).
+// Spiegel von module/beleg-druck.js — beim Ändern beide.
+function fehlendePflichtangaben(profile, { betrag = null } = {}) {
   const fehlend = [];
-  if (!profile?.iban) fehlend.push('Bankverbindung (IBAN)');
-  if (!profile?.steuernummer && !profile?.ust_id) fehlend.push('Steuernummer oder USt-IdNr.');
+  if (!profile?.business_name) fehlend.push('Praxisname');
+  if (!profile?.street || !profile?.zip || !profile?.city) fehlend.push('Praxisanschrift (Straße, PLZ, Ort)');
+  if (Number(betrag) > 250 && !profile?.steuernummer && !profile?.ust_id) fehlend.push('Steuernummer oder USt-IdNr. (Beleg über 250 €)');
   return fehlend;
 }
 
@@ -472,14 +474,13 @@ function pflichtangabenHinweisHtml(fehlend) {
   .hint { font-size:13px; color:#666; }
 </style></head><body>
   <div class="box">
-    <h1>Rechnung kann nicht gedruckt werden</h1>
-    <p>Für eine Rechnung sind folgende Angaben gesetzlich vorgeschrieben (§ 14 Abs. 4 UStG),
+    <h1>Beleg kann nicht gedruckt werden</h1>
+    <p>Für den Zuzahlungsbeleg sind folgende Angaben vorgeschrieben (§ 33 UStDV),
        fehlen aber in Ihrem Praxisprofil:</p>
     <ul>${fehlend.map(f => `<li>${f}</li>`).join('')}</ul>
     <p>Bitte tragen Sie die Angaben im Dashboard unter
        <strong>Einstellungen → Finanzen → Rechnungsdaten</strong> nach
        und öffnen Sie den Druck danach erneut.</p>
-    <p class="hint">Quittungen ohne Rechnungscharakter sind davon nicht betroffen.</p>
   </div>
 </body></html>`;
 }
@@ -2675,8 +2676,8 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       .eq('vorlage_type', 'quittung_zuzahlung')
       .eq('is_default', true)
       .maybeSingle();
-    // Zuzahlungsrechnung ist trotz des Typnamens eine Rechnung (Fälligkeit +
-    // Bankzeile), also gelten die Pflichtangaben nach § 14 Abs. 4 UStG.
+    // Zuzahlungsbeleg = Kleinbetragsrechnung (§ 33 UStDV): Name + Anschrift Pflicht, Steuernummer
+    // erst über 250 € (Prüfung nach der Summe unten), IBAN nie (legal-de 21.10.2026).
     const fehlend = fehlendePflichtangaben(praxisProfil);
     if (fehlend.length > 0) {
       res.set('Content-Type', 'text/html; charset=utf-8');
@@ -2755,6 +2756,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       // ausloest, gehoert von gkv-302 geprueft — siehe PREISE-ANALYSE.md.
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
+    // Über 250 € keine Kleinbetragsrechnung mehr → Steuernummer/USt-IdNr. Pflicht (§ 14 Abs. 4 UStG).
+    { const fehlendGross = fehlendePflichtangaben(praxisProfil, { betrag: totals?.gesZuzahlung });
+      if (fehlendGross.length > 0) { res.set('Content-Type', 'text/html; charset=utf-8'); return res.status(400).send(pflichtangabenHinweisHtml(fehlendGross)); } }
 
     const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei, label }) => ({
       session_id: s.id,
