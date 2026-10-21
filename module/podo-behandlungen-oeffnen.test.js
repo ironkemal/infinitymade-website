@@ -5,10 +5,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { oeffnePodoBehandlungen, terminIstPodo, terminDatum, terminInZukunft, terminStartenPodo } from './podo-behandlungen-oeffnen.js';
 
-function fakeDeps({ vords = [], confirmResult = true } = {}) {
+function fakeDeps({ vords = [], confirmResult = true, dokumentiert = false } = {}) {
   const calls = { setPodVorwahl: [], switchPanel: [], closeBkActionPanel: 0, showToast: [], showConfirmModal: [], sbLimit: [] };
   const sb = {
     from(table) {
+      if (table === 'podologie_behandlungen') {
+        const q = { select: () => q, eq: () => q, is: () => q, limit: async () => ({ data: dokumentiert ? [{ id: 'beh-1' }] : [] }) };
+        return q;
+      }
       assert.equal(table, 'prescriptions');
       return {
         select() { return this; },
@@ -225,4 +229,17 @@ test('S3.13: Hausbesuch gibt bookingId an setPodVorwahl weiter, Nicht-Hausbesuch
   const c2 = fakeDeps();
   await terminStartenPodo({ lead_id: 'l', verordnung_id: 'v1', start_time: new Date().toISOString(), id: 'bk2' }, c2.deps);
   assert.equal('bookingId' in c2.calls.setPodVorwahl[0][1], false);
+});
+
+test('schon dokumentierter Tag: Rückfrage vor dem Öffnen, Abbrechen öffnet nichts (canli-test 20.10.2026)', async () => {
+  const heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const b = { lead_id: 'lead-1', verordnung_id: 'vord-1', start_time: heute + 'T08:00:00Z' };
+  const nein = fakeDeps({ dokumentiert: true, confirmResult: false });
+  await terminStartenPodo(b, nein.deps);
+  assert.equal(nein.calls.showConfirmModal.length, 1);
+  assert.match(nein.calls.showConfirmModal[0].title, /schon dokumentiert/);
+  assert.equal(nein.calls.setPodVorwahl.length, 0);
+  const ja = fakeDeps({ dokumentiert: true, confirmResult: true });
+  await terminStartenPodo(b, ja.deps);
+  assert.equal(ja.calls.setPodVorwahl.length, 1);
 });

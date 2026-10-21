@@ -132727,10 +132727,12 @@
    "lang": "js",
    "file": "module/podo-behandlungen-oeffnen.js",
    "start": 164,
-   "end": 186,
-   "lines": 23,
+   "end": 206,
+   "lines": 43,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "podologie_behandlungen"
+   ],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
