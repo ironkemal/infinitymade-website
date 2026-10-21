@@ -17387,7 +17387,7 @@ function showPlanWall(lastPlan) {
           }).join('')}
         </div>
 
-        <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
+        <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</p>
         <button id="plan-wall-signout" onclick="window.__pwSignOut()">
           Abmelden
         </button>
