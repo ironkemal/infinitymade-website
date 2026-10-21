@@ -206,6 +206,23 @@ export function verdrahteSerienStarttag(doc = globalThis.document) {
     boxen.forEach(cb => { cb.checked = Number(cb.value) === tag; });
     boxen[0]?.dispatchEvent(new Event('change'));   // Vorschau nachziehen (nicht als Handeingabe gezählt)
   };
-  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (e) => { if (e.target.checked) { vonHand = false; setze(); } });
+  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (e) => { if (e.target.checked) { vonHand = false; setze(); uebernimmAnzahl(); } });
   doc.getElementById('bkStart')?.addEventListener('change', setze);
+
+  // Eine Zahl, zwei Felder: „Anzahl" oben und „Anzahl der Termine" unter
+  // „Mehr Optionen" liefen auseinander („Alle 6 Termine" über einer Vorschau
+  // mit 3 — canli-test 20.10.2026). Beim Einschalten gilt die obere Zahl,
+  // wer unten tippt, schreibt sie nach oben zurück.
+  const anzahl = doc.getElementById('bkAnzahl'), serie = doc.getElementById('bkSeriesCount');
+  function uebernimmAnzahl() {
+    const n = parseInt(anzahl?.value, 10);
+    if (!serie || !(n > 1) || String(n) === serie.value) return;
+    serie.value = String(n);
+    serie.dispatchEvent(new Event('input'));
+  }
+  serie?.addEventListener('input', (e) => {
+    if (!e.isTrusted || !anzahl) return;
+    const n = parseInt(serie.value, 10);
+    if (n > 1 && String(n) !== anzahl.value) { anzahl.value = String(n); anzahl.dispatchEvent(new Event('input')); }
+  });
 }

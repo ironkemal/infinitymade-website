@@ -59,3 +59,29 @@ test('Folgeleistungen: ohne Zeilen gilt die Hauptleistung des Termins; ist die s
   assert.deepEqual(folgeLeistungen(null, 'erst', dienste).serviceIds, []);
   assert.deepEqual(folgeLeistungen([{ service_id: 'erst', anzahl: 1 }], 'erst', dienste).serviceIds, []);
 });
+
+import { passeFolgeterminAn } from './termin-folge.js';
+
+const WH = [1, 2, 3, 4, 5].map(d => ({ day_of_week: d, start_time: '08:00:00', end_time: '18:00:00' }));
+const L = (y, mo, d, h, mi = 0) => new Date(y, mo - 1, d, h, mi);
+
+test('Folgetermin 21:00 → nächster Arbeitstag 08:00 (canli-test 20.10.2026)', () => {
+  const r = passeFolgeterminAn(L(2026, 10, 28, 21), 45, WH);   // Mi 21:00
+  assert.deepEqual([r.getDate(), r.getHours(), r.getMinutes()], [29, 8, 0]);
+});
+
+test('Folgetermin am Samstag → Montag', () => {
+  const r = passeFolgeterminAn(L(2026, 10, 31, 10), 30, WH);   // Sa
+  assert.deepEqual([r.getDate(), r.getMonth() + 1, r.getHours()], [2, 11, 8]);
+});
+
+test('belegte Zeit wird in 15-Minuten-Schritten übersprungen', () => {
+  const belegt = [{ start: L(2026, 10, 28, 10), end: L(2026, 10, 28, 10, 45) }];
+  const r = passeFolgeterminAn(L(2026, 10, 28, 10), 30, WH, belegt);
+  assert.deepEqual([r.getHours(), r.getMinutes()], [10, 45]);
+});
+
+test('ohne Arbeitszeiten bleibt der Vorschlag unverändert', () => {
+  const z = L(2026, 10, 28, 21);
+  assert.equal(passeFolgeterminAn(z, 30, []).getTime(), z.getTime());
+});

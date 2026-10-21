@@ -63,6 +63,43 @@ export function folgeterminStart(startZeit, frequenz, jetzt = new Date()) {
 }
 
 /**
+ * Rückt einen vorgeschlagenen Beginn in die Arbeitszeit und auf eine freie
+ * Stelle: Tag ohne Arbeitszeit → nächster Arbeitstag; Uhrzeit ausserhalb →
+ * Arbeitsbeginn; belegt → in 15-Minuten-Schritten weiter, notfalls nächster
+ * Tag. Vorher schlug der Folgetermin 21:00 Uhr vor, weil der Ausgangstermin
+ * so spät lag, und übersah belegte Zeiten (canli-test 20.10.2026).
+ *
+ * Rechnet in Ortszeit des Browsers (wie `folgeterminStart`).
+ *
+ * @param {Date} ziel
+ * @param {number} dauerMin
+ * @param {Array<{day_of_week:number,start_time:string,end_time:string}>} arbeitszeiten  leer = keine Kenntnis → unverändert
+ * @param {Array<{start:Date,end:Date}>} belegt
+ * @param {number} [maxTage]
+ * @returns {Date} angepasster Beginn (oder `ziel`, wenn nichts passt)
+ */
+export function passeFolgeterminAn(ziel, dauerMin, arbeitszeiten, belegt = [], maxTage = 21) {
+  if (!arbeitszeiten?.length) return ziel;
+  const minuten = (s) => { const [h, m] = String(s || '').slice(0, 5).split(':').map(Number); return h * 60 + m; };
+  const dauer = Math.max(5, Number(dauerMin) || 30);
+  for (let tag = 0; tag <= maxTage; tag++) {
+    const d = new Date(ziel.getFullYear(), ziel.getMonth(), ziel.getDate() + tag);
+    const wh = arbeitszeiten.find(w => Number(w.day_of_week) === d.getDay());
+    if (!wh) continue;
+    const von = minuten(wh.start_time), bis = minuten(wh.end_time);
+    let m = tag === 0 ? ziel.getHours() * 60 + ziel.getMinutes() : von;
+    if (m < von || m + dauer > bis) m = tag === 0 && m < von ? von : (tag === 0 ? null : von);
+    if (m == null) continue;
+    for (; m + dauer <= bis; m += 15) {
+      const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(m / 60), m % 60);
+      const e = new Date(s.getTime() + dauer * 60000);
+      if (!belegt.some(b => s < b.end && e > b.start)) return s;
+    }
+  }
+  return ziel;
+}
+
+/**
  * Die Leistungen des Folgetermins: die des Ausgangstermins ohne die
  * Eingangsbefundung (einmalig).
  *
@@ -137,7 +174,16 @@ export async function oeffneFolgetermin(booking, deps) {
       : Promise.resolve({ data: null }),
   ]);
 
-  const { start, abstandTage, ausFrequenz } = folgeterminStart(booking.start_time, rx?.frequenz);
+  // Steht schon ein späterer Termin dieser Patientin, plant der Folgetermin
+  // nach DEM — sonst lag der Vorschlag vor einem längst gebuchten Termin.
+  const { data: spaeter } = await supabase.from('bookings').select('start_time')
+    .eq('lead_id', booking.lead_id).eq('status', 'confirmed')
+    .gt('start_time', booking.start_time || new Date().toISOString())
+    .order('start_time', { ascending: false }).limit(1);
+  const basis = spaeter?.[0]?.start_time || booking.start_time;
+  const vorschlag = folgeterminStart(basis, rx?.frequenz);
+  const { abstandTage, ausFrequenz } = vorschlag;
+  const start = await inArbeitszeit(supabase, booking, vorschlag.start, deps).catch(() => vorschlag.start);
   const { serviceIds, menge } = folgeLeistungen(leistungen, booking.service_id, deps.getServices?.());
   const hauptId = serviceIds[0] || booking.service_id || null;
 
@@ -185,8 +231,25 @@ export async function oeffneFolgetermin(booking, deps) {
   // Kartenklick — nach dem Setzen der Leistungen einmal anstossen (wie termin-leistungen.js selbst, mit Verzug).
   setTimeout(() => { schlageBefundungVor(); }, 80);
 
+  const nachGeplantem = basis !== booking.start_time ? ' (nach dem schon geplanten Termin)' : '';
   toast?.(ausFrequenz
-    ? `Folgetermin vorbelegt: ${abstandTage} Tage nach dem letzten Termin (Frequenz der Verordnung) — bitte prüfen und speichern.`
+    ? `Folgetermin vorbelegt: ${abstandTage} Tage nach dem letzten Termin${nachGeplantem} (Frequenz der Verordnung), in der Arbeitszeit — bitte prüfen und speichern.`
     : 'Folgetermin vorbelegt (Frequenz der Verordnung nicht erkannt: eine Woche) — bitte prüfen und speichern.', 'info');
   return true;
+}
+
+/** Arbeitszeit + belegte Zeiten des Behandlers laden und den Vorschlag anpassen. */
+async function inArbeitszeit(supabase, booking, startLokal, deps) {
+  const ziel = new Date(startLokal);
+  const behandler = booking.user_id || deps.ownerId?.();
+  const dauer = booking.end_time && booking.start_time
+    ? (new Date(booking.end_time) - new Date(booking.start_time)) / 60000 : 30;
+  const bis = new Date(ziel.getTime() + 22 * 86400000);
+  const [{ data: wh }, { data: termine }] = await Promise.all([
+    supabase.from('working_hours').select('day_of_week,start_time,end_time').eq('user_id', behandler).eq('is_active', true),
+    supabase.from('bookings').select('start_time,end_time').eq('user_id', behandler).neq('status', 'cancelled')
+      .gte('start_time', new Date(ziel.getFullYear(), ziel.getMonth(), ziel.getDate()).toISOString()).lt('start_time', bis.toISOString()),
+  ]);
+  const belegt = (termine || []).map(b => ({ start: new Date(b.start_time), end: new Date(b.end_time || b.start_time) }));
+  return alsDatetimeLocal(passeFolgeterminAn(ziel, dauer, wh || [], belegt));
 }

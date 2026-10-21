@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
  "dateien": 450,
- "funktionen": 3622,
+ "funktionen": 3626,
  "module": [
   "abrechnung",
   "anamnese",
@@ -77300,6 +77300,7 @@
     "getAvailableSlots",
     "horizonDays",
     "icdSpeicherHinweise",
+    "inArbeitszeit",
     "init",
     "ladeAbrechnungAuswahl",
     "ladeAbrechnungVerlauf",
@@ -104156,6 +104157,7 @@
    ],
    "calledBy": [
     "folgeterminStart",
+    "inArbeitszeit",
     "openBookingModal",
     "zeitpunktAusFeld"
    ],
@@ -153930,8 +153932,8 @@
    "lang": "js",
    "file": "module/serien-termine.js",
    "start": 195,
-   "end": 211,
-   "lines": 17,
+   "end": 228,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -153941,7 +153943,8 @@
    "calls": [
     "isValidCalendarDate",
     "nachziehen",
-    "setze"
+    "setze",
+    "uebernimmAnzahl"
    ],
    "calledBy": [
     "(datei) dashboard.js"
@@ -154024,6 +154027,28 @@
    "uiPfad": [
     "ortak yardımcı — 37 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "uebernimmAnzahl",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/serien-termine.js",
+   "start": 217,
+   "end": 222,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "verdrahteSerienStarttag"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "jetonAusHash",
@@ -158134,12 +158159,138 @@
    ]
   },
   {
+   "name": "passeFolgeterminAn",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/termin-folge.js",
+   "start": 81,
+   "end": 100,
+   "lines": 20,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "minuten"
+   ],
+   "calledBy": [
+    "inArbeitszeit"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "minuten",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/termin-folge.js",
+   "start": 83,
+   "end": 83,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "passeFolgeterminAn"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "folgeLeistungen",
    "kind": "function",
    "lang": "js",
    "file": "module/termin-folge.js",
-   "start": 74,
-   "end": 89,
+   "start": 111,
+   "end": 126,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -158203,8 +158354,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/termin-folge.js",
-   "start": 76,
-   "end": 84,
+   "start": 113,
+   "end": 121,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -158267,13 +158418,14 @@
    "kind": "function",
    "lang": "js",
    "file": "module/termin-folge.js",
-   "start": 115,
-   "end": 192,
-   "lines": 78,
+   "start": 152,
+   "end": 239,
+   "lines": 88,
    "spiegelHinweis": null,
    "tables": [
     "booking_leistungen",
-    "prescriptions"
+    "prescriptions",
+    "bookings"
    ],
    "rpcs": [],
    "writes": [],
@@ -158284,6 +158436,7 @@
     "closeModal",
     "folgeLeistungen",
     "folgeterminStart",
+    "inArbeitszeit",
     "oeffneAnlegenWahl",
     "ownerId",
     "parseNameMitGeburt",
@@ -158349,8 +158502,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/termin-folge.js",
-   "start": 148,
-   "end": 148,
+   "start": 194,
+   "end": 194,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -158371,6 +158524,75 @@
     "resetServiceForm",
     "srvFarbwahl",
     "verdrahteSerienStarttag"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "inArbeitszeit",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/termin-folge.js",
+   "start": 242,
+   "end": 255,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [
+    "working_hours",
+    "bookings"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "all",
+    "alsDatetimeLocal",
+    "passeFolgeterminAn"
+   ],
+   "calledBy": [
+    "oeffneFolgetermin"
    ],
    "modules": [
     "abrechnung",
@@ -201683,7 +201905,7 @@
    "orte": [
     "merkez/cloudflare.js:30",
     "module/serien-termine.js:200",
-    "module/termin-folge.js:148",
+    "module/termin-folge.js:194",
     "module/termin-heute.js:86"
    ],
    "aynalar": []

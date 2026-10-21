@@ -152,3 +152,17 @@ test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt'
   hoerer.bkStartchange[0]();
   assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['5']);
 });
+
+test('verdrahteSerienStarttag: Anzahl oben und Serienanzahl bleiben gleich', async () => {
+  const { verdrahteSerienStarttag } = await import('./serien-termine.js');
+  const hoerer = {};
+  const el = (id, value = '') => ({ id, value, dispatchEvent: (e) => (hoerer[id + e.type] || []).forEach(f => f(e)), addEventListener: (t, f) => { (hoerer[id + t] ||= []).push(f); } });
+  const els = { bkSeriesWeekdays: { ...el('bkSeriesWeekdays'), querySelectorAll: () => [] }, bkStart: el('bkStart', '2026-10-21T09:00'),
+    bkSeriesToggle: el('bkSeriesToggle'), bkAnzahl: el('bkAnzahl', '6'), bkSeriesCount: el('bkSeriesCount', '3') };
+  verdrahteSerienStarttag({ getElementById: (id) => els[id] });
+  hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
+  assert.equal(els.bkSeriesCount.value, '6');
+  els.bkSeriesCount.value = '4';
+  hoerer.bkSeriesCountinput[0]({ isTrusted: true });
+  assert.equal(els.bkAnzahl.value, '4');
+});
