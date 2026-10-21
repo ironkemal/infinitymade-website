@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "Montagmorgen. Eine Blankoverordnung. Und jetzt entscheiden Sie. Bei der Blankoverordnung bestimmen Therapeutin oder Therapeut Heilmittel, Menge und Frequenz und tragen die wirtschaftliche Verantwortung. Die Verordnung gilt höchstens 16 Wochen ab Verordnungsdatum (HeilM-RL § 13a).\n\nErgotherapeut:innen: Mehr Praxiswissen auf praxura.de\n\n#Ergotherapie #Heilmittel #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "tippen", "dauer": 2.6, "kicker": "Montagmorgen", "titel": "Eine Blankoverordnung. Und jetzt entscheiden <em>Sie.</em>" },
+    { "typ": "aussage", "dauer": 3, "kicker": "Ergotherapeut:innen", "titel": "Heilmittel, Menge, Frequenz: <em>Ihre</em> Wahl.", "quelle": "KBV Praxiswissen Heilmittel" },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Und die Verantwortung?", "titel": "Die Wirtschaftlichkeit <em>liegt bei Ihnen.</em>", "quelle": "KBV Praxiswissen Heilmittel" },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Die Grenze", "titel": "Höchstens <em>16 Wochen</em> ab Verordnungsdatum.", "quelle": "Heilmittel-Richtlinie § 13a Abs. 2" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Therapie.</em>", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

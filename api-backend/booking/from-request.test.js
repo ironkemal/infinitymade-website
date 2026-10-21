@@ -272,3 +272,26 @@ test('fehlgeschlagener atomarer Commit erzeugt keinen nichtatomaren Fallback', a
   }), /RPC fehlt/);
   assert.equal(supabase.inserts.length, 0);
 });
+
+test('„1x pro Woche" aus dem Anfrageformular legt die Serie an (canli-test 21.10.2026)', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: async () => ({ slots: ['10:00'] }),
+  });
+  const result = await create(
+    { ...baseRequest, verordnung_sitzungen: 3, frequenz: '1x pro Woche' },
+    'owner-1', 'therapeut-1', 'Max Mustermann',
+  );
+  assert.equal(result.sessions_created, 3);
+  assert.equal(result.needs_manual_scheduling, false);
+});
+
+test('leadId landet in jeder Terminzeile (direkt und im commit)', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({ supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: async () => ({ slots: ['10:00'] }) });
+  await create({ ...baseRequest, verordnung_sitzungen: 2, frequenz: '1x/Woche' }, 'owner-1', 'therapeut-1', 'X', { leadId: 'lead-9' });
+  assert.ok(supabase.inserts.length === 2 && supabase.inserts.every(r => r.lead_id === 'lead-9'));
+  let geplant = null;
+  await create({ ...baseRequest }, 'owner-1', 'therapeut-1', 'X', { leadId: 'lead-9', commit: async (rows, m) => { geplant = rows; return { ...m }; } });
+  assert.equal(geplant[0].lead_id, 'lead-9');
+});

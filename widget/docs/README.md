@@ -27,7 +27,7 @@ Alternativ ohne Script (kein automatischer Höhenabgleich):
 **On-Prem:** Kundenbox-Praxen laden `embed.js` von **ihrer eigenen** Adresse
 (`https://<kutu>/widget/embed.js`). Der Loader hat keinen festen Host; er leitet die iframe-Adresse
 aus seinem eigenen `src` ab. Würde eine Box-Praxis das Skript von `praxura.de` laden, ginge der
-Seitenaufruf ihrer Patient:innen an unseren Server (onprem O-190).
+Seitenaufruf ihrer Patient:innen an unseren Server (onprem O-211).
 
 ## Dateien
 

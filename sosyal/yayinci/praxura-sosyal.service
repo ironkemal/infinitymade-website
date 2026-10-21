@@ -1,0 +1,30 @@
+# Praxura-Veröffentlicher auf dem merkez-VPS — gleiches Muster wie praxura-merkez.service.
+# Wird von yukle.sh nach /etc/systemd/system/ installiert. Nicht auf dem Server von Hand ändern (onprem O-205).
+[Unit]
+Description=Praxura Social (Veröffentlicher, O-205)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=sosyal
+Group=sosyal
+EnvironmentFile=/etc/praxura-sosyal/sosyal.env
+Environment=SOSYAL_INHALT=/opt/praxura-sosyal/inhalt
+Environment=SOSYAL_MEDIEN=/opt/praxura-sosyal/medien
+Environment=SOSYAL_DATEN=/var/lib/praxura-sosyal
+WorkingDirectory=/opt/praxura-sosyal/app
+ExecStart=/usr/bin/node yayinci.mjs --dienst
+StateDirectory=praxura-sosyal
+StateDirectoryMode=0700
+Restart=always
+RestartSec=30
+# Auf demselben Host laufen Namensdienst und ACME-DNS der Boxen — nicht aushungern
+MemoryMax=160M
+CPUQuota=50%
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

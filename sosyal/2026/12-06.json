@@ -1,0 +1,27 @@
+{
+  "art": "post",
+  "layout": "liste",
+  "rubrik": "Heilmittel · Verordnung",
+  "seite": "Nikolaus-Check",
+  "titel": "Waren Ihre Verordnungen <em>brav?</em>",
+  "punkte": [
+    [
+      "Diagnosegruppe",
+      "steht auf der Verordnung"
+    ],
+    [
+      "ICD-10-Diagnose",
+      "konkret, behandlungsrelevant"
+    ],
+    [
+      "Leitsymptomatik",
+      "Buchstabe oder Klartext"
+    ],
+    [
+      "Therapiefrequenz",
+      "Spanne möglich"
+    ]
+  ],
+  "quelle": "Quelle: Heilmittel-Richtlinie § 13 Abs. 2",
+  "caption": "Nikolaus-Check: Waren Ihre Verordnungen brav?\n\nBehandelt werden darf nur, wenn die erforderlichen Angaben auf dem Vordruck stehen (HeilM-RL § 16 Abs. 1). Vier davon sehen Sie hier. Bei der Blankoverordnung entfallen einzelne Angaben (§ 13a). Praxura prüft die Verordnung, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Heilmittel #Verordnung #Praxisalltag #GKV #Therapiepraxis"
+}

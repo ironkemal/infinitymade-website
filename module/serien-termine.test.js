@@ -133,3 +133,36 @@ test('recurrence biweekly ohne intervalDays liefert 14 Tage Abstand', () => {
   const tage = serienDaten({ startDatum: '2026-10-14', anzahl: 3, recurrence: 'biweekly', wochentage: [3] });
   assert.deepEqual(tage, ['2026-10-14', '2026-10-28', '2026-11-11']);
 });
+
+test('verdrahteSerienStarttag: Starttag Mittwoch hakt Mi an, Handeingabe bleibt', async () => {
+  const { verdrahteSerienStarttag } = await import('./serien-termine.js');
+  const box = (v, c) => ({ value: String(v), checked: c });
+  const boxen = [box(1, true), box(2, false), box(3, false), box(4, false), box(5, false), box(6, false), box(0, false)];
+  const hoerer = {};
+  const el = (id) => ({ id, value: id === 'bkStart' ? '2026-10-21T09:00' : '', addEventListener: (t, f) => { (hoerer[id + t] ||= []).push(f); } });
+  const wrap = { ...el('bkSeriesWeekdays'), querySelectorAll: () => boxen };
+  const els = { bkSeriesWeekdays: wrap, bkStart: el('bkStart'), bkSeriesToggle: el('bkSeriesToggle') };
+  boxen[0].dispatchEvent = () => {};
+  verdrahteSerienStarttag({ getElementById: (id) => els[id] });
+  hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
+  assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['3']);
+  hoerer.bkSeriesWeekdayschange[0]({ isTrusted: true });   // Hand
+  boxen.forEach(b => { b.checked = b.value === '5'; });
+  els.bkStart.value = '2026-10-22T09:00';
+  hoerer.bkStartchange[0]();
+  assert.deepEqual(boxen.filter(b => b.checked).map(b => b.value), ['5']);
+});
+
+test('verdrahteSerienStarttag: Anzahl oben und Serienanzahl bleiben gleich', async () => {
+  const { verdrahteSerienStarttag } = await import('./serien-termine.js');
+  const hoerer = {};
+  const el = (id, value = '') => ({ id, value, dispatchEvent: (e) => (hoerer[id + e.type] || []).forEach(f => f(e)), addEventListener: (t, f) => { (hoerer[id + t] ||= []).push(f); } });
+  const els = { bkSeriesWeekdays: { ...el('bkSeriesWeekdays'), querySelectorAll: () => [] }, bkStart: el('bkStart', '2026-10-21T09:00'),
+    bkSeriesToggle: el('bkSeriesToggle'), bkAnzahl: el('bkAnzahl', '6'), bkSeriesCount: el('bkSeriesCount', '3') };
+  verdrahteSerienStarttag({ getElementById: (id) => els[id] });
+  hoerer.bkSeriesTogglechange[0]({ target: { checked: true } });
+  assert.equal(els.bkSeriesCount.value, '6');
+  els.bkSeriesCount.value = '4';
+  hoerer.bkSeriesCountinput[0]({ isTrusted: true });
+  assert.equal(els.bkAnzahl.value, '4');
+});

@@ -4,14 +4,14 @@
 
 | | |
 |---|---|
-| **Verantwortliche Stelle** | InfinityMade (Einzelunternehmen) |
+| **Verantwortliche Stelle** | Yavuz Kemal Demir – InfinityMade (Einzelunternehmer) |
 | **Inhaber / DSB** | Yavuz Kemal Demir, ironkemal5@gmail.com |
 | **Adresse** | Industriestraße 33, 53721 Siegburg, Deutschland |
 | **Aufsichtsbehörde** | Landesbeauftragter für Datenschutz NRW |
-| **Letzte Aktualisierung** | 2026-08-14 |
-| **Version** | 1.2 |
+| **Letzte Aktualisierung** | 2026-10-21 (Nachtrag Verarbeitung 7, Entwurf) |
+| **Version** | 1.2 + Nachtrag 2026-10-21 |
 
-InfinityMade tritt **doppelt** in Erscheinung:
+Yavuz Kemal Demir – InfinityMade tritt **doppelt** in Erscheinung:
 - als **Verantwortlicher** für eigene Geschäftskunden-Daten (B2B-Stammdaten, Login, Abrechnung)
 - als **Auftragsverarbeiter** im Auftrag der angeschlossenen Praxen für deren Patient*innen-Daten
 
@@ -96,6 +96,31 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | **Widerruf** | Art. 7 Abs. 3 DSGVO: die Datenschutz-Einwilligung ist jederzeit formlos widerruflich, der Widerrufsweg steht im unterschriebenen Text. Ein Widerruf **löscht den Nachweis nicht**, er markiert ihn (`revoked_at`). Die Behandlungs-Einwilligung nach § 630d BGB ist davon getrennt erfasst — Kopplung beider Wäre ein Verstoß gegen das Koppelungsverbot |
 | **TOM-Verweis** | siehe TOM.md § 1.2, § 1.3, § 2.1 |
 
+> **Verarbeitung 6** ist für die Privatliquidation reserviert (offener Punkt, LEGAL_DECISIONS.md 08.09.2026; erscheint mit Version 1.3).
+
+## Verarbeitung 7 — Begleitete Datenübernahme („Datenübernahme-Paket", Box)
+
+> **Entwurf legal-de 21.10.2026** — wirksam mit dem ersten verkauften Paket. Grundlage:
+> LEGAL_DECISIONS.md 20.10.2026, Vertrag `compliance/AVV-DATENUEBERNAHME.md`.
+> Eintrag nach **Art. 30 Abs. 2 DSGVO** (Verzeichnis des Auftragsverarbeiters). Die Box selbst
+> bleibt rollenlos; diese Tätigkeit ist die einzige im Box-Modell, bei der Praxura Patientendaten
+> zu sehen bekommt.
+
+| Feld | Inhalt |
+|---|---|
+| **Bezeichnung** | Begleitung der Praxis bei der Übernahme von Daten aus ihrer bisherigen Praxissoftware in Praxura (CSV-/Excel-Import) per Bildschirmfreigabe |
+| **Rolle** | Auftragsverarbeiter (Art. 28 DSGVO), je gebuchter Sitzung; zugleich mitwirkende Person nach § 203 Abs. 3 S. 2 StGB |
+| **Verantwortliche (Art. 30 Abs. 2 lit. a)** | Die jeweils beauftragende Praxis. Die Liste der Auftraggeber mit Datum der Vereinbarung und der Sitzung(en) wird **außerhalb dieses öffentlichen Repositorys** geführt (gemeinsamer Ablageordner, `vertraege/`) und ist Bestandteil dieses Verzeichnisses. Ein Datenschutzbeauftragter ist bei Praxura nicht benannt (DSB_PRUEFVERMERK.md) |
+| **Kategorien von Verarbeitungen (lit. b)** | Ausschließlich **Einsehen** (Abfragen, Art. 4 Nr. 2) des von der Praxis freigegebenen Bildschirminhalts in Echtzeit. Kein Erheben, Speichern, Kopieren, Übermitteln, Eingeben oder Löschen durch Praxura; die Praxis bedient ihre Systeme selbst |
+| **Datenkategorien (sichtbar)** | Patientenstamm (Name, Geburtsdatum, Anschrift, Kontakt, Krankenkasse/IK, Versichertennummer, Versichertenstatus, Zuzahlungsbefreiung); offene und teilweise erbrachte, nicht abgerechnete Verordnungen (Ausstellungsdatum, LANR/BSNR/Arztname, ICD-10, Diagnose, Diagnosegruppe, Leitsymptomatik, Heilmittel, Anzahl, Frequenz; Podologie zusätzlich Nagel, Wagner-Grad); bereits erbrachte Behandlungstage (Datum, Leistung); Vorgeschichte (Daten früherer Leistungen); Zuzahlungs-Vermerk (Betrag, Datum, Beleg-Nr. des Altsystems); beiläufig sichtbare Inhalte der bisherigen Software |
+| **Besondere Kategorien (Art. 9)** | ja — Gesundheitsdaten |
+| **Betroffene** | Patient*innen der Praxis; verordnende Ärzt*innen; Beschäftigte der Praxis, soweit sichtbar |
+| **Empfänger** | Keine Empfänger von Inhalten. Fernsitzungswerkzeug: TeamViewer über Praxura-Lizenz — **Unterauftragsverarbeiter nur für Verbindungsdaten** (Geräte-IDs, IP-Adressen, Zeitpunkte, Konto des Praxura-Teilnehmers): TeamViewer Germany GmbH, Bahnhofsplatz 2, 73033 Göppingen; Auftragsverarbeitungsvertrag des Anbieters (Stand 02.02.2026, gilt mit der Nutzung, EULA A.4) mit Anlagen 1–3 abgelegt im gemeinsamen Ordner (`vertraege/`). Bildschirminhalte Ende-zu-Ende verschlüsselt, für den Anbieter nicht lesbar. Nutzt die Praxis ausnahmsweise ihr eigenes Werkzeug, ist dessen Anbieter ihr Dienstleister |
+| **Drittland-Übermittlung (lit. c)** | Inhalte: keine (Ende-zu-Ende-Verschlüsselung). Verbindungsdaten: Standort der Vermittlungsserver vom Anbieter nicht auf die EU festgelegt; Übermittlung in Drittländer nach dessen Auftragsverarbeitungsvertrag (Ziff. 2.13, 3.3) nur unter den Voraussetzungen der Art. 44 ff. DSGVO. Keine US-Konferenzdienste |
+| **Speicherdauer** | Patientendaten: keine Speicherung bei Praxura. Sitzungsprotokoll (enthält keine Patientendaten): bis Ende des dritten Jahres nach dem Jahr der Sitzung. Versehentlich eingegangene Dateien: unverzügliche Löschung, Vermerk im Protokoll |
+| **TOM (lit. d, Art. 32)** | Nur-Ansicht-Modus, im Praxura-Client fest eingestellt (Zugriffssteuerung ausgehend „View and show"); Verbindung nur mit Sitzungs-ID und Einmal-Kennwort der Praxis (QuickSupport), kein unbeaufsichtigter Zugang, Gerät der Praxis nicht gespeichert; keine Aufzeichnung, keine Dateiübertragung, keine Zwischenablage; KI-Zusatzfunktionen des Werkzeugs aus; Endgerät mit Festplattenverschlüsselung, Bildschirmsperre, ohne Hintergrund-Aufzeichnung; geschlossener Raum, Kopfhörer; nur schriftlich verpflichtete Teilnehmende (§ 203 Abs. 4 S. 2 Nr. 2 StGB, Art. 28 Abs. 3 lit. b); Sitzung auf gebuchte Dauer begrenzt; Protokoll je Sitzung (`compliance/vorlagen/SITZUNGSPROTOKOLL-DATENUEBERNAHME.md`). Einzelheiten: AVV-DATENUEBERNAHME.md § 6 Abs. 3 |
+| **DSFA** | Nicht gesondert erforderlich: keine Speicherung, kein neuer Empfänger, zeitlich eng begrenzt; Bewertung liegt beim Verantwortlichen (Praxis) |
+
 ---
 
 ## Verarbeitung 6 — Online-Terminanfragen (Widget und Anfrageseite)
@@ -125,6 +150,7 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | Stripe Payments Europe | Zahlungsabwicklung | EU (Irland) | ✅ | (USA via SCC + DPF) |
 | GoDaddy (Mailhosting `praxura.de`) | Transaktions-E-Mails über SMTP (nodemailer) sowie Supabase-Auth-Mails | ⚠️ **offen** | ⚠️ **offen** | ⚠️ **zu prüfen** |
 | Google LLC | OAuth + Calendar (nur opt-in) | DPF-zertifiziert | (Google Workspace DPA) | (USA via DPF) |
+| TeamViewer Germany GmbH | Verbindungsaufbau Bildschirmfreigabe — **nur** Verarbeitung 7 (Datenübernahme-Paket), nur Verbindungsdaten, Inhalte E2E | DE (Göppingen); Vermittlungsserver nicht auf EU festgelegt | ⚠️ mit Lizenzkauf (DPA Stand 02.02.2026, gilt mit Nutzung) | nur nach Art. 44 ff. (DPA Ziff. 2.13, 3.3) |
 
 > **Korrektur 14.08.2026:** In diesem Verzeichnis stand bis dahin „Resend (geplant) — Transaktions-E-Mails". **Resend wird nicht eingesetzt und ist nicht vorgesehen.** Der Versand läuft über `nodemailer` gegen den SMTP-Server des Mailhostings (`SMTP_HOST`/`SMTP_USER`, siehe `api/contact.js`); belegt in `ONPREM_MIGRATION_PLAYBOOK.md` und `ON_PREMISE_ANALYSE.md`. Ein Verzeichnis, das einen nicht existierenden Auftragsverarbeiter nennt und den tatsächlichen verschweigt, ist nach Art. 30 unvollständig — deshalb korrigiert.
 >

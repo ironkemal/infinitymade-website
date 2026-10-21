@@ -25,6 +25,9 @@
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { alsISODatum } from './datum.js?v=20261001a';
 import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=20260918';
+import { alsBerlinDatum } from './berlin-datum.js';
+import { anzeigeName } from './kalender-block.js?v=20261021p';
+import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 
 const MONATE_DE = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -194,7 +197,8 @@ export async function renderMonat({
     const wrap = document.createElement('div');
     wrap.className = 'month-cell-events';
 
-    const tagesTermine = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(ds));
+    // Berliner Tag, nicht der UTC-Präfix: ein Termin um 00:30 lag sonst am Vortag.
+    const tagesTermine = (bookings || []).filter(b => b.start_time && alsBerlinDatum(new Date(b.start_time)) === ds);
 
     tagesTermine.slice(0, MAX_PILLEN).forEach(b => {
       const farben = farbeFuer ? farbeFuer(b) : {};
@@ -206,7 +210,13 @@ export async function renderMonat({
       // Der Rand trägt den Mitarbeiter — in dieser Ansicht die einzige Stelle,
       // an der er überhaupt noch abzulesen ist.
       pille.style.borderLeft = `3px solid ${farben.rand || farben.flaeche || 'var(--primary)'}`;
-      pille.textContent = b.services?.title || b.customer_name || 'Termin';
+      // Uhrzeit + Patient statt nur der Leistung — in der Monatsansicht war nicht
+      // zu erkennen, wer wann kommt (canli-test 20.10.2026). Leistung im Tooltip.
+      const uhr = (d) => new Date(d).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+      const wer = anzeigeName(parseNameMitGeburt(b.customer_name).name || b.customer_name) || b.services?.title || 'Termin';
+      pille.textContent = `${uhr(b.start_time)} ${wer}`;
+      // `wer` statt `customer_name`: dort hängt das ISO-Geburtsdatum am Namen (canli-test Regression 3).
+      pille.title = [b.end_time ? `${uhr(b.start_time)}–${uhr(b.end_time)}` : uhr(b.start_time), wer, b.services?.title].filter(Boolean).join(' · ');
       // Die Pille zeigt einen konkreten Termin — dann soll sie ihn auch öffnen,
       // statt nur in den Tag zu springen.
       pille.addEventListener('click', (ev) => {

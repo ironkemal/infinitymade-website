@@ -185,8 +185,15 @@ export function frageAnamnese78040({ checks, hatAnamnese: hat }) {
 /**
  * Soll nach dem Speichern gefragt werden? Nicht, wenn die Verordnung mit
  * dieser Behandlung aufgebraucht ist — dann folgt eine neue Verordnung, kein
- * Folgetermin auf der alten.
+ * Folgetermin auf der alten. Auch nicht, wenn sie nicht mehr laufend ist
+ * (`abrechnung_status` gesetzt: bereit, abgerechnet, storniert …): mit „bereit"
+ * hat die Praxis die Serie selbst abgeschlossen, ein Folgetermin auf dieselbe
+ * VO plante Einheiten nach der Einreichung (podoloji, PE-007 Nachtrag 11.10.2026).
+ *
+ * @param {{alleVerbraucht:boolean, abrechnungStatus?:?string}} lage
+ *   `abrechnungStatus` = Spaltenwert aus `prescriptions` (NULL = laufend)
  */
-export function frageFolgetermin({ alleVerbraucht }) {
-  return !alleVerbraucht;
+export function frageFolgetermin({ alleVerbraucht, abrechnungStatus = null }) {
+  if (alleVerbraucht) return false;
+  return abrechnungStatus == null || abrechnungStatus === '';
 }

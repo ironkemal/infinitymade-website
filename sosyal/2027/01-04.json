@@ -1,0 +1,35 @@
+{
+  "art": "video",
+  "caption": "Was viele denken: Therapie per Video geht nicht. Was stimmt: Heilmittel können nach Maßgabe der Verträge nach § 125 SGB V als Videobehandlung in Echtzeit erbracht werden (HeilM-RL § 16b). Aufzeichnungen zählen nicht, die erste Behandlung im Verordnungsfall und regelmäßige Verlaufskontrollen finden persönlich statt.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Therapiepraxis #GKV #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "vergleich",
+      "dauer": 4.4,
+      "titel": "Was viele <em>denken</em>",
+      "links": { "label": "Mythos", "text": "Therapie per Video geht nicht." },
+      "rechts": { "label": "Fakt", "text": "Geht: per Video, live, nach den Verträgen." },
+      "rechtsBei": 2
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Die Bedingung",
+      "titel": "Nur in <em>Echtzeit.</em> Aufzeichnungen zählen nicht.",
+      "quelle": "HeilM-RL § 16b Abs. 1"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Und der Anfang?",
+      "titel": "Die erste Behandlung bleibt <em>persönlich.</em>",
+      "quelle": "HeilM-RL § 16b Abs. 3"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Praxiswissen für <em>Heilmittelpraxen.</em>",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

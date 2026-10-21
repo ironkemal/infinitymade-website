@@ -44,7 +44,7 @@ curl -s -o /dev/null -w "%{http_code}" https://n8n.infinitymade.de/api/krankenka
 > (19.09.2026'da tam olarak bu yaşandı: calendar-api tamamen çökükken bile `/health` 200
 > döndü). Sebep: Traefik yalnız `n8n.infinitymade.de/api/*`'i calendar-api'ye yönlendiriyor,
 > kök yol (`/health` dahil) **n8n'in kendisine** düşüyor — dönen 200, calendar-api'nin route'u
-> [server.js:284](api-backend/server.js#L284) değil, **n8n'in SPA HTML'i**
+> `/health` route'u (`api-backend/server.js`, `app.get('/health'`; `/health/ready` de var) değil, **n8n'in SPA HTML'i**
 > (`<title>n8n.io - Workflow Automation</title>`). `/api/health` de ayrı bir tuzak: böyle bir
 > uç yok, sağlıklı sistemde bile 404 döner (2026-08-11).
 >
@@ -91,7 +91,7 @@ curl -s https://app.praxura.de/dashboard.html | grep -o 'dashboard\.js?v=[^"]*' 
 ### 🚪 Kapı 3 — Oturum canlı mı?
 
 ```bash
-playwright-cli -s=praxura open https://app.praxura.de/dashboard.html --persistent
+playwright-cli -s=praxura-qa open https://app.praxura.de/dashboard.html --persistent
 ```
 
 URL `dashboard.html` olarak kalıyorsa giriş yapılı. `login.html`'e düştüyse oturum
@@ -102,20 +102,22 @@ sohbete yazdırma; kalıcı profil zaten bunun için var.
 
 ## 2. Aracın: `playwright-cli`
 
-Kurulu ve doğrulanmış (2026-08-11). Oturum adı **her zaman `praxura`** — kalıcı profil
-orada, giriş orada.
+Kurulu ve doğrulanmış (2026-08-11). Oturum adı **her zaman `praxura-qa`** — test tenant'ı „TEST-Podologie QA" (28.09.2026'dan
+beri), kalıcı profil ve giriş orada. ⛔ `-s=praxura` beta müşterinin oturumudur: orada test,
+tıklama ve yazma YAPILMAZ. Kapı 3'te URL'den sonra tenant adını da kontrol et; „TEST-Podologie QA"
+değilse dur.
 
 ```bash
-playwright-cli -s=praxura goto <url>          # gezin
-playwright-cli -s=praxura snapshot            # sayfanın erişilebilirlik ağacı + [ref=eN]
-playwright-cli -s=praxura find "<metin>"      # snapshot içinde ara (tam dökümden ucuz)
-playwright-cli -s=praxura click e12           # ref ile tıkla
-playwright-cli -s=praxura fill e14 "değer"    # alan doldur
-playwright-cli -s=praxura select e20 "seçenek"
-playwright-cli -s=praxura eval "() => ..."    # sayfada JS çalıştır
-playwright-cli -s=praxura press Enter
-playwright-cli -s=praxura resize 390 844      # mobil ölçüm
-playwright-cli -s=praxura close
+playwright-cli -s=praxura-qa goto <url>          # gezin
+playwright-cli -s=praxura-qa snapshot            # sayfanın erişilebilirlik ağacı + [ref=eN]
+playwright-cli -s=praxura-qa find "<metin>"      # snapshot içinde ara (tam dökümden ucuz)
+playwright-cli -s=praxura-qa click e12           # ref ile tıkla
+playwright-cli -s=praxura-qa fill e14 "değer"    # alan doldur
+playwright-cli -s=praxura-qa select e20 "seçenek"
+playwright-cli -s=praxura-qa eval "() => ..."    # sayfada JS çalıştır
+playwright-cli -s=praxura-qa press Enter
+playwright-cli -s=praxura-qa resize 390 844      # mobil ölçüm
+playwright-cli -s=praxura-qa close
 ```
 
 Her komut şunları döndürür: sayfa URL'i, başlık, **konsol hata/uyarı sayısı** ve
@@ -124,25 +126,26 @@ Her komut şunları döndürür: sayfa URL'i, başlık, **konsol hata/uyarı say
 
 ### Panel gezintisi
 
-Dashboard tek sayfa; paneller arası geçiş global fonksiyonla ([dashboard.js:21704](dashboard.js#L21704)):
+Dashboard tek sayfa; paneller arası geçiş global fonksiyonla (`window.switchPanel`, `dashboard.js` içinde `async function switchPanel`):
 
 ```bash
-playwright-cli -s=praxura eval "() => window.switchPanel('podologie-billing')"
+playwright-cli -s=praxura-qa eval "() => window.switchPanel('podologie-billing')"
 ```
 
-Geçerli panel kimlikleri (2026-08-11 canlı sidebar, 23 modül):
+Geçerli panel kimlikleri (`nav-registry.js`, 27 benzersiz id; güncel sayım için dosyayı grep'le):
 
 ```
 overview · ueberblick · calendar · anfragen · kunden · notizen · warteliste
 services · hours · team · verordnungen · podologie-billing · rechnungen
 fussstatus · belegliste · mahnwesen · statistik · b2b · b2c · beispielmodus
-feedback · vorlagen · settings
+feedback · vorlagen · settings · abrechnung · anamnese · doctors · fahrtenbuch
 ```
 
 ### ⛔ localhost'ta TEST ETME
 
-[server.js:41-50](api-backend/server.js#L41-L50) CORS listesinde localhost **yok**, ayrıca
-[dashboard.js:11](dashboard.js#L11) localhost'ta `http://localhost:3000/api`'ye düşer.
+`api-backend/server.js` `ALLOWED_ORIGINS` (CORS) listesinde localhost **yok**; backend adresi
+`supabase-config.js` `API_BASE`'ten (`/api/config` ile) gelir, lokal sayfadan canlı backend'e çağrı
+CORS'a takılır.
 Sonuç: her backend çağrısı "failed to fetch" verir — **sahte hata üretirsin.**
 
 Tek istisna: hiçbir backend çağrısı içermeyen saf CSS/düzen işleri. Onlar da zaten
@@ -205,7 +208,7 @@ Bunlar teknik olarak "çalışıyor" ama podolog için doğru değil olabilir. D
 
 ### Faz 1 — Kapsamı belirle
 Ne değişti? `git diff HEAD~1 --stat` veya kullanıcının söylediği. Değişen dosyadan
-**hangi ekranların etkilendiğini** çıkar. Değişmemiş 23 paneli baştan sona gezme —
+**hangi ekranların etkilendiğini** çıkar. Değişmemiş panelleri baştan sona gezme —
 odaklan, ama **komşu etkiyi** düşün: `services` değiştiyse `bookings` ve `rechnungen`
 de kontrol edilir (`builder` §1 katman zinciri).
 
@@ -275,15 +278,16 @@ Bulamadıysan "bulunamadı" yaz, uydurma.
 
 ## 7. Hasta verisi — pazarlık konusu değil
 
-Test hesabı gerçek bir podoloji praksisine ait. Gördüğün her isim, doğum tarihi, teşhis,
-sigorta numarası **gerçek hasta verisidir** (§203 StGB, DSGVO Art. 9).
+Test tenant'ı sentetiktir; yine de gördüğün her isim, doğum tarihi, teşhis, sigorta
+numarasını **gerçek hasta verisi gibi** ele al — yanlış oturumda (`-s=praxura`) gördüğün veri
+gerçektir (§203 StGB, DSGVO Art. 9).
 
 - **Raporuna hasta verisi yazma.** "Hasta X'in kaydı" değil → "bir hasta kaydı".
   İsim, doğum tarihi, ICD kodu, HPNR, sigorta no, adres, telefon **hiçbiri rapora girmez.**
 - Hata teşhisi için tanımlayıcı gerekiyorsa UUID'nin ilk 8 karakterini kullan.
 - `.playwright-cli/` altındaki snapshot ve konsol logları **ham hasta verisi içerir.**
   Klasör `.gitignore`'da — oraya öyle kalsın, dışına kopyalama, commit etme.
-- Test bitince uzun süre saklama: `playwright-cli -s=praxura close`, gerekiyorsa dosyaları sil.
+- Test bitince uzun süre saklama: `playwright-cli -s=praxura-qa close`, gerekiyorsa dosyaları sil.
 - Ekran görüntüsünü sadece kullanıcı isterse al, hasta listesi görünen ekranlarda **alma.**
 
 ---
@@ -332,9 +336,10 @@ kullanıcı ona güvenip canlıya devam eder.
 
 ## 10. Bu ajanın hafızası — iki katman
 
-**Katman 1 — §3 gürültü tablosu (bu dosyanın içinde, gitignore'lu).** `.claude/` klasörü
-`.gitignore`'da, bu tablo Melih'e Git üzerinden gitmez ve gitmesi de gerekmiyor: içeriği
-"bu hatayı biliyoruz, tekrar rapor etme" tipi işletme detayı, kalıcı ürün bilgisi değil.
+**Katman 1 — §3 gürültü tablosu (bu dosyanın içinde; ajan dosyaları git'te izlenir ve depo PUBLIC).**
+`.claude/agents/` ve `.claude/skills/konsey/` `.gitignore` istisnasıyla git'tedir (`git ls-files .claude`):
+tablo Melih'e Git üzerinden gider. İçeriği "bu hatayı biliyoruz, tekrar rapor etme" tipi işletme
+detayı olduğundan hasta verisi, host/yol ve hesap bilgisi buraya YAZILMAZ.
 Her koşuda güncellenir, yoksa ajan her seferinde aynı hataları yeniden keşfeder ve
 raporu gürültüye boğar.
 
@@ -345,11 +350,11 @@ aynı statüde — kalıcı kurumsal bilgi, Melih de görür, silinmez.
 
 Neden ayrı dosya, aynı `.md` içinde değil: gürültü tablosu tek kişinin (bu ajanın)
 işletme notu, register ise **çok yazarlı** — `fonksiyon-ustasi`, `db-ustasi`, `builder`,
-`podoloji`, `mobil-ui` de oraya yazar. Karıştırılırsa kurumsal bilgi gitignore'lu dosyada
+`podoloji`, `mobil-ui` de oraya yazar. Karıştırılırsa kurumsal bilgi ajan tanım dosyasında
 kaybolur veya işletme gürültüsü public repoya sızar.
 
 **Bu ajan otomatik/periyodik çalışmaz** (2026-09-19 kararı, `/konsey` yerine kullanıcıyla
 doğrudan netleştirildi). Sadece "şunu test et" dendiğinde çalışır — sürekli tarama
 kurulmadı, kontrol kullanıcıda kalsın istendi. Register'ın büyümesi de bu yüzden
-kümülatiftir: her test turu bir/birkaç satır ekler, toplu bir "23 paneli tara" turu
+kümülatiftir: her test turu bir/birkaç satır ekler, toplu bir "bütün panelleri tara" turu
 planlanmadı (aynı gerekçe `fonksiyon-ustasi` için: okuma iddiası olurdu).

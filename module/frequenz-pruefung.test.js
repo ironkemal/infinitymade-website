@@ -260,13 +260,18 @@ test('Podologie: ohne ownerId keine Abfrage, also keine Warnung', async () => {
 // Der eigentliche Fehler, den Reform S1.9 behebt: eine >12-Wochen-Pause darf
 // in der Podologie NICHT automatisch als „Verordnung ungültig" gemeldet
 // werden — FAK Nr. 11 sagt nur, was bei WENIGER als 12 Wochen gilt.
-test('Podologie: lange Pause allein löst KEINE Unterbrechungswarnung aus', async () => {
+// Geändert 21.10.2026 (Kemal): Podologie-Vertrag § 7 Abs. 7 nennt die 12-Wochen-Grenze, HeilM-RL nicht
+// (gkv-302, Quellenkonflikt) — bis zur Klärung ein HINWEIS, nie eine Sperre.
+test('Podologie: lange Pause löst einen Unterbrechungs-HINWEIS mit Quellenhinweis aus', async () => {
   const supabase = doppelPodo([podoBooking('b1', '2026-05-04T09:00:00Z')]); // > 12 Wochen vor dem Zieldatum
   const rx = { id: 'rx-podo-2', frequenz: 'nach Bedarf', therapie_bereich: 'podo' }; // kein Sollabstand
   const r = await pruefeFrequenz({
     supabase, rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
   });
-  assert.equal(r.ok, true);
+  assert.equal(r.ok, false);
+  assert.equal(r.befund.urteil, 'unterbrechung');
+  assert.match(r.meldung, /Podologie-Vertrag \(§ 7 Abs\. 7\)/);
+  assert.doesNotMatch(r.meldung, /bei der Kasse nachfragen|HeilM-RL/);
 });
 
 // Storno/no_show zählen für Podologie genauso wenig als Nachbar wie im
@@ -483,4 +488,14 @@ test('mehrwöchige Intervalle sind keine Wochenfrequenz', () => {
 test('freier Text ohne Wochenangabe liefert nichts', () => {
   assert.equal(sitzungenProWoche('10 Einheiten'), null);
   assert.equal(sitzungenProWoche('nach Bedarf'), null);
+});
+
+// gkv-302 21.10.2026: Vertrag § 7 Abs. 7 nennt Nagelspangen ausdrücklich — die
+// 12-Wochen-Pause gilt auch bei UI1/UI2, nur die Frequenzwarnung entfällt.
+test('Podologie UI1: keine Frequenzwarnung, aber 12-Wochen-Hinweis', async () => {
+  const rx = { id: 'rx-ui-podo', frequenz: '1x wöchentlich', diagnosegruppe: 'UI1', therapie_bereich: 'podo' };
+  const nah = await pruefeFrequenz({ supabase: doppelPodo([podoBooking('b1', '2026-08-09T09:00:00Z')]), rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1' });
+  assert.equal(nah.ok, true);
+  const weit = await pruefeFrequenz({ supabase: doppelPodo([podoBooking('b1', '2026-05-04T09:00:00Z')]), rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1' });
+  assert.equal(weit.befund?.urteil, 'unterbrechung');
 });

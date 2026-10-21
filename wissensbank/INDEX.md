@@ -3,7 +3,7 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-10-10 · **43 belge kayıtlı** (38 mevcut arşiv kaydı + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
+> Son güncelleme: 2026-10-11 (temizlik turu: Kostenträgerdatei durumu 01.10 sonrasına çekildi, Anhang 01'deki GGT atfı, HPNR halef notu, `sitzungen/` notu) · önceki 2026-10-10 · **44 belge kayıtlı** (39 mevcut arşiv kaydı — +Podologie-Vertrag § 125 Lesefassung 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
 > (10.10.2026: **DGUV / gesetzliche Unfallversicherung** — Handlungsanleitung Heilmittel (Januar 2026) +
 >  Gebührenverzeichnis Physiotherapie (ab 01.01.2026) + Ergotherapie (ab 01.09.2026). Yeni klasör
 >  `gemeinsam/unfallversicherung-dguv/`. BG fatura dalının (PE-006 B) kaynağı; Podologie üçünde de **geçmiyor**.)
@@ -110,6 +110,7 @@ podologie/                        Podologie Leistungsbeschreibungen 1a–3, FAK,
 physiotherapie/                   Vertrag §125 Anlage 2, Blanko-Leitfaden
 ergotherapie/ · logopaedie/       ilgili Anlage 2 Vergütungsvereinbarungen
 _archiv/                          düşmüş · kapsam dışı · mükerrer kopyalar
+sitzungen/                        ⚠️ belge DEĞİL — kendi oturum notlarımız; burada kayıt açılmaz (README, sitzungen/SITZUNGEN.md)
 ```
 
 ⚠️ **`Podoloji/` ile karıştırma.** O klasör hâlâ duruyor ama artık belge tutmuyor —
@@ -200,7 +201,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - **4.3 Physikalischer Dateiname** (`E`/`T` + `SOL` + `0` + Transfernummer)
   - 4.5 Dokumentation (2 yıl, 9 asgari içerik)
   - 4.6 Datenträger (Transportsicherung, Begleitzettel içeriği)
-- ⚠️ **Eski ama düşmemiş.** 2017 tarihli olması geçersiz olduğu anlamına gelmez — kapakta `Anzuwenden ab: 01.09.2017`, sonraki bir sürüm yayımlanmamış. Ancak Kap. 4.1'deki FTAM-over-ISDN (31.12.2017) ve X.400 (31.12.2017) sonu notları **geçmişte kaldı**; bugün DFÜ yolu için GGT'nin güncel Fassung'una (01.01.2026) bakılır.
+- ⚠️ **Eski ama düşmemiş.** 2017 tarihli olması geçersiz olduğu anlamına gelmez — kapakta `Anzuwenden ab: 01.09.2017`, sonraki bir sürüm yayımlanmamış. Ancak Kap. 4.1'deki FTAM-over-ISDN (31.12.2017) ve X.400 (31.12.2017) sonu notları **geçmişte kaldı**; bugün DFÜ yolu için GGT'nin güncel Fassung'una (**01.09.2026** — REGISTER W-05; 11.10.2026'da „01.01.2026"dan düzeltildi) bakılır.
 
 ### wissensbank/gemeinsam/302-tp5/Anhang_02_Anlage_1_TP5_Kapitel_9_Pruefverfahren_20031110.txt
 - **Ne:** Aynı rehberlerin Technische Anlage 1, **Kapitel 9 „Prüfverfahren"** düzenlemesini içeren Anhang 2 belgesidir. 5 sayfa.
@@ -239,8 +240,9 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   kodları (IK), adresler, Datenannahmestelle bağlantıları (VKG) ve DFÜ parametreleri.
   Bir spec değil, spec'in (Anhang 03) tarif ettiği **veri dosyasının kendisi**.
   Uzantı `.txt` ama içerik düzyazı değil, ham EDIFACT (`KOTR:02:001:KV`).
-- **Kapsam:** 7 resmî dosya, **her biri ayrı dosya** · toplam 22.436 satır · 1.329 KOTR
-  kaydı · 1.043 tekil IK · 12.133 VKG. Segmentler: `IDK` (IK + kasa adı) · `VDT` (geçerlilik) ·
+- **Kapsam:** 11 resmî dosya, **her biri ayrı dosya**. 05.09 partisi (7): 22.436 satır · 1.329 KOTR
+  kaydı · 1.043 tekil IK · 12.133 VKG. 01.10.2026'dan geçerli küme (6): 1.067 kayıt · 1.042 tekil IK ·
+  11.411 VKG (REGISTER W-01). Segmentler: `IDK` (IK + kasa adı) · `VDT` (geçerlilik) ·
   `FKT` · `VKG` (hangi IK hangi DAS'a bağlı) · `NAM` · `ANS` (adres) · `ASP` · `UEM` · `DFU`.
 - **Sürüm:** dosya başına ayrı — tek bir sürümü yok
 - **Anzuwenden ab:** 01.04.2026 – 01.10.2026 arası, dosya başına
@@ -253,22 +255,23 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   Aranan tek bir IK ise `Grep` ile `^IDK+<ik>` aranır; toplu iş gerekiyorsa
   `api-backend/billing/kostentraeger/parser.js` üzerinden DB'ye alınır
   (`tools/kostentraeger-annahmestellen-laden.mjs`). **Cevap zaten DB'de olabilir:**
-  `kostentraeger` (1.052 satır) ve `kostentraeger_annahmestellen` (11.409 satır) dolu.
+  `kostentraeger` ve `kostentraeger_annahmestellen` (01.10.2026 Q4 yüklemesi, 11.411 satır) dolu —
+  güncel sayı `db/REGISTER.md`'de (11.10.2026: burada 06.09 sayıları 1.052 / 11.409 duruyordu).
 - **Hangi dosyada ne var:**
 
   | Dosya | Kasa birliği | Kayıt | VKG | gültig ab |
   |---|---|---|---|---|
-  | `AO05Q326_KE3.txt` | AOK-Bundesverband | 187 | 764 | 27.07.2026 ✅ |
-  | `BK05Q326_KE1.txt` | Betriebskrankenkassen | 365 | 3.234 | 01.07.2026 ✅ |
-  | `IK05Q326_KE1.txt` | Innungskrankenkassen | 207 | 475 | 01.07.2026 ✅ |
+  | `AO05Q326_KE3.txt` | AOK-Bundesverband | 187 | 764 | 27.07.2026 — ⛔ DÜŞMÜŞ (son gün 30.09.2026) |
+  | `BK05Q326_KE1.txt` | Betriebskrankenkassen | 365 | 3.234 | 01.07.2026 — ⛔ DÜŞMÜŞ (son gün 30.09.2026) |
+  | `IK05Q326_KE1.txt` | Innungskrankenkassen | 207 | 475 | 01.07.2026 — ⛔ DÜŞMÜŞ (son gün 30.09.2026) |
   | `BN050526_KE0.txt` | Knappschaft-Bahn-See | 37 | 6.183 | 01.05.2026 ✅ (aylık) |
   | `LK05Q226_KE0.txt` | SVLFG / Landwirtschaftliche KK | 11 | 27 | 01.04.2026 ✅ |
-  | `EK05Q226_KE0.txt` | vdek / Ersatzkassen | 261 | 724 | 01.04.2026 — 30.09.2026 son gün |
+  | `EK05Q226_KE0.txt` | vdek / Ersatzkassen | 261 | 724 | 01.04.2026 — ⛔ DÜŞMÜŞ (son gün 30.09.2026) |
   | `EK05Q426_KE0.txt` | vdek / Ersatzkassen | 261 | 726 | ⛔ DÜŞMÜŞ — yürürlüğe girmeden KE1 ile değişti |
-  | `AO05Q426_KE0.txt` | AOK-Bundesverband | 186 | 764 | **01.10.2026** ⏳ (öncül `AO05Q326_KE3`) |
-  | `BK05Q426_KE0.txt` | Betriebskrankenkassen | 365 | 3.234 | **01.10.2026** ⏳ (öncülle içerik aynı) |
-  | `IK05Q426_KE0.txt` | Innungskrankenkassen | 207 | 477 | **01.10.2026** ⏳ |
-  | `EK05Q426_KE1.txt` | vdek / Ersatzkassen | 261 | 726 | **01.10.2026** ⏳ |
+  | `AO05Q426_KE0.txt` | AOK-Bundesverband | 186 | 764 | **01.10.2026** ✅ GEÇERLİ (öncül `AO05Q326_KE3`) |
+  | `BK05Q426_KE0.txt` | Betriebskrankenkassen | 365 | 3.234 | **01.10.2026** ✅ GEÇERLİ (öncülle içerik aynı) |
+  | `IK05Q426_KE0.txt` | Innungskrankenkassen | 207 | 477 | **01.10.2026** ✅ GEÇERLİ |
+  | `EK05Q426_KE1.txt` | vdek / Ersatzkassen | 261 | 726 | **01.10.2026** ✅ GEÇERLİ |
 
   `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` → son geçerli gün **30.09.2026**.
   Farklar ve sha256: REGISTER W-01 „30.09 partisi".
@@ -279,7 +282,8 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   ⚠️ **Ama 06.09.2026'da tam da bu yapıldı:** `kostentraeger_annahmestellen`'de bugün
   Q4 yüklü, bugün geçerli Q2 yüklü değil. Bugünkü zarar ölçüldü ve **yok** (fark iki
   satır, ikisi de Abrechnungscode 30 altında; bizim 20/71/72 kodlarımız aynı), ama
-  madde açık. Gerekçe, ölçüm ve çıkış yolları: REGISTER W-01 açık madde 6.
+  ~~madde açık~~ ✅ **kapandı** (20.09.2026 Q2 yüklendi, 01.10.2026 Q4 `EK05Q426_KE1` tarih güdümlü girdi —
+  REGISTER W-01 madde 6, 11.10.2026 işlendi). Tarihsel gerekçe ve ölçüm: REGISTER W-01 açık madde 6.
 - **Geçmiş:** 06.09.2026'ya kadar yedisi tek dosyadaydı
   (`Krankenkassen IK nummern .md`, 22.441 satır). Bölündü, ham dosya 07.09.2026'da silindi
   (bölme byte-exact doğrulandı — kanıt REGISTER W-01). **Eski satır aralığı atıfları
@@ -399,7 +403,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Ne:** Anlage 2: Vergütungsvereinbarung i. d. F. vom 12.02.2026 zum Vertrag nach § 125 Absatz 1 SGB V für Stimm-, Sprech-, Sprach- und Schlucktherapie über die Versorgung mit Leistungen der Stimm-, Sprech-, Sprach- und Schlucktherapie und deren Vergütung.
 - **Kapsam:** Inkrafttreten, Beendigung, Vergütung der Leistungen, Leistungserbringergruppen, Heilmittel-Positions-Nummern ve 01.07.2026 tarihinden itibaren geçerli Vergütungsliste (Erstdiagnostik, Einzel- und Gruppentherapie, Hausbesuch, Berichte).
 - **Sürüm:** i. d. F. vom 12.02.2026
-- **Geçerlilik:** 01.01.2026
+- **Geçerlilik:** in Kraft 01.01.2026 — gilt für Leistungen **ab 01.07.2026** (txt satır 44-45; 11.10.2026 netleştirildi)
 - **Ne zaman lazım:** Stimm-, Sprech-, Sprach- und Schlucktherapie (ses, konuşma, dil ve yutma terapisi) hizmetlerinin 01.07.2026 tarihinden itibaren faturalandırılması ve ücret/pozisyon numarası kontrolü gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, 33010 (120,86 Euro), 33102 (57,06 Euro)
 
@@ -588,6 +592,14 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Anahtar bölümler:** §3a Nagelspange (TXT:350), §3b geçiş ve yeni kurallar (TXT:453), §7 Durchführung/Beendigung (TXT:598), §18 Abrechnung (TXT:1052), §21 Inkrafttreten/Kündigung (TXT:1324).
 - **Sürüm:** kapak einschließlich Änderungen bis 16.06.2025. Temel yürürlük 01.01.2021 (§21); §3b reçete tarihi eşiği ayrıca 01.10.2025. Tek bir yeni genel yürürlük günü kapakta belirtilmemiş.
 - **Ne zaman lazım:** tarihsel 2023 değişikliği ile güncel ana sözleşmeyi ayırmak; fatura/tedavi kuralını orijinal bölümle doğrulamak. 78040 girişi §3a değildir, W-11 Artikel 1'e bakılır.
+### wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt
+- **Ne:** Vertrag nach § 125 Absatz 1 SGB V über die Versorgung mit Leistungen der Podologie und deren Vergütung — ana sözleşme metni (Lesefassung), GKV-SV ↔ VDP · ZFD · Bundesverband für Podologie. Anlagen 1a-3 bu sözleşmenin ekleridir.
+- **Kapsam:** Begriffsbestimmungen · § 1 Geltungsbereich · § 3/§ 3a/§ 3b Grundsätze (Nagelspange) · § 4 Hausbesuche · § 5 Bestätigung · § 6 Beginn · § 7 Durchführung/Beendigung · **§ 8 Gesetzliche Zuzahlung** · § 11 Zulassung · § 12 Praxisanforderungen · § 14 QS · § 16 Vergütung · § 17 IK · § 18 Abrechnungsregelungen · § 19 Vertragsverstöße · § 21 Inkrafttreten.
+- **Anahtar bölümler (txt satırı):** § 3a Z.335 · § 3b Z.438 · § 4 Z.477 · § 6 Z.540 · § 7 Z.575 (Abs. 7: 12 Wochen Unterbrechung Z.628-630) · **§ 8 Z.632-670 — Abs. 1 Z.634 (höchstens Kosten der *erbrachten* Therapie, § 43c nur in dieser Höhe) · Abs. 2 Z.639 (ab 18; Zeitpunkt der Leistungserbringung; VO-Gebühr erster Behandlungstag; Einzug durch Kasse nach schriftl. Aufforderung) · Abs. 3 Z.648 (Verzicht nur mit Befreiungsbescheinigung, Jahreswechsel neu prüfen) · Abs. 4 Z.653 (zu viel einbehalten → erstatten, Quittung ändern)** · Abs. 5/6 Z.663-670 · § 17 IK Z.964 · § 18 Abrechnung Z.999-1182 · § 21 Z.1250.
+- **Sürüm:** i. d. F. vom 30.11.2020 einschließlich aller Änderungen bis zum 16.06.2025
+- **Geçerlilik:** Vertrag seit 01.01.2021; Stand 16.06.2025 in Kraft 01.07.2025 (Änderungsvereinbarung Art. 5); unbefristet
+- **Ne zaman lazım:** Zuzahlung (wann, wie viel, Erstattung, Befreiung), Behandlungsbeginn/-abbruch, Hausbesuch, Nagelspange-Grundsätze und vertragliche Abrechnungsregeln der Podologie. Sicil: REGISTER W-11.
+- **İçerdiği fiyat/pozisyon numarası var mı:** hayır (Preise → Anlage 2)
 
 ### wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung.txt
 - **Ne:** Änderungsvereinbarung zum Vertrag nach § 125 Abs. 1 SGB V über die Versorgung mit Leistungen der Podologie und deren Vergütung vom 30.11.2020.
@@ -602,7 +614,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Kapsam:** 10 sütun — HPNR · Leistungstyp · Heilmittelbereich · Leistungserbringer · Grundlage · Leistungsart · Leistung · gültig ab · gültig bis · Eigentümer.
 - **Prefix kuralı:** `68xxx` = Krankenhaus · `78xxx` = Podologe (ambulant, bizim scope) · `88xxx` = Kurort.
 - **⚠ Verzeichnis'te olmak abrechenbar olmak DEĞİLDİR.** `Grundlage` ve `Eigentümer` sütunları BOŞ olan satırların §125-Vertrag Anlage 2'de fiyatı yoktur → SLLA'ya konursa Absetzung. Örnek: 78001–78006 (Maßnahmen-Ebene).
-- **Sürüm / Stand:** gültig ab 01.01.2026, Stand 15.12.2025
+- **Sürüm / Stand:** gültig ab 01.01.2026, Stand 15.12.2025 · **halefi:** 2027 sürümü 01.01.2027'de beklenir, henüz indirilmedi (REGISTER §1 takvimi, Z-05)
 - **Ne zaman lazım:** Bir HPNR'nin var olup olmadığını, tam Leistungsbezeichnung'unu ve geçerlilik tarihlerini doğrularken. Faturalanabilirlik için **ayrıca** `wissensbank/podologie/20250617_Podologie_Anlage_2.txt` kontrol edilir.
 - **İçerdiği fiyat/pozisyon numarası var mı:** pozisyon numarası **evet** · fiyat **hayır** (fiyatlar Anlage 2'de)
 

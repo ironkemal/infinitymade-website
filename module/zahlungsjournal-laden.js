@@ -1,3 +1,6 @@
+/** Anzeige der Belegart (belegliste.type, CHECK in db/SCHEMA.sql) — vorher stand „zuzahlung" roh da (canli-test 20.10.2026). */
+const BELEGART = { zuzahlung: 'Zuzahlung', barverkauf: 'Barverkauf', storno: 'Storno', ausfall: 'Ausfallhonorar', rechnung: 'Rechnung' };
+
 /** Latest filter request owns the rendered journal; stale responses never append. */
 export function erstelleZahlungsjournalLader({ document, supabase, API, location, fetch,
   escapeHtml, zahlartLabel, fmtEur, getUserId, showToast, triggerStorno }) {
@@ -8,7 +11,7 @@ return async function loadBelegliste() {
   const empty = document.getElementById('beleglisteEmpty');
   if (!tbody) return;
   tbody.innerHTML = '';
-  
+
   const from = document.getElementById('blFilterFrom')?.value || '';
   const to = document.getElementById('blFilterTo')?.value || '';
   const type = document.getElementById('blFilterType')?.value || 'all';
@@ -53,15 +56,15 @@ return async function loadBelegliste() {
       const color = isNegative ? 'var(--danger)' : 'var(--success)';
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid var(--border)';
-      
-      const stornoBtn = r.type !== 'storno' 
-        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
+
+      const stornoBtn = r.type !== 'storno' && !r.bereits_storniert
+        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-id="${escapeHtml(r.id || '')}" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
         : '';
 
       tr.innerHTML = `
         <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
         <td style="color:var(--text-main);">${dateStr}</td>
-        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
+        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${escapeHtml(BELEGART[r.type] || r.type)}</span></td>
         <td style="color:var(--text-muted);">${r.zahlart ? escapeHtml(zahlartLabel(r.zahlart)) : '—'}</td>
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
@@ -74,7 +77,7 @@ return async function loadBelegliste() {
 
     // Wire Storno Event
     tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
-      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
+      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null, btn.dataset.id || null));
     });
   } catch (err) {
     if (request !== generation) return;

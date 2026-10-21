@@ -68,7 +68,31 @@ ENV_TEMPLATE="$SCRIPT_DIR/.env.template"
 log() { printf '%s\n' "$*" | tee -a "$LOG_FILE"; }
 ok()   { log "  [ok] $*"; }
 warn() { log "  [warn] $*"; }
-reveal_once() { printf '%s\n' "$*"; }  # bewusst OHNE tee — siehe Kopf der Datei
+reveal_once() {  # bewusst OHNE tee — siehe Kopf der Datei
+  if [ "${FENSTER:-0}" -eq 1 ]; then printf '@@PRAXURA GEHEIM %s\n' "$*"; else printf '%s\n' "$*"; fi
+}
+
+# ── Fenster-Modus (--fenster, Konsey 2026-10-13 Stufe 2) ─────────────────────
+# Das Windows-Einrichtungsfenster (installieren/install.ps1) startet install.sh
+# ohne Terminal und beantwortet die Fragen selbst. Protokoll auf stdout:
+#   @@PRAXURA FRAGE <id> <Text>   → Fenster fragt, schreibt EINE Antwortzeile
+#   @@PRAXURA GEHEIM <Zeile>      → nur im Schlüssel-Fenster zeigen, nie loggen
+#   @@PRAXURA FEHLER <Titel>\t<Gefunden>\t<Was tun>
+# Antworten kommen über fd 3 (die stdin-Pipe des Fensters) — Einrichtungscode
+# und GESICHERT stehen damit nie in argv, env oder einer Datei (guvenlik).
+# Alle anderen Befehle bekommen /dev/null als stdin: ein `docker compose run`
+# darf keine Antwort verschlucken.
+frage() {
+  # $1 Variablenname · $2 Frage-ID · $3 Text (wie bisher bei read -p)
+  if [ "${FENSTER:-0}" -eq 1 ]; then
+    printf '@@PRAXURA FRAGE %s %s\n' "$2" "$3"
+    if ! read -r "$1" <&3; then
+      fail "Einrichtung abgebrochen" "keine Antwort auf '$2' (Fenster geschlossen?)" "eine Antwort" "Einrichtung erneut starten."
+    fi
+  else
+    read -r -p "$3" "$1"
+  fi
+}
 
 fail() {
   # $1 Titel · $2 gefunden · $3 erwartet · $4 was-tun
@@ -138,7 +162,9 @@ SICHERUNGSSCHLUESSEL=0
 # fragt dann nicht noch einmal (sonst Bundle aus einem Kanal, Image aus dem
 # anderen = O-157).
 KANAL_VORGABE=""
+FENSTER=0
 for arg in "$@"; do
+  [ "$arg" = "--fenster" ] && FENSTER=1
   [ "$arg" = "--neu" ] && NEU=1
   [ "$arg" = "--neuer-jeton" ] && NEUER_JETON=1
   [ "$arg" = "--sicherungsschluessel" ] && SICHERUNGSSCHLUESSEL=1
@@ -174,7 +200,12 @@ fi
 # (z. B. "curl … | sudo bash") liest `read` dann vom Installationsskript
 # selbst statt von einer Person — das Fehlermodell (K10: klare Meldung statt
 # stillem Abbruch) wäre komplett umgangen (Gegenlesen 11.09.2026, 3. Runde).
-if [ "$NEUER_JETON" -ne 1 ] && [ ! -t 0 ]; then
+if [ "$FENSTER" -eq 1 ]; then
+  # Nur auf ausdrücklichen Wunsch (--fenster): Antwortkanal auf fd 3 legen,
+  # stdin aller übrigen Befehle = /dev/null (s. frage()). Ohne --fenster gilt
+  # die Terminal-Pflicht unten unverändert.
+  exec 3<&0 0</dev/null
+elif [ "$NEUER_JETON" -ne 1 ] && [ ! -t 0 ]; then
   fail "Kein interaktives Terminal" "Eingabe kommt nicht von einer Tastatur (z. B. aus einer Pipe)" \
     "direkter Aufruf in einem Terminal" \
     "Den Starter verwenden: curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash — oder 'sudo bash install.sh' direkt in einer SSH-Sitzung."
@@ -275,7 +306,7 @@ if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
     log "      Wird dieser Schlüssel ersetzt, lassen sich bestehende alte Sicherungen"
     log "      nur noch mit dem ALTEN privaten Schlüssel wiederherstellen!"
     log ""
-    read -r -p "  Zum Fortfahren genau tippen: ERSETZEN " ers_confirm
+    frage ers_confirm ersetzen "  Zum Fortfahren genau tippen: ERSETZEN "
     [ "$ers_confirm" = "ERSETZEN" ] || fail "Bestätigung nicht erhalten" "'$ers_confirm'" "'ERSETZEN'" \
       "Abgebrochen, vorhandener Sicherungsschlüssel wurde nicht verändert."
   fi
@@ -284,7 +315,7 @@ if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
   log "  Wie soll der Sicherungsschlüssel eingerichtet werden?"
   log "    [1] Neues Schlüsselpaar in der Box erzeugen (empfohlen)"
   log "    [2] Eigenen öffentlichen Schlüssel (age1...) einfügen"
-  read -r -p "  Auswahl [1/2] (Enter = 1): " wahl
+  frage wahl schluesselart "  Auswahl [1/2] (Enter = 1): "
   wahl="${wahl:-1}"
 
   case "$wahl" in
@@ -324,14 +355,14 @@ if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
       reveal_once ""
 
       while true; do
-        read -r -p "  Zum Fortfahren genau tippen, sobald der private Schlüssel gesichert ist: GESICHERT " gesichert_bestaetigt
+        frage gesichert_bestaetigt gesichert "  Zum Fortfahren genau tippen, sobald der private Schlüssel gesichert ist: GESICHERT "
         [ "$gesichert_bestaetigt" = "GESICHERT" ] && break
         log "  Nicht akzeptiert ('$gesichert_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM der Schlüssel notiert wurde."
       done
       unset sec_k pub_k
       ;;
     2)
-      read -r -p "  Öffentlichen Schlüssel eingeben (age1...): " pub_eingabe
+      frage pub_eingabe age_pub "  Öffentlichen Schlüssel eingeben (age1...): "
       pub_eingabe="$(printf '%s' "$pub_eingabe" | tr -d '[:space:]')"
       if ! printf '%s' "$pub_eingabe" | grep -qE '^age1[0-9a-z]{58}$'; then
         fail "Ungültiger age-Schlüssel" "$pub_eingabe" "Format ^age1[0-9a-z]{58}$ (62 Zeichen)" \
@@ -381,7 +412,7 @@ if [ "$NEU" -eq 1 ] && [ -d "$SCRIPT_DIR/volumes/db/data" ]; then
   log "  ⚠️  --neu gesetzt: neue Geheimnisse werden erzeugt, aber die vorhandene"
   log "      Datenbank in volumes/db/data ist mit den ALTEN Geheimnissen verschlüsselt/"
   log "      authentifiziert. Sie wird nach den Vorprüfungen UNWIEDERBRINGLICH GELÖSCHT."
-  read -r -p "  Zum Fortfahren genau tippen: LÖSCHEN " confirm
+  frage confirm loeschen "  Zum Fortfahren genau tippen: LÖSCHEN "
   [ "$confirm" = "LÖSCHEN" ] || fail "Bestätigung nicht erhalten" "'$confirm'" "'LÖSCHEN'" "Abgebrochen, nichts wurde verändert."
   NEU_BESTAETIGT=1
 fi
@@ -518,30 +549,39 @@ elif [ -z "$MERKEZ_URL_VORLAGE" ]; then
 else
   log "  Einrichtungscode (XXXX-XXXX-XXXX-XXXX) eingeben."
   log "  (Enter ohne Eingabe = eigene Adresse manuell konfigurieren)"
-  read -r -s -p "  Einrichtungscode: " RAW_CODE
-  echo ""
-  CLEAN_CODE="$(printf '%s' "$RAW_CODE" | tr -d '[:space:]')"
-  if [ -n "$CLEAN_CODE" ]; then
+  # Sichtbare Eingabe, drei Versuche (Kemal 12.10.2026, erste Einrichtung von Hand:
+  # blind getippt, vertippt, Abbruch der ganzen Einrichtung). Der Code ist einmalig
+  # und 14 Tage gültig; geloggt wird er weiterhin nie (read schreibt nicht ins Protokoll).
+  code_versuche=0
+  while :; do
+    frage RAW_CODE code "  Einrichtungscode: "
+    CLEAN_CODE="$(printf '%s' "$RAW_CODE" | tr -d '[:space:]')"
+    [ -n "$CLEAN_CODE" ] || break
     # Alphabet: FORMAT_KUTU (0123456789ABCDEFGHJKMNPQRSTVWXYZ, inkl. I, L, O-Toleranz)
     if printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}$'; then
-      KAYIT_CODE="$CLEAN_CODE"
+      KAYIT_CODE="$CLEAN_CODE"; break
     elif printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{16}$'; then
-      KAYIT_CODE="${CLEAN_CODE:0:4}-${CLEAN_CODE:4:4}-${CLEAN_CODE:8:4}-${CLEAN_CODE:12:4}"
-    else
+      KAYIT_CODE="${CLEAN_CODE:0:4}-${CLEAN_CODE:4:4}-${CLEAN_CODE:8:4}-${CLEAN_CODE:12:4}"; break
+    fi
+    code_versuche=$((code_versuche + 1))
+    if [ "$code_versuche" -ge 3 ]; then
       fail "Ungültiges Code-Format" "Eingabe entspricht nicht dem Format XXXX-XXXX-XXXX-XXXX" \
         "XXXX-XXXX-XXXX-XXXX (16 Zeichen aus Ziffern/Buchstaben)" \
         "Den von Praxura erhaltenen Einrichtungscode im Format XXXX-XXXX-XXXX-XXXX eingeben."
     fi
+    echo "  Das passt nicht zum Format XXXX-XXXX-XXXX-XXXX (16 Zeichen, Bindestriche freiwillig). Bitte noch einmal."
+  done
+  if [ -n "$KAYIT_CODE" ]; then
     KAYIT_MODUS="code"
-    unset RAW_CODE CLEAN_CODE
     ok "Einrichtungscode erfasst (wird nicht geloggt)"
   fi
+  unset RAW_CODE CLEAN_CODE
 fi
 
 if [ "$KAYIT_MODUS" = "adresse" ]; then
   log "  Unter welcher Adresse ruft der Praxisrechner die Box im Browser auf?"
   log "  Beispiel: https://praxis.local  (ohne Port — Caddy hört auf 443)"
-  read -r -p "  SITE_URL: " SITE_URL_INPUT
+  frage SITE_URL_INPUT adresse "  SITE_URL: "
   case "$SITE_URL_INPUT" in
     https://*) : ;;
     *) fail "Falsches Schema" "$SITE_URL_INPUT" "https://… (kein http, TLS ist Pflicht)" "Erneut mit https:// beginnen." ;;
@@ -594,6 +634,11 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
     fi
   done
   rm -rf "$SCRIPT_DIR/volumes/db/data" "$SCRIPT_DIR/volumes/storage"
+  # O-191: --neu erzeugt einen NEUEN Datenschlüssel. Bliebe die alte
+  # sicherung.json liegen, trüge sie den Abdruck des alten Schlüssels als
+  # `_erst` weiter — die gesunde, frische Box zeigte nach der ersten Sicherung
+  # dauerhaft „Schlüssel weicht ab" (onprem 11.10.2026).
+  rm -f "$SCRIPT_DIR/volumes/status/sicherung.json"
   ok "Alte Datenbank entfernt"
 fi
 
@@ -814,9 +859,9 @@ else
   log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
   log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
   log "  Zertifikat ausstellen?"
-  read -r -p "  Echtes Zertifikat einrichten? [j/N] " tls_antwort
+  frage tls_antwort tls "  Echtes Zertifikat einrichten? [j/N] "
   if [ "$tls_antwort" = "j" ] || [ "$tls_antwort" = "J" ]; then
-    read -r -p "  E-Mail-Adresse für Let's-Encrypt-Benachrichtigungen: " acme_mail
+    frage acme_mail acme_mail "  E-Mail-Adresse für Let's-Encrypt-Benachrichtigungen: "
     [ -n "$acme_mail" ] || fail "Keine E-Mail-Adresse" "leer" "eine gültige E-Mail-Adresse" "Erneut ausführen und Adresse eintragen."
     CADDY_TLS_ARG_VALUE="$acme_mail"
     set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
@@ -850,7 +895,7 @@ if [ -n "$KANAL_VORGABE" ]; then
 else
   log "  beta   = jede veröffentlichte Version (Test-/Pilotbox, Entscheidung K-1)"
   log "  stable = nur Versionen, die vorher 72 Stunden auf einer Testbox liefen"
-  read -r -p "  Kanal [beta/stable] (Enter = beta): " kanal
+  frage kanal kanal "  Kanal [beta/stable] (Enter = beta): "
   kanal="${kanal:-beta}"
 fi
 case "$kanal" in
@@ -869,7 +914,7 @@ if ! docker manifest inspect "$api_img" >/dev/null 2>&1; then
     fail "Kanal 'stable' nicht verfügbar" "$api_img nicht in der Registry" "der Kanal, aus dem der Starter das Bundle geholt hat"       "Starter erneut ausführen — er bietet dann 'beta' an."
   elif [ "$kanal" = "stable" ]; then
     warn "Kanal 'stable' ist (noch) nicht veröffentlicht: $api_img"
-    read -r -p "  Stattdessen 'beta' verwenden? [J/n] " auf_beta
+    frage auf_beta auf_beta "  Stattdessen 'beta' verwenden? [J/n] "
     if [ "$auf_beta" = "n" ] || [ "$auf_beta" = "N" ]; then
       fail "Kanal 'stable' nicht verfügbar" "$api_img nicht in der Registry" "ein veröffentlichter Kanal"         "Mit Kanal 'beta' installieren — ':stable' entsteht erst nach 72 h Testbetrieb (RELEASE-STANDARD.md §6.3)."
     fi
@@ -889,11 +934,11 @@ ok "Kanal: ${kanal} ($api_img)"
 # turu): sorulmazsa her kutu veritabanıyla AYNI diskte yedekle teslim edilir
 # — RELEASE-STANDARD.md §4.3'ün "varsayılan kutu dışı" gereği kâğıtta kalır.
 # Panel henüz yok (Faz 2.4), bu yüzden uyarı burada ve install.log'da kalıcı.
-log "[12/17] Yedekleme hedefi (gecelik + migration-öncesi otomatik yedekler)"
-log "  Yedekler varsayılan olarak KUTUNUN KENDİ DİSKİNDE tutulur — disk arızasında"
-log "  veritabanıyla BİRLİKTE kaybolurlar. Önerilen: önceden bağladığınız (mount"
-log "  ettiğiniz) bir NAS/SMB/NFS dizini."
-read -r -p "  Yedek hedefi (boş = kutu içi, aksi hâlde mount edilmiş bir dizin yolu, ör. /mnt/yedek): " backup_ziel
+log "[12/17] Sicherungsziel (nächtliche Sicherung + Sicherung vor Datenbank-Updates)"
+log "  Sicherungen liegen ohne Angabe AUF DER PLATTE DIESER BOX — bei einem"
+log "  Plattenschaden gehen sie ZUSAMMEN mit der Datenbank verloren. Empfohlen: ein"
+log "  vorher eingebundenes Laufwerk (NAS, Netzlaufwerk, externe Platte)."
+frage backup_ziel sicherungsziel "  Sicherungsziel (leer = in der Box, sonst der Pfad eines eingebundenen Laufwerks, z. B. /mnt/sicherung): "
 if [ -n "$backup_ziel" ]; then
   if [ ! -d "$backup_ziel" ]; then
     warn "Girilen yol bir dizin olarak bulunamadı: $backup_ziel — yine de kaydediliyor, ama 'bash backup.sh --sebep manuel' ilk yedekte hata verecektir. Mount'un kalıcı olduğundan (fstab/otomatik bağlama) emin ol. Bağladıktan sonra bir kez: sudo touch '$backup_ziel/.praxura-backup-ziel'"
@@ -996,7 +1041,7 @@ if [ "$KAYIT_MODUS" = "code" ]; then
         log "  Wiederverbindungs-Code: bisherige Adresse wird übernommen"
         break
       fi
-      read -r -p "  Diesen Namen übernehmen? [J]a / [N]euen Namen vorschlagen: " name_antwort
+      frage name_antwort name "  Diesen Namen übernehmen? [J]a / [N]euen Namen vorschlagen: "
       case "$name_antwort" in
         j|J|ja|Ja|JA|"")
           gewaehlter_name="$v_name"
@@ -1058,6 +1103,9 @@ fi
 # Verzeichnis für IP-Mount vor erstem Start immer anlegen (L5, Adress-Weg ohne Dateien)
 mkdir -p "$SCRIPT_DIR/volumes/ip"
 chmod 0755 "$SCRIPT_DIR/volumes/ip"
+# O-191: Host-Zustandsdateien für /api/status (in `api` :ro gemountet).
+mkdir -p "$SCRIPT_DIR/volumes/status"
+chmod 0755 "$SCRIPT_DIR/volumes/status"
 
 # Im Weg 'vorhanden' (falls Datei fehlt): Modus ebenfalls festlegen (L1, L10)
 if [ "$KAYIT_MODUS" = "vorhanden" ] && [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; then
@@ -1125,6 +1173,12 @@ log "[14/17] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
 source "$SCRIPT_DIR/lib-health.sh"
 warte_auf_gesundheit 180 || fail "Nicht alle Container wurden gesund" "nicht alle Container 'running'+'healthy' nach 3 Minuten" "8 Container, alle 'running' + 'healthy'" \
   "'docker compose ps --all' und 'docker compose logs' auf dem Server prüfen — wir kommen nicht in die Box (K10)."
+# O-193 (0.6.0): gesund ≠ bereit — der Wartungsmodus (Baseline-Migration
+# gescheitert) zählt im api-Healthcheck als gesund. Ohne diese Prüfung stünde
+# unten „Installation fertig", während die Box nur die Wartungsmeldung zeigt.
+install_bereit="$(bereitschaft_pruefen 60)"
+[ "$install_bereit" = "ok" ] || fail "Die Datenbank ist nicht bereit" "/health/ready: $install_bereit" "/health/ready 200" \
+  "'docker compose logs api' auf dem Server prüfen (Zeile [migrate]) und den Support kontaktieren — wir kommen nicht in die Box (K10)."
 
 # ── Schritt 15 — Schlüsselbeweis (O-60) ──────────────────────────────────────
 log "[15/17] Abgeleiteten Schlüssel wirklich testen"
@@ -1154,16 +1208,16 @@ RESOLVE_VAL="${HOST_PART}:443:127.0.0.1"
 TESTPFAD="${SITE_URL}/rest/v1/profiles?limit=1"
 # Caddy kann bereits gesund sein, während die Zertifikatsausstellung läuft.
 # Alle Modi begrenzt prüfen; öffentliche CA strikt, interne CA mit eigener Root.
-tls_pruef_args=()
+tls_pruef_args=(-fsS)
 if [ "$CADDY_TLS_MODUS_VALUE" = "klassisch" ] && [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
-  tls_pruef_args=(--cacert "${CA_DIR}/root.crt")
+  tls_pruef_args=(-fsS --cacert "${CA_DIR}/root.crt")
 fi
 log "  Warte auf ein vertrauenswürdiges HTTPS-Zertifikat (bis zu 5 Minuten) ..."
 zert_da=0
 zert_deadline=$((SECONDS + 300))
 for _ in $(seq 1 60); do
   [ "$SECONDS" -ge "$zert_deadline" ] && break
-  if curl --connect-timeout 3 --max-time 5 -fsS "${tls_pruef_args[@]}" "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null "${SITE_URL}/login.html"; then
+  if curl --connect-timeout 3 --max-time 5 "${tls_pruef_args[@]}" "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null "${SITE_URL}/login.html"; then
     zert_da=1; break
   fi
   [ "$SECONDS" -ge "$zert_deadline" ] && break
@@ -1214,6 +1268,12 @@ ok "SERVICE_ROLE_KEY akzeptiert (200)"
 # ersetzt diesen Weg NICHT, das ist eine offene, spätere Entscheidung).
 log "[16/17] Automatische Aktualisierung + Yedekleme einrichten (nächtlich)"
 chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh" "$SCRIPT_DIR/lib-ip.sh" "$SCRIPT_DIR/ip-melden.sh"
+
+# O-191: stand.json schon jetzt schreiben — sonst zeigt /api/status bis zum
+# ersten nächtlichen Update keinen Image-Digest. Fehler → egal.
+if declare -F status_stand_yaz >/dev/null 2>&1; then
+  status_stand_yaz "$SCRIPT_DIR" installiert || true
+fi
 
 # Taban für update.sh's erste .env-Zusammenführung (§7J J4): ohne diese Kopie
 # hätte der allererste Lauf nichts, wogegen er "was haben WIR geändert"
@@ -1405,7 +1465,7 @@ reveal_once ""
 # VERLANGT — ein Enter-Reflex ohne Lesen/Sichern war möglich. Eine gemeinsame Schleife,
 # bis die Bestätigung wirklich kommt.
 while true; do
-  read -r -p "  Zum Fortfahren genau tippen, sobald BEIDE Schlüssel gesichert sind: GESICHERT " schluessel_bestaetigt
+  frage schluessel_bestaetigt gesichert "  Zum Fortfahren genau tippen, sobald BEIDE Schlüssel gesichert sind: GESICHERT "
   [ "$schluessel_bestaetigt" = "GESICHERT" ] && break
   log "  Nicht akzeptiert ('$schluessel_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM beide Schlüssel notiert wurden."
 done

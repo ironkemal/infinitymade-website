@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "Nicht jede Patientin braucht alle paar Wochen eine neue Verordnung.\n\nBei bestimmten Diagnosen in Verbindung mit der passenden Diagnosegruppe gilt ein langfristiger Heilmittelbedarf, ohne Antrags- und Genehmigungsverfahren (HeilM-RL § 8 Abs. 2, Anlage 2). Ergotherapie-Praxen kennen diese Patient:innen.\n\nMehr auf praxura.de\n\n#Ergotherapie #Heilmittel #Praxisalltag #GKV #Therapiepraxis",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Dienstag, 9:15", "titel": "Nicht jede Patientin braucht alle paar Wochen eine <em>neue</em> Verordnung." },
+    { "typ": "tippen", "dauer": 2.8, "kicker": "Ergotherapie", "titel": "Seit Jahren in Behandlung. Gleiche Diagnose.", "tempo": 22 },
+    { "typ": "aussage", "dauer": 3.2, "kicker": "Langfristiger Heilmittelbedarf", "titel": "Diagnose auf der <em>Liste?</em> Kein Antrag nötig.", "quelle": "Heilmittel-Richtlinie § 8 Abs. 2" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Nicht auf der Liste?", "titel": "Dann entscheidet die <em>Kasse</em> auf Antrag." },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Ergotherapie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

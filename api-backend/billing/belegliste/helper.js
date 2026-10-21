@@ -62,7 +62,7 @@ export function validateBelegEntry(type, amount, zahlart) {
   }
 
   const numAmount = Number(amount);
-  if (amount === undefined || isNaN(numAmount)) {
+  if (amount === undefined || !Number.isFinite(numAmount)) {
     return { isValid: false, error: 'Ungültiger oder fehlender Betrag.' };
   }
 

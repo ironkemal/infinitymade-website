@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Fremder Server oder eigene Praxis: Wo liegen Ihre Daten?\n\nPraxura läuft auf Ihrem eigenen Rechner oder Server. Patientendaten bleiben bei Ihnen, auch im Support haben wir keinen Zugriff.\n\nMehr auf praxura.de\n\n#Praxissoftware #PVS #Heilmittel #Praxisinhaber",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Kurz gefragt", "titel": "Wo liegen Ihre <em>Patientendaten?</em>" },
+    { "typ": "vergleich", "dauer": 3.4, "titel": "Zwei <em>Orte</em>", "links": { "label": "Fremder Server", "text": "Daten liegen beim Anbieter." }, "rechts": { "label": "Eigene Praxis", "text": "Daten bleiben bei Ihnen." } },
+    { "typ": "aussage", "dauer": 2.8, "ton": "dunkel", "kicker": "Praxura Lokal", "titel": "Selbst unser Support sieht <em>nichts.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Ihre Daten. <em>Ihre</em> Praxis.", "cta": "Mehr auf praxura.de" }
+  ]
+}

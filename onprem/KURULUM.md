@@ -72,6 +72,12 @@ kommt von uns auf einem separaten Weg.
    (Ubuntu 24.04 in WSL2, getrennt von einem evtl. schon vorhandenen Ubuntu).
    Beim allerersten Mal verlangt Windows evtl. einen **Neustart** — danach läuft
    die Einrichtung nach der Anmeldung von selbst weiter.
+
+   ⚠️ Betreiben Sie auf diesem PC keine zweite Linux-Umgebung mit Docker (z. B. ein
+   weiteres Ubuntu oder Docker Desktop) gleichzeitig mit der Box — sonst kann die Box
+   ihre Datenbank nicht mehr erreichen und Praxura lädt keine Daten. Falls doch
+   passiert: die andere Umgebung mit „wsl --terminate <Name>“ beenden und den PC neu
+   starten.
 5. Danach startet automatisch `install.sh` mit den Fragen aus **§2**.
 6. Am Ende fragt das Skript noch:
    - nach Ihrem **Windows-Passwort** — damit die Box beim Einschalten des PCs

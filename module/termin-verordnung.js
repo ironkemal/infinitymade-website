@@ -25,8 +25,8 @@
 
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261010zc';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { ausTopf } from './verordnung-topf.js?v=20260930c';
-import { RX_FELDER } from './termin-laden.js?v=20261010za';
+import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
+import { RX_FELDER } from './termin-laden.js?v=20261021s';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 
@@ -121,13 +121,22 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
       ? rx.icd10 + (rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : '')
       : (rx.diagnosegruppe || '');
     const freq = rx.frequenz ? ` · ${escapeHtml(rx.frequenz)}` : '';
+    // Geschlossene (nur als Termin-Bindung sichtbare) Verordnung: markiert und
+    // nicht wählbar — sonst bindet man neue Termine an eine abgerechnete VO (podoloji).
+    const geschlossen = rxGeschlossen(rx);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}${geschlossen ? ` <span data-vero-geschlossen style="font-size:10px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);padding:0 6px;border-radius:8px;">${geschlossen}</span>` : ''}</div>
         <span data-vero-zaehler="${escapeHtml(rx.id)}" style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(diag)} · ${escapeHtml(issued)}${freq}</div>`;
-    card.addEventListener('click', () => onSelect(rx, sessions));
+      <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(diag)} · ${escapeHtml(issued)}${freq}</div>${geschlossen ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Termin gehört zu dieser Verordnung — für neue Behandlungen andere aktive Verordnung wählen.</div>' : ''}`;
+    if (geschlossen) {
+      card.disabled = true;
+      card.style.opacity = '0.6';
+      card.style.cursor = 'default';
+    } else {
+      card.addEventListener('click', () => onSelect(rx, sessions));
+    }
     container.appendChild(card);
 
     if (istPodo && sb && ownerId && rx.id) {
@@ -322,21 +331,53 @@ export function resetVerordnungFelder() {
   zeigeDienstleistungsfeld(true);
 }
 
-/** Fünf aktive Vorschläge plus bestehende aktive Bindung, für Maske und Aktionspanel. */
-export async function ladeAktiveVerordnungenFuerTermin(sb, { leadId, verordnungId } = {}) {
+const RX_GESCHLOSSEN = { completed: 'abgeschlossen', billed: 'abgerechnet', cancelled: 'storniert' };
+const ABR_GESCHLOSSEN = new Set(['abgerechnet', 'storniert', 'archiviert']);
+
+/**
+ * Ist die Verordnung fuer neue Termine/Behandlungen geschlossen? Zwei Achsen:
+ * `status` (Physio-Sitzungsbuch) und `abrechnung_status` (Podologie, §302).
+ * Eine eingereichte Podo-VO traegt weiter status='confirmed' — nur `status`
+ * zu lesen liess sie als aktiv waehlbar (KHS 10.10.2026, 4 Zeilen live).
+ * @returns {string|null} Etikett oder null = offen
+ */
+export function rxGeschlossen(rx) {
+  if (!rx) return null;
+  if (RX_GESCHLOSSEN[rx.status]) return RX_GESCHLOSSEN[rx.status];
+  const abr = statusAusTopf(rx.abrechnung_status);
+  return ABR_GESCHLOSSEN.has(abr) ? abr : null;
+}
+
+/**
+ * Verordnungen für Termin-Fenster und Termin-Aktionen: die neuesten 5 aktiven,
+ * dazu die an den Termin gebundene IMMER als erste — auch wenn sie älter oder
+ * schon abgeschlossen ist. Vorher fiel sie aus `.limit(5)` bzw. dem Statusfilter,
+ * und man sah nicht, zu welcher Verordnung der Termin gehört (KHS 10.10.2026).
+ *
+ * @returns {Promise<object[]>}
+ */
+export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {}) {
+  if (!sb || !leadId) return [];
   const felder = `${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`;
-  const { data, error } = await sb.from('prescriptions').select(felder)
+  const { data } = await sb
+    .from('prescriptions')
+    .select(felder)
     .eq('patient_id', leadId)
     .not('status', 'in', '("completed","billed","cancelled")')
-    .order('created_at', { ascending: false }).limit(5);
-  if (error || !verordnungId || data?.some(rx => rx.id === verordnungId)) return { data, error };
-
-  // Eine bestehende Bindung darf nicht wegen der Fünfergrenze verschwinden.
-  // Gleicher Patient und gleiche Aktivitätsregel wie bei der Vorschlagsliste.
-  const direkt = await sb.from('prescriptions').select(felder)
-    .eq('patient_id', leadId).eq('id', verordnungId)
-    .not('status', 'in', '("completed","billed","cancelled")').maybeSingle();
-  return { data: direkt.data ? [direkt.data, ...(data || [])] : data, error: direkt.error };
+    .or(PODO_ARBEITSLISTE_OR)   // eingereichte/stornierte nach abrechnung_status auch raus
+    .order('created_at', { ascending: false })
+    .limit(5);
+  const rxs = data || [];
+  if (!vordId) return rxs;
+  const gebunden = rxs.find(r => r.id === vordId);
+  if (gebunden) return [gebunden, ...rxs.filter(r => r !== gebunden)];
+  const { data: extra } = await sb
+    .from('prescriptions')
+    .select(felder)
+    .eq('id', vordId)
+    .eq('patient_id', leadId)
+    .maybeSingle();
+  return extra ? [extra, ...rxs] : rxs;
 }
 
 /**
@@ -368,7 +409,7 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
     vordId = data?.verordnung_id ?? null;
   }
 
-  const { data: rxs } = await ladeAktiveVerordnungenFuerTermin(sb, { leadId, verordnungId: vordId });
+  const rxs = await ladeTerminVerordnungen(sb, { leadId, vordId });
 
   const renderFn = deps.rendereVeroKarten || rendereVeroKarten;
   renderFn({

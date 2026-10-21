@@ -1,0 +1,34 @@
+{
+  "art": "video",
+  "caption": "POV: Freitag, 17 Uhr. Die Abrechnung ist fällig. Praxura bereitet Ihre §302-Dateien vor, Sie reichen mit Ihrem eigenen ITSG-Zertifikat selbst ein. Ohne Provision auf Ihren Umsatz.\n\nMehr auf praxura.de oder schreiben Sie uns: kontakt@praxura.de\n\n#Heilmittel #Praxissoftware #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "POV",
+      "titel": "Freitag, 17 Uhr. Die Abrechnung ist <em>fällig.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Der Reflex",
+      "titel": "Warum Prozente vom Umsatz <em>abgeben?</em>",
+      "uebergang": "schnitt"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "ton": "dunkel",
+      "kicker": "Die Alternative",
+      "titel": "Dateien <em>vorbereiten.</em> Selbst einreichen.",
+      "text": "Mit Ihrem eigenen Zertifikat."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Abrechnung vorbereiten. <em>Provisionsfrei.</em>",
+      "cta": "Schreiben Sie uns: kontakt@praxura.de"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "art": "video",
+  "caption": "Wer darf eigentlich Heilmittel verordnen?\n\nGrundsätzlich Vertragsärztinnen und Vertragsärzte. In der Ergotherapie gibt es eine Ausnahme. Welche? Das zeigen wir in zwei Tagen. Und Sie als Therapeut:in sind grundsätzlich an die Verordnung gebunden.\n\nVerordnung prüfen, bevor Sie behandeln: Mehr auf praxura.de\n\n#Heilmittel #GKV #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    {
+      "typ": "frage",
+      "dauer": 4,
+      "kicker": "Wissen Sie es?",
+      "titel": "Wer darf Heilmittel <em>verordnen?</em>",
+      "antwort": "Vertragsärzt:innen. Und noch jemand — dazu bald mehr.",
+      "antwortLabel": "Antwort",
+      "quelle": "HeilM-RL § 1 Abs. 1, § 3 Abs. 1"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Und Sie?",
+      "titel": "Grundsätzlich an die Verordnung <em>gebunden.</em>",
+      "quelle": "HeilM-RL § 3 Abs. 1"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Prüfen, <em>bevor</em> Sie behandeln.",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

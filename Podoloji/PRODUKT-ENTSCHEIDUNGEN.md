@@ -830,3 +830,43 @@
 - **Offen:** Telefonnummer der Praxis auf der Statusseite (braucht Backend-Feld); Annehmen
   vorgeschlagener Termine direkt im Widget statt per E-Mail-Link.
 
+## PE-007 (10.10.2026) — Behandlung an geschlossener Verordnung dokumentieren
+
+**Kemal-Auftrag:** benutzerfreundlich, nur was im Praxisalltag wirklich vorkommt. **podoloji** (UX) + **gkv-302** (Abrechnung, UE Korrekturverfahren 13.02.2025 Frage 1/2/5, Anlage 3 Podologie p).
+
+| Lage der Verordnung | Verhalten in der Tagesbehandlung |
+|---|---|
+| aktiv | frei |
+| bereit (abrechenbar, nicht eingereicht) · abgesetzt | Formular offen, gelber Hinweis + Haken „Trotzdem dokumentieren" (1 Klick, kein Modal, kein „wieder öffnen" — podoloji: das vergisst man wieder zu schließen) |
+| verordnete Menge erreicht (neuer Tag) | kein Formular, Hinweis „Verordnete Menge erreicht (n von n)" + „neue Verordnung erfassen / Menge korrigieren" |
+| abgerechnet | kein Formular; „Abgerechnet – keine Behandlung mehr möglich" + „Nachträgliche Leistung? → Korrekturabrechnung (Support)" |
+| storniert / archiviert | kein Formular |
+
+- Liste „Bereits dokumentiert" bleibt sichtbar (Storno, Empfangsnachweis).
+- **Nicht gebaut, bewusst:** VKZ 02 Nachforderung (selten, Auslöser = erster echter Fall); „VO folgt" (Behandlung ohne Verordnung, VO später zuordnen — eigener Punkt); Sperre „nach Behandlungsabbruch" (kein Abbruch-Datum im Schema).
+- Termin-Fenster: eingereichte Podo-VO trug `status='confirmed'` und war deshalb wählbar — jetzt zählt auch `abrechnung_status` (`rxGeschlossen`, termin-verordnung.js).
+- Code: `module/podo-dokumentations-sperre.js` (+ Test), Speichern prüft frisch gelesen.
+
+### PE-007 Nachtrag (11.10.2026) — Termin-Fenster und Folgetermin bei geschlossener VO
+
+**podoloji** (UX, Annahme — mit keiner Podologin geprüft) + **gkv-302** (Umhängen). Code `dd6b208e`, live-Regression canli-test GEÇTİ (A–C im Browser, D im Code).
+
+1. **Überschrift und Sperrsatz:** Bei abgerechnet/storniert heißt der Block „Verordnung" statt „Aktive Verordnung" (gelesen wird zuerst die Überschrift, sie widersprach dem Abzeichen). Der Satz „Verordnung … — keine weiteren Termine planbar." steht sichtbar an der Stelle der Serie (`setzeSitzungenKopf`, termin-panel.js), nicht mehr in der Liste „Unvergebene", die bei 0 offenen nie gezeigt wird.
+2. **„Leistungen des Tages dokumentieren"** öffnet die am Termin **gebundene** VO mit dem Termin-Datum — bei abgerechneter VO also die PE-007-Sperre. Vorher öffnete der Knopf die neueste laufende VO des Patienten: die Behandlung landete still auf einer anderen VO als der Termin zeigt. Ausblenden abgelehnt (der Patient wurde behandelt, es braucht einen Weg).
+3. **„Folgetermin?"** nur bei laufender VO (`abrechnung_status` NULL), nicht bei bereit/abgerechnet/storniert: mit „bereit" hat die Praxis die Serie selbst abgeschlossen.
+
+**Nicht gebaut, bewusst:** Knopf „Stattdessen auf Verordnung vom TT.MM. dokumentieren" (Termin auf eine andere laufende VO umhängen). gkv-302: zulässig, aber nur wenn **alle** gelten — Behandlungsbeginn-Frist der Ziel-VO (28 Tage, dringlich 14; HeilM-RL § 15 Abs. 1+2), Verordnungsdatum ≤ Behandlungsdatum (abgeleitet, nicht wörtlich), Ziel-VO nicht abgerechnet/abgebrochen, Heilmittel/HPNR passt zur Diagnosegruppe (§ 16 Abs. 1), Menge nicht überschritten (Anlage 3 f), Frequenz (§ 16 Abs. 3), Quittung auf der Ziel-VO (Anlage 3 o1), Tag nicht schon in der abgerechneten VO/DTA (sonst Korrekturverfahren). Auslöser zum Bauen: erster echter Fall. Ungebundener Folgetermin ohne VO hängt an „VO folgt".
+
+### PE-008 Podologie 12-Wochen-Pause: Vertrag § 7 Abs. 7 ist die Arbeitsregel, Hinweis statt Sperre, Klartext
+- **Karar:** Die Oberfläche behandelt eine Pause von mehr als 12 Kalenderwochen nach der letzten Behandlung (bei Nagelspange auch Kontrolltermin) als **„Verordnung ungültig – neue VO nötig"**, nicht als „im Zweifel bei der Kasse fragen". Bei der Terminvergabe bleibt es ein **Hinweis mit Bestätigung** (keine Sperre). Ist die Pause tatsächlich eingetreten (letzte Behandlung > 84 Tage her), zeigt die VO ein Abzeichen „abgelaufen (12-Wochen-Pause)" und bietet „Folge-VO anfordern" an. Ob Abrechnung/Dokumentation auf so einer VO gesperrt wird, entscheidet `gkv-302`.
+- **Neden:** Der Vertrag nach § 125 bindet die zugelassene Praxis direkt und ist der Prüfmaßstab der Kasse; FAK Nr. 11 („unter 12 Wochen bleibt gültig") passt dazu. HeilM-RL § 16 Abs. 4 S. 5 nimmt Podologie von der 14-Tage-Regel aus, nennt aber keine Frist — für die Praxis ist die strengere, ausdrücklich vertragliche Regel die sichere. Eine Sperre bei der Terminvergabe wäre falsch, weil der Termin legitim auf eine neue VO laufen kann und die Pause oft erst nachträglich (Absage, Krankheit) entsteht. Der Satz „bitte bei der Kasse nachfragen" schiebt eine Entscheidung zur Podologin, die sie 20× am Tag nicht treffen will.
+- **Tarih:** 2026-10-21
+- **Etkilenen:** `module/frequenz-pruefung.js` (`pruefeFrequenz` Meldungstext), VO-Status-Anzeige Podologie
+- **Reddedilen alternatif:** Harte Sperre bei der Terminvergabe (Nachhol-/Neu-VO-Fälle). Weiter „Kasse fragen" (verlagert die Frage auf die Praxis). Verband/Kasse um Auskunft bitten: nicht nötig für die Produktentscheidung, die Rangfrage Vertrag ↔ RL klärt `gkv-302` aus den Belegen. Annahme, nicht mit einer Podologin geprüft.
+
+### PE-009 Vorgeschichte aus dem Altsystem: Erfassung beim Patienten/VO-Import, nicht am Behandlungsstuhl; Planungsvorschau muss sie mitlesen
+- **Karar:** (1) Vorgeschichte wird **einmal je Patient** erfasst – im VO-Import/Patientenakte, mit allen Nägeln in einer Tabelle (nur befüllte Zeilen + „Nagel hinzufügen"). Der Block im Behandlungsformular bleibt als Rückfallweg, eingeklappt, und erscheint, wenn der Patient aus dem Altsystem kommt (nicht nur bei übernommener VO). (2) `podoHistorie` (VO-Erfassung, Sitzungsplan-Vorschau) liest `vorgeschichteAlsBehandlungen` mit – sonst kündigt die Vorschau 78040 an, das die Behandlung dann ablehnt. (3) Eine eigene Geschichtsliste in der VO-Maske ist nicht nötig; dort reicht eine Zeile „Vorgeschichte Altsystem: 78040 am …, letzte Erstbefundung U1 rechts am …".
+- **Neden:** Die Altdaten trägt die Rezeption beim Umstieg nach, nicht die Podologin mit Patient im Stuhl. Je-Nagel-Erfassung im Behandlungsformular zeigt nur den Nagel der aktuellen VO – bei drei Spangen-Nägeln drei Mal öffnen. Ein Altsystem-Patient mit NEUER (nicht übernommener) VO sieht den Block heute gar nicht → 78040 doppelt → Absetzung.
+- **Tarih:** 2026-10-21
+- **Etkilenen:** `module/podo-vorgeschichte-form.js`, `module/podologie-abrechnung.js` (Mount-Bedingung `istAltsystemVerordnung`), `module/verordnung-podo.js` (`podoHistorie`), `leads.podo_vorgeschichte_*`
+- **Reddedilen alternatif:** Vorgeschichte als vollständige Behandlungsliste im VO-Bildschirm (zu viel für einen Zweck: sie dient nur den Einmaligkeitsregeln). Echte Zeilen in `podologie_behandlungen` (db-ustasi hat abgelehnt). Annahme, nicht mit einer Podologin geprüft.

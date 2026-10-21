@@ -1,0 +1,46 @@
+{
+  "art": "video",
+  "caption": "Diese 10 € bleiben an Ihrer Praxis hängen, wenn Sie nichts tun: Die Kasse zieht die Zuzahlung von der Rechnung ab. Zahlt der Patient nicht, können Sie sie mit Nachweis des erfolglosen Einzugs zurückfordern (§ 43c SGB V).\n\nPraxura bereitet die Abrechnung vor. Mehr auf praxura.de\n\n#Heilmittel #GKV #Praxisalltag #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "hook",
+      "dauer": 2.6,
+      "kicker": "Heilmittelpraxen, aufgepasst",
+      "titel": "Diese 10 € bleiben an <em>Ihnen</em> hängen.",
+      "muster": "MUSTER 13",
+      "datum": "Zuzahlung offen",
+      "stempel": "10 € OFFEN",
+      "stempelBei": 0.55
+    },
+    {
+      "typ": "zaehler",
+      "dauer": 2.6,
+      "kicker": "Die Zuzahlung",
+      "praefix": "€",
+      "von": 0,
+      "bis": 10,
+      "text": "pro Verordnung, dazu 10 % der Kosten.",
+      "quelle": "KBV Praxiswissen Heilmittel"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Das Problem",
+      "titel": "Die Kasse zieht ab. Der Patient <em>zahlt nicht.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3.2,
+      "kicker": "Die Lösung",
+      "titel": "Mit Nachweis <em>zurückfordern.</em>",
+      "quelle": "§ 43c SGB V · TA 1, Kap. 7.4.2"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Zuzahlungen <em>im Blick.</em>",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

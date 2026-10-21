@@ -11,7 +11,7 @@ export async function ladePatientTermine(sb, { ownerId, lead, patientName, mitAb
   // canli-test P2 30.09: zuerst über `lead_id` (die Akte gehört zu genau diesem Patienten);
   // Telefon nur zusätzlich für Alttermine ohne `lead_id`. Vorher fehlten 14 von 16 Terminen.
   const tel = String(lead?.phone || '').replace(/["\\]/g, '');
-  if (lead?.id && tel) query = query.or(`lead_id.eq.${lead.id},customer_phone.eq."${tel}"`);
+  if (lead?.id && tel) query = query.or(`lead_id.eq.${lead.id},and(lead_id.is.null,customer_phone.eq."${tel}")`);
   else if (lead?.id) query = query.eq('lead_id', lead.id);
   else if (tel) query = query.eq('customer_phone', tel);
   else if (patientName) query = query.eq('customer_name', patientName);

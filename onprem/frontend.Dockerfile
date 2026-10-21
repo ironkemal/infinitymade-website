@@ -94,7 +94,7 @@ COPY LICENSE ./LICENSE.txt
 # ── Öffentliche Patienten-Seiten (kein Login, Slug-basiert) ─────────────────
 COPY booking.html booking.js ./
 COPY booking-request.html booking-request.css booking-request.js ./
-# Einbettbares Termin-Widget (O-190): nur die ausgelieferten Dateien, kein Mock/Demo/Test/Doku.
+# Einbettbares Termin-Widget (O-211): nur die ausgelieferten Dateien, kein Mock/Demo/Test/Doku.
 COPY widget/embed.js widget/booking-widget.html widget/booking-widget.css widget/booking-widget.js widget/booking-widget.logic.js ./widget/
 
 # ── Gemeinsame Module (dashboard.js:1-8 importiert sie direkt) ─────────────

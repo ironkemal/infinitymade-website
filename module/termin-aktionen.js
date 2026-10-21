@@ -34,10 +34,10 @@
 // Beide Werte gehören zusammen; wird einer geändert, muss der andere mit.
 export const BK_PANEL_OFFSET = '456px';
 
-import { RX_FELDER, RX_JOIN } from './termin-laden.js?v=20261010za';
-import { fuelleMuster13 } from './verordnung-maske.js?v=20261010zc';
+import { RX_FELDER, RX_JOIN } from './termin-laden.js?v=20261021s';
+import { fuelleMuster13 } from './verordnung-maske.js?v=20261021v';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
-import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261010zc';
+import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261021w';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -51,9 +51,16 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
  * sofort, dass man den Patienten dort wechseln kann.
  */
 export function setzeAktionsKopf({ patientName = '', dob = null } = {}) {
+  const geb = dob ? ` · ${new Date(dob).toLocaleDateString('de-DE')}` : '';
+  // Der Name als Überschrift des Seitenbereichs (Kalender-Entwurf, Kemal
+  // 20.10.2026): man soll ohne Suchen sehen, um wen es geht. Das Suchfeld
+  // darunter bleibt, wie es war — es ist der Weg zu einem anderen Patienten.
+  const titel = document.getElementById('bkKopfTitel');
+  if (titel) titel.textContent = patientName || 'Termin';
+  const meta = document.getElementById('bkKopfMeta');
+  if (meta) meta.textContent = dob ? `geb. ${new Date(dob).toLocaleDateString('de-DE')}` : '';
   const el = document.getElementById('bkActPatSearch');
   if (!el) return;
-  const geb = dob ? ` · ${new Date(dob).toLocaleDateString('de-DE')}` : '';
   el.value = patientName ? patientName + geb : '';
   // Der zuletzt gesetzte Name ist der Rückfallwert: verlässt der Nutzer das
   // Feld ohne Auswahl, darf dort kein halb getippter Suchtext stehen bleiben.

@@ -28,7 +28,7 @@ import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
-import { berlinHeute } from '../../lib/berlin-tag.js';
+import { berlinHeute, berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 import { nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
@@ -435,12 +435,14 @@ function buildBankverbindung(profile) {
   ].filter(Boolean).join('\n');
 }
 
-// Pflichtangaben für rechnungsartige Belege (§ 14 Abs. 4 UStG).
-// Steuernummer ODER USt-IdNr. genügt — eine von beiden muss vorhanden sein.
-function fehlendePflichtangaben(profile) {
+// Pflichtangaben des Zuzahlungsbelegs — Kleinbetragsrechnung (§ 33 UStDV, legal-de 21.10.2026):
+// Name + Anschrift der Praxis; Steuernummer/USt-IdNr. erst über 250 €; IBAN nie Pflicht (F7: Soll).
+// Spiegel von module/beleg-druck.js — beim Ändern beide.
+function fehlendePflichtangaben(profile, { betrag = null } = {}) {
   const fehlend = [];
-  if (!profile?.iban) fehlend.push('Bankverbindung (IBAN)');
-  if (!profile?.steuernummer && !profile?.ust_id) fehlend.push('Steuernummer oder USt-IdNr.');
+  if (!profile?.business_name) fehlend.push('Praxisname');
+  if (!profile?.street || !profile?.zip || !profile?.city) fehlend.push('Praxisanschrift (Straße, PLZ, Ort)');
+  if (Number(betrag) > 250 && !profile?.steuernummer && !profile?.ust_id) fehlend.push('Steuernummer oder USt-IdNr. (Beleg über 250 €)');
   return fehlend;
 }
 
@@ -472,14 +474,13 @@ function pflichtangabenHinweisHtml(fehlend) {
   .hint { font-size:13px; color:#666; }
 </style></head><body>
   <div class="box">
-    <h1>Rechnung kann nicht gedruckt werden</h1>
-    <p>Für eine Rechnung sind folgende Angaben gesetzlich vorgeschrieben (§ 14 Abs. 4 UStG),
+    <h1>Beleg kann nicht gedruckt werden</h1>
+    <p>Für den Zuzahlungsbeleg sind folgende Angaben vorgeschrieben (§ 33 UStDV),
        fehlen aber in Ihrem Praxisprofil:</p>
     <ul>${fehlend.map(f => `<li>${f}</li>`).join('')}</ul>
     <p>Bitte tragen Sie die Angaben im Dashboard unter
        <strong>Einstellungen → Finanzen → Rechnungsdaten</strong> nach
        und öffnen Sie den Druck danach erneut.</p>
-    <p class="hint">Quittungen ohne Rechnungscharakter sind davon nicht betroffen.</p>
   </div>
 </body></html>`;
 }
@@ -2286,7 +2287,7 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
 
 // ---------- §302-Bildschirm: Zeilen und Geldeingang ----------
 //
-// Die untere Hälfte des Archivs (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
+// Die untere Hälfte des Archivs (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
 // Sie läuft über das VPS-Backend, nicht über Vercel: dort sind 12/12
 // Funktionen belegt, und G8 verbietet ohnehin eine dreizehnte.
 
@@ -2675,8 +2676,8 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       .eq('vorlage_type', 'quittung_zuzahlung')
       .eq('is_default', true)
       .maybeSingle();
-    // Zuzahlungsrechnung ist trotz des Typnamens eine Rechnung (Fälligkeit +
-    // Bankzeile), also gelten die Pflichtangaben nach § 14 Abs. 4 UStG.
+    // Zuzahlungsbeleg = Kleinbetragsrechnung (§ 33 UStDV): Name + Anschrift Pflicht, Steuernummer
+    // erst über 250 € (Prüfung nach der Summe unten), IBAN nie (legal-de 21.10.2026).
     const fehlend = fehlendePflichtangaben(praxisProfil);
     if (fehlend.length > 0) {
       res.set('Content-Type', 'text/html; charset=utf-8');
@@ -2722,17 +2723,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
 
-    const resolvedSessions = doneSessions.map(s => {
-      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
-        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: s.code,
-        datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(preisBereich),
-      });
-      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
-      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
-    });
+    const resolvedSessions = loeseSitzungenAuf(rx, erbracht, preisBereich);
     // position_frei haengt an der Position/dem Abrechnungscode UND am Preis-
     // fenster (ein Code kann in einem Fenster frei sein, im naechsten nicht —
     // O-101-Nachtrag, gkv-302-Fund 14.09.2026) — deshalb PRO SITZUNG, nicht
@@ -2765,6 +2756,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       // ausloest, gehoert von gkv-302 geprueft — siehe PREISE-ANALYSE.md.
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
+    // Über 250 € keine Kleinbetragsrechnung mehr → Steuernummer/USt-IdNr. Pflicht (§ 14 Abs. 4 UStG).
+    { const fehlendGross = fehlendePflichtangaben(praxisProfil, { betrag: totals?.gesZuzahlung });
+      if (fehlendGross.length > 0) { res.set('Content-Type', 'text/html; charset=utf-8'); return res.status(400).send(pflichtangabenHinweisHtml(fehlendGross)); } }
 
     const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei, label }) => ({
       session_id: s.id,
@@ -3088,17 +3082,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
-    const resolvedSessions = doneSessions.map(s => {
-      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
-      const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
-        bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
-        code: s.code,
-        datum: dateStr,
-        abrechnungscode: abrechnungscodeFuer(preisBereich),
-      });
-      // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
-      return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
-    });
+    const resolvedSessions = loeseSitzungenAuf(rx, erbracht, preisBereich);
     // Pro Sitzung, nicht von der ersten auf alle uebertragen — O-101-Nachtrag,
     // gleiche Begruendung wie in der Zuzahlungsrechnung oben.
     const zuzahlungBefreitVerordnung = !!rx.zuzahlung_befreit;
@@ -3242,17 +3226,53 @@ router.get('/belegliste', async (req, res) => {
     if (zahlart && zahlart !== 'all') {
       query = query.eq('zahlart', zahlart);
     }
-    if (from) {
-      query = query.gte('created_at', `${from}T00:00:00Z`);
+    const fromDay = from ? berlinTagesgrenzen(from) : null;
+    const toDay = to ? berlinTagesgrenzen(to) : null;
+    if ((from && !fromDay) || (to && !toDay) || (fromDay && toDay && from > to)) {
+      return res.status(400).json({ error: 'Ungültiger Zeitraum. Bitte echte Kalendertage (JJJJ-MM-TT) und von ≤ bis angeben.' });
     }
-    if (to) {
-      query = query.lte('created_at', `${to}T23:59:59Z`);
-    }
+    if (fromDay) query = query.gte('created_at', fromDay.von);
+    if (toDay) query = query.lt('created_at', toDay.bisExklusiv);
 
     const { data: rows, error: qErr } = await query;
     if (qErr) throw qErr;
 
-    return res.json(rows || []);
+    // "Bereits storniert" unabhaengig vom Filter: Storno-Zeilen des Mandanten, per storno_von
+    // oder (Altbestand ohne Verweis) per Belegnummer im Referenztext.
+    const { data: stornos, error: sErr } = await supabase
+      .from('belegliste')
+      .select('storno_von, reference_text')
+      .eq('owner_id', tenantId)
+      .eq('type', 'storno');
+    if (sErr) throw sErr;
+    const storniertIds = new Set();
+    const storniertNr = new Set();
+    for (const s of stornos || []) {
+      if (s.storno_von) storniertIds.add(s.storno_von);
+      const m = typeof s.reference_text === 'string' ? /^STORNO für Beleg-Nr: ([1-9]\d{0,14}) \(/.exec(s.reference_text) : null;
+      if (m) storniertNr.add(Number(m[1]));
+    }
+
+    // Rezept-Saldo-Storno bindet sich an kein einzelnes Original (storno_von NULL): ist der
+    // Zuzahlungs-Saldo des Rezepts ausgeglichen, gilt dessen Zuzahlung ebenfalls als storniert.
+    const { data: saldoRows, error: saldoErr } = await supabase
+      .from('belegliste')
+      .select('prescription_id, amount_eur, type')
+      .eq('owner_id', tenantId)
+      .in('type', ['zuzahlung', 'storno']);
+    if (saldoErr) throw saldoErr;
+    const saldoCent = new Map();
+    for (const x of saldoRows || []) {
+      if (!x.prescription_id) continue;
+      saldoCent.set(x.prescription_id, (saldoCent.get(x.prescription_id) || 0) + Math.round(Number(x.amount_eur) * 100));
+    }
+
+    return res.json((rows || []).map(r => ({
+      ...r,
+      bereits_storniert: r.type !== 'storno' && (
+        storniertIds.has(r.id) || storniertNr.has(Number(r.beleg_nr))
+        || (r.type === 'zuzahlung' && !!r.prescription_id && (saldoCent.get(r.prescription_id) ?? 1) <= 0)),
+    })));
   } catch (e) {
     console.error('[belegliste/get]', e);
     return res.status(500).json({ error: 'Server-Fehler: ' + e.message });
@@ -3260,6 +3280,49 @@ router.get('/belegliste', async (req, res) => {
 });
 
 // POST /api/billing/belegliste - Insert a transaction record
+/**
+ * Erbrachte Sitzungen → Preis + Zuzahlung je Sitzung an ihrem EIGENEN
+ * Leistungsdatum (O-97). Vorher zweimal wörtlich in den Routen dieser Datei;
+ * seit 21.10.2026 zusätzlich von der Soll-Prüfung beim Kassieren genutzt.
+ */
+function loeseSitzungenAuf(rx, erbracht, preisBereich) {
+  return erbracht.sitzungen.map(s => {
+    const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+    const { preis_eur, zuzahlung_eur, position_frei, katalogPosition } = resolvePreis({
+      bereich: preisBereich === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: s.code,
+      datum: dateStr,
+      abrechnungscode: abrechnungscodeFuer(preisBereich),
+    });
+    // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
+    return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
+  });
+}
+
+/**
+ * Gesetzliche Zuzahlung einer PODOLOGIE-Verordnung auf die bisher erbrachten
+ * Behandlungen (Podologie-Vertrag § 8 Abs. 1: höchstens auf die erbrachte
+ * Therapie; gkv-302 21.10.2026). Gleiche Rechnung wie die Zuzahlungsrechnung.
+ * @returns {Promise<?number>} Euro, oder null wenn nicht podologisch / nicht ermittelbar
+ */
+async function podoZuzahlungSoll(rx, tenantId) {
+  if (rx?.therapie_bereich !== 'podo') return null;
+  const erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId });
+  if (!erbracht.podo) return null;
+  const befreit = !!rx.zuzahlung_befreit;
+  const sessions = loeseSitzungenAuf(rx, erbracht, 'podologie').map(({ preis_eur, zuzahlung_eur, position_frei }) => ({
+    preis_eur, zuzahlung_eur_position: (befreit || position_frei) ? 0 : zuzahlung_eur, position_frei: befreit || position_frei,
+  }));
+  const letzte = erbracht.sitzungen[erbracht.sitzungen.length - 1];
+  const totals = calcAbrechnungsfallZuzahlung({
+    sessions, patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
+    behandlungsende: letzte ? letzte.done_at : new Date(), verordnung_zuzahlungsfrei: rx.zuzahlung_befreit,
+  });
+  if (!Number.isFinite(Number(totals?.gesZuzahlung))) return null;
+  // Übernommene VO: im Altsystem schon kassiert (Migration 0086) zählt mit — hier darf nur der Rest kassiert werden.
+  return Math.max(0, Number(totals.gesZuzahlung) - (Number(rx.zuzahlung_altsystem_eur) || 0));
+}
+
 router.post('/belegliste', async (req, res) => {
   try {
     // ---- Auth scoping ----
@@ -3281,11 +3344,82 @@ router.post('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Input Validation ----
-    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason, zahlart } = req.body || {};
+    const { type, reference_text, storno_reason, original_id } = req.body || {};
+    let { amount_eur, patient_id, prescription_id, abrechnung_id, zahlart } = req.body || {};
+    let invoice_id = null;
+    let storno_von = null;
+
+    if (type === 'storno') {
+      // Identität und Zahlart kommen vom Original, niemals aus dem Browser.
+      const legacyMatch = typeof reference_text === 'string'
+        ? /^STORNO für Beleg-Nr: ([1-9]\d*) \([\s\S]*\)$/.exec(reference_text) : null;
+      const legacyNr = legacyMatch ? Number(legacyMatch[1]) : null;
+      if (legacyMatch && !Number.isSafeInteger(legacyNr)) {
+        return res.status(400).json({ error: 'Ungültige Originalbelegnummer. Bitte Zahlungsjournal neu laden.' });
+      }
+      if (original_id || legacyNr) {
+        let originalQuery = supabase.from('belegliste')
+          .select('id, type, amount_eur, zahlart, patient_id, prescription_id, abrechnung_id, invoice_id')
+          .eq('owner_id', tenantId);
+        originalQuery = original_id ? originalQuery.eq('id', original_id) : originalQuery.eq('beleg_nr', legacyNr);
+        const { data: original, error: originalErr } = await originalQuery.maybeSingle();
+        if (originalErr) throw originalErr;
+        if (!original) return res.status(404).json({ error: 'Originalbeleg nicht gefunden.' });
+        if (original.type === 'storno' || !Number.isFinite(Number(original.amount_eur)) || Number(original.amount_eur) <= 0) {
+          return res.status(400).json({ error: 'Nur positive Originalbelege können storniert werden.' });
+        }
+        amount_eur = -Number(original.amount_eur);
+        ({ patient_id, prescription_id, abrechnung_id, invoice_id, zahlart } = original);
+        storno_von = original.id;
+      } else if (prescription_id) {
+        // Alter Rezept-Button storniert den offenen Journalsaldo. Rückwärts-
+        // kompatibel bleiben, aber Saldo und Buchungsbezüge serverseitig prüfen.
+        const { data: belege, error: belegErr } = await supabase.from('belegliste')
+          .select('amount_eur, zahlart, patient_id, abrechnung_id, invoice_id')
+          .eq('owner_id', tenantId).eq('prescription_id', prescription_id)
+          .in('type', ['zuzahlung', 'storno']);
+        if (belegErr) throw belegErr;
+        const rows = belege || [];
+        const saldo = Math.round(rows.reduce((sum, r) => sum + Number(r.amount_eur), 0) * 100);
+        if (!Number.isSafeInteger(saldo) || saldo <= 0 || !Number.isFinite(Number(amount_eur)) || Math.abs(Number(amount_eur) * 100 + saldo) > 0.000001) {
+          return res.status(409).json({ error: 'Zahlungssaldo hat sich geändert oder ist bereits ausgeglichen. Bitte neu laden.' });
+        }
+        for (const field of ['zahlart', 'patient_id', 'abrechnung_id', 'invoice_id']) {
+          const values = new Set(rows.map(r => r[field] ?? null));
+          if (values.size !== 1) return res.status(409).json({ error: 'Mehrere Zahlarten oder Buchungsbezüge. Bitte Originalbelege einzeln im Zahlungsjournal stornieren.' });
+        }
+        amount_eur = -saldo / 100;
+        ({ patient_id, abrechnung_id, invoice_id, zahlart } = rows[0]);
+      } else {
+        return res.status(400).json({ error: 'Zum Stornieren wird ein Originalbeleg benötigt. Bitte Zahlungsjournal neu laden.' });
+      }
+      // Ein reiner Journalbeleg darf den unabhängigen Rechnungs-Zahlungssaldo
+      // nicht umgehen. Dafür ist eine gemeinsame Gegenbuchung erforderlich.
+      if (invoice_id) return res.status(409).json({ error: 'Rechnungszahlung kann hier nicht storniert werden: Zahlungsbuchung und Rechnungsstatus müssen gemeinsam korrigiert werden.' });
+    }
 
     const validation = validateBelegEntry(type, amount_eur, zahlart);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
+    }
+
+    // Podologie: nie mehr kassieren als die Zuzahlung der ERBRACHTEN Behandlungen
+    // (Vertrag § 8 Abs. 1). Vorher übernahm diese Route den Betrag ungeprüft vom
+    // Browser — die alte Terminzeile buchte so die ganze VO (canli-test 20.10.2026).
+    if (type === 'zuzahlung' && prescription_id) {
+      const { data: rxSoll } = await supabase.from('prescriptions')
+        .select('id, owner_id, therapie_bereich, zuzahlung_befreit, zuzahlung_altsystem_eur, ausstellungsdatum, leads:patient_id (geburtsdatum)')
+        .eq('id', prescription_id).eq('owner_id', tenantId).maybeSingle();
+      let soll = null;
+      try { soll = rxSoll ? await podoZuzahlungSoll(rxSoll, tenantId) : null; } catch { soll = null; }
+      if (soll != null) {
+        const { data: bisher } = await supabase.from('belegliste').select('amount_eur')
+          .eq('owner_id', tenantId).eq('prescription_id', prescription_id).in('type', ['zuzahlung', 'storno']);
+        const ist = (bisher || []).reduce((s, r) => s + Number(r.amount_eur || 0), 0);
+        if (Math.round((ist + Number(amount_eur)) * 100) > Math.round(soll * 100)) {
+          return res.status(422).json({ error: `Mehr als die Zuzahlung der erbrachten Behandlungen (${soll.toFixed(2).replace('.', ',')} €, bereits kassiert ${ist.toFixed(2).replace('.', ',')} €). Bitte Betrag prüfen.` });
+        }
+      }
     }
 
     // ---- Database Insert ----
@@ -3298,6 +3432,8 @@ router.post('/belegliste', async (req, res) => {
         patient_id: patient_id || null,
         prescription_id: prescription_id || null,
         abrechnung_id: abrechnung_id || null,
+        invoice_id: invoice_id || null,
+        storno_von: storno_von || null,
         reference_text: reference_text || null,
         created_by: u.user.id,
         zahlart: zahlart || null,
@@ -3305,7 +3441,13 @@ router.post('/belegliste', async (req, res) => {
       })
       .select()
       .single();
-    if (insErr) throw insErr;
+    if (insErr) {
+      // Migration 0084: belegliste_storno_von_einmal (23505) / belegliste_storno_pruefen (23514)
+      if (type === 'storno' && (insErr.code === '23505' || insErr.code === '23514')) {
+        return res.status(409).json({ error: 'Dieser Beleg wurde bereits storniert oder der Storno passt nicht zum Zahlungsstand. Bitte Zahlungsjournal neu laden.' });
+      }
+      throw insErr;
+    }
 
     return res.status(201).json(newRow);
   } catch (e) {
@@ -3354,12 +3496,13 @@ router.get('/belegliste/export', async (req, res) => {
     if (zahlart && zahlart !== 'all') {
       query = query.eq('zahlart', zahlart);
     }
-    if (from) {
-      query = query.gte('created_at', `${from}T00:00:00Z`);
+    const fromDay = from ? berlinTagesgrenzen(from) : null;
+    const toDay = to ? berlinTagesgrenzen(to) : null;
+    if ((from && !fromDay) || (to && !toDay) || (fromDay && toDay && from > to)) {
+      return res.status(400).json({ error: 'Ungültiger Zeitraum. Bitte echte Kalendertage (JJJJ-MM-TT) und von ≤ bis angeben.' });
     }
-    if (to) {
-      query = query.lte('created_at', `${to}T23:59:59Z`);
-    }
+    if (fromDay) query = query.gte('created_at', fromDay.von);
+    if (toDay) query = query.lt('created_at', toDay.bisExklusiv);
 
     const { data: rows, error: qErr } = await query;
     if (qErr) throw qErr;

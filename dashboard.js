@@ -9,11 +9,13 @@ import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, v
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
-import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
+import { zeigePatientTermine } from './module/patient-termine.js?v=20261017seven1';
+import { erstelleRezeptPatientenkopf } from './module/rezept-patientenkopf.js?v=20261017seven1';
+import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload.js?v=20261017seven1';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import './module/hausbesuch-route.js?v=20261018a'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
@@ -22,18 +24,18 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20261004m113';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260813';
-import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261010zc'; import { icdSpeicherHinweise } from './module/verordnung-speichern-hinweise.js?v=20261004m113'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261010zd'; import { minPasswortLaenge } from './module/passwort-regel.js?v=20261006';
+import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261010zc'; import { icdSpeicherHinweise } from './module/verordnung-speichern-hinweise.js?v=20261021f'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261010zd'; import { minPasswortLaenge } from './module/passwort-regel.js?v=20261006';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261010zc';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261021f';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
-// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
+// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261005b';
@@ -43,41 +45,41 @@ import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, ope
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261003m16';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261010zc';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
-import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y';
+import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261006m';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261021v'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261021v';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
-import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261010zc'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261021v'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261010zc';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261010zc';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261021v';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261021v';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261010zc'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261009rs';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
-import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261010';
+import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010zc';
@@ -88,30 +90,31 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261010zc';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261021zc';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261010zc';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
-import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, ladeAktiveVerordnungenFuerTermin, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261018a';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021s';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
-import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
-import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261010zc';
-import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261010zc';
+import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
+import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261021v';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261010zc';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261010zc';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261021v';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021v';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261010zc';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261021w';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
-import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
+import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
+import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261001e';
-import { renderMonat } from './module/kalender-monat.js?v=20261001e';
+import { renderWoche } from './module/kalender-woche.js?v=20261021p';
+import { renderMonat } from './module/kalender-monat.js?v=20261021ze';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
@@ -119,31 +122,31 @@ import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
-import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261010za';
+import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
+import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261021s';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
-import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261016six1';
+import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261021g';
 import { wartelisteZeitfensterGueltig } from './module/warteliste-zeitfenster.js?v=20261014a';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261010zc';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261010zc'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+} from './module/termin-aktionen.js?v=20261021w';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
-import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20261014fix1';
+import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261009k15c';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261016patient2';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -211,7 +214,7 @@ const T = {
     btn_leave_cancel: 'Abbrechen', btn_leave_save: 'Speichern',
     lbl_other: 'Andere',
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
-    copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
+    copied: 'Kopiert!',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
     nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
     doctors_sub: 'Verordnende Ärzte und ihre Zuweisungen', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
@@ -324,7 +327,7 @@ const T = {
     kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
     kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges', kass_paypal: 'PayPal',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
-    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
+    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung kassiert', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
     sitz_leer_kein_termin: 'Keine Verordnung zugeordnet.', sitz_leer_keine_vo: 'Für diesen Patienten ist keine aktive Verordnung hinterlegt.',
@@ -374,13 +377,13 @@ const T = {
 
 const PLAN_FEATURES = {
   starter: {
-    de: ['Online-Terminbuchung 24/7', 'Automatische Erinnerungen', 'Warteliste-Automation', 'Eigene Praxura Buchungsseite', 'DSGVO-konform'],
+    de: ['Online-Terminbuchung 24/7', 'Online-Anfragen & Warteliste', 'Eigene Praxura Buchungsseite', 'Digitale Patientenakte', 'DSGVO-konform'],
   },
   professional: {
-    de: ['Alles aus Starter', 'Reaktivierungskampagne', 'Upsell-Vorschläge', 'Auslastungs-Dashboard', 'Mitarbeiter-Routing'],
+    de: ['Alles aus Starter', 'Verordnung prüfen', 'Abrechnung vorbereiten (§302)', 'Ausfallrechnung & Mahnwesen', 'Mitarbeiter & Rollen'],
   },
   klinik: {
-    de: ['Alles aus Professional', 'Digitales Anamnese-Formular', 'Verpasster Anruf → Assistent', 'Medizinische Erinnerungen', 'Rezept-Workflow'],
+    de: ['Alles aus Professional', 'Digitale Einwilligung & Anamnese', 'Mehrere Standorte', 'Fahrtenbuch für Hausbesuche', 'Rezept-Workflow'],
   },
   mitarbeiter: {
     de: ['Online-Terminbuchung', 'Kalender-Synchronisation', 'Arbeitszeiten-Verwaltung', 'DSGVO-konform'],
@@ -915,6 +918,8 @@ function closeBkActionPanel() {
 }
 
 function closeModal(id) {
+  if (id === 'rezeptModal') rezeptPatientenkopf.invalidate();
+  if (id === 'patientDetailModal') ueberweisungUpload.invalidate();
   if (id === 'bkActionModal') { closeBkActionPanel(); return; }
   if (id === 'dasGuideModal') onDasGuideModalClosed();
   const el = document.getElementById(id);
@@ -1130,21 +1135,21 @@ function shiftColorForTime(hex, hour) {
 }
 
 function findGaps(whStart, whEnd, bookings) {
+  // Minuten statt Uhrzeit-Strings, Termine auf die Arbeitszeit gekappt: vorher endete eine Lücke an
+  // einem Termin NACH Feierabend (21:00 statt 18:00) und ein über Mitternacht reichendes Ende lag am Vortag (canli-test 20.10.2026).
   try {
-    let current = (whStart || '09:00:00').substring(0, 5);
-    const end = (whEnd || '18:00:00').substring(0, 5);
-    if (!current || !end) return [];
-    const gaps = [];
-    const sorted = [...bookings].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-    for (const b of sorted) {
-      const bStart = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
-      const durMin = b.services?.duration_minutes || 30;
-      const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + durMin * 60000);
-      const bEnd = bEndRaw.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
-      if (bStart > current) gaps.push({ start: current, end: bStart });
-      if (bEnd > current) current = bEnd;
+    const min = (s) => { const [h, m] = String(s || '').slice(0, 5).split(':').map(Number); return h * 60 + m; };
+    const berlin = (d) => min(d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' }));
+    const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    const start = min(whStart || '09:00'), end = min(whEnd || '18:00'); if (!(end > start)) return [];
+    const gaps = []; let current = start;
+    for (const b of [...bookings].sort((x, y) => new Date(x.start_time) - new Date(y.start_time))) {
+      const s = new Date(b.start_time), e = b.end_time ? new Date(b.end_time) : new Date(s.getTime() + (b.services?.duration_minutes || 30) * 60000);
+      const bs = Math.max(start, Math.min(end, berlin(s))), be = Math.max(start, Math.min(end, e - s >= 86400000 || berlin(e) < berlin(s) ? end : berlin(e)));
+      if (bs > current) gaps.push({ start: fmt(current), end: fmt(bs) });
+      if (be > current) current = be;
     }
-    if (current < end) gaps.push({ start: current, end });
+    if (current < end) gaps.push({ start: fmt(current), end: fmt(end) });
     return gaps;
   } catch (e) { console.error('[findGaps]', e); return []; }
 }
@@ -1325,7 +1330,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,verordnung_id,services(title,color,code),' + RX_JOIN)
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,verordnung_id,services(title,color,code,gkv_position_nr),rezeptart,' + RX_JOIN)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1338,9 +1343,9 @@ async function loadScheduleBookings(date) {
     displayBookings = displayBookings.filter(b => b.start_time >= nowIso);
   }
   if (isToday) {
-    const countToday = currentProfile.role === 'owner'
-      ? displayBookings.length
-      : displayBookings.filter(b => b.user_id === currentSession.user.id).length;
+    const countToday = currentProfile.role === 'owner'   // ganzer Tag ohne Absagen — die Liste darunter zeigt nur die kommenden
+      ? (bookings || []).length
+      : (bookings || []).filter(b => b.user_id === currentSession.user.id).length;
     document.getElementById('kpi-today').textContent = countToday;
   }
 
@@ -1352,12 +1357,12 @@ async function loadScheduleBookings(date) {
   colsWrap.innerHTML = '';
 
   const SLOT_H = 48;
-  let DAY_START = 8;
+  let DAY_START = 8; const OV_BIS = rasterStunden(displayBookings).bis;   // Termine nach 20 Uhr nicht abschneiden
   if (isToday) {
     const now = new Date();
     DAY_START = Math.max(8, now.getHours());
   }
-  for (let h = DAY_START; h < 20; h++) {
+  for (let h = DAY_START; h < OV_BIS; h++) {
     for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');
       slot.className = 'dv-slot';
@@ -1420,7 +1425,7 @@ async function loadScheduleBookings(date) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h = DAY_START; h < 20; h++) {
+    for (let h = DAY_START; h < OV_BIS; h++) {
       for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
@@ -1468,7 +1473,7 @@ async function loadScheduleBookings(date) {
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
 
-      block.innerHTML = renderBookingSlotInner(b, childBookings);
+      block.innerHTML = renderBookingSlotInner(b, childBookings) + terminHinweiseHtml(b);   // Hausbesuch / Ohne VO / Zuzahlung offen (module/termin-hinweise.js)
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -1696,121 +1701,10 @@ async function loadActivityFeed() {
   }
 }
 
-// Render the inner HTML for a calendar booking block. Physio-friendly:
-//   line 1 — "Nachname, Vorname"
-//   line 2 — Heilmittel · DG     (n/total)
-//   icons  — Hausbesuch, Dringend, Blanko, Notiz
+// Inhalt eines Terminblocks — seit 20.10.2026 in module/kalender-block.js
+// (Kalender-Entwurf: Patient · Leistung, darunter Zeit · Therapiezeit · DG).
 function renderBookingSlotInner(b, childBookings = []) {
-  // Right-aligned icon strip (clickable parent already wired)
-  const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
-  const rx   = sess?.prescriptions || null;
-  const icons = [
-    b.hausbesuch    ? `<span title="Hausbesuch" style="width:13px;height:13px;display:inline-flex;">${ICON.car}</span>` : '',
-    rx?.is_dringend ? `<span title="Dringend" style="color:#fbbf24;width:13px;height:13px;display:inline-flex;">${ICON.warning}</span>` : '',
-    rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
-    rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
-    b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
-  ].filter(Boolean).join(' ');
-
-  const heilmittel = rx?.heilmittel || b.services?.code || '';
-  const hmColor = (() => {
-    const hm = (heilmittel || '').toUpperCase();
-    if (hm.startsWith('KG') || hm.startsWith('MT')) return '#60a5fa';
-    if (hm.startsWith('VO') || hm.startsWith('KT')) return '#a78bfa';
-    if (hm.startsWith('ET') || hm.startsWith('ERGO')) return '#34d399';
-    if (hm.startsWith('LOG') || hm.startsWith('SP')) return '#f472b6';
-    if (hm.startsWith('PO') || hm.startsWith('PODO')) return '#fb923c';
-    if (rx?.is_dringend) return '#fbbf24';
-    return null;
-  })();
-  const hmBorder = hmColor ? `border-left:3px solid ${hmColor};padding-left:4px;` : '';
-
-  if (b.is_group) {
-    const count = childBookings.length;
-    const capacity = b.group_capacity || 5;
-    
-    // Glassmorphic styling based on fill status
-    let badgeColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12)';
-    let textColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 1)';
-    let borderColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.22)';
-    
-    if (count >= capacity) {
-      badgeColor = 'rgba(34, 197, 94, 0.1)';
-      textColor = 'rgb(34, 197,  green-color)';
-      textColor = '#22c55e';
-      borderColor = 'rgba(34, 197, 94, 0.25)';
-    } else if (count === 0) {
-      badgeColor = 'rgba(156, 163, 175, 0.1)';
-      textColor = 'var(--text-muted)';
-      borderColor = 'rgba(156, 163, 175, 0.2)';
-    }
-    
-    const badge = `
-      <span class="group-capacity-badge" style="background: ${badgeColor}; color: ${textColor}; border: 1px solid ${borderColor}; border-radius: 6px; padding: 1px 5px; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; backdrop-filter: blur(4px);">
-        👥 ${count}/${capacity}
-      </span>
-    `;
-    
-    const partNames = childBookings.map(cb => {
-      const name = cb.customer_name || 'Teilnehmer';
-      return name.split(',')[0].trim();
-    }).join(', ');
-    
-    const subtitle = partNames ? escapeHtml(partNames) : '<span style="opacity: 0.6; font-style: italic;">Freier Gruppenslot</span>';
-    
-    return `<div style="height:100%;${hmBorder}">
-      <div class="dv-booking-name" style="font-weight:700;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
-        ${terminZeitLabel(b)}
-        <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.services?.title || 'Gruppe')}</span>
-        ${badge}
-      </div>
-      <div class="dv-booking-subtitle" style="font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-        ${subtitle}
-      </div>
-      ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-    </div>`;
-  }
-
-  // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
-  // already comma-formatted strings pass through.
-  const raw = (parseNameMitGeburt(b.customer_name).name || b.services?.title || 'Termin').trim();
-  let displayName = raw;
-  if (raw.includes(',')) {
-    displayName = raw;
-  } else {
-    const parts = raw.split(/\s+/);
-    if (parts.length >= 2) {
-      const ln = parts[parts.length - 1];
-      const vn = parts.slice(0, -1).join(' ');
-      displayName = ln + ', ' + vn;
-    }
-  }
-
-  const dg = rx?.diagnosegruppe || '';
-  const counter = (sess?.session_number && rx?.anzahl_einheiten)
-    ? `(${sess.session_number}/${rx.anzahl_einheiten})`
-    : '';
-  const isReadyBadge = rx?.abrechnung_status === 'bereit' ? '<span title="Abrechnungsbereit" style="color:#15803d;">●</span>' : '';
-
-  const subtitle = [
-    heilmittel ? escapeHtml(heilmittel) : '',
-    dg ? `<span style="opacity:0.75;">${escapeHtml(dg)}</span>` : '',
-  ].filter(Boolean).join(' · ');
-
-  return `<div style="height:100%;${hmBorder}">
-    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;display:flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
-      ${terminZeitLabel(b)}
-      <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(displayName)}</span>
-      ${isReadyBadge}
-    </div>
-    ${subtitle || counter
-      ? `<div class="dv-booking-subtitle" style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;">
-           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subtitle}</span>
-           ${counter ? `<span style="font-variant-numeric:tabular-nums;flex-shrink:0;">${counter}</span>` : ''}
-         </div>`
-      : ''}
-    ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-  </div>`;
+  return blockInhalt(b, childBookings, { ICON, escapeHtml, katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] });
 }
 
 (function setupCalTimeTooltip() {
@@ -1833,8 +1727,7 @@ function renderBookingSlotInner(b, childBookings = []) {
     const relY = e.clientY - rect.top;
     const totalH = rect.height;
     if (relY < 0 || relY > totalH) { tip.style.display = 'none'; return; }
-    const startHour = 8;
-    const endHour = 20;
+    const startHour = Number(grid.dataset.von) || 8, endHour = Number(grid.dataset.bis) || 20;   // rasterStunden() in renderDayView
     const minuteOfDay = startHour * 60 + Math.round((relY / totalH) * (endHour - startHour) * 60 / 15) * 15;
     const hh = String(Math.floor(minuteOfDay / 60)).padStart(2, '0');
     const mm = String(minuteOfDay % 60).padStart(2, '0');
@@ -2311,18 +2204,6 @@ async function renderDayView(dateStr) {
   const isToday = dateStr === toISODate(_now);
   const nowMin = _now.getHours() * 60 + _now.getMinutes();
 
-  for (let h = 8; h < 20; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const slot = document.createElement('div');
-      slot.className = 'dv-slot';
-      if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
-      const label = document.createElement('div');
-      label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      slot.appendChild(label);
-      timeFrag.appendChild(slot);
-    }
-  }
 
   const ownerId = getOwnerId();
   const dStart = new Date(dateStr + 'T00:00:00').toISOString();
@@ -2336,6 +2217,19 @@ async function renderDayView(dateStr) {
 
   const empIds = emps.map(e => e.id);
   const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
+  const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
+  for (let h = DV_VON; h < DV_BIS; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const slot = document.createElement('div');
+      slot.className = 'dv-slot';
+      if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
+      const label = document.createElement('div');
+      label.className = 'dv-time-label';
+      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      slot.appendChild(label);
+      timeFrag.appendChild(slot);
+    }
+  }
 
   emps.forEach((emp) => {
     const col = document.createElement('div');
@@ -2350,7 +2244,7 @@ async function renderDayView(dateStr) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h = 8; h < 20; h++) {
+    for (let h = DV_VON; h < DV_BIS; h++) {
       for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
@@ -2404,11 +2298,11 @@ async function renderDayView(dateStr) {
       }
     }
 
-    // Live "Jetzt"-Linie (nur heute, innerhalb der Tagesansicht 08–20)
-    if (isToday && nowMin >= 8 * 60 && nowMin < 20 * 60) {
+    // Live "Jetzt"-Linie (nur heute, innerhalb des Rasters DV_VON–DV_BIS)
+    if (isToday && nowMin >= DV_VON * 60 && nowMin < DV_BIS * 60) {
       const nowLine = document.createElement('div');
-      nowLine.className = 'dv-now-line';
-      nowLine.style.top = (((nowMin - 8 * 60) / 30) * 56) + 'px';
+      nowLine.className = 'dv-now-line'; nowLine.dataset.zeit = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      nowLine.style.top = (((nowMin - DV_VON * 60) / 30) * 56) + 'px';
       slotWrap.appendChild(nowLine);
     }
 
@@ -2420,7 +2314,7 @@ async function renderDayView(dateStr) {
       const e = new Date(b.end_time);
       const sMin = s.getHours() * 60 + s.getMinutes();
       const eMin = e.getHours() * 60 + e.getMinutes();
-      const dayStartMin = 8 * 60;
+      const dayStartMin = DV_VON * 60;
       const topPx = ((sMin - dayStartMin) / 30) * 56;
       const hPx = ((eMin - sMin) / 30) * 56;
 
@@ -2991,10 +2885,9 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         rx, erbracht: current, zahler: 'gkv',
         position: findeRxPosition(rx, { katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] }),
       });
-      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur)
-                   : (gerechnet.unbekannt ? null : gerechnet.gesamt);
-      const befreit = !!rx.zuzahlung_befreit;
-      const bezahlt = !!rx.zuzahlung_kassiert_am;
+      const befreit = !!rx.zuzahlung_befreit, bezahlt = !!rx.zuzahlung_kassiert_am, podoRx = rx.therapie_bereich === 'podo';
+      // Podologie: Zuzahlung nur auf ERBRACHTE Behandlungen (Podologie-Vertrag § 8 Abs. 1; gkv-302 21.10.2026). Offen kassiert allein die Geldzeile (ladePodoZuzahlung) — diese Zeile rechnete die ganze VO und buchte zu viel. Kassiert: Betrag vom Beleg.
+      const betrag = podoRx ? (bezahlt ? Number(rx.zuzahlung_kassiert_eur ?? gerechnet.gesamt ?? 0) : null) : rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : (gerechnet.unbekannt ? null : gerechnet.gesamt);
 
       if (befreit || betrag != null) {
         rzgWarnEl.hidden = false;
@@ -3049,15 +2942,15 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     // 'no_show' / 'planned'); er war seit jeher unsichtbar.
   }
 
-  // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter
-  // dem Knopf "Verlauf" in der Patientenkarte und oeffnet die Patientenakte.
-  // Verdrahtet wird der Knopf weiter unten, sobald der Lead bekannt ist.
+  // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter dem Knopf "Verlauf"
+  // in der Patientenkarte und oeffnet die Patientenakte. Verdrahtet wird er weiter unten, sobald der Lead bekannt ist.
 
   // Alles ab hier bis zur Patientenkarte setzt einen konkreten Termin voraus.
   const isOwn = !!booking && booking.user_id === currentSession.user.id;
   if (booking) {
-    document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
-    document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+    const abgeschlossen = ['completed', 'no_show', 'cancelled'].includes(booking.status);   // abgeschlossen: kein rotes „Nicht erschienen" mehr (canli-test 20.10.2026)
+    document.getElementById('bkActionNoShowBtn').hidden = !isOwn || abgeschlossen;
+    document.getElementById('bkActionNoShowHint').hidden = !isOwn || abgeschlossen;
 
     const ausfallBtn = document.getElementById('bkActionAusfallBtn');
     if (ausfallBtn) ausfallBtn.hidden = !(['no_show', 'cancelled'].includes(booking.status) && ausfallBizForBooking(booking));   // erst NACH No-Show/Absage — sonst verdrängte er „Nicht erschienen" (P1 canli-test 01.10.2026)
@@ -3120,7 +3013,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
       supabase.from('leads')
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
-      ladeAktiveVerordnungenFuerTermin(supabase, { leadId, verordnungId: wunschRx }),
+      ladeTerminVerordnungen(supabase, { leadId, vordId: rx?.id || booking?.verordnung_id || null }).then(data => ({ data })),
       supabase.from('anamnese')
         .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,created_at')
         .eq('patient_id', leadId)
@@ -3188,7 +3081,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         // Hier waehlt eine Karte, WELCHE Verordnung das Panel zeigt — sie fuellt
         // nicht die Terminmaske (das tut selectVerordnung in #bookingModal).
         onSelect: (gewaehlt) => openBookingActionModal(booking, { ...opts, rxId: gewaehlt.id }),
-        onAnlegen: () => oeffneAnlegenWahl(leadId),
+        onAnlegen: () => oeffneAnlegenWahl(leadId, booking?.id),
       });
       veroWrap.hidden = false;
     }
@@ -3313,43 +3206,6 @@ async function uebernehmeDienstleistungAusRx(rx) {
       hinweis.hidden = false;
     }
   }
-}
-
-async function loadCalRpRezeptInfo(leadId) {
-  const section = document.getElementById('calRpRezeptSection');
-  if (!section) return;
-
-  const { data: rxs } = await supabase
-    .from('prescriptions')
-    .select('id, rezept_typ, status, heilmittel, ausstellungsdatum, anzahl_einheiten, prescription_sessions(id, session_number, status)')
-    .eq('patient_id', leadId)
-    .not('status', 'in', '("completed","billed","cancelled")')
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  if (!rxs || rxs.length === 0) {
-    section.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">Kein aktives Rezept</div>';
-    return;
-  }
-
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-
-  section.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Rezepte</div>` +
-    rxs.map(rx => {
-      const sessions = rx.prescription_sessions || [];
-      const done = sessions.filter(s => s.status === 'done').length;
-      const total = rx.anzahl_einheiten || sessions.length || 0;
-      return `<div style="padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:6px;">
-        <div style="color:var(--text-main);font-size:12px;font-weight:600;">${escapeHtml(rx.heilmittel || rx.rezept_typ || '—')}</div>
-        <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Ausgestellt: ${fmt(rx.ausstellungsdatum)}</div>
-        <div style="margin-top:6px;">
-          <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-            <div style="width:${total ? Math.round((done/total)*100) : 0}%;height:100%;background:#22c55e;"></div>
-          </div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${done}/${total} Sitzungen</div>
-        </div>
-      </div>`;
-    }).join('');
 }
 
 async function loadCalRpUnverga(leadId) {
@@ -3575,7 +3431,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
     fahrt_return_pending: 'Termin läuft / Rückkehr offen',
     fahrt_completed: 'Abgeschlossen'
   };
-  statusBadge.textContent = statusLabels[booking.fahrt_status] || statusLabels.null;
+  statusBadge.textContent = (booking.status === 'completed' && !booking.fahrt_status) ? 'Termin abgeschlossen (ohne Fahrt)' : (statusLabels[booking.fahrt_status] || statusLabels.null);
 
   if (!isOwn) {
     // Başka terapistin Hausbesuch'u — sadece bilgi göster, aksiyon yok
@@ -3584,9 +3440,9 @@ async function renderBkActionFahrtState(booking, isOwn) {
   }
 
   const s = booking.fahrt_status;
-  if (s == null) {
-    fahrtStartGroup.hidden = false;
-    startTerminGroup.hidden = true;
+  if (s == null && booking.status === 'completed') startTerminGroup.hidden = true;   // abgeschlossen ohne Fahrt: kein „Fahrt Starten" (canli-test P3 21.10.2026)
+  else if (s == null) {
+    fahrtStartGroup.hidden = false; startTerminGroup.hidden = true;
   } else if (s === 'fahrt_started') {
     arrivedGroup.hidden = false;
     startTerminGroup.hidden = true;
@@ -3641,19 +3497,19 @@ async function openFahrtStartModal() {
     err.textContent = 'Noch kein Fahrzeug vorhanden. Bitte zuerst eines anlegen.';
     err.style.display = '';
   }
-  openModal('fahrtStartModal');
+  vorbelegeStartKm(supabase, sel); openModal('fahrtStartModal');   // letzter Kilometerstand des Fahrzeugs (module/fahrt-km.js)
 }
 
 async function saveFahrtStartHandler() {
   const vehicleId = document.getElementById('fsVehicleSelect').value;
   const startKmRaw = document.getElementById('fsStartKm').value;
   const startKm = parseInt(startKmRaw, 10);
-  const err = document.getElementById('fsError');
-  err.style.display = 'none';
+  const err = document.getElementById('fsError'); err.style.display = 'none';
   if (!vehicleId) { err.textContent = 'Bitte ein Fahrzeug wählen.'; err.style.display = ''; return; }
   if (!Number.isFinite(startKm) || startKm < 0) {
     err.textContent = 'Bitte einen gültigen Start-KM eingeben.'; err.style.display = ''; return;
   }
+  const kmFehler = startKmFehler(startKm, await letzterKmStand(supabase, vehicleId).catch(() => null)); if (kmFehler) { err.textContent = kmFehler; err.style.display = ''; return; }
   const b = bkActionBookingCache;
   if (!b || !b.id) { err.textContent = 'Buchung nicht gefunden. Bitte Modal neu öffnen.'; err.style.display = ''; return; }
 
@@ -4558,10 +4414,10 @@ async function openBookingModal(b) {
   }
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
-  await initBkCustomerAutocomplete();
+  await initBkCustomerAutocomplete(true);   // Karten stehen schon, samt Bindung (canli-test 11.10.2026)
 }
 
-async function initBkCustomerAutocomplete() {
+async function initBkCustomerAutocomplete(veroSteht = false) {
   const input = document.getElementById('bkCustomerSearch');
   const list = document.getElementById('bkCustomerList');
   const nameH = document.getElementById('bkCustomer');
@@ -4570,7 +4426,7 @@ async function initBkCustomerAutocomplete() {
   const phoneInput = document.getElementById('bkPhone');
   if (!input || !list || !nameH || !idH) return;
   if (phoneGroup) phoneGroup.hidden = true;
-
+  if (!veroSteht) window._bkUrspruenglicheVordId = null;   // sonst wandert die Bindung des zuletzt bearbeiteten Termins ins neue Fenster
   async function loadBkLeads() {
     const ownerId = getOwnerId();
     const { data } = await bizScope(supabase
@@ -4616,7 +4472,7 @@ async function initBkCustomerAutocomplete() {
   // Patienten setzen kann — inklusive Hausbesuch-Panel und Verordnungskarten.
   window._bkApplyLead = applyLeadById;
 
-  function applyLeadById(id) {
+  function applyLeadById(id, ohneVero = false) {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
     if (!lead) return;
     input.value = displayNameWithBirth(lead);
@@ -4626,7 +4482,7 @@ async function initBkCustomerAutocomplete() {
     list.hidden = true;
     if (leadHausbesuch(lead)) document.getElementById('bkHausbesuch').checked = true;   // nur setzen, nie abwaehlen
     refreshBkHausbesuchPanel();
-    loadBkVerordnungen(lead.id);
+    if (!ohneVero) loadBkVerordnungen(lead.id);
   }
 
   async function loadBkVerordnungen(leadId) {
@@ -4713,7 +4569,7 @@ async function initBkCustomerAutocomplete() {
   const existingName = (nameH.value || '').trim().toLowerCase();
   const existingId = (idH.value || '').trim();
   if (existingId && (window.bkAllLeads || []).some(l => l.id === existingId)) {
-    applyLeadById(existingId);
+    applyLeadById(existingId, veroSteht);
   } else if (existingName) {
     const match = (window.bkAllLeads || []).find(l =>
       (displayNameWithBirth(l) || '').toLowerCase() === existingName ||
@@ -5358,7 +5214,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const selLead = getSelectedBkLead();
     if (!selLead) { terminFehler('Bitte zuerst den Patienten auswählen.'); return; }
     if (!selLead.street || !selLead.plz || !selLead.city) { terminFehler('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.'); return; }
-    if (selLead.duration_min == null && !IST_KUTU) { terminFehler('Bitte zuerst "Entfernung berechnen" klicken.'); return; }
+    if (selLead.duration_min == null && !IST_KUTU && !await holeFahrzeitBeimSpeichern(selLead)) showToast('Fahrzeit konnte nicht berechnet werden — Termin ohne Fahrzeit gespeichert.', 'warning');
     totalBlockMin = Number(selLead.duration_min || 0) * 2 + dur + HAUSBESUCH_BUFFER_MIN; // Box: keine Routenberechnung (K-5) → ohne Fahrtzeit, canli-test 02.10.
   }
 
@@ -6472,7 +6328,7 @@ function openKassierenDialog({ betragEur, patientName, titel }) {
 }
 
 // Kassiert die Zuzahlung eines Rezepts. Gibt true zurück, wenn gebucht wurde.
-async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur, rest = false }) {   // rest: Nachkassieren — VO ist schon kassiert, kein Anspruch/Rückbau (Server begrenzt auf Soll)
   const betrag = Number(betragEur);
   if (!(betrag > 0)) { showToast(t('kass_err_betrag'), 'error'); return false; }
 
@@ -6484,7 +6340,7 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   // erzeugen so keinen zweiten Beleg — wichtig, weil die belegliste per Trigger
   // unveränderlich ist und ein Fehlbeleg nur noch storniert, nie gelöscht werden
   // kann (database_v27_gobd_belegliste.sql).
-  const { data: claimed, error: claimErr } = await supabase
+  const { data: claimed, error: claimErr } = rest ? { data: [{ id: rxId }], error: null } : await supabase
     .from('prescriptions')
     .update({
       zuzahlung_kassiert_am: new Date().toISOString(),
@@ -6523,7 +6379,7 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   } catch (err) {
     // Beleg gescheitert → Anspruch zurücknehmen. Sonst gälte die Zuzahlung als
     // kassiert, ohne dass sie im Kassenbuch steht.
-    await supabase.from('prescriptions')
+    if (!rest) await supabase.from('prescriptions')
       .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
       .eq('id', rxId);
     showToast(`${t('kass_err_beleg')} ${err.message}`, 'error');
@@ -6540,7 +6396,7 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
 
   if (!await markiereZuBelegBezahlt(supabase, rxId, choice.zahlart)) showToast('Zuzahlung gebucht — der Zuzahlungsbeleg wird beim nächsten Druck als bezahlt nachgezogen.', 'warning'); if (choice.drucken) {
     const auf = await openZuzahlungsrechnung(rxId, { stillBeiFehler: true });
-    if (!auf) showToast(t('kass_popup_gebucht'), 'warning');
+    if (auf === false) showToast(t('kass_popup_gebucht'), 'warning');   // null = Rechnungsdaten fehlen, Modal sagt es schon
   }
 
   return true;
@@ -7320,6 +7176,7 @@ async function pdSpringeZu(ziel, id, extra = {}) {
 }
 
 async function openPatientDetailModal(lead) {
+  ueberweisungUpload.invalidate();
   pdCurrentLeadId = lead.id;
   pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
@@ -7361,7 +7218,7 @@ async function openPatientDetailModal(lead) {
     loadMessreihen(leadId);
   }
   if (isPodo) {
-    zeigeFussbefundArchiv(leadId);
+    zeigeFussbefundArchiv(leadId); montiereVorgeschichte({ sb: supabase, ownerId: getOwnerId(), leadId, nagel: null, immer: true, wrap: document.getElementById('pdVorgeschichteHost') }).catch(() => {});   // alle Nägel, einmal je Patient (PE-009)
   }
   loadPatientDetailRechnungen(leadId);
   loadPatientDetailTermine(leadId);
@@ -8030,10 +7887,12 @@ async function loadPatientDetailMails(leadId) {
 }
 
 async function loadPatientDetailUeberweisung(leadId) {
+  const version = ueberweisungUpload.version();
   const { data } = await supabase.from('ueberweisungen')
     .select('*')
     .eq('lead_id', leadId)
     .order('created_at', { ascending: false });
+  if (version !== ueberweisungUpload.version() || pdCurrentLeadId !== leadId) return;
   const content = document.getElementById('pdUeberContent');
   if (!data || data.length === 0) {
     content.innerHTML = '<div class="pd-empty">Noch keine Überweisung eingetragen.</div>';
@@ -8103,24 +7962,9 @@ document.getElementById('pdUeberAddBtn').addEventListener('click', () => {
   document.getElementById('pdUeberFileInput').click();
 });
 
-document.getElementById('pdUeberFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file || !pdCurrentLeadId) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result;
-    const { error } = await supabase.from('ueberweisungen').insert({
-      owner_id: getOwnerId(),
-      lead_id: pdCurrentLeadId,
-      image_url: base64,
-      created_at: new Date().toISOString()
-    });
-    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-    showToast('Überweisung gespeichert ✓');
-    loadPatientDetailUeberweisung(pdCurrentLeadId);
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+const ueberweisungUpload = erstelleUeberweisungUpload({ supabase, getPatientId: () => pdCurrentLeadId, getOwnerId, showToast, reload: loadPatientDetailUeberweisung });
+document.getElementById('pdUeberFileInput').addEventListener('change', e => {
+  const file = e.target.files[0]; e.target.value = ''; ueberweisungUpload.upload(file);
 });
 
 document.querySelectorAll('.pd-tab').forEach(tab => {
@@ -8444,49 +8288,12 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('csvImportBtn').addEventListener('click', () => {
-  document.getElementById('csvFile').click();
-});
-document.getElementById('csvFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const ownerId = getOwnerId();
-  try {
-    let rows = [];
-    if (file.name.endsWith('.json')) {
-      rows = JSON.parse(text);
-    } else {
-      const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      rows = lines.slice(1).map(line => {
-        const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
-        return Object.fromEntries(headers.map((h, i) => [h, vals[i]]));
-      });
-    }
-    const inserts = rows.filter(r => r.title || r.name).map(r => ({
-      owner_id: ownerId,
-      title: r.title || r.name || '—',
-      phone: r.phone || r.phoneNumber || null,
-      email: r.email || null,
-      website: r.website || null,
-      city: r.city || r['address.city'] || null,
-      country_code: r.country_code || r.country || null,
-      total_score: parseFloat(r.rating || r.totalScore) || null,
-      reviews_count: parseInt(r.reviews_count || r.reviewsCount) || null,
-      google_url: r.google_url || r.url || null,
-      status: 'new'
-    }));
-    if (inserts.length === 0) throw new Error('empty');
-    await supabase.from('leads').insert(inserts);
-    emit('leads:changed', { anzahl: inserts.length });
-    await loadLeads();
-    showToast(t('csv_imported') + inserts.length);
-  } catch (err) {
-    showToast(t('csv_error') + err.message, 'error');
-  }
-  e.target.value = '';
-});
+// Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
+// Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.
+document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePatientenImport({
+  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
+  nachImport: async (anzahl) => { verwerfeKassenCache(); emit('leads:changed', { anzahl }); await loadLeads(); },
+}));
 
 // Apify/Google-Maps-Suche (b2b + Ärzte "In der Nähe finden") → module/lead-suche.js
 // (O-09, onprem/REGISTER.md — On-Prem-Box entfernt diese Knoten statt sie zu laden)
@@ -14031,59 +13838,8 @@ function setM13Hausbesuch(isJa) {
 // Sektör → Muster-13 Therapiebereich eşlemesi (manuel + OCR ortak)
 const M13_SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
 
-async function fillRzPatientFromLead(leadId) {
-  const g = id => document.getElementById(id);
-  g('rzPatientId').value = leadId || '';
-  const hint = g('rzPatientHint');
-  if (!leadId) { if (hint) hint.textContent = ''; return; }
-
-  // Vollen Patientendatensatz laden (robust — unabhängig vom Dropdown-Cache)
-  let lead = null;
-  try {
-    const { data } = await supabase.from('leads').select('*').eq('id', leadId).maybeSingle();
-    lead = data;
-  } catch (e) { console.error('[fillRzPatientFromLead]', e); }
-  if (!lead) { if (hint) hint.textContent = ''; return; }
-  const md = lead.metadata || {};
-
-  g('rzPatName').value = lead.last_name || '';
-  g('rzPatVorname').value = lead.first_name || '';
-  // Geburtsdatum → dt. Format TT.MM.JJJJ
-  const bd = leadGeburtsdatum(lead) || '';
-  const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  g('rzPatGeb').value = m ? `${m[3]}.${m[2]}.${m[1]}` : (bd || '');
-  g('rzPatStrasse').value = lead.street || '';
-  g('rzPatOrt').value = [lead.plz, lead.city].filter(Boolean).join(' ');
-  g('rzPatVersNr').value = lead.versichertennummer || md.krankenkassennummer || '';
-  g('rzPatStatus').value = lead.versichertenstatus || '';
-  const kasse = lead.krankenkasse || md.krankenkasse || '';
-  g('rzPatKasse').value = kasse; vorauswahlArtAusPatient(lead);
-  // Karten-IK aus der Akte (S3.8b), NICHT aus der Kassenliste (dort: Kostenträger-IK, gkv-302)
-  g('rzPatKasseIk').value = lead.krankenkasse_ik || ''; tazeleIkHinweis(g('rzPatKasseIk'));
-
-  // Hausbesuch + Arzt vom Patienten übernehmen (nur wenn Felder noch leer)
-  if (leadHausbesuch(lead)) setM13Hausbesuch(true);
-  if (lead.arzt_id && !g('rzArztName').value) {
-    try {
-      const { data: arzt } = await supabase.from('aerzte')
-        .select('arzt_name,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
-      if (arzt) {
-        g('rzArztName').value = arzt.arzt_name || '';
-        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || ''; aktualisiereArztSperreBanner();
-        if (!g('rzBsnr').value) g('rzBsnr').value = arzt.bsnr || '';
-      }
-    } catch { /* ignore */ }
-  }
-
-  if (hint) {
-    const missing = [];
-    if (!g('rzPatGeb').value) missing.push('Geb.-Datum');
-    if (!g('rzPatVersNr').value) missing.push('Vers.-Nr.');
-    if (!kasse) missing.push('Kasse');
-    hint.textContent = missing.length ? `⚠ fehlt beim Patienten: ${missing.join(', ')} — bitte manuell ergänzen` : '✓ Patientendaten übernommen';
-    hint.style.color = missing.length ? '#b45309' : '#15803d';
-  }
-}
+const rezeptPatientenkopf = erstelleRezeptPatientenkopf({ document, supabase, getOwnerId, leadGeburtsdatum, leadHausbesuch, setHausbesuch: setM13Hausbesuch, vorauswahlArtAusPatient, tazeleIkHinweis, aktualisiereArztSperreBanner });
+async function fillRzPatientFromLead(leadId) { return rezeptPatientenkopf.load(leadId); }
 
 function rzPatientLabel(l) {
   const md = l.metadata || {};
@@ -14100,7 +13856,7 @@ async function openRezeptModal(phone, leadId) {
   // stehen. Ohne diesen Schritt öffnete sich hier ein LEERES Modal — und alle
   // `g(...)`-Zuweisungen unten liefen ins Nichts. Der Weg ist der häufige:
   // erst eine Verordnung aufschlagen, dann „+ Neue Verordnung" drücken.
-  maskeHeimschicken();
+  maskeHeimschicken(); const kopfVersion = rezeptPatientenkopf.version();
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
@@ -14146,7 +13902,9 @@ async function openRezeptModal(phone, leadId) {
 
   // Patientenliste für den Kopf-Selector. Die Suche selbst macht
   // patient-suche.js; hier wird nur der Cache gefüllt, aus dem sie liest.
+  if (kopfVersion !== rezeptPatientenkopf.version()) return;
   const ownerId = await ladeRzPatientenCache();
+  if (kopfVersion !== rezeptPatientenkopf.version()) return;
   // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
   if (leadId && search) {
     const pre = rzPatientCache.find(l => l.id === leadId);
@@ -14190,7 +13948,7 @@ async function saveRezept() {
   // ist keine Zusicherung. Regeln: module/verordnung-maske.js.
   const _nein = pruefeAenderungErlaubt(); if (_nein) { showToast(_nein, 'error'); return; }
 
-  const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
+  const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft || btn.dataset.patientLoading) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
 
   let riegel = null;
   try {
@@ -14310,10 +14068,10 @@ async function saveRezept() {
     } else {
       // Ein gescanntes Rezept fuehrt weiter in die Terminplanung — so endete
       // der Scan-Weg schon immer. Von Hand getippt bleibt es beim Schliessen.
-      const warScan = !!scanHerkunft();
-      closeModal('rezeptModal');
-      showToast('Verordnung gespeichert ✓', 'success');
-      if (warScan) {
+      const warScan = !!scanHerkunft(); closeModal('rezeptModal');
+      const tb = await bindeAnTerminNachAnlage(supabase, { ownerId, rxId: rx.id, patientId: patId, emit });   // aus dem Termin angelegt → zuordnen statt neue Terminplanung
+      showToast(tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
+      if (warScan && !tb?.podo) {
         const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
         window._physioFlow = vorgabe;
         sessionStorage.setItem('rxPreset', JSON.stringify(vorgabe));
@@ -14917,7 +14675,7 @@ async function init() {
     // es sich über `window` zu holen (module/verordnung-maske.js, Kopf).
     setzeMaskeBruecke({
       apiBasis: API,                 // KEINE zweite Adresskonstante (onprem O-44)
-      fuellePatient: fillRzPatientFromLead,
+      fuellePatient: fillRzPatientFromLead, verwerfePatientenkopf: () => rezeptPatientenkopf.invalidate(),
       lsApply,
       setTherapiebereich: setM13Therapy,
       setHausbesuch: setM13Hausbesuch, verdrahteToggles: wireM13Toggles,   // auch für die eingebettete Maske
@@ -15388,7 +15146,7 @@ async function ladeKostentraegerNamen() {
 // Der 4-Stufen-Assistent (Kontrolle · Taxierung · Export · Archiv) ist am
 // 09.09.2026 entfallen. An seine Stelle treten drei Ansichten — Einstieg, Neu,
 // Bisherige — und EINE Auswahlliste fuer alle vier Fachbereiche
-// (module/abrechnung-auswahl.js, ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
+// (module/abrechnung-auswahl.js, archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
 // Mitgegangen sind setWizardStep(), runPreflightCheck(), renderTaxierungList(),
 // renderExportStep(), renderAbrechnungReady() und createAbrechnung().
 // Mit Phase 3 kamen renderAbrechnungHistory() und downloadAbrechnungFile()
@@ -16222,7 +15980,7 @@ const loadBelegliste = erstelleZahlungsjournalLader({ document, supabase, API, l
 // zugeordnet bleibt. Mahnwesen und Statistik rechnen Zuzahlung und Storno je
 // Rezept gegeneinander auf — ohne die ID bliebe ein storniertes Rezept dort
 // faelschlich als bezahlt stehen.
-async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null) {
+async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null, originalId = null) {
   // Storno reason input modal
   const reason = await showInputModal({
     title: 'Beleg Stornieren',
@@ -16247,6 +16005,7 @@ async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null
       },
       body: JSON.stringify({
         type: 'storno',
+        original_id: originalId,
         amount_eur: -Number(amount),
         prescription_id: prescriptionId || null,
         patient_id: patientId || null,
@@ -17575,7 +17334,7 @@ function showPlanWall(lastPlan) {
           }).join('')}
         </div>
 
-        <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
+        <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</p>
         <button id="plan-wall-signout" onclick="window.__pwSignOut()">
           Abmelden
         </button>

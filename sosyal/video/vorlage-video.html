@@ -1,0 +1,249 @@
+<!doctype html>
+<!-- Praxura Reel-Vorlage, 1080x1920. Deterministisch: window.renderAt(t) zeichnet den
+     Zustand zur Sekunde t — keine CSS-Animationen, damit jedes Frame exakt reproduzierbar ist.
+     Szenen kommen aus window.VIDEO (Tagesdatei sosyal/<jahr>/<MM-TT>.json, art "video").
+     Szenentypen + Felder: siehe sosyal/SOSYAL-LOG.md → A6.
+     Safe-Zone: Reels/TikTok verdecken unten ~420px und rechts ~150px → Text bleibt im Kasten. -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../fonts/system-fonts.css">
+<style>
+  :root{
+    --bg:#F8F3E8; --bg-warm:#F1E9D6; --ink:#1A1611; --ink-soft:#4A4036; --ink-mute:#685E52;
+    --bronze:#6B5538; --emerald:#1E3D2F; --gold:#C9A876; --rose:#9C3A3A;
+    --serif:'Fraunces','Times New Roman',serif; --sans:'Plus Jakarta Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+  .bar{position:absolute;left:90px;right:90px;top:120px;height:6px;background:rgba(26,22,17,.08);border-radius:3px;z-index:9}
+  .bar i{display:block;height:100%;background:var(--gold);border-radius:3px;width:0}
+  .scene{position:absolute;inset:0;padding:230px 150px 420px 90px;display:flex;flex-direction:column;justify-content:center;opacity:0;background:var(--bg)}
+  .inhalt{display:flex;flex-direction:column}
+  .kicker{font-family:var(--mono);font-size:34px;letter-spacing:.16em;text-transform:uppercase;color:var(--bronze);margin-bottom:44px}
+  .big{font-family:var(--serif);font-weight:400;font-size:150px;line-height:1;letter-spacing:-.035em}
+  .mid{font-family:var(--serif);font-weight:400;font-size:112px;line-height:1.04;letter-spacing:-.03em}
+  .big em,.mid em{font-style:italic;color:var(--bronze)}
+  .w{display:inline-block;will-change:transform}
+  .sub{font-size:46px;line-height:1.4;color:var(--ink-soft);margin-top:48px}
+  .quelle{font-family:var(--mono);font-size:30px;color:var(--ink-mute);margin-top:40px;letter-spacing:.04em}
+
+  /* dunkler Ton für jede Szene (ton: "dunkel") und Outro */
+  .dunkel{background:var(--emerald);color:var(--bg)}
+  .dunkel .big em,.dunkel .mid em{color:var(--gold)}
+  .dunkel .kicker{color:var(--gold)}
+  .dunkel .sub{color:rgba(248,243,232,.78)}
+  .dunkel .quelle{color:rgba(248,243,232,.6)}
+
+  /* hook: Verordnung + Stempel */
+  .rezept{position:relative;margin-top:80px;width:780px;height:470px;background:#FFFEFB;border:2px solid rgba(26,22,17,.14);
+    border-radius:10px;box-shadow:0 30px 60px rgba(26,22,17,.12);padding:44px 52px;color:var(--ink)}
+  .rezept .kopf{font-family:var(--mono);font-size:26px;color:var(--ink-mute);letter-spacing:.1em;display:flex;justify-content:space-between}
+  .rezept .z{height:20px;background:rgba(26,22,17,.08);border-radius:4px;margin-top:34px}
+  .rezept .datum{font-family:var(--mono);font-size:30px;color:var(--ink);margin-top:40px}
+  .stempel{position:absolute;right:40px;bottom:60px;padding:18px 40px;border:8px solid var(--rose);color:var(--rose);
+    font-family:var(--mono);font-weight:700;font-size:74px;letter-spacing:.12em;border-radius:12px;opacity:0;transform-origin:center;white-space:nowrap}
+  .stempel.gut{border-color:var(--emerald);color:var(--emerald)}
+
+  /* zaehler */
+  .zahl{font-family:var(--serif);font-size:420px;line-height:.9;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+  .zahl small{font-size:120px;font-style:italic;color:var(--bronze);margin-right:24px;letter-spacing:-.02em}
+  .dunkel .zahl small{color:var(--gold)}
+
+  /* frage / vergleich: Karten */
+  .karte{margin-top:56px;padding:48px 52px;border-radius:10px;opacity:0}
+  .karte .lbl{font-family:var(--mono);font-size:28px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px}
+  .karte p{font-size:52px;line-height:1.3}
+  .karte p em{font-family:var(--serif);font-style:italic}
+  .karte.hell{background:rgba(26,22,17,.06);color:var(--ink-mute)}
+  .karte.hell.weg p{text-decoration:line-through;text-decoration-color:rgba(156,58,58,.7);text-decoration-thickness:3px}
+  .karte.gruen{background:var(--emerald);color:var(--bg)} .karte.gruen .lbl{color:var(--gold)}
+  .dunkel .karte.gruen{background:var(--bg);color:var(--ink)} .dunkel .karte.gruen .lbl{color:var(--bronze)}
+  .dunkel .karte.hell{background:rgba(248,243,232,.1);color:rgba(248,243,232,.7)}
+
+  /* countdown */
+  .cd{position:relative;height:900px}
+  .cd .punkt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0}
+  .cd .nr{font-family:var(--serif);font-size:380px;line-height:.85;letter-spacing:-.05em;color:var(--bronze)}
+  .dunkel .cd .nr{color:var(--gold)}
+  .cd .txt{font-family:var(--serif);font-size:96px;line-height:1.06;letter-spacing:-.03em;margin-top:30px}
+  .cd .txt em{font-style:italic;color:var(--bronze)} .dunkel .cd .txt em{color:var(--gold)}
+
+  /* tippen */
+  .cursor{display:inline-block;width:.06em;height:.9em;background:currentColor;margin-left:.06em;vertical-align:-.08em}
+
+  /* outro */
+  .marke{font-family:var(--serif);font-weight:500;font-size:96px;letter-spacing:-.02em;margin-top:120px}
+  .marke em{font-style:italic;color:var(--gold)}
+  .cta{font-family:var(--mono);font-size:34px;letter-spacing:.1em;color:rgba(248,243,232,.7);margin-top:24px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="stage"><div class="bar"><i></i></div></div>
+<script>
+const V = window.VIDEO;
+const stage = document.getElementById('stage');
+const barFill = stage.querySelector('.bar i');
+const clamp = x => Math.min(1, Math.max(0, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const E = {
+  out: x => 1 - Math.pow(1 - x, 3),
+  back: x => { const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); },
+  in: x => x * x * x,
+};
+// Wörter einzeln umschließen, <em> bleibt erhalten
+const words = html => html.replace(/(<em>.*?<\/em>|[^\s<]+)/g, m => `<span class="w">${m}</span>`);
+const plain = html => html.replace(/<[^>]+>/g, '').replace(/&shy;/g, '');
+
+let start = 0;
+const szenen = V.szenen.map(s => {
+  const el = document.createElement('div');
+  const dunkel = s.typ === 'outro' || s.ton === 'dunkel';
+  el.className = 'scene' + (dunkel ? ' dunkel' : '');
+  const k = s.kicker ? `<div class="kicker">${s.kicker}</div>` : '';
+  const q = s.quelle ? `<div class="quelle">${s.quelle}</div>` : '';
+  let html = '';
+  if (s.typ === 'hook') {
+    html = `${k}<div class="big">${words(s.titel)}</div>
+      <div class="rezept"><div class="kopf"><span>${s.kopf || 'VERORDNUNG · HEILMITTEL'}</span><span>${s.muster || ''}</span></div>
+      <div class="z" style="width:80%"></div><div class="z" style="width:60%"></div><div class="z" style="width:70%"></div>
+      <div class="datum">${s.datum || ''}</div><div class="stempel ${s.stempelGut ? 'gut' : ''}">${s.stempel}</div></div>`;
+  } else if (s.typ === 'zaehler') {
+    html = `${k}<div class="zahl"><small>${s.praefix || ''}</small><span class="n">${s.von}</span></div>
+      <div class="sub">${s.text || ''}</div>${q}`;
+  } else if (s.typ === 'frage') {
+    html = `${k}<div class="mid">${words(s.titel)}</div>
+      <div class="karte gruen"><div class="lbl">${s.antwortLabel || 'Antwort'}</div><p>${s.antwort}</p></div>${q}`;
+  } else if (s.typ === 'vergleich') {
+    html = `${k}${s.titel ? `<div class="mid" style="font-size:88px">${words(s.titel)}</div>` : ''}
+      <div class="karte hell ${s.links.weg === false ? '' : 'weg'}"><div class="lbl">${s.links.label}</div><p>${s.links.text}</p></div>
+      <div class="karte gruen"><div class="lbl">${s.rechts.label}</div><p>${s.rechts.text}</p></div>${q}`;
+  } else if (s.typ === 'countdown') {
+    const n = s.punkte.length;
+    html = `${k}<div class="cd">${s.punkte.map((p, i) =>
+      `<div class="punkt"><div class="nr">${n - i}</div><div class="txt">${p}</div></div>`).join('')}</div>`;
+  } else if (s.typ === 'enthuellung') {
+    html = `${k}<div class="mid enth">${s.titel}</div>${s.text ? `<div class="sub">${s.text}</div>` : ''}`;
+  } else if (s.typ === 'tippen') {
+    html = `${k}<div class="mid"><span class="tipp"></span><span class="cursor"></span></div>${s.text ? `<div class="sub">${s.text}</div>` : ''}`;
+  } else if (s.typ === 'outro') {
+    html = `${k}<div class="mid">${words(s.titel)}</div>
+      <div class="marke">Prax<em>ura</em></div><div class="cta">${s.cta || ''}</div>`;
+  } else { // aussage
+    html = `${k}<div class="mid">${words(s.titel)}</div>${s.text ? `<div class="sub">${s.text}</div>` : ''}${q}`;
+  }
+  el.innerHTML = `<div class="inhalt">${html}</div>`;
+  stage.appendChild(el);
+  const seg = { s, el, a: start, b: start + s.dauer, ws: [...el.querySelectorAll('.w')],
+    tippText: s.typ === 'tippen' ? plain(s.titel) : '' };
+  start += s.dauer;
+  return seg;
+});
+window.DAUER = start;
+// Mitte/Ende jeder Szene — für die Vorschau (ein Frame pro Szene, alles sichtbar)
+window.SZENEN_ENDE = szenen.map(z => Math.max(z.a, z.b - .35));
+
+// Überlaufprüfung: Inhalt darf weder unten noch rechts aus der Safe-Zone ragen
+window.pruefe = () => {
+  const fehler = [];
+  szenen.forEach((z, i) => {
+    z.el.style.opacity = 1; z.el.style.transform = 'none';
+    if (z.s.typ === 'countdown') z.el.querySelectorAll('.punkt').forEach(p => { p.style.opacity = 1; p.querySelector('.nr').style.transform = 'none'; });
+    if (z.s.typ === 'tippen') z.el.querySelector('.tipp').textContent = z.tippText;
+    if (z.s.typ === 'hook') z.el.querySelector('.stempel').style.transform = 'rotate(-12deg)';
+    const inhalt = z.el.querySelector('.inhalt').getBoundingClientRect();
+    if (inhalt.top < 225 || inhalt.bottom > 1920 - 415) fehler.push(`Szene ${i + 1} (${z.s.typ}): zu hoch (${Math.round(inhalt.height)} px, max 1270)`);
+    z.el.querySelectorAll('.inhalt *').forEach(n => {
+      const r = n.getBoundingClientRect();
+      if (r.width && r.right > 1080 - 145) fehler.push(`Szene ${i + 1} (${z.s.typ}): ragt rechts raus: "${n.textContent.trim().slice(0, 40)}"`);
+    });
+    z.el.style.opacity = 0;
+  });
+  return [...new Set(fehler)];
+};
+
+window.renderAt = t => {
+  barFill.style.width = (prog(t, 0, start) * 100) + '%';
+  szenen.forEach((z, i) => {
+    const lt = t - z.a;
+    const aktiv = t >= z.a && t < z.b || (i === szenen.length - 1 && t >= z.b);
+    if (!aktiv) { z.el.style.opacity = 0; return; }
+    const ersteSzene = i === 0;
+    const schnitt = z.s.uebergang === 'schnitt';
+    // Auftritt: schneller Schub von unten. Szene 1 steht ab Frame 0 (Vorschaubild muss packen).
+    const ein = ersteSzene || schnitt ? 1 : E.out(prog(lt, 0, .28));
+    const naechsteSchnitt = szenen[i + 1] && szenen[i + 1].s.uebergang === 'schnitt';
+    const aus = i < szenen.length - 1 && !naechsteSchnitt ? 1 - prog(lt, z.s.dauer - .15, z.s.dauer) : 1;
+    z.el.style.opacity = Math.min(ein, aus);
+    z.el.style.transform = `translateY(${(1 - ein) * 80}px) scale(${1 + lt * .012})`;
+    z.ws.forEach((w, j) => {
+      const p = ersteSzene ? 1 : E.back(prog(lt, .08 + j * .07, .38 + j * .07));
+      w.style.opacity = clamp(p * 1.5);
+      w.style.transform = `translateY(${(1 - p) * 60}px)`;
+    });
+    const wortEnde = .38 + z.ws.length * .07;
+    if (z.s.typ === 'hook') {
+      const st = z.el.querySelector('.stempel'), rz = z.el.querySelector('.rezept');
+      const bei = z.s.stempelBei ?? .55;
+      const p = prog(lt, bei, bei + .22);
+      st.style.opacity = p > 0 ? 1 : 0;
+      st.style.transform = `rotate(-12deg) scale(${2.4 - 1.4 * E.out(p)})`;
+      const schlag = prog(lt, bei + .18, bei + .5);
+      const wackel = schlag > 0 && schlag < 1 ? Math.sin(schlag * 30) * (1 - schlag) * 14 : 0;
+      rz.style.transform = `rotate(-3deg) translateX(${wackel}px)`;
+    }
+    if (z.s.typ === 'zaehler') {
+      const p = E.in(prog(lt, .3, z.s.dauer - .7));
+      const n = Math.round(z.s.von + (z.s.bis - z.s.von) * p);
+      const nel = z.el.querySelector('.n');
+      nel.textContent = n;
+      const drueber = z.s.grenze != null && n > z.s.grenze;
+      nel.style.color = drueber ? 'var(--rose)' : '';
+      const puls = drueber ? 1 + .08 * Math.max(0, 1 - prog(lt, z.s.dauer - .7, z.s.dauer - .3)) : 1;
+      nel.style.display = 'inline-block'; nel.style.transform = `scale(${puls})`;
+    }
+    if (z.s.typ === 'frage') {
+      const bei = z.s.antwortBei ?? Math.max(wortEnde + .6, z.s.dauer * .5);
+      const p = E.back(prog(lt, bei, bei + .35));
+      const k = z.el.querySelector('.karte');
+      k.style.opacity = clamp(p * 1.5); k.style.transform = `translateY(${(1 - p) * 70}px)`;
+    }
+    if (z.s.typ === 'vergleich') {
+      const [l, r] = z.el.querySelectorAll('.karte');
+      const pl = E.out(prog(lt, wortEnde, wortEnde + .3));
+      const bei = z.s.rechtsBei ?? Math.max(wortEnde + .8, z.s.dauer * .45);
+      const pr = E.back(prog(lt, bei, bei + .35));
+      l.style.opacity = pl; l.style.transform = `translateY(${(1 - pl) * 50}px)`;
+      r.style.opacity = clamp(pr * 1.5); r.style.transform = `translateY(${(1 - pr) * 70}px)`;
+    }
+    if (z.s.typ === 'countdown') {
+      const ps = z.el.querySelectorAll('.punkt'), d = z.s.dauer / ps.length;
+      ps.forEach((p, j) => {
+        const pp = prog(lt, j * d, j * d + .25);
+        const an = lt >= j * d && (lt < (j + 1) * d || j === ps.length - 1);
+        p.style.opacity = an ? E.out(pp) : 0;
+        p.querySelector('.nr').style.transform = `scale(${1.5 - .5 * E.out(pp)})`;
+        p.querySelector('.nr').style.transformOrigin = 'left bottom';
+      });
+    }
+    if (z.s.typ === 'enthuellung') {
+      const p = E.out(prog(lt, .2, z.s.dauer * .65));
+      const t2 = z.el.querySelector('.enth');
+      t2.style.filter = `blur(${(1 - p) * 28}px)`; t2.style.opacity = .35 + .65 * p;
+    }
+    if (z.s.typ === 'tippen') {
+      const tempo = z.s.tempo ?? 22; // Zeichen pro Sekunde
+      // Szene 1: ein Drittel steht ab Frame 0 (Vorschaubild darf nicht leer sein)
+      const vorlauf = ersteSzene ? Math.ceil(z.tippText.length * .35) : 0;
+      const n = vorlauf + Math.floor(Math.max(0, lt - .15) * tempo);
+      z.el.querySelector('.tipp').textContent = z.tippText.slice(0, n);
+      z.el.querySelector('.cursor').style.opacity = n >= z.tippText.length ? (Math.floor(lt * 2.5) % 2 ? 0 : 1) : 1;
+    }
+  });
+};
+renderAt(0);
+</script>
+</body>
+</html>

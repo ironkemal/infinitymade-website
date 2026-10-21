@@ -5,7 +5,7 @@ var, nerede kullanılıyor, neyle besleniyor"**u tutar.
 
 ## Neden var
 
-`dashboard.js` 24.000+ satır; projede 1700'den fazla fonksiyon var. "Böyle bir şey zaten var
+`dashboard.js` ~19.000 satır; projede 3400'ü aşkın fonksiyon var (güncel sayı: `node tools/funktionskarte.mjs --check`). "Böyle bir şey zaten var
 mı" sorusu okuyarak cevaplanamaz — hiçbir model bu hacmi tek seferde kapsayamaz, okur ve
 **makul ama eksik** bir cevap üretir. Bu klasör o soruyu okumaya değil **saymaya** çevirir.
 
@@ -19,6 +19,8 @@ Bunlar tek tek bug değil, **bir kalıp**. Kalıbı görmek için envanter gerek
 |---|---|
 | `INDEX.json` | Makine okuru. Her fonksiyon: dosya/satır, dokunduğu tablolar, yazma işlemleri, çağırdıkları, **onu çağıranlar**, hangi sidebar modülünden erişilebildiği, tıklama yolu. |
 | `INDEX.md` | İnsan okuru. Kopya adayları, en çok yazılan tablolar, çift isimler. |
+| `GKV-SORULAR-2026-08-12.md` | 12.08.2026 tarihli gkv-302 soru listesi (`db/REGISTER.md` ve `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` atıf veriyor). Üretilmez, elle. |
+| `FAZ2-BEFUND.md` | 12.08.2026 tek seferlik eleme/karar kartı — **tarihsel**; içindeki `verordnungen` ayrımı 04.09.2026'da geçersiz oldu. Üretilmez, elle. |
 
 İkisi de **üretilir, elle düzenlenmez.** Yanlış varsa düzeltilecek yer
 `tools/funktionskarte.mjs`, çıktı değil.
@@ -44,14 +46,12 @@ Bu projede bilinçli bir katmanlama var ve script onu ayırt edemez:
 
 - ✅ **Doğru:** ortak taban + üstüne binen alan bloğu (podolojide ayak şeması), ya da tek
   uygulamanın parametreyle daraltılması (`attachDiagnoseSearch(..., { strict: true })`)
-- ⚠️ **ARTIK GEÇERSİZ (04.09.2026):** "iki veri havuzu kasıtlıdır, birleştirme kırar"
-  maddesi kalktı. Kemal'in kararıyla podoloji `verordnungen`'den `prescriptions`'a taşındı
-  (hedef: 9 kolon / 7 satır / 72 kod noktası — 47 / 242 / 168 yerine). Podolojinin kendi
-  kelime dağarcığı (`lead_id`, `behandlungseinheiten`, `therapiefrequenz`, `dringend`,
-  `icd10` dizisi, aktiv/abrechenbar/abgesetzt durum ekseni) sıfırdan yeniden yazılmadı;
-  arada **`module/verordnung-topf.js`** sınır modülü duruyor (`ausTopf`/`inTopf`,
-  `statusAusTopf`/`statusInTopf`, `fuehrtSitzungsbuch`). Yani `prescriptions`'a iki farklı
-  kelimeyle yazan yolları görürsen bu kopya değil, **çeviri katmanıdır.**
+- ✅ **Doğru — çeviri katmanı (kopya değil):** `prescriptions`'a iki farklı kelime
+  dağarcığıyla yazan yollar. Tek Verordnung havuzu `prescriptions`'tır (04.09.2026'dan beri;
+  eski `verordnungen` tablosu silindi). Podolojinin kendi kelime dağarcığı (`lead_id`,
+  `behandlungseinheiten`, `therapiefrequenz`, `dringend`, `icd10` dizisi, aktiv/abrechenbar/
+  abgesetzt durum ekseni) arada **`module/verordnung-topf.js`** sınır modülüyle çevrilir
+  (`ausTopf`/`inTopf`, `statusAusTopf`/`statusInTopf`, `fuehrtSitzungsbuch`).
   ⚠️ `api-backend/billing/utils/einreichbar.js` içindeki `statusAusAbrechnungStatus` /
   `abrechnungStatusAusStatus` bu modülün **bilinçli aynasıdır** (`SPIEGEL` yorumlu):
   Docker imajı `module/`'ü içermediği için paylaşılamıyor. Biri değişirse ikisi değişir.
@@ -99,11 +99,12 @@ delete yolu) çıkarır. Bu yüzden **salt-okunur iki render yolu asla kuyruğa 
 DOM'u iki ayrı şablonla doldursalar bile.
 
 Ölçülen olay — Ops #308, sağdaki Termin-Panel'i (`#bkActionModal`) iki giriş doldurur:
-`openBookingActionModal` (dashboard.js:3223, 477 satır) ve `zeigePatientOhneTermin`
-(module/termin-panel-patient.js:135, 54 satır). İkisi de hiçbir tabloya yazmaz; harita
-ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci yolun bloklarının
-çoğunu hiç çizmeden yaşadı. Aynı denetimde `bkVerordnungSection`'ın panelden değil
-`#bookingModal`'dan geldiği de yalnız DOM id'lerini elle sayarak bulundu.
+`openBookingActionModal` (`dashboard.js`) ve eskiden `zeigePatientOhneTermin`. İkisi de hiçbir
+tabloya yazmaz; harita ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci
+yolun bloklarının çoğunu hiç çizmeden yaşadı. Düzeltme sonrası tek kural `module/termin-panel.js`'te
+(`PANEL_BLOECKE`); `zeigePatientOhneTermin` artık yalnız o dosyanın yorumunda anılır. Aynı denetimde
+`bkVerordnungSection`'ın panelden değil `#bookingModal`'dan geldiği de yalnız DOM id'lerini elle
+sayarak bulundu.
 
 **Kural:** "aynı ekranı kaç yol çiziyor" sorusu `kopieKandidaten`'dan cevaplanmaz. Aynı
 `getElementById('…')` kimliğine dokunan fonksiyonları say — bugün elle, `INDEX.json`'daki
@@ -149,6 +150,13 @@ En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
   Objekte) vs. `module/anfrage-anliegen.js` + `logic.js` (Arrays) — Parität nur per
   `widget/widget-listen-parity.test.js`; `validateName`/`validateContact`/E-Mail-Regex in `logic.js` und
   `widget-guards.js` (gleiche Regex) und abweichend in `booking-request.js` (schwächere Regex, ohne `<>`).
+### 11.10.2026 · PE-007 Nachtrag — geschlossene VO im Termin-Fenster (dd6b208e)
+- `setzeSitzungenKopf(geschlossen)` (`module/termin-panel.js`). Niye: başlık „Aktive Verordnung" abgerechnet/storniert
+  VO'da rozetle çelişiyordu; kilit cümlesi hiç gösterilmeyen bir listede duruyordu (podoloji PE-007 Nachtrag).
+  Nerede: `zeichnePodoEinheiten` (`module/podo-einheiten.js`) `rxGeschlossen(vord)` ile çağırır; `zeigeSitzungenArbeit` /
+  `zeichneSitzungenLeer` sıfırlar.
+- Değişti: `frageFolgetermin({alleVerbraucht, abrechnungStatus})` (`podo-tag-zusatz.js`) — yalnız laufende VO'da sorar.
+  Einheitenblock'taki Leistungen düğmesi `aufBehandlungen(patientId, {vordId, datum})` — bağlı VO'yu açar (yalnız patientId değil).
 
 ### 10.10.2026 · KHS 10. tur a–d — Zähler = dokumentierte Einheit, Kasse/VersNr nur auf Kassenbelegen, RX_FELDER überall, Speichern-Text (c6afd9ae)
 - `module/verordnung-termine.js` `podoBelegung(verordnet, termine, behandlungen, alsTag)` + `ladeVerordnungsBehandlungen`.
@@ -1052,3 +1060,38 @@ verlangt sie für gespeicherte Barcodequelle. Echte lokale UI/DB-Abnahme war Aus
 Kartenumfang: `tools/` ist kein JavaScript-Scanroot des bestehenden Generators.
 Die drei exportierten Diskcheck-Funktionen sind daher hier absichtlich dokumentiert,
 aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergänzung.
+### 13.10.2026 · Windows-Einrichtungsfenster (install.ps1, Stufe 1) — Intentmeldung
+
+- `installieren/install.ps1`, Commit 1bee7189: `U` (Umlaut in ASCII-Datei), `UiStarten` + Skriptblock
+  `$UiSkript` (WinForms-Fenster im STA-Runspace; darin `Rgb`/`Pt`/`Gr` — die Karte führt sie als
+  Top-Level, sie leben im Skriptblock), `UiSchritt`, `UiMeldung` (TopMost-MessageBox), `UiAbschluss`,
+  `UiZu` (schließt das Fenster vor jedem Skriptende — sonst PipelineStoppedException aus dem
+  Zeitgeber), `KonsoleZeigen`. Niye: Konsey 2026-10-13 Windows-Kurulum-Sihirbazı Stufe 1 — Kemal
+  wollte auf dem Test-PC ohne Kommandoeingabe einrichten. Nerede: nur `install.ps1`; `Log`/`Warn`/
+  `Fehler`/`Frage` rufen sie auf, Schritt 6 startet `install.sh` in eigenem Konsolenfenster
+  (Geheimnisse gehen nicht durch das Fenster). `-Text` = alter Textweg. Karte im selben Commit
+  aufgefrischt (`--check`: taze, 3500 Einträge). Tutanak: `konsey/tutanak/2026-10-13-windows-kurulum-sihirbazi.md`.
+
+### 16.10.2026 — geprüfte Dashboard-Korrekturen
+
+- Notizencontroller bindet bearbeitbaren Inhalt an erfolgreich geladene Patienten-/Inhaberidentität; verspätete Antworten und Schreibfehler erzeugen keine falsche Zuordnung/Erfolgsmeldung.
+- Zahlungsjournal rendert nur aktuelle Filtergeneration. Wartelisten-Auswahl verwirft alte ID nach Texteingabe und prüft Zeitfenster bei Neu/Bearbeitung.
+- Rechnungseingaben werden vor asynchroner Verarbeitung eingefroren; Rechnungseditor wird erst nach vollständigem Laden geöffnet.
+- No-show-Sperre prüft aktuelle Termin-/Sitzungs-/Snapshot-Verknüpfungen. Fahrtenreferenzen sind für neue Fahrten vollständig, historische Referenzen bleiben konsistent in Anzeige und CSV.
+- Startkonfiguration/Profil/Rechte müssen bestätigt geladen sein; Fehler bleiben sichtbar statt erfundener Ownerfreigabe oder Login-Schleife.
+- Diese Änderung benötigt keine neue Backend-RPC. Serienparität sowie atomare Backend-/Schema-Korrekturen werden separat erst nach bestätigter Migration ausgeliefert.
+
+### 16.10.2026 — vorbereitete Backend-/Installationskorrekturen
+
+- Bestehende authentifizierte Terminpfade prüfen Praxiszugehörigkeit von Mitarbeiter/Leistung; Serienberechnung teilt dieselben Regeln wie Vorschau und erzeugt keine Termine vor Startdatum. SITE_URL wird zum HTTP(S)-Origin normalisiert.
+- Wartelisten-API prüft optionales Zeitfenster, Mahnungen verwenden vorhandene Ledger-/Legacylogik für tatsächlichen Restbetrag.
+- Migration0081 führt eingefrorene AF-Fälligkeit und atomare AF-Status-/Journalbuchung ein. Migration0082 bestätigt Anfrage und legt Kalendertermine in gemeinsamer Transaktion an. Beide RPCs SECURITY INVOKER, ausschließlich service_role. Keine nichtatomaren Fallbacks.
+- Upstream-Migrationen0079/0080 bleiben unverändert. Aktuelle volle Kette bis0082 physisch lokal geprüft; kein Live-Nachweis bei verweigertem Supabase-Zugriff.
+- Installer prüft alle TLS-Modi mit tatsächlicher Zertifikatsvalidierung und begrenzten HTTP-Fristen. Neuere Upstream-Readiness-/Reload-Logik bleibt erhalten.
+
+### 17.10.2026 — Patienten-/Maskenkontext bei verzögerten Antworten
+
+- `module/rezept-patientenkopf.js` übernimmt bisherigen Rezept-Prefill aus Dashboard: Patient, Inhaber und Maskengeneration bleiben verbunden, Speichern wartet auf vollständige Stammdaten. Arztname/LANR/BSNR werden als Gruppe behandelt; manuelle Angaben bleiben erhalten.
+- `module/patient-ueberweisung-upload.js` bindet Dateiauswahl an ursprünglichen Patienten/Inhaber und verwirft Dateilesen/Rückmeldungen nach Aktenwechsel. Erste Verwendung: Dashboard-Überweisungsupload.
+- Bestehender Fußbefund bleibt einziger Editor; Ladegeneration und Schreibsnapshot verhindern gemischte Patienten-/Versionsketten. Patiententermine verwenden Telefonnummer nur bei unzugeordneten Altterminen.
+- Absicht und erste Verwendung an `fonksiyon-ustasi` vor und nach Änderung mitgeteilt; Funktionskarte erneuert. Nur lokale Nachweise, kein Live-Release.

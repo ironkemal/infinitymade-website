@@ -33,6 +33,7 @@
 
 import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.js?v=20261003a';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20261010zc';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 import { alsISODatum } from './datum.js?v=20261001a';
 import { befundGrundText } from './podo-vorbelegung-grund.js?v=20261001i';
@@ -686,7 +687,8 @@ async function patientenBehandlungen() {
     .select('id, start_time, status, no_show, services(gkv_position_nr, code), booking_leistungen(services(gkv_position_nr, code))')
     .eq('owner_id', ctx.getOwnerId()).eq('lead_id', leadId).neq('status', 'cancelled');
   const eigene = document.getElementById('bk-id')?.value || '';
-  return [...(behs || []), ...geplanteAlsBehandlungen(geplant, { ohneId: eigene })];
+  const vorgeschichte = await ladeVorgeschichte(ctx.supabase, { ownerId: ctx.getOwnerId(), leadId });   // Altsystem
+  return [...(behs || []), ...vorgeschichte, ...geplanteAlsBehandlungen(geplant, { ohneId: eigene })];
 }
 
 /** Befundung vorschlagen — der Telefonablauf aus Karte 221. */

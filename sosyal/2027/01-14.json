@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "POV: Die Ergo-Verordnung kommt von der Psychotherapeutin.\n\nDas ist erlaubt: Die Heilmittel-Richtlinie lässt Ergotherapie-Verordnungen durch Vertragspsychotherapeut:innen zu, bei Diagnosen aus dem Indikationsspektrum der Psychotherapie-Richtlinie. Praxura weist auf fehlende Angaben hin, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Ergotherapie #Heilmittel #Praxisalltag #Therapeutenleben",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.8, "kicker": "POV", "titel": "Die Ergo-Verordnung kommt von der <em>Psychotherapeutin.</em>" },
+    { "typ": "frage", "dauer": 3.6, "uebergang": "schnitt", "kicker": "Ergotherapeut:innen", "titel": "Darf sie das <em>verordnen?</em>", "antwort": "Ja. Bei Diagnosen aus der Psychotherapie-Richtlinie.", "quelle": "Heilmittel-Richtlinie, § 1 und § 35 Abs. 4" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Gut zu wissen", "titel": "Auch hier gilt: <em>Angaben</em> prüfen." },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Fehlende Angaben sehen, <em>bevor</em> Sie behandeln.", "cta": "Folgen für mehr Praxiswissen" }
+  ]
+}

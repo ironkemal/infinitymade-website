@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
--- EXPORTED AT:        2026-10-10T01:02:45.000Z
--- ERZEUGT AM:         2026-10-10
+-- LAST MIGRATION:     20261021104136 0086_altsystem_uebernahme
+-- EXPORTED AT:        2026-10-21T10:45:00.000Z
+-- ERZEUGT AM:         2026-10-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1397
+--   table_columns:       1408
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           109
---   triggers:            97
---   indexes:             337
+--   functions:           111
+--   triggers:            98
+--   indexes:             338
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -1622,6 +1622,7 @@ ALTER FUNCTION public.admin_top_tenants_by_rows() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.aerzte_touch_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
   NEW.updated_at = now();
@@ -1727,6 +1728,98 @@ END;
 $function$
 ;
 ALTER FUNCTION public.anamnese_versionieren() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.approve_booking_request_atomic(
+  p_request_id uuid, p_owner_id uuid, p_actor_id uuid,
+  p_expected_updated_at timestamptz, p_employee_id uuid,
+  p_changes jsonb, p_bookings jsonb, p_result jsonb
+) RETURNS jsonb
+LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_request public.booking_requests%ROWTYPE;
+  v_row jsonb;
+  v_id uuid;
+  v_ids jsonb := '[]'::jsonb;
+  v_service_id uuid;
+  v_lead_id uuid;
+BEGIN
+  IF p_actor_id IS DISTINCT FROM p_owner_id OR NOT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = p_owner_id AND role = 'owner'
+  ) THEN
+    RAISE EXCEPTION 'Nur Praxisinhaber dürfen bestätigen' USING ERRCODE = '42501';
+  END IF;
+  SELECT * INTO v_request FROM public.booking_requests
+    WHERE id = p_request_id AND owner_id = p_owner_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Anfrage nicht gefunden' USING ERRCODE = '40001';
+  END IF;
+  IF v_request.status IS DISTINCT FROM 'pending'
+     OR v_request.updated_at IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'Anfrage wurde inzwischen bearbeitet' USING ERRCODE = '40001';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_employee_id
+    AND (id = p_owner_id OR owner_id = p_owner_id)) THEN
+    RAISE EXCEPTION 'Fremder Therapeut' USING ERRCODE = '42501';
+  END IF;
+  IF jsonb_typeof(p_changes) IS DISTINCT FROM 'object'
+     OR EXISTS (SELECT 1 FROM jsonb_object_keys(p_changes) k WHERE k NOT IN
+       ('preferred_date','preferred_time','service_id','session_count','verordnung_sitzungen','notizen'))
+     OR jsonb_typeof(p_bookings) IS DISTINCT FROM 'array'
+     OR jsonb_array_length(p_bookings) NOT BETWEEN 1 AND 99 THEN
+    RAISE EXCEPTION 'Ungültige Terminplanung' USING ERRCODE = '22023';
+  END IF;
+  v_service_id := CASE WHEN p_changes ? 'service_id'
+    THEN (p_changes->>'service_id')::uuid ELSE v_request.service_id END;
+  IF v_service_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.services WHERE id = v_service_id
+      AND (owner_id = p_owner_id OR user_id = p_owner_id)
+  ) THEN
+    RAISE EXCEPTION 'Fremde Leistung' USING ERRCODE = '42501';
+  END IF;
+  FOR v_row IN SELECT value FROM jsonb_array_elements(p_bookings) LOOP
+    IF (v_row->>'owner_id')::uuid IS DISTINCT FROM p_owner_id
+      OR (v_row->>'user_id')::uuid IS DISTINCT FROM p_employee_id
+      OR (v_row->>'service_id')::uuid IS DISTINCT FROM v_service_id
+      OR (v_row->>'end_time')::timestamptz <= (v_row->>'start_time')::timestamptz
+      OR v_row->>'start_time' IS NULL OR v_row->>'end_time' IS NULL THEN
+      RAISE EXCEPTION 'Ungültiger Termin' USING ERRCODE = '22023';
+    END IF;
+    -- 0085: optionale Patientenakte. Nur eine Akte DIESER Praxis (Mandantengrenze,
+    -- wie pruefeLeadId in server.js); NULL bleibt erlaubt — alter Code läuft weiter.
+    v_lead_id := NULLIF(v_row->>'lead_id', '')::uuid;
+    IF v_lead_id IS NOT NULL AND NOT EXISTS (
+      SELECT 1 FROM public.leads WHERE id = v_lead_id AND owner_id = p_owner_id
+    ) THEN
+      RAISE EXCEPTION 'Fremde Patientenakte' USING ERRCODE = '42501';
+    END IF;
+    INSERT INTO public.bookings(user_id, owner_id, service_id, customer_name, start_time, end_time, status, lead_id)
+      VALUES (p_employee_id, p_owner_id, v_service_id, v_row->>'customer_name',
+        (v_row->>'start_time')::timestamptz, (v_row->>'end_time')::timestamptz, 'confirmed', v_lead_id)
+      RETURNING id INTO v_id;
+    v_ids := v_ids || jsonb_build_array(v_id);
+  END LOOP;
+  UPDATE public.booking_requests SET
+    employee_id = p_employee_id, status = 'approved',
+    booking_id = (v_ids->>0)::uuid, booking_ids = v_ids,
+    preferred_date = CASE WHEN p_changes ? 'preferred_date' THEN (p_changes->>'preferred_date')::date ELSE preferred_date END,
+    preferred_time = CASE WHEN p_changes ? 'preferred_time' THEN (p_changes->>'preferred_time')::time ELSE preferred_time END,
+    service_id = v_service_id,
+    session_count = CASE WHEN p_changes ? 'session_count' THEN (p_changes->>'session_count')::integer ELSE session_count END,
+    verordnung_sitzungen = CASE WHEN p_changes ? 'verordnung_sitzungen' THEN (p_changes->>'verordnung_sitzungen')::integer ELSE verordnung_sitzungen END,
+    notizen = CASE WHEN p_changes ? 'notizen' THEN p_changes->>'notizen' ELSE notizen END,
+    updated_at = now()
+    WHERE id = p_request_id AND owner_id = p_owner_id AND status = 'pending';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Anfrage wurde inzwischen bearbeitet' USING ERRCODE = '40001';
+  END IF;
+  RETURN COALESCE(p_result, '{}'::jsonb) || jsonb_build_object(
+    'booking_id', v_ids->0, 'booking_ids', v_ids, 'sessions_created', jsonb_array_length(v_ids));
+END;
+$function$
+;
+ALTER FUNCTION public.approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_owner_freeze(p_owner uuid)
  RETURNS boolean
@@ -2091,39 +2184,89 @@ end $function$
 ;
 ALTER FUNCTION public.audit_write_log() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.ausfall_status_buchen(
+  p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid,
+  p_status text, p_zahlart text DEFAULT NULL::text
+) RETURNS void
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+DECLARE
+  af public.ausfallrechnungen%ROWTYPE;
+  patient_name text;
+BEGIN
+  IF p_actor_id IS DISTINCT FROM p_owner_id OR NOT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = p_actor_id AND role = 'owner'
+  ) THEN
+    RAISE EXCEPTION 'Nur der Inhaber darf Ausfallrechnungen buchen.' USING ERRCODE = '42501';
+  END IF;
+  IF p_status IS NULL OR p_status NOT IN ('bezahlt', 'storniert', 'abgeschrieben') THEN
+    RAISE EXCEPTION 'Ungültiger Ausfallstatus.' USING ERRCODE = '23514';
+  END IF;
+  IF p_status = 'bezahlt' AND (p_zahlart IS NULL OR p_zahlart NOT IN ('bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal')) THEN
+    RAISE EXCEPTION 'Zahlart erforderlich.' USING ERRCODE = '23514';
+  END IF;
+
+  SELECT * INTO af FROM public.ausfallrechnungen WHERE id = p_ausfall_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Ausfallrechnung nicht gefunden.' USING ERRCODE = 'P0002';
+  END IF;
+  IF af.owner_id IS DISTINCT FROM p_owner_id THEN
+    RAISE EXCEPTION 'Kein Zugriff auf diese Ausfallrechnung.' USING ERRCODE = '42501';
+  END IF;
+  IF af.status IN ('bezahlt', 'storniert') THEN
+    RAISE EXCEPTION 'Ausfallrechnung ist bereits % und nicht mehr änderbar.', af.status USING ERRCODE = '23514';
+  END IF;
+
+  IF p_status = 'bezahlt' THEN
+    SELECT trim(concat_ws(' ', first_name, last_name)) INTO patient_name
+      FROM public.leads WHERE id = af.patient_id;
+    IF coalesce(patient_name, '') = '' THEN
+      SELECT customer_name INTO patient_name FROM public.bookings WHERE id = af.booking_id;
+    END IF;
+    INSERT INTO public.belegliste(owner_id, type, amount_eur, patient_id, reference_text, created_by, zahlart)
+    VALUES (p_owner_id, 'ausfall', af.amount_eur, af.patient_id,
+      'Ausfallhonorar erhalten (AF-' || lpad(af.rechnung_nr::text, greatest(4, length(af.rechnung_nr::text)), '0') || ')'
+        || CASE WHEN coalesce(patient_name, '') <> '' THEN ': ' || patient_name ELSE '' END,
+      p_actor_id, p_zahlart);
+  END IF;
+
+  UPDATE public.ausfallrechnungen
+    SET status = p_status,
+        bezahlt_at = CASE WHEN p_status = 'bezahlt' THEN now() ELSE bezahlt_at END
+    WHERE id = af.id;
+END;
+$function$
+;
+ALTER FUNCTION public.ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.ausfallrechnung_festschreibung()
  RETURNS trigger
  LANGUAGE plpgsql
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  -- c) zurück auf offen: aus keinem anderen Status
   IF NEW.status = 'offen' AND OLD.status IS DISTINCT FROM 'offen' THEN
     RAISE EXCEPTION 'Ausfallrechnung AF-% (Status %) kann nicht wieder auf offen gesetzt werden.', OLD.rechnung_nr, OLD.status
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- c) bezahlt ist endgültig
   IF OLD.status = 'bezahlt'
      AND (NEW.status IS DISTINCT FROM OLD.status OR NEW.bezahlt_at IS DISTINCT FROM OLD.bezahlt_at) THEN
     RAISE EXCEPTION 'Bezahlte Ausfallrechnung AF-% ist festgeschrieben (Status und Zahlungsdatum).', OLD.rechnung_nr
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- c) storniert ist endgültig (Hauptsitzung 10.10.2026): POST /ausfall/create erlaubt nach Storno eine neue
-  --    AF für denselben Termin — ein Zurück aus storniert ergäbe zwei lebende AF für einen Termin.
   IF OLD.status = 'storniert' AND NEW.status IS DISTINCT FROM OLD.status THEN
     RAISE EXCEPTION 'Stornierte Ausfallrechnung AF-% ist endgültig. Für den Termin bitte eine neue Ausfallrechnung anlegen.', OLD.rechnung_nr
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- c) bezahlt_at nur zusammen mit dem Übergang auf bezahlt
   IF NEW.bezahlt_at IS DISTINCT FROM OLD.bezahlt_at AND NEW.status IS DISTINCT FROM 'bezahlt' THEN
     RAISE EXCEPTION 'Ausfallrechnung AF-%: Zahlungsdatum nur zusammen mit Status bezahlt.', OLD.rechnung_nr
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- a) + b): Inhalt ab Anlage gesperrt (es gibt keinen Entwurf)
   IF NEW.amount_eur      IS DISTINCT FROM OLD.amount_eur
   OR NEW.service_name    IS DISTINCT FROM OLD.service_name
   OR NEW.leistung_datum  IS DISTINCT FROM OLD.leistung_datum
@@ -2133,7 +2276,7 @@ BEGIN
   OR NEW.owner_id        IS DISTINCT FROM OLD.owner_id
   OR NEW.aussteller_snapshot IS DISTINCT FROM OLD.aussteller_snapshot
   OR NEW.empfaenger_snapshot IS DISTINCT FROM OLD.empfaenger_snapshot
-  -- FK ON DELETE SET NULL muss durchgehen; Umhängen auf eine andere Zeile nicht
+  OR NEW.faellig_am IS DISTINCT FROM OLD.faellig_am
   OR (NEW.patient_id IS NOT NULL AND NEW.patient_id IS DISTINCT FROM OLD.patient_id)
   OR (NEW.booking_id IS NOT NULL AND NEW.booking_id IS DISTINCT FROM OLD.booking_id)
   THEN
@@ -2176,6 +2319,67 @@ AS $function$
 $function$
 ;
 ALTER FUNCTION public.auth_tenant_id() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.belegliste_storno_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_nr bigint;
+  v_otype text;
+  v_onr bigint;
+  v_oamount numeric;
+  v_oowner uuid;
+  v_saldo numeric;
+BEGIN
+  IF NEW.type <> 'storno' THEN
+    RETURN NEW;
+  END IF;
+
+  -- Verweis aus dem Altformat aufloesen (alte Backend-Version schreibt storno_von nicht).
+  IF NEW.storno_von IS NULL AND NEW.reference_text ~ '^STORNO für Beleg-Nr: [1-9][0-9]{0,14} \(' THEN
+    v_nr := substring(NEW.reference_text from '^STORNO für Beleg-Nr: ([1-9][0-9]{0,14}) \(')::bigint;
+    SELECT id INTO NEW.storno_von FROM public.belegliste
+     WHERE owner_id = NEW.owner_id AND beleg_nr = v_nr AND type <> 'storno';
+  END IF;
+
+  IF NEW.storno_von IS NOT NULL THEN
+    SELECT owner_id, type, beleg_nr, amount_eur INTO v_oowner, v_otype, v_onr, v_oamount
+      FROM public.belegliste WHERE id = NEW.storno_von FOR UPDATE;
+    IF NOT FOUND OR v_oowner <> NEW.owner_id OR v_otype = 'storno' THEN
+      RAISE EXCEPTION 'Storno verweist auf keinen stornierbaren Originalbeleg dieser Praxis.' USING ERRCODE = '23514';
+    END IF;
+    IF NEW.amount_eur <> -v_oamount THEN
+      RAISE EXCEPTION 'Storno muss den Betrag des Originals vollstaendig aufheben.' USING ERRCODE = '23514';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.belegliste s
+       WHERE s.owner_id = NEW.owner_id AND s.type = 'storno' AND s.storno_von IS NULL
+         AND s.reference_text ~ '^STORNO für Beleg-Nr: [1-9][0-9]{0,14} \('
+         AND substring(s.reference_text from '^STORNO für Beleg-Nr: ([1-9][0-9]{0,14}) \(')::bigint = v_onr
+    ) THEN
+      RAISE EXCEPTION 'Dieser Beleg wurde bereits storniert.' USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  -- Zuzahlungs-Saldo je Rezept darf durch einen Storno nie negativ werden (deckt auch den
+  -- Rezept-Saldo-Weg und gleichzeitige Anfragen ab).
+  IF NEW.prescription_id IS NOT NULL AND (NEW.storno_von IS NULL OR v_otype = 'zuzahlung') THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(NEW.prescription_id::text, 0));
+    SELECT coalesce(sum(amount_eur), 0) INTO v_saldo FROM public.belegliste
+     WHERE owner_id = NEW.owner_id AND prescription_id = NEW.prescription_id
+       AND type IN ('zuzahlung', 'storno');
+    IF v_saldo + NEW.amount_eur < 0 THEN
+      RAISE EXCEPTION 'Storno uebersteigt den gezahlten Betrag des Rezepts.' USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.belegliste_storno_pruefen() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.business_lookup_for_inbound(p_whatsapp_phone_number_id text)
  RETURNS TABLE(business_id uuid, business_name text, sector text, city text, language text, is_active boolean, cal_api_key text, cal_username text, whatsapp_access_token text, whatsapp_waba_id text, working_hours jsonb, faq jsonb, message_templates jsonb, system_prompt text, services jsonb)
@@ -3180,6 +3384,7 @@ ALTER FUNCTION public.normalize_phone(p text) OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.notify_feedback_telegram()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
   PERFORM net.http_post(
@@ -3227,6 +3432,7 @@ ALTER FUNCTION public.notify_new_referral_draft() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.pat_fussbefund_versionieren()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 DECLARE
   v_max integer;
@@ -3351,6 +3557,7 @@ begin
   or new.betrag_gkv        is distinct from old.betrag_gkv
   or new.owner_id          is distinct from old.owner_id
   or new.created_at        is distinct from old.created_at
+  or new.herkunft          is distinct from old.herkunft
   then
     raise exception 'Dokumentierte Behandlung ist unveraenderlich (§ 630f Abs. 1 S. 2 BGB). Eine Korrektur erfolgt durch Stornierung mit Grund und eine neue Behandlungszeile.';
   end if;
@@ -5297,6 +5504,7 @@ ALTER FUNCTION public.trg_prescriptions_updated_at() OWNER TO postgres;
 CREATE OR REPLACE FUNCTION public.update_attendance_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $function$
@@ -5364,42 +5572,6 @@ END;
 $function$
 ;
 ALTER FUNCTION public.vergebe_verordnungsnummer_rx() OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION public.verordnung_festschreibung()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO 'public'
-AS $function$
-BEGIN
-  IF OLD.belegnummer IS NULL THEN
-    RETURN NEW;
-  END IF;
-
-  IF NEW.belegnummer          IS DISTINCT FROM OLD.belegnummer
-  OR NEW.ausstellungsdatum    IS DISTINCT FROM OLD.ausstellungsdatum
-  OR NEW.diagnosegruppe       IS DISTINCT FROM OLD.diagnosegruppe
-  OR NEW.icd10                IS DISTINCT FROM OLD.icd10
-  OR NEW.leitsymptomatik      IS DISTINCT FROM OLD.leitsymptomatik
-  OR NEW.pat_leitsymptomatik  IS DISTINCT FROM OLD.pat_leitsymptomatik
-  OR NEW.dringend              IS DISTINCT FROM OLD.dringend
-  OR NEW.hausbesuch            IS DISTINCT FROM OLD.hausbesuch
-  OR NEW.therapiefrequenz      IS DISTINCT FROM OLD.therapiefrequenz
-  OR NEW.rezeptart             IS DISTINCT FROM OLD.rezeptart
-  OR NEW.zuzahlung_befreit     IS DISTINCT FROM OLD.zuzahlung_befreit
-  OR NEW.kostentraeger_ik      IS DISTINCT FROM OLD.kostentraeger_ik
-  OR NEW.versichertennummer    IS DISTINCT FROM OLD.versichertennummer
-  OR NEW.lead_id                IS DISTINCT FROM OLD.lead_id
-  OR NEW.arzt_id                IS DISTINCT FROM OLD.arzt_id
-  THEN
-    RAISE EXCEPTION 'Verordnung % wurde bereits an die Kasse uebermittelt (Beleg %). Die abgerechneten Angaben sind festgeschrieben und koennen nicht mehr direkt geaendert werden. Korrekturen laufen ueber das Korrekturverfahren (erneute Arztunterschrift + Datum, Anlage 3 TP5 V21 Abschnitt k) sowie ueber Absetzung/Teilabsetzung/Storno (PATCH /verordnung/:id/abrechnungsstatus).', OLD.id, OLD.belegnummer
-      USING ERRCODE = 'check_violation';
-  END IF;
-
-  RETURN NEW;
-END;
-$function$
-;
-ALTER FUNCTION public.verordnung_festschreibung() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.whoami()
  RETURNS jsonb
@@ -5507,6 +5679,8 @@ CREATE TRIGGER trg_ausfallrechnung_festschreibung BEFORE UPDATE ON ausfallrechnu
 CREATE TRIGGER trg_set_ausfallrechnung_nr BEFORE INSERT ON ausfallrechnungen FOR EACH ROW EXECUTE FUNCTION set_next_ausfallrechnung_nr();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON b2b_contacts FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER trg_belegliste_storno_pruefen BEFORE INSERT ON belegliste FOR EACH ROW EXECUTE FUNCTION belegliste_storno_pruefen();
 
 CREATE TRIGGER trg_prevent_belegliste_mod BEFORE DELETE OR UPDATE ON belegliste FOR EACH ROW EXECUTE FUNCTION prevent_belegliste_mod();
 
@@ -5788,6 +5962,8 @@ CREATE INDEX idx_b2b_contacts_owner ON b2b_contacts USING btree (owner_id);
 
 -- Index belegliste_pkey ON public.belegliste is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX belegliste_pkey ON belegliste USING btree (id);
+
+CREATE UNIQUE INDEX belegliste_storno_von_einmal ON belegliste USING btree (storno_von) WHERE (storno_von IS NOT NULL);
 
 CREATE INDEX idx_belegliste_invoice ON belegliste USING btree (invoice_id) WHERE invoice_id IS NOT NULL;
 
@@ -6794,6 +6970,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=anamnese_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_unfreeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -6822,6 +7000,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_sitzungen_beenden(p_user uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -6908,6 +7088,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_twilio(p_to_number text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -12482,8 +12664,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=vergebe_patientennummer() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=verordnung_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=verordnung_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO

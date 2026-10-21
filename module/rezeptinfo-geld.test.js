@@ -303,3 +303,27 @@ test('euroZustand: vorhandene Rechnung zeigt ihren Betrag, nicht „—" (canli-
   const ohne = euroZustand(rx, { ...st, rechnungOhneBetrag: true, rechnung: { id: 'r', invoice_number: null, total_patient: null } });
   assert.equal(ohne.text, 'vorhanden');
 });
+
+// canli-test P3 / Podologie-Vertrag § 8 (21.10.2026): nach dem ersten Kassieren kommen
+// Behandlungen dazu → Rest nachkassieren; zu viel kassiert → Storno + neu kassieren.
+test('euroZustand: Rest nachkassieren, zu viel kassiert, Altsystem-Abzug im Titel', () => {
+  const rx = { zuzahlung_kassiert_am: '2026-10-01' };
+  const rest = euroZustand(rx, { zahler: 'gkv', gesamt: 30, kassiert: 20 }, {});
+  assert.equal(rest.aktion, 'kassieren');
+  assert.equal(rest.betrag, 10);
+  const zuViel = euroZustand(rx, { zahler: 'gkv', gesamt: 15, kassiert: 20 }, {});
+  assert.equal(zuViel.aktion, 'beleg');
+  assert.match(zuViel.titel, /5,00.*zu viel.*stornieren/);
+  const alt = euroZustand({}, { zahler: 'gkv', gesamt: 12.22, gesamtSoll: 17.22, altsystem: 5 }, {});
+  assert.match(alt.titel, /abzüglich 5,00/);
+});
+
+// canli-test 21.10.2026: Podo-VO mit Behandlungen zeigte „Bestätigt — Serie noch nicht begonnen"
+// (Physio-Spalte `status`). Podologie liest ihre eigene Achse `abrechnung_status`.
+test('rendereGeldzeile: Podologie zeigt den Podo-Status, nicht die Physio-Spalte', () => {
+  const el = { innerHTML: '', querySelector: () => null };
+  const rx = { therapie_bereich: 'podo', status: 'confirmed', abrechnung_status: null, anzahl_einheiten: 6 };
+  rendereGeldzeile(el, { rx, stand: ermittleGeldstand({ rx, erbracht: 2, zahler: 'gkv', position: POS }) });
+  assert.ok(!el.innerHTML.includes('Bestätigt'), el.innerHTML);
+  assert.ok(el.innerHTML.includes('In Behandlung') || el.innerHTML.includes('Aktiv'), el.innerHTML);
+});

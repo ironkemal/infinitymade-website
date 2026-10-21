@@ -64,6 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
+import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { preisAusService, offeneBehandlungen, zeilenAusBehandlungen } from './rechnung-bruecke.js?v=20261010zc';
 import { ladeRechnungZurVerordnung } from './rechnung-zur-verordnung.js?v=20261010zc';
 
@@ -247,6 +248,11 @@ export async function ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen })
   await Promise.all([...new Set(behs.map(b => tag(b.behandlungsdatum)))]
     .map(async t => karten.set(t, await ladePodoPositionen(t).catch(() => null))));
   const summe = zuzahlungFuerPodoVerordnung(rx, behs, (code, datum) => karten.get(tag(datum))?.get?.(String(code)) || null);
+  // Übernommene VO: im Altsystem schon kassiert (Migration 0086) — Praxura fordert nur den Rest (Vertrag § 8).
+  const altsystem = Number(rx?.zuzahlung_altsystem_eur) || 0;
+  if (altsystem > 0 && Number.isFinite(Number(summe?.gesamt))) {
+    return { ...summe, gesamtSoll: summe.gesamt, altsystem, gesamt: Math.max(0, Math.round((summe.gesamt - altsystem) * 100) / 100), behandlungen: behs.length };
+  }
   return { ...summe, behandlungen: behs.length };
 }
 
@@ -303,8 +309,21 @@ export function euroZustand(rx, stand, lead) {
              titel: 'Zuzahlungsbefreit — Beleg öffnen' };
   }
   if (rx.zuzahlung_kassiert_am) {
-    return { ton: 'bezahlt', text: fmt(stand.gesamt), label: 'Zuzahlung', aktion: 'beleg',
-             titel: 'Bereits kassiert — Beleg öffnen' };
+    // Betrag aus dem Kassenbuch, nicht der gerechnete Sollwert: weichen beide ab
+    // (z. B. vor dem 21.10.2026 die ganze VO kassiert), muss das sichtbar sein —
+    // zu viel Kassiertes ist zu erstatten (Podologie-Vertrag § 8 Abs. 4).
+    const ist = stand.kassiert, abw = ist != null && !stand.unbekannt && Math.abs(ist - stand.gesamt) > 0.005;
+    // Rest offen (weitere Behandlungen nach dem ersten Kassieren): den Rest kassieren — der
+    // Server lässt höchstens Soll − schon kassiert zu (belegliste POST, Vertrag § 8 Abs. 1).
+    if (abw && ist < stand.gesamt) {
+      const rest = Math.round((stand.gesamt - ist) * 100) / 100;
+      return { ton: 'offen', text: `Rest ${fmt(rest)}`, label: 'Zuzahlung', aktion: 'kassieren', betrag: rest,
+               titel: `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(rest)} nachkassieren und quittieren` };
+    }
+    // Zu viel kassiert: Erstattung GoBD-sauber über Storno des Belegs + neues Kassieren des richtigen Betrags.
+    return { ton: 'bezahlt', text: fmt(ist ?? stand.gesamt), label: 'Zuzahlung', aktion: 'beleg',
+             titel: abw ? `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(Math.round((ist - stand.gesamt) * 100) / 100)} zu viel: Beleg im Zahlungsjournal stornieren (Betrag zurückgeben) und ${fmt(stand.gesamt)} neu kassieren`
+                        : 'Bereits kassiert — Beleg öffnen' };
   }
   if (stand.unbekannt) {
     return { ton: 'unbekannt', text: '—', label: 'Zuzahlung', aktion: 'keine',
@@ -315,7 +334,8 @@ export function euroZustand(rx, stand, lead) {
              titel: 'Für diese Verordnung fällt keine Zuzahlung an' };
   }
   return { ton: 'offen', text: fmt(stand.gesamt), label: 'Zuzahlung', aktion: 'kassieren',
-           titel: `${fmt(stand.gesamt)} kassieren und quittieren` };
+           titel: `${fmt(stand.gesamt)} kassieren und quittieren`
+                + (stand.altsystem > 0 ? ` (fällig ${fmt(stand.gesamtSoll)} abzüglich ${fmt(stand.altsystem)} im Altsystem kassiert)` : '') };
 }
 
 const TON_FARBE = {
@@ -338,7 +358,11 @@ const TON_FARBE = {
 export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   if (!el) return;
   const zz = euroZustand(rx, stand, lead);
-  const st = verordnungStatusInfo('physio', rx?.status);
+  // Podologie hat ihre eigene Statusachse (abrechnung_status); `status` ist die Physio-Spalte
+  // und blieb bei Podo-VOs auf „Bestätigt — Serie noch nicht begonnen" (canli-test 21.10.2026).
+  const st = rx?.therapie_bereich === 'podo'
+    ? verordnungStatusInfo('podologie', statusAusTopf(rx?.abrechnung_status))
+    : verordnungStatusInfo('physio', rx?.status);
   const aktiv = zz.aktion !== 'keine';
 
   // Beim Privatpatienten sind Summe und Forderung dieselbe Zahl — sie zweimal
@@ -376,7 +400,8 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   const knopf = el.querySelector('#bkRxEuroBtn');
   if (knopf) {
     knopf.disabled = !aktiv;
-    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, stand);
+    // `betrag` (Rest nachkassieren) ersetzt den Gesamtbetrag nur für diesen Klick.
+    if (aktiv && aufEuro) knopf.onclick = () => aufEuro(zz.aktion, zz.betrag != null ? { ...stand, gesamt: zz.betrag, rest: true } : stand);
   }
 }
 
@@ -410,7 +435,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
   } = deps;
 
-  let lead = null, position = null, privat = null, podo = null, rechnung = null;
+  let lead = null, position = null, privat = null, podo = null, rechnung = null, kassiert = null;
   let standGkv = null, standPrivat = null;
 
   const zeichne = () => {
@@ -419,6 +444,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo });
     // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
     standGkv.geschaetzt = sector === 'podologie' && !podo;
+    standGkv.kassiert = kassiert;
     standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
     standPrivat.rechnungOhneBetrag = sector === 'podologie' && !!rx?.id;
     standPrivat.rechnung = rechnung;
@@ -466,6 +492,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
       patientId: rx.patient_id || booking?.lead_id || null,
       patientName,
       betragEur: stand.gesamt,
+      rest: !!stand.rest,   // Nachkassieren: VO ist schon als kassiert markiert (canli-test P1 21.10.2026)
     });
     if (ok) await nachKassieren(rx.id);
   }
@@ -479,6 +506,10 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
       ? await ladePodoPrivatSumme({ sb, ownerId, rx, services: typeof services === 'function' ? await services() : services, katalogPodo: katalog })
       : await ladePrivatSumme(sb, rx.id);
     if (sector === 'podologie' && rx?.id) rechnung = await ladeRechnungZurVerordnung(sb, rx.id);
+    if (rx?.zuzahlung_kassiert_am && rx?.id) {   // Kassenbuch-Saldo (Zuzahlung + Storno negativ)
+      const { data: belege } = await sb.from('belegliste').select('amount_eur').eq('owner_id', ownerId).eq('prescription_id', rx.id);
+      if (belege?.length) kassiert = Math.round(belege.reduce((s, b) => s + (Number(b.amount_eur) || 0), 0) * 100) / 100;
+    }
     if (sector === 'podologie' && ladePodoPositionen) {
       const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
       position = findePosition(rx, { podoKarte: karte, katalog }) || position;

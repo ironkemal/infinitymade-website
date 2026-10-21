@@ -1,0 +1,35 @@
+{
+  "art": "video",
+  "caption": "3 Dinge, die Ihre Praxis jede Woche Zeit kosten: Zuzahlungen hinterherlaufen, Verordnungen prüfen, Kilometer notieren.\n\nPraxura übernimmt genau diese Wege, lokal auf Ihrem Rechner.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxisalltag #Praxissoftware #Therapeutenleben",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.2,
+      "kicker": "Jede Woche",
+      "titel": "3 Dinge, die <em>Zeit</em> kosten."
+    },
+    {
+      "typ": "countdown",
+      "dauer": 3.8,
+      "kicker": "Die Zeitfresser",
+      "punkte": [
+        "Zuzahlung <em>nachlaufen</em>",
+        "Verordnung <em>prüfen</em>",
+        "Kilometer <em>notieren</em>"
+      ]
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Und wenn …",
+      "titel": "Das alles <em>mitläuft?</em>"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Mehr Zeit für <em>Patienten.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

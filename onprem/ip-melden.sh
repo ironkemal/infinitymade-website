@@ -32,7 +32,7 @@ le_konto_melden() {
   local roh urls anzahl url alt
   [ -d "$SCRIPT_DIR/volumes/ip" ] || return 0
   roh="$(cd "$SCRIPT_DIR" && timeout -k 5 20 docker compose exec -T caddy sh -c \
-    'cat /data/caddy/acme/acme-v02.api.letsencrypt.org-directory/users/*/*.json 2>/dev/null' 2>/dev/null || true)"
+    'cat /data/caddy/acme/acme-v02.api.letsencrypt.org-directory/users/*/*.json 2>/dev/null' </dev/null 2>/dev/null || true)"
   [ -n "$roh" ] || return 0
   urls="$(printf '%s' "$roh" | grep -oE '"location"[[:space:]]*:[[:space:]]*"https://acme-v02\.api\.letsencrypt\.org/acme/acct/[0-9]{1,20}"' \
     | grep -oE 'https://acme-v02\.api\.letsencrypt\.org/acme/acct/[0-9]{1,20}' | sort -u || true)"
@@ -50,6 +50,23 @@ le_konto_melden() {
   mv -f "$LE_KONTO_DATEI.tmp.$$" "$LE_KONTO_DATEI"
 }
 le_konto_melden || true
+
+# ── O-191: NTP-Zustand des Hosts für /api/status (Feld `zeit`) ──────────────
+# Bewusst VOR dem Modus-Tor: sonst bliebe `zeit` auf "internet"-Boxen für immer
+# unbekannt. Jeder Lauf schreibt (status.js wertet Dateien > 10 Min als
+# "Timer tot"). Kein timedatectl (oder unklare Antwort) → null = unbekannt,
+# nie ein erfundenes "nicht synchron". Fehler → still weiter.
+zeit_melden() {
+  local ntp=null roh
+  declare -F status_datei_yaz >/dev/null 2>&1 || return 0
+  if command -v timedatectl >/dev/null 2>&1; then
+    roh="$(timedatectl show -p NTPSynchronized --value 2>/dev/null || true)"
+    case "$roh" in yes) ntp=true ;; no) ntp=false ;; esac
+  fi
+  status_datei_yaz "$SCRIPT_DIR/volumes/status" zeit.json \
+    "{\"v\":1,\"ntp_synchron\":$ntp,\"gemessen_epoch\":$(date -u +%s)}"
+}
+zeit_melden || true
 
 # Fehlt die Datei oder steht nicht "lan" drin (z. B. "internet") → nichts tun
 [ -f "$MODUS_DATEI" ] || exit 0

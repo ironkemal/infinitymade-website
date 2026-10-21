@@ -23,8 +23,8 @@
  * bestehen, aber als Netz, nicht als Benutzerführung.
  *
  * Die Prüfregel ist wörtlich die des Servers (`fehlendePflichtangaben`,
- * § 14 Abs. 4 UStG): IBAN ist Pflicht, und **Steuernummer ODER USt-IdNr.**
- * genügt. Weichen die beiden Seiten voneinander ab, blockiert entweder der
+ * seit 21.10.2026 § 33 UStDV): Name + Anschrift der Praxis; IBAN und Steuernummer
+ * sind für den Zuzahlungsbeleg keine Pflicht (legal-de). Weichen die beiden Seiten voneinander ab, blockiert entweder der
  * Server einen Druck, den das Dashboard durchgelassen hat (der alte Zustand),
  * oder das Dashboard warnt grundlos — beides schlimmer als keine Prüfung.
  *
@@ -45,14 +45,20 @@ export function istRechnungsartig(typ) {
 }
 
 /**
- * Pflichtangaben nach § 14 Abs. 4 UStG. Rückgabe: Liste der fehlenden Angaben
- * in Klartext, leer = alles da.
+ * Pflichtangaben des Zuzahlungsbelegs. Rückgabe: fehlende Angaben in Klartext, leer = alles da.
+ * legal-de 21.10.2026: der Zuzahlungsbeleg ist eine Kleinbetragsrechnung (§ 33 UStDV, bis 250 €) —
+ * Pflicht sind Name und vollständige Anschrift der Praxis; Steuernummer und IBAN gehören NICHT
+ * dazu (IBAN ist nach F7 ohnehin nur „Soll"). Über 250 € kommt Steuernummer/USt-IdNr. dazu.
+ * Vorher blockierte die Regel jede Quittung ohne IBAN/Steuernummer.
  * Identisch mit `fehlendePflichtangaben()` im Backend — beim Ändern beide.
+ * @param {object} profil
+ * @param {{betrag?:?number}} [o]  Belegbetrag, falls bekannt
  */
-export function fehlendePflichtangaben(profil) {
+export function fehlendePflichtangaben(profil, { betrag = null } = {}) {
   const fehlend = [];
-  if (!profil?.iban) fehlend.push('Bankverbindung (IBAN)');
-  if (!profil?.steuernummer && !profil?.ust_id) fehlend.push('Steuernummer oder USt-IdNr.');
+  if (!profil?.business_name) fehlend.push('Praxisname');
+  if (!profil?.street || !profil?.zip || !profil?.city) fehlend.push('Praxisanschrift (Straße, PLZ, Ort)');
+  if (Number(betrag) > 250 && !profil?.steuernummer && !profil?.ust_id) fehlend.push('Steuernummer oder USt-IdNr. (Beleg über 250 €)');
   return fehlend;
 }
 
@@ -78,7 +84,7 @@ export async function ladePraxisAbrechnungsProfil({ supabase, ownerId }) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('iban, bic, bank_name, steuernummer, ust_id')
+      .select('iban, bic, bank_name, steuernummer, ust_id, business_name, street, zip, city')
       .eq('id', ownerId)
       .maybeSingle();
     if (error || !data) return null;
@@ -102,15 +108,13 @@ export function belegDruckUrl({ api, rxId, typ, token, drucken = false }) {
 function hinweisHtml(fehlend) {
   return `
     <p style="margin:0 0 12px;color:var(--text-main);line-height:1.55;">
-      Für eine Rechnung sind diese Angaben gesetzlich vorgeschrieben
-      (§ 14 Abs. 4 UStG), fehlen aber in Ihren Rechnungsdaten:
+      Für den Zuzahlungsbeleg sind diese Angaben vorgeschrieben
+      (§ 33 UStDV), fehlen aber in Ihren Praxisdaten:
     </p>
     <ul style="margin:0 0 14px;padding-left:20px;color:var(--text-main);">
       ${fehlend.map(f => `<li style="margin-bottom:4px;font-weight:600;">${f}</li>`).join('')}
     </ul>
-    <p style="margin:0;font-size:13px;color:var(--text-sub,#94a3b8);line-height:1.5;">
-      Quittungen ohne Rechnungscharakter sind davon nicht betroffen.
-    </p>`;
+`;
 }
 
 /**
@@ -129,7 +133,8 @@ function hinweisHtml(fehlend) {
  * @param {Function} deps.showToast
  * @param {Function} deps.gehZuEinstellung   (sectionId, focusId) => void
  * @param {string} [deps.popupFehlerText]
- * @returns {Promise<boolean>} ob das Fenster aufging
+ * @returns {Promise<?boolean>} ob das Fenster aufging; `null` = Hinweis auf fehlende
+ *          Rechnungsdaten gezeigt (kein Popup-Problem — canli-test 21.10.2026)
  */
 export async function oeffneBelegDruck(
   { rxId, typ = 'quittung_zuzahlung', drucken = false, stillBeiFehler = false },
@@ -146,12 +151,12 @@ export async function oeffneBelegDruck(
       const fehlend = fehlendePflichtangaben(profil);
       if (fehlend.length > 0) {
         showHtmlModal({
-          title: 'Rechnung kann noch nicht gedruckt werden',
+          title: 'Beleg kann noch nicht gedruckt werden',
           html: hinweisHtml(fehlend),
           confirmText: 'Zu den Rechnungsdaten',
           onConfirm: () => { gehZuEinstellung('settingsBillingSection', 'setIban'); },
         });
-        return false;
+        return null;
       }
     }
   }

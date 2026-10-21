@@ -1,0 +1,15 @@
+{
+  "art": "post",
+  "layout": "liste",
+  "rubrik": "Verordnung · Vor der ersten Behandlung",
+  "seite": "Checkliste",
+  "titel": "5 Felder, die Sie vor der ersten Behandlung <em>prüfen.</em>",
+  "punkte": [
+    ["Personalienfeld", "vollständig und plausibel"],
+    ["Heilmittel und Anzahl der Einheiten", "passend zur Diagnosegruppe"],
+    ["Diagnosegruppe", "stimmt mit dem Befund überein"],
+    ["Diagnose als ICD-10-Code", "konkret und behandlungsrelevant"],
+    ["Leitsymptomatik", "nach Heilmittelkatalog oder im Klartext"]
+  ],
+  "caption": "5 Felder, die Sie vor der ersten Behandlung prüfen sollten: Personalienfeld, Heilmittel mit Anzahl der Einheiten, Diagnosegruppe, ICD-10-Diagnose und Leitsymptomatik (Heilmittel-Richtlinie § 13 Abs. 2). Praxura weist auf formale Fehler hin, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #Praxisalltag #GKV"
+}

@@ -1,0 +1,38 @@
+{
+  "art": "video",
+  "caption": "Was, wenn Ihre Praxissoftware bei Ihnen wohnt? Auf Ihrem Rechner, mit Ihren Daten.\n\nPraxura Lokal läuft in Ihrer Praxis. Selbst unser Support sieht keine Patientendaten. Mehr zeigen wir bald.\n\nMehr auf praxura.de\n\n#Praxissoftware #PVS #Heilmittel #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "enthuellung",
+      "dauer": 2.8,
+      "ton": "dunkel",
+      "kicker": "Stellen Sie sich vor",
+      "titel": "Was, wenn Ihre Praxissoftware <em>bei Ihnen</em> wohnt?"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Kein fremder Server",
+      "titel": "Auf <em>Ihrem</em> Rechner."
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Die Daten",
+      "titel": "Bleiben <em>bei Ihnen.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Selbst unser Support",
+      "titel": "Sieht <em>keine</em> Patientendaten."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Mehr zeigen wir <em>bald.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 >
 > **Hazırlayan:** Claude Fable 5, 2026-07-06 (tam bağlamla: kod envanteri + regülasyon araştırması + kullanıcıyla karar tartışması sonrası)
 > **Arka plan analizi:** `ON_PREMISE_ANALYSE.md` (regülasyon detayı), `REGULATORY_AUDIT.md` (SaaS landmine audit'i)
-> **Durum:** ⬜ BAŞLAMADI — aşağıdaki DURUM TAKİBİ bölümünü güncelleyerek ilerle.
+> **Durum:** 🟡 sürüyor — güncel durum `onprem/REGISTER.md` + `KUTU_HAZIRLIK_SPRINT.md` (aşağıdaki DURUM TAKİBİ tablosu kısmen bayat, bkz. onun altındaki ⚠️ notu).
 
 ---
 
@@ -16,7 +16,7 @@
 4. Her fazın sonunda **kabul kriterlerini** tek tek doğrula; geçmeyen kriter varken sonraki faza geçme.
 5. Faz bitince §10'daki tabloyu güncelle (tarih + commit hash).
 6. Belirsiz kaldığın her yerde: bu dokümanın ilgili bölümündeki gerekçeye dön; hâlâ belirsizse §9 Açık Sorular'a bak; orada da yoksa kullanıcıya sor — tahmin etme.
-7. Proje kuralları geçerli: vanilla JS (framework yok), Almanca UI (DE/EN/TR i18n — dashboard.js sözlüğü), API anahtarı hardcode edilmez, e-posta = nodemailer+SMTP (Resend YASAK).
+7. Proje kuralları geçerli: vanilla JS (framework yok), Almanca UI (**yalnız `de`** — Kemal 28.09.2026; `dashboard.js` sözlüğünde yalnız `T.de`, en/tr kalktı), API anahtarı hardcode edilmez, e-posta = nodemailer+SMTP (Resend YASAK).
 
 ---
 
@@ -48,10 +48,10 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 | K7 | **Rezept-Scan opsiyonel modül DEĞİL** — sihirbazda standart adım ("şimdi değil, sonra kur" çıkışıyla); satışta ana özellik | Ayırt edici özelliğimiz; "ek modül" konumlandırması satışı zayıflatır |
 | K8 | **n8n on-prem pakete KONMAZ** | Sustainable Use License: ücretli müşteriye dağıtım yasak. n8n'e kalan akışlar Express route'a taşınır |
 | K9 | **Lisans kill-switch = salt-okunur mod, tam kilit DEĞİL** | Hasta dokümantasyonuna erişim yasal zorunluluk; "iptal edersen verin rehin" Almanya'da satış zehiri |
-| K10 | **Destek modeli: veriye uzak erişim YOK** — "Tanılama paketi indir → bize gönder" butonu; opsiyonel ekran-paylaşımlı seans (müşteri başında, veri erişimi yok) | Veriye erişimli Fernwartung = Auftragsverarbeiter rolü geri gelir |
+| K10 | **Destek modeli: veriye uzak erişim YOK** — "Tanılama paketi indir → bize gönder" butonu; opsiyonel ekran-paylaşımlı seans (müşteri başında, veri erişimi yok). <br>**İstisna (20.10.2026, Kemal):** satın alınmış *Datenübernahme-Paket* — tek oturum, praksis kullanır, yalnız ekranı görürüz, dosya almayız, kayıt yok. Oturum süresince Auftragsverarbeiter + §203 mitwirkende Person (dar AVV + protokol); kutu rolsüz kalır (`compliance/LEGAL_DECISIONS.md` 20.10.2026, `onprem/REGISTER.md` O-208) | Veriye erişimli Fernwartung = Auftragsverarbeiter rolü geri gelir |
 | K11 | **Kanal sistemi:** `:beta` (her push otomatik, beta müşterileri) / `:stable` (yalnızca release'te, ücretli müşteriler). Tek codebase, fork yok | Beta feedback döngüsü (bugünkü "push = anında görürler") korunur; ücretliler denemelerden izole |
 | K12 | **05.10.2026 (KHS K-19 (k), Kemal) — DEĞİŞTİ: beta kutuları baştan praksisin KENDİ yerinde:** kendi PC'si ya da kendi Hetzner hesabı (`:beta` kanalı). **Bizim Hetzner hesabımızda sponsorlu instance yok** — orada hasta verisi bizim bulut sözleşmemizde durur, Auftragsverarbeiter rolü + §393 bize geri gelir (K6'nın kapattığı kapı, O-165). Sunucu maliyetini üstlenmek istersek iade/indirimle yaparız, sözleşme praksiste kalır (legal-de 07.10). Beta sırası: SaaS'taki beta hesapları kutu hazır olunca kutuya geçer, sonra `app.praxura.de` kapanır. Hetzner'de §393 praksis için geçerlidir; C5 Typ 2 Cloud Server + Storage Box'ı kapsıyor (Hetzner kaynağı, KURULUM §9, K2b.9). <br>~~**Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir~~ *(2026-07-06 metni)* | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
-| K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "€49/ay + ~€10 sunucu (kendi hesabınızda), veriniz %100 sizde". AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
+| K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "<lisans fiyatı> + sunucu (kendi hesabınızda), veriniz %100 sizde" (fiyat henüz belirlenmedi — Kemal 11.10.2026; rakam yazma). AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
 | K14 | **Geçiş takvimi:** PoC şimdi → normal geliştirme "buluta yeni zincir ekleme" kuralıyla devam → paketleme sprinti ürün olgunlaşınca (para almadan önce) | Tam paralel çalışma tek kişilik ekipte özellik geliştirmeyi öldürür; sona bırakmak makası açar |
 
 ---
@@ -74,7 +74,7 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 ### 4.1 Müşterinin kutusu (tek `docker compose` stack'i)
 
 ```
-praxisadi.praxura.app  (DNS A-kaydı → müşterinin sunucu IP'si)
+<ad>.box.praxura.de  (K-18: kurulum kodu → rastgele ad, örn. hafer-turm-9; A kaydı → kutunun IP'si; LE DNS-01 — 07.2026 taslağındaki praxisadi.praxura.app düştü)
 │
 ├── caddy              # reverse proxy + otomatik Let's Encrypt SSL
 ├── frontend           # mevcut HTML/CSS/JS (nginx veya caddy static)
@@ -87,7 +87,7 @@ praxisadi.praxura.app  (DNS A-kaydı → müşterinin sunucu IP'si)
 └── watchtower         # kanal tag'inden (:beta | :stable) otomatik güncelleme
 ```
 
-- Dış AI çağrıları: `api` → **müşterinin kendi IONOS anahtarıyla** IONOS AI Model Hub (Almanya). Bizden geçmez (K6).
+- Dış AI çağrıları (K4 / K-20, 05.10.2026): `api` → Praxura'nın Azure OpenAI kaynağı (Sweden Central), merkezden alınan **kısa ömürlü jetonla**, doğrudan; içerik bizden geçmez (K6). `AI_MODE=aus|direkt|jeton`, kutuda varsayılan `aus`; müşterinin kendi anahtarı (`direkt`) istisna olarak kalır. ~~müşterinin kendi IONOS anahtarıyla IONOS AI Model Hub~~ *(07.2026 metni)*
 - E-posta: `api` → müşterinin SMTP'si (sihirbazda yapılandırılır).
 - Tek makine asgari: **2 vCPU / 4 GB RAM / 40 GB disk** (kurulum scripti ön-kontrol yapar, yetmiyorsa açıklayıp durur).
 
@@ -99,16 +99,19 @@ praxura.de (Vercel + supabase.com kalabilir)
 ├── Stripe (checkout/webhook/portal — mevcut api/stripe/* yapısı)
 ├── Müşteri kayıt DB'si (kim, hangi plan, hangi instance)
 ├── Lisans sunucusu     # POST /license/renew — imzalı lisans üretir
-├── Provisioning sayfası # /setup?lizenz=... — Hetzner API + DNS API zinciri
+├── Ad servisi + acme-dns # K-18: kurulum kodu → <ad>.box.praxura.de + LE DNS-01 (merkez/)
+│                        #   (07.2026 taslağındaki Hetzner-API provisioning sayfası yok)
 └── Private Docker registry erişim yönetimi (per-müşteri pull credential)
 ```
 
 ### 4.3 Kurulum akışı (müşteri deneyimi, hedef: ~30-40 dk, terminal YOK)
 
+> ⚠️ **11.10.2026 (onprem):** aşağıdaki akış 07.2026 taslağıdır. Bugünkü yol K1/K-18: kurulum kodu + `praxura.de/install.sh` / `install.ps1` (KHS K2b.14); kutu Windows-PC, Linux sunucu ya da praksisin **kendi** Hetzner'i — `onprem/KURULUM.md` Weg A/B/C. Merkezde Hetzner-API provisioner'ı yok. Kılavuz ve ön kontroller orada.
+
 1. praxura.de'de plan seç + Stripe ödeme → mailine lisanslı kurulum linki.
 2. Hetzner hesabı aç (resimli rehber) → Cloud API-Token oluştur → kurulum sayfasına yapıştır.
-3. Provisioner otomatik: müşterinin hesabında sunucu (cloud-init) → IP → DNS A-kaydı (`praxisadi.praxura.app`) → Caddy SSL → "hazır" maili.
-4. İlk-açılış sihirbazı (lokal, tarayıcıda): yönetici hesabı → işletme bilgileri (mevcut onboarding'in lokal versiyonu) → SMTP (hazır profiller: IONOS/GMX/T-Online/GoDaddy + "Test maili gönder" butonu) → yedek hedefi (önerilen: Hetzner Storage Box ~€4/ay, müşterinin hesabında) → IONOS AI anahtarı (standart adım, "sonra kur" çıkışlı, "örnek reçete tara" test butonu).
+3. Provisioner otomatik: müşterinin hesabında sunucu (cloud-init) → IP → DNS A-kaydı (bugün `<ad>.box.praxura.de`, K-18; ~~`praxisadi.praxura.app`~~) → Caddy SSL → "hazır" maili.
+4. İlk-açılış sihirbazı (lokal, tarayıcıda): yönetici hesabı → işletme bilgileri (mevcut onboarding'in lokal versiyonu) → SMTP (hazır profiller: IONOS/GMX/T-Online/GoDaddy + "Test maili gönder" butonu) → yedek hedefi (önerilen: Hetzner Storage Box ~€4/ay, müşterinin hesabında) → KI (K4/K-20: anahtar girilmez, jeton modu; varsayılan `aus` — ~~IONOS AI anahtarı~~) (standart adım, "sonra kur" çıkışlı, "örnek reçete tara" test butonu).
 
 Alternatif yollar: **Yol B** "zaten sunucum var" (SSH bilgisi veya tek-komut kurulum; AB lokasyonu + asgari donanım ön-kontrolü) ve **Yol C** praxis-içi lokal makine (Faz 2 ürünü — bu playbook kapsamı DIŞI, lansmandan sonra).
 
@@ -121,7 +124,7 @@ Uygulayan model: dosya konumları değişmiş olabilir — göreve başlamadan d
 | Bileşen | Bugünkü hali | Geçişteki kaderi |
 |---|---|---|
 | `api-backend/server.js` | Express, VPS'te Docker+Watchtower, ~3000+ satır | Paketin çekirdeği — büyük ölçüde hazır |
-| `api-backend/ai/` (router.js, azureClient.js, tasks/*) | Azure OpenAI, env-var tabanlı, dry-run destekli, PII-mask'li | Provider-agnostik hale gelir; IONOS varsayılan (Faz 4) |
+| `api-backend/ai/` (router.js, azureClient.js, tasks/*) | Azure OpenAI, env-var tabanlı, dry-run destekli, PII-mask'li | K4/K-20: tek Praxura Azure kaynağı + kutuya kısa ömürlü jeton — kod `ai/ki-config.js` (`AI_MODE`) · `ki-jeton.js` · `ki-gateway.js`. ~~Provider-agnostik hale gelir; IONOS varsayılan (Faz 4)~~ |
 | `api-backend/billing/` (dta/, kostentraeger/, codes/) | DTA/EDIFACT üretimi; PKCS#7 imzalama zaten browser'da | Değişiklik YOK — on-prem'e doğal uyar |
 | `api/` (Vercel fonksiyonları) | config, contact, dsgvo, demo-booking, stripe/*, onboarding/*, admin/* | Müşteriye ait olanlar Express'e taşınır (Faz 1); stripe/onboarding merkezde kalır |
 | Supabase cloud (`njvuclullotbksskpwgk`) | Auth (magic link + Google OAuth), Postgres+RLS, Vault (Gmail/Calendar token'ları), Realtime (bookings) | Müşteri kutusunda self-hosted Supabase'e; merkez için ayrı hafif proje |
@@ -171,13 +174,13 @@ Görevler:
 - [ ] 0.2 Doğrula: **Auth** (email/parola girişi; magic link SMTP ile), **RLS** politikaları, **Realtime** (bookings aboneliği — `refreshBookingViews` akışı), **PostgREST** (supabase-js frontend'i sadece URL/anon-key değişikliğiyle çalışıyor mu), **Vault/pgsodium** (token şifreleme RPC'leri: `set_gmail_token`, `business_get_secret/save_secret` — 8 canlı secret var, D6; Vault self-host'ta çalışmazsa alternatif: pgcrypto ile kendi şifreleme fonksiyonlarımız), **Storage** (5 bucket — D3: `avatars/referrals/prescriptions/abrechnungen/patient-documents`; signed-URL akışı `createSignedUrl` çalışıyor mu), **PostGIS** (extension yükleniyor mu — D4).
 - [ ] 0.3 `api-backend/server.js`'i self-hosted Supabase'e bağla (`SUPABASE_URL` lokal); temel akışları uçtan uca test et: login → randevu oluştur → takvimde canlı görün → booking maili (test SMTP, örn. Mailpit container'ı).
 - [ ] 0.4 Frontend'i lokal servis et (nginx/caddy container); `api/config.js`'in verdiği Supabase URL'sinin lokal muadilini kur.
-- [ ] 0.5 **IONOS AI Model Hub testi:** hesap aç, LightOnOCR-2 ve Mistral Small 24B (vision) ile 3–5 gerçek(imsi) reçete fotoğrafı tarat; mevcut Azure çıktısıyla alan-alan karşılaştır (Heilmittel kodları, tarih, tanı). Token maliyetini ölç ve bu dokümanın §9-A1'ine gerçek rakamı yaz. IONOS Cloud'un C5 testat durumunu doğrula (§9-A2).
+- [ ] 0.5 ⚠️ *düştü (K4/K-20, 05.10.2026 — IONOS yolu kapandı; aşağısı tarihçe)* — **IONOS AI Model Hub testi:** hesap aç, LightOnOCR-2 ve Mistral Small 24B (vision) ile 3–5 gerçek(imsi) reçete fotoğrafı tarat; mevcut Azure çıktısıyla alan-alan karşılaştır (Heilmittel kodları, tarih, tanı). Token maliyetini ölç ve bu dokümanın §9-A1'ine gerçek rakamı yaz. IONOS Cloud'un C5 testat durumunu doğrula (§9-A2).
 - [ ] 0.6 Tek `docker-compose.onprem.yml` taslağı: supabase + api + frontend + caddy tek komutla ayağa kalksın.
 
 **Kabul kriterleri:**
 - ✅ `docker compose up` → temiz makinede tam ürün; login, randevu CRUD, canlı takvim, e-posta çalışıyor.
 - ✅ Frontend kodunda URL/config dışında değişiklik gerekmedi (gerekliyse liste çıkarıldı).
-- ✅ IONOS OCR kalitesi Azure'a "yeterince yakın" (alan doğruluğu ≥ Azure'un %90'ı) VEYA fark dokümante edilip kullanıcıya karar soruldu.
+- ~~✅ IONOS OCR kalitesi Azure'a "yeterince yakın" (alan doğruluğu ≥ Azure'un %90'ı) VEYA fark dokümante edilip kullanıcıya karar soruldu.~~ *(düştü, K4/K-20)*
 - ✅ Vault/token-şifreleme yolu netleşti (Vault çalışıyor VEYA pgcrypto alternatifi seçildi ve yazıldı).
 - ✅ Bulgular bu dokümana işlendi (§9 güncellendi).
 
@@ -191,8 +194,8 @@ Görevler:
 
 Görevler:
 - [ ] 1.1 Vercel `api/` fonksiyonlarını sınıflandır: **müşteri-kutusuna gidecekler** (config, dsgvo-export, müşteri operasyonları) → Express route olarak `api-backend/server.js`'e (veya yeni `api-backend/routes/` modüllerine) taşı; **merkezde kalacaklar** (stripe/*, onboarding/pending, admin/*, contact, demo-booking) → dokunma.
-- [ ] 1.2 n8n'e giden akışları Express içine taşı (D9 detayı): (a) `N8N_WEBHOOK_URL` booking bildirimi — işlevi kalmadıysa kaldır; (b) `N8N_AI_SERIES_URL` seri-planlayıcı → `ai/tasks/series-schedule.js` (llmClient üzerinden doğrudan; mevcut deterministik fallback ve `candidateByKey` doğrulaması aynen korunur; hasta adını prompt'a koyma — PII iyileştirmesi); (c) feedback-notify (D2). Sonunda `grep N8N_` sıfır sonuç vermeli. (SaaS'ta n8n şimdilik çalışmaya devam edebilir — taşınan kod her iki ortamda da çalışmalı.)
-- [ ] 1.3 AI katmanını provider-agnostik yap: `ai/azureClient.js` → `ai/llmClient.js` (OpenAI-uyumlu genel istemci; `AI_PROVIDER=ionos|azure`, `AI_ENDPOINT`, `AI_API_KEY`, `AI_MODEL_TEXT`, `AI_MODEL_VISION` env-var'ları). Dry-run davranışı korunur. EU-region kontrolü provider-bazlı: Azure'da mevcut EU Data Boundary listesi, IONOS'ta hep Almanya.
+- [ ] 1.2 n8n'e giden akışları Express içine taşı (D9 detayı): (a) `N8N_WEBHOOK_URL` booking bildirimi — işlevi kalmadıysa kaldır; (b) `N8N_AI_SERIES_URL` seri-planlayıcı → `ai/tasks/series-schedule.js` (AI katmanı üzerinden doğrudan — bugün `ai/ki-config.js` + `azureClient.js`, ~~llmClient~~; mevcut deterministik fallback ve `candidateByKey` doğrulaması aynen korunur; hasta adını prompt'a koyma — PII iyileştirmesi); (c) feedback-notify (D2). Sonunda `grep N8N_` sıfır sonuç vermeli. (SaaS'ta n8n şimdilik çalışmaya devam edebilir — taşınan kod her iki ortamda da çalışmalı.)
+- [ ] 1.3 ⚠️ *11.10.2026: K4/K-20 ile şekil değişti — `llmClient.js` yazılmadı, `ionos` sağlayıcısı yok. Yerine `ai/ki-config.js` (`AI_MODE=aus|direkt|jeton`, `AI_*` adları + `AZURE_*` geri düşüşü, çağrı başına okuma) + `ki-jeton.js` + `ki-gateway.js` (`a227e4cb`, `faccf4b9`); açılış O-169 şartlarına bağlı. Aşağısı 07.2026 metni:* AI katmanını provider-agnostik yap: `ai/azureClient.js` → `ai/llmClient.js` (OpenAI-uyumlu genel istemci; `AI_PROVIDER=ionos|azure`, `AI_ENDPOINT`, `AI_API_KEY`, `AI_MODEL_TEXT`, `AI_MODEL_VISION` env-var'ları). Dry-run davranışı korunur. EU-region kontrolü provider-bazlı: Azure'da mevcut EU Data Boundary listesi, IONOS'ta hep Almanya.
 - [ ] 1.4 CDN bağımlılıklarını lokale al (Cropperjs → `vendor/` klasörü); HTML'lerde üçüncü-parti script kalmadığını doğrula (Sentry loader hariç — o Faz 2'de koşullu olacak).
 - [ ] 1.5 **Edge function'ları Express'e taşı (D1):** `supabase/functions/fahrtenbuch-{geocode,route,matrix}` → `api-backend/routes/fahrtenbuch.js`; frontend'te yalnızca `invokeFahrtenbuchFn()` helper'ı değişir. ORS anahtarı env-var (`ORS_API_KEY`) — kimin anahtarı olacağı §9-A8 kararına bağlı.
 - [ ] 1.6 **`notify_feedback_telegram` trigger'ını kaldır (D2):** feedback bildirimi DB trigger'ı + pg_net yerine Express'te, feedback formunun submit'inde açık API çağrısına dönüşsün (on-prem'de "Praxura'ya gönder" onay metniyle). SaaS'ta davranış aynı kalır.
@@ -200,7 +203,7 @@ Görevler:
 **Kabul kriterleri:**
 - ✅ SaaS production'da regresyon yok (mevcut QA crawler `qa_crawl_prod.py` production'da PASS).
 - ✅ Kodda `N8N_` referansı kalmadı (veya yalnızca merkez-tarafı, dokümante).
-- ✅ `AI_PROVIDER=azure` ile mevcut davranış birebir; `AI_PROVIDER=ionos` ile PoC testleri geçiyor.
+- ✅ ~~`AI_PROVIDER=azure` ile mevcut davranış birebir; `AI_PROVIDER=ionos` ile PoC testleri geçiyor.~~ → K-20: `AI_MODE=direkt` (SaaS, `AZURE_*` geri düşüşü) mevcut davranışla birebir; `AI_MODE=aus` uygulamayı çökertmez; `AI_MODE=jeton` O-169 şartlarıyla.
 
 ---
 
@@ -213,7 +216,7 @@ Görevler:
 - [x] **2.1a TAMAM (11.09.2026)** — `onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/` yazıldı ve **boş bir veritabanına karşı çalıştırıldı**: 7 konteyner sağlıklı, zincir kendi kendine koştu (`✓ 0000_baseline.sql`, 16,1 sn), 11 self-check sayacının 11'i tuttu, signup → trigger → profil oluştu, apikey'siz istek 401 aldı. Yığın **11 fremd konteynerden 6'ya** indi (studio · meta · imgproxy · supavisor · functions çıktı, her biri koda karşı doğrulandı). Compose'da **tek bir sürüm etiketi yok** — hepsi `.env`'den (O-45 çözüm (a)). Boşta ölçüm: **≈1,65 GB**, `api` dahil.
 - [ ] 2.1b Caddy (TLS + statik yüzeyin servisi) · `pg_net`'siz kendi init dosyamız (O-49) · Kong ↔ Caddy kararı (O-48, konsey) · compose'un kutuya dağıtımı (O-45 (b)).
 - [ ] 2.1c `install.sh`: donanım ön-kontrolü (2 vCPU/4GB/40GB + AB-lokasyon uyarısı), Docker kurulumu, `.env` üretimi (sırlar sunucuda üretilir — G2), compose up.
-- [ ] 2.2 **İlk-açılış sihirbazı** (lokal web sayfası; mevcut `onboarding.html`'den türet): yönetici hesabı → işletme bilgileri → SMTP (hazır profiller: IONOS/GMX/T-Online/GoDaddy/Ionos-mail + host/port otomatik; "Test maili gönder" butonu) → yedek hedefi → IONOS AI anahtarı (test butonu: örnek görüntüyle OCR çağrısı; "sonra kur" çıkışı). Sihirbaz tamamlanana kadar uygulama kurulum modunda kalır.
+- [ ] 2.2 **İlk-açılış sihirbazı** (lokal web sayfası; mevcut `onboarding.html`'den türet): yönetici hesabı → işletme bilgileri → SMTP (hazır profiller: IONOS/GMX/T-Online/GoDaddy/Ionos-mail + host/port otomatik; "Test maili gönder" butonu) → yedek hedefi → KI (K4/K-20: anahtar girilmez, jeton modu; varsayılan `aus` — ~~IONOS AI anahtarı~~) (test butonu: örnek görüntüyle OCR çağrısı; "sonra kur" çıkışı). Sihirbaz tamamlanana kadar uygulama kurulum modunda kalır.
 - [ ] 2.3 **Yedekleme:** gecelik `pg_dump` **+ storage volume arşivi** (D3 — reçete görselleri/DTA dosyaları/hasta belgeleri pg_dump'a girmez, ikisi birlikte tek yedek seti olmalı); hedefler: Hetzner Storage Box (SFTP/rclone), lokal dizin/NAS. Saklama: 14 günlük + 12 aylık rotasyon. Panelde "son yedek: X" göstergesi + başarısızlıkta panel uyarısı. Geri-yükleme scripti (`restore.sh`) ve test talimatı.
 - [ ] 2.4a **Zamanlanmış işler (D5):** `delete_expired_accounts()` ve benzeri periyodik işler için pakette node-cron zamanlayıcısı (pg_cron'a bağımlı olma — self-host'ta ekstra kurulum). NOT: SaaS'ta bu fonksiyonun zamanlayıcısı YOK — bağımsız bug olarak SaaS'ta da düzelt.
 - [ ] 2.4 **Healthcheck:** `GET /health` (DB, auth, realtime, disk doluluk) + kurulum/update sonrası self-check; panelde durum sayfası.
@@ -226,7 +229,7 @@ Görevler:
 - ✅ Temiz Ubuntu 24.04 makinede: `install.sh` → sihirbaz → çalışan ürün, hiçbir manuel adım olmadan.
 - ✅ Yedek al → veritabanını sil → `restore.sh` → veri eksiksiz geri geldi (gerçekten test et, varsayma).
 - ✅ Docker smoke-test dersi uygulandı: image **gerçek CMD'siyle** `docker run --rm` test edildi (npx/npm run ile DEĞİL — geçmişte prod crash-loop yaşandı).
-- ✅ Sihirbaz üç dilde (DE/EN/TR) — dashboard.js i18n sözlüğü düzenine uygun; Almanca ana dil.
+- ✅ Sihirbaz Almanca — yalnız `de` (Kemal 28.09.2026; ~~üç dilde DE/EN/TR~~).
 
 ---
 
@@ -243,7 +246,7 @@ Tasarım (kilitli):
 
 Görevler:
 - [ ] 3.1 Merkez: lisans üretim + `/license/renew` endpoint'i (Stripe subscription status kontrolü; mevcut `api/stripe/webhook.js` altyapısına bağlanır).
-- [ ] 3.2 Kutu: lisans doğrulama modülü (imza + tarih), gecelik yenileme cron'u, durum makinesi (aktif → uyarı → tolerans → salt-okunur), panel banner'ları (3 dilde).
+- [ ] 3.2 Kutu: lisans doğrulama modülü (imza + tarih), gecelik yenileme cron'u, durum makinesi (aktif → uyarı → tolerans → salt-okunur), panel banner'ları (Almanca — yalnız `de`, 28.09.2026).
 - [ ] 3.2a **E-posta Mahnung (hukuki zorunluluk — `LEGAL_ONPREM_REQUIREMENTS.md` §4):** yalnızca panel uyarısı YETMEZ; merkez, tolerans başlangıcında ve bitişten 7 gün önce müşterinin kayıtlı e-postasına Mahnung gönderir. Sperrklausel AGB'de şeffaf tanımlanmadan kill-switch canlıya ALINMAZ (Alman içtihadı: gizli/orantısız kilit geçersiz + hukuka aykırı tehdit riski).
 - [ ] 3.3 Mevcut plan-gating noktalarını (`profiles.plan`, `is_active` kontrolleri) tek bir `entitlements` helper'ına topla; SaaS'ta Stripe'tan, on-prem'de lisanstan beslensin.
 - [ ] 3.4 GHCR/registry per-müşteri pull-credential üretimi + iptali.
@@ -260,15 +263,17 @@ Görevler:
 
 **Amaç:** Müşteri başına sıfır manuel işle kurulum.
 
+> ⚠️ **11.10.2026 (onprem):** K-18 ile 4.1/4.2/4.5 yeniden şekillendi — Hetzner-API provisioner yok; kutu kurulum koduyla adını ve LE sertifikasını kendisi alır (merkez ad servisi + acme-dns, KHS K2b.2–K2b.6), başlatıcı K2b.14. 4.3 kanal sistemi O-25/O-41 ile kuruldu. Güncel durum: `onprem/REGISTER.md` O-161 · O-176.
+
 Görevler:
 - [ ] 4.1 Merkez: `/setup?lizenz=...` sayfası (Hetzner API-Token kutusu + resimli rehber). Token tek kullanımlık: sunucu oluşturulduktan sonra saklanmaz, silindiği loglanır.
-- [ ] 4.2 Provisioner servisi: Hetzner Cloud API → müşterinin hesabında sunucu (Ubuntu + cloud-init: Docker, compose, paket, lisans dosyası gömülü) → IP döner → DNS API (Cloudflare vb.) ile `praxisadi.praxura.app` A-kaydı → hazır-maili. Hata durumlarında anlaşılır mesaj + yeniden deneme.
+- [ ] 4.2 Provisioner servisi: Hetzner Cloud API → müşterinin hesabında sunucu (Ubuntu + cloud-init: Docker, compose, paket, lisans dosyası gömülü) → IP döner → DNS API (Cloudflare vb.) ile ~~`praxisadi.praxura.app`~~ `<ad>.box.praxura.de` A-kaydı (K-18) → hazır-maili. Hata durumlarında anlaşılır mesaj + yeniden deneme.
 - [ ] 4.3 Kanal sistemi: GitHub Actions `:beta` (her main push) + `:stable` (yalnızca release tag'i) yayınlar; Watchtower kanal tag'ini izler. Release süreci dokümante (CHANGELOG, migration notları).
 - [ ] 4.4 Yol B ("zaten sunucum var"): tek-komut kurulum (`curl ... | bash` yerine indirilen imzalı script önerilir) + ön-kontroller.
-- [ ] 4.5 Alan adı: `praxura.app` (veya seçilecek domain) alınır; DNS API entegrasyonu; wildcard DEĞİL — müşteri başına explicit kayıt.
+- [x] 4.5 ✅ *çözüldü (K-18, 05.10.2026): `box.praxura.de` altında, ad rastgele iki kelime + sayı (A-21), Cloudflare DNS, kutu başına explicit kayıt (K2b.1–K2b.3). Eski metin:* ~~Alan adı: `praxura.app` (veya seçilecek domain) alınır;~~ DNS API entegrasyonu; wildcard DEĞİL — müşteri başına explicit kayıt.
 
 **Kabul kriterleri:**
-- ✅ Uçtan uca canlı test: test Hetzner hesabıyla ödeme→link→token→~15 dk içinde `test-praxis.praxura.app`'te SSL'li çalışan ürün.
+- ✅ Uçtan uca canlı test: test Hetzner hesabıyla ödeme→link→token→~15 dk içinde `<ad>.box.praxura.de`'de (~~`test-praxis.praxura.app`~~) SSL'li çalışan ürün.
 - ✅ Provisioner müşteri token'ını kalıcı saklamıyor (kod incelemesi + log doğrulaması).
 - ✅ `:beta` kanalındaki instance, main'e push'tan ≤5 dk sonra güncelleniyor; `:stable` etkilenmiyor.
 
@@ -295,10 +300,10 @@ Görevler:
 Görevler:
 - [ ] 6.1 Hukuki evrak seti — **içerik iskeletleri hazır: `LEGAL_ONPREM_REQUIREMENTS.md`** (E1-E11 listesi: AGB/Softwaremietvertrag, Sperrklausel, Fernwartungs-AVV şablonu, Datenschutzerklärung güncellemesi, open-source NOTICE, CRA dokümanları). Avukat brifing paketi aynı dosyanın §7'sinde. Healthcare-IT avukatı nihai metinleri yazar (€1.500–3.000).
 - [ ] 6.1a CRA hazırlığı (D10): CVD politikası + security@praxura.de + SBOM build adımı + bildirim runbook'u. Bildirim yükümlülüğü 11 Eylül 2026'da başlıyor — go-live'dan bağımsız takvim!
-- [ ] 6.2 Fiyatlandırma sayfası (K13 diliyle) + "So funktioniert's" kurulum sayfası + resimli Hetzner/IONOS rehberleri.
+- [ ] 6.2 Fiyatlandırma sayfası (K13 diliyle) + "So funktioniert's" kurulum sayfası + resimli Hetzner rehberi (~~IONOS~~ — K4/K-20).
 - [ ] 6.3 EU AI Act Art. 6(3) non-high-risk gerekçe dokümanı (yazılı, kayıtlı) + MDR metin taraması (G6 ihlali var mı — tüm UI/pazarlama).
 - [ ] 6.4 Destek runbook'u: tanılama paketi nasıl okunur, en olası 10 arıza + çözümü.
-- [ ] 6.5 `TODO.md` §2 (Launch-Checkliste) ile çapraz kontrol; `CLAUDE.md`'yi yeni mimariye göre güncelle.
+- [ ] 6.5 Ops-Dashboard **Launch** kategorisi ile çapraz kontrol (~~`TODO.md` §2~~ — o bölüm yok, açık işler 08.08.2026'dan beri Ops-Dashboard'da); `CLAUDE.md`'yi yeni mimariye göre güncelle.
 
 **Kabul kriterleri:** hepsi tamam + kullanıcının son onayı.
 
@@ -320,7 +325,7 @@ Görevler:
 | Müşteri | Hetzner sunucu (CX22 sınıfı) | ~€6/ay |
 | Müşteri | Storage Box (yedek) | ~€4/ay |
 | Müşteri | KI (Rezept-Scan) — K4/K-20: Praxura'nın Azure kaynağı + kutuya kısa ömürlü jeton | lisansa dahil mi ayrı mı: fiyatla birlikte belirlenecek ~~IONOS AI kullanımı ~€2–5/ay~~ |
-| Müşteri | Praxura lisansı | **fiyat henüz belirlenmedi** (10.09.2026 kararı; en düşük paket ~59'dan) ~~mevcut plan fiyatları (€29/49/99)~~ |
+| Müşteri | Praxura lisansı | **fiyat henüz belirlenmedi** (Kemal 10.09 + 11.10.2026) |
 | Biz | ~~Beta sponsor sunucuları (geçici)~~ | yok — beta kutuları praksisin kendi hesabında (K12, O-165); istenirse iade/indirim |
 | Biz | Merkez (Vercel+Supabase küçük ölçek+domain) | mevcut düzeyde |
 | Biz | Geliştirme eforu | ~2,5–4 ay (Faz 0–6 toplamı) |
@@ -330,11 +335,11 @@ Görevler:
 
 ## 9. AÇIK SORULAR (uygulama sırasında cevaplanacak)
 
-- **A1 — IONOS token fiyatları:** Herkese açık net liste yok; PoC'de (0.5) gerçek reçete taramasıyla ölç, buraya yaz. Kabul eşiği: reçete başına ≤ €0,10.
-- **A2 — IONOS Cloud C5 durumu:** IONOS'un cloud altyapısının C5 testatı PoC'de doğrulanacak. Varsa: "IONOS VPS + IONOS AI = tek fatura" varyantı (Yol A'ya alternatif provisioner) değerlendirilir — kalem-korkusu çözümü.
+- ⚠️ *A1 ve A2 düştü (K4/K-20, 05.10.2026 — IONOS yolu yok; KI maliyeti §8, sınır O-169). Tarihçe:* **A1 — IONOS token fiyatları:** Herkese açık net liste yok; PoC'de (0.5) gerçek reçete taramasıyla ölç, buraya yaz. Kabul eşiği: reçete başına ≤ €0,10.
+- *(düştü)* **A2 — IONOS Cloud C5 durumu:** IONOS'un cloud altyapısının C5 testatı PoC'de doğrulanacak. Varsa: "IONOS VPS + IONOS AI = tek fatura" varyantı (Yol A'ya alternatif provisioner) değerlendirilir — kalem-korkusu çözümü.
 - **A3 — Google Calendar sync'in geleceği:** v1'de yok (lokal kurulumda public OAuth redirect sorunu + token yönetimi). Talep gelirse seçenekler: müşterinin kendi Google OAuth app'i, CalDAV/ICS-feed, cihaz-akışı. Kullanıcı kararı gerekir.
 - **A4 — Vault self-host:** PoC 0.2'de doğrulanacak; çalışmazsa pgcrypto tabanlı şifreleme fonksiyonlarına geçilir (karar PoC'de).
-- **A5 — Alan adı:** `praxura.app` müsaitliği/alternatifi — kullanıcıyla birlikte seçilecek.
+- **A5 — Alan adı:** ✅ cevaplandı — `box.praxura.de` (K-18, 05.10.2026; ad rastgele iki kelime + sayı, A-21). ~~`praxura.app` müsaitliği/alternatifi — kullanıcıyla birlikte seçilecek.~~
 - **A6 — SaaS'ın uzun vadesi:** On-prem oturunca SaaS tamamen kapanır mı, yoksa ISO 27001 alınıp premium "managed" seçenek olarak mı kalır? Gelire bağlı, ileride kullanıcı kararı.
 - **A8 — ORS (OpenRouteService) anahtarı (D1):** Fahrtenbuch geocoding/routing'de hasta ev adresleri ORS'a gidiyor. Seçenekler: (a) müşterinin kendi ücretsiz ORS anahtarı (sihirbaza adım ekle — 2000 istek/gün ücretsiz), (b) bizim anahtarımız Express'te → adres bizim üzerimizden geçmese de anahtar paylaşımı/kota sorunu, (c) OSRM/Valhalla self-host (ağır). Öneri: (a). DSGVO notu: ev adresi kişisel veri — hangi seçenekte de sihirbazda şeffaflık metni gerekli. Kullanıcı kararı bekliyor.
 - **A9 — Ölü tablo temizliği (D7):** ~~teyit bekliyor~~ 2026-07-06 üç turda doğrulandı: gerçek ölüler = `user_credits`, `applications`, `accommodations`, `trip_plans`, `trip_history` (chatbot_usage HARİÇ — admin KPI + DSGVO kodu kullanıyor). On-prem şemasına girmezler. SaaS'tan DROP etmek ayrı ve acil olmayan karar.
@@ -355,6 +360,8 @@ Görevler:
 | 6 — Go-live | ⬜ başlamadı | | |
 
 > ⚠️ **02.10.2026 (onprem ajanı):** Faz 1 ve Faz 2 satırları 11.09.2026 fotoğrafıdır, bayattır. Koda karşı doğrulanan kapanışlar: **1.1** (`api/dsgvo.js` → Express, O-16, `59c3ea1`) · **2.1b** Caddy/TLS (§7F) · **2.1c** `install.sh` (§7G) · **2.2** kurulum sihirbazı (§7H). Güncel madde durumu: `onprem/REGISTER.md` §9 · güncel iş sırası: `KUTU_HAZIRLIK_SPRINT.md` §0/§3 (K2). Bu tablo faz bitince yeniden yazılır, madde madde değil.
+
+> ⚠️ **11.10.2026 (onprem ajanı, belge turu):** tablo hâlâ faz bitince yeniden yazılır; o güne kadar güncel durum **`onprem/REGISTER.md` §9** (madde sayımı) + **`KUTU_HAZIRLIK_SPRINT.md` §0** (iş sırası). Bu turda koda karşı doğrulanan ek değişiklikler: **0.5** (IONOS testi) düştü — K4/K-20 · **1.3** farklı biçimde kodlandı (`ki-config.js`/`ki-jeton.js`, `a227e4cb`; açılış O-169) · **2.4** `/api/status` dilim 1 (`3e2a812b`, O-40) · **4.3** kanal sistemi (`:beta`/`:stable`, `promote-stable.yml`, O-25/O-41) · **4.5** alan adı `box.praxura.de` (K-18).
 
 G8 kuralı (buluta yeni zincir yok) yürürlük tarihi: ✅ **2026-09-04** — kural Temmuz'dan
 beri yazılıydı ama tutmuyordu (`module/` altına dört yeni dosya backend adresini koda
@@ -395,7 +402,7 @@ commit'te (§302, Kassenbuch, Verordnung, Mahnwesen) bulut zinciri **bir satır 
 - Topluluk deneyimi (neler çalışıyor): https://github.com/orgs/supabase/discussions/39820
 - 2026 sınırlamalar değerlendirmesi: https://queryglow.com/blog/supabase-self-hosted
 
-### Teknik — IONOS AI Model Hub
+### Teknik — IONOS AI Model Hub *(tarihçe — K4/K-20 ile yol düştü)*
 - Ürün sayfası: https://cloud.ionos.com/managed/ai-model-hub
 - Model kataloğu (OCR/vision dahil): https://docs.ionos.com/cloud/ai/ai-model-hub/models
 - OpenAI-uyumlu API referansı: https://api.ionos.com/docs/inference-openai/v1/
@@ -408,8 +415,8 @@ commit'te (§302, Kassenbuch, Verordnung, Mahnwesen) bulut zinciri **bir satır 
 - `ON_PREMISE_ANALYSE.md` — regülasyon analizi (bu playbook'un temeli)
 - `REGULATORY_AUDIT.md` — SaaS landmine audit'i (Haziran 2026)
 - `INFRASTRUCTURE.md` — mevcut VPS/deploy düzeni
-- `TODO.md` §2 (Launch-Checkliste) — go-live çapraz kontrol
+- Ops-Dashboard → **Launch** — go-live çapraz kontrol (~~`TODO.md` §2~~, o bölüm yok)
 
 ---
 
-*Son güncelleme: 2026-07-06 — Claude Fable 5. Bu doküman canlıdır: her faz sonunda §9 ve §10 güncellenir.*
+*İlk sürüm: 2026-07-06 — Claude Fable 5. Son gövde hizalaması: 2026-10-11 (onprem ajanı — K1/K4/K12 ve K-18'e göre; K tablosu ve G kuralları değiştirilmedi). Güncel durum: `onprem/REGISTER.md` §9 + `KUTU_HAZIRLIK_SPRINT.md`. Bu doküman canlıdır: her faz sonunda §9 ve §10 güncellenir.*

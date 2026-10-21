@@ -1,0 +1,46 @@
+{
+  "art": "video",
+  "caption": "Die Verordnung hat ein Verfallsdatum: Behandlungsbeginn innerhalb von 28 Kalendertagen, bei dringlichem Bedarf 14 Tage (HeilM-RL § 15). Wer später startet, riskiert die Absetzung.\n\nMehr Praxiswissen für Heilmittelpraxen: praxura.de\n\n#Heilmittel #Therapiepraxis #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "hook",
+      "dauer": 2.6,
+      "kicker": "Heilmittelpraxen, aufgepasst",
+      "titel": "Diese Verordnung ist <em>wertlos.</em>",
+      "muster": "MUSTER 13",
+      "datum": "Ausgestellt: 01.10.",
+      "stempel": "UNGÜLTIG",
+      "stempelBei": 0.55
+    },
+    {
+      "typ": "zaehler",
+      "dauer": 2.8,
+      "kicker": "Der Grund",
+      "praefix": "Tag",
+      "von": 1,
+      "bis": 29,
+      "grenze": 28,
+      "text": "nach Ausstellung. Behandlung noch nicht begonnen."
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Die Regel",
+      "titel": "Beginn spätestens nach <em>28</em> Kalender&shy;tagen.",
+      "quelle": "Heilmittel-Richtlinie § 15"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Dringlicher Bedarf?",
+      "titel": "Dann nur <em>14 Tage.</em>"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Prüft die Frist, <em>bevor</em> Sie behandeln.",
+      "cta": "Folgen für mehr Praxiswissen"
+    }
+  ]
+}

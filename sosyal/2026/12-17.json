@@ -1,0 +1,44 @@
+{
+  "art": "video",
+  "caption": "Ein Jahr Therapiepraxis in 15 Sekunden: neue Fristen, fehlende Unterschriften, Kilometer auf Zetteln.\n\nWir kennen den Praxisalltag und bauen Praxura Lokal dafür. Was 2027 kommt? Bleiben Sie dran.\n\nMehr auf praxura.de\n\n#Praxisalltag #Therapiepraxis #Heilmittel #Therapeutenleben",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Therapiepraxis",
+      "titel": "Ein Jahr in <em>15 Sekunden.</em>"
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.4,
+      "kicker": "Januar",
+      "titel": "Neue Verordnungen. Neue Fristen."
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.4,
+      "kicker": "April",
+      "titel": "Irgendwo fehlt eine Unterschrift."
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.4,
+      "kicker": "Juli",
+      "titel": "Hausbesuche. Kilometer auf Zetteln."
+    },
+    {
+      "typ": "enthuellung",
+      "dauer": 2.6,
+      "ton": "dunkel",
+      "kicker": "Und 2027?",
+      "titel": "Gleiche Praxis. <em>Mehr Ruhe.</em>"
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Ihren</em> Alltag.",
+      "cta": "Folgen – 2027 kommt"
+    }
+  ]
+}

@@ -24,7 +24,7 @@
  * gestern. `prescriptions.abrechnung_id` bleibt daneben bestehen und heisst
  * weiter „in welcher Datei liegt die Zeile GERADE" (Arbeitsachse);
  * `abrechnung_zeile` ist die Geschichtsachse. Nicht zusammenlegen.
- * (ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 4 · db/REGISTER.md)
+ * (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 4 · db/REGISTER.md)
  *
  * ⚠️ Die Zuzahlungsformel unten ist WÖRTLICH dieselbe wie die Summenschleife in
  * beiden Routen (`totalBrutto`/`totalZu`). Wer eine ändert, ändert beide —

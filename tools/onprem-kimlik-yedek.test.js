@@ -143,7 +143,7 @@ test('install.sh: kein down -v/--volumes, erwähnt bei --neu-Löschen nicht kiml
   assert.ok(/db-config\s+caddy_data\s+caddy_config/.test(neuBlock), 'Löschung muss gezielt db-config, caddy_data, caddy_config ansprechen');
 });
 
-test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeben, read -r -s für Code, Volume-Init vor erstem up', () => {
+test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeben, nie ausgegeben, Volume-Init vor erstem up', () => {
   const inhalt = fs.readFileSync(installPfad, 'utf8');
 
   // Code wird nie per set_env geschrieben (set_env KAYIT_CODE kommt nicht vor)
@@ -152,8 +152,10 @@ test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeb
   // Code wird nie als CLI-Argument --code übergeben
   assert.ok(!/--code\b/.test(inhalt), 'install.sh darf den Code nie per --code übergeben');
 
-  // read -r -s für geheime Code-Eingabe vorhanden
-  assert.match(inhalt, /read\s+[^;\n]*-r\s+[^;\n]*-s|read\s+[^;\n]*-s\s+[^;\n]*-r/, 'install.sh muss read -r -s für die Code-Eingabe verwenden');
+  // Seit 0.6.1 ist die Code-Eingabe sichtbar (einmaliger Code; blind getippt = vertippt, 12.10.2026).
+  // Geblieben ist: der Code darf nie ins Protokoll — keine Ausgabezeile nennt die Variablen.
+  const codeInAusgabe = inhalt.split('\n').filter((z) => /^\s*(log|ok|warn|echo|printf)\b/.test(z) && /\$\{?(RAW_CODE|CLEAN_CODE|KAYIT_CODE)\b/.test(z));
+  assert.deepEqual(codeInAusgabe, [], 'install.sh darf den Einrichtungscode nie ausgeben oder loggen');
 
   // set -u: ip_modus muss vor der ersten Verwendung gesetzt werden (K2b.6-Review: Absturz nach Registrierung)
   const posModusSetzen = inhalt.search(/^\s*ip_modus=/m);

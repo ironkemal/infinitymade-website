@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "POV: Sie versuchen, die Unterschrift des Arztes zu entziffern.\n\nDer Vordruck muss vollständig ausgefüllt sein (Heilmittel-Richtlinie § 13). Praxura prüft Diagnosegruppe, Behandlungseinheiten, Ausstellungsdatum und Frist, bevor Sie behandeln.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxisalltag #Therapeutenleben #GKV",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.6, "kicker": "POV", "titel": "Sie entziffern die <em>Unterschrift</em> des Arztes." },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Dabei zählt noch mehr", "titel": "Ist der Vordruck <em>vollständig?</em>", "quelle": "Heilmittel-Richtlinie § 13" },
+    { "typ": "countdown", "dauer": 3.6, "kicker": "Praxura prüft vorab", "punkte": ["Diagnose<em>gruppe</em>", "Behandlungs<em>einheiten</em>", "Ausstellungs<em>datum</em>", "<em>Frist</em>"] },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Prüft, <em>bevor</em> Sie behandeln.", "cta": "Mehr auf praxura.de" }
+  ]
+}

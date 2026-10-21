@@ -1,0 +1,29 @@
+{
+  "art": "video",
+  "caption": "Hausbesuch, aber nicht verordnet. Dürfen Sie? Grundsätzlich nein: Ohne verordneten Hausbesuch wird in der Praxis behandelt (Heilmittel-Richtlinie § 11). Ausnahme: Kinder und Jugendliche bis 18, die ganztägig eine Fördereinrichtung besuchen, unter den Voraussetzungen des § 11 Abs. 2.\n\nWie Praxura Hausbesuche und Fahrtenbuch zusammenbringt: praxura.de\n\n#Logopädie #Heilmittel #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "frage",
+      "dauer": 5.4,
+      "kicker": "Logopädie-Praxen, aufgepasst",
+      "titel": "Hausbesuch, aber nicht verordnet. <em>Dürfen Sie?</em>",
+      "antwortLabel": "Die Antwort",
+      "antwort": "Grundsätzlich nein. Ohne Hausbesuch auf der Verordnung behandeln Sie in der Praxis.",
+      "antwortBei": 2.6,
+      "quelle": "Heilmittel-Richtlinie § 11"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Darauf achten",
+      "titel": "Auf dem Muster 13 muss <em>Hausbesuch: ja</em> stehen."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Hausbesuch? Verordnung <em>und</em> Fahrtenbuch an einem Ort.",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

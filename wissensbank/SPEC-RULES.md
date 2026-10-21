@@ -8,7 +8,12 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-29 (Reform S1.12 + S2 — `gkv-302` bulguları, `wissensbank` orijinallere
+> Son güncelleme: 2026-10-11 (`wissensbank` temizlik turu — **2 yeni kural:** „Leistungsbereich yalnız UNB S005'te" ·
+> „SUM diye segment yok" (silinen bir hafıza kaydının „yaygın yanılgılar" listesindeydi; kaynak + kod okundu).
+> Bayat `Kodda:` satırları koda karşı güncellendi: Logischer/Physikalischer Dateiname, Auftragsdatei, EnvelopedData,
+> Höchstmenge kopyası (artık import), GES, `heilmittel_position`, Behandlungsbeginn, `UNTERBRECHUNG_TAGE` atfı.
+> Kayan satır numaraları sembol adına çevrildi; eski iddialar üstü çizili duruyor.)
+> Önceki: 2026-09-29 (Reform S1.12 + S2 — `gkv-302` bulguları, `wissensbank` orijinallere
 > karşı okudu. 3 yeni kural: Hausbesuch yalnız „Ja" ile (S2.6) · Abrechnung Verordnung bitince,
 > VKZ 02 sonradan yapılan seans için DEĞİL (S2.3) · Datenaustausch durum terimleri (S2.1) ·
 > IK des Leistungserbringers Muss (S2.7). **1 kayıt düzeltildi:** „Teilabrechnung normaldir;
@@ -137,8 +142,8 @@
   anılmıştı — bu belge `wissensbank`'ta YOK (21.09.2026 aranmış, bulunamamış), doğrulanmamış
   sayılır, üstteki HeilM-RL alıntısı tek bağlayıcı kaynaktır.
 - **Geçerlilik:** 05.08.2025
-- **Kodda:** uygulanmamış — `dashboard.html:3621/3625` tek `rzHm` + tek `rzHmErg` alanı;
-  `prescriptions.heilmittel_items` (`db/SCHEMA.sql:2256`) liste taşıyabilir ama sayı kapısı yok.
+- **Kodda:** uygulanmamış — `dashboard.html` tek `#rzHm` + tek `#rzHmErg` alanı;
+  `prescriptions.heilmittel_items` (`db/SCHEMA.sql`, jsonb) liste taşıyabilir ama sayı kapısı yok.
   Ops #202 (Kategorie Physiotherapie — önceki "Podoloji" etiketi yanlıştı, bu kural onu düzeltti).
 - **Kapsam:** Physiotherapie, Ergotherapie — vorrangige+ergänzende Heilmittel, Muster 13.
   Logopädie — yalnız Behandlungszeit/Einzel-Gruppe kombinasyonu (S. 2), ergänzendes Heilmittel
@@ -248,9 +253,10 @@
   değişiklikten bağımsız — a/b artık 78010 dolu geldiği için onlarda düzeliyor, c'de hâlâ 0 €).
 - **Kaynak:** Kod gerçeği (spec değil) — Anlage 1 TP5 V21 § 5.5.3.3 EHE-Segment
 - **Geçerlilik:** 18.09.2026
-- **Kodda:** `api-backend/billing/api/abrechnung.routes.js:2411-2434`
-  (`mapVerordnungToDtaShape`) · `api-backend/billing/utils/abrechnung-zeilen.js:138-140` ·
-  `api-backend/billing/api/zuzahlung.routes.js:106-113` (hatalı okuyucu — düzeltme Ops-Dashboard
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js`
+  (`mapVerordnungToDtaShape()` — EHE'yi `beh.hpnr_codes`'tan kuruyor) · `api-backend/billing/utils/abrechnung-zeilen.js`
+  (11.10.2026: `hpnr_codes` bu dosyada artık geçmiyor — atıf doğrulanamadı) ·
+  `api-backend/billing/api/zuzahlung.routes.js` (`code: rx.heilmittel_position`) (hatalı okuyucu — düzeltme Ops-Dashboard
   → Teknik, bu değişikliğin kapsamı dışında)
 - **Kapsam:** Podologie, tüm Verordnungsart'lar
 
@@ -287,23 +293,23 @@
 - **Geçerlilik:** 05.08.2025
 - **Kodda:** ✅ uygulanmış, **kasten uyarı seviyesinde** (blok değil). Sayı bugün **üç
   dosyada** duruyor, üçü de tutarlı (18.09.2026'da satır satır sayıldı):
-  1. `module/verordnung-regeln.js:91` (`POD_HOECHSTMENGE`) + `:97` (`POD_ORIENTIEREND`) —
+  1. `module/verordnung-regeln.js` (`POD_HOECHSTMENGE` + `POD_ORIENTIEREND`) —
      **niyet edilen tek adres**, `[Q1]` (HeilM-RL) / `[Q2]` (Anlage 3) kaynak etiketleriyle;
-     `REGELSTAND` listesi (`:250-257`) yeni bir Richtlinie geldiğinde gözden geçirilecek
-     satırları sayıyor. Runtime önceliği `regelnFuerBereich()` (`:189-204`): **DB kazanır**,
+     `REGELSTAND` listesi yeni bir Richtlinie geldiğinde gözden geçirilecek
+     satırları sayıyor. Runtime önceliği `regelnFuerBereich()`: **DB kazanır**,
      bu değerler yalnız `diagnosegruppen.hoechstmenge` boşken devreye girer — podolojide
      dosyanın kendi 03.09.2026 notuna göre boş (canlı DB'ye karşı doğrulanmadı).
-  2. `module/verordnung-podo.js:72` / `:75` + `:365-395` (`einheitenPruefen()` — `max`/`min`
-     attribute + uyarı metni). ⚠️ **Kendi kopyası**: `verordnung-regeln.js`'in baş yorumu
-     „`verordnung-podo.js` liest sie von hier — eine Zahl, ein Ort" diyor ama dosya onu
-     **import etmiyor**, sabitleri yeniden tanımlıyor → `REGISTER.md` W-A10.
-  3. `api-backend/ai/validators/diagnosegruppen.json:162-279` — backend kopyası; DF `:164` ·
-     NF `:187` · QF `:215` · UI1 `:248` · UI2 `:265`, her birinde `hoechstmenge` +
+  2. `module/verordnung-podo.js` `einheitenPruefen()` (`max`/`min` attribute + uyarı metni).
+     ✅ **11.10.2026 ölçüldü:** dosya `POD_HOECHSTMENGE`/`POD_ORIENTIEREND`'i artık
+     `verordnung-regeln.js`'ten **import ediyor** — 18.09.2026'daki ~~kendi kopyası~~ bulgusu
+     geçersiz; `REGISTER.md` W-A10 yalnız aşağıdaki JSON kopyası için açık.
+  3. `api-backend/ai/validators/diagnosegruppen.json` `podologie` bloğu — backend kopyası; DF ·
+     NF · QF · UI1 · UI2, her birinde `hoechstmenge` +
      `orientierende_menge`.
 
-  Uyarı yolu: `module/verordnung-pruefung.js:220-234` (`UEBER_HOECHSTMENGE`,
+  Uyarı yolu: `module/verordnung-pruefung.js` (`UEBER_HOECHSTMENGE`,
   `SCHWERE.warnung`). DB tarafı: `diagnosegruppen.hoechstmenge` kolonu **var**
-  (`db/SCHEMA.sql:1240`) — physio'da dolu, podolojide boş; dolduğu gün 1. maddedeki
+  (`db/SCHEMA.sql`, tablo `diagnosegruppen`) — physio'da dolu, podolojide boş; dolduğu gün 1. maddedeki
   değerler kendiliğinden devre dışı kalır. Zincirin tamamı: `REGISTER.md` → **Z-11**.
 - **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF/UI1/UI2, standart Verordnung.
   § 7 Abs. 6 HeilM-RL (besonderer Verordnungsbedarf / langfristiger Heilmittelbedarf) başka
@@ -312,7 +318,8 @@
 - ⚠️ **Karıştırma tuzağı — „Nagelspange sekiz gider" doğru değil.** 8 yalnız **UI1**'in
   Höchstmenge'sidir; UI2'de 8 **orientierende Menge**'dir ve birden çok Verordnung'a yayılır.
   UI2'ye pauschal 8 einheit yazmak Absetzung üretir. Kod yorumu
-  `module/verordnung-podo.js:66-71` bu ayrımı zaten kayda geçirmiş — silme.
+  `module/verordnung-podo.js:66-71` bu ayrımı zaten kayda geçirmiş — silme. (11.10.2026: o satırlarda artık
+  bu yorum yok — sabitler `verordnung-regeln.js`'e taşınınca yorum da taşınmış/kısalmış olabilir, doğrulanmadı.)
 - 📌 **Bezugsgröße farkı:** Höchstmenge **Verordnung** başına, orientierende Menge
   **Verordnungsfall** başınadır (§ 7 Abs. 3: *„Der Verordnungsfall und die orientierende
   Behandlungsmenge beziehen sich auf die jeweilige Verordnerin oder den jeweiligen
@@ -320,47 +327,61 @@
   Ziff. 4.1: *„keine Behandlungseinheit im Sinne der Heilmittel-Richtlinie"* (yukarıdaki
   78040 kaydı).
 
-### Podologie: Behandlungsunterbrechung macht die Verordnung NICHT ungültig — keine 12-Wochen-Grenze
-- **Kural:** Podolojide seanslar arasındaki kesinti — süresi ne olursa olsun — Verordnung'u
-  **geçersiz kılmaz.** HeilM-RL § 16 Abs. 4'ün genel kuralı (Satz 1: gerekçesiz >14 Kalendertage
-  kesinti → Verordnung düşer; Satz 2: gerekçeli kesinti Verordnung'a yazılır) Podologie'ye
-  **uygulanmaz** (Satz 5). Kesinti Verordnung'a dokümante edilmek zorunda da değildir.
-  Yazılım podolojide kesinti yüzünden ne blok ne "ungültig" uyarısı üretir; ±2 Werktage
-  frekans sapması uyarısı (FAK Nr. 11 ilk cümlesi) bundan ayrıdır ve uyarı olarak kalır.
-- **Kaynak:** HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 16 Abs. 4 Satz 5 — *„Abweichend von
-  Satz 1 und 2 führen Behandlungsunterbrechungen bei Maßnahmen der Podologischen Therapie sowie
-  der Ernährungstherapie nicht zur Ungültigkeit der Verordnung."*
-  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:698-704`,
-  S. 17 — Satz 1/2 `:698-700`, Satz 5 `:702-704`; kapak „in Kraft getreten am 5. August 2025"
-  `:14`). Tamamlayıcı, norm değil: GKV-SV FAK Podologie Stand 24.05.2023 Nr. 11 — *„Wird die
-  Behandlung kürzer als 12 Wochen unterbrochen (z.B. wegen Krankheit oder Urlaub), bleibt die
-  Verordnung gültig. Unterbrechungen brauchen nicht auf der VO dokumentiert werden. (vgl. § 16
-  Abs. 4 Satz 5 Heilmittel-Richtlinie)"* (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:92-110`)
-  · Nr. 34 (Therapiefrequenz Nagelspangenbehandlung) — *„Verliert eine Verordnung auch dann ihre
-  Gültigkeit, wenn zwischen zwei Spangenanlagen zwar mehr als 12 Wochen liegen, in der
-  Zwischenzeit (z. B. nach 6 Wochen) aber eine Kontrolle stattfand? …"* → *„Nein"* (`:295-303`).
-  Tüm satırlar 29.09.2026'da orijinale karşı okundu.
-- ⚠️ **Ters okuma tuzağı (eski hata, `dbd79f0`'da düzeltildi):** FAK Nr. 11 yalnız "<12 hafta →
-  geçerli kalır" der; **">12 hafta → geçersiz"** demez. Bunu çıkarımla 84 günlük geçersizlik
-  sınırına çevirmek HeilM-RL Satz 5'e aykırıdır — FAK'ın kendisi Satz 5'e atıf yapıyor ve
-  Satz 5'te süre yok. Nr. 34 ">12 hafta"da da geçersizliği reddediyor; ancak soru araya
-  Kontrolle girmiş vakayı soruyor, "Kontrolle olmadan da Nein" diye **ayrıca** yazmıyor —
-  dayanak her durumda FAK değil Satz 5'tir.
-- **Geçerlilik:** 05.08.2025 (HeilM-RL Fassung 15.05.2025) · FAK Stand 24.05.2023
-- **Kodda:** ✅ `module/frequenz-pruefung.js:263` `pruefeFrequenz` → `:273` `istPodo` →
-  `:325` `bewerteAbstand(kt, wt, soll, !istPodo)`; `bewerteAbstand` `:230-231`
-  (`pruefeUnterbrechung=false` iken `'unterbrechung'` hükmü hiç verilmez). Commit `dbd79f0`
-  (Reform S1.9, 29.09.2026). Test: `module/frequenz-pruefung.test.js`.
-  - ⚠️ **Yanlış atıf kaldı (`offen`, sahip `builder` — Physio ince ayarı, Ops → Teknik):**
-    `module/frequenz-pruefung.js:66` `UNTERBRECHUNG_TAGE = 12 * 7; // § 16 Abs. 4 Satz 5 HeilM-RL`
-    — Satz 5 süre içermez (podoloji istisnasıdır), 84 gün **hiçbir** HeilM-RL satırında yok.
-    Sabit bugün yalnız Physio/Ergo/Logo dalında çalışıyor; oranın dayanağı Satz 1 =
-    **14 Kalendertage ohne angemessene Begründung**'dur (`:698-699`), 12 hafta değil. Kod
-    yorumu (`:43-51`) bunu "Physio-Feinabstimmung'a ertelendi" diye kaydetmiş; `:66`'daki
-    atıf düzeltilmemiş. Podolojiyi etkilemez.
-- **Kapsam:** Podologie (DF/NF/QF/UI1/UI2 — Nagelspange dahil). Ernährungstherapie de Satz 5
-  kapsamında (bizim kapsam dışı). Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2 geçerli**, bu kural
-  onlara taşınmaz.
+### Podologie: 12 Kalenderwochen Unterbrechung → Verordnung ungültig (Vertrag § 7 Abs. 7) — 14-Tage-Regel gilt NICHT
+- **Kural:** Podolojide son Behandlung'dan (Nagelspange'de **Kontrolltermin 78510 dahil**) sonra
+  **12 Kalenderwochen** içinde yeni bir Behandlung olmazsa Verordnung **geçersizdir**; o tarihten
+  sonraki seanslar bu VO üzerinden **abgewiesen/abgesetzt** edilir. Prüfmaßstab **Vertrag § 7
+  Abs. 7**'dir. HeilM-RL § 16 Abs. 4 Satz 5 yalnız genel **14-Tage-Regel'i (Satz 1) ve
+  Dokumentationspflicht'i (Satz 2)** podolojiden kaldırır; Satz 4 „Das Nähere hierzu regeln die
+  Vertragspartner nach § 125 SGB V" ile ayrıntıyı Vertrag'a bırakır. İki metin çelişmez:
+  14 gün yok, dokümantasyon yok, **dış sınır 12 Kalenderwochen**. Kesinti gerekçesi önemsiz
+  (Krankheit/Urlaub da sayılır). ±2 Werktage frekans sapması (Vertrag § 7 Abs. 6, FAK Nr. 11)
+  ayrı kuraldır ve uyarı olarak kalır.
+- **Kaynak:**
+  - Vertrag nach § 125 Abs. 1 SGB V Podologie i.d.F. 30.11.2020 inkl. Änderungen bis 16.06.2025
+    (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt`):
+    § 7 Abs. 7 (Z.628-630) *„Die Verordnung verliert bei einer Unterbrechung von 12
+    Kalenderwochen nach dem Tag der letzten Behandlung (bei Nagelspangenbehandlungen auch
+    Kontrolltermin) ihre Gültigkeit."* · § 1 Abs. 5 (Z.153-156) *„Die Bestimmungen dieses
+    Vertrages und der Heilmittel-Richtlinie … sind … zwingend zu beachten und anzuwenden."* ·
+    § 18 Abs. 2 (Z.1014-1015) *„Abrechnungen, die den Richtlinien nach § 302 SGB V und/oder
+    diesem Vertrag nicht entsprechen, werden von den Krankenkassen abgewiesen."*
+  - HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 16 Abs. 4
+    (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:698-704`):
+    Satz 1 (14 Kalendertage), Satz 4 *„Das Nähere hierzu regeln die Vertragspartner nach § 125
+    SGB V."*, Satz 5 *„Abweichend von Satz 1 und 2 führen Behandlungsunterbrechungen bei
+    Maßnahmen der Podologischen Therapie … nicht zur Ungültigkeit der Verordnung."*
+  - FAK Podologie Stand 24.05.2023 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt`)
+    Nr. 11 (Z.92-110, „kürzer als 12 Wochen … bleibt gültig") ve Nr. 34 (Z.295-303,
+    Kontrolle arada → „Nein", geçerliliği kaybetmez) — ikisi de Vertrag okumasıyla uyumlu.
+  - Tüm satırlar 21.10.2026'da orijinale karşı okundu (gkv-302).
+- **Sayım:** Süre letzte Behandlung'un **ertesi günü** başlar; 84 gün boyunca Behandlung
+  yoksa kesinti tamamlanmıştır → `abstandTage > 84` geçersiz, `= 84` hâlâ geçerli. ⚠️ Sınır
+  günü (84/85) kasa pratiğine karşı **doğrulanmadı**; 84. günde de uyarı verilir.
+- **Eski hata (29.09–21.10.2026):** bu başlık „keine 12-Wochen-Grenze" diyordu — Vertrag
+  arşivde yoktu (W-11 21.10.2026'da girdi), Satz 5 tek dayanak sanıldı, Satz 4 okunmamıştı.
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (iK 01.07.2025) · HeilM-RL 05.08.2025
+- **Kodda:**
+  - 🟡 Termin: `module/frequenz-pruefung.js:328-330` → `bewerteAbstand(kt, wt, soll, true)`;
+    meldung `:408-414`. Uyarı (blok değil) — Termin yeni VO ile meşru olabilir, bu doğru.
+    ⚠️ `:273` UI1/UI2'de erken `return { ok: true }` → Nagelspange'de 12-Wochen hiç
+    kontrol edilmiyor; kontrol bu return'ün **önüne** alınmalı (yalnız frekans uyarısı
+    atlanır). Ayrıca `:270` yorumu UI'yı „venöse/arterielle Ulcera" diye açıklıyor —
+    UI = Unguis incarnatus (Nagelspange).
+  - 🔴 Abrechnung: `api-backend/billing/dta/preflight.js:576-593` **S:01010** her bereichte
+    >14 Tage'yi **hart** hata sayıyor (`regel-schwere.js:138`) — podolojide Satz 5'e aykırı,
+    4-6 haftalık normal podo frekansında **dosya hiç üretilmez** (`builder.js:710-715`).
+    Podo için eşik 84 gün olmalı (son Behandlung incl. 78510'a göre), hata metni Vertrag § 7
+    Abs. 7. `:620-627` **S:01012** (Ausstellung + 84 gün, `regel-schwere.js:140` „HeilM-RL
+    Gültigkeit 84 Tage") **kaynaksız** (`module/heilmittel-fristen.js:7` aynı tespiti
+    yapıyor) ve uzun podo VO'larını meşru seanslarda bloklar — podo için kaldırılmalı.
+  - ⬜ Behandlung kaydı: `module/podologie-abrechnung.js` (`podErstbefundungGrossLage`
+    `:366-375` yanındaki kapı kalıbı) — 84 gün aşılmışsa seans **eski VO'ya bağlanamaz**,
+    dokümantasyon serbest; „neue Verordnung zuordnen" yolu gösterilir. Uygulanmamış.
+- **Kapsam:** Podologie DF/NF/QF/UI1/UI2. Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2**
+  (14 Kalendertage ohne Begründung) geçerli, bu kural onlara taşınmaz;
+  `module/frequenz-pruefung.js:69` `UNTERBRECHUNG_TAGE = 12 * 7` oralar için kaynaksız
+  (Physio ince ayarı, Ops → Teknik).
 
 ### Behandlungsbeginn-Frist: 28 Kalendertage, dringlich 14 — kaçarsa Verordnung geçersiz
 - **Kural:** Tedavi Verordnungsdatum'dan itibaren **28 Kalendertage** içinde başlamalıdır;
@@ -391,13 +412,13 @@
 - **Geçerlilik:** 05.08.2025 (HeilM-RL) · 16.06.2025 (Anlage 3 Podologie)
 - **Kodda:** ✅ `module/heilmittel-fristen.js:41` `BEHANDLUNGSBEGINN_TAGE = { dringend: 14,
   normal: 28 }` · `:52` `behandlungsbeginnFrist(ausstellungsdatum, istDringend)` (→
-  `prescriptions.gueltig_bis`, `dashboard.js:15834`) · `:80` `pruefeBehandlungsbeginn` (saf,
+  `prescriptions.gueltig_bis`, `dashboard.js` `behandlungsbeginnFrist(ausstDate, isDringend)`) · `:80` `pruefeBehandlungsbeginn` (saf,
   Europe/Berlin gün sayımı) · `module/frequenz-pruefung.js:361-374` `pruefeErsttermin` —
   **yalnız podo, yalnız ilk vergeben Termin'de, `behandlungsbeginn` boşken** → blok
-  (`dashboard.js:5805-5808` Termin-Fenster, `:6776` KI-Serienbestätigung). Commit `dbd79f0`
+  (`dashboard.js` iki `pruefeErsttermin({…})` çağrısı: Termin-Fenster, KI-Serienbestätigung). Commit `dbd79f0`
   (Reform S1.9). Diğer okuyucular (uyarı/gösterim): `module/verordnung-podo.js:615`,
   `module/verordnung-pruefung.js:304`, `module/podologie-abrechnung.js:574,1036`,
-  `dashboard.js:7973,19659`. Test: `module/heilmittel-fristen.test.js`,
+  `dashboard.js` (iki `behandlungsbeginnFrist(rx.ausstellungsdatum, rx.is_dringend)` çağrısı). Test: `module/heilmittel-fristen.test.js`,
   `module/frequenz-pruefung.test.js:317-419`.
   - 📌 `pruefeErsttermin` `ownerId` yoksa (`:367`) sessizce `ok:true` döner — iki çağıran da
     `getOwnerId()` veriyor, bugün zararsız (`unkritisch`); yeni çağıran eklenirse bakılmalı.
@@ -1094,10 +1115,54 @@
   `0,00` verilir. Brutto her zaman Zuzahlung **dahil** BES toplamıdır.
 - **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt` §5.5.2, GES segmenti (Z.1660-1690)
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
-- **Kodda:** `api-backend/billing/dta/segments.js:73-85` alanları taşıyor; hesaplama
-  `abrechnung.routes.js:600-615` (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
+- **Kodda:** `api-backend/billing/dta/segments.js` `buildSLGA_GES()` alanları taşıyor; hesaplama
+  `abrechnung.routes.js` (11.10.2026: eski `:600-615` atfı kaymış, hesaplayan sembol bu turda doğrulanmadı) (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
   (Brutto = 0,00) **doğrulanmadı**.
 - **Kapsam:** tüm Leistungserbringergruppen
+
+### Leistungsbereich yalnız UNB S005'te durur — SLGA/SLLA'da ayrı alanı yok
+- **Kural:** Leistungsbereich (Leistungserbringer-Sammelgruppenschlüssel; Heilmittel = `B`) dosyada
+  **tek bir yerde** taşınır: Service-Segment **UNB**, veri elemanı **S005** (1 hane, AN, Muss).
+  SLGA ve SLLA segment tablolarında bu adla bir alan **yoktur**, mesaj içinde tekrarlanmaz. SLGA
+  yapısı bütün Sammelgruppenschlüssel'ler için aynıdır; SLLA yapısı Leistungsbereich'e göre seçilir
+  (Heilmittel → §5.5.3.3 „SLLA: B"). Abrechnungscode (`71`/`72`) Leistungsbereich **değildir**
+  (yukarıdaki „Abrechnungscode 71" kuralı).
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026) §5.4 Dateiaufbau, UNB tablosu, S. 21 —
+  *„S005 Leistungsbereich … 1 AN M Einzutragen ist der Leistungserbringer-Sammelgruppenschlüssel,
+  siehe Schlüssel Anlage 3 Abschnitt 8.1.14."*
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:895-899`) · §5.5.2, S. 31 —
+  *„Der Nachrichtentyp SLGA ist für alle Leistungserbringer-Sammelgruppenschlüssel (Anlage 3,
+  Schlüssel 8.1.14) gleich."* (`:1418-1419`); SLGA FKT alanları Verarbeitungskennzeichen ·
+  Sammelrechnung · IK'lardır (`:1424-1440`). Değer listesi: Anlage 3 TP5 V21 §8.1.14 **gövde**
+  (`Anlage_3_TP5_V21_20250919.txt:1107`; içindekiler 8.1.13 diyor — REGISTER Z-02 atıf tuzağı).
+  Ölçüm (11.10.2026, deterministik `grep`): V21 `.txt`'te „Leistungsbereich" yalnız S005 satırında
+  (`:895`), §5.3.1 Gesamtaufstellung cümlesinde (`:569`, alan değil) ve §7.1 Korrekturverfahren
+  yürürlük tablosunda (`:8015-8077`, alan değil) geçiyor.
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ✅ `api-backend/billing/dta/envelope.js` `buildUNB()` (`leistungsbereich = 'B'`, S005 yorumu)
+  ← `api-backend/billing/dta/builder.js` `buildDtaFile()` (`leistungsbereich: 'B'`; Heilmittel olmayan
+  Abrechnungscode'u „is not a Heilmittel code (Leistungsbereich B)" ile reddediyor)
+- **Kapsam:** tüm DTA üretimi (Heilmittel = `B`)
+- ⚠️ **Yaygın yanılgı:** „Leistungsbereich SLGA FKT/REC'te ya da SLLA'da da yazılır" — yazılmaz.
+
+### SUM diye bir segment yok — Rechnungssummen SLGA `GES`'tedir
+- **Kural:** Anlage 1 TP5 V21'in segment tablolarında `SUM` (ve genel EDIFACT'teki `MOA`/`CNT`)
+  adında segment **yoktur**. Rechnungssummen SLGA'da **`GES`** segmentindedir: Muss, mesaj başına
+  **min 2, max 9**; önce Summenstatus `00` (toplam), ardından Versichertenstatus başına birer GES.
+  Abrechnungsfall tutarları SLLA tarafında ayrı segmentlerdedir (kodda `BES`, VKZ 03'te `GZF`).
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026) §5.5.2 SLGA segment özeti (`:1387-1395`, S. 30) ve
+  GES alan tablosu (`:1618-1641`, S. 35) — *„Das Segment muss je Nachricht mindestens zweimal und kann
+  höchstens neunmal vorkommen. Es ist stets ein GES-Segment für den Summenstatus 00 zuerst zu
+  übermitteln."* · Summenstatus değerleri: Anlage 3 TP5 V21 §8.1.6. Ölçüm (11.10.2026, deterministik):
+  `grep -cw` Anlage 1 V21 `.txt` → `SUM` 0 · `MOA` 0 · `CNT` 0; Anlage 3 V21 `.txt` → `SUM` 0.
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ✅ `api-backend/billing/dta/segments.js` `buildSLGA_GES()` (Summenstatus `SUMMENSTATUS`
+  listesine karşı sert kontrol, Anlage 3 §8.1.6) · SLLA: `buildSLLA_BES()` / `buildSLLA_GZF()`.
+  `dta/` altında `SUM` segmenti üreten kod yok (11.10.2026 grep).
+- **Kapsam:** tüm DTA üretimi
+- ⚠️ **Yaygın yanılgı:** genel EDIFACT alışkanlığıyla „toplam = SUM/MOA/CNT segmenti" sanılır;
+  §302 Anlage 1 bunları kullanmaz — toplam `GES`'tir. GES hesap kuralı: yukarıdaki „GES:
+  Gesamtrechnungsbetrag = Gesamtbruttobetrag − Zuzahlung".
 
 ### Heilmittel fiyatı Leistungsdatum'a göre çözülür, Ausstellungsdatum'a göre değil
 - **Kural:** Bir pozisyonun fiyatı ve Zuzahlung'u, tedavinin **yapıldığı** tarihin
@@ -1477,9 +1542,10 @@
   Auftragsdatei'nin „Dateiname" alanına birebir aynı yazılır, tüm aktarım ortamları için aynıdır.
 - **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.2 (Stand 31.08.2017)
 - **Geçerlilik:** 01.09.2017 — hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — `api-backend/billing/dta/filename.js` → `buildDtaFilename()`,
-  dönüş satırı ``return `E${anwendung}${ikSuffix}${seq}` `` **16 haneli `EHK…`/`EHM…`** üretiyor.
-- ⚠️ **Çelişki, çözülmeden koda dokunulmamalı:** `filename.js` baş yorumu kendi kaynağı olarak
+- **Kodda:** ✅ `api-backend/billing/dta/filename.js` `buildLogischerDateiname()` — `SL` + IK 3.–8. + `S`/`A` +
+  2 haneli ay (20.09.2026'dan beri; 11.10.2026 dosya başlığı ve dönüş satırı okundu). Eski `buildDtaFilename()`
+  ve 16 haneli `EHK…`/`EHM…` **artık yok**.
+- ~~⚠️ Çelişki, çözülmeden koda dokunulmamalı~~ ✅ kapandı (REGISTER W-A09) — tarihsel metin: `filename.js` baş yorumu kendi kaynağı olarak
   „GKV-DA Anlage 17 (Nutzdatendateien)" gösteriyor — yani §302 Anhang 1 §4.2'ye değil **başka bir
   spesifikasyona** dayanıyor. Anlage 17 arşivde **yok**. Hangisinin geçerli olduğuna `gkv-302`
   karar verir; „16 haneyi 11 haneye çevir" işi o karardan önce yapılmaz.
@@ -1490,7 +1556,9 @@
   `0` (Versionsangabe) + 3 haneli laufende Nummer (Transfernummer). Auftragsdatei'de belirtilir.
 - **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.3 (Stand 31.08.2017)
 - **Geçerlilik:** 01.09.2017 — hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — Auftragsdatei üreten kod yok (aşağıdaki kurala bak)
+- **Kodda:** ✅ `api-backend/billing/dta/filename.js` `buildPhysikalischerDateiname()` (`E`/`T` + `SOL` + `0` +
+  3 haneli Transfernummer); Auftragsdatei'yi `api-backend/billing/dta/auftragsdatei.js` `buildAuftragsdatei()`
+  yazıyor (11.10.2026'ya kadar burada „uygulanmamış" yazıyordu)
 - **Kapsam:** tüm gruplar
 
 ### Transfernummer 0..999 arasında döner ve 999'dan sonra 0'a atlar
@@ -1621,11 +1689,12 @@
   d.h. Auftragsdatei und zugehörige Nutzdatei übermittelt"* · Auftragsdatei yapısı için
   Anhang 1 zur Anlage 1 TP5 § 4.3 → Anlage A (GGT) · GGT § 2.3 (Fassung 01.01.2026)
 - **Geçerlilik:** hâlâ geçerli
-- **Kodda:** ⛔ uygulanmamış — projede `Auftragsdatei` üreten hiçbir kod yok
-  (`grep -rn "Auftragsdatei" --include=*.js --include=*.mjs` → sıfır sonuç, 10.09.2026'da ölçüldü)
+- **Kodda:** ✅ `api-backend/billing/dta/auftragsdatei.js` `buildAuftragsdatei()` (348 bayt, ISO 8859-1, GGT
+  Anlage 2; 17.09.2026) — `abrechnung.routes.js` Nutzdatei'nin yanında saklıyor (`auftragsdatei_path`).
+  ~~Projede Auftragsdatei üreten kod yok~~ (10.09.2026 ölçümü, artık geçersiz — 11.10.2026)
 - **Kapsam:** tüm gruplar; DFÜ'de zorunlu, portal yüklemesinde bilateral
-- ⚠️ **Auftragsdatei'nin tam alan yapısı arşivde YOK** — GGT Anlage 2 indirilmeli
-  (`wissensbank/REGISTER.md` → W-A09).
+- ✅ ~~Auftragsdatei'nin tam alan yapısı arşivde YOK~~ — GGT Anlage 2 17.09.2026'da indirildi:
+  `wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei.txt` (`wissensbank/REGISTER.md` → W-A09).
 
 ### Önce imzala, sonra alıcının açık anahtarıyla şifrele
 - **Kural:** Nutzdaten önce **göndericinin özel anahtarıyla imzalanır**, ardından **ALICININ
@@ -1634,8 +1703,10 @@
   (Anhang 04c) istenir.
 - **Kaynak:** GGT § 5.1 · § 2.3 (Fassung 01.01.2026) · Anhang 04c § 4 (qeS kapsamı)
 - **Geçerlilik:** 01.01.2026
-- **Kodda:** ⚠️ **yarı uygulanmış** — `dashboard.js:18085` (`forge.pkcs7.createSignedData()`)
-  CMS SignedData üretiyor, **EnvelopedData yok**; `api-backend/billing/api/abrechnung.routes.js`
+- **Kodda:** ⚠️ **11.10.2026:** EnvelopedData artık var — `api-backend/billing/dta/verschluesselung.js`
+  `verschluesseleFuerEmpfaenger()`, `abrechnung.routes.js` import ediyor (Adım 1.3 D). SECON profiline uygunluk
+  bu turda doğrulanmadı (REGISTER Z-12 sınırı). Aşağısı 10.09.2026 metni: ~~yarı uygulanmış~~ —
+  `dashboard.js` (`forge.pkcs7.createSignedData()`) CMS SignedData üretiyor, ~~EnvelopedData yok~~; `api-backend/billing/api/abrechnung.routes.js`
   yalnız SignedData OID'ini doğruluyor (satır **977** yorum `contentType OID 1.2.840.113549.1.7.2`
   + satır **983** ret mesajı „Ungültige PKCS#7-Struktur — Datei ist kein gültiges CMS SignedData").
   Yani bugün üretilen dosya **imzalı ama şifresiz**.
@@ -1929,10 +2000,112 @@
 
 ---
 
+### Podologie: Übernahme offener VOs aus Altsoftware — eine VO, ein Abrechner, erbrachte Tage mit Datum
+- **Kural:** Bir Verordnung yazılım değişiminde **bölünmez**: ya tamamı Altsystem'den ya tamamı
+  Praxura'dan, **bir kez**, bittikten sonra faturalanır. Praxura'ya „offen" olarak yalnız
+  Original-Verordnung'u hâlâ praxis'te olan ve **hiç eingereicht edilmemiş** VO alınır. Altsystem'de
+  zaten erbracht edilmiş Behandlung'lar alınacaksa **her Leistungstag tarih + HPNR ile** alınır —
+  yalnız „3 von 6 erledigt" sayacı yetmez, çünkü SLLA'da her Leistungstag ayrı EHE ister ve fiyat
+  Leistungsdatum'a göre çözülür. Altsystem'de eingereicht edilmiş VO (Original kasada) Praxura'da
+  açık VO olamaz; kalan Einheiten için yeni Verordnung gerekir.
+- **Kaynak:** Richtlinien § 302 i.d.F. 20.11.2006 § 7 Abs. 1 (`Richtlinien-Text_061120.txt:249-255`,
+  „vollständig erbracht … abzurechnen") · Podologie Anlage 3 i.d.F. 16.06.2025 lit. p
+  (`:689-694`, „nach Beendigung der entsprechenden Verordnung") · Anlage 1 TP5 V21 Kap. 5.5.3.3
+  SLLA B EHE (`Anlage_1_TP5_V21_20260115.txt:3120-3140`, „für jeden Tag der Leistungserbringung
+  ein eigenes EHE-Segment") · aynı belge GZF (`:3587-3600`, „Pauschaler Zuzahlungsbetrag je
+  Abrechnungsfall (Verordnungsblatt): 10,00 Euro") · UE Korrekturverfahren 13.02.2025 Frage 1-2
+  (`:77-103`, VKZ 02 yalnız fatura anında var olan Anspruch için; Original kasada).
+- **Geçerlilik:** 20.11.2006 / 16.06.2025 / 01.10.2025 (TA V21)
+- **Kodda:** Fall D (hiç Einheit erbracht değil) uygulandı 20.10.2026 — `module/verordnung-import.js`
+  (`zeileZuVerordnung`: erbracht > 0 / abgerechnet / § 15 Frist / Unterschrift → ret; Pflicht-Checkbox
+  „Altsystem rechnet nicht ab"). Fall B/C (erbrachte Tage) uygulanmamış. `POST /api/rezept/confirm`
+  (`api-backend/server.js:2473`) Behandlung taşımaz; `podologie_behandlungen` tek INSERT yolu
+  `module/podologie-abrechnung.js` (db/REGISTER.md „kein zweiter Schreibweg").
+- **Kapsam:** Podologie (Anlage 3 p); § 7 Abs. 1 ve EHE kuralı tüm Heilmittel
+
+### Podologie: Übernahme teilweise erbrachter VOs (Fall B/C) — Vorgeschichte, nachgetragene Tage, Zuzahlung (21.10.2026)
+- **Kural (Vorgeschichte):** Altsystem'de **zaten abgerechnet** VO'lardan gelen geçmiş, Behandlung
+  kaydı olmadan hasta düzeyinde tutulabilir; kural fonksiyonları yalnız `{behandlungsdatum,
+  hpnr_codes}` okur. Gereken alanlar: **(a)** hasta: *erste podologische Behandlung in der Praxis*
+  (Datum) — `darf78040` yalnız önceki 78040'a değil **her önceki Behandlung**'a bakar
+  („vor der ersten Abgabe"); bu alan 01.11.2023 Altbestand açığını da taşınan hastalar için
+  kapatır. **(b)** hasta: Datum der 78040 (varsa). **(c)** hasta: Datum der letzten 78100 —
+  takvim yılı sınırı **hasta** başınadır, nagel başına değil. **(d)** her nagel (`prescriptions.nagel`
+  değer seti, U1–U5 links/rechts): Datum der letzten Erstbefundung (78100 **veya** 78110, hangisi
+  olduğu ile) **ve** Datum des letzten 78520 Behandlungsabschluss — 78520 olmadan seri açık mı
+  kapalı mı bilinemez. Übernommen edilen VO'nun **kendi** günleri Vorgeschichte'ye yazılmaz,
+  Tag olarak nachgetragen edilir (aksi hâlde kendi 78040/78100'ünü kilitler).
+- **Kural (nachgetragene Tage):** Her gün: Datum + HPNR (+ Hausbesuch/km varsa). Therapiezeit,
+  Fußbefund ve Verlaufsdokumentation DTA alanı **değildir** (EHE = Positionsnummer, Anzahl,
+  Einzelbetrag, Leistungsdatum, Zuzahlung, km); Verlaufsdokumentation Vertrag § 3 Abs. 12 gereği
+  Altsystem'de durur. Absetzung üreten içerik kuralları (78040+78030 aynı gün, 78030 UI1/UI2'de yok,
+  78020 yalnız Komplexbehandlung, UI'de Lokalisation, gün başına bir Behandlung) **gevşetilmez**.
+  Versicherten-Unterschrift **her gün için** kağıt VO arkasında, o gün atılmış olmalı; import
+  sırasında toplu/geriye dönük imza **yasak**. 78040 Empfangsnachweis-Prüflog'u mevcut yoldan
+  (Inhaber bestätigt) geçer, atlanmaz.
+- **Kural (Zuzahlung):** DTA'daki Zuzahlung (EHE + GZF) **Soll**'dür, tahsil durumundan bağımsız.
+  Altsystem'de kassierte tutar Praxura'nın tahsil edeceği **kalan**ı düşürür; 10 € Blattgebühr
+  ilk Behandlungstag'a bağlıdır ve Altsystem'de alındıysa ikinci kez alınmaz.
+- **Kural (Ablehnung):** Bkz. aşağıdaki liste — Gün < VO-Datum · Gün > heute · ilk Gün Beginnfrist
+  dışında · Einheit toplamı > verordnete Menge · aynı gün iki Behandlung · 78040 hakkı yokken
+  78040 · seri içinde ikinci Erstbefundung · aynı DG için daha sonraki VO zaten başlamış ·
+  günler arasında > 12 Kalenderwochen (⚠️ çelişki, aşağıda) · Abschluss + 9 Kalendermonate geçmiş.
+- **Kaynak:** Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 2 (Z.80-84, „vor der ersten Abgabe") + Teil 1
+  Nr. 3 (Z.123-128 Verlaufsdokumentation) + Nr. 3 Komplexbehandlung (Z.167-171, 20 Min.) ·
+  Anlage 1c i.d.F. 01.07.2025 Teil 1 Nr. 5 I.1 (Z.236-239) · Änderungsvereinbarung 16.06.2025
+  § 3b lit. a (Z.57-59) · Vertrag § 125 Abs. 1 Podologie i.d.F. bis 16.06.2025
+  (`20250617_Podologie_Vertrag-Lesefassung.txt`): § 3 Abs. 12 (Z.317-323), § 5 Abs. 1
+  (Z.511-521, *„unmittelbar nach Erbringung … Bestätigungen im Voraus oder Globalunterschriften …
+  unzulässig"*), § 6 Abs. 3-4 (Z.560-572), § 7 Abs. 5 (Z.618-620), § 7 Abs. 7 (Z.628-630),
+  § 8 Abs. 1-4 (Z.632-656), § 17 Abs. 2 (Z.979-988, *„Abrechnungen … ausschließlich unter diesem
+  IK"*), § 18 Abs. 5 (Z.1039-1044, 9 Kalendermonate) · Podologie Anlage 3 i.d.F. 16.06.2025 lit. o
+  (Z.630-656, Unterschrift *„vor Einreichung der Abrechnung"*) · Anlage 1 TP5 V21 §5.5.3.3 EHE
+  (Z.3120-3185)
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (iK 01.07.2025) · TA V21 ab 01.10.2025
+- **Kodda:** uygulanmamış. Değişecek yerler: `module/verordnung-import.js:212` (erbracht > 0 ret) ·
+  `:214-215` (Beginnfrist `heute`'ye göre — B/C'de **ilk erbrachter Tag**'a göre ölçülmeli) ·
+  `module/eingangsbefundung-regel.js:67` `darf78040` / `:333` `darf78100` / `:449`
+  `darfErstbefundungNagel` (Vorgeschichte'yi pseudo-Behandlung olarak almalı) ·
+  `module/podologie-abrechnung.js:1082` (Therapiezeit-Pflicht Altsystem-Tag'da düşer) ·
+  `api-backend/billing/utils/podo-empfangsnachweis.js` (değişmez).
+- **Kapsam:** Podologie DF/NF/QF/UI1/UI2, yalnız Fall B/C (Original praxis'te, hiç eingereicht
+  edilmemiş, **aynı IK**)
+
+---
+
+### Zuzahlung = nur auf ERBRACHTE Leistungen; Vorab-Kassieren der ganzen VO unzulässig
+- **Kural:** Gesetzliche Zuzahlung je Verordnung = 10 % der Kosten der **erbrachten** Positionen
+  (Preis nach Leistungsdatum) + 10,00 € Verordnungsblattgebühr (höchstens Brutto − Prozentanteil);
+  erhoben werden darf **nur dieser Betrag** — nicht die verordnete Menge. Zu viel Einbehaltenes
+  (Abbruch, Rechnungskürzung) ist dem Versicherten zu erstatten, Quittung ändern/austauschen.
+  Prozentanteil richtet sich nach dem Zeitpunkt der Leistungserbringung, die 10 € nach dem ersten
+  Behandlungstag. Schriftliche Aufforderung (→ § 43c / VKZ 03) erst „nach Ende der Behandlungsserie".
+- **Kaynak:** Vertrag § 125 Abs. 1 Podologie i. d. F. 30.11.2020 „einschließlich aller Änderungen bis
+  zum 16.06.2025" (`wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt:632-656`, § 8 Abs. 1, 2, 4 — Seite 13;
+  REGISTER W-11, abgelegt 21.10.2026, SHA-256 geprüft) · § 32 Abs. 2 i. V. m.
+  § 61 Satz 3 SGB V („10 vom Hundert der Kosten sowie 10 Euro je Verordnung") · Anlage 1 TP5 V21
+  §5.5.3.3 EHE „Betrag der Zuzahlung … je Abrechnungsposition" + GZF Berechnungsregel
+  (`Anlage_1_TP5_V21_20260115.txt:3168-3185`, `:3583-3600`)
+- **Geçerlilik:** Vertrag-Stand 16.06.2025 (in Kraft 01.07.2025) · Anlage 1 V21 ab 01.10.2025
+- **Kodda:** ✅ richtig: `module/rezeptinfo-geld.js:217-221` (Geldzeile, podo aus
+  `podologie_behandlungen`), Backend ZU-Beleg `api-backend/billing/api/abrechnung.routes.js:2718-2730`
+  (`ladeErbrachteSitzungen`), DTA `api-backend/billing/dta/builder.js:355-369`.
+  ✅ behoben f575c8d8 (21.10.2026): `dashboard.js` `bkRxZuzahlungWarn` kassiert für Podo nicht
+  mehr selbst (vorher `ermittleGeldstand` ohne `podo` → ganze VO; canli-test 20.10.2026: Panel
+  18,47 € vs. gebucht 31,66 €); offen kassiert nur die Geldzeile. Offen: Backend-Soll-Prüfung
+  in `POST /billing/belegliste` (type zuzahlung) und Rest-/Erstattungsweg für Podo
+  (`zuzahlung.routes.js:110` `rx.heilmittel_position`).
+- **Kapsam:** Podologie (Vertrag § 8); § 61 S. 3 SGB V + EHE/GZF-Regel gelten für alle Heilmittel —
+  Physio/Ergo/Logo-Verträge vor Übernahme je eigenen § prüfen
+
+---
+
 ## Doğrulama kuyruğu
 
 `gkv-302` ajanının ilk turlarında kapatılacak açık noktalar:
 
+- [ ] 🔴 **Podologie 12-Wochen-Unterbrechung — HeilM-RL § 16 Abs. 4 S. 5 vs. Vertrag § 7 Abs. 7.**
+      İki kaynak çelişiyor (21.10.2026). Karar Kemal'de; GKV-SV/Verband teyidi istenmeli.
 - [x] ~~Podologie Blankoverordnung 40 hafta — §125a sözleşmesi yürürlükte mi?~~ **KAPANDI 2026-08-05:**
       sözleşme yok, 40 hafta ileriye dönük hüküm. Konsey kararı → guard eklenecek, tablo yapılmayacak.
 - [ ] 🔴 **Ergotherapie Blanko desteklenmiyor** — sözleşme 01.04.2024'ten beri var, kod reddediyor.

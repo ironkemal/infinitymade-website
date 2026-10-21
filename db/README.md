@@ -6,8 +6,8 @@
 
 | Datei | Inhalt | Beantwortet |
 |---|---|---|
-| `SCHEMA.sql` | 94 Tabellen, alle Spalten, Constraints, Views | **was** |
-| `SCHEMA-RLS.sql` | 167 RLS-Policies, 93 eigene Funktionen, 88 Trigger, 331 Indizes | **wer darf** |
+| `SCHEMA.sql` | alle Tabellen, Spalten, Constraints, Views (Zahlen: Kopf der Datei) | **was** |
+| `SCHEMA-RLS.sql` | RLS-Policies, eigene Funktionen, Trigger, Indizes (Zahlen: Kopf der Datei) | **wer darf** |
 | `REGISTER.md` | warum jede Tabelle angelegt wurde, seit wann, ob noch gebraucht | **warum** |
 | `NUTZUNG.json` / `.md` | wer liest und schreibt (erzeugt: `node tools/tabellenkarte.mjs`) | **wer nutzt** |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel | |
@@ -15,16 +15,7 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Stand:** 2026-10-10 · letzte SaaS-Migration `20261010005316 0078_zuzahlungsbeleg_invoices` (Datei `0078`); vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
-(davor `20261009091146 praxis_rechtstexte_urls`, `20261009083226 profiles_anon_spaltenrechte`, `prescription_sessions_booking_unique`,
-`leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
-(davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
-davor `20260815233848_verordnungsnummer_belegnummer`)
-(davor `20260815085338_leads_patientennummer`, `20260814200147_leads_handy_getrennt`,
-`20260814101707_patient_consents`, `20260814101624_kiosk_pin_hardening`,
-`20260814083941_fussbefund_termin_legende`.
-Am 11.08. lief zusätzlich `sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` über den SQL-Editor —
-steht in keiner Migrationszeile, ist in der DB aber drin und im Dump enthalten)
+**Stand:** 2026-10-11 · letzte SaaS-Migration `20261011142627 0080_drop_verordnung_festschreibung` (Datei `0080`). Die Kette selbst: `api-backend/db/migrations/`; Warum je Tabelle: `REGISTER.md`. Vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).
 Das Ops-Dashboard liegt in einem **anderen** Projekt (`farkaejociddtgqkusvm`) — nicht verwechseln.
 
@@ -62,7 +53,7 @@ und Gesundheitsdaten haben in keinem Repo etwas verloren.
 Der Name täuscht. `leads` entstand als Akquise-Tabelle (daher `title`,
 `google_url`, `reviews_count`) und ist heute die **reale Patientenakte**.
 Daran hängen: `anamnese`, `prescriptions`, `invoices`, `messreihen`,
-`pat_fussbefund`, `verordnungen`, `fahrten`, `ausfallrechnungen`,
+`pat_fussbefund`, `fahrten`, `ausfallrechnungen`,
 `zuzahlung_befreiung`, `ueberweisungen`, `patient_notes`, `warteliste`.
 
 `patients` existiert parallel und wird **nur vom Termin-Anfrage-Flow** benutzt
@@ -71,16 +62,21 @@ Daran hängen: `anamnese`, `prescriptions`, `invoices`, `messreihen`,
 Beide Töpfe bestehen bewusst nebeneinander. **Nicht zusammenlegen** — das bricht
 laufende Abläufe.
 
-### 2. Zwei Verordnungstöpfe, nach Fachbereich getrennt
+### 2. Ein Verordnungstopf: `prescriptions`
+
+Seit 04.09.2026 liegen die Verordnungen **aller** Fachbereiche in `prescriptions`
+(`therapie_bereich` unterscheidet). Die frühere Podologie-Tabelle `verordnungen`
+wurde gedroppt. Behandlungen laufen weiter getrennt:
 
 | Fachbereich | Verordnung | Behandlung |
 |---|---|---|
 | Physio · Ergo · Logopädie | `prescriptions` | `prescription_sessions` |
-| **Podologie** | `verordnungen` | `podologie_behandlungen` |
+| **Podologie** | `prescriptions` (`therapie_bereich = 'podo'`) | `podologie_behandlungen` + `bookings.verordnung_id` |
 
-Auch hier: bewusst getrennt, nicht vereinheitlichen. Achtung beim Umschreiben von
-Code — `verordnungen.icd10` ist `text[]`, `prescriptions` hat dagegen zwei
-Einzelspalten (`icd10`, `icd10_2`).
+Die Übersetzung zwischen den beiden Wortschätzen (podologische Feldnamen ↔
+Spalten von `prescriptions`) macht `module/verordnung-topf.js`. Eine zweite
+Verordnungstabelle wird **nicht** mehr angelegt — Begründung im Eintrag
+`verordnungen` in `REGISTER.md`.
 
 ### 3. Drei Heilmittel-Tabellen
 
@@ -92,8 +88,8 @@ Einzelspalten (`icd10`, `icd10_2`).
 
 `katalog` mit K ist das Aktive. Ein Buchstabe Unterschied.
 
-Ebenso doppelt: `krankenkassen` (UI-Dropdown, 93 Kassen) vs. `kostentraeger`
-(§302-Seite, aktuell Mock-Daten bis der ITSG-Zugang steht).
+Ebenso doppelt: `krankenkassen` (UI-Dropdown) vs. `kostentraeger`
+(§302-Seite, echte Kostenträgerdatei, quartalsweise geladen; Ladestand und Reste: `REGISTER.md`, Eintrag `kostentraeger`).
 
 ### 4. Owner-Einstellungen gehören nach `profiles`, nicht nach `businesses`
 
@@ -182,7 +178,11 @@ nur bei gesetztem `booking_slug` und `auth.uid() IS NULL`.
 
 Bekannte Schwachstellen, dokumentiert statt stillschweigend gepatcht:
 - ~~`employee_services` und `time_offs`: jeder eingeloggte Nutzer darf schreiben, mandantenübergreifend.~~ **Geschlossen 02.10.2026** (`0054`, S-07): beide nur noch innerhalb des eigenen Mandanten; `time_offs` ist seitdem auch **nicht mehr öffentlich lesbar**. Details: `db/REGISTER.md`.
-- ⚠️ **Veraltet (Stand 02.10.2026 nicht neu geprüft):** "Fünf Tabellen ohne Team-Zugriff: `verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`, `warteliste`". `verordnungen` (04.09.) und `fußstatus` (02.10.) sind gedroppt; für `patient_notes`/`warteliste` gilt seit 17.09.2026 Teamzugriff laut `db/REGISTER.md` (`0022`). Massgeblich ist der jeweilige REGISTER-Eintrag. Ob angestellte Therapeuten das sehen sollen, ist eine offene **Produktfrage** — nicht nebenbei „korrigieren".
+- Team-Zugriff je Tabelle: massgeblich ist der jeweilige Eintrag in `db/REGISTER.md`
+  (`patient_notes`/`warteliste`: Teamzugriff seit 17.09.2026, Migration `0022`). Ob
+  angestellte Therapeuten eine Tabelle sehen sollen, ist eine offene **Produktfrage** —
+  nicht nebenbei „korrigieren".
+- Weitere bekannte Lücken: `guvenlik/REGISTER.md` (nicht öffentlich) und `db/REGISTER.md`.
 
 ---
 
@@ -251,3 +251,16 @@ Schemastand — diese Dateien hier sind es.
 Die obigen Live-Snapshots bleiben auf dem ausgewiesenen Stand; sie behaupten keine bereits angewandte Änderung. Vor SaaS-Backend-Release müssen neue Migrationen autorisiert angewandt, PostgREST aktualisiert und beide Strukturdokumente aus der tatsächlichen Datenbank neu erzeugt werden. Aktuelles `/health/ready` allein weist neue RPCs nicht nach. Keine manuelle Änderung historischer Migrationsdateien.
 
 `0081_warteliste_referenzen_abrechnungsrechte.sql` ergänzt die Mandantenprüfung verknüpfter Wartelistendaten und standortbezogene Abrechnungsrechte für Rechnungen und Zahlungszeilen. Änderungen an Gruppenrechten und individuellen Freigaben bleiben dem Inhaber vorbehalten; Stornos werden an die Originalbuchung derselben Rechnung gebunden. Ebenfalls nur lokal vorbereitet: Die SaaS-Snapshots oben bleiben unverändert. Aktive Mitarbeiter benötigen ein ausdrücklich bestätigtes Abrechnungsrecht am Rechnungsstandort; Rechnungen ohne Standortzuordnung bleiben dem Inhaber zugänglich. Anwendung auf SaaS und anschließender Schemaexport sind eigene Releaseschritte.
+Die ausführbare Kette liegt in `api-backend/db/migrations/` (`0000_baseline` bis
+heute; Regeln: `api-backend/db/migrations/README.md`). Reihenfolge bei jeder
+Schemaänderung: **erst Datei, dann Dump, dann live** — wer nur per MCP anwendet,
+erreicht die Kundenboxen nie; der Hook `tools/check-onprem.sh` bricht ab, wenn
+der Dump ohne neue Kettendatei aktualisiert wird.
+
+`supabase/migrations/` gibt es nicht mehr (archiviert 04.09.2026 nach
+`archive/supabase-migrations-vor-baseline/`). Für den Schemastand maßgeblich sind
+diese Dateien hier.
+
+## Migrationen 0081/0082 — SaaS-angewandt 17.10.2026
+
+`0081_ausfall_zahlung_faelligkeit.sql` (MCP-Version `20261017202834`) und `0082_request_approve_atomic.sql` (`20261017202847`) ergänzen Fälligkeitssnapshot/atomare Ausfallzahlung und atomare Anfragebestätigung. Beide rein expansiv (`:stable` läuft weiter). Live geprüft: Spalte `ausfallrechnungen.faellig_am` vorhanden, die RPCs `ausfall_status_buchen` und `approve_booking_request_atomic` nur für `service_role` ausführbar (anon/authenticated: nein). Schemaexports `SCHEMA.sql`/`SCHEMA-RLS.sql` am 17.10.2026 gezielt fortgeschrieben (Spalte, 3 Funktionen, ACLs, Zähler 1398 Spalten / 110 Funktionen); kein vollständiger Katalogexport.

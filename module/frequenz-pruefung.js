@@ -39,8 +39,11 @@
  * ⚠️ Reform S1.9 (29.09.2026), Korrektur einer falsch herum gelesenen Quelle:
  * Nr. 11 sagt „unter 12 Wochen bleibt die Verordnung gültig" — sie sagt NICHT
  * das Gegenteil, dass eine LÄNGERE Unterbrechung die podologische Verordnung
- * ungültig macht. Diese Datei tat bis dahin genau das. Für Podologie wird die
- * 12-Wochen-Unterbrechung deshalb gar nicht mehr geprüft; die Frequenz­warnung
+ * ungültig macht. Diese Datei tat bis dahin genau das. Für Podologie wurde die
+ * 12-Wochen-Unterbrechung deshalb nicht mehr geprüft.
+ * ⚠ 21.10.2026: Der Podologie-Vertrag (wissensbank/podologie/) § 7 Abs. 7 nennt die
+ * 12-Wochen-Grenze doch; gkv-302 21.10.2026: sie ist der Prüfmaßstab (HeilM-RL § 16
+ * Abs. 4 S. 4 verweist auf den Vertrag). Bei Terminen HINWEIS, nie Sperre (PE-008). Die Frequenz­warnung
  * (die ±2-Werktage-Schwelle) bleibt unverändert ein Warn-, kein Block-Hinweis.
  *
  * Physio/Ergo/Logo behalten die 12-Wochen-Schwelle vorerst unverändert — sie
@@ -265,13 +268,15 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
   const neu = new Date(neuesDatum);
   if (Number.isNaN(neu.getTime())) return { ok: true };
 
-  // UI1/UI2 (venöse/arterielle Ulcera): der Arzt darf hier frei von der
-  // Frequenz abweichen (Anlage 3 Podologie lit. i) — eine Warnung wäre falsch.
+  // UI1/UI2 (Unguis incarnatus, Nagelspange): der Arzt darf hier frei von der
+  // Frequenz abweichen (Anlage 3 Podologie lit. i) — eine Frequenzwarnung wäre falsch.
+  // Die 12-Wochen-Pause gilt aber auch hier (Vertrag § 7 Abs. 7 nennt Nagelspangen
+  // ausdrücklich; gkv-302 21.10.2026) — früher sprang die Prüfung hier ganz heraus.
   const dgWurzel = String(rx.diagnosegruppe || '').trim().toUpperCase();
-  if (dgWurzel === 'UI1' || dgWurzel === 'UI2') return { ok: true };
+  const freieFrequenz = dgWurzel === 'UI1' || dgWurzel === 'UI2';
 
   const istPodo = rx.therapie_bereich === 'podo';
-  const soll = sollAbstand(rx.frequenz);
+  const soll = freieFrequenz ? null : sollAbstand(rx.frequenz);
 
   let nachbarn; // [{start_time, nummer}]
   if (istPodo) {
@@ -322,7 +327,10 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     if (!treffer) continue;
     const kt = Math.abs(kalendertage(treffer.datum, neu));
     const wt = werktageZwischen(treffer.datum, neu);
-    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, !istPodo) });
+    // Podologie: 12-Wochen-Pause als HINWEIS — Prüfmaßstab ist Podologie-Vertrag § 7 Abs. 7
+    // (gkv-302 21.10.2026: kein Konflikt, HeilM-RL § 16 Abs. 4 S. 4 verweist auf den Vertrag).
+    // Bei der Terminvergabe nie gesperrt: der Termin kann auf eine neue VO laufen (PE-008).
+    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, true) });
   }
 
   const problem = seiten.find(s => s.urteil !== 'ok');
@@ -333,7 +341,7 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     titel: problem.urteil === 'unterbrechung'
       ? 'Behandlungspause über 12 Wochen'
       : 'Frequenz der Verordnung',
-    meldung: baueMeldung({ soll, seiten, problem, neu }),
+    meldung: baueMeldung({ soll, seiten, problem, neu, istPodo }),
     befund: { soll, seiten, urteil: problem.urteil },
   };
 }
@@ -377,7 +385,7 @@ function datumStr(d) {
   return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function baueMeldung({ soll, seiten, problem, neu }) {
+function baueMeldung({ soll, seiten, problem, neu, istPodo = false }) {
   const zeilen = [];
 
   // Bewusst ohne Spalten-Ausrichtung: der Dialog rendert in einer
@@ -400,7 +408,14 @@ function baueMeldung({ soll, seiten, problem, neu }) {
       + (soll.min === soll.max ? ` (etwa alle ${soll.min} Tage)` : ` (etwa ${soll.min}–${soll.max} Tage Abstand)`));
   }
 
-  if (problem.urteil === 'unterbrechung') {
+  if (problem.urteil === 'unterbrechung' && istPodo) {
+    // podoloji 21.10.2026 (PE-008): für Podologie ist der Vertrag die Quelle, und die
+    // Rückfrage „bei der Kasse nachfragen" schob eine Entscheidung auf die Praxis ab.
+    zeilen.push('');
+    zeilen.push(`Zwischen den Behandlungen liegen mehr als 12 Kalenderwochen.`);
+    zeilen.push(`Nach dem Podologie-Vertrag (§ 7 Abs. 7) ist die Verordnung damit ungültig —`);
+    zeilen.push(`für diesen Termin wird eine neue Verordnung benötigt.`);
+  } else if (problem.urteil === 'unterbrechung') {
     zeilen.push('');
     zeilen.push(`Zwischen den Terminen liegen mehr als 12 Wochen.`);
     zeilen.push(`Lange Behandlungsunterbrechung — bitte die Gültigkeit der Verordnung`);

@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "POV: Weihnachtsessen. Sie erklären der Familie die Heilmittel-Richtlinie.\n\nDie Familie hört höflich zu. Die Formalfehler auf der Verordnung prüft Praxura, bevor Sie behandeln. Dann bleibt der Abend für den Nachtisch.\n\nFrohe Weihnachten an alle Therapiepraxen. Mehr auf praxura.de\n\n#Heilmittel #Therapiepraxis #Therapeutenleben #Praxisalltag",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "POV: Weihnachtsessen", "titel": "Sie erklären die <em>Heilmittel-Richtlinie.</em>" },
+    { "typ": "aussage", "dauer": 2.2, "ton": "dunkel", "uebergang": "schnitt", "kicker": "Die Familie", "titel": "Höfliches <em>Nicken.</em>" },
+    { "typ": "tippen", "dauer": 2.6, "kicker": "Onkel Peter", "titel": "Und das macht dir wirklich Spaß?", "tempo": 22 },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Zum Glück", "titel": "Formfehler prüft die Software <em>vorher.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Frohe <em>Weihnachten.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

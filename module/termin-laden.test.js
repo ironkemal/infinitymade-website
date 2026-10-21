@@ -86,11 +86,10 @@ test('die alte Verordnungs-Spaltenliste am Termin kommt nicht zurueck', () => {
   for (const d of ['dashboard.js', 'module/termin-verordnung.js', 'module/termin-folge.js']) {
     const text = readFileSync(wurzel + d, 'utf8');
     assert.ok(!text.includes("'id,heilmittel,heilmittel_position,icd10,anzahl_einheiten"), `${d}: Spaltenliste von Hand — RX_FELDER benutzen`);
-    if (d === 'dashboard.js') {
-      assert.ok(text.includes('ladeAktiveVerordnungenFuerTermin(supabase, { leadId, verordnungId: wunschRx })'),
-        'Aktionspanel muss denselben Ladeweg wie die Terminmaske nutzen');
-    } else {
-      assert.ok(text.includes('${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)'), `${d}: RX_FELDER fehlt`);
-    }
+    // dashboard.js laedt seit 10.10.2026 (10. Runde) ueber ladeTerminVerordnungen().
+    const ok = d === 'dashboard.js'
+      ? text.includes('ladeTerminVerordnungen(supabase')
+      : text.includes('${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)');
+    assert.ok(ok, `${d}: RX_FELDER fehlt`);
   }
 });

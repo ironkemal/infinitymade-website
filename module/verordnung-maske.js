@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261006m';
+import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
@@ -79,7 +79,7 @@ export function setzeScanHerkunft(herkunft) { _scanHerkunft = herkunft || null; 
  * wieder selbst statt anzulegen.
  */
 let _patientNeu = false;
-export function setzePatientNeu(neu) { _patientNeu = !!neu; }
+export function setzePatientNeu(neu) { if (neu) _bruecke?.verwerfePatientenkopf?.(); _patientNeu = !!neu; }
 export function istPatientNeu() { return _patientNeu; }
 
 /** Woher der Inhalt stammt — `null` heisst: von Hand eingetippt. */
@@ -141,6 +141,7 @@ export function istEingebettet() {
  * „+ Neue Verordnung" drücken.
  */
 export function maskeHeimschicken() {
+  _bruecke?.verwerfePatientenkopf?.();
   const wrap = document.getElementById('rzMaskeWrap');
   const heim = document.getElementById('rzMaskeHeim');
   _bearbeitung = null;
@@ -185,6 +186,7 @@ export function maskeHeimschicken() {
 export async function maskeEinbetten({ host, rx }) {
   const wrap = document.getElementById('rzMaskeWrap');
   if (!wrap || !host || !rx?.id) return false;
+  _bruecke?.verwerfePatientenkopf?.();
   entferneBarcodeBestaetigung();
 
   _bearbeitung = {
@@ -199,6 +201,7 @@ export async function maskeEinbetten({ host, rx }) {
     anzahl: rx.anzahl_einheiten ?? null,
     riegel: schreibRiegel(rx),
   };
+  const lauf = _bearbeitung;
 
   host.appendChild(wrap);
   // Klick-Verdrahtung der Maske (Therapiebereich, Hausbesuch, Patientensuche,
@@ -234,9 +237,10 @@ export async function maskeEinbetten({ host, rx }) {
   // danach die Werte der Verordnung — die stehen auf dem Papier und haben
   // Vorrang vor dem, was in der Akte gepflegt ist.
   if (rx.patient_id && _bruecke?.fuellePatient) {
-    try { await _bruecke.fuellePatient(rx.patient_id); }
+    try { if (await _bruecke.fuellePatient(rx.patient_id) === false) return false; }
     catch (e) { console.warn('[verordnung-maske] Patientenkopf:', e?.message); }
   }
+  if (_bearbeitung !== lauf || wrap.parentElement !== host) return false;
   fuelleMuster13(rx, { alsVorlage: false });
   // Sperre der Umschaltung: Belegnummer (= Trigger 0020) oder festgeschriebene
   // Rechnung (sonst doppelt abgerechnet). Das Backend erzwingt dasselbe.
@@ -425,6 +429,7 @@ function erstePositionAusItems(items) {
  */
 export function fuelleMuster13(rx, opt = {}) {
   if (!rx) return;
+  _bruecke?.verwerfePatientenkopf?.();
   const alsVorlage = opt.alsVorlage !== false;
   const g = (id) => document.getElementById(id);
   // rzIcd/rzDg verdrahten, BEVOR Werte gesetzt werden — sonst existiert der
@@ -766,7 +771,9 @@ export function nutzlastAusMaske(v) {
  */
 /**
  * Schickt den Rumpf zum Server — gemeinsame Stelle fuer ANLEGEN
- * (`POST /rezept/confirm`) und AENDERN (`PATCH /rezept/:id`, Ops #289).
+ * (`POST /rezept/confirm`) und AENDERN (`PATCH /rezept/:id`, Ops #289) —
+ * und seit 20.10.2026 der Verordnungs-Import (module/verordnung-import.js),
+ * der `apiBasis` selbst mitgibt, weil er die Maske nicht öffnet.
  * Beide brauchen dieselbe Session-/Adress-Pruefung und denselben Fehlerpfad;
  * eine zweite Kopie hiesse, dass eine kuenftige Korrektur (z.B. Timeout,
  * anderer Fehlertext) nur in einer der beiden Routen ankommt.
@@ -775,10 +782,10 @@ export function nutzlastAusMaske(v) {
  * nicht „gespeichert" melden — sonst tippt die Praxis eine Verordnung ab,
  * die nirgends steht. (onprem O-44, Auflage 3.)
  */
-async function sendeAnServer(supabase, { methode, pfad, rumpf }) {
+export async function sendeAnServer(supabase, { methode, pfad, rumpf, apiBasis = null }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Nicht angemeldet');
-  const basis = _bruecke?.apiBasis;
+  const basis = apiBasis || _bruecke?.apiBasis;
   if (!basis) throw new Error('Keine API-Adresse angemeldet (setzeMaskeBruecke)');
 
   const antwort = await fetch(`${basis}${pfad}`, {

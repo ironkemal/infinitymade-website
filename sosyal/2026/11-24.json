@@ -1,0 +1,10 @@
+{
+  "art": "post",
+  "caption": "Was ist eigentlich ein ITSG-Zertifikat? Der digitale Ausweis Ihrer Praxis für die §302-Abrechnung: Er ist an Ihr Institutionskennzeichen gebunden, kommt vom ITSG TrustCenter für sonstige Leistungserbringer und gilt höchstens ein Jahr (GGT Anlage 16).\n\nPraxura bereitet die Abrechnungsdateien vor. Eingereicht wird mit Ihrem eigenen Zertifikat, ohne Provision auf den Umsatz. Mehr auf praxura.de\n\n#Heilmittel #GKV #Praxissoftware #Praxisinhaber",
+  "seiten": [
+    { "layout": "wissen", "rubrik": "Abrechnung · §302", "seite": "1 / 4", "titel": "Was ist eigentlich ein <em>ITSG-Zertifikat?</em>", "text": "Wer Heilmittel-Abrechnungen <b>selbst</b> an die Kassen schickt, braucht eines. Vier Karten, kurz erklärt." },
+    { "layout": "wissen", "rubrik": "Abrechnung · §302", "seite": "2 / 4", "titel": "Der digitale Ausweis <em>Ihrer Praxis.</em>", "text": "Das Zertifikat gehört zu Ihrem <b>Institutionskennzeichen (IK)</b>. Die Datenannahmestelle erkennt damit, wer die Datei geschickt hat.", "quelle": "Quelle: GGT Anlage 16 (SECON), § 4.4.5" },
+    { "layout": "wissen", "rubrik": "Abrechnung · §302", "seite": "3 / 4", "titel": "Es läuft <em>nicht ewig.</em>", "text": "Ein Teilnehmer-Zertifikat gilt <b>höchstens ein Jahr</b>. Danach braucht es einen Folgeantrag beim ITSG TrustCenter.", "quelle": "Quelle: GGT Anlage 16 (SECON), §§ 4.5, 5.5" },
+    { "layout": "haltung", "rubrik": "Praxura Lokal", "seite": "4 / 4", "titel": "Praxura bereitet vor. <em>Sie reichen ein.</em>", "text": "Mit Ihrem eigenen Zertifikat, ohne Provision auf den Umsatz. Mehr auf <b>praxura.de</b>." }
+  ]
+}

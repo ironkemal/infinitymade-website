@@ -37,3 +37,12 @@ test('fehlende oder ungültige Eingaben liefern null statt zu werfen', () => {
   assert.equal(slotSpanHinweis('2026-09-28T09:00:00', 'quatsch', 30), null);
   assert.equal(slotSpanHinweis('2026-09-28T09:00:00', '2026-09-28T10:00:00', 0), null);
 });
+
+test('rasterStunden: Standard 8–20, gedehnt bis zum spätesten/frühesten Termin', async () => {
+  const { rasterStunden } = await import('./kalender-raster.js');
+  const L = (h, m = 0) => new Date(2026, 9, 21, h, m).toISOString();
+  assert.deepEqual(rasterStunden([]), { von: 8, bis: 20 });
+  assert.deepEqual(rasterStunden([{ start_time: L(21), end_time: L(21, 45) }]), { von: 8, bis: 22 });
+  assert.deepEqual(rasterStunden([{ start_time: L(7, 30), end_time: L(8) }]), { von: 7, bis: 20 });
+  assert.deepEqual(rasterStunden([{ start_time: L(10), end_time: L(11) }]), { von: 8, bis: 20 });
+});

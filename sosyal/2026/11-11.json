@@ -1,0 +1,11 @@
+{
+  "art": "video",
+  "caption": "Vier Behandler. Drei Zettel. Null Überblick.\n\nTeamkalender und Serientermine in einer Praxissoftware, die auf Ihrem eigenen Rechner läuft. Für Physiotherapie-Praxen, die morgens nicht erst sortieren wollen.\n\nMehr auf praxura.de\n\n#Physiotherapie #Praxisalltag #Heilmittel #Therapiepraxis",
+  "szenen": [
+    { "typ": "tippen", "dauer": 2.8, "kicker": "Physio-Praxis, Dienstag 8:15", "titel": "Vier Behandler. Drei Zettel. Null Überblick." },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Die Frage des Tages", "titel": "Wer hat heute noch <em>Zeit?</em>" },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Serientermine", "titel": "Einmal anlegen. <em>Fertig.</em>" },
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Teamkalender", "titel": "Alle Behandler. <em>Ein</em> Blick." },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Weniger Zettel. <em>Mehr</em> Überblick.", "cta": "Mehr auf praxura.de" }
+  ]
+}

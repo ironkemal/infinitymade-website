@@ -1,6 +1,11 @@
 // Box oder SaaS? EIN Signal: SUPABASE_PUBLIC_URL ist nur in der Box gesetzt (onprem, O-16/O-145).
 export function istKutu() { return !!process.env.SUPABASE_PUBLIC_URL; }
 
+// Express-Middleware fuer Box-only-Endpunkte: im SaaS 404, als gaebe es die
+// Route nicht (auch mit gueltigem Token). Vorher je eine Kopie in
+// routes/status.js und routes/ueber.js (Kemal 11.10.2026: eine Stelle).
+export const nurKutu = (req, res, next) => (istKutu() ? next() : res.status(404).json({ error: 'Not found' }));
+
 // Plan, mit dem der Box-Inhaber geboren wird (KHS K-2, onprem O-147, 02.10.2026).
 // Vorher entstand er mit den Spaltendefaults starter/pending — das §302-Menue
 // blieb in der Box unsichtbar. Richtung: jedes Paket bekommt Abrechnung; Paket/

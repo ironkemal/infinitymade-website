@@ -20,7 +20,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261005a" />
+  <link rel="stylesheet" href="dashboard.css?v=20261021ze" />
+  <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -338,7 +339,6 @@
               <p class="panel-sub" data-i18n="kunden_sub">Leads & Kundeninformationen</p>
             </div>
             <div class="panel-actions">
-              <input type="file" id="csvFile" accept=".csv,.json" hidden />
               <button class="btn-ghost" id="patTableViewToggle" title="Tabellenansicht umschalten" style="padding:7px 10px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:16px;height:16px;vertical-align:-3px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
               </button>
@@ -1454,7 +1454,7 @@
             </div>
           </div>
 
-          <!-- Drei Ansichten statt vier Assistentenstufen (ABRECHNUNG_BILDSCHIRM_PLAN.md,
+          <!-- Drei Ansichten statt vier Assistentenstufen (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md,
                Phase 0.3 + 1). Der Umschalter sitzt in module/abrechnung-ansicht.js und
                findet die Bereiche ueber [data-ab-ansicht]; die Knoepfe ueber [data-ab-goto].
                Der Einstieg erscheint IMMER zuerst — er wird nicht uebersprungen, auch
@@ -4245,6 +4245,7 @@
                geaendert wird nur noch in der linken Navigation unter "Fussbefund".
                Fuellung: module/fussbefund-archiv.js -->
           <div class="pd-panel" id="pdPanelFussbefund">
+            <div id="pdVorgeschichteHost" style="padding:16px 20px 0;"></div>
             <div id="pdFussbefundArchiv" style="padding:16px 20px;"></div>
           </div>
           <div class="pd-panel" id="pdPanelRechnungen">
@@ -4832,7 +4833,7 @@
   <div id="bkActionModal" style="position:fixed;top:56px;right:0;bottom:0;width:440px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:400;overflow-y:auto;display:none;flex-direction:column;">
     <div class="modal-header" style="position:sticky;top:0;z-index:1;background:var(--bg-card-solid,#1f2937);flex-direction:column;align-items:stretch;gap:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="modal-title">Termin-Aktionen</span>
+        <span class="bk-kopf"><span class="modal-title" id="bkKopfTitel">Termin-Aktionen</span><span class="bk-kopf-meta" id="bkKopfMeta"></span></span>
         <button class="modal-close" data-modal="bkActionModal">✕</button>
       </div>
       <!-- Patient wählen — ganz oben, weil hier auch der Name steht.
@@ -4975,6 +4976,10 @@
           <div id="bkActionHbRoute" class="hb-info-route"></div>
         </div>
 
+        <!-- Fuss des Seitenbereichs: Status- und Handlungsknöpfe, unten angeheftet
+             (Kalender-Entwurf, Kemal 20.10.2026). Nur ein Rahmen um die
+             bestehenden Gruppen — ids und Verdrahtung unverändert. -->
+        <div class="bk-fuss" id="bkFuss">
         <!-- STATE: null → Fahrt Starten -->
         <div class="form-group" id="bkActionFahrtStartedGroup" hidden>
           <button class="btn-primary" id="bkActionFahrtStartBtn" style="width:100%;justify-content:center;background:#1c4d8f;">
@@ -5073,6 +5078,7 @@
             <button class="btn-ghost bk-akt-btn" id="bkActionFussbefundBtn" type="button" role="menuitem" hidden>🦶 Fußbefund</button>
           </div>
         </div>
+        </div><!-- /bkFuss -->
 
         <!-- Rezeptinfo und „Aktive Verordnung" stehen bewusst als Paar ganz
              unten, in dieser Reihenfolge. Vorher stand die Rezeptinfo weit
@@ -5141,7 +5147,7 @@
         <!-- ===== VERORDNUNG SESSIONS PANEL ===== -->
         <div id="bkRxSessionsPanel" hidden style="margin-top:14px;border-top:2px solid var(--border);padding-top:14px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
-            <span>Aktive Verordnung</span>
+            <span id="bkRxSessionsTitel">Aktive Verordnung</span>
             <span id="bkRxSessionsBadge" style="font-size:11px;background:var(--primary);color:#fff;border-radius:20px;padding:1px 8px;font-weight:600;"></span>
           </div>
           <!-- Leerzustand mit Grund. Dieser Block verschwand bis 18.09.2026 aus
@@ -5164,6 +5170,13 @@
                   style="width:100%;justify-content:center;font-size:12px;color:var(--text-main);margin-bottom:10px;">
             🗓 Offene Einheiten als Serie verteilen
           </button>
+          <!-- Geschlossene Verordnung (abgerechnet/storniert): an der Stelle der
+               Serie steht der Grund, warum nichts mehr planbar ist (podoloji,
+               PE-007 Nachtrag 11.10.2026). Vorher stand der Satz in der Liste
+               „Unvergebene", die der Umschalter bei 0 offenen nie zeigt.
+               Sichtbarkeit: module/podo-einheiten.js, Rücksetzen: termin-panel.js. -->
+          <div id="bkRxGeschlossenHinweis" hidden
+               style="font-size:12px;color:var(--text-muted);font-style:italic;padding:8px 10px;border:1px dashed var(--border);border-radius:8px;margin-bottom:10px;"></div>
           <!-- Umschalter statt zwei Spalten. Nebeneinander blieben je Spalte
                rund 190 px, und der Heilmittelname — das, was man vergibt —
                war fast immer abgeschnitten. Jetzt eine Liste über die volle
@@ -5835,7 +5848,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261021ops1"></script>
+  <script type="module" src="dashboard.js?v=20261021zf"></script>
 </body>
 
 </html>

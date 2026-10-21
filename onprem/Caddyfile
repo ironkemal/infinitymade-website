@@ -77,7 +77,7 @@
 
 	# Einbettbares Termin-Widget (widget/): genau EINE Seite darf in fremde Seiten — eigener
 	# Matcher statt Ueberschreiben, damit je Antwort genau ein Wert steht (siehe A-19 unten).
-	# guvenlik S-52 / onprem O-190: frame-ancestors https:, eigene enge CSP, kein Supabase.
+	# guvenlik S-52 / onprem O-211: frame-ancestors https:, eigene enge CSP, kein Supabase.
 	@widgetseite path /widget/booking-widget.html
 	@kein_widget not path /widget/booking-widget.html
 	header @widgetseite {

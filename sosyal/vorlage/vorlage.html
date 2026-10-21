@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- Praxura Social-Vorlage. Ein Post = ein JSON-Objekt (Tagesdatei sosyal/<jahr>/<MM-TT>.json, art "post"),
+     erzeuge.mjs setzt es als window.POST und fotografiert #post in 1080x1350.
+     Farben und Schriften 1:1 aus assets/system.css — dort ändern, hier nachziehen. -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../fonts/system-fonts.css">
+<style>
+  :root{
+    --bg:#F8F3E8; --bg-card:#FFFEFB; --bg-warm:#F1E9D6; --bg-deep:#E8DCC0;
+    --ink:#1A1611; --ink-soft:#4A4036; --ink-mute:#685E52;
+    --bronze:#6B5538; --emerald-deep:#1E3D2F; --highlight:#C9A876;
+    --line:rgba(26,22,17,.12);
+    --serif:'Fraunces','Times New Roman',serif;
+    --sans:'Plus Jakarta Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#ccc}
+  #post{width:1080px;height:1350px;position:relative;overflow:hidden;
+    background:var(--bg);color:var(--ink);font-family:var(--sans);
+    padding:96px 96px 0;display:flex;flex-direction:column}
+  #post::after{content:"";position:absolute;inset:36px;border:1.5px solid var(--line);pointer-events:none}
+
+  .kicker{font-family:var(--mono);font-size:24px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--bronze);display:flex;justify-content:space-between}
+  .rule{width:96px;height:4px;background:var(--highlight);margin:40px 0 56px}
+  h1{font-family:var(--serif);font-weight:400;font-size:104px;line-height:1.02;letter-spacing:-.03em}
+  h1 em{font-style:italic;color:var(--bronze);
+    background:linear-gradient(transparent 72%,rgba(201,168,118,.45) 72%)}
+  .body{font-size:36px;line-height:1.45;color:var(--ink-soft);margin-top:56px;max-width:840px}
+  .body b{color:var(--ink);font-weight:600}
+  .quelle{font-family:var(--mono);font-size:20px;color:var(--ink-mute);margin-top:32px;letter-spacing:.04em}
+  .main{flex:1;display:flex;flex-direction:column}
+
+  .foot{height:150px;display:flex;align-items:center;justify-content:space-between;
+    border-top:1.5px solid var(--line);margin:0 -60px;padding:0 60px}
+  .wissen .main{justify-content:center;padding-bottom:80px}
+  .brand{font-family:var(--serif);font-weight:500;font-size:44px;letter-spacing:-.02em}
+  .brand em{font-style:italic;color:var(--bronze)}
+  .url{font-family:var(--mono);font-size:22px;letter-spacing:.08em;color:var(--ink-mute)}
+
+  /* Haltung: dunkles Grün, Aussage im Mittelpunkt */
+  .haltung{background:var(--emerald-deep)!important;color:var(--bg)!important}
+  .haltung::after{border-color:rgba(248,243,232,.18)!important}
+  .haltung .kicker{color:var(--highlight)}
+  .haltung h1{font-size:112px}
+  .haltung h1 em{color:var(--highlight);background:none}
+  .haltung .body{color:rgba(248,243,232,.78)}
+  .haltung .body b{color:var(--bg)}
+  .haltung .main{justify-content:center}
+  .haltung .foot{border-color:rgba(248,243,232,.18)}
+  .haltung .brand em{color:var(--highlight)} .haltung .url{color:rgba(248,243,232,.6)}
+
+  /* Liste: nummerierte Punkte */
+  .liste{background:var(--bg-card)!important}
+  .liste h1{font-size:84px}
+  ol{list-style:none;margin-top:56px;counter-reset:n}
+  ol li{counter-increment:n;display:grid;grid-template-columns:96px 1fr;align-items:baseline;
+    padding:26px 0;border-bottom:1.5px solid var(--line);font-size:36px;line-height:1.35}
+  ol li::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:26px;color:var(--bronze)}
+  ol li small{display:block;font-size:26px;color:var(--ink-mute);margin-top:6px}
+
+  /* Mythos/Fakt: zwei Felder */
+  .mythos{background:var(--bg-warm)!important}
+  .mythos h1{font-size:84px}
+  .feld{margin-top:48px;padding:44px 48px;border-radius:6px}
+  .feld .lbl{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+  .feld p{font-size:36px;line-height:1.4}
+  .feld.m{background:rgba(26,22,17,.05);color:var(--ink-mute)} .feld.m p{text-decoration:line-through;text-decoration-color:rgba(156,58,58,.6);text-decoration-thickness:2px}
+  .feld.f{background:var(--emerald-deep);color:var(--bg)} .feld.f .lbl{color:var(--highlight)}
+</style>
+</head>
+<body>
+<div id="post"></div>
+<script>
+  const p = window.POST;
+  const el = document.getElementById('post');
+  el.className = p.layout;
+  const zaehler = p.seite ? `<span>${p.seite}</span>` : '';
+  let inhalt = '';
+  if (p.layout === 'liste') {
+    inhalt = `<h1>${p.titel}</h1><ol>${p.punkte.map(x => `<li><div>${x[0]}${x[1] ? `<small>${x[1]}</small>` : ''}</div></li>`).join('')}</ol>`;
+  } else if (p.layout === 'mythos') {
+    inhalt = `<h1>${p.titel}</h1>
+      <div class="feld m"><div class="lbl">Mythos</div><p>${p.mythos}</p></div>
+      <div class="feld f"><div class="lbl">Fakt</div><p>${p.fakt}</p></div>`;
+  } else {
+    inhalt = `<h1>${p.titel}</h1>${p.text ? `<div class="body">${p.text}</div>` : ''}`;
+  }
+  el.innerHTML = `
+    <div class="kicker"><span>${p.rubrik}</span>${zaehler}</div>
+    <div class="rule"></div>
+    <div class="main">${inhalt}${p.quelle ? `<div class="quelle">${p.quelle}</div>` : ''}</div>
+    <div class="foot"><div class="brand">Prax<em>ura</em></div><div class="url">praxura.de</div></div>`;
+  // Überlaufprüfung: Inhalt darf nicht in die Fußzeile oder rechts aus dem Rahmen laufen
+  window.pruefe = () => {
+    const fehler = [], main = el.querySelector('.main'), foot = el.querySelector('.foot').getBoundingClientRect();
+    const letztes = [...main.querySelectorAll('*')].reduce((m, n) => Math.max(m, n.getBoundingClientRect().bottom), 0);
+    if (letztes > foot.top - 20) fehler.push(`Inhalt läuft in die Fußzeile (${Math.round(letztes - foot.top + 20)} px zu viel)`);
+    el.querySelectorAll('.main *').forEach(n => {
+      const r = n.getBoundingClientRect();
+      if (r.width && r.right > 1080 - 90) fehler.push(`ragt rechts raus: "${n.textContent.trim().slice(0, 40)}"`);
+    });
+    return [...new Set(fehler)];
+  };
+</script>
+</body>
+</html>

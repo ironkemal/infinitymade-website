@@ -1,0 +1,43 @@
+{
+  "art": "video",
+  "caption": "Dieselbe Leistung. Drei Nummern. Die Hornhautabtragung hat im Podologie-Positionsnummernverzeichnis je nach Leistungserbringer eine eigene Nummer: 68001 Krankenhaus, 78001 Podologe, 88001 ambulante Vorsorgeleistungen im Kurort.\n\nNeues Jahr, kurzer Blick: Stimmen die ersten Ziffern bei Ihnen?\n\nMehr auf praxura.de\n\n#Podologie #Heilmittel #GKV #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "hook",
+      "dauer": 2.6,
+      "kicker": "Podolog:innen, aufgepasst",
+      "titel": "Dieselbe Leistung. <em>Drei</em> Nummern.",
+      "muster": "POSITIONSNUMMER",
+      "datum": "Hornhautabtragung",
+      "stempel": "78001",
+      "stempelGut": true,
+      "stempelBei": 0.55
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Podologie-Praxis",
+      "titel": "Ihre Nummer: <em>78001.</em>",
+      "quelle": "Positionsnummernverzeichnis Podologie"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.8,
+      "kicker": "Die beiden anderen",
+      "titel": "Klinik 68001. Kurort <em>88001.</em>"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "Neues Jahr",
+      "titel": "Prüfen Sie die <em>ersten zwei</em> Ziffern."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Podologie.</em>",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

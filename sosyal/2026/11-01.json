@@ -1,0 +1,34 @@
+{
+  "art": "video",
+  "caption": "Was alle denken: Selbst einreichen ist zu kompliziert. Was stimmt: Mit eigenem ITSG-Zertifikat reicht Ihre Praxis die §302-Dateien selbst ein. Praxura bereitet sie vor, ohne Provision auf Ihren Umsatz.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #GKV #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "vergleich",
+      "dauer": 4.4,
+      "titel": "Was alle <em>denken</em>",
+      "links": { "label": "Mythos", "text": "Selbst einreichen ist zu kompliziert." },
+      "rechts": { "label": "Fakt", "text": "Eigenes ITSG-Zertifikat. Praxis reicht selbst ein." },
+      "rechtsBei": 2
+    },
+    {
+      "typ": "aussage",
+      "dauer": 3,
+      "kicker": "Der Unterschied",
+      "titel": "Praxura <em>bereitet vor.</em> Sie reichen ein.",
+      "quelle": "Technische Anlage 1 zu § 302 SGB V"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "kicker": "Und die Provision?",
+      "titel": "Keine <em>Prozente</em> vom Umsatz."
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Ihre Abrechnung in <em>Ihrer</em> Hand.",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

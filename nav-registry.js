@@ -101,7 +101,7 @@ export const NAV_REGISTRY = {
     // Seit 09.09.2026 heisst dieser Bildschirm „Behandlungen" und traegt nur
     // noch Tagesbehandlung + Verordnungsliste. Der §302-Teil ist nach
     // `abrechnung` umgezogen — EIN Abrechnungsbildschirm fuer alle vier
-    // Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 0 Nr. 1).
+    // Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 0 Nr. 1).
     { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Behandlungen',         roles: ['owner'],             group: 'abrechnung' },
     // ⚠️ Mit diesem Eintrag gilt die Planschranke has302Access() (Professional+)
     // ab jetzt auch fuer die Podologie — eine Regel, kein Sonderweg

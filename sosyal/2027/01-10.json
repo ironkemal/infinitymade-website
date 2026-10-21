@@ -1,0 +1,12 @@
+{
+  "art": "video",
+  "caption": "Freitag, 16:40. Letzter Patient. Dokumentation? Schon fertig.\n\nBefund direkt in der Patientenakte, Verordnung geprüft, nächster Termin im Kalender. So fühlt sich ein Freitagnachmittag an, wenn nichts liegen bleibt.\n\nMehr auf praxura.de\n\n#Praxisalltag #Therapeutenleben #Heilmittel #Praxissoftware #Therapiepraxis",
+  "szenen": [
+    { "typ": "aussage", "dauer": 2.4, "kicker": "Freitag, 16:40", "titel": "Letzter <em>Patient.</em>" },
+    { "typ": "tippen", "dauer": 2.6, "kicker": "Früher", "titel": "Dokumentation? Nach Feierabend.", "tempo": 20 },
+    { "typ": "aussage", "dauer": 2.6, "kicker": "Heute", "titel": "Befund direkt in der <em>Akte.</em>" },
+    { "typ": "tippen", "dauer": 2.8, "kicker": "Gleich dazu", "titel": "Verordnung geprüft. Termin gebucht.", "tempo": 20 },
+    { "typ": "aussage", "dauer": 2.4, "ton": "dunkel", "uebergang": "schnitt", "kicker": "Freitag, 16:45", "titel": "<em>Feierabend.</em>" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Therapie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

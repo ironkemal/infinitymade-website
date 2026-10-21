@@ -135,9 +135,9 @@ export const REGEL_SCHWERE = Object.freeze({
   'S:01007': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.2 (EHE, NK M)', hinweis: 'Einzelbetrag <= 0' },
   'S:01008': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'hausregel',                            hinweis: 'Einzelbetrag auffällig hoch — Tippfehlerbremse, kein Verstoß' },
   'S:01009': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'hausregel (§ 61 SGB V, 10 %)',         hinweis: 'Zuzahlungssumme weicht von 10 % ab' },
-  'S:01010': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL (Behandlungsunterbrechung)',        hinweis: 'Unterbrechung > 14 Tage' },
+  'S:01010': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL § 16 Abs. 4; Podologie: Vertrag § 7 Abs. 7', hinweis: 'Unterbrechung > 14 Tage (Podologie: > 12 Kalenderwochen)' },
   'S:01011': { schwere: 'hart', kasse: 'zeile', quelle: '§ 125 SGB V Verträge (MT/MLD/KGG)',          hinweis: 'Therapeut ohne erforderliche Qualifikation' },
-  'S:01012': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL (Gültigkeit 84 Tage)',              hinweis: 'Verordnung abgelaufen' },
+  'S:01012': { schwere: 'hart', kasse: 'zeile', quelle: 'unbelegt (heilmittel-fristen.js:7); nicht Podologie', hinweis: 'Verordnung abgelaufen' },
   'S:01013': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL § 12 Abs. 8; Podologie Anlage 2 § 2 c (78610 bis 2× je Tag)', hinweis: 'Mehr als eine Behandlung (78010/78020) je Tag an derselben Verordnung' },
 
   // ── Tarif (SLLA.EHE, LEGS) ───────────────────────────────────────────────

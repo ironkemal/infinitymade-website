@@ -1,0 +1,10 @@
+{
+  "art": "video",
+  "caption": "Von unterwegs? Über Ihr eigenes VPN.\n\nPraxura läuft im Browser. Unterwegs erreichen Sie Ihre Praxis über das VPN Ihrer Praxis, zum Beispiel über die FRITZ!Box. Ihre Daten bleiben bei Ihnen.\n\nMehr auf praxura.de\n\n#Praxissoftware #Heilmittel #Praxisinhaber #Therapiepraxis",
+  "szenen": [
+    { "typ": "enthuellung", "dauer": 2.6, "ton": "dunkel", "kicker": "Von unterwegs?", "titel": "Über Ihr <em>eigenes</em> VPN." },
+    { "typ": "aussage", "dauer": 3, "kicker": "Praxura läuft im Browser", "titel": "Der Weg führt zu <em>Ihrer</em> Praxis." },
+    { "typ": "aussage", "dauer": 2.8, "kicker": "Zum Beispiel", "titel": "Ihre <em>FRITZ!Box.</em>" },
+    { "typ": "outro", "dauer": 2.8, "kicker": "Praxura Lokal", "titel": "Ihre Daten <em>bleiben</em> bei Ihnen.", "cta": "Mehr auf praxura.de" }
+  ]
+}

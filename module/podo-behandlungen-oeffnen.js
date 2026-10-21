@@ -177,6 +177,26 @@ export async function terminStartenPodo(booking, deps) {
     datum = heute;
   }
 
+  // Schon dokumentiert? Vorher öffnete „Termin starten" dieselbe Tagesdoku
+  // ohne Hinweis ein zweites Mal — und lud zur Doppelerfassung ein (canli-test
+  // 20.10.2026). Jetzt: sagen, dass es sie gibt; geöffnet wird trotzdem
+  // derselbe Tag (dort steht die vorhandene Behandlung zum Ansehen/Stornieren).
+  if (booking?.verordnung_id && deps.sb) {
+    const { data: schon } = await deps.sb.from('podologie_behandlungen').select('id')
+      .eq('owner_id', deps.ownerId).eq('verordnung_id', booking.verordnung_id)
+      .eq('behandlungsdatum', datum).is('storniert_am', null).limit(1);
+    if (schon?.length) {
+      const ok = await deps.showConfirmModal({
+        title: 'Heute schon dokumentiert',
+        message: 'Für diese Verordnung ist am ' + datum.split('-').reverse().join('.') + ' bereits eine Behandlung dokumentiert. '
+          + 'Die Tagesdokumentation öffnen, um sie anzusehen oder zu korrigieren?',
+        confirmText: 'Dokumentation öffnen',
+        cancelText: 'Abbrechen',
+      });
+      if (!ok) return;
+    }
+  }
+
   return oeffnePodoBehandlungen(
     booking?.lead_id || null,
     { vordId: booking?.verordnung_id || undefined, datum, mehrdeutigFragen: true,

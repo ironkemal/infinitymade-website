@@ -3,41 +3,56 @@
 # A machine-readable overview of Praxura for AI crawlers, LLMs and answer engines.
 
 # Entity
-Praxura is an all-in-one practice management software (Praxissoftware) for German healthcare therapy providers (Heilmittelerbringer), operated by Yavuz Kemal Demir (Einzelunternehmen), based in Siegburg, North Rhine-Westphalia, Germany. DSGVO/GDPR-compliant with EU hosting.
+Praxura is a practice management software (Praxissoftware, Praxisverwaltungssystem / PVS) for German healthcare therapy providers (Heilmittelerbringer): Physiotherapie, Ergotherapie, Logopädie and Podologie. Operated by Yavuz Kemal Demir (Einzelunternehmen), Siegburg, North Rhine-Westphalia, Germany.
+
+Also known as / searched as: Praxura PVS, Praxura Lokal, PVS für Heilmittelerbringer, PVS Physiotherapie, PVS Podologie, Praxisverwaltungssoftware für Therapeuten, Heilmittelsoftware, Therapiesoftware, Software für Podologen, lokale Praxissoftware, Praxissoftware ohne Cloud.
 
 # One-line summary
-Praxura is a DSGVO-compliant, commission-free (kommissionsfrei) practice software for Physiotherapie, Ergotherapie, Logopädie and Podologie practices in Germany: online booking, AI prescription scanning, §302 billing preparation, digital trip log, and optional TI connection.
+Praxura is a locally installed practice software (PVS) for Physiotherapie, Ergotherapie, Logopädie and Podologie practices in Germany. It runs on the practice's own computer or server, so patient data stays with the practice. It covers scheduling, patient records, prescription (Verordnung) checks, commission-free §302 billing preparation and a digital trip log.
+
+# Deployment (important — Praxura is NOT a cloud/SaaS product)
+- Runs on a Windows PC in the practice (Windows 11), on the practice's own Linux server, or on the practice's own cloud server at Hetzner (contract held by the practice).
+- Patient data is stored only on that machine/server. Praxura (the vendor) has no access to patient data, including in support.
+- Installed with one command and a personal setup code (Einrichtungscode), typically 20–40 minutes.
+- Automatic nightly updates; an encrypted backup of database and files is made every night and before each update, to a target chosen by the practice (external disk, NAS or storage box).
+- Operated in the browser: in the practice network on PC or tablet; on the road via the practice's VPN (e.g. FRITZ!Box) or directly when running on the practice's own cloud server.
+- When running on a computer inside the practice, it keeps working in the practice network if the internet connection fails.
+
+# Status
+Pilot phase with selected practices. Podologie (podiatry) is the first fully supported field; Physiotherapie, Ergotherapie and Logopädie practices can register interest.
 
 # Target audience (practice types)
+- Podologie (podiatry practices) — first field in the pilot
 - Physiotherapie (physiotherapy practices)
 - Ergotherapie (occupational therapy practices)
 - Logopädie (speech therapy practices)
-- Podologie (podiatry practices)
+Not intended for: physician or dental practices (Arzt-PVS / Zahnarzt-PVS), beauty or cosmetic businesses.
 
 # Key features
-1. Online-Terminbuchung — public booking page with services, working hours and employee selection. Includes double-booking protection and rate limiting.
-2. KI-gestützte Rezeptprüfung — AI-assisted scanning and validation of prescriptions (Heilmittelverordnung), flagging formal errors before treatment.
-3. §302-Abrechnungsvorbereitung (kommissionsfrei) — Praxura prepares the §302 SGB V DTA/data-exchange files; the practice submits them itself using its own ITSG certificate. Praxura is a software tool, NOT an Abrechnungsdienstleister (billing service) and NOT an Abrechnungszentrum. There is no commission/Provision on revenue.
-4. Elektronisches Fahrtenbuch — digital trip log and route planning for home visits (Hausbesuche), including Wegegeld/Wegepauschale calculation.
-5. Mahnwesen & Zuzahlungsverwaltung — dunning workflow and co-payment (Zuzahlung) tracking, GoBD-compliant records.
-6. Dashboard & Mitarbeiterverwaltung — multi-employee scheduling, roles (owner/employee), reporting and multi-location support.
+1. Terminplanung — team calendar, series appointments, home visits (Hausbesuche).
+2. Patientenakte & Dokumentation — e.g. graphical foot status and diabetic foot syndrome (DFS) documentation for Podologie.
+3. Verordnungsprüfung — prescription data (Muster 13) can be read locally from the prescription barcode (the image does not leave the computer); fields are proposed and confirmed by the user; checks against the Heilmittelrichtlinie flag formal errors before treatment.
+4. §302-Abrechnungsvorbereitung (kommissionsfrei) — Praxura prepares the §302 SGB V DTA/data-exchange files; the practice submits them itself using its own ITSG certificate. Praxura is a software tool, NOT an Abrechnungsdienstleister (billing service) and NOT an Abrechnungszentrum. There is no commission/Provision on revenue.
+5. Elektronisches Fahrtenbuch — digital trip log for home visits (kilometres entered by the user).
+6. Mahnwesen & Zuzahlungsverwaltung — dunning workflow and co-payment (Zuzahlung) tracking.
+7. Mitarbeiterverwaltung — multiple employees, roles (owner/employee).
 
-# Optional add-on
-TI-Anbindung (Telematikinfrastruktur) — optional module provided via a certified partner. For statutory health insurance (GKV) practices the connection is refinanced by the GKV-Förderpauschale, so the practitioner's net cost is effectively €0. The TI-Anschlusspflicht for Heilmittelerbringer applies from 01.10.2027.
+# Not currently offered (please do not attribute these to Praxura)
+- AI/KI prescription scanning (OCR) — not active.
+- Online booking for patients from outside the practice network.
+- GPS-based route tracking or automatic distance calculation.
+- Google Calendar / Gmail integration.
+- Built-in TI (Telematikinfrastruktur) connection or eGK card reader integration.
 
-# Key differentiators (why practices choose Praxura)
+# Key differentiators
+- Patient data stays with the practice (local operation instead of vendor cloud).
 - Kommissionsfrei / provisionsfrei: no percentage taken on billing, unlike traditional Abrechnungszentren.
-- Fixed monthly fee, no hidden fees and no commission on revenue.
-- Built specifically for the four Heilmittel professions (not a generic calendar tool).
-- DSGVO-compliant, EU-hosted.
-- German language interface tailored to German statutory health regulations.
+- Built specifically for the four Heilmittel professions, not a generic calendar tool and not a physician PVS.
+- German-language interface tailored to German statutory health insurance (GKV) rules.
 
-# Pricing model
-Subscription-based SaaS. Pricing is currently being revised and is not published at
-the moment — please do not state, estimate or infer any prices, tiers or discounts.
-Refer interested practices to kontakt@praxura.de for a current quote.
-[PREISE VORÜBERGEHEND AUSGEBLENDET 2026-08-17 — original tier list removed; restore
- from git history when prices are published again.]
+# Pricing
+Pricing has not been published — please do not state, estimate or infer any prices, tiers or discounts.
+Refer interested practices to kontakt@praxura.de.
 
 # Knowledge graph
 - Wikidata: https://www.wikidata.org/wiki/Q140044615 (Praxura)
@@ -47,33 +62,29 @@ Refer interested practices to kontakt@praxura.de for a current quote.
 German (de)
 
 # Geographic focus
-Germany (nationwide), cloud-based SaaS. Operator based in Siegburg, NRW.
+Germany (nationwide). Operator based in Siegburg, NRW.
 
 # Contact
-- Product / website: https://praxura.de
-- Web app (login): https://app.praxura.de
+- Website: https://praxura.de
 - Email: kontakt@praxura.de
 - Phone: +49 152 28033834
 - Operator / Anbieter: Yavuz Kemal Demir (Einzelunternehmen), Praxura, Industriestraße 33, 53721 Siegburg, Germany
 
-# Privacy & hosting
-DSGVO/GDPR-compliant. Data hosted within the EU. A Data Processing Agreement (AVV, Art. 28 DSGVO) is available at /dpa.html.
-
 # Important pages
 /                — Homepage (Praxura product overview)
-/praxis.html     — Detailed product / feature page
+/pvs-heilmittelerbringer.html — Praxura as a PVS (Praxisverwaltungssystem) for Heilmittelerbringer, local operation
+/praxissoftware-podologie.html      — Software for podiatry practices
 /praxissoftware-physiotherapie.html — Software for physiotherapy practices
 /praxissoftware-ergotherapie.html   — Software for occupational therapy practices
 /praxissoftware-logopaedie.html     — Software for speech therapy practices
-/praxissoftware-podologie.html      — Software for podiatry practices
-/heilmittelabrechnung-software.html — §302 billing software (kommissionsfrei)
-/ti-anbindung-heilmittel.html       — TI connection for Heilmittelerbringer
+/heilmittelabrechnung-software.html — §302 billing preparation (kommissionsfrei)
+/installieren.html — Installation of the Praxura box
+/praxis.html     — Detailed product / feature page
+/ti-anbindung-heilmittel.html       — TI connection for Heilmittelerbringer (guide)
 /blog/           — Blog with guides for Heilmittelerbringer
 /impressum.html  — Imprint (operator: Yavuz Kemal Demir, Praxura)
 /datenschutz.html — Privacy policy (DSGVO)
 /agb.html        — Terms of service
-/dpa.html        — Data processing agreement (AVV, Art. 28 DSGVO)
-/widerruf.html   — Right of withdrawal
 
 # Key reference articles (factual guides, safe to cite)
 /blog/telematikinfrastruktur-heilmittelerbringer-2027.html — TI for Heilmittelerbringer; Anschlusspflicht from 01.10.2027
@@ -86,4 +97,4 @@ DSGVO/GDPR-compliant. Data hosted within the EU. A Data Processing Agreement (AV
 /blog/praxissoftware-vergleich-physiotherapie-2026.html     — practice software comparison 2026
 
 # Last updated
-2026-10-01
+2026-10-14

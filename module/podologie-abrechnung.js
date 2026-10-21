@@ -6,7 +6,7 @@
  * ausgezogen: Auswahlliste, Sammellauf, Dateieinheit-Abzeichen, „trotzdem
  * übernehmen" und der Abrechnungszeitraum stehen jetzt in
  * `module/abrechnung-auswahl.js`, gemeinsam mit Physio/Ergo/Logo — EIN
- * §302-Bildschirm für alle vier Fachbereiche (`ABRECHNUNG_BILDSCHIRM_PLAN.md`,
+ * §302-Bildschirm für alle vier Fachbereiche (`archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md`,
  * Abschnitt 0 Nr. 1 und Phase 1). Umbenannt wurde die Datei NICHT: ein
  * Dateiname ist billiger falsch als eine Umbenennung, die jeden Import, jeden
  * Cache-Buster und jede Fundstelle in `funktionen/INDEX.json` mitzieht.
@@ -60,6 +60,7 @@
  * Aufruf.
  */
 
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { pauseLage, pauseMeldung } from './podo-unterbrechung.js?v=20261021y'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021y';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -83,7 +84,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
   from './eingangsbefundung-regel.js?v=20261003a';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, statusAusTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260930c';
 import { behandlungGesperrt } from './podo-arztangaben.js?v=20261010zc';
 import { istKasse } from './rezeptart.js?v=20261006a';
@@ -92,9 +93,10 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261006n';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261021f';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
+import { dokumentationsLage } from './podo-dokumentations-sperre.js?v=20261010a';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz, massnahmeAusLeitsymptomatik } from './podo-behandlungsposition-regel.js?v=20261002a';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
@@ -107,16 +109,16 @@ import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fr
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
-  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001r';
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261011c';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
 // Konsey S0 2a/2b (30.09.2026): Wagner-Rozet (salt-okunur) + Therapiezeit bei c) Komplexbehandlung.
 import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
 import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit, therapiezeitWert } from './podo-therapiezeit-regel.js?v=20261001z';
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
-import { mountFussbefund } from './fussbefund.js?v=20261003m16';
+import { mountFussbefund } from './fussbefund.js?v=20261021c';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261010zc';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261021w';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -226,6 +228,11 @@ function podDiagRoot(diagCode) {
  * @param {object} vord  Zeile im podologischen Wortschatz (verordnung-topf.js), braucht lead_id ODER patient_name
  * @returns {Promise<Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, nagel:?string}>>}
  */
+/** Kam die Verordnung aus dem Altsystem-Import (module/verordnung-import.js setzt den Hinweis)? */
+export function istAltsystemVerordnung(vord) {
+  return /Aus Altsystem übernommen/.test(String(vord?.hinweise || ''));
+}
+
 async function podPatientBehandlungen(vord) {
   if (!vord || !(vord.lead_id || vord.patient_name)) return [];
 
@@ -238,7 +245,8 @@ async function podPatientBehandlungen(vord) {
     .eq('therapie_bereich', 'podo');
   q = vord.lead_id ? q.eq('patient_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
   const { data: allVords } = await q;
-  if (!allVords?.length) return [];
+  const vorgeschichte = ladeVorgeschichte(ctx.supabase, { ownerId: ctx.getOwnerId(), leadId: vord.lead_id });
+  if (!allVords?.length) return vorgeschichte;
 
   // Eine Abfrage für alle Sperren — hpnr_codes wird von den Regeln
   // ausgewertet, nicht per `.contains()` gefiltert, sonst braeuchte jede
@@ -251,7 +259,9 @@ async function podPatientBehandlungen(vord) {
     .order('behandlungsdatum', { ascending: true });
 
   const nagelJeVord = new Map(allVords.map(v => [v.id, v.nagel || null]));
-  return (behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null }));
+  // Vorgeschichte aus dem Altsystem (Migration 0086) als Pseudo-Behandlungen — nur Lesen,
+  // keine Zeilen in podologie_behandlungen (module/podo-vorgeschichte.js).
+  return [...(behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null })), ...(await vorgeschichte)];
 }
 
 /**
@@ -715,8 +725,19 @@ async function loadPodologieBilling() {
   const { behFaturali, behBekliyor } = podAbrechnetZaehler(dokumentiert, cutoffCreatedAt);
   const abgerechnetHinweisHtml = istAbgerechnet ? `
   <div style="font-size:12px;color:var(--text-muted);background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;">
-    Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen. Neue Behandlungen können weiterhin dokumentiert werden.
+    Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen.
   </div>` : '';
+
+  // Darf hier noch dokumentiert werden? (gkv-302 + podoloji 10.10.2026, Regel in
+  // podo-dokumentations-sperre.js). Sperre → Hinweis statt Formular; Warnung →
+  // eine Bestätigung im Formular. Verbindlich ist die Prüfung im Speichern-Handler.
+  const dokuLage = selectedVord ? dokumentationsLage(selectedVord, dokumentiert, behDatumStr) : { stufe: 'frei' };
+  const dokuLageHtml = dokuLage.stufe === 'frei' ? '' : `
+  <div id="podDokuLage" data-stufe="${dokuLage.stufe}" style="font-size:12px;color:var(--warning-text,var(--text-main));background:var(--warning-dim,var(--bg-card-solid));border:1px solid ${dokuLage.stufe === 'sperre' ? 'var(--border)' : 'var(--warning,var(--border))'};border-radius:6px;padding:8px 10px;margin-bottom:12px;">
+    <div style="font-weight:600;margin-bottom:2px;">${ctx.escapeHtml(dokuLage.titel)}</div>
+    <div style="color:var(--text-muted);">${ctx.escapeHtml(dokuLage.text)}</div>
+    ${dokuLage.stufe === 'warnung' ? `<label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer;color:var(--text-main);"><input type="checkbox" id="podDokuTrotzdem"> Trotzdem dokumentieren</label>` : ''}
+  </div>`;
 
   const bereitsDokumentiertHtml = `
         <div style="border-top:1px solid var(--border);padding-top:12px;">
@@ -777,11 +798,22 @@ async function loadPodologieBilling() {
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
+  } else if (dokuLage.stufe === 'sperre') {
+    // Kein Formular — aber die Liste bleibt: Stornieren und Empfangsnachweise
+    // vorhandener Behandlungen müssen weiter gehen.
+    behandlungFormHtml = `
+    <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
+      ${abgerechnetHinweisHtml}
+      ${dokuLageHtml}
+      ${bereitsDokumentiertHtml}
+    </div>`;
   } else {
     behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} <span id="podWagnerRozet">${wagnerHtml}</span>${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
       ${abgerechnetHinweisHtml}
+      ${dokuLageHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
       ${diabetesNotiz ? `<div id="podDiabetesKonfliktNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(diabetesNotiz)}</div>` : ''}
@@ -860,6 +892,11 @@ async function loadPodologieBilling() {
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_notizen')}</label>
           <textarea id="podBehNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
         </div>
+        <div id="podVgWrap"></div>
+        ${istAltsystemVerordnung(selectedVord) ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer;color:var(--text-main);">
+          <input type="checkbox" id="podAltsystem" style="margin-top:2px;">
+          <span><b>Aus Altsystem übernommen</b> — diese Behandlung wurde im bisherigen Programm erbracht; die Unterschrift des Patienten für diesen Tag steht auf der Rückseite der Verordnung.</span>
+        </label>` : ''}
         <div id="podBehError" style="color:#ef4444;font-size:13px;display:none;"></div>
         <button id="podSaveBehBtn" class="btn-primary" style="width:fit-content;">${ctx.t('pod_save_behandlung')}</button>
 
@@ -985,6 +1022,10 @@ async function loadPodologieBilling() {
     });
   });
 
+  // Vorgeschichte aus dem Altsystem (übernommene VO oder Patient) — module/podo-vorgeschichte-form.js.
+  { const vgVord = findVord(_podState.selectedVordId);
+    montiereVorgeschichte({ sb: ctx.supabase, ownerId: ctx.getOwnerId(), leadId: vgVord?.lead_id, nagel: vgVord?.nagel, immer: istAltsystemVerordnung(vgVord), wrap: document.getElementById('podVgWrap') }).catch(() => {}); }
+
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
     const checks  = [...document.querySelectorAll('.pod-hpnr-cb:checked')].map(cb => cb.value);
@@ -993,6 +1034,10 @@ async function loadPodologieBilling() {
     const lokalFrei = (document.getElementById('podLokalisation')?.value || '').trim();
     const notiz   = document.getElementById('podBehNotizen').value.trim();
     const errEl   = document.getElementById('podBehError');
+    // Nachtrag eines im Altsystem erbrachten Tages (VO-Import Schritt 2, gkv-302 21.10.2026):
+    // derselbe Speicherweg, aber ohne Therapiezeit-Pflicht, ohne Anamnese-Rückfrage, ohne
+    // Fahrt/Folgetermin; herkunft='altsystem', employee_id NULL (nicht hier behandelt).
+    const altsystem = !!document.getElementById('podAltsystem')?.checked;
 
     // ICD-Regeln sicherstellen, BEVOR geprüft wird: _icdMatchesDgRule()
     // ist bei fehlenden Regeln absichtlich nachsichtig (nur Hinweis-Text), für
@@ -1020,7 +1065,18 @@ async function loadPodologieBilling() {
     const heuteStr = alsISODatum(new Date());
     let err = '';
     // Reform S3.7: ohne Arzt-Nr. oder Unterschrift/Stempel darf keine Behandlung beginnen (kein Override).
+    // Frisch gelesen, nicht aus der Anzeige: die Verordnung kann seit dem Rendern
+    // eingereicht oder storniert worden sein (gkv-302 10.10.2026).
+    const frischRx = vord ? (await ctx.supabase.from(TOPF).select('abrechnung_status')
+      .eq('id', _podState.selectedVordId).maybeSingle()).data : null;
+    const dokuJetzt = vord && datum
+      ? dokumentationsLage({ ...vord, status: frischRx ? statusAusTopf(frischRx.abrechnung_status) : vord.status },
+          await podBehandlungenDerVerordnung(_podState.selectedVordId), datum)
+      : { stufe: 'frei' };
     if (behandlungGesperrt(vord).gesperrt) err = behandlungGesperrt(vord).text;
+    else if (dokuJetzt.stufe === 'sperre') err = `${dokuJetzt.titel}. ${dokuJetzt.text}`;
+    else if (dokuJetzt.stufe === 'warnung' && !document.getElementById('podDokuTrotzdem')?.checked)
+      err = `${dokuJetzt.titel}: bitte „Trotzdem dokumentieren“ ankreuzen.`;
     else if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
     // Ohne Kasse und ohne Diagnosegruppe gibt es keine Positionsnummern: die Behandlung wird ohne Code
@@ -1045,11 +1101,16 @@ async function loadPodologieBilling() {
           + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}“ — bitte 78010 zzgl. 78030 verwenden.`;
     else if (isUIx && !lokal) err = ctx.t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
     // Konsey S0 2b: bei c) Komplexbehandlung ist die Therapiezeit Pflicht, die Position folgt daraus (78010 ≤ 20 < 78020).
-    else if (therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))
+    else if (!altsystem && therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))
       err = therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value });
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
+
+    // 12-Wochen-Pause (Podologie-Vertrag § 7 Abs. 7, gkv-302 21.10.2026): nach mehr als
+    // 84 Tagen seit der letzten Behandlung gehört der Tag auf eine neue VO — module/podo-unterbrechung.js.
+    { const pause = pauseLage(await podBehandlungenDerVerordnung(_podState.selectedVordId), datum);
+      if (pause.ungueltig) { errEl.textContent = pauseMeldung(pause); errEl.style.display = 'block'; return; } }
 
     // 78040 gehört einmalig VOR die erste podologische Leistung des Patienten —
     // begründet in podEingangsbefundungLage(). Zwei getrennte Sperren, damit die
@@ -1154,7 +1215,7 @@ async function loadPodologieBilling() {
     // Eingangsbefundung ohne Anamnese (gkv-302, 30.09.2026): Rückfrage, KEINE Sperre —
     // sie darf auch auf Papier erhoben sein. Frisch gelesen (kann seit dem Rendern
     // nachgetragen sein); nur bei 78040, sonst keine Abfrage. „Zurück" = nichts gespeichert.
-    if (checks.includes(POD_EINGANGSBEFUNDUNG) && vord?.lead_id) {
+    if (!altsystem && checks.includes(POD_EINGANGSBEFUNDUNG) && vord?.lead_id) {
       const hat = await hatAnamnese(ctx.supabase, vord.lead_id);
       if (frageAnamnese78040({ checks, hatAnamnese: hat })) {
         const erhoben = await ctx.showConfirmModal({ ...ANAMNESE_78040_FRAGE });
@@ -1171,7 +1232,8 @@ async function loadPodologieBilling() {
       lokalisation: lokal || null,
       notizen: notiz || null,
       therapiezeit_min: therapiezeitFuerSpeichern(podVordMassnahme(vord), document.getElementById('podTherapiezeit')?.value),   // Konsey S0 2b; NULL außerhalb c)
-      employee_id: ctx.getSessionUserId?.() || null,   // Ops #252 — wer hat behandelt
+      employee_id: altsystem ? null : (ctx.getSessionUserId?.() || null),   // Ops #252 — wer hat behandelt
+      ...(altsystem ? { herkunft: 'altsystem' } : {}),   // Migration 0086 — nur gesetzt, wenn angekreuzt
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
 
@@ -1218,10 +1280,13 @@ async function loadPodologieBilling() {
 
     const bookingIdVorLaden = _podState.fahrtBookingId;
     await loadPodologieBilling();
+    if (altsystem) return;   // Nachtrag: keine Fahrt, kein Folgetermin
     const fahrtOffen = await zeigeFahrtHinweis();
     // Folgetermin-Frage (Konsey S0, 1b). Hausbesuch: ERST die Fahrt beenden, dann fragen —
     // die Frage wartet dann auf `onFertig` in fahrtBeendenKlick.
-    if (!frageFolgetermin({ alleVerbraucht })) return;
+    // Frisch gelesener Status von oben; ohne ihn der Stand der Anzeige (podologischer Wortschatz).
+    const abrStatus = frischRx ? frischRx.abrechnung_status : (vord?.status && vord.status !== 'aktiv' ? vord.status : null);
+    if (!frageFolgetermin({ alleVerbraucht, abrechnungStatus: abrStatus })) return;
     if (fahrtOffen) _podState.folgeOffen = { vord, datum, bookingId: bookingIdVorLaden };
     else await fragFolgetermin({ vord, datum, bookingId: bookingIdVorLaden });
   });

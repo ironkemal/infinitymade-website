@@ -71,6 +71,7 @@ __pycache__/
 onprem/volumes/db/data/
 onprem/volumes/storage/
 onprem/volumes/ip/
+onprem/volumes/status/
 
 # On-Prem Kundenbox: die erzeugte .env traegt Geheimnisse (G2) und bleibt
 # draussen. Die VORLAGE dagegen muss ins Repository — sonst kann niemand eine
@@ -121,3 +122,7 @@ wissensbank/gemeinsam/unfallversicherung-dguv/*.txt
 # Lokale Podologie-Vertragsquellen; keine Veröffentlichung der Suchableitungen.
 wissensbank/podologie/20231030_Podologie_Aenderungsvereinbarung.txt
 wissensbank/podologie/20250617_vertrag_125_podologie_vertrag_lesefassung.txt
+sosyal/ausgabe/
+sosyal/musik/*.wav
+sosyal/yayinci/.daten/
+sosyal/yayinci/.env

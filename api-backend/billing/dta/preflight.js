@@ -573,7 +573,12 @@ export function preflight(input) {
     if (!Array.isArray(p.sessions) || p.sessions.length === 0) {
       E(errors, 'S:01001', `${at}.sessions`, 'Mindestens eine Leistung erforderlich');
     } else {
-      // 14-day legal break (Behandlungsunterbrechung) check
+      // Behandlungsunterbrechung. Podologie (Abrechnungscode 71/72): keine 14-Tage-Grenze
+      // (HeilM-RL § 16 Abs. 4 S. 5), sondern 12 Kalenderwochen nach der letzten Behandlung
+      // (Podologie-Vertrag § 7 Abs. 7, Stand 16.06.2025) — gkv-302 21.10.2026. Vorher wurde
+      // eine normale Podo-VO mit 4–6 Wochen Abstand hier hart abgewiesen.
+      const istPodo = ['71', '72'].includes(String(p.tarif?.abrechnungscode || ''));
+      const maxPause = istPodo ? 84 : 14;
       if (p.sessions.length > 1) {
         const sorted = [...p.sessions].sort((a, b) => {
           const da = parseDate(a.datumLeistung);
@@ -586,8 +591,10 @@ export function preflight(input) {
           if (prevD && currD) {
             const diffTime = currD.getTime() - prevD.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays > 14) {
-              E(errors, 'S:01010', `${at}.sessions`, `Unzulässige Behandlungsunterbrechung von ${diffDays} Tagen zwischen den Sitzungen vom ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} (maximal 14 Tage erlaubt)`);
+            if (diffDays > maxPause) {
+              E(errors, 'S:01010', `${at}.sessions`, istPodo
+                ? `Behandlungspause von ${diffDays} Tagen zwischen ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} — nach mehr als 12 Kalenderwochen ist die Verordnung ungültig (Podologie-Vertrag § 7 Abs. 7). Spätere Behandlungen gehören auf eine neue Verordnung.`
+                : `Unzulässige Behandlungsunterbrechung von ${diffDays} Tagen zwischen den Sitzungen vom ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} (maximal 14 Tage erlaubt)`);
             }
           }
         }
@@ -619,8 +626,9 @@ export function preflight(input) {
           // Leistung darf nicht vor Ausstellung liegen
           if (ausstellung && sDate < ausstellung)
             E(errors, 'S:01004', `${sat}.datumLeistung`, 'Leistungsdatum liegt vor Ausstellungsdatum');
-          // Verordnung ist max. 12 Wochen (84 Tage) gültig
-          if (ausstellung) {
+          // Verordnung ist max. 12 Wochen (84 Tage) gültig. Quelle unbelegt (heilmittel-fristen.js:7);
+          // für Podologie falsch — dort zählt die Pause, nicht das Ausstellungsdatum (gkv-302 21.10.2026).
+          if (ausstellung && !istPodo) {
             const diffDays = Math.floor((sDate - ausstellung) / (1000 * 60 * 60 * 24));
             if (diffDays > 84)
               E(errors, 'S:01012', `${sat}.datumLeistung`, `Leistungsdatum liegt ${diffDays} Tage nach Ausstellung — Verordnung ist nach 84 Tagen abgelaufen`);

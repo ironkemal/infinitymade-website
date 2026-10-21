@@ -74,12 +74,14 @@ Detay: `ONPREM_MIGRATION_PLAYBOOK.md`
 
 | Konu | Oturur |
 |---|---|
-| **Daimî üyeler** (konu ne olursa olsun) | `muhalif`, `deger-mi`, `fonksiyon-ustasi` |
+| **Daimî üyeler** (konu ne olursa olsun) | `muhalif`, `deger-mi`, `fonksiyon-ustasi`, `guvenlik` |
 | Hasta verisi, dış servis, kamuya giden metin, çerez/izleme, sözleşme/fiyat | `legal-de` |
 | Para, §302, Abrechnung, pozisyon numarası, Rezept doğrulama, katalog | `gkv-302` |
 | Podoloji ekranı/akışı/formu | `podoloji` |
 | Yeni ekran/düzen, tablo, çok sütunlu görünüm, form — telefonda da kullanılacaksa | `mobil-ui` |
 | Dış servis çağrısı, şema değişikliği, yeni env var, zamanlanmış iş, koda gömülen sabit adres, plan/yetki kontrolü | `onprem` |
+| Yeni tablo/kolon, veri modeli, bir tablonun silinmesi/birleştirilmesi | `db-ustasi` (olgu getirir: niye açıldı, kim yazıyor) |
+| Ticari/stratejik yön: fiyat, kanal, ortaklık, yol haritası önceliği | `mentor` |
 | Karar dış kaynaklı resmî veriye dayanıyor (fiyat, katalog, kod listesi, IK, ICD) · yeni belge indirme · sürüm geçişi zamanlaması | `wissensbank` |
 | (ileride) Physio / Logo / Ergo alanı | ilgili alan ajanı |
 | Katman 1 (`services`, `profiles`, çalışma saatleri) | **hepsi** |
@@ -159,6 +161,8 @@ Sentezi **ana bağlam yapar** (yeni bir ajan açma — gereksiz katman, gereksiz
 | `legal-de` | 🔒 **SERT VETO** — hukuki risk pazarlık konusu değil. Aşılamaz; ancak alternatif yolla çözülür. |
 | `gkv-302` | 🔒 **SERT VETO** — para gelmiyorsa özellik yok. Aşılamaz. |
 | `onprem` | 🔒 **SERT VETO — yalnız dört korkulukta:** G1 (hasta verisi bize akmaz) · G2 (sır image'a gömülmez) · G3 (n8n pakete girmez) · G8 (buluta yeni zincir yok). Dışında ⚠️ güçlü sinyal, aşılabilir. |
+| `guvenlik` | 🔒 **SERT VETO — yalnız dört konuda:** sırrı yayına çıkaran · mandant sınırını gevşeten · var olan güvenlik kontrolünü kaldıran (GoBD kilidi, `patient_consents` RESTRICT, rate limit, PHI şifrelemesi) · PHI'yi yeni yere taşıyan karar. Dışında ⚠️ güçlü sinyal (`guvenlik.md`). |
+| `db-ustasi`, `mentor` | ⚠️ güçlü sinyal — vetosu yok |
 | `wissensbank` | ⚠️ güçlü sinyal — vetosu yok. Ama "bu veri hangi belgeden, hangi sürüm, ne zaman düşüyor" cevapsızsa karar **eksik bilgiyle** alınıyor demektir |
 | alan ajanı (`podoloji` vb.) | ⚠️ güçlü sinyal — kullanıcı bilinçli olarak aşabilir |
 | `muhalif`, `deger-mi` | ⚠️ güçlü sinyal — aşılabilir |
@@ -168,8 +172,7 @@ Chairman **çoğunluğa karşı karar verebilir**, ama gerekçesini yazmak zorun
 istisnadır: aşılamaz, etrafından dolaşılır.
 
 **Kapsam kayması freni:** Konsey **sorulan soruyu** cevaplar. Üyelerin ürettiği ekstra iyi
-fikirler karara karışmaz — ayrı bir "Backlog" satırına düşer. `TODO.md` §1 (Beta-Roadmap)'nin
-tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmektir; konsey bunu **artırmamalıdır.**
+fikirler karara karışmaz — ayrı bir "Backlog" satırına düşer. açık işler listesinin (Ops-Dashboard; eski `TODO.md` §1 planı 04.09.2026'da kapandı) tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmektir; konsey bunu **artırmamalıdır.**
 
 ### Çıktı
 
@@ -200,7 +203,7 @@ Tarih: <YYYY-MM-DD> · Oturan üyeler: <liste>
 - [ ] <somut adım> — karmaşıklık: K<0-4>
 
 > **K = karmaşıklık sınıfı** (`builder`'ın modeli seçmesi için: K0 önemsiz … K4 kritik).
-> `TODO.md` §1 (Beta-Roadmap)'deki **T1–T6 hafta numaralarıyla karıştırma** — T hafta, K zorluk.
+> `TODO.md` §1'deki (kapanmış plan) **T1–T6 hafta numaralarıyla karıştırma** — T hafta, K zorluk.
 
 ## Backlog (karara dahil DEĞİL)
 <Konseyden çıkan ama sorulan soruya ait olmayan fikirler>

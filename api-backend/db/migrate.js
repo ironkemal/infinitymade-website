@@ -171,6 +171,8 @@ REVOKE ALL ON public.praxura_migrations FROM anon, authenticated;
  * @param {string}   [opt.appVersion]   Image-Version, kommt ins Buch
  * @param {function} [opt.log]
  */
+const VERBINDUNG_TIMEOUT_MS = 5000;
+
 export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log = console.log }) {
   if (!databaseUrl) {
     log('[migrate] DATABASE_URL nicht gesetzt — Migrationen werden übersprungen.');
@@ -190,7 +192,10 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
   // pg wird absichtlich erst hier geladen: ist DATABASE_URL nicht gesetzt, muss das
   // Paket nicht einmal vorhanden sein. Hält den SaaS-Pfad unverändert.
   const { default: pg } = await import('pg');
-  const client = new pg.Client({ connectionString: databaseUrl });
+  // connectionTimeoutMillis (O-194, onprem 11.10.2026): ohne sie wartet ein
+  // Versuch gegen eine DB, die Pakete verschluckt (O-190), auf das TCP-Timeout
+  // des Kerns (~2 Min) — mal sieben Versuche kaeme app.listen erst nach ~15 Min.
+  const client = new pg.Client({ connectionString: databaseUrl, connectionTimeoutMillis: VERBINDUNG_TIMEOUT_MS });
 
   const angewandt = [];
   let gesperrt = false;
@@ -306,7 +311,9 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
     return {
       status: 'fehler',
       angewandt,
-      fehler: { art: 'verbindung', code: err.code || null, text: err.message }
+      // pg meldet sein eigenes Verbindungs-Timeout als Error('timeout expired')
+      // OHNE code — ohne diese Zuordnung fiele es aus der Wiederholungsliste.
+      fehler: { art: 'verbindung', code: err.code || (/timeout expired/i.test(err.message || '') ? 'ETIMEDOUT' : null), text: err.message }
     };
   } finally {
     try {
@@ -314,4 +321,48 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
     } catch { /* beim Verbindungsabbruch gibt Postgres das Lock ohnehin frei */ }
     try { await client.end(); } catch { /* egal */ }
   }
+}
+
+// ── O-194: Startrennen Box-Neustart ─────────────────────────────────────────
+// Nach einem Host-Neustart startet Docker die Container OHNE `depends_on`
+// (das gilt nur für `compose up`). Kommt `api` vor Postgres hoch, scheitert
+// der einzige Verbindungsversuch, der Aufrufer setzt den Wartungsmodus — und
+// der wird nie zurückgesetzt: gesundes Schema, Box dauerhaft in Wartung, bis
+// jemand `docker compose restart api` tippt (K10: wir kommen nicht rein).
+//
+// Wiederholt wird NUR, wenn die DB nachweislich gar nicht erreicht wurde
+// (Netz-/Startcode) und noch keine Migration lief. Jeder andere Fehler
+// (Prüfsumme, SQL, Downgrade, Lock) geht sofort zurück — den heilt Warten nicht.
+const VERBINDUNG_NOCH_NICHT_DA = new Set([
+  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH', 'ENETUNREACH',
+  '57P03', // cannot_connect_now — Postgres fährt noch hoch
+]);
+// Pausen 59 s + 7 Versuche × 5 s Verbindungs-Timeout = hoechstens 94 s —
+// bleibt unter der start_period (120 s) des Box-Healthchecks.
+export const VERBINDUNG_PAUSEN_MS = Object.freeze([2000, 4000, 8000, 15000, 15000, 15000]);
+
+export function istStartrennen(ergebnis) {
+  return ergebnis?.status === 'fehler'
+    && ergebnis.fehler?.art === 'verbindung'
+    && VERBINDUNG_NOCH_NICHT_DA.has(ergebnis.fehler.code)
+    && (ergebnis.angewandt?.length ?? 0) === 0;
+}
+
+/**
+ * runMigrations mit Geduld für das Startrennen. Gleiche Rückgabe wie runMigrations.
+ * @param {object}   opt                wie runMigrations
+ * @param {object}   [o]
+ * @param {number[]} [o.pausenMs]       Wartezeiten zwischen den Versuchen
+ * @param {function} [o.lauf]           (Test) Ersatz für runMigrations
+ * @param {function} [o.warte]          (Test) Ersatz für das Warten
+ */
+export async function runMigrationsMitGeduld(opt, { pausenMs = VERBINDUNG_PAUSEN_MS, lauf = runMigrations, warte = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  const log = opt?.log || console.log;
+  let ergebnis = await lauf(opt);
+  for (let i = 0; i < pausenMs.length && istStartrennen(ergebnis); i++) {
+    log(`[migrate] Datenbank noch nicht erreichbar (${ergebnis.fehler.code}) — Versuch ${i + 2}/${pausenMs.length + 1} in ${pausenMs[i] / 1000} s.`);
+    await warte(pausenMs[i]);
+    ergebnis = await lauf(opt);
+  }
+  return ergebnis;
 }

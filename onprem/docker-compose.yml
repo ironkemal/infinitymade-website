@@ -442,6 +442,26 @@ services:
       # dieses Verzeichnis. Verzeichnis-Mount (nicht Datei), damit Inode-Wechsel
       # durch atomaren mv sichtbar bleibt. Read-only.
       - ./volumes/ip:/var/lib/praxura/ip:ro
+      # O-191 (0.6.0): Host-Zustand für /api/status — backup.sh (sicherung.json),
+      # update.sh/install.sh (stand.json), ip-melden.sh (zeit.json). Read-only,
+      # nur `api`. Verzeichnis-Mount, keine Einzeldateien (atomarer mv).
+      # ⛔ NICHT .praxura-stand/ — dort liegen .env-Schnappschüsse (O-100).
+      - ./volumes/status:/var/lib/praxura/status:ro
+    # O-190 (c) (0.6.0): der Image-HEALTHCHECK fragt /health (Prozess lebt) und
+    # bleibt so — SaaS/Traefik hängt daran (G7). In der Box reicht das nicht:
+    # 10.10.2026 21:51 war api „healthy", während es weder db noch kong
+    # erreichte. Hier deshalb /health/ready (DB über Kong/PostgREST).
+    # Wartungsmodus (Migration fehlgeschlagen) zählt als GESUND — sonst startet
+    # caddy nicht (depends_on) und der Kunde sieht nicht einmal die
+    # Wartungsmeldung; der Schemazustand ist Sache von /api/status. Ausnahme
+    # art=verbindung: der Runner kam gar nicht zur DB — genau der O-190-Fall.
+    # Listenform: keine Shell, kein `$`. Läuft auch mit dem 0.5.2-Image.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(async r=>{if(r.ok)process.exit(0);const j=await r.json().catch(()=>({}));process.exit(j.grund==='schema_migration'&&j.detail?.art!=='verbindung'?0:1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 120s
     environment:
       NODE_ENV: production
       PORT: 3000

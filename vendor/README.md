@@ -24,11 +24,11 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 
 | Dosya | Kaynak | Nerede kullanılıyor |
 |---|---|---|
-| `supabase-js.js` | `@supabase/supabase-js@2.112.3` | 14 sayfa/modül (`createClient`) |
+| `supabase-js.js` | `@supabase/supabase-js@2.112.3` | ~12 sayfa/modül (`createClient`; güncel liste: `grep -rl vendor/supabase-js`) |
 | `node-forge.js` | `node-forge@1.3.1` | `dashboard.js` → `loadForge()`, §302 PKCS#7 imzalama (tembel yüklenir) |
 | `fullcalendar/index.global.min.js` | `fullcalendar@6.1.11` (Standard, MIT — 05.10.2026 Premium/Scheduler entfernt: NonCommercial-Key, legal-de; sha256 8b8bc35b…d481, jsDelivr = unpkg) | `kalender.html` |
 | `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
-| `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html:26-27` → Logo/Profilbild zuschneiden (`dashboard.js:11935`, `13141`) |
+| `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html` (cropper `<link>`/`<script>`) → Logo/Profilbild zuschneiden (`dashboard.js`, `new Cropper(`) |
 | `zxing.js` | `@zxing/library@0.21.3`, npm + esbuild, pure JavaScript | `module/rezept-barcode-scan.js`, yerel PDF417 |
 | `pdfjs/pdf.mjs` + `pdfjs/pdf.worker.mjs` | `pdfjs-dist@4.10.38`, npm build çıktılarının birebir kopyası | aynı tarayıcı modülü, PDF sayfalarını yerelde render eder |
 
@@ -119,7 +119,7 @@ Sonra çağrı yerlerindeki `?v=YYYYMMDD` sürümünü **yükselt** (cache busti
 > node-forge 1.3.1'de `none` ile `eof` **birebir aynı** çıktı veriyor (bu iki
 > sürümde korunacak yorum yok; depodaki dosyalar aynı komutla bit bit yeniden
 > üretildi). Yine de `eof` kalır: ileride yorum taşıyan bir sürüm gelirse silinmez.
-> Lisans METİNLERİ ayrıca THIRD-PARTY-NOTICES'te verilir (MIT/BSD şartı).
+> Lisans METİNLERİ ayrıca `vendor/LICENSES.txt` ve `onprem/NOTICE.md` (+ `onprem/NOTICE-QUELLEN.txt`) içinde verilir (MIT/BSD şartı).
 
 ### ⚠️ Düz indirme çalışmaz
 
@@ -172,6 +172,8 @@ imajında bu satırın da gitmesi gerekiyor — `legal-de`'nin sert şartı "tek
 dış runtime çağrısı kalamaz" diyor. Ayrı kart: *"Sentry CDN loader — on-prem'de
 kapatılmalı."*
 
+> ✅ **Güncel durum:** bu bulgu giderildi — Sentry loader'ı artık `sentry-init.js` çalışma anında yükler ve yalnız `/api/config` `telemetryEnabled === true` ise (SaaS); kutuda tek istek yoktur (O-06). Yukarıdaki tablo 2026-08-14 ölçümüdür, tarihsel.
+
 ## Kapsam dışı kalanlar
 
 Kapatılanlar: **esm.sh** (supabase-js, node-forge) ve **jsDelivr**
@@ -181,7 +183,7 @@ Hâlâ dışarıdan gelenler — ayrı kartları var:
 
 | Ne | Nerede | Not |
 |---|---|---|
-| **Sentry loader** | her sayfa (`js-de.sentry-cdn.com`) | On-prem'de yerelleştirme değil **kapatma** doğru olabilir — ayrı karar |
+| **Sentry loader** | `sentry-init.js` (`js-de.sentry-cdn.com`) | SaaS'ta yüklenir; kutuda `telemetryEnabled=false` → tek istek yok (O-06, `sentry-init.js` başlık yorumu) |
 | ~~**Google Fonts**~~ | — | ✅ **KAPANDI.** Fontlar `fonts/system-fonts.css` ile self-hosted; 27.08.2026'da CSP'den de çıkarıldı (`style-src`/`font-src`). Kodda tek referans kalmadı — tarandı. |
-| **Wistia** | `index.html:1202/1211/1220` | ⛔ **Önceliği yükseldi.** `legal-de` 27.08.2026: Wistia player boot'ta **localStorage okuyor** → § 25 Abs. 1 TDDDG Einwilligung gerektiriyor (cookie olmaması kurtarmıyor). Ayrıca `datenschutz.html`'de hiç adı geçmiyor (Art. 13 lit. e) ve `cookie-consent.js` banner'ı "cookie-frei, keine personenbezogenen Daten" diyor — Wistia yüklenince bu beyan yanlış olur (UWG § 5). Fix: Zwei-Klick-Lösung ya da videoyu kendi alanımızdan servis et. |
+| **Wistia** | `index.html` (`data-wistia` yer tutucuları) | `legal-de` 27.08.2026: Wistia player boot'ta **localStorage okuyor** → § 25 Abs. 1 TDDDG Einwilligung gerektiriyor. Uygulandı: iki tıkla (Zwei-Klick) yer tutucu, tıklamadan Wistia'ya tek bayt gitmez; `datenschutz.html#wistia` bölümü yazılı. `cookie-consent.js` beyanıyla uyumun son doğrulaması `legal-de`'de. |
 | **Stripe** | ödeme | **Yerelleştirilemez ve gerekmez** — PCI gereği Stripe'ın kendi alanından yüklenmek zorunda |

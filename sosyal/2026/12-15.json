@@ -1,0 +1,38 @@
+{
+  "art": "video",
+  "caption": "POV: Neue Kollegin, erster Tag. Wo stehen die Passwörter?\n\nIn Praxura bekommt jede Person ein eigenes Konto mit Rolle. Die Inhaberin gibt einen Einrichtungscode weiter, das Passwort wählt die Kollegin selbst.\n\nMehr auf praxura.de\n\n#Praxisalltag #Therapeutenleben #Praxissoftware #Heilmittel",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "dauer": 2.6,
+      "kicker": "POV",
+      "titel": "Neue Kollegin. <em>Erster Tag.</em>"
+    },
+    {
+      "typ": "tippen",
+      "dauer": 2.4,
+      "kicker": "Sie fragt",
+      "titel": "Wo stehen die Passwörter?"
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.4,
+      "uebergang": "schnitt",
+      "kicker": "Der Zettel am Monitor",
+      "titel": "Gibt es <em>nicht</em> mehr."
+    },
+    {
+      "typ": "vergleich",
+      "dauer": 3.2,
+      "links": { "label": "Früher", "text": "Gemeinsames Passwort" },
+      "rechts": { "label": "Mit Praxura", "text": "Eigenes Konto, eigene Rolle" }
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.6,
+      "kicker": "Praxura Lokal",
+      "titel": "Jede Person <em>ihr</em> Konto.",
+      "cta": "Mehr auf praxura.de"
+    }
+  ]
+}

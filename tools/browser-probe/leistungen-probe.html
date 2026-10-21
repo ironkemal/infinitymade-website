@@ -65,6 +65,7 @@ const kette = () => {
   const k = {};
   for (const m of ['select', 'eq', 'in', 'neq', 'order', 'delete', 'insert']) k[m] = () => k;
   k.then = (aufl) => Promise.resolve(leer).then(aufl);
+  k.maybeSingle = async () => ({ data: null });   // leads-Vorgeschichte (module/podo-vorgeschichte.js)
   return k;
 };
 const supabase = { from: () => kette() };

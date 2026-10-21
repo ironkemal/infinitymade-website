@@ -65,3 +65,51 @@ warte_auf_gesundheit() {
   done
   return 1
 }
+
+# ── O-193 (0.6.0): "gesund" heisst nicht "bereit" ───────────────────────────
+# Seit O-190 (c) zählt der Wartungsmodus im api-Healthcheck als gesund (sonst
+# startet caddy nicht und der Kunde sieht nicht einmal die Wartungsmeldung).
+# Damit läuft warte_auf_gesundheit auch bei gescheiterter Migration durch —
+# update.sh meldete dann `ok`. Deshalb nach der Gesundheit /health/ready lesen.
+#
+# bereitschaft_einordnen "<http-status> <grund> <art>" → eine Zeile:
+#   ok                    200
+#   schema_fehler <art>   503 + grund=schema_migration + art aus der Weißliste
+#                         (endgültig: wartungsmodus wird vor app.listen gesetzt)
+#   nicht_bereit          alles andere (auch art=verbindung — der O-190-Fall,
+#                         der geht in den Rückroll-Zweig, nicht nach schema_fehler)
+# Rein, ohne Docker — testbar. Nur `art` verlässt die Funktion, nie Text/Datei:
+# Postgres-Meldungen gehören nicht in Statusdateien (onprem O-193).
+bereitschaft_einordnen() {
+  local status grund art
+  read -r status grund art <<<"$1"
+  if [ "$status" = "200" ]; then echo "ok"; return 0; fi
+  if [ "$status" = "503" ] && [ "$grund" = "schema_migration" ]; then
+    case "$art" in
+      migration|pruefsumme|downgrade|reihenfolge) echo "schema_fehler $art"; return 0 ;;
+    esac
+  fi
+  echo "nicht_bereit"
+}
+
+# bereitschaft_pruefen <timeout_sekunden> — fragt /health/ready im api-Container
+# alle 5 s, bis ok oder schema_fehler (beides endgültig) oder Zeit um.
+# `timeout 15` je Versuch: fetch hat kein eigenes Zeitlimit (onprem 11.10.2026).
+# `</dev/null` ist Pflicht: `timeout` startet den Befehl in einer eigenen
+# Prozessgruppe; liest docker compose dann vom Terminal, hält der Kernel ihn an
+# (SIGTTIN) und `timeout` beendet ihn nicht mehr — install.sh blieb so in
+# Schritt 14 für immer stehen (12.10.2026, erste Windows-Einrichtung von Hand).
+# Muss im Verzeichnis mit der aktiven docker-compose.yml aufgerufen werden.
+bereitschaft_pruefen() {
+  local timeout_sek="${1:-60}" versuche roh ergebnis i
+  versuche=$(( timeout_sek / 5 ))
+  [ "$versuche" -ge 1 ] || versuche=1
+  ergebnis="nicht_bereit"
+  for i in $(seq 1 "$versuche"); do
+    roh="$(timeout 15 docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/health/ready').then(async r=>{const j=await r.json().catch(()=>({}));const s=v=>String(v||'-').replace(/[^a-z_]/gi,'').slice(0,32)||'-';console.log(r.status+' '+s(j.grund)+' '+s(j.detail&&j.detail.art))}).catch(()=>console.log('0 - -'))" </dev/null 2>/dev/null | tail -n 1 || true)"
+    ergebnis="$(bereitschaft_einordnen "${roh:-0 - -}")"
+    case "$ergebnis" in ok|schema_fehler*) echo "$ergebnis"; return 0 ;; esac
+    [ "$i" -eq "$versuche" ] || sleep 5
+  done
+  echo "$ergebnis"
+}

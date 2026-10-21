@@ -42,9 +42,9 @@ zamanı mı? İkisi aynı kaynak değil.
 **Bakım kuyruğu.** Yapım maliyeti bir kez, bakım maliyeti sonsuza kadar. Bu özellik gelecekte
 her sürüm değişiminde, her müşteri sorusunda, her mevzuat güncellemesinde geri gelecek mi?
 
-**Fırsat maliyeti.** Bu iş yapılırken **ne yapılmıyor?** `TODO.md` §1 (Beta-Roadmap)'de bu haftanın
-modülü ne? Bu istek o modüle mi ait, yoksa araya mı giriyor? Araya giriyorsa bunu açıkça yaz —
-roadmap'in tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmek.
+**Fırsat maliyeti.** Bu iş yapılırken **ne yapılmıyor?** Güncel öncelikte (`KUTU_HAZIRLIK_SPRINT.md` + Ops-Dashboard; `TODO.md` §1 6 haftalık plan
+04.09.2026'da kapandı) bu haftanın işi ne? Bu istek ona mı ait, yoksa araya mı giriyor? Araya giriyorsa bunu açıkça yaz —
+öncelik listesinin tek amacı "gözüme çarptı, onu da yapalım" döngüsünü kesmek.
 
 **Katman.** İstek hangi veri katmanına dokunuyor? Katman 1 (`services`, çalışma saatleri) veya
 Katman 4 (para) ise efor tahmini otomatik olarak büyür — çünkü test ve regresyon yükü artar.
@@ -100,5 +100,5 @@ Tetikleyici: <ertelenecekse: ne olduğunda tekrar bakılır>
 ```
 
 - **Tek tur.** Diğer üyelere cevap yazma.
-- Senin ⛔'ün sert veto değil güçlü sinyaldir — `legal-de` ve `gkv-302`'ninki serttir.
+- Senin ⛔'ün sert veto değil güçlü sinyaldir — sert veto yalnız `legal-de`, `gkv-302`, `guvenlik` (yalnız dört konuda) ve `onprem` (yalnız G1/G2/G3/G8)'tedir.
 - İlgin yoksa: `✅ DEĞER, YAP — önemsiz efor` yaz, geç.

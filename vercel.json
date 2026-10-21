@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':!*.md' ':!db' ':!funktionen' ':!api-backend' ':!onprem' ':!merkez' ':!tools' ':!ops' ':!archive' ':!.github' ':!.claude' ':!module/*.test.js'; [ $? = 0 ]",
   "functions": {
     "api/**/*.js": {
       "regions": [
@@ -127,6 +128,14 @@
       "source": "/(install.sh|install.ps1|installieren/install.sh|installieren/install.ps1)",
       "headers": [
         { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/installieren/Praxura-Einrichtung.cmd",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Praxura-Einrichtung.cmd\"" },
         { "key": "Cache-Control", "value": "no-store" }
       ]
     }
@@ -376,6 +385,8 @@
   "rewrites": [
     { "source": "/install.sh", "destination": "/installieren/install.sh" },
     { "source": "/install.ps1", "destination": "/installieren/install.ps1" },
+    { "source": "/installieren", "destination": "/installieren.html" },
+    { "source": "/installieren/", "destination": "/installieren.html" },
     {
       "source": "/praxis",
       "destination": "/praxis.html"

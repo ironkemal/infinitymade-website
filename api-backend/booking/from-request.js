@@ -36,7 +36,11 @@ export function createBookingsFromRequestFactory({
     // Nur die manuelle Bestätigung übergibt commit: vor dem RPC werden keine
     // Termine geschrieben. Die bisherigen Auto-/Alternativwege bleiben unverändert.
     const plannedRows = [];
-    const insertBooking = async (row) => {
+    // Patientenakte (lead-aus-anfrage.js) an jeden Termin — ohne sie fehlte der
+    // Patient unter „Patienten" (canli-test 21.10.2026). NULL bleibt erlaubt.
+    const mitAkte = (row) => (options.leadId ? { ...row, lead_id: options.leadId } : row);
+    const insertBooking = async (zeile) => {
+      const row = mitAkte(zeile);
       if (options.commit) {
         plannedRows.push(row);
         return { data: { id: `planned-${plannedRows.length}` }, error: null };
@@ -87,9 +91,14 @@ export function createBookingsFromRequestFactory({
     let needsManualScheduling = false;
     const sessionsTotal = bookReq.verordnung_sitzungen || 1;
     if (sessionsTotal > 1 && bookReq.preferred_date && bookReq.preferred_time) {
-      const freq = bookReq.frequenz;
-      if (freq === 'Täglich' || freq === '1x/Woche') {
-        const recurrence = freq === 'Täglich' ? 'daily' : 'weekly';
+      // Das Anfrageformular speichert die Frequenz aus FREQUENZ_OPTIONS („1x pro Woche"),
+      // ältere Anfragen „1x/Woche" — beide meinen dasselbe. Vorher wurde aus
+      // „1x pro Woche" mit 6 Sitzungen nur 1 Termin (canli-test 21.10.2026).
+      const freq = String(bookReq.frequenz || '').trim();
+      const taeglich = /^t(ä|ae|a)glich$/i.test(freq);
+      const woechentlich = /^1\s*x\s*(\/|pro)\s*woche$/i.test(freq);
+      if (taeglich || woechentlich) {
+        const recurrence = taeglich ? 'daily' : 'weekly';
         const remainingDates = generateRecurringDates(bookReq.preferred_date, recurrence, sessionsTotal).slice(1);
         for (const dateStr of remainingDates) {
           try {

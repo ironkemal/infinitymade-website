@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { berlinHeute, istStichtag, jahresendePlus } from './berlin-tag.js';
+import { berlinHeute, istStichtag, jahresendePlus, berlinTagesgrenzen } from './berlin-tag.js';
 
 test('berlinHeute: kurz nach Mitternacht Berliner Zeit ist UTC noch am Vortag (Sommerzeit)', () => {
   // 30.09.2026 22:30 UTC = 01.10.2026 00:30 MESZ
@@ -33,3 +33,11 @@ test('jahresendePlus: addiert Jahre auf das Berliner Jahr und liefert YYYY-12-31
   assert.equal(jahresendePlus(10, new Date('2026-12-31T23:30:00Z')), '2037-12-31');
 });
 
+
+test('berlinTagesgrenzen: DST, Schaltjahr, Jahreswechsel und ungültige Werte', () => {
+  assert.deepEqual(berlinTagesgrenzen('2026-03-29'), { tag: '2026-03-29', von: '2026-03-28T23:00:00.000Z', bisExklusiv: '2026-03-29T22:00:00.000Z' });
+  assert.deepEqual(berlinTagesgrenzen('2026-10-25'), { tag: '2026-10-25', von: '2026-10-24T22:00:00.000Z', bisExklusiv: '2026-10-25T23:00:00.000Z' });
+  assert.equal(berlinTagesgrenzen('2028-02-29').bisExklusiv, '2028-02-29T23:00:00.000Z');
+  assert.equal(berlinTagesgrenzen('2026-12-31').bisExklusiv, '2026-12-31T23:00:00.000Z');
+  for (const value of ['2026-02-29', '2026-02-30', '2026-13-01', '0000-01-01', null, [], '']) assert.equal(berlinTagesgrenzen(value), null);
+});

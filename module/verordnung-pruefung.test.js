@@ -53,9 +53,9 @@ function saubereVo(ueber = {}) {
     ausstellungsdatum: '2026-09-01',
     behandlungsbeginn: '2026-09-10',
     dringend: false,
-    versichertennummer: 'A123456789',
+    versichertennummer: 'A123456780',
     kasseIk: '101575519',
-    arztLanr: '123456789',
+    arztLanr: '123456601',
     arztBsnr: '987654321',
     rezeptart: 'gkv',
     ...ueber,
@@ -589,4 +589,12 @@ test('Diagnosegruppe und ICD sind nur bei Kasse Pflicht — Privat/Selbstzahler/
   const text = kasse.befunde.map(b => b.text).join(' | ');
   assert.match(text, /Diagnosegruppe fehlt/);
   assert.match(text, /ICD-10-Kode fehlt/);
+});
+
+test('Prüfziffer von LANR und Versichertennummer: Warnung, kein Blocker (canli-test 20.10.2026)', () => {
+  const e = pruefeVerordnung(saubereVo({ arztLanr: '123456789', versichertennummer: 'A123456789' }), PODO, HEUTE);
+  const codes = e.befunde.map(b => b.code);
+  assert.ok(codes.includes('PRUEFZIFFER_LANR'));
+  assert.ok(codes.includes('PRUEFZIFFER_KVNR'));
+  assert.ok(e.befunde.filter(b => b.code.startsWith('PRUEFZIFFER')).every(b => b.schwere === 'warnung'));
 });

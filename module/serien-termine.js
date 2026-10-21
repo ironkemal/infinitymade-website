@@ -183,3 +183,46 @@ export function anzahlHinweisText(anzahl, alsSerie) {
     ? `Alle ${anzahl} Termine jetzt als Serie verteilen (Wiederholung und Wochentage unter „Mehr Optionen").`
     : `Nur diesen einen Termin speichern — die übrigen ${anzahl - 1} bleiben offen und lassen sich später vergeben.`;
 }
+
+/**
+ * Wochentag der Serie folgt dem Starttag, solange niemand die Kästchen selbst
+ * angefasst hat. Vorher stand ohne Verordnung fest „Mo" angehakt — eine Serie
+ * ab Mittwoch lief dann montags (canli-test 20.10.2026). Mit Verordnung setzt
+ * `uebernimmSerienfrequenzAusRx()` die Tage ohnehin aus der Frequenz.
+ *
+ * @param {Document} [doc]
+ */
+export function verdrahteSerienStarttag(doc = globalThis.document) {
+  const wrap = doc?.getElementById('bkSeriesWeekdays');
+  if (!wrap) return;
+  let vonHand = false;
+  wrap.addEventListener('change', (e) => { if (e.isTrusted) vonHand = true; });
+  const setze = () => {
+    const v = doc.getElementById('bkStart')?.value;
+    if (vonHand || !v || !isValidCalendarDate(v.substring(0, 10))) return;
+    const tag = new Date(v.substring(0, 10) + 'T12:00:00Z').getUTCDay();
+    const boxen = [...wrap.querySelectorAll('input')];
+    if (boxen.filter(cb => cb.checked).length > 1) return;   // mehrere Tage = bewusst gewählt (z. B. aus der Frequenz)
+    boxen.forEach(cb => { cb.checked = Number(cb.value) === tag; });
+    boxen[0]?.dispatchEvent(new Event('change'));   // Vorschau nachziehen (nicht als Handeingabe gezählt)
+  };
+  doc.getElementById('bkSeriesToggle')?.addEventListener('change', (e) => { if (e.target.checked) { vonHand = false; setze(); uebernimmAnzahl(); } });
+  doc.getElementById('bkStart')?.addEventListener('change', setze);
+
+  // Eine Zahl, zwei Felder: „Anzahl" oben und „Anzahl der Termine" unter
+  // „Mehr Optionen" liefen auseinander („Alle 6 Termine" über einer Vorschau
+  // mit 3 — canli-test 20.10.2026). Beim Einschalten gilt die obere Zahl,
+  // wer unten tippt, schreibt sie nach oben zurück.
+  const anzahl = doc.getElementById('bkAnzahl'), serie = doc.getElementById('bkSeriesCount');
+  function uebernimmAnzahl() {
+    const n = parseInt(anzahl?.value, 10);
+    if (!serie || !(n > 1) || String(n) === serie.value) return;
+    serie.value = String(n);
+    serie.dispatchEvent(new Event('input'));
+  }
+  serie?.addEventListener('input', (e) => {
+    if (!e.isTrusted || !anzahl) return;
+    const n = parseInt(serie.value, 10);
+    if (n > 1 && String(n) !== anzahl.value) { anzahl.value = String(n); anzahl.dispatchEvent(new Event('input')); }
+  });
+}

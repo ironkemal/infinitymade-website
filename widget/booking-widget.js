@@ -1,7 +1,7 @@
 // Praxura Termin-Anfrage-Widget — laeuft IM iframe (booking-widget.html), nie in der Host-Seite.
 //
 // Bewusst ohne Supabase-Client, Sentry, Cookie-Consent, Analytics oder CDN (guvenlik S-52,
-// legal-de 11.10.2026, onprem O-190). Alle fetch-Aufrufe gehen vom Ursprung des iframes aus,
+// legal-de 11.10.2026, onprem O-211). Alle fetch-Aufrufe gehen vom Ursprung des iframes aus,
 // deshalb braucht die einbettende Seite weder CORS-Freigabe noch Zugriff auf Formularwerte.
 // Nach aussen gehen nur zwei inhaltsleere postMessage-Signale: Hoehe und "fertig".
 //

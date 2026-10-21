@@ -10,6 +10,8 @@ Dateiname: `JJJJ-MM-TT.md`, also z. B. `2026-08-10.md`.
 Existiert die Datei für heute bereits, wird sie **ergänzt**, nicht ersetzt und
 nicht überschrieben. Neue Einträge kommen unten dazu.
 
+Ausnahme: Übergabe- und Abnahmeprotokolle eines Meilensteins (z. B. `2026-10-05_M1_CLAUDE_HANDOFF.md`) dürfen als eigene Datei neben der Tagesdatei liegen; die Tagesdatei verweist darauf.
+
 ## Warum
 
 Der Ordner beantwortet die Frage „was ist an dem Tag passiert und warum". Wenn
@@ -57,7 +59,7 @@ Kurzliste.
 |---|---|
 | `fortschritte/` | Was an einem bestimmten Tag passiert ist — Verlauf |
 | Ops-Dashboard → Aufgaben | Was noch zu tun ist — die offene Liste |
-| `konsey/KARARLAR.md` | Getroffene Entscheidungen — kapanmış karar yeniden açılmaz |
+| `konsey/KARARLAR.md` | Getroffene Entscheidungen — abgeschlossene Entscheidung wird nicht neu aufgemacht |
 | `compliance/LEGAL_DECISIONS.md` | Abgeschlossene rechtliche Klärungen |
 
 Der Fortschrittsordner ersetzt das Ops-Dashboard **nicht**. Neue offene Aufgaben

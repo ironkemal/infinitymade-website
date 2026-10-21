@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261010005316 0078_zuzahlungsbeleg_invoices
--- EXPORTED AT:        2026-10-10T01:02:45.000Z
--- ERZEUGT AM:         2026-10-10
+-- LAST MIGRATION:     20261021104136 0086_altsystem_uebernahme
+-- EXPORTED AT:        2026-10-21T10:45:00.000Z
+-- ERZEUGT AM:         2026-10-21
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       96
---   table_columns:       1397
+--   table_columns:       1408
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        166
---   functions:           109
---   triggers:            97
---   indexes:             337
+--   functions:           111
+--   triggers:            98
+--   indexes:             338
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -760,7 +760,8 @@ CREATE TABLE public.ausfallrechnungen (
   created_by uuid,
   bezahlt_at timestamp with time zone,
   aussteller_snapshot jsonb,
-  empfaenger_snapshot jsonb
+  empfaenger_snapshot jsonb,
+  faellig_am date
 );
 --   FK booking_id -> bookings(id)
 --   FK business_id -> businesses(id)
@@ -770,6 +771,7 @@ ALTER TABLE ONLY public.ausfallrechnungen OWNER TO postgres;
 COMMENT ON TABLE public.ausfallrechnungen IS 'Private Ausfallhonorar-Rechnungen (Schadensersatz, umsatzsteuerfrei) für No-Shows und kurzfristige Absagen. Nicht GKV-relevant.';
 COMMENT ON COLUMN public.ausfallrechnungen.aussteller_snapshot IS 'Praxis (Aussteller) wie gedruckt, eingefroren beim Anlegen (POST /billing/ausfall/create): gleiche Schlüssel wie invoices.aussteller_snapshot (v, name, inhaber, strasse, plzOrt, telefon, email, ik, bank{name,iban,bic}); name = tatsächlich gedruckter Name (Standortname bei mehreren Standorten). Ab status=bezahlt gesperrt (ausfallrechnung_festschreibung, 0076). § 147 Abs. 2 Nr. 1 AO.';
 COMMENT ON COLUMN public.ausfallrechnungen.empfaenger_snapshot IS 'Rechnungsempfänger (Patient) wie gedruckt: gleiche Schlüssel wie invoices.empfaenger_snapshot art=patient (v, art, name, strasse, plzOrt, geburtsdatum, krankenkasse, versichertennummer). Kein IBAN, keine Diagnose. Ab status=bezahlt gesperrt (0076).';
+COMMENT ON COLUMN public.ausfallrechnungen.faellig_am IS 'Bei Ausstellung gespeichertes, unveränderliches Zahlungsziel. NULL = Altbeleg, ursprüngliche Fälligkeit nicht nachgewiesen; keine automatische Mahnung.';
 
 ALTER TABLE ONLY public.ausfallrechnungen
   ADD CONSTRAINT ausfallrechnungen_amount_check CHECK (amount_eur > 0::numeric);
@@ -846,7 +848,8 @@ CREATE TABLE public.belegliste (
   created_by uuid,
   storno_reason text,
   zahlart text,
-  invoice_id uuid
+  invoice_id uuid,
+  storno_von uuid
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK created_by -> auth.users(id)
@@ -854,9 +857,11 @@ CREATE TABLE public.belegliste (
 --   FK owner_id -> profiles(id)
 --   FK patient_id -> leads(id)
 --   FK prescription_id -> prescriptions(id)
+--   FK storno_von -> belegliste(id)
 ALTER TABLE ONLY public.belegliste OWNER TO postgres;
 COMMENT ON COLUMN public.belegliste.zahlart IS 'Zahlungsart des Belegs: bar | ec | ueberweisung | sonstiges. NULL = Altbeleg vor v32.';
 COMMENT ON COLUMN public.belegliste.invoice_id IS 'Bei type IN (''rechnung'',''storno''): die bar bezahlte Privatrechnung bzw. deren Gegenbuchung. Die Storno-Zeile braucht die Referenz ebenso, sonst ist der Kassenbuch-Saldo je Rechnung nicht rechenbar (Muster: prescription_id in saldoJeRezept). Bewusst KEIN CHECK darauf. Bank/EC erzeugen keine Beleglisten-Zeile, Ausbuchungen nie (kein Geldfluss).';
+COMMENT ON COLUMN public.belegliste.storno_von IS 'Original-Beleg, den dieser Storno aufhebt (je Original hoechstens ein Storno). NULL bei Altstornos und beim Rezept-Saldo-Storno.';
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
@@ -881,6 +886,12 @@ ALTER TABLE ONLY public.belegliste
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_storno_von_fkey FOREIGN KEY (storno_von) REFERENCES belegliste(id);
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_storno_von_nur_storno CHECK (storno_von IS NULL OR type = 'storno'::text);
 
 ALTER TABLE ONLY public.belegliste
   ADD CONSTRAINT belegliste_type_check CHECK (type = ANY (ARRAY['zuzahlung'::text, 'barverkauf'::text, 'storno'::text, 'ausfall'::text, 'rechnung'::text]));
@@ -1110,7 +1121,7 @@ CREATE TABLE public.bookings (
 --   FK verordnung_id -> prescriptions(id)
 ALTER TABLE ONLY public.bookings OWNER TO postgres;
 COMMENT ON TABLE public.bookings IS 'RLS: user_id (employee self-access) + owner_id (owner and team access) policies both active.';
-COMMENT ON COLUMN public.bookings.verordnung_id IS 'Podologie-Topf: zu welcher `verordnungen`-Zeile gehoert dieser Termin. NIEMALS eine prescriptions.id — der Physio-Topf verknuepft ueber prescription_sessions.booking_id.';
+COMMENT ON COLUMN public.bookings.verordnung_id IS 'Podologie: zu welcher podologischen Verordnung (prescriptions.id, therapie_bereich = ''podo'') gehoert dieser Termin. Seit 04.09.2026 zeigt die Spalte auf prescriptions (vorher Tabelle verordnungen, ids unveraendert uebernommen). Physio/Ergo/Logo verknuepfen Termin und Verordnung NICHT hierueber, sondern ueber prescription_sessions.booking_id. Owner-Riegel: trg_booking_verordnung_owner.';
 COMMENT ON COLUMN public.bookings.dauer_quelle IS 'Herkunft der Termindauer. NULL = nicht erfasst (Altbestand, Backend-Wege). ''vorschlag'' = Vorschlag unveraendert uebernommen. ''manuell'' = im Dauer-Feld von Hand eingetippt/geaendert — NUR diese Zeilen speisen gelernteDauer() in module/termin-dauer.js. ''serie'' = aus einem Serien-/Batch-Lauf uebernommen, zaehlt nicht als Beleg.';
 COMMENT ON COLUMN public.bookings.cancelled_at IS 'Zeitpunkt der Absage ab #192; bei vorher bereits abgesagten Terminen unbekannt (NULL).';
 COMMENT ON COLUMN public.bookings.cancelled_session_links IS 'Historische Zuordnung geplanter Sitzungen, die bei Absage wieder freigegeben wurden. Kein Sitzungszähler.';
@@ -1953,7 +1964,7 @@ CREATE TABLE public.invoices (
 ALTER TABLE ONLY public.invoices OWNER TO postgres;
 COMMENT ON COLUMN public.invoices.prescription_id IS 'Linked Muster-13/Blanko prescription (multi-prescription patients). Set automatically when invoice is created from a physio workflow.';
 COMMENT ON COLUMN public.invoices.invoice_type IS 'gkv = GKV Abrechnung (fixed tariff + Zuzahlung), privat = Privatrechnung (practice prices, no Zuzahlung), selbstzahler, bg = UV-Träger (0068), zuzahlung = Zuzahlungsaufforderung/-beleg ZU-JJJJ-nnnn an den Patienten (0078; VKZ-03-Urbeleg, ab INSERT festgeschrieben, nie draft).';
-COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologie-Verordnung (verordnungen.id). Gegenstueck zu prescription_id fuer den Physio/Ergo/Logo-Topf. Es ist immer hoechstens eines von beiden gesetzt.';
+COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologische Verordnung (prescriptions.id, therapie_bereich = ''podo''), seit 04.09.2026 auf prescriptions (vorher Tabelle verordnungen). Gegenstueck zu prescription_id fuer Physio/Ergo/Logo. Hoechstens eines von beiden ist gesetzt (CHECK invoices_ein_verordnungsbezug).';
 COMMENT ON COLUMN public.invoices.tax_summary IS 'Eingefrorene Aufschluesselung je Steuersatz/Befreiung (§ 14 Abs. 4 Nr. 7 UStG): [{satz, grund, netto, steuer, brutto}].';
 COMMENT ON COLUMN public.invoices.steuerhinweis_text IS 'Wortlaut des gedruckten Steuerhinweises, eingefroren. Nicht zur Druckzeit aus profiles lesen — sonst druckt dieselbe Rechnung in zwei Jahren anders (GoBD Rz. 107 ff., § 146 Abs. 4 AO).';
 COMMENT ON COLUMN public.invoices.steuernummer_snapshot IS 'Steuernummer der Praxis zum Zeitpunkt der Rechnungsstellung (Snapshot, § 14 Abs. 4 Nr. 2 UStG).';
@@ -2190,7 +2201,12 @@ CREATE TABLE public.leads (
   patientennummer integer,
   podologie_altbestand_vor_2023 boolean,
   podologie_altbestand_beantwortet_am timestamp with time zone,
-  krankenkasse_ik text
+  krankenkasse_ik text,
+  podo_vorgeschichte_erste_beh_am date,
+  podo_vorgeschichte_78040_am date,
+  podo_vorgeschichte_78100_am date,
+  podo_vorgeschichte_naegel jsonb,
+  podo_vorgeschichte_erfasst_am timestamp with time zone
 );
 --   FK arzt_id -> aerzte(id)
 --   FK business_id -> businesses(id)
@@ -2205,6 +2221,11 @@ COMMENT ON COLUMN public.leads.patientennummer IS 'Fortlaufende Nummer je Praxis
 COMMENT ON COLUMN public.leads.podologie_altbestand_vor_2023 IS 'NULL = noch nicht gefragt/unbekannt. true/false = Patient hat vor dem 01.11.2023 erstmals podologische Behandlung begonnen (HPNR 78040 Aenderungsvereinbarung 20.10.2023). Ops #244.';
 COMMENT ON COLUMN public.leads.podologie_altbestand_beantwortet_am IS 'Wann die Altbestand-Frage beantwortet wurde — dient als Beleg gegenueber der Kasse, ein fluechtiger Dialog reicht laut SPEC-RULES.md nicht. Ops #244.';
 COMMENT ON COLUMN public.leads.krankenkasse_ik IS 'IK der Krankenkasse von der Versichertenkarte des Patienten (Karten-IK, §302 Anlage 1 TP5 V21 § 5.5.3.1). Gleiche Bedeutung wie prescriptions.krankenkasse_ik, NICHT die Kostentraeger-IK. Vorbelegung fuer neue Verordnungen. NULL = nicht erfasst.';
+COMMENT ON COLUMN public.leads.podo_vorgeschichte_erste_beh_am IS 'Erste podologische Behandlung in dieser Praxis im Altsystem (78040-Anspruch, Anlage 1a Teil 1 Nr. 2).';
+COMMENT ON COLUMN public.leads.podo_vorgeschichte_78040_am IS 'Eingangsbefundung 78040 im Altsystem, falls erbracht.';
+COMMENT ON COLUMN public.leads.podo_vorgeschichte_78100_am IS 'Letzte 78100 im Altsystem (einmal je Patient und Kalenderjahr, Anlage 1c Teil 1 Nr. 5 I.1).';
+COMMENT ON COLUMN public.leads.podo_vorgeschichte_naegel IS 'Je Nagel (Schlüssel wie prescriptions.nagel): {"erstbefundung":{"code":"78100|78110","am":"YYYY-MM-DD"},"abschluss_78520_am":"YYYY-MM-DD"} (§ 3b lit. a).';
+COMMENT ON COLUMN public.leads.podo_vorgeschichte_erfasst_am IS 'Wann die Vorgeschichte erfasst wurde (Beleg).';
 
 ALTER TABLE ONLY public.leads
   ADD CONSTRAINT leads_arzt_id_fkey FOREIGN KEY (arzt_id) REFERENCES aerzte(id);
@@ -2226,6 +2247,9 @@ ALTER TABLE ONLY public.leads
 
 ALTER TABLE ONLY public.leads
   ADD CONSTRAINT leads_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_podo_vorgeschichte_naegel_check CHECK (podo_vorgeschichte_naegel IS NULL OR jsonb_typeof(podo_vorgeschichte_naegel) = 'object'::text);
 
 ALTER TABLE ONLY public.leads
   ADD CONSTRAINT leads_status_check CHECK (status = ANY (ARRAY['new'::text, 'contacted'::text, 'booked'::text, 'won'::text, 'lost'::text]));
@@ -2528,7 +2552,8 @@ CREATE TABLE public.podologie_behandlungen (
   storniert_am timestamp with time zone,
   storniert_von uuid,
   storno_grund text,
-  therapiezeit_min smallint
+  therapiezeit_min smallint,
+  herkunft text DEFAULT 'praxura'::text NOT NULL
 );
 --   FK employee_id -> profiles(id)
 --   FK invoice_id -> invoices(id)
@@ -2540,8 +2565,12 @@ COMMENT ON COLUMN public.podologie_behandlungen.invoice_id IS 'Gesetzt, sobald d
 COMMENT ON COLUMN public.podologie_behandlungen.employee_id IS 'Wer die Behandlung durchgefuehrt hat. NULL bei Altbestand oder wenn der Owner selbst behandelt hat. Ops #252.';
 COMMENT ON COLUMN public.podologie_behandlungen.storniert_am IS 'Zeitpunkt der Stornierung. NULL = wirksame Behandlung. Gesetzt statt geloescht (§ 630f Abs. 1 S. 2 BGB): die Zeile bleibt lesbar, zaehlt aber nicht mehr — weder fuer die Einmaligkeitssperre noch fuer die §302-Datei.';
 COMMENT ON COLUMN public.podologie_behandlungen.storniert_von IS 'Wer storniert hat. ON DELETE SET NULL, damit das Loeschen eines Mitarbeiterkontos nicht an dieser Zeile haengenbleibt.';
+COMMENT ON COLUMN public.podologie_behandlungen.herkunft IS 'praxura = in Praxura erbracht; altsystem = im bisherigen Programm erbracht, nachgetragen beim Praxiswechsel (Datum + HPNR, employee_id NULL). Festgeschrieben.';
 COMMENT ON COLUMN public.podologie_behandlungen.storno_grund IS 'Warum storniert wurde. Pflichtangabe — das "warum/wann erkennbar" ist der eigentliche Inhalt von § 630f Abs. 1 S. 2 BGB, ohne Grund ist die Stornierung dokumentarisch wertlos.';
 COMMENT ON COLUMN public.podologie_behandlungen.therapiezeit_min IS 'Dokumentierte Therapiezeit in Minuten (78020 Komplexbehandlung: > 20). NULL = nicht erfasst.';
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_herkunft_check CHECK (herkunft = ANY (ARRAY['praxura'::text, 'altsystem'::text]));
 
 ALTER TABLE ONLY public.podologie_behandlungen
   ADD CONSTRAINT podologie_behandlungen_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE SET NULL;
@@ -2838,7 +2867,10 @@ CREATE TABLE public.prescriptions (
   bg_kostenzusage_datum date,
   bg_kostenzusage_zeichen text,
   bg_einverstaendnis_am date,
-  bg_einverstaendnis_version text
+  bg_einverstaendnis_version text,
+  zuzahlung_altsystem_eur numeric(10,2),
+  zuzahlung_altsystem_am date,
+  zuzahlung_altsystem_beleg text
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK abrechnung_status_manuell_von -> auth.users(id)
@@ -2859,6 +2891,7 @@ COMMENT ON COLUMN public.prescriptions.hinweise IS 'Muster 13: ggf. Therapieziel
 COMMENT ON COLUMN public.prescriptions.icd10_2 IS 'Zweiter behandlungsrelevanter ICD-10-Code (Muster 13, 2. Diagnose)';
 COMMENT ON COLUMN public.prescriptions.zuzahlung_kassiert_am IS 'Zeitpunkt der Vereinnahmung der gesetzlichen Zuzahlung. NULL = offen. Einmal je Verordnung (nicht je Sitzung).';
 COMMENT ON COLUMN public.prescriptions.zuzahlung_zahlart IS 'Zahlungsart, mit der die Zuzahlung kassiert wurde. Gehört zu zuzahlung_kassiert_am/_von.';
+COMMENT ON COLUMN public.prescriptions.zuzahlung_altsystem_eur IS 'Im Altsystem schon kassierte Zuzahlung dieser übernommenen VO; Praxura kassiert Soll minus Vermerk (gkv-302 21.10.2026).';
 COMMENT ON COLUMN public.prescriptions.patient_name IS 'Freitextname vom Anlagezeitpunkt (aus verordnungen uebernommen 09.2026). NICHT fuer die Abrechnung verwenden — der Name kommt immer aus leads.';
 COMMENT ON COLUMN public.prescriptions.rezeptart IS 'Zahlerachse: kassen|privat|selbstzahler. NICHT mit rezept_typ verwechseln — das ist die Formachse (standard|blanko|lhb_bvb).';
 COMMENT ON COLUMN public.prescriptions.notizen IS 'Interne Notiz der Praxis. Gegenstueck: hinweise = Therapieziel vom Arzt (aus dem gescannten Muster 13).';
@@ -2929,6 +2962,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_zuzahlung_altsystem_check CHECK (zuzahlung_altsystem_eur IS NULL OR zuzahlung_altsystem_eur >= 0::numeric);
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_signature_confidence_check CHECK (signature_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text]));

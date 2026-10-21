@@ -1,7 +1,7 @@
 # Arşiv — eskimiş belgeler ve kökten çekilen ağırlık
 
 **İlk taşınma:** 2026-08-05 · 39 dosya · Silinmedi, taşındı (git geçmişi korunuyor).
-**Bugün:** 573 dosya · ~271 MB · beş yeni alt klasör (09.09.2026 kök temizliği).
+**Bugün:** ~585 dosya · ~272 MB (güncel sayı: `find archive -type f | wc -l`) · beş yeni alt klasör (09.09.2026 kök temizliği).
 
 Bu klasördeki dosyalar **tarihsel kayıttır.** Güncel bilgi için buraya bakma — kök dizindeki
 canlı dosyalara, `.claude/agents/` altındaki ajan tanımlarına veya `wissensbank/INDEX.md`'ye bak.
@@ -49,7 +49,7 @@ Arşivlemeden önce koddan/git'ten çıkarılamayacak bilgiler ilgili yerlere ta
 | `DEGISIKLIK_REHBERI_2026-06-01.md` | Prod crash-loop kök sebebi: `SUPABASE_SERVICE_KEY` değil **`SUPABASE_SERVICE_ROLE_KEY`** | `.claude/agents/builder.md` |
 | `UI_TEST_REPORT.md` | ES-module kapsamı: inline `onclick` için `window.fn = fn` gerekir | `.claude/agents/builder.md` |
 | `SECURITY_AUDIT_2026-06-03.md` | Bulgularının çoğu çürütüldü (bkz. aşağıdaki uyarı) | hafıza |
-| `infinitymade*.md` | Fiyat setleri — **hepsi geçersiz.** Geçerli set: 29/49/99 €/ay | `CLAUDE.md` |
+| `infinitymade*.md` | Fiyat setleri — **hepsi geçersiz.** Fiyat henüz belirlenmedi (CLAUDE.md → Stripe); hiçbir eski set geçerli değil | `CLAUDE.md` |
 | `Fahrtenbuch.md` | ORS entegrasyonu, 10 dk buffer formülü, durum makinesi | (özellik canlı — koda bak) |
 | `rapor/STRIPE_SETUP.md` | Env var **adları** — hâlâ geçerli, ama dosya Test Mode döneminde yazıldı | `CLAUDE.md` → Stripe bölümü |
 
@@ -76,18 +76,19 @@ archive/
 ├── ai-chatbot-proje/ (3)            terk edilmiş chatbot projesi — belge + kod
 ├── lib-orphan/ (3)                  kök `lib/`'in içeriği — 28.08.2026
 ├── supabase-migrations-vor-baseline/ (14)   eski `supabase/migrations/` — 04.09.2026
+├── db-migrations-geplant-vor-baseline/ (4)  baseline öncesi planlanmış, hiç çalıştırılmamış SQL taslakları (kendi README'si var)
 │
 │   ── 09.09.2026 kök temizliği ──
-├── kod/ (52)                        ölü SQL + ölü script
+├── kod/ (~54)                        ölü SQL + ölü script
 ├── medya/ (49, 81 MB)               marka + video ham materyali
-├── rapor/ (5)                       eskimiş kök raporları
-├── denetim/ (291, 159 MB)           UI/mobil denetim kanıt görselleri
+├── rapor/ (~7)                       eskimiş kök raporları
+├── denetim/ (~295, 159 MB)           UI/mobil denetim kanıt görselleri
 └── recherche/ (118, 30 MB)          rakip ekran arşivi
 ```
 
 > ℹ️ `funktionen-shots/raw/` **buraya gelmedi** — `assets/img/fn/_raw/` altına taşındı,
 > çünkü arşivlik değil: `assets/img/fn/`'deki canlı `.webp`'lerin ham kaynağı
-> (`index.html:1485` onları yüklüyor). Arşivde arama.
+> (`index.html` Funktionen-walkthrough onları yüklüyor). Arşivde arama.
 
 ---
 
@@ -97,12 +98,12 @@ Kök dizinde 15 yıl önce bırakılmış gibi duran ne varsa tek günde sınıf
 Ölçüt her seferinde aynıydı: **çalışma zamanında bu dosyayı okuyan var mı?** Yoksa
 kökte durması için sebep yok. Her taşımada atıflar da yönlendirildi.
 
-### `kod/` — ölü SQL ve ölü script (52 dosya · commit `4f282f7`)
+### `kod/` — ölü SQL ve ölü script (09.09.2026'da 52 dosya · commit `4f282f7`)
 
 - **Ne:** 39 kök `database_v*.sql` + 9 ölü `.py` + `script.js` · `chatbot.js` ·
   `_fix_encoding2.cjs` · `stripe-live-setup.js`.
 - **Niye:** SQL numaraları çakışıyordu (v28/v29/v31 ikişer kez, v13/v14 hiç yok), canlı
-  veritabanında **195 migration** kayıtlı ve çalışma zamanında bu dosyaların **hiçbiri**
+  veritabanında o gün **195 migration** kayıtlı ve çalışma zamanında bu dosyaların **hiçbiri**
   okunmuyordu. `db-ustasi` + `fonksiyon-ustasi` ikisi birden doğruladı.
 - **Gerçek şema nerede:** `db/SCHEMA.sql` + `db/SCHEMA-RLS.sql`. Bir kolonun ne zaman
   eklendiği sorusu `db/REGISTER.md` ve `fortschritte/` üzerinden cevaplanır.
@@ -131,6 +132,13 @@ kökte durması için sebep yok. Her taşımada atıflar da yönlendirildi.
 - ⚠️ `STRIPE_SETUP.md` tamamen ölü değil: **env var adları hâlâ geçerli.** Geçersiz olan,
   dosyanın Test Mode döneminde yazılmış olması.
 - ⚠️ Buna atıf veren yerler kök yolunu kullanıyor olabilir — `archive/rapor/` önekiyle ara.
+
+#### `rapor/` — 11.10.2026 eki (5 dosya, kapanmış sprint/plan belgeleri)
+
+- `KHS_M2_PLAN.md` — M2 Bauplan; M2 06.10.2026'da abgenommen (`KUTU_HAZIRLIK_SPRINT.md` §0).
+- `KEMAL_M4_UEBERGABE.md` + `CHROME-M4-TEST.md` — M3/M4 kod devri (08.10.2026) ve lokal Chrome test promptu; içinde Melih'in makine yolları var.
+- `ABRECHNUNG_BILDSCHIRM_PLAN.md` — §302 tek ekran planı; 09-10.09.2026'da uygulandı. Kod yorumları ve `db/REGISTER.md` bu yola atıf veriyor.
+- `COMPETITOR_ANALYSIS.md` — Haziran 2026 rakip analizi; fiyat/UI iddiaları bayat, aksiyondan önce doğrula.
 
 ### `denetim/` — UI ve mobil denetim kanıtları (291 dosya · 159 MB · commit `56e8d95`)
 
@@ -209,11 +217,13 @@ hiç yok, her müşteri her özelliği görüyor" yazıyordu. **Yanlıştı.** A
 
 | Nerede | Ne yapıyor |
 |---|---|
-| `has302Access()` `dashboard.js:844` | `['professional','klinik','enterprise'].includes(plan)` → §302 Abrechnung modülünü Starter'da sidebar'dan gizler (`:983`, gerekçe `'plan'`) |
-| `isEnterprise()` `dashboard.js:17281` | Çok-Standort anahtarı; `:17678` "Mehrere Standorte sind nur im Enterprise-Paket verfügbar." |
-| `checkPlanActive()` `dashboard.js:4570` | `canceled`/`expired` durumunda yeni randevu, hasta ve abrechnung'u durdurur |
-| `showPlanWall()` `dashboard.js:22235` | Tam ekran paket duvarı (29/49/99) |
-| `PLAN_EMPLOYEE_LIMITS` `dashboard.js:66` → `:14574` | "Plan-Limit erreicht: max. N Mitarbeiter" |
+| `has302Access()` | `['professional','klinik','enterprise'].includes(plan)` → §302 Abrechnung modülünü Starter'da sidebar'dan gizler (gerekçe `'plan'`) |
+| `isEnterprise()` | Çok-Standort anahtarı; "Mehrere Standorte sind nur im Enterprise-Paket verfügbar." |
+| `checkPlanActive()` | `canceled`/`expired` durumunda yeni randevu, hasta ve abrechnung'u durdurur |
+| `showPlanWall()` | Tam ekran paket duvarı |
+| `PLAN_EMPLOYEE_LIMITS` | "Plan-Limit erreicht: max. N Mitarbeiter" |
+
+(Hepsi `dashboard.js` içinde; satır numarası verilmez, `grep` ile bulunur.)
 
 Kaybolan bir şey **yok**. `lib/plan.js`'teki `hasFeature()`/`isPlanActive()` ise
 doğuştan öksüz: 22.05.2026'da (`9bc0afb`) yazıldı ve **hiçbir commit'te hiçbir
@@ -222,7 +232,7 @@ yerden import edilmedi**. Yani ikinci, hiç açılmamış bir kapı taşıyordu 
 (`has302Access`) §302'yi doğru biçimde Professional'dan itibaren açıyor. İkisi
 bağlansaydı çelişirlerdi; arşivlenmesi bu yüzden ayrıca doğru oldu.
 
-`PLAN_FEATURES` (`dashboard.js:664` → tek kullanım `:12656`) gerçekten kilit değil,
+`PLAN_FEATURES` (`dashboard.js`) gerçekten kilit değil,
 sadece "paketiniz şunları içerir" metin listesi — o kısım doğruydu.
 
 ---
@@ -232,7 +242,7 @@ sadece "paketiniz şunları içerir" metin listesi — o kısım doğruydu.
 Eskiden `supabase/migrations/`. **Silinmedi, taşındı** — tarih olarak duruyor.
 
 **Niye taşındı:** bu klasör hiçbir zaman şemanın kaynağı olmadı ve olduğu sanılıyordu.
-İçinde 14 dosya vardı, canlı veritabanında ise **227** migration kayıtlıydı; 14'ün
+İçinde 14 dosya vardı, canlı veritabanında ise o gün (04.09.2026) **227** migration kayıtlıydı; 14'ün
 yalnız **3'ü** canlıdaki kayıtla birebir eşleşiyordu. Yani buraya bakan biri şemanın
 ne olduğu konusunda yanlış bilgi alıyordu.
 

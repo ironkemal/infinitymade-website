@@ -46,11 +46,13 @@
  */
 
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
+import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
 import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
-import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261010zc';
+import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261021f';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
-import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261014fix1';
+import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261021k';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261021s';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({
@@ -402,7 +404,7 @@ async function ladeVerordnung(sb, { ownerId, leadId, vordId }) {
   // nur `booking?.hausbesuch`, und eine Verordnung "Hausbesuch: ja" wurde bei
   // der Serienverteilung ignoriert, sobald der Ausgangstermin keiner war.
   const spalten = 'id, heilmittel, heilmittel_feld_text, heilmittel_position, diagnosegruppe, '
-                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich, frequenz, hausbesuch';
+                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich, frequenz, hausbesuch, status, abrechnung_status';
   if (vordId) {
     const { data } = await sb.from('prescriptions').select(spalten)
       .eq('id', vordId).eq('owner_id', ownerId).eq('therapie_bereich', 'podo').maybeSingle();
@@ -421,15 +423,17 @@ async function ladeVerordnung(sb, { ownerId, leadId, vordId }) {
 /** Alle dokumentierten Behandlungen des Patienten über ALLE seine Verordnungen. */
 async function ladeBehandlungen(sb, { ownerId, leadId }) {
   if (!leadId) return [];
+  // Vorgeschichte aus dem Altsystem ohne verordnung_id — belegt keine Einheit (podoBelegung filtert).
+  const vorgeschichte = await ladeVorgeschichte(sb, { ownerId, leadId });
   const { data: vords } = await sb.from('prescriptions').select('id')
     .eq('owner_id', ownerId).eq('patient_id', leadId).eq('therapie_bereich', 'podo');
-  if (!vords?.length) return [];
+  if (!vords?.length) return vorgeschichte;
   const { data } = await sb.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes, verordnung_id')
     // Stornierte Behandlungen verbrauchen keine Einheit (Migration 0026).
     .is('storniert_am', null)
     .eq('owner_id', ownerId).in('verordnung_id', vords.map(v => v.id));
-  return data || [];
+  return [...(data || []), ...vorgeschichte];
 }
 
 async function ladeAltbestand(sb, { ownerId, leadId }) {
@@ -491,12 +495,18 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
 
   zeigeSitzungenArbeit();
 
+  // Eingereichte/stornierte Verordnung: ihre offenen Einheiten sind verfallen —
+  // weder Serie noch Ziehen anbieten (canli-test 11.10.2026; gkv-302-Urteil PE-007:
+  // abgerechnet/storniert = keine weitere Behandlung). `bereit` bleibt planbar.
+  const geschlossen = rxGeschlossen(vord);
+  setzeSitzungenKopf(geschlossen);
+
   const badge = document.getElementById('bkRxSessionsBadge');
-  const offene = plan.einheiten.filter(e => !e.termin && !e.erbracht);
+  const offene = geschlossen ? [] : plan.einheiten.filter(e => !e.termin && !e.erbracht);
   const belegte = plan.einheiten.filter(e => e.termin);
 
   if (badge) {
-    badge.textContent = plan.offen === null
+    badge.textContent = geschlossen ? geschlossen : plan.offen === null
       ? `${belegte.length} vergeben`
       : `${plan.offen} offen / ${plan.einheiten.length} ges.`;
   }
@@ -510,7 +520,7 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   // REZEPT entschieden, nicht nach Fachbereich-Einstellung).
   const serieBtn = document.getElementById('bkRxSerieBtn');
   if (serieBtn) {
-    const aktivierbar = typeof aufSerie === 'function' && plan.offen > 0;
+    const aktivierbar = !geschlossen && typeof aufSerie === 'function' && plan.offen > 0;
     serieBtn.hidden = !aktivierbar;
     if (aktivierbar) {
       // `serienAnzahl` fällt von selbst auf `plan.offen` zurück, wenn die Liste
@@ -528,7 +538,11 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   const stil = 'display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);'
              + 'border:1px solid var(--border);border-radius:8px;font-size:12px;';
 
-  if (plan.offen === null) {
+  if (geschlossen) {
+    // Der Grund steht sichtbar über den Listen (`setzeSitzungenKopf`); die Liste
+    // „Unvergebene" ist bei 0 offenen nie die gezeigte Seite.
+    unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine offen</span>';
+  } else if (plan.offen === null) {
     // `anzahl_einheiten` fehlt: keine Restmenge behaupten (terminZaehler, Regel 1).
     unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">'
       + 'Einheitenzahl der Verordnung nicht erfasst — es lässt sich nichts vorplanen.</span>';
@@ -572,7 +586,12 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
   const leistBtn = document.getElementById('bkRxLeistungenBtn');
   if (leistBtn) {
     leistBtn.hidden = !patientId || typeof aufBehandlungen !== 'function';
-    leistBtn.onclick = aufBehandlungen ? () => aufBehandlungen(patientId) : null;
+    // Die gezeigte Verordnung öffnen, nicht „die neueste laufende" des Patienten:
+    // bei einem Termin an einer abgerechneten VO landete die Behandlung sonst
+    // still auf einer anderen VO (podoloji, PE-007 Nachtrag 11.10.2026). Ist sie
+    // geschlossen, zeigt die Tagesbehandlung dort die PE-007-Sperre.
+    const datum = booking?.start_time ? (alsBerlinDatum(booking.start_time) || undefined) : undefined;
+    leistBtn.onclick = aufBehandlungen ? () => aufBehandlungen(patientId, { vordId: vord.id, datum }) : null;
   }
 
   panel.hidden = false;

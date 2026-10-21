@@ -13,6 +13,7 @@ import { createAiRouter } from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
+import { leadAusAnfrage, findeLeadNachNameGeburt } from './booking/lead-aus-anfrage.js';
 import { cancelRequestBookings } from './booking/cancel-request.js';
 import { requestToken, tokenMatches, toPublicStatus } from './booking/status.js';
 import { escHtml, mailBetreff } from './booking/html-escape.js';
@@ -44,8 +45,10 @@ import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest, safeAiError } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
-import { runMigrations } from './db/migrate.js';
-import { schemaZaehlerSetzen } from './setup/selbstpruefung.js';
+import { runMigrationsMitGeduld, migrationenLesen } from './db/migrate.js';
+import { schemaZaehlerSetzen, schemaZaehlerLesen } from './setup/selbstpruefung.js';
+import { createStatusRouter } from './routes/status.js';
+import { standardPruefungen } from './lib/status.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
@@ -343,7 +346,11 @@ function berlinDayBoundsUTC(dateStr) {
 function berlinLocalToUTC(dateStr, timeStr) {
   const probe = new Date(`${dateStr}T12:00:00Z`);
   const offsetMin = berlinOffsetMin(probe);
-  const naiveMs = new Date(`${dateStr}T${timeStr}:00Z`).getTime();
+  // Postgres liefert `time` als HH:MM:SS. Unverändert angehängt wurde daraus
+  // „10:00:00:00Z" → Invalid Date → 500 beim Bestätigen einer Terminanfrage,
+  // deren Uhrzeit der Inhaber nicht angefasst hat (canli-test 20.10.2026).
+  const hhmm = String(timeStr ?? '').slice(0, 5);
+  const naiveMs = new Date(`${dateStr}T${hhmm}:00Z`).getTime();
   return new Date(naiveMs - offsetMin * 60000);
 }
 
@@ -436,6 +443,24 @@ app.get('/health/ready', async (req, res) => {
   }
 });
 
+// Tiefer Box-Status (O-40, §6.5) — nur Box + Inhaber, Details in routes/status.js.
+// Steht hier, vor Wartungsmodus-Middleware und accessLogger (Begründung dort).
+{
+  let imageMax = null;
+  try {
+    imageMax = migrationenLesen(pfadJoin(dirname(fileURLToPath(import.meta.url)), 'db', 'migrations'))
+      .reduce((max, d) => (d.version > max ? d.version : max), '0000');
+  } catch { /* unbekannt */ }
+  const pruefBasis = standardPruefungen({ supabase });
+  app.use('/api', createStatusRouter({
+    pruefungen: () => ({
+      ...pruefBasis,
+      version: { version: process.env.IMAGE_VERSION || 'dev' },
+      schema: { imageMax, wartung: wartungsmodus, zaehler: schemaZaehlerLesen() },
+    }),
+  }));
+}
+
 // Öffentliche Config — derselbe Vertrag wie api/config.js (Vercel, SaaS). Muss
 // über der Wartungsmodus-Middleware stehen: ohne sie kann das Frontend nicht
 // einmal den Supabase-Client aufbauen, also auch keine Wartungsmeldung zeigen.
@@ -466,7 +491,7 @@ app.get('/api/config', (req, res) => {
     // Box standardmaessig AUS (G4 — kein Telemetrie-Opt-out noetig, weil es
     // nie an ist). Setup-Wizard-Opt-in kommt in Faz 2.6, noch nicht gebaut —
     // bis dahin ist "aus" der sichere Default.
-    telemetryEnabled: !process.env.SUPABASE_PUBLIC_URL
+    telemetryEnabled: !istKutu()
   });
 });
 
@@ -2516,14 +2541,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     // gesucht: sonst widerspricht der Speicherweg dem, was der Anwender
     // gerade auf dem Bildschirm gelesen hat.
     if (!patientId && !patientIstNeu && dob && (fn || ln)) {
-      const { data: matches } = await supabase
-        .from('leads')
-        .select('id, krankenkasse_ik')
-        .eq('owner_id', tenantId)
-        .eq('geburtsdatum', dob)
-        .ilike('first_name', fn || '%')
-        .ilike('last_name', ln || '%')
-        .limit(1);
+      // Gemeinsamer Abgleich (booking/lead-aus-anfrage.js): beide Namen Pflicht, keine
+      // Platzhalter, mehrdeutig = kein Treffer → neue Akte statt falscher (fonksiyon-ustasi 21.10.2026).
+      const treffer = await findeLeadNachNameGeburt(supabase, { ownerId: tenantId, vorname: fn, nachname: ln, geburtsdatum: dob });
+      const matches = treffer && treffer !== 'mehrdeutig' ? [treffer] : [];
 
       if (matches && matches.length) {
         patientId = matches[0].id;
@@ -4212,9 +4233,10 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
     if (!ausWidget && preferred_date && preferred_time && autoConfig?.booking_auto_approve && autoTypes.includes(payment_type)
         && employee_id && await gehoertZurPraxis(employee_id, owner_id)) {
       const { data: pat } = resolvedPatientId
-        ? await supabase.from('patients').select('email, vorname, nachname').eq('id', resolvedPatientId).maybeSingle()
+        ? await supabase.from('patients').select('email, vorname, nachname, geburtsdatum, telefon').eq('id', resolvedPatientId).maybeSingle()
         : { data: null };
       const patName = pat ? `${pat.vorname} ${pat.nachname}` : 'Patient';
+      const autoLeadId = await leadAusAnfrage(supabase, { ownerId: owner_id, patient: pat, paymentType: payment_type, krankenkasse: krankenkasse || null });
 
       const autoResult = await createBookingsFromRequest({
         service_id: service_id || null,
@@ -4222,7 +4244,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         preferred_time: preferred_time || null,
         verordnung_sitzungen: verordnung_sitzungen || null,
         frequenz: frequenz || null,
-      }, owner_id, employee_id, patName);
+      }, owner_id, employee_id, patName, { leadId: autoLeadId });
 
       // Wunschtermin inzwischen belegt: NICHT automatisch bestaetigen, sondern die
       // Anfrage offen lassen — sonst haette der Patient eine Zusage ohne Termin.
@@ -4377,7 +4399,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     if (profile?.id !== owner_id) return res.status(403).json({ error: 'Nur der Praxisinhaber kann Anfragen bestätigen' });
 
     const { data: bookReq, error: reqErr } = await supabase.from('booking_requests')
-      .select('*, patients(vorname, nachname, email)')
+      .select('*, patients(vorname, nachname, email, geburtsdatum, telefon)')
       .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
     if (reqErr || !bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Anfrage wurde bereits bearbeitet' });
@@ -4406,7 +4428,9 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     }
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
+    const leadId = await leadAusAnfrage(supabase, { ownerId: owner_id, patient: bookReq.patients, paymentType: bookReq.payment_type, krankenkasse: bookReq.krankenkasse });
     const result = await createBookingsFromRequest(anfrage, owner_id, empId, patName, {
+      leadId,
       commit: async (rows, metadata) => {
         const { data, error } = await supabase.rpc('approve_booking_request_atomic', {
           p_request_id: request_id, p_owner_id: owner_id, p_actor_id: userId,
@@ -4694,7 +4718,7 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
   }
   try {
     const { data: bookReq } = await supabase.from('booking_requests')
-      .select('*, patients(vorname, nachname, email)')
+      .select('*, patients(vorname, nachname, email, geburtsdatum, telefon)')
       .eq('id', request_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
 
@@ -4715,9 +4739,10 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
     // Der Vorschlag kann inzwischen selbst belegt sein — dieselbe Pruefung wie beim
     // Bestaetigen, damit auch dieser Weg keine Doppelbuchung erzeugen kann.
+    const angebotLeadId = await leadAusAnfrage(supabase, { ownerId: bookReq.owner_id, patient: bookReq.patients, paymentType: bookReq.payment_type, krankenkasse: bookReq.krankenkasse });
     const result = await createBookingsFromRequest(
       { ...bookReq, preferred_date: gewaehlt.date, preferred_time: gewaehlt.time },
-      bookReq.owner_id, gewaehlt.employee_id, patName,
+      bookReq.owner_id, gewaehlt.employee_id, patName, { leadId: angebotLeadId },
     );
     if (result.conflict) {
       return res.status(409).json({ error: 'Dieser Termin ist inzwischen leider vergeben. Bitte melden Sie sich bei der Praxis.' });
@@ -4758,7 +4783,9 @@ const PORT = process.env.PORT || 3000;
 // der Prozess bleibt oben, beantwortet /health und die Fehlerseite, und liefert
 // sonst 503. So bleibt die Box diagnostizierbar.
 {
-  const ergebnis = await runMigrations({
+  // MitGeduld (O-194): nach einem Host-Neustart kann Postgres ein paar Sekunden
+  // später kommen als wir — ohne Wiederholung bliebe die Box dauerhaft in Wartung.
+  const ergebnis = await runMigrationsMitGeduld({
     databaseUrl: process.env.DATABASE_URL,
     verzeichnis: pfadJoin(dirname(fileURLToPath(import.meta.url)), 'db', 'migrations'),
     appVersion: process.env.IMAGE_VERSION || null
