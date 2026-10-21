@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-21",
- "dateien": 454,
- "funktionen": 3649,
+ "dateien": 455,
+ "funktionen": 3654,
  "module": [
   "abrechnung",
   "anamnese",
@@ -22258,6 +22258,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -22348,6 +22349,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -38026,6 +38028,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -38116,6 +38119,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -74696,6 +74700,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -74786,6 +74791,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -74897,6 +74903,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -74987,6 +74994,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -80158,6 +80166,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -80248,6 +80257,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -80330,7 +80340,8 @@
     "(datei) katalog-suche.js",
     "dateiversionenHtml",
     "esc",
-    "oeffneArztDetail"
+    "oeffneArztDetail",
+    "vorgeschichteFormHtml"
    ],
    "modules": [
     "abrechnung",
@@ -82110,6 +82121,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -82200,6 +82212,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -84214,6 +84227,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -84304,6 +84318,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -87448,6 +87463,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -87538,6 +87554,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -93879,6 +93896,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -93969,6 +93987,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -97733,6 +97752,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -97823,6 +97843,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -98959,7 +98980,8 @@
     "(datei) katalog-suche.js",
     "dateiversionenHtml",
     "esc",
-    "oeffneArztDetail"
+    "oeffneArztDetail",
+    "vorgeschichteFormHtml"
    ],
    "modules": [
     "abrechnung",
@@ -102501,6 +102523,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -102591,6 +102614,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -106052,6 +106076,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -106142,6 +106167,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -122362,6 +122388,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -122452,6 +122479,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -128132,6 +128160,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -128222,6 +128251,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -130364,6 +130394,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -130454,6 +130485,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -131373,6 +131405,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -131463,6 +131496,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -134272,6 +134306,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -134362,6 +134397,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -137754,6 +137790,442 @@
    ]
   },
   {
+   "name": "esc",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 16,
+   "end": 45,
+   "lines": 30,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "datum",
+    "vorgeschichteFormHtml"
+   ],
+   "calledBy": [
+    "$",
+    "$$",
+    "(datei) module/termin-rechtstexte.js",
+    "_LEER",
+    "_erfasseZahlung",
+    "_erstelleGruppen",
+    "_feld",
+    "_feldEinheiten",
+    "_freitextBlock",
+    "_manuellHinweis",
+    "_merkmale",
+    "_summeHtml",
+    "_termine",
+    "_terminePodo",
+    "_ueberschrift",
+    "_verschreibung",
+    "aktionenHtml",
+    "aktualisiereKopf",
+    "anamneseFehltNotizHtml",
+    "attachArztSearch",
+    "attachDiagnoseSearch",
+    "attachHeilmittelSearch",
+    "attachKrankenkasseSuche",
+    "beispiele",
+    "belegnummerRosette",
+    "blockInhalt",
+    "boardNotice",
+    "cardHTML",
+    "confirmDialog",
+    "count",
+    "darf",
+    "dat",
+    "dateiversionenHtml",
+    "datum",
+    "detailTabelleHtml",
+    "digits",
+    "druckeInline",
+    "eingabeHtml",
+    "eur",
+    "extern",
+    "fachbereich",
+    "fehlerhaftHtml",
+    "feld",
+    "fmtDate",
+    "fmtDateTime",
+    "fn",
+    "form",
+    "formExpense",
+    "formHtml",
+    "frageBerichtFreigabe",
+    "fussbefundBoxHtml",
+    "geldHtml",
+    "gruppeHtml",
+    "heilmittelOptionsHtml",
+    "herstellerHtml",
+    "hinweiseHtml",
+    "inline",
+    "karteHtml",
+    "kartenIkHinweisHtml",
+    "kopfHtml",
+    "kopieOeffnen",
+    "korrekturHtml",
+    "kostentraegerFehltHtml",
+    "kurzOf",
+    "ladePatientenAnamnese",
+    "ladeRxKontext",
+    "langOf",
+    "leerHtml",
+    "loadAnamnese",
+    "loadTree",
+    "loadVehicles",
+    "md",
+    "memberById",
+    "mountBrandingExtras",
+    "mountEinrichtungRing",
+    "oeffneArztDetail",
+    "oeffneBefreiungsFormular",
+    "oeffnePatientenImport",
+    "oeffneVerordnungImport",
+    "oeffneZahlungseingang",
+    "oeffneZuzahlungKorrektur",
+    "openDasGuideModalController",
+    "openFile",
+    "openIn",
+    "optionen",
+    "optionenHtml",
+    "passt",
+    "praxisFusszeileHtml",
+    "protokollFehlerHtml",
+    "pruefStatusHtml",
+    "render",
+    "renderAICopilot",
+    "renderArztRegister",
+    "renderCatBar",
+    "renderCategoryBreakdown",
+    "renderCostsTab",
+    "renderEinwilligungListe",
+    "renderFixcostDetail",
+    "renderFussbefundArchiv",
+    "renderList",
+    "renderMahnung",
+    "renderStammdaten",
+    "renderStep",
+    "renderTripsTab",
+    "renderVehiclesTab",
+    "renderVendorPortfolio",
+    "renderVerlauf",
+    "renderZaaUploadResult",
+    "rozetHtml",
+    "schritt2",
+    "senden",
+    "showAbsagegrundModal",
+    "showHistory",
+    "spalteFeld",
+    "status",
+    "stift",
+    "terminHinweiseHtml",
+    "todoForm",
+    "toggleMenu",
+    "togglePopover",
+    "verbindungenHtml",
+    "verordnungDetailHtml",
+    "verwerfungHtml",
+    "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
+    "vorschau",
+    "vorschlag",
+    "w",
+    "wagnerRozetHtml",
+    "withTimeout",
+    "zeichne",
+    "zeichneLuecken",
+    "zeichnePodoEinheiten",
+    "zeichneVerlauf",
+    "zeigeAbrechnungDetail",
+    "zeigeVerordnungDetail",
+    "zeigeVorschlaege",
+    "zeile",
+    "zeileDetailHtml",
+    "zeileHtml",
+    "zeitraumHtml",
+    "zuordnungsSchritt"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "vorgeschichteFormHtml",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 20,
+   "end": 45,
+   "lines": 26,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "datum",
+    "esc"
+   ],
+   "calledBy": [
+    "esc",
+    "montiereVorgeschichte"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "datum",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 22,
+   "end": 22,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/pdf/ausfallrechnung.template.js",
+    "(datei) katalog-suche.js",
+    "dateiversionenHtml",
+    "esc",
+    "oeffneArztDetail",
+    "vorgeschichteFormHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "montiereVorgeschichte",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 51,
+   "end": 80,
+   "lines": 30,
+   "spiegelHinweis": null,
+   "tables": [
+    "leads"
+   ],
+   "rpcs": [],
+   "writes": [
+    "leads:update"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "pruefeVorgeschichte",
+    "vorgeschichteFormHtml"
+   ],
+   "calledBy": [
+    "loadPodologieBilling"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "$",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/podo-vorgeschichte-form.js",
+   "start": 57,
+   "end": 81,
+   "lines": 25,
+   "spiegelHinweis": null,
+   "tables": [
+    "leads"
+   ],
+   "rpcs": [],
+   "writes": [
+    "leads:update"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "pruefeVorgeschichte"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "tag",
    "kind": "arrow",
    "lang": "js",
@@ -138097,11 +138569,53 @@
     "tag"
    ],
    "calledBy": [
+    "$",
+    "montiereVorgeschichte",
     "zeileZuPatient"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 37 modülden çağrılıyor"
+   ]
   },
   {
    "name": "d",
@@ -139392,8 +139906,8 @@
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
    "start": 504,
-   "end": 1286,
-   "lines": 783,
+   "end": 1291,
+   "lines": 788,
    "spiegelHinweis": null,
    "tables": [
     "abrechnung_zeile",
@@ -139444,6 +139958,7 @@
     "leitsymptomatikNotiz",
     "loadDgIcdRules",
     "matchIcdToDg",
+    "montiereVorgeschichte",
     "mountEmpfangsnachweise",
     "mountFussbefund",
     "nagelLabel",
@@ -139677,8 +140192,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1292,
-   "end": 1308,
+   "start": 1297,
+   "end": 1313,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [
@@ -139751,8 +140266,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1314,
-   "end": 1325,
+   "start": 1319,
+   "end": 1330,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -139818,8 +140333,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1328,
-   "end": 1336,
+   "start": 1333,
+   "end": 1341,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -139885,8 +140400,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1339,
-   "end": 1355,
+   "start": 1344,
+   "end": 1360,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [
@@ -139914,8 +140429,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1360,
-   "end": 1363,
+   "start": 1365,
+   "end": 1368,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -139979,8 +140494,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1375,
-   "end": 1379,
+   "start": 1380,
+   "end": 1384,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -140046,8 +140561,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1385,
-   "end": 1387,
+   "start": 1390,
+   "end": 1392,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -140112,8 +140627,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1401,
-   "end": 1410,
+   "start": 1406,
+   "end": 1415,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -140180,8 +140695,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/podologie-abrechnung.js",
-   "start": 1418,
-   "end": 1446,
+   "start": 1423,
+   "end": 1451,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -147165,6 +147680,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -147255,6 +147771,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -160575,6 +161092,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -160665,6 +161183,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -165368,6 +165887,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -165458,6 +165978,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -169718,6 +170239,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -169808,6 +170330,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -179724,6 +180247,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -179814,6 +180338,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -182645,6 +183170,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -182735,6 +183261,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -182914,6 +183441,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -183004,6 +183532,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -187321,6 +187850,7 @@
     "darf",
     "dat",
     "dateiversionenHtml",
+    "datum",
     "detailTabelleHtml",
     "digits",
     "druckeInline",
@@ -187411,6 +187941,7 @@
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
+    "vorgeschichteFormHtml",
     "vorschau",
     "vorschlag",
     "w",
@@ -198286,6 +198817,328 @@
    ]
   },
   {
+   "tabelle": "leads",
+   "anzahl": 10,
+   "pfade": [
+    {
+     "leitfunktion": "leadAusAnfrage",
+     "funktionen": [
+      {
+       "name": "leadAusAnfrage",
+       "file": "api-backend/booking/lead-aus-anfrage.js",
+       "start": 50,
+       "end": 78,
+       "lines": 29,
+       "writes": [
+        "leads:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "kontoLoeschenIntern",
+     "funktionen": [
+      {
+       "name": "kontoLoeschenIntern",
+       "file": "api-backend/dsgvo/loeschen.js",
+       "start": 75,
+       "end": 760,
+       "lines": 686,
+       "writes": [
+        "leads:delete",
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "handleDirectAusfallrechnung",
+     "funktionen": [
+      {
+       "name": "handleDirectAusfallrechnung",
+       "file": "dashboard.js",
+       "start": 3838,
+       "end": 3984,
+       "lines": 147,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "maybeOfferAppointmentConfirmEmail",
+     "funktionen": [
+      {
+       "name": "maybeOfferAppointmentConfirmEmail",
+       "file": "dashboard.js",
+       "start": 6600,
+       "end": 6687,
+       "lines": 88,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "initSchnellerfassung",
+     "funktionen": [
+      {
+       "name": "initSchnellerfassung",
+       "file": "dashboard.js",
+       "start": 16585,
+       "end": 16706,
+       "lines": 122,
+       "writes": [
+        "leads:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "oeffnePatientenImport",
+     "funktionen": [
+      {
+       "name": "oeffnePatientenImport",
+       "file": "module/patienten-import.js",
+       "start": 407,
+       "end": 573,
+       "lines": 167,
+       "writes": [
+        "leads:insert",
+        "leads:delete"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "importiere",
+       "file": "module/patienten-import.js",
+       "start": 523,
+       "end": 542,
+       "lines": 20,
+       "writes": [
+        "leads:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "schritt3",
+       "file": "module/patienten-import.js",
+       "start": 544,
+       "end": 570,
+       "lines": 27,
+       "writes": [
+        "leads:delete"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "montiereVorgeschichte",
+     "funktionen": [
+      {
+       "name": "montiereVorgeschichte",
+       "file": "module/podo-vorgeschichte-form.js",
+       "start": 51,
+       "end": 80,
+       "lines": 30,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "$",
+     "funktionen": [
+      {
+       "name": "$",
+       "file": "module/podo-vorgeschichte-form.js",
+       "start": 57,
+       "end": 81,
+       "lines": 25,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "verordnungPatientenAbgleich",
+     "funktionen": [
+      {
+       "name": "verordnungPatientenAbgleich",
+       "file": "module/verordnung-patient-abgleich.js",
+       "start": 19,
+       "end": 98,
+       "lines": 80,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "beantworteAltbestand",
+     "funktionen": [
+      {
+       "name": "beantworteAltbestand",
+       "file": "module/verordnung-podo.js",
+       "start": 919,
+       "end": 932,
+       "lines": 14,
+       "writes": [
+        "leads:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 37 modülden çağrılıyor"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "prescriptions",
    "anzahl": 10,
    "pfade": [
@@ -199628,254 +200481,6 @@
        ],
        "modules": [],
        "uiPfad": []
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "tabelle": "leads",
-   "anzahl": 8,
-   "pfade": [
-    {
-     "leitfunktion": "leadAusAnfrage",
-     "funktionen": [
-      {
-       "name": "leadAusAnfrage",
-       "file": "api-backend/booking/lead-aus-anfrage.js",
-       "start": 50,
-       "end": 78,
-       "lines": 29,
-       "writes": [
-        "leads:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "kontoLoeschenIntern",
-     "funktionen": [
-      {
-       "name": "kontoLoeschenIntern",
-       "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
-       "writes": [
-        "leads:delete",
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "handleDirectAusfallrechnung",
-     "funktionen": [
-      {
-       "name": "handleDirectAusfallrechnung",
-       "file": "dashboard.js",
-       "start": 3838,
-       "end": 3984,
-       "lines": 147,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "maybeOfferAppointmentConfirmEmail",
-     "funktionen": [
-      {
-       "name": "maybeOfferAppointmentConfirmEmail",
-       "file": "dashboard.js",
-       "start": 6600,
-       "end": 6687,
-       "lines": 88,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "initSchnellerfassung",
-     "funktionen": [
-      {
-       "name": "initSchnellerfassung",
-       "file": "dashboard.js",
-       "start": 16585,
-       "end": 16706,
-       "lines": 122,
-       "writes": [
-        "leads:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "oeffnePatientenImport",
-     "funktionen": [
-      {
-       "name": "oeffnePatientenImport",
-       "file": "module/patienten-import.js",
-       "start": 407,
-       "end": 573,
-       "lines": 167,
-       "writes": [
-        "leads:insert",
-        "leads:delete"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "importiere",
-       "file": "module/patienten-import.js",
-       "start": 523,
-       "end": 542,
-       "lines": 20,
-       "writes": [
-        "leads:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "schritt3",
-       "file": "module/patienten-import.js",
-       "start": 544,
-       "end": 570,
-       "lines": 27,
-       "writes": [
-        "leads:delete"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "verordnungPatientenAbgleich",
-     "funktionen": [
-      {
-       "name": "verordnungPatientenAbgleich",
-       "file": "module/verordnung-patient-abgleich.js",
-       "start": 19,
-       "end": 98,
-       "lines": 80,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 37 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "beantworteAltbestand",
-     "funktionen": [
-      {
-       "name": "beantworteAltbestand",
-       "file": "module/verordnung-podo.js",
-       "start": 919,
-       "end": 932,
-       "lines": 14,
-       "writes": [
-        "leads:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 37 modülden çağrılıyor"
-       ]
       }
      ]
     }
@@ -202217,8 +202822,8 @@
        "name": "loadPodologieBilling",
        "file": "module/podologie-abrechnung.js",
        "start": 504,
-       "end": 1286,
-       "lines": 783,
+       "end": 1291,
+       "lines": 788,
        "writes": [
         "podologie_behandlungen:insert"
        ],
@@ -202902,6 +203507,7 @@
     "module/patienten-import.js:317",
     "module/patientenkarte.js:44",
     "module/podo-einheiten.js:379",
+    "module/podo-vorgeschichte-form.js:16",
     "module/rechnung-zahlungseingang.js:225",
     "module/termin-hinweise.js:37",
     "module/ueber.js:26",
@@ -202984,6 +203590,23 @@
    "aynalar": []
   },
   {
+   "name": "$",
+   "orte": [
+    "attendance.js:10",
+    "module/anamnese.js:43",
+    "module/branding-ui.js:31",
+    "module/kiosk.js:72",
+    "module/podo-vorgeschichte-form.js:57",
+    "module/rechnung-zahlungseingang.js:455",
+    "module/ueber.js:52",
+    "module/verordnung-podo.js:83",
+    "module/verordnung-pruefen-knopf.js:42",
+    "module/zuzahlung-korrektur.js:206",
+    "ops/app.js:48"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "r2",
    "orte": [
     "api-backend/billing/api/abrechnung.routes.js:2334",
@@ -202997,22 +203620,6 @@
     "api-backend/billing/zuzahlung/korrektur.js:16",
     "module/abrechnung-verlauf.js:128",
     "module/zuzahlung-rechnen.js:42"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "$",
-   "orte": [
-    "attendance.js:10",
-    "module/anamnese.js:43",
-    "module/branding-ui.js:31",
-    "module/kiosk.js:72",
-    "module/rechnung-zahlungseingang.js:455",
-    "module/ueber.js:52",
-    "module/verordnung-podo.js:83",
-    "module/verordnung-pruefen-knopf.js:42",
-    "module/zuzahlung-korrektur.js:206",
-    "ops/app.js:48"
    ],
    "aynalar": []
   },
@@ -203437,6 +204044,15 @@
    "aynalar": []
   },
   {
+   "name": "datum",
+   "orte": [
+    "module/abrechnung-artefakte.js:24",
+    "module/arzt-register.js:549",
+    "module/podo-vorgeschichte-form.js:22"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "DE",
    "orte": [
     "module/behandlungsbestaetigung.js:41",
@@ -203837,14 +204453,6 @@
    "orte": [
     "module/patienten-einwilligung.js:59",
     "module/podo-vorgeschichte.js:51"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "datum",
-   "orte": [
-    "module/abrechnung-artefakte.js:24",
-    "module/arzt-register.js:549"
    ],
    "aynalar": []
   },

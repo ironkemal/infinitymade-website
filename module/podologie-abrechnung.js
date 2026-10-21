@@ -60,7 +60,7 @@
  * Aufruf.
  */
 
-import { vorgeschichteAlsBehandlungen } from './podo-vorgeschichte.js?v=20261021s';
+import { vorgeschichteAlsBehandlungen } from './podo-vorgeschichte.js?v=20261021s'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021u';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
@@ -895,6 +895,7 @@ async function loadPodologieBilling() {
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_notizen')}</label>
           <textarea id="podBehNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
         </div>
+        ${istAltsystemVerordnung(selectedVord) ? '<div id="podVgWrap"></div>' : ''}
         ${istAltsystemVerordnung(selectedVord) ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer;color:var(--text-main);">
           <input type="checkbox" id="podAltsystem" style="margin-top:2px;">
           <span><b>Aus Altsystem übernommen</b> — diese Behandlung wurde im bisherigen Programm erbracht; die Unterschrift des Patienten für diesen Tag steht auf der Rückseite der Verordnung.</span>
@@ -1023,6 +1024,10 @@ async function loadPodologieBilling() {
       else if (cb.value === '78010' || cb.value === '78020') cb.checked = false;
     });
   });
+
+  // Vorgeschichte aus dem Altsystem (nur bei übernommenen VOs) — module/podo-vorgeschichte-form.js.
+  { const vgVord = findVord(_podState.selectedVordId);
+    if (istAltsystemVerordnung(vgVord)) montiereVorgeschichte({ sb: ctx.supabase, ownerId: ctx.getOwnerId(), leadId: vgVord?.lead_id, nagel: vgVord?.nagel, wrap: document.getElementById('podVgWrap') }).catch(() => {}); }
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
