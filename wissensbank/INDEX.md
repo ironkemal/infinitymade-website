@@ -810,6 +810,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - **308-1213 Buchungsstapel — 125 alan** (alan tablosu ayrıca `.tsv`)
   - 1214 Wiederkehrende Buchungen · 1856 Debitoren/Kreditoren · 3778 Zahlungsbedingungen · 4046 Sachkontenbeschriftung · 4103 Diverse Adressen
   - 5576 Import/Export (Stapelverarbeitung, KrStaPv.exe, accounting:extf-files) · 5608 Format-Kategorie/Version tablosu · 5680 Notation für Ausdrücke · 5841 Changelog
+- **Kodda karşılığı:** `api-backend/lib/datev.js` (`EXTF_SPALTEN`, Formatversion 13) · test `api-backend/lib/datev.test.js`.
 - ⚠️ Tablo sütun adları Musterdatei başlığından farklı yazılmış (ör. „Umsatz" ↔ „Umsatz (ohne Soll/Haben-Kz)") — 2. satır için satır 21 esas (REGISTER W-13).
 - **Sicil kaydı:** REGISTER **W-13**.
 
