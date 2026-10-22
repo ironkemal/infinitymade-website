@@ -151,6 +151,14 @@
   .foto .mid,.foto .sub{text-shadow:0 2px 30px rgba(0,0,0,.45)} .foto .sub{color:rgba(255,255,255,.9)}
   .kilabel{position:absolute;top:150px;right:90px;z-index:3;font-family:var(--mono);font-size:22px;letter-spacing:.08em;color:rgba(255,255,255,.7)}
 
+  /* Untertitel zur Sprachspur (Karaoke): Band über der unteren Safe-Zone, Inhalt rückt dafür nach oben */
+  .mitvo .scene{padding-bottom:560px}
+  #ut{position:absolute;left:90px;right:150px;top:1385px;height:120px;z-index:8;display:flex;justify-content:center;align-items:center;pointer-events:none}
+  #ut .satz{display:inline-block;padding:14px 30px;border-radius:22px;background:rgba(26,22,17,.86);color:#fff;
+    font-family:var(--sans);font-weight:800;font-size:60px;line-height:1.15;letter-spacing:-.01em;text-align:center;opacity:0;white-space:nowrap}
+  #ut .wo{display:inline-block;margin:0 .14em;opacity:.55}
+  #ut .wo.da{opacity:1} #ut .wo.jetzt{color:#E8CF9C}
+
   /* outro */
   .marke{font-family:var(--serif);font-weight:500;font-size:96px;letter-spacing:-.02em;margin-top:120px}
   .marke em{font-style:italic;color:var(--gold)}
@@ -586,6 +594,25 @@ const szenen = V.szenen.map(s => {
   return seg;
 });
 window.DAUER = start;
+
+// Untertitel: Wortzeiten proportional zur Wortlänge (+ Pause nach Satzzeichen) über die gemessene Sprechdauer
+const MITVO = szenen.some(z => z.s.vo);
+if (MITVO) stage.classList.add('mitvo');
+const ut = document.createElement('div'); ut.id = 'ut'; stage.appendChild(ut);
+szenen.forEach(z => {
+  if (!z.s.vo) return;
+  const wo = z.s.sprecher.trim().split(/\s+/);
+  const gew = wo.map(w => w.replace(/[^\p{L}\p{N}]/gu, '').length + 2 + (/[.,!?;:…]$/.test(w) ? 5 : 0));
+  const summe = gew.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  const zeiten = gew.map(g => { const t0 = acc; acc += g; return z.s.vo.bei + z.s.vo.dauer * t0 / summe; });
+  const stuecke = []; let cur = [];
+  wo.forEach((w, i) => {
+    cur.push(i);
+    if (cur.length >= 3 || /[.,!?;:…]$/.test(w) || i === wo.length - 1) { stuecke.push(cur); cur = []; }
+  });
+  z.ut = { wo, zeiten, stuecke };
+});
 // Mitte/Ende jeder Szene — für die Vorschau (ein Frame pro Szene, alles sichtbar)
 window.SZENEN_ENDE = szenen.map(z => Math.max(z.a, z.b - .35));
 
@@ -598,7 +625,8 @@ window.pruefe = () => {
     if (z.s.typ === 'tippen') z.el.querySelector('.tipp').textContent = z.tippText;
     if (z.s.typ === 'hook') z.el.querySelector('.stempel').style.transform = 'rotate(-12deg)';
     const inhalt = z.el.querySelector('.inhalt').getBoundingClientRect();
-    if (inhalt.top < 225 || inhalt.bottom > 1920 - 415) fehler.push(`Szene ${i + 1} (${z.s.typ}): zu hoch (${Math.round(inhalt.height)} px, max 1270)`);
+    const unten = MITVO ? 1920 - 555 : 1920 - 415;
+    if (inhalt.top < 225 || inhalt.bottom > unten) fehler.push(`Szene ${i + 1} (${z.s.typ}): zu hoch (${Math.round(inhalt.height)} px, max ${unten - 230})`);
     z.el.querySelectorAll('.inhalt *').forEach(n => {
       const r = n.getBoundingClientRect();
       if (r.width && r.right > 1080 - 145) fehler.push(`Szene ${i + 1} (${z.s.typ}): ragt rechts raus: "${n.textContent.trim().slice(0, 40)}"`);
@@ -608,8 +636,27 @@ window.pruefe = () => {
   return [...new Set(fehler)];
 };
 
+function untertitel(t) {
+  let html = '', k = 0;
+  const z = szenen.find(z => z.ut && t >= z.a + z.s.vo.bei - .05 && t < z.a + z.s.vo.bei + z.s.vo.dauer + .25);
+  if (z) {
+    const lt = t - z.a, { wo, zeiten, stuecke } = z.ut;
+    let jetzt = 0;
+    zeiten.forEach((x, i) => { if (lt >= x) jetzt = i; });
+    const si = stuecke.findIndex(s => s.includes(jetzt));
+    const s = stuecke[si];
+    html = s.map(i => `<span class="wo ${i <= jetzt ? 'da' : ''} ${i === jetzt ? 'jetzt' : ''}">${wo[i]}</span>`).join('');
+    k = E.back(prog(lt, zeiten[s[0]] - .02, zeiten[s[0]] + .14));
+    html = `<span class="satz" data-k="${z.a}-${si}">${html}</span>`;
+  }
+  if (ut.dataset.h !== html) { ut.innerHTML = html; ut.dataset.h = html; }
+  const el = ut.firstElementChild;
+  if (el) { el.style.opacity = clamp(k * 1.6); el.style.transform = `scale(${.86 + .14 * k})`; }
+}
+
 window.renderAt = t => {
   barFill.style.width = (prog(t, 0, start) * 100) + '%';
+  untertitel(t);
   szenen.forEach((z, i) => {
     const lt = t - z.a;
     // Ein Foto blendet über die vorige Szene: die bleibt so lange stehen, bis es deckt
