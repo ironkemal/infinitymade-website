@@ -1,5 +1,5 @@
 {
-  "surum": "0.6.3",
+  "surum": "0.7.0",
   "dateien": [
     { "yol": "docker-compose.yml", "sha256": "e08ef84ecb312f8b51084b7d0f3ee25ededd3f1acd2811de28d0c851093e0fcf" },
     { "yol": ".env.template", "sha256": "e9efcfaabd22dba1818ef435a81271e2b6a202fc0b7c028d237beec5ee360ce3" },

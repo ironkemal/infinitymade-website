@@ -25,6 +25,8 @@ gitignore/
 .mcp.json
 .roo/
 skills-lock.json
+# Also exclude local dependency symlinks used by temporary worktrees.
+node_modules
 node_modules/
 .env
 .env.local

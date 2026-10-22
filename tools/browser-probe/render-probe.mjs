@@ -181,7 +181,7 @@ const bindung = await page.evaluate(async () => {
   const sb = { from() {
     const filter = {};
     const qb = {
-      select: () => qb, not: () => qb, order: () => qb,
+      select: () => qb, not: () => qb, or: () => qb, order: () => qb,
       eq(key, value) { filter[key] = value; return qb; },
       async limit(n) { return { data: rxs.filter(rx => rx.patient_id === filter.patient_id).slice(0, n) }; },
       async maybeSingle() { return { data: rxs.find(rx => rx.id === filter.id && rx.patient_id === filter.patient_id) }; },
