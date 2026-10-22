@@ -3,6 +3,8 @@
 //   ab SENDEZEIT   → heutigen Inhalt auf jede Plattform posten (genau einmal, bis zu 3 Versuche)
 //   ab VORSCHAUZEIT → Vorschau für morgen an Telegram + Warnung, wenn der Vorrat knapp wird
 //   immer          → Telegram-Befehle lesen: /stopp MM-TT · /freigeben MM-TT · /pause · /weiter · /status
+//                    · /test (Verbindung prüfen) · /jetzt [MM-TT] (Tag sofort posten, z. B. nach Fehlschlag)
+//   START_AB=JJJJ-MM-TT → Tage davor werden nie automatisch gepostet (erster Sendetag)
 // Aufruf:
 //   node sosyal/yayinci/yayinci.mjs --dienst              Dauerbetrieb
 //   node sosyal/yayinci/yayinci.mjs --trocken             ein Durchlauf, nichts wird gepostet
@@ -32,6 +34,7 @@ export function konfiguration(env = process.env) {
     plattformen: (env.PLATTFORMEN || 'instagram,facebook').split(',').map(s => s.trim()).filter(Boolean),
     takt: Number(env.TAKT_MINUTEN || 5),
     vorratWarnung: Number(env.VORRAT_WARNUNG_TAGE || 7),
+    startAb: env.START_AB || '',
     meta: { token: env.META_PAGE_TOKEN, pageId: env.META_PAGE_ID, igUserId: env.META_IG_USER_ID, version: env.META_API_VERSION || 'v23.0' },
     telegram: { token: env.TELEGRAM_BOT_TOKEN, chatId: env.TELEGRAM_CHAT_ID },
   };
@@ -58,6 +61,11 @@ export function schluessel(mmtt, jetzt) {
   const heute = berlin(jetzt);
   if (/^\d{4}-\d{2}-\d{2}$/.test(mmtt)) return mmtt;
   return `${mmtt >= heute.tag ? heute.jahr : Number(heute.jahr) + 1}-${mmtt}`;
+}
+/** "10-21" → das letzte Vorkommen bis heute (Nachholen geht rückwärts, über den Jahreswechsel). */
+export function letzterSchluessel(mmtt, jetzt) {
+  const heute = berlin(jetzt);
+  return `${mmtt <= heute.tag ? heute.jahr : Number(heute.jahr) - 1}-${mmtt}`;
 }
 const teile = key => ({ jahr: key.slice(0, 4), tag: key.slice(5) });
 
@@ -87,7 +95,7 @@ export async function poste(key, t, { z, cfg, plattformen, telegram, log }) {
       z.tage[key][p] = { versuche, fehler: e.message, zeit: new Date().toISOString() };
       log(`❌ ${key} ${p} (Versuch ${versuche}): ${e.message}`);
       if (versuche === 1 || versuche === MAX_VERSUCHE) {
-        const ende = versuche === MAX_VERSUCHE ? 'Aufgegeben. Nachholen: /posten nach Behebung oder Neustart.' : 'Neuer Versuch beim nächsten Durchlauf.';
+        const ende = versuche === MAX_VERSUCHE ? `Aufgegeben. Nachholen nach Behebung: /jetzt ${t.tag}` : 'Neuer Versuch beim nächsten Durchlauf.';
         await telegram.sende(`❌ ${t.tag} auf ${NAMEN[p] || p} fehlgeschlagen:\n${e.message}\n${ende}`).catch(() => {});
       }
     }
@@ -117,6 +125,19 @@ async function befehleVerarbeiten(ctx) {
       const heute = cfg.plattformen.map(p => `${NAMEN[p] || p}: ${z.tage[key]?.[p]?.id ? '✅' : (z.tage[key]?.[p]?.fehler ? '❌' : '–')}`).join(' · ');
       const vorrat = await zaehleVorrat(laden, jetzt, 60);
       await telegram.sende(`Status ${h.tag}${z.pausiert ? ' (PAUSIERT)' : ''}\nHeute: ${heute}\nVorrat: ${vorrat} Tage\nGestoppt: ${z.gesperrt.join(', ') || '—'}`);
+    } else if (befehl === 'test') {
+      const text = ctx.verbindung ? await ctx.verbindung().catch(e => `❌ Verbindung gestört:\n${e.message}`) : '– Verbindungstest hier nicht verfügbar';
+      await telegram.sende(text);
+    } else if (befehl === 'jetzt') {
+      // ausdrücklicher Befehl: hebt /stopp für diesen Tag auf und setzt erschöpfte Versuche zurück
+      const h = berlin(jetzt), key = letzterSchluessel(arg || h.tag, jetzt), { jahr, tag } = teile(key);
+      const t = await laden(jahr, tag);
+      if (!t || t.fehlt.length) { await telegram.sende(`⚠ ${tag}: ${t ? `Dateien fehlen:\n${t.fehlt.join('\n')}` : 'kein Inhalt'}`); continue; }
+      z.gesperrt = z.gesperrt.filter(k => k !== key);
+      for (const p of cfg.plattformen) if (z.tage[key]?.[p] && !z.tage[key][p].id) delete z.tage[key][p];
+      if (cfg.plattformen.every(p => z.tage[key]?.[p]?.id)) { await telegram.sende(`✅ ${tag} ist schon überall veröffentlicht.`); continue; }
+      await telegram.sende(`▶ ${tag} wird jetzt veröffentlicht …`);
+      await poste(key, t, ctx);
     }
     log(`Befehl /${befehl} ${arg || ''}`);
   }
@@ -179,7 +200,7 @@ export async function tick(ctx) {
   await befehleVerarbeiten(ctx).catch(e => log(`Telegram-Befehle: ${e.message}`));
   const h = berlin(jetzt), key = `${h.jahr}-${h.tag}`;
 
-  if (h.minuten >= cfg.sendezeit && !z.pausiert && !z.gesperrt.includes(key)) {
+  if (h.minuten >= cfg.sendezeit && !z.pausiert && !z.gesperrt.includes(key) && !(cfg.startAb && key < cfg.startAb)) {
     const t = await laden(h.jahr, h.tag);
     if (!t) await einmal(z, `${key}:leer`, telegram, `⚠ Für heute (${h.tag}) gibt es keinen Inhalt.`, log);
     else if (t.fehlt.length) await einmal(z, `${key}:fehlt`, telegram, `⚠ ${h.tag}: Dateien fehlen, nicht gepostet:\n${t.fehlt.join('\n')}`, log);
@@ -244,20 +265,23 @@ async function main() {
     return;
   }
 
-  if (args.includes('--verbindung')) {
-    // prüft Token, Seite, Instagram-Konto und Telegram — ohne etwas zu veröffentlichen
+  // prüft Token, Seite und Instagram-Konto — ohne etwas zu veröffentlichen (CLI --verbindung und Telegram /test)
+  const verbindung = async () => {
     const c = new MetaClient(cfg.meta);
     const seite = await c.graph(cfg.meta.pageId, { params: { fields: 'name,instagram_business_account' } });
     const ig = await c.graph(cfg.meta.igUserId, { params: { fields: 'username' } });
-    console.log(`✓ Facebook-Seite: ${seite.name}`);
-    console.log(`✓ Instagram: @${ig.username}${seite.instagram_business_account?.id === cfg.meta.igUserId ? ' (mit der Seite verknüpft)' : ' ⚠ nicht die mit der Seite verknüpfte ID'}`);
+    return `✓ Facebook-Seite: ${seite.name}\n✓ Instagram: @${ig.username}${seite.instagram_business_account?.id === cfg.meta.igUserId ? ' (mit der Seite verknüpft)' : ' ⚠ nicht die mit der Seite verknüpfte ID'}`;
+  };
+
+  if (args.includes('--verbindung')) {
+    console.log(await verbindung());
     const tgEcht = new Telegram(cfg.telegram);
     if (tgEcht.aktiv) { await tgEcht.sende('✓ Praxura-Veröffentlicher: Verbindung steht.'); console.log('✓ Telegram: Testnachricht gesendet'); }
     else console.log('– Telegram nicht eingerichtet');
     return;
   }
 
-  const ctxBasis = { cfg, laden, telegram, plattformen, kennzahlen, log };
+  const ctxBasis = { cfg, laden, telegram, plattformen, kennzahlen, log, verbindung: trocken ? null : verbindung };
   const p = args.indexOf('--posten');
   if (p >= 0) {
     const z = await ladeZustand(cfg.daten), key = schluessel(args[p + 1], new Date()), { jahr, tag } = teile(key);

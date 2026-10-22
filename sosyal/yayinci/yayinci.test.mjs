@@ -5,7 +5,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { MetaClient } from './meta.mjs';
-import { tick, schluessel } from './yayinci.mjs';
+import { tick, schluessel, letzterSchluessel } from './yayinci.mjs';
 import { berlin, inTagen } from './tag.mjs';
 
 const dir = await mkdtemp(path.join(tmpdir(), 'yayinci-'));
@@ -119,6 +119,34 @@ test('/stopp sperrt den Tag, /pause stoppt alles', async () => {
   }
 });
 
+test('START_AB: Tage davor werden nicht automatisch gepostet', async () => {
+  const z = leer(); let posts = 0;
+  const plattformen = { instagram: async () => ({ id: ++posts }), facebook: async () => ({ id: ++posts }) };
+  await tick({ z, cfg: { ...cfg, startAb: '2026-10-22' }, jetzt: MITTAG, laden: async (j, t) => inhalt(j, t), telegram: tg(), plattformen, log: () => {} });
+  assert.equal(posts, 0);
+  await tick({ z, cfg: { ...cfg, startAb: '2026-10-21' }, jetzt: MITTAG, laden: async (j, t) => inhalt(j, t), telegram: tg(), plattformen, log: () => {} });
+  assert.equal(posts, 2);
+});
+
+test('/jetzt holt einen aufgegebenen und gesperrten Tag sofort nach, auch vor der Sendezeit', async () => {
+  const z = leer(), telegram = tg([{ befehl: 'jetzt', arg: '10-20' }]); let posts = 0;
+  z.gesperrt.push('2026-10-20');
+  z.tage['2026-10-20'] = { instagram: { versuche: 3, fehler: 'kaputt' }, facebook: { id: 'f0' } };
+  await tick({ z, cfg, jetzt: new Date('2026-10-21T08:00:00Z'), laden: async (j, t) => inhalt(j, t), telegram,
+    plattformen: { instagram: async () => ({ id: `i${++posts}` }), facebook: async () => ({ id: `f${++posts}` }) }, log: () => {} });
+  assert.equal(posts, 1); // nur Instagram, Facebook war schon draußen
+  assert.equal(z.tage['2026-10-20'].instagram.id, 'i1');
+  assert.deepEqual(z.gesperrt, []);
+});
+
+test('/test meldet die Verbindung, auch wenn sie gestört ist', async () => {
+  for (const [verbindung, erwartet] of [[async () => '✓ ok', '✓ ok'], [async () => { throw new Error('Invalid token'); }, /Verbindung gestört:\nInvalid token/]]) {
+    const telegram = tg([{ befehl: 'test' }]);
+    await tick({ z: leer(), cfg, jetzt: new Date('2026-10-21T08:00:00Z'), laden: async () => null, telegram, plattformen: {}, verbindung, log: () => {} });
+    if (typeof erwartet === 'string') assert.equal(telegram.gesendet[0], erwartet); else assert.match(telegram.gesendet[0], erwartet);
+  }
+});
+
 test('Fehler: bis zu 3 Versuche, Meldung beim ersten und letzten', async () => {
   const z = leer(), telegram = tg(); let versuche = 0;
   const ctx = { z, cfg: { ...cfg, plattformen: ['instagram'] }, jetzt: MITTAG, laden: async (j, t) => inhalt(j, t), telegram,
@@ -148,6 +176,8 @@ test('Datum: Berlin-Zeit, Jahreswechsel und DST', () => {
   assert.deepEqual(berlin(new Date('2026-12-31T23:30:00Z')), { jahr: '2027', tag: '01-01', minuten: 30 });
   assert.equal(inTagen(1, new Date('2026-10-24T22:30:00Z')).tag, '10-26'); // 25.10. 00:30 MEZ-Wechsel → morgen 26.10.
   assert.equal(schluessel('01-02', new Date('2026-12-20T10:00:00Z')), '2027-01-02');
+  assert.equal(letzterSchluessel('12-31', new Date('2027-01-02T10:00:00Z')), '2026-12-31');
+  assert.equal(letzterSchluessel('01-02', new Date('2027-01-02T10:00:00Z')), '2027-01-02');
   assert.equal(schluessel('12-24', new Date('2026-12-20T10:00:00Z')), '2026-12-24');
 });
 

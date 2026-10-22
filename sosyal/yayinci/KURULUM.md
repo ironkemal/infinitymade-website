@@ -30,6 +30,10 @@ yayinci/*.mjs        ─┘   (ssh)         19:00 → yarının önizlemesi → 
 | `/pause` | Bütün yayını durdur (tatil, kriz) |
 | `/weiter` | Yayına devam |
 | `/status` | Bugün atıldı mı, kaç günlük stok var, neler durdurulmuş |
+| `/test` | Hiçbir şey atmadan bağlantıyı kontrol eder (token, sayfa, Instagram), sonucu yazar |
+| `/jetzt` · `/jetzt 10-22` | O günü (tarih yoksa bugünü) hemen atar — 3 denemede başarısız kalan ya da `/stopp`'lanan günü telafi etmek için. Yalnız bugün veya geçmiş günler |
+
+Telegram'dan tamir yapılmaz (kod/ayar değişmez). `/test` ❌ diyorsa mesajı Claude'ye gönder.
 
 Her akşam 19:00'da yarının kapağı ve hook'u gelir. Bir şey yapmazsan ertesi gün 12:15'te otomatik çıkar.
 
@@ -65,6 +69,7 @@ Hata çıkarsa önce bağlantı testini çalıştır (aşağıda), mesajı bana 
 
 ### 4. Ayar dosyası
 `sosyal/yayinci/env.beispiel` → kopyala → `sosyal/yayinci/.env` (git'e girmez), değerleri yaz.
+`START_AB` ilk yayın günüdür; öncesindeki günler otomatik atılmaz (yükleme günü 12:15'i geçse bile o günü sessizce atlamak için).
 
 ### 5. Test, sonra yükleme (bu kısmı Claude yapar)
 Servis **20.10.2026'dan beri merkezde kurulu ve deneme modunda çalışıyor**; `.env` gelince aynı komutla gerçek moda geçer.

@@ -41,7 +41,7 @@ export class Telegram {
       offset = Math.max(offset, u.update_id + 1);
       const m = u.message;
       if (!m || String(m.chat?.id) !== this.chatId) continue;
-      const t = (m.text || '').trim().match(/^\/(stopp|stop|freigeben|pause|weiter|status)(?:@\w+)?(?:\s+(\d{2}-\d{2}))?/i);
+      const t = (m.text || '').trim().match(/^\/(stopp|stop|freigeben|pause|weiter|status|test|jetzt)(?:@\w+)?(?:\s+(\d{2}-\d{2}))?/i);
       if (t) befehle.push({ befehl: t[1].toLowerCase().replace(/^stop$/, 'stopp'), arg: t[2] });
     }
     return { offset, befehle };
