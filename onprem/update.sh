@@ -496,7 +496,10 @@ if [ -n "$sapma_bulundu" ]; then
     "Değişiklikleri gözden geçir, gerekiyorsa .neu dosyalarıyla elle birleştir (destek: install.log/update.log'u gönder, K10 gereği içeri giremiyoruz)."
   for yol in $sapma_bulundu; do
     hedef="$SCRIPT_DIR/$yol"
-    [ -f "$hedef" ] && cp "$hedef" "$hedef.neu.bekliyor" 2>/dev/null || true
+    # Die NEUE Fassung aufheben (onprem O-218 b): vorher wurde die Datei von der
+    # Disk kopiert — die neue lag nur in BUNDLE_TMP und verschwand mit dem
+    # EXIT-Trap, zum „mit .neu zusammenführen" gab es nichts.
+    [ -f "$BUNDLE_TMP/bundle/$yol" ] && cp "$BUNDLE_TMP/bundle/$yol" "$hedef.neu.bekliyor" 2>/dev/null || true
   done
   durumu_yaz "konflikt" "\"catisma_dosyalari\": \"$sapma_bulundu\","
   exit 1
@@ -623,6 +626,10 @@ fi
 # oysa uygulanmamıştı; ertesi gece bizim==taban eşleşir, yükseltme bir daha
 # HİÇ denenmezdi — kutu sessizce eski sürümde kalırdı (onprem-Gegenlesen
 # 12.09.2026).
+# Kein Konflikt (mehr): .neu.bekliyor-Reste eines früheren Laufs wegräumen.
+while IFS= read -r yol; do
+  [ -n "$yol" ] && rm -f "$SCRIPT_DIR/$yol.neu.bekliyor"
+done < <(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"' "$MANIFEST" | sed -E 's/.*"([^"]+)"$/\1/')
 for yol in $degisen_dosyalar; do
   kaynak="$BUNDLE_TMP/bundle/$yol"
   hedef="$SCRIPT_DIR/$yol"
