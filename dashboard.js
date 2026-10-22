@@ -47,7 +47,7 @@ import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrah
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
-import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15';
+import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y';
@@ -14618,7 +14618,7 @@ async function init() {
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
-    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast });
+    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal });
     console.log('[init] ausfallConfig ok');

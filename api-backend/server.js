@@ -32,6 +32,7 @@ import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import ueberRouter from './routes/ueber.js';
+import { createManifestRouter } from './routes/manifest.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -460,6 +461,11 @@ app.get('/health/ready', async (req, res) => {
     }),
   }));
 }
+
+// App für Mitarbeiter (onprem O-214): Web-App-Manifest mit Praxisnamen, nur Box.
+// Über der Wartungsmodus-Middleware — das Symbol auf dem Startbildschirm soll auch
+// während einer Wartung seinen Namen behalten (Route liefert nie 5xx).
+app.use('/api', createManifestRouter({ supabase }));
 
 // Öffentliche Config — derselbe Vertrag wie api/config.js (Vercel, SaaS). Muss
 // über der Wartungsmodus-Middleware stehen: ohne sie kann das Frontend nicht

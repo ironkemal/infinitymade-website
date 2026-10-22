@@ -839,3 +839,47 @@ wsl -d Praxura -- bash -c "cd /opt/praxura/onprem && read -rs KAYIT_CODE; export
 ⚠️ **Hinweis:** Die Box-Identität (Volumes `kimlik`, `acmedns`) gehört nicht in
 die Sicherung und wird bei `install.sh --neu` nicht gelöscht — nicht von Hand
 löschen.
+
+## 11. Box entfernen
+
+Zum Entfernen **nur** dieses Skript verwenden — nicht von Hand mit
+`docker compose down -v`:
+
+```bash
+sudo bash /opt/praxura/onprem/deinstallieren.sh
+```
+
+Es arbeitet in dieser Reihenfolge:
+
+1. Setzt die Update-Sperre. Läuft gerade eine Aktualisierung oder Sicherung,
+   bricht es ab, ohne etwas zu verändern.
+2. Bietet eine letzte Sicherung an. Liegen Sicherungen **im** Installationsordner
+   (Sicherungsziel leer, §2.4), kopiert es sie vorher nach
+   `/root/praxura-sicherung-<Datum>` — sonst gingen sie mit dem Ordner verloren.
+   Lesbar sind sie nur mit dem Sicherungsschlüssel und dem `DATA_ENCRYPTION_KEY`
+   vom Notfallzettel (§2.5).
+3. Fragt nach der Bestätigung `ENTFERNEN`.
+4. Stoppt automatische Aktualisierung, Sicherung und IP-Meldung.
+5. Entfernt Container, Daten und Programmpakete der Box. Andere Docker-Projekte
+   auf demselben Server bleiben unberührt.
+6. Löscht den Installationsordner.
+
+Danach ist Port 80/443 frei. **Aufbewahrungspflichten** (Behandlungsdokumentation,
+Abrechnung — in der Regel 10 Jahre) liegen bei der Praxis: vor dem Entfernen
+sicherstellen, dass eine lesbare Sicherung außerhalb der Box existiert.
+
+Von Hand bleibt: auf den Praxisrechnern die hosts-Zeile und ein importiertes
+Box-Zertifikat entfernen; Praxura mitteilen, dass die Box entfernt ist (der Name
+wird dann geschlossen).
+
+**Windows-PC (WSL):** Das Skript läuft innerhalb von WSL genauso. Auf der
+Windows-Seite bleiben drei Dinge, die Sie in einer Administrator-PowerShell entfernen:
+
+```powershell
+Unregister-ScheduledTask -TaskName "Praxura Box (Autostart)" -Confirm:$false
+Remove-NetFirewallRule -Name Praxura-Box-HTTPS
+wsl --unregister Praxura
+```
+
+Hatte die Einrichtung `%USERPROFILE%\.wslconfig` geändert, liegt die alte Fassung
+als `.wslconfig.vor-praxura` daneben — zurückbenennen.

@@ -30,6 +30,7 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 | `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
 | `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html` (cropper `<link>`/`<script>`) → Logo/Profilbild zuschneiden (`dashboard.js`, `new Cropper(`) |
 | `zxing.js` | `@zxing/library@0.21.3`, npm + esbuild, pure JavaScript | `module/rezept-barcode-scan.js`, yerel PDF417 |
+| `qrcode.js` | `@zxing/library@0.21.3` (yalnız QRCodeWriter, derin esm yolları — 68 KB), `node tools/vendor/build-qrcode.mjs` | `module/qr-svg.js` → Einstellungen „App für Mitarbeiter“ (22.10.2026, onprem O-214); lisans `zxing.LICENSE` |
 | `pdfjs/pdf.mjs` + `pdfjs/pdf.worker.mjs` | `pdfjs-dist@4.10.38`, npm build çıktılarının birebir kopyası | aynı tarayıcı modülü, PDF sayfalarını yerelde render eder |
 
 ### M3 — Barcode / PDF (07.10.2026)

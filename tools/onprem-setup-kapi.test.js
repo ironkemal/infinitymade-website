@@ -108,8 +108,12 @@ test('setup.js: 404 bei /setup/status zeigt "bereits eingerichtet", abgelaufen e
   assert.match(s, /res\.status === 404\) \{ zeigeGeschlossen\(false\)/);
   assert.match(s, /data\.abgelaufen\) zeigeGeschlossen\(true\)/);
   assert.equal((s.match(/zeigeGeschlossen\(!!data\.abgelaufen\)/g) || []).length, 3, 'verify/owner/branding');
-  assert.match(s, /abgelaufenSub: .*\$\{NEUER_LINK_LINUX\}/);
-  assert.match(lies('module/einrichtung-hinweis.js'), /NEUER_LINK_LINUX = 'sudo bash \/opt\/praxura\/onprem\/install\.sh --neuer-jeton'/);
+  // setup.js darf einrichtung-hinweis.js nicht importieren (onprem-setup-jeton.test.js) —
+  // derselbe Text muss trotzdem drinstehen, sonst laufen Login- und Setup-Hinweis auseinander.
+  const linux = lies('module/einrichtung-hinweis.js').match(/NEUER_LINK_LINUX = '([^']+)'/)[1];
+  assert.match(linux, /\/opt\/praxura\/onprem\/install\.sh --neuer-jeton/);
+  assert.ok(/abgelaufenSub: .*/.exec(s)[0].includes(linux), 'abgelaufenSub nennt den Linux-Befehl');
+  assert.ok(/tokenSub: .*/.exec(s)[0].includes(linux), 'tokenSub nennt den Linux-Befehl');
 });
 
 // ── Caddy ────────────────────────────────────────────────────────────────────

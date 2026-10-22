@@ -43,6 +43,7 @@ const BUNDLE_DATEILER = [
   'lib-ip.sh',
   'lib-setup-jeton.sh',
   'ip-melden.sh',
+  'deinstallieren.sh',
   'backup.sh',
   'restore.sh',
   'reset-owner-passwort.sh',

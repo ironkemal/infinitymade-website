@@ -124,6 +124,13 @@
 	handle /health {
 		reverse_proxy api:3000
 	}
+	# App für Mitarbeiter (onprem O-214): das Manifest kommt in der Box mit dem
+	# Praxisnamen aus api (routes/manifest.js). Die HTML-Seiten bleiben bei
+	# /manifest.json — im SaaS liefert Vercel dort die statische Datei.
+	handle /manifest.json {
+		rewrite * /api/manifest
+		reverse_proxy api:3000
+	}
 
 	# ── Supabase-Dienste über Kong ──────────────────────────────────────────
 	# Bewusst OHNE /functions/*: keine Deno-Laufzeit in der Box (O-11), Kong

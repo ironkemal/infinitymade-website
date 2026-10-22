@@ -19,13 +19,15 @@
 // Erster Import (Reihenfolge ist Absicht): liest den Jeton aus #… und entfernt ihn,
 // BEVOR supabase-config.js beim Laden fetch aufruft (module/setup-fragment.js, K2b.11).
 import { fragmentJeton } from './module/setup-fragment.js';
-import { NEUER_LINK_LINUX, NEUER_LINK_WINDOWS } from './module/einrichtung-hinweis.js?v=20261022';
 import { API_BASE } from './supabase-config.js';
 
 const T = {
   de: {
     tokenStepLabel: 'Schritt 1 von 5', tokenTitle: 'Einrichtung starten',
-    tokenSub: `Hier legen Sie E-Mail und Passwort des Inhaber-Kontos fest. Dazu brauchen Sie den Einrichtungslink vom Ende der Installation. Neuen Link erzeugen — Linux-Server: ${NEUER_LINK_LINUX} · Windows-PC: ${NEUER_LINK_WINDOWS}. Alternativ den Teil nach „#" aus dem Link hier eintragen.`,
+    // Gleicher Text wie NEUER_LINK_* in module/einrichtung-hinweis.js — setup.js darf
+    // das Modul nicht importieren (Jeton-Seite, tools/onprem-setup-jeton.test.js);
+    // Gleichlauf prüft tools/onprem-setup-kapi.test.js.
+    tokenSub: `Hier legen Sie E-Mail und Passwort des Inhaber-Kontos fest. Dazu brauchen Sie den Einrichtungslink vom Ende der Installation. Neuen Link erzeugen — Linux-Server: sudo bash /opt/praxura/onprem/install.sh --neuer-jeton · Windows-PC: „Praxura-Einrichtung" erneut starten. Alternativ den Teil nach „#" aus dem Link hier eintragen.`,
     tokenAuto: 'Einrichtung wird geprüft …',
     tokenLabel: 'Einrichtungs-Jeton', tokenSubmit: 'Weiter',
     tokenInvalid: 'Jeton wird nicht akzeptiert. Bitte den Link vom Ende von install.sh erneut öffnen.',
@@ -77,7 +79,7 @@ const T = {
     closedSub: 'Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.',
     closedLoginBtn: 'Zur Anmeldung',
     abgelaufenTitle: 'Einrichtungslink abgelaufen',
-    abgelaufenSub: `Der Link gilt 14 Tage. Neuen Link erzeugen — Linux-Server: ${NEUER_LINK_LINUX} · Windows-PC: ${NEUER_LINK_WINDOWS}.`,
+    abgelaufenSub: `Der Link gilt 14 Tage. Neuen Link erzeugen — Linux-Server: sudo bash /opt/praxura/onprem/install.sh --neuer-jeton · Windows-PC: „Praxura-Einrichtung" erneut starten.`,
   },
 };
 

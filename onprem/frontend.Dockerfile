@@ -88,6 +88,8 @@ COPY setup.html setup.js ./
 # Ersetzt in der Box die Praxura-Impressum/Datenschutz-Links (legal-de 08.10).
 # module/ueber.js kommt über COPY module, vendor/LICENSES.txt über COPY vendor.
 COPY ueber.html ./
+# App für Mitarbeiter (onprem O-214): Ziel des QR-Codes aus Einstellungen.
+COPY app.html ./
 # Produkt-Lizenz (T21, 09.10.2026) — verlinkt aus ueber.html.
 COPY LICENSE ./LICENSE.txt
 
@@ -113,7 +115,7 @@ COPY module ./module
 COPY vendor ./vendor
 
 # ── Branding / Icons / Schrift ──────────────────────────────────────────────
-COPY favicon.svg favicon.png apple-touch-icon.png logo.png ./
+COPY favicon.svg favicon.png apple-touch-icon.png icon-192.png logo.png ./
 COPY fonts ./fonts
 # Nur der Podologie-Fussatlas — nicht assets/img/fn/ (Marketing-Walkthrough,
 # index.html), nicht assets/img/fn/_raw/ (Rohbilder, sowieso kein Web-Asset).

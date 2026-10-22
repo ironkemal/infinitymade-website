@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Praxura</title>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Praxura" />
+
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+
+  <style>
+    /* .btn setzt display:block und schlüge sonst das hidden-Attribut. */
+    [hidden] { display: none !important; }
+    #installKnopf + #androidMenue, #installKnopf { margin-bottom: 0.4rem; }
+    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+    .wrap { width: 100%; max-width: 460px; }
+    .brand { display: inline-block; font-family: var(--serif); font-size: 1.4rem; font-weight: 500;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none; margin-bottom: 2rem; }
+    .brand em { font-style: italic; color: var(--bronze); }
+    .karte { background: var(--bg); border: 1px solid var(--line); border-radius: 22px; padding: 2.2rem 1.6rem;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 24px 48px -20px rgba(26,22,17,0.18), 0 6px 14px -4px rgba(26,22,17,0.05); }
+    .symbol { width: 72px; height: 72px; border-radius: 18px; display: block; margin-bottom: 1.2rem;
+      box-shadow: 0 6px 16px -6px rgba(26,22,17,0.3); }
+    .label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-mute); }
+    h1 { font-family: var(--serif); font-weight: 400; font-size: 1.9rem; line-height: 1.15; letter-spacing: -0.025em;
+      color: var(--ink); margin: 0.35rem 0 0.6rem; overflow-wrap: anywhere; }
+    .sub { font-size: 0.95rem; color: var(--ink-mute); line-height: 1.5; margin-bottom: 1.6rem; }
+    .btn { display: block; width: 100%; padding: 1rem 1.4rem; background: var(--ink); color: var(--bg);
+      font-family: var(--sans); font-weight: 500; font-size: 1rem; border: none; border-radius: 999px; cursor: pointer;
+      text-align: center; text-decoration: none; }
+    .btn:active { transform: scale(0.98); }
+    ol.schritte { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 0.9rem; }
+    ol.schritte li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 0.75rem; align-items: start;
+      font-size: 0.97rem; line-height: 1.45; color: var(--ink); }
+    ol.schritte li::before { content: counter(s); width: 2rem; height: 2rem; border-radius: 50%; background: var(--bg-warm);
+      color: var(--bronze-deep); font-weight: 600; display: grid; place-items: center; font-size: 0.9rem; }
+    .ico { display: inline-flex; vertical-align: -0.3em; width: 1.4em; height: 1.4em; }
+    .hinweis { margin-top: 1.4rem; font-size: 0.85rem; color: var(--ink-mute); line-height: 1.5; }
+    .ok { margin-top: 1rem; padding: 0.9rem 1rem; border-radius: 12px; background: rgba(78,92,69,0.12); color: var(--emerald-deep); font-size: 0.95rem; }
+    .fuss { margin-top: 1.6rem; text-align: center; font-size: 0.9rem; }
+    .fuss a { color: var(--ink-soft); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a href="/login.html" class="brand">Prax<em>ura</em></a>
+
+    <div class="karte">
+      <img class="symbol" src="/apple-touch-icon.png" alt="" width="72" height="72" />
+      <div class="label">App für Ihr Handy</div>
+      <h1 id="praxisName">Praxura</h1>
+      <p class="sub">Legen Sie die Praxis-App einmal auf Ihren Startbildschirm — danach öffnen Sie sie wie jede andere App, ohne Link.</p>
+
+      <!-- Android -->
+      <section id="wegAndroid" hidden>
+        <button type="button" class="btn" id="installKnopf" hidden>App installieren</button>
+        <ol class="schritte" id="androidMenue" hidden>
+          <li><span>Oben rechts auf <strong>⋮</strong> (Menü) tippen.</span></li>
+          <li><span><strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong> wählen.</span></li>
+          <li><span>Mit <strong>„Installieren"</strong> bestätigen.</span></li>
+        </ol>
+        <p class="hinweis" id="unsicherHinweis" hidden>Ihr Browser vertraut dem Zertifikat dieser Box nicht — darum gibt es hier keinen Installieren-Knopf. Über das Menü klappt es trotzdem (als Verknüpfung).</p>
+        <div class="ok" id="installiertMeldung" hidden>Fertig — die App liegt jetzt auf Ihrem Startbildschirm.</div>
+      </section>
+
+      <!-- iPhone / iPad -->
+      <section id="wegIos" hidden>
+        <ol class="schritte">
+          <li><span>Unten (iPad: oben) auf <strong>Teilen</strong> tippen
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Teilen-Symbol"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>.</span></li>
+          <li><span>Nach unten scrollen und <strong>„Zum Home-Bildschirm"</strong> wählen.</span></li>
+          <li><span>Oben rechts <strong>„Hinzufügen"</strong> tippen.</span></li>
+        </ol>
+        <p class="hinweis">Beim ersten Öffnen der App melden Sie sich einmal an — das iPhone merkt sich die Anmeldung für die App getrennt vom Browser.</p>
+      </section>
+
+      <!-- Computer -->
+      <section id="wegAndere" hidden>
+        <p class="sub" style="margin-bottom:1rem;">Diese Seite ist für das Handy gedacht. Scannen Sie den QR-Code mit der Kamera Ihres Handys — oder arbeiten Sie hier am Computer direkt im Browser weiter.</p>
+        <a class="btn" href="/login.html">Zur Anmeldung</a>
+      </section>
+
+      <p class="hinweis">Die App öffnet nur dort, wo Ihre Praxis-Box erreichbar ist — meist im Praxis-WLAN.</p>
+    </div>
+
+    <p class="fuss"><a href="/login.html">Ohne App im Browser weiter</a></p>
+  </main>
+
+  <script type="module">
+    import { start } from './module/app-installieren.js?v=20261022';
+    start();
+  </script>
+</body>
+</html>
