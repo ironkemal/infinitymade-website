@@ -977,16 +977,17 @@ export function gruppiereBefunde(zeilen = befundeDesPatienten) {
 /** Eine Version in der aufgeklappten Liste. `created_at` = wann geschrieben. */
 function versionHtml(v) {
   const aktiv = v.id === currentId;
+  // Die ganze Zeile öffnet die Version — das 👁 allein war als Ziel zu klein.
   return `
-    <div style="display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:4px;font-size:11.5px;
+    <div class="fbp-btn-open" data-id="${escapeHtml(v.id)}" role="button" tabindex="0"
+         title="Diese Version ansehen"
+         style="display:flex;align-items:center;gap:6px;padding:5px 4px;border-radius:4px;font-size:11.5px;cursor:pointer;
                 color:var(--text-muted);${aktiv ? 'background:var(--bg-hover);' : ''}">
       <span style="min-width:24px;font-variant-numeric:tabular-nums;">v${v.version || 1}</span>
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-            title="${escapeHtml(formatDateTime(v.created_at || v.erstellt_am) + ' · ' + kurzBefund(v))}">
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
         ${escapeHtml(formatDateTime(v.created_at || v.erstellt_am))} · ${escapeHtml(kurzBefund(v))}
       </span>
-      <button type="button" class="btn-sm fbp-btn-open" data-id="${escapeHtml(v.id)}"
-              title="Diese Version ansehen" style="padding:2px 6px;">👁</button>
+      <span aria-hidden="true">👁</span>
     </div>`;
 }
 
@@ -1002,7 +1003,8 @@ function eintragHtml(e) {
   return `
     <div style="padding:5px 6px;border-radius:6px;${aktiv ? 'background:var(--bg-hover);' : ''}">
       <div style="display:flex;align-items:center;gap:6px;">
-        <div style="flex:1;min-width:0;">
+        <div class="fbp-btn-open" data-id="${escapeHtml(e.kopf.id)}" role="button" tabindex="0"
+             title="Befund ansehen" style="flex:1;min-width:0;cursor:pointer;">
           <div style="font-size:12.5px;color:var(--text-main);white-space:nowrap;">
             ${escapeHtml(formatDate(e.kopf.erstellt_am))}${herkunft}
           </div>
@@ -1073,9 +1075,14 @@ function renderBefundListe() {
   container.innerHTML = serienHtml(gruppiereBefunde());
 
   container.querySelectorAll('.fbp-btn-open').forEach(btn => {
-    btn.addEventListener('click', () => {
+    const oeffnen = () => {
       const row = befundeDesPatienten.find(r => r.id === btn.dataset.id);
       if (row) oeffneBefund(row);
+    };
+    btn.addEventListener('click', oeffnen);
+    // Zeilen sind <div role="button"> — Enter/Leertaste wie bei einem Knopf.
+    if (btn.tagName !== 'BUTTON') btn.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); oeffnen(); }
     });
   });
 
