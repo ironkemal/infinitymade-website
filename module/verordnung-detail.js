@@ -92,6 +92,8 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261021v';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
+// Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
+import { mountTherapiebericht } from './therapiebericht.js?v=20261022a';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -138,7 +140,9 @@ function ohneStornierte(rx) {
 }
 
 const BERICHT_LABEL = {
-  offen: 'offen', erstellt: 'erstellt', versendet: 'versendet'
+  // Werte = CHECK prescriptions_bericht_status_check (offen/in_arbeit/erledigt);
+  // die alten Schlüssel erstellt/versendet gab es in der DB nie.
+  offen: 'offen', in_arbeit: 'in Arbeit', erledigt: 'erledigt'
 };
 
 function _datum(d) {
@@ -546,6 +550,7 @@ function _felderPhysio(rx, esc) {
       _feld('Angefordert', _jaNein(rx.bericht_angefordert), esc),
       _feld('Status', BERICHT_LABEL[rx.bericht_status] || rx.bericht_status, esc)
     ], esc)}
+    <div data-therapiebericht style="margin-top:8px;"></div>
 
     ${_freitextBlock('Hinweise', rx.hinweise, esc)}
 
@@ -1092,6 +1097,11 @@ export async function zeigeVerordnungDetail(ctx) {
     });
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';
+
+    // Nicht abwarten: die Berichtsliste ist ein Zusatz, die Verordnung steht schon.
+    mountTherapiebericht(inhalt.querySelector('[data-therapiebericht]'), {
+      supabase, rxId: rx.id, arztId: rx.arzt_id || rxRoh?.arzt_id || null,
+    }).catch(e => console.warn('[zeigeVerordnungDetail] Therapiebericht:', e?.message));
 
     // Die Maske einhängen und gleich prüfen. Das Prüfen ist hier NICHT
     // ungefragt: die Zeile in der Liste hat das Ausrufezeichen gesetzt, das

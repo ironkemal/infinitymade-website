@@ -778,6 +778,14 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **⛔ Achtung — KEINE Umgebungsvariable, und das ist eine Entscheidung** (`onprem` O-117, 20.09.2026). Im SaaS wäre eine Umgebungsvariable mandantenübergreifend und würde **alle** Praxen gleichzeitig umstellen, auch die ohne Zulassung. In der Kundenbox hieße sie: `.env` bearbeiten und den Container neu erzeugen — der Kunde tut das nicht, und wir kommen nicht hinein (K10). Der Schalter muss dort liegen, wo der Inhaber drankommt. `praxura_setup` schied aus, weil es die Tabelle nur in der Box gibt (zwei Codewege, G7).
 - **Achtung — dies ist der VORGABEWERT der Praxis, nicht das letzte Wort.** Die Ausnahme je Datenannahmestelle steht in `betriebsart_empfaenger` (0031). Auflösungsreihenfolge: Zeile dort → `terapeut_zertifikat.betriebsart` → `'test'`.
 
+### `therapieberichte`
+- **Warum:** Der Therapiebericht an den verordnenden Arzt — so, wie er hinausging (Mail/Fax/Druck). Vorher gab es nur das Flag `prescriptions.bericht_angefordert`/`bericht_status`, aber keinen Ort für den Bericht selbst. Eigene Tabelle statt Spalten in `prescriptions`, weil es je VO mehrere Berichte geben kann (Zwischen-/Abschlussbericht). `prescription_documents` passt nicht: Datei-Anhang mit `storage_path NOT NULL`, ohne Text, Empfänger, Versandweg und Festschreibung.
+- **Seit:** 22.10.2026 · `0087_therapieberichte` · SaaS `20261022153644`
+- **Status:** aktiv
+- **Wer:** schreibt ausschließlich das Backend (service_role) in `api-backend/routes/dokument-mail.js` beim Versand; dort entsteht auch `inhalt_snapshot`. Frontend `module/therapiebericht.js` liest per RLS (Owner + Team) und ruft das Backend. Gesetzt wird beim Versand außerdem `prescriptions.bericht_status = 'erledigt'`.
+- **Achtung:** Zeile entsteht erst beim Versand, Entwürfe gibt es in der DB nicht. Danach festgeschrieben (`therapieberichte_festschreibung`, § 630f BGB): einzige erlaubte Änderung ist `passwort_telefonisch` false → true und das Nullsetzen von `arzt_id`/`versendet_von` durch ON DELETE SET NULL. Korrektur = neuer Bericht mit `vorgaenger_id`. Das PDF wird **nicht** gespeichert — aus `inhalt_snapshot` + Freitext jederzeit neu erzeugbar, keine zweite Kopie im Storage. Das PDF-Passwort wird **nirgends** gespeichert (legal-de 22.10.2026, `compliance/LEGAL_DECISIONS.md`). `prescription_id`/`lead_id` RESTRICT: ein Patient mit versandtem Bericht wird gesperrt, nicht gelöscht (Kilit-Modell). DSGVO-Kategorie `behandlung` (10 Jahre).
+- **Quelle:** Kemal 22.10.2026 (Dokumentenversand, Interessenten-Anfrage Physio + Podologie); podoloji (Inhalt), db-ustasi (Tabellenzuschnitt), legal-de, onprem O-216.
+
 ### `therapist_certificates`
 - **Warum:** Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.
 - **Seit:** spätestens 08.06.2026 · `cleanup_test_users_keep_fizyo6`

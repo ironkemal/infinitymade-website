@@ -70,8 +70,8 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261021v';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261021v';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022tb';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';

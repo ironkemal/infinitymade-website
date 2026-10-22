@@ -33,6 +33,7 @@ import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import ueberRouter from './routes/ueber.js';
 import { createManifestRouter } from './routes/manifest.js';
+import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -615,6 +616,8 @@ app.use('/api', mitarbeiterZugangRouter);
 app.use('/api', dsgvoRouter);
 // „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
 app.use('/api', ueberRouter);
+// Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
+app.use('/api', createDokumentMailRouter({ supabase }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
