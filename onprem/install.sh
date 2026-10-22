@@ -1217,7 +1217,10 @@ RESOLVE_VAL="${HOST_PART}:443:127.0.0.1"
 # vollen Wurzelpfads — `profiles` ist Teil von 0000_baseline.sql und existiert
 # auf jeder Installation, RLS filtert für `anon` auf eine leere Liste ([]),
 # aber der HTTP-Status beweist weiterhin exakt das, was O-60 wissen will.
-TESTPFAD="${SITE_URL}/rest/v1/profiles?limit=1"
+# 22.10.2026 (Beta-Test Linux, HTTP 401 + PostgREST error=42501): seit 0072
+# darf anon auf profiles nur noch 11 Spalten lesen — ohne select= fragt PostgREST
+# alle Spalten ab und bekommt "permission denied". `id` gehoert zu den freigegebenen.
+TESTPFAD="${SITE_URL}/rest/v1/profiles?select=id&limit=1"
 # Caddy kann bereits gesund sein, während die Zertifikatsausstellung läuft.
 # Alle Modi begrenzt prüfen; öffentliche CA strikt, interne CA mit eigener Root.
 tls_pruef_args=(-fsS)
