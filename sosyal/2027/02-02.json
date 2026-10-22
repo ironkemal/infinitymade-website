@@ -1,0 +1,16 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Ergotherapeut:innen: Auf der Verordnung fehlt etwas, und wieder muss eine Mail an die Arztpraxis raus? Stichwort eintippen, die KI formuliert die Rückfrage. Sie prüfen und senden.\n\nMehr auf praxura.de\n\n#Ergotherapie #KI #Verordnung #Praxissoftware",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Ergotherapeut:innen", "titel": "Rückfrage an die <em>Arztpraxis.</em>", "person": 0,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Wie formuliere ich das?",
+      "wechsel": { "bei": 2.2, "laune": "staunen", "requisit": "tablet", "sprechblase": "Steht <em>schon</em> da." } },
+    { "typ": "geraet", "dauer": 5.8, "kicker": "KI-Entwurf", "titel": "Höflich. Klar. <em>Fertig.</em>", "kopf": "Mail",
+      "ansicht": "entwurf", "an": "Praxis Dr. Beispiel", "auftrag": "Leitsymptomatik fehlt, Ergänzung erbitten",
+      "betreff": "Bitte um Ergänzung der Verordnung",
+      "text": "Sehr geehrte Damen und Herren,\nauf der Verordnung für {NAME} fehlt die Leitsymptomatik. Wir bitten um eine kurze Ergänzung.",
+      "klar": { "NAME": "Frau Muster" }, "ergebnis": "Geprüft und gesendet" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura KI", "titel": "Die lästigen Mails? <em>Schreibt die KI.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

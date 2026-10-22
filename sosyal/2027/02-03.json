@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "3 Dinge, die die KI in Praxura für Sie erledigt: Mails formulieren, Serientermine vorschlagen, Termine bestätigen. Und Ihre Patientendaten? Sieht die KI nur maskiert.\n\nMehr auf praxura.de\n\n#KI #Praxissoftware #Heilmittel #Therapiepraxis",
+  "szenen": [
+    { "typ": "figur", "dauer": 2.6, "kicker": "Praxura KI", "titel": "Ihre neue <em>Kollegin.</em>", "person": 2,
+      "laune": "entspannt", "requisit": "winken", "sprechblase": "Ich schreibe. Sie <em>therapieren.</em>" },
+    { "typ": "countdown", "dauer": 4.2, "kicker": "Das übernimmt die KI", "punkte": ["Mails <em>formulieren</em>", "Serien <em>vorschlagen</em>", "Termine <em>bestätigen</em>"] },
+    { "typ": "figur", "dauer": 3.0, "ton": "dunkel", "titel": "Und die <em>Patientendaten?</em>", "person": 1,
+      "laune": "staunen", "requisit": "tablet", "sprechblase": "Sieht die KI nur <em>maskiert.</em>" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura KI", "titel": "Ihre Praxis. <em>Mit KI.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

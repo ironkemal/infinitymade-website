@@ -1,0 +1,16 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Zwölf Absagen, zwölf Mails? Mit der KI in Praxura tippen Sie ein Stichwort, und der Entwurf steht. Namen sieht die KI nur als Platzhalter, eingesetzt werden sie erst in Ihrer Praxis. Sie prüfen, Sie senden.\n\nMehr auf praxura.de\n\n#KI #Praxissoftware #Heilmittel #Praxisalltag",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Montag, 8:10", "titel": "Zwölf Absagen. <em>Zwölf Mails.</em>", "person": 0,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Das dauert ewig …",
+      "wechsel": { "bei": 2.2, "laune": "staunen", "requisit": "tablet", "sprechblase": "Moment. <em>Das</em> schreibt die KI?" } },
+    { "typ": "geraet", "dauer": 5.8, "kicker": "KI-Entwurf", "titel": "Ein Stichwort. <em>Eine Mail.</em>", "kopf": "Mail",
+      "ansicht": "entwurf", "an": "Frau Muster", "auftrag": "Do absagen, krank, neuen Termin anbieten",
+      "betreff": "Ihr Termin am Donnerstag",
+      "text": "Guten Tag {NAME},\nleider müssen wir Ihren Termin am Donnerstag absagen. Gern bieten wir Ihnen einen neuen Termin an.",
+      "klar": { "NAME": "Frau Muster" }, "ergebnis": "Geprüft und gesendet" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura KI", "titel": "Die KI schreibt. <em>Sie</em> entscheiden.", "cta": "Mehr auf praxura.de" }
+  ]
+}

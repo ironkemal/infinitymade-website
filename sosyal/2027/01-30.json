@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "caption": "Was sieht die KI von Ihren Patient:innen? Fast nichts. Name wird zum Platzhalter, aus dem Geburtsdatum wird ein Alter, Versichertennummer und Anschrift verlassen die Praxis nie. Erst in Ihrer Praxis wird der Name wieder eingesetzt.\n\nMehr auf praxura.de\n\n#KI #Datenschutz #Praxissoftware #Heilmittel",
+  "szenen": [
+    { "typ": "figur", "dauer": 3.4, "kicker": "Die wichtigste Frage", "titel": "Was sieht die KI von <em>Ihren</em> Patient:innen?", "person": 2,
+      "laune": "neutral", "requisit": "tablet", "sprechblase": "Hoffentlich nichts." },
+    { "typ": "geraet", "dauer": 5.2, "kicker": "Maskierung", "titel": "Fast <em>nichts.</em>", "kopf": "Datenschutz", "ansicht": "maske",
+      "zeilen": [["Name", "Erika Muster", "{NAME}"], ["Geburtsdatum", "12.03.1958", "68 Jahre"], ["Versicherten-Nr.", "A123456789", "—"], ["Anschrift", "Musterweg 5", "—"]],
+      "ergebnis": "Namen bleiben in der Praxis" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura KI", "titel": "KI ja. <em>Mit Maske.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Physios: Zehn Termine, drei Behandler, eine Verordnung. Die KI in Praxura schlägt passende Serientermine vor, Sie übernehmen sie mit einem Tipp. Die verordnete Frequenz bleibt, die KI sucht nur die Lücken.\n\nMehr auf praxura.de\n\n#Physiotherapie #KI #Terminplanung #Praxissoftware",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Physios, aufgepasst", "titel": "Zehn Termine. <em>Drei Behandler.</em>", "person": 1,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Wann passt das bloß?",
+      "wechsel": { "bei": 2.2, "laune": "staunen", "requisit": "tablet", "sprechblase": "Die KI hat <em>schon</em> einen Plan." } },
+    { "typ": "geraet", "dauer": 4.6, "kicker": "KI-Vorschlag", "titel": "KI schlägt vor. <em>Sie tippen.</em>", "kopf": "Serienplanung",
+      "ansicht": "kalender", "ki": true, "ergebnis": "Serie übernommen" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura KI", "titel": "Serienplanung in <em>einem Tipp.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "caption": "Logopädie-Praxen: Termine bestätigen, eine Mail nach der anderen? Ein Stichwort reicht, die KI schreibt die Bestätigung. Sie lesen kurz drüber und senden.\n\nFolgen für mehr aus dem Praxisalltag.\n\n#Logopädie #KI #Praxissoftware #Praxisalltag",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.2, "kicker": "Logopädie-Praxen", "titel": "Termine bestätigen? <em>Schon fertig.</em>", "person": 3,
+      "laune": "neutral", "requisit": "tablet", "sprechblase": "Noch eine Mail …",
+      "wechsel": { "bei": 2.0, "laune": "staunen", "requisit": "tablet", "sprechblase": "Ach, <em>die</em> ist schon geschrieben." } },
+    { "typ": "geraet", "dauer": 5.6, "kicker": "KI-Entwurf", "titel": "Bestätigt. <em>In Sekunden.</em>", "kopf": "Mail",
+      "ansicht": "entwurf", "an": "Familie Muster", "auftrag": "Serie bestätigen, dienstags 15 Uhr",
+      "betreff": "Ihre Termine sind bestätigt",
+      "text": "Guten Tag {NAME},\nhiermit bestätigen wir Ihre Termine jeweils dienstags um 15:00 Uhr. Wir freuen uns auf Sie.",
+      "klar": { "NAME": "Familie Muster" }, "ergebnis": "Bestätigung gesendet" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura KI", "titel": "Weniger tippen. <em>Mehr Therapie.</em>", "cta": "Folgen für mehr" }
+  ]
+}

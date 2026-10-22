@@ -72,6 +72,7 @@ Bunlar öne çıkarılır. Her ay en az 4'ü işlenir.
 | **Tarayıcıda çalışır, praxis ağında tablet/PC** | „Kein Installationsmarathon an jedem Platz." |
 | **Ev ziyareti + dijital Fahrtenbuch** | „Hausbesuch? Kilometer sind schon drin." |
 | **Grafik Fußbefund (podoloji)** | „Befund mit einem Tipp auf den Fuß." |
+| **KI-Assistent (maskiert)** | „Die KI schreibt. Sie entscheiden." · „KI ja. Mit Maske." — mail taslağı (stichwort → mail), Arztpraxis'e rückfrage, termin onayı, seri önerisi |
 
 ⚠️ „Als einzige", „keiner außer uns" gibi **teklik iddiası kurulmaz**. Rakiplerde de olabilir;
 fark hissettirilir, iddia edilmez.
@@ -81,6 +82,7 @@ fark hissettirilir, iddia edilmez.
 - **Ürünün yapmadığı özellik gösterilmez.** Bu, ısınma döneminde güveni yakan tek hata:
   ilgilenen praxis demoda bulamazsa geri gelmez. Kapsam: KI/OCR-Scan, Online-Buchung,
   GPS rota, Google-Kalender, TI-Anbindung (liste: `llms.txt` → „Not currently offered").
+- **KI (22.10.2026, Kemal):** KI gösterilir, aktivasyon şartları (avukat + MS C5) toplu sonra kapanacak. Gösterilen yalnız kodda olan dört iş: mail taslağı (b2c/b2b), termin onay taslağı, seri önerisi, maskeleme. Her ekranda „KI-Entwurf · bitte prüfen" (AI Act) ve insan gönderir. **KI-OCR / Rezept-Scan KI olarak gösterilmez** (barkod yerel). Abartı sunumda olur (hız, „oha" anı), olmayan yetenekte değil (UWG § 5).
 - „Cloud", „SaaS", „App" denmez. Ürün yerel kurulum: Praxura Lokal.
 - „Wir rechnen ab" denmez. Doğrusu: „Praxura **bereitet** die Abrechnung **vor**".
 - Hasta adı, gerçek hasta görüntüsü, beta müşterisinin adı kullanılmaz.
@@ -122,8 +124,8 @@ Motoru yalnız ana oturum değiştirir; üretici ajanlar mevcut tipleri kullanı
 | `countdown` | `punkte[]` (2–4 madde, `<em>` serbest), ops. `kicker` | 3-2-1 sayımı |
 | `enthuellung` | `titel`, ops. `kicker` `text` | Bulanıktan netleşir, teaser |
 | `tippen` | `titel` (düz metin, daktiloyla yazılır), ops. `kicker` `text` `tempo` | Storytelling, POV |
-| `figur` | `titel`, ops. `kicker` `person` (0–3) `laune` (`gestresst`·`neutral`·`entspannt`·`schlaf`) `requisit` (`zettel`·`tablet`·`kaffee`·`winken`·`keine`) `sprechblase` (`<em>` serbest) `wechsel:{bei, laune?, requisit?, sprechblase?}` | Animasyonlu terapist figürü. `wechsel` ile aynı plan içinde önce/sonra: kâğıtlar uçup gider, tablet/kahve gelir, yüz gülümser |
-| `geraet` | `titel`, `kopf` (app başlığı), ops. `kicker` `ansicht` (`schritte`·`kalender`·`fuss`) `schritte[]` (2–4) `punkte[]` (fuss, en çok 4) `ergebnis` (son bildirim) `serieZeile` `serieLabel` | Tablette Praxura ekranı, parmak dokunur, adımlar tik alır. ⚠ Yalnız ürünün gerçekten yaptığı akış (A5) |
+| `figur` | `titel`, ops. `kicker` `person` (0–3) `laune` (`gestresst`·`neutral`·`entspannt`·`schlaf`·`staunen`) `requisit` (`zettel`·`tablet`·`kaffee`·`winken`·`keine`) `sprechblase` (`<em>` serbest) `wechsel:{bei, laune?, requisit?, sprechblase?}` | Animasyonlu terapist figürü. `wechsel` ile aynı plan içinde önce/sonra: kâğıtlar uçup gider, tablet/kahve gelir, yüz gülümser |
+| `geraet` | `titel`, `kopf` (app başlığı), ops. `kicker` `ansicht` (`schritte`·`kalender`·`fuss`·`entwurf`·`maske`) `schritte[]` (2–4) `punkte[]` (fuss, en çok 4) `ergebnis` (son bildirim) `serieZeile` `serieLabel` `ki:true` (kalender: önce KI önerisi) · entwurf: `an` `auftrag` `betreff` `text` (`{NAME}` yer tutucu) `klar:{NAME:…}` · maske: `zeilen:[[etiket, klar, maskeli]]` | Tablette Praxura ekranı, parmak dokunur, adımlar tik alır. ⚠ Yalnız ürünün gerçekten yaptığı akış (A5) |
 | `outro` | `titel`, `cta`, ops. `kicker` | Yeşil kapanış + logo (her zaman koyu) |
 
 Her sahnede ayrıca: `ton:"dunkel"` (yeşil zemin) · `uebergang:"schnitt"` (sert kesme, komik zamanlama).
@@ -293,6 +295,16 @@ Her video aynı iskelet: **figür stresli → bir tıkla rahat** (`figur` + `wec
 | 01-27 | Video 12 sn | Karakter · teaser | Ortak | „23:00. Sie schlafen." | llms.txt → Deployment (gece şifreli yedek, A4) | Taslak | |
 | 01-28 | Video 11 sn | Karakter · POV | Ortak | „Freitag, 17:00. Abrechnung. Schon wieder." | llms.txt → Key features 4 („vorbereiten", A5) | Taslak | |
 
+### Seri „KI-Assistent" (22.10.2026) — ⚠ yayına yüklemeden önce Kemal'in KI aktivasyon teyidi
+| No (AA-GG) | Tür | Format | Alan | Hook | Kaynak / iddia kontrolü | Durum | Sonuç (7 gün) |
+|---|---|---|---|---|---|---|---|
+| 01-29 | Video 12,8 sn | Karakter + KI-Entwurf | Ortak | „Zwölf Absagen. Zwölf Mails." | ai/tasks/b2c-draft.js · LEGAL_DECISIONS Nachtrag (4) Auflage 7 | Taslak | |
+| 01-30 | Video 11,2 sn | Karakter + Maskierung | Ortak | „Was sieht die KI von Ihren Patient:innen?" | Nachtrag (4) Auflage 1 (Allowlist: {NAME}, Alter, IK/Adresse/VersNr nie) | Taslak | |
+| 01-31 | Video 11,4 sn | Karakter + KI-Serie | Physio | „Zehn Termine. Drei Behandler." | ai/tasks/series-scheduler.js (yalnız sunulan adaylar, frekans verordnung'dan) | Taslak | |
+| 02-01 | Video 12,2 sn | Karakter + KI-Entwurf | Logo | „Termine bestätigen? Schon fertig." | ai/tasks/b2c-draft.js | Taslak | |
+| 02-02 | Video 12,6 sn | Karakter + KI-Entwurf | Ergo | „Rückfrage an die Arztpraxis." | ai/tasks/b2b-draft.js | Taslak | |
+| 02-03 | Video 12,2 sn | Geri sayım + karakter | Ortak | „Ihre neue Kollegin." | b2c/b2b-draft, series-scheduler, appointment-confirm-draft | Taslak | |
+
 ### Şablon örnekleri (`_muster/`, yayına girmez)
 | No | Format | Hook |
 |---|---|---|
@@ -312,3 +324,4 @@ Her video aynı iskelet: **figür stresli → bir tıkla rahat** (`figur` + `wec
 - **20.10.2026:** Otomatik yayıncı yazıldı (`sosyal/yayinci/`): merkez VPS'te Docker, yalnız giden bağlantı, n8n yok (G8). Instagram (Reel/görsel/carousel) + Facebook sayfası, Telegram önizleme ve komutları (/stopp, /pause, /status), stok uyarısı. 13 test geçiyor. Bekleyen: Kemal'in Meta + Telegram hesap kurulumu (KURULUM.md §1–4), sonra Claude yükler.
 - **20.10.2026:** Yayıncı merkez VPS'e kuruldu. Merkezde Docker yok, servisler systemd ile çalışıyor; aynı kalıp uygulandı (kullanıcı `sosyal`, `/etc/praxura-sosyal/sosyal.env`, `/var/lib/praxura-sosyal`, MemoryMax 160M). Token yokken deneme modunda. n8n sunucusu önerisi reddedildi: SaaS VPS kapanacak (K1), G8.
 - **22.10.2026:** Motora iki sahne tipi eklendi: `figur` (animasyonlu terapist figürü, 4 görünüm, ruh hâli + requisit, `wechsel` ile tek planda önce/sonra) ve `geraet` (tablette Praxura ekranı, parmak dokunuşu; `schritte` · `kalender` · `fuss`). Kemal'in isteği: düz yazı değil, karakterli, günlük kullanımın kolaylığını gösteren animasyon. Bunlarla „Praxisalltag" serisi 01-21 → 01-28 (8 video) üretildi. Ekranlar yalnız gerçek akışları gösteriyor (A5): barkod yerelde, Fahrtenbuch'ta km elle, KI/GPS/Online-Buchung yok.
+- **22.10.2026:** KI serisi 01-29 → 02-03 (6 video). Motora `geraet` için `entwurf` (stichwort yazılır → KI düğmesi → mail akar, `{NAME}` önce maskeli sonra praxiste açılır), `maske` (tarama çizgisi klar → maskeli) ve `kalender` + `ki:true` (altın kesikli öneri → tek dokunuşla seri) eklendi; figüre `laune:"staunen"` („oha" yüzü). Kemal: aktivasyon şartları toplu olarak sonra kapanacak, reklamda KI gösterilsin.
