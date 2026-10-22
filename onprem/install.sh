@@ -437,7 +437,13 @@ ARCH="$(uname -m 2>/dev/null || echo unbekannt)"
 # Hypervisor-Reservierung oft nur 3,7-3,9 GB freien MemTotal — die
 # ganzzahlige Division rundet das auf 3 ab. Echte Anforderung bleibt 4 GB.
 [ "$MEM_GB" -ge 3 ] || fail "Zu wenig Arbeitsspeicher" "${MEM_GB} GB" "mindestens 4 GB (kann als ~3 GB gemeldet werden, siehe Kommentar)" "Server mit mindestens 4 GB RAM verwenden."
-[ "$DISK_GB" -ge 40 ] || fail "Zu wenig freier Speicher" "${DISK_GB} GB" "mindestens 40 GB" "Speicherplatz freigeben oder größeren Server verwenden."
+# Harte Grenze 15 GB, Empfehlung 40 GB (22.10.2026, Kemal): Images ~6-8 GB, ein
+# Update hält alte + neue Images kurz gleichzeitig (~2×), dazu DB, Storage, Logs
+# und der lokale Arbeitsordner von backup.sh. 15 GB reicht für die Einrichtung;
+# für Updates muss die Praxis Platz schaffen — dafür die Warnung darunter.
+# 40 GB als harte Grenze sperrte 40-GB-Server aus (frei ~36 GB, O-174).
+[ "$DISK_GB" -ge 15 ] || fail "Zu wenig freier Speicher" "${DISK_GB} GB" "mindestens 15 GB (empfohlen 40 GB)" "Speicherplatz freigeben oder größeren Server verwenden."
+[ "$DISK_GB" -ge 40 ] || warn "Nur ${DISK_GB} GB frei — läuft, aber empfohlen sind 40 GB. Updates brauchen kurzzeitig doppelten Platz für die Programmpakete — Platz regelmäßig prüfen (df -h), Sicherungen auf ein externes Ziel legen."
 ok "${CPU_COUNT} vCPU · ${MEM_GB} GB RAM · ${DISK_GB} GB frei"
 
 if command -v swapon >/dev/null 2>&1; then

@@ -13,7 +13,7 @@
 |---|---|---|---|
 | System | Ubuntu 24.04 LTS | Windows 11 ab 22H2 (Home reicht) | Ubuntu 24.04 LTS (x86) |
 | Typ / RAM | 2 Kerne · 4 GB | 4 Kerne · **8 GB** (die Box bekommt die Hälfte) | CX33 (4 vCPU · 8 GB RAM) |
-| Freier Speicher | 40 GB | 50 GB auf C: | 80 GB (CX33) |
+| Freier Speicher | mind. 15 GB, empfohlen 40 GB | 50 GB auf C: | 80 GB (CX33) |
 | Netz | fest im Praxisnetz, Internet für Updates | dito; PC bleibt **eingeschaltet** | Hetzner Cloud Firewall (80, 443; 22 eingeschränkt) |
 | Zugang | `sudo`/root per SSH | ein Konto mit Administratorrechten | SSH-Schlüssel (root) |
 
@@ -127,9 +127,10 @@ Sie können die Box auf einem eigenen Cloud-Server bei Hetzner Cloud betreiben.
 Dieser Weg steht gleichwertig neben Weg A und B.
 
 - **Servertyp:** Wählen Sie den Typ **CX33** (x86-Architektur, 4 vCPU, 8 GB RAM,
-  80 GB Festplatte). Wählen Sie *nicht* den kleineren Typ CX23: Dessen 40-GB-Platte
-  bietet nach Abzug des Betriebssystems nur ca. 36 GB freien Speicherplatz —
-  `install.sh` bricht unter 40 GB freiem Speicherplatz bewusst ab.
+  80 GB Festplatte). Der kleinere Typ CX23 (40-GB-Platte, ca. 36 GB frei) reicht
+  für den Start: `install.sh` bricht erst unter 15 GB freiem Speicherplatz ab und
+  warnt unter 40 GB. Für den Dauerbetrieb mit Sicherungen und Updates ist CX33 die
+  bessere Wahl.
 - **Architektur nur x86:** Wählen Sie keine Server mit ARM-Prozessor (keine CAX-Typen).
   Die Software-Pakete liegen derzeit nur für `amd64` (x86) vor; auf ARM bricht
   die Installation mit einem Fehler („no matching manifest") ab.
