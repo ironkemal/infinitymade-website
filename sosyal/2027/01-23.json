@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "POV: Vier Behandler, ein Wandkalender. Wer hat um 10 Uhr? Im Praxura-Teamkalender planen Sie auch Serientermine mit wenigen Klicks, und alle sehen denselben Stand.\n\nMehr auf praxura.de\n\n#Physiotherapie #Praxissoftware #Praxisalltag #Terminplanung",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.6, "kicker": "POV · Physio", "titel": "Vier Behandler. <em>Ein Wandkalender.</em>", "person": 1,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Wer hat 10 Uhr?",
+      "wechsel": { "bei": 2.4, "laune": "entspannt", "requisit": "kaffee", "sprechblase": "Steht im <em>Teamkalender.</em>" } },
+    { "typ": "geraet", "dauer": 3.8, "kicker": "Serientermin", "titel": "Einmal tippen. <em>Serie steht.</em>", "kopf": "Teamkalender",
+      "ansicht": "kalender", "ergebnis": "Serie geplant" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Ein Kalender für das <em>ganze Team.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

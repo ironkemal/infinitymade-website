@@ -1,0 +1,12 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "caption": "Podolog:innen: Befund mit einem Tipp auf den Fuß. Im grafischen Fußbefund markieren Sie die Stelle direkt am Fuß, statt sie zu beschreiben oder zu zeichnen.\n\nFolgen für mehr aus dem Praxisalltag.\n\n#Podologie #Praxissoftware #Fußbefund #Heilmittel",
+  "szenen": [
+    { "typ": "figur", "dauer": 3.4, "kicker": "Podolog:innen", "titel": "Befund? <em>Ein Tipp.</em>", "person": 3,
+      "laune": "entspannt", "requisit": "tablet", "sprechblase": "Hier. Und hier. <em>Fertig.</em>" },
+    { "typ": "geraet", "dauer": 4.6, "kicker": "Fußbefund", "titel": "Tippen statt <em>zeichnen.</em>", "kopf": "Fußbefund", "ansicht": "fuss",
+      "punkte": ["Clavus", "Hyperkeratose", "Rhagade"], "ergebnis": "Befund gespeichert" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Podologie.</em>", "cta": "Folgen für mehr" }
+  ]
+}

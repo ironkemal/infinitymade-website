@@ -1,0 +1,12 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "caption": "23:00. Sie schlafen. Praxura sichert. Jede Nacht entsteht automatisch ein verschlüsseltes Backup Ihrer Praxisdaten, ohne dass Sie daran denken müssen.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #Datenschutz #Therapiepraxis",
+  "szenen": [
+    { "typ": "figur", "dauer": 3.6, "ton": "dunkel", "kicker": "23:00", "titel": "Sie <em>schlafen.</em>", "person": 1, "laune": "schlaf" },
+    { "typ": "aussage", "dauer": 3.0, "kicker": "Währenddessen", "titel": "Jede Nacht <em>verschlüsselt</em> gesichert.", "text": "Ohne dass Sie daran denken." },
+    { "typ": "figur", "dauer": 3.0, "kicker": "7:30", "titel": "Guten <em>Morgen.</em>", "person": 1, "laune": "entspannt", "requisit": "winken",
+      "sprechblase": "Alles noch da." },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Ihre Daten. <em>Jede Nacht</em> gesichert.", "cta": "Mehr auf praxura.de" }
+  ]
+}

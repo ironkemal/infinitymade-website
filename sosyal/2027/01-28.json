@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Freitag, 17:00. Die Abrechnung ist dran. Praxura bereitet Ihre §302-Dateien vor, Sie reichen mit Ihrem eigenen ITSG-Zertifikat selbst ein. Ohne Provision auf Ihren Umsatz.\n\nSchreiben Sie uns: kontakt@praxura.de\n\n#Heilmittel #Abrechnung #Praxissoftware #GKV",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Freitag, 17:00", "titel": "Abrechnung. <em>Schon wieder.</em>", "person": 2,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Wo ist die Liste?",
+      "wechsel": { "bei": 2.2, "laune": "entspannt", "requisit": "kaffee", "sprechblase": "Dateien sind <em>vorbereitet.</em>" } },
+    { "typ": "geraet", "dauer": 4.2, "kicker": "§302", "titel": "Vorbereiten. <em>Selbst einreichen.</em>", "kopf": "Abrechnung",
+      "schritte": ["Leistungen geprüft", "Dateien erstellt", "Bereit zum Einreichen"], "ergebnis": "Mit Ihrem Zertifikat" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Abrechnung vorbereiten. <em>Provisionsfrei.</em>", "cta": "Schreiben Sie uns: kontakt@praxura.de" }
+  ]
+}

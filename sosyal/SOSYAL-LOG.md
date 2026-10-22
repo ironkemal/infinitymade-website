@@ -122,6 +122,8 @@ Motoru yalnız ana oturum değiştirir; üretici ajanlar mevcut tipleri kullanı
 | `countdown` | `punkte[]` (2–4 madde, `<em>` serbest), ops. `kicker` | 3-2-1 sayımı |
 | `enthuellung` | `titel`, ops. `kicker` `text` | Bulanıktan netleşir, teaser |
 | `tippen` | `titel` (düz metin, daktiloyla yazılır), ops. `kicker` `text` `tempo` | Storytelling, POV |
+| `figur` | `titel`, ops. `kicker` `person` (0–3) `laune` (`gestresst`·`neutral`·`entspannt`·`schlaf`) `requisit` (`zettel`·`tablet`·`kaffee`·`winken`·`keine`) `sprechblase` (`<em>` serbest) `wechsel:{bei, laune?, requisit?, sprechblase?}` | Animasyonlu terapist figürü. `wechsel` ile aynı plan içinde önce/sonra: kâğıtlar uçup gider, tablet/kahve gelir, yüz gülümser |
+| `geraet` | `titel`, `kopf` (app başlığı), ops. `kicker` `ansicht` (`schritte`·`kalender`·`fuss`) `schritte[]` (2–4) `punkte[]` (fuss, en çok 4) `ergebnis` (son bildirim) `serieZeile` `serieLabel` | Tablette Praxura ekranı, parmak dokunur, adımlar tik alır. ⚠ Yalnız ürünün gerçekten yaptığı akış (A5) |
 | `outro` | `titel`, `cta`, ops. `kicker` | Yeşil kapanış + logo (her zaman koyu) |
 
 Her sahnede ayrıca: `ton:"dunkel"` (yeşil zemin) · `uebergang:"schnitt"` (sert kesme, komik zamanlama).
@@ -277,6 +279,20 @@ Yeni günlerde **Bölüm B'deki 10-20 → 12-20 konuları tekrarlanmaz**; aynı 
 
 Dönem 2 dağılımı: 16 video + 15 post · Physio 3 · Ergo 3 · Logo 3 · Podologie 4 · Ortak 18.
 
+### Seri „Praxisalltag": karakter animasyonu (22.10.2026, Kemal: „animasyonlu, karakterler günlük kullanımı göstersin")
+Her video aynı iskelet: **figür stresli → bir tıkla rahat** (`figur` + `wechsel`) → **tablette akış** (`geraet`) → outro. Format ailesi aynı, açı her gün farklı (storytelling · POV · teaser).
+
+| No (AA-GG) | Tür | Format | Alan | Hook | Kaynak / iddia kontrolü | Durum | Sonuç (7 gün) |
+|---|---|---|---|---|---|---|---|
+| 01-21 | Video 11,2 sn | Karakter · storytelling | Ortak | „Montag, 7:58. Ein Stapel Verordnungen." | llms.txt → Key features 3 | Taslak | |
+| 01-22 | Video 10,4 sn | Karakter · demo | Podologie | „Befund? Ein Tipp." | llms.txt → Key features 2 | Taslak | |
+| 01-23 | Video 10,8 sn | Karakter · POV | Physio | „Vier Behandler. Ein Wandkalender." | llms.txt → Key features 1 (Serientermine) | Taslak | |
+| 01-24 | Video 9,8 sn | Karakter · storytelling | Ortak | „Das Internet ist weg." | llms.txt → Deployment (A4 „Router aus") | Taslak | |
+| 01-25 | Video 11 sn | Karakter · POV | Ergo | „Kilometer auf dem Zettel?" | llms.txt → Key features 5 (km elle girilir, GPS yok) | Taslak | |
+| 01-26 | Video 11 sn | Karakter · storytelling | Logo | „Zuzahlung vergessen?" | llms.txt → Key features 6 | Taslak | |
+| 01-27 | Video 12 sn | Karakter · teaser | Ortak | „23:00. Sie schlafen." | llms.txt → Deployment (gece şifreli yedek, A4) | Taslak | |
+| 01-28 | Video 11 sn | Karakter · POV | Ortak | „Freitag, 17:00. Abrechnung. Schon wieder." | llms.txt → Key features 4 („vorbereiten", A5) | Taslak | |
+
 ### Şablon örnekleri (`_muster/`, yayına girmez)
 | No | Format | Hook |
 |---|---|---|
@@ -284,6 +300,7 @@ Dönem 2 dağılımı: 16 video + 15 post · Physio 3 · Ergo 3 · Logo 3 · Pod
 | P2 | Post · haltung | „Ihre Patientendaten gehören Ihrer Praxis. Nicht uns." |
 | P3 | Post · liste | „Was Praxura im Praxisalltag übernimmt." (podoloji listesi, genele uyarlanmalı) |
 | P4 | Post · mythos | „Ohne Abrechnungszentrum geht es nicht?" |
+| T2 | Video · `figur` + `geraet` bütün varyantlar | Motor testi (`T2-figuren.json`) |
 
 ## Kayıt notları
 
@@ -294,3 +311,4 @@ Dönem 2 dağılımı: 16 video + 15 post · Physio 3 · Ergo 3 · Logo 3 · Pod
 - **20.10.2026:** Dönem 2 (12-21 → 01-20, 31 içerik) 8 ajanla üretildi; rate limit sonrası devam edildi. Konu değişen günler: 01-01 („Befreiung pro Kalenderjahr" wissensbank'ta yok → Jahreswechsel-Status), 01-02 (HPNR 2027 henüz yok → numaranın ilk hanesi), 01-11 (Kombination + Einzelmaßnahme). Ana oturum: 01-12'nin cevabı 01-14'e teaser yapıldı (aynı espri iki gün arayla tekrar etmesin). Tarama temiz.
 - **20.10.2026:** Otomatik yayıncı yazıldı (`sosyal/yayinci/`): merkez VPS'te Docker, yalnız giden bağlantı, n8n yok (G8). Instagram (Reel/görsel/carousel) + Facebook sayfası, Telegram önizleme ve komutları (/stopp, /pause, /status), stok uyarısı. 13 test geçiyor. Bekleyen: Kemal'in Meta + Telegram hesap kurulumu (KURULUM.md §1–4), sonra Claude yükler.
 - **20.10.2026:** Yayıncı merkez VPS'e kuruldu. Merkezde Docker yok, servisler systemd ile çalışıyor; aynı kalıp uygulandı (kullanıcı `sosyal`, `/etc/praxura-sosyal/sosyal.env`, `/var/lib/praxura-sosyal`, MemoryMax 160M). Token yokken deneme modunda. n8n sunucusu önerisi reddedildi: SaaS VPS kapanacak (K1), G8.
+- **22.10.2026:** Motora iki sahne tipi eklendi: `figur` (animasyonlu terapist figürü, 4 görünüm, ruh hâli + requisit, `wechsel` ile tek planda önce/sonra) ve `geraet` (tablette Praxura ekranı, parmak dokunuşu; `schritte` · `kalender` · `fuss`). Kemal'in isteği: düz yazı değil, karakterli, günlük kullanımın kolaylığını gösteren animasyon. Bunlarla „Praxisalltag" serisi 01-21 → 01-28 (8 video) üretildi. Ekranlar yalnız gerçek akışları gösteriyor (A5): barkod yerelde, Fahrtenbuch'ta km elle, KI/GPS/Online-Buchung yok.

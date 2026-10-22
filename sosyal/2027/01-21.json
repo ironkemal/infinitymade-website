@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Montag, 7:58. Ein Stapel Verordnungen. Ist die noch gültig? Mit Praxura lesen Sie den Barcode der Verordnung lokal ein, bestätigen die Felder, und formale Fehler fallen vor der Behandlung auf. Das Bild verlässt Ihren Rechner nicht.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Montag, 7:58", "titel": "Ein Stapel <em>Verordnungen.</em>", "person": 0,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Ist die noch gültig?",
+      "wechsel": { "bei": 2.2, "laune": "entspannt", "requisit": "tablet", "sprechblase": "Geprüft. <em>Vor</em> der Behandlung." } },
+    { "typ": "geraet", "dauer": 4.2, "kicker": "So einfach", "titel": "Scannen. <em>Prüfen.</em>", "kopf": "Verordnung",
+      "schritte": ["Barcode eingelesen", "Felder bestätigt", "Angaben geprüft"], "ergebnis": "Bereit für die Behandlung" },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Fehler sehen, bevor die <em>Kasse</em> sie sieht.", "cta": "Mehr auf praxura.de" }
+  ]
+}

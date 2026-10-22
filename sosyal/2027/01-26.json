@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "caption": "Logopädie-Praxen: Offene Zuzahlung, wieder vergessen? Praxura zeigt offene Zuzahlungen auf einen Blick und bereitet die Mahnung vor, wenn es nötig wird.\n\nMehr auf praxura.de\n\n#Logopädie #Zuzahlung #Praxissoftware #Praxisalltag",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Logopädie-Praxen", "titel": "Zuzahlung <em>vergessen?</em>", "person": 3,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Hat sie schon bezahlt?",
+      "wechsel": { "bei": 2.2, "laune": "entspannt", "requisit": "tablet", "sprechblase": "Sehe ich <em>sofort.</em>" } },
+    { "typ": "geraet", "dauer": 4.2, "kicker": "Zuzahlungen", "titel": "Offen. <em>Erledigt.</em>", "kopf": "Zuzahlungen",
+      "schritte": ["Offene Zuzahlungen", "Als bezahlt markiert", "Mahnung vorbereitet"], "ergebnis": "Alles im Blick" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Keine Zuzahlung geht <em>verloren.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

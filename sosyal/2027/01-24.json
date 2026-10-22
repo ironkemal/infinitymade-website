@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "caption": "Dienstag, 10:15. Das Internet ist weg. Und die Praxis? Läuft weiter. Praxura läuft lokal in Ihrem Praxisnetz: Termine, Akten und Verordnungen sind da, auch wenn der Router streikt.\n\nMehr auf praxura.de\n\n#Heilmittel #Praxissoftware #Praxisalltag #Therapiepraxis",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Dienstag, 10:15", "titel": "Das Internet ist <em>weg.</em>", "person": 2,
+      "laune": "neutral", "requisit": "tablet", "sprechblase": "Und jetzt?",
+      "wechsel": { "bei": 2.2, "laune": "entspannt", "requisit": "kaffee", "sprechblase": "Praxis läuft <em>weiter.</em>" } },
+    { "typ": "aussage", "dauer": 3.0, "ton": "dunkel", "kicker": "Praxura Lokal", "titel": "Läuft in Ihrer Praxis. <em>Nicht im Netz.</em>",
+      "text": "Termine, Akten, Verordnungen: alles im Praxisnetz." },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Router aus. <em>Praxis läuft.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

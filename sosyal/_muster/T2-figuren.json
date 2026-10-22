@@ -1,0 +1,16 @@
+{
+  "art": "video",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.2, "kicker": "Montag, 7:58", "titel": "Stapel <em>Verordnungen.</em>", "person": 0,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Ist die noch gültig?",
+      "wechsel": { "bei": 2.0, "laune": "entspannt", "requisit": "tablet", "sprechblase": "Geprüft. <em>Vor</em> der Behandlung." } },
+    { "typ": "geraet", "dauer": 4, "kicker": "So geht's", "titel": "Scannen. <em>Prüfen.</em>", "kopf": "Verordnung",
+      "schritte": ["Barcode eingelesen", "Felder bestätigt", "Angaben geprüft"], "ergebnis": "Bereit für die Behandlung" },
+    { "typ": "figur", "dauer": 3, "kicker": "23:00", "titel": "Sie schlafen.", "person": 3, "laune": "schlaf", "ton": "dunkel" },
+    { "typ": "figur", "dauer": 3, "titel": "Läuft.", "person": 1, "laune": "entspannt", "requisit": "kaffee", "sprechblase": "Alles im Blick." },
+    { "typ": "geraet", "dauer": 3.6, "titel": "Serie <em>planen.</em>", "kopf": "Teamkalender", "ansicht": "kalender", "ergebnis": "Serie geplant" },
+    { "typ": "geraet", "dauer": 4.4, "titel": "Tippen statt <em>zeichnen.</em>", "kopf": "Fußbefund", "ansicht": "fuss",
+      "punkte": ["Clavus", "Hyperkeratose", "Rhagade"], "ergebnis": "Befund gespeichert" },
+    { "typ": "figur", "dauer": 2.4, "titel": "Hallo!", "person": 2, "laune": "entspannt", "requisit": "winken", "sprechblase": "Bis morgen." }
+  ]
+}

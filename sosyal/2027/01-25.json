@@ -1,0 +1,13 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "Ergotherapeut:innen: Hausbesuch gemacht, Kilometer auf einem Zettel im Handschuhfach? Im elektronischen Fahrtenbuch von Praxura tragen Sie die Fahrt direkt beim Hausbesuch ein.\n\nFolgen für mehr aus dem Praxisalltag.\n\n#Ergotherapie #Hausbesuch #Praxissoftware #Praxisalltag",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.4, "kicker": "Ergotherapeut:innen", "titel": "Kilometer <em>auf dem Zettel?</em>", "person": 0,
+      "laune": "gestresst", "requisit": "zettel", "sprechblase": "Wo war der nochmal?",
+      "wechsel": { "bei": 2.2, "laune": "entspannt", "requisit": "tablet", "sprechblase": "Steht im <em>Fahrtenbuch.</em>" } },
+    { "typ": "geraet", "dauer": 4.2, "kicker": "Hausbesuch", "titel": "Eintragen. <em>Fertig.</em>", "kopf": "Fahrtenbuch",
+      "schritte": ["Hausbesuch gewählt", "Kilometer eingetragen", "Fahrt gespeichert"], "ergebnis": "Fahrtenbuch aktuell" },
+    { "typ": "outro", "dauer": 2.4, "kicker": "Praxura Lokal", "titel": "Hausbesuch? <em>Kilometer sind drin.</em>", "cta": "Folgen für mehr" }
+  ]
+}
