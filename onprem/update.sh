@@ -476,7 +476,10 @@ while IFS=$'\t' read -r yol yeni_sha; do
   fi
   if [ "$ilk_kosu" -eq 0 ]; then
     taban_sha="$(onceki_sha "$yol" || echo '')"
-    if [ -n "$taban_sha" ] && [ -n "$mevcut_sha" ] && [ "$taban_sha" != "$mevcut_sha" ]; then
+    # Beta-Test 22.10.2026: Ein von Hand eingespielter Hotfix, der schon BYTEGLEICH
+    # mit der neuen Bundle-Fassung ist, ist keine Abweichung — es gibt nichts zu
+    # überschreiben und nichts zu verlieren. Vorher stoppte so ein Fall jede Box.
+    if [ -n "$taban_sha" ] && [ -n "$mevcut_sha" ] && [ "$taban_sha" != "$mevcut_sha" ] && [ "$mevcut_sha" != "$yeni_sha" ]; then
       warn "Sapma: $yol kutuda elden geçirilmiş — üzerine yazılmıyor"
       sapma_bulundu="$sapma_bulundu $yol"
       continue
