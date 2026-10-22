@@ -1,0 +1,58 @@
+[
+  {
+    "theme": "dark",
+    "width": 390,
+    "color": "rgb(242, 236, 221)",
+    "background": "rgb(32, 28, 21)",
+    "font": "\"Plus Jakarta Sans\", Inter, -apple-system, \"system-ui\", sans-serif",
+    "modal": {
+      "x": 0,
+      "right": 390
+    },
+    "overflow": false,
+    "text": "Hinweise:\n  • LANR-Prüfziffer stimmt nicht — bitte mit der Verordnung vergleichen.\n  • IK der Krankenkasse fehlt.\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.",
+    "confirmResolves": true
+  },
+  {
+    "theme": "dark",
+    "width": 1280,
+    "color": "rgb(242, 236, 221)",
+    "background": "rgb(32, 28, 21)",
+    "font": "\"Plus Jakarta Sans\", Inter, -apple-system, \"system-ui\", sans-serif",
+    "modal": {
+      "x": 420,
+      "right": 860
+    },
+    "overflow": false,
+    "text": "Hinweise:\n  • LANR-Prüfziffer stimmt nicht — bitte mit der Verordnung vergleichen.\n  • IK der Krankenkasse fehlt.\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.",
+    "confirmResolves": true
+  },
+  {
+    "theme": "light",
+    "width": 390,
+    "color": "rgb(43, 35, 28)",
+    "background": "rgb(255, 255, 255)",
+    "font": "\"Plus Jakarta Sans\", Inter, -apple-system, \"system-ui\", sans-serif",
+    "modal": {
+      "x": 0,
+      "right": 390
+    },
+    "overflow": false,
+    "text": "Hinweise:\n  • LANR-Prüfziffer stimmt nicht — bitte mit der Verordnung vergleichen.\n  • IK der Krankenkasse fehlt.\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.",
+    "confirmResolves": true
+  },
+  {
+    "theme": "light",
+    "width": 1280,
+    "color": "rgb(43, 35, 28)",
+    "background": "rgb(255, 255, 255)",
+    "font": "\"Plus Jakarta Sans\", Inter, -apple-system, \"system-ui\", sans-serif",
+    "modal": {
+      "x": 420,
+      "right": 860
+    },
+    "overflow": false,
+    "text": "Hinweise:\n  • LANR-Prüfziffer stimmt nicht — bitte mit der Verordnung vergleichen.\n  • IK der Krankenkasse fehlt.\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.",
+    "confirmResolves": true
+  }
+]
