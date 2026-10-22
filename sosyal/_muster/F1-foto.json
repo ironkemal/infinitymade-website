@@ -1,0 +1,14 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "caption": "Montag, 7:58. Ein Stapel Verordnungen, bevor der erste Patient kommt. Mit Praxura lesen Sie den Barcode lokal ein, formale Fehler fallen vor der Behandlung auf. Und der Tag gehört wieder der Therapie.\n\nMehr auf praxura.de\n\n(Bilder KI-generiert)\n\n#Physiotherapie #Praxisalltag #Praxissoftware #Heilmittel",
+  "szenen": [
+    { "typ": "foto", "dauer": 3.0, "bild": "foto/test/test1.jpg", "kicker": "Montag, 7:58", "titel": "Erst mal <em>Papierkram.</em>", "schwenk": -30 },
+    { "typ": "geraet", "dauer": 4.0, "kicker": "Mit Praxura", "titel": "Scannen. <em>Prüfen.</em>", "kopf": "Verordnung",
+      "schritte": ["Barcode eingelesen", "Felder bestätigt", "Angaben geprüft"], "ergebnis": "Bereit für die Behandlung" },
+    { "typ": "foto", "dauer": 2.6, "bild": "foto/test/test2.jpg", "kicker": "8:04", "titel": "Alles <em>geprüft.</em>", "text": "Bevor der erste Patient kommt.", "schwenk": 20 },
+    { "typ": "foto", "dauer": 2.6, "bild": "foto/test/test3.jpg", "kicker": "Der Rest des Tages", "titel": "Zeit für <em>Therapie.</em>", "zoom": "raus" },
+    { "typ": "foto", "dauer": 2.8, "bild": "foto/test/test4.jpg", "position": "unten", "kicker": "17:30", "titel": "Pünktlich <em>Feierabend.</em>", "gross": true },
+    { "typ": "outro", "dauer": 2.6, "kicker": "Praxura Lokal", "titel": "Weniger Papier. <em>Mehr Therapie.</em>", "cta": "Mehr auf praxura.de" }
+  ]
+}

@@ -140,6 +140,17 @@
   .kal .vorschlag{background:rgba(201,168,118,.18);border:3px dashed var(--gold);color:var(--bronze);opacity:0}
   .chip{font-size:32px;font-weight:600;padding:12px 24px;border-radius:40px;background:rgba(156,58,58,.1);color:var(--rose);opacity:0}
 
+  /* foto: KI-generiertes Foto vollflächig, langsamer Zoom (Ken Burns), weiße Schrift */
+  .scene.foto{background:#000;color:#fff;justify-content:flex-start;padding-top:250px}
+  .foto .bild{position:absolute;inset:-4%;background-size:cover;background-position:center;will-change:transform}
+  .foto .verlauf{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,8,6,.86) 0%,rgba(10,8,6,.72) 22%,rgba(10,8,6,.25) 40%,rgba(10,8,6,0) 52%)}
+  .foto.unten .verlauf{background:linear-gradient(0deg,rgba(10,8,6,.88) 0%,rgba(10,8,6,.78) 26%,rgba(10,8,6,.3) 42%,rgba(10,8,6,0) 56%)}
+  .foto .inhalt{position:relative;z-index:2}
+  .foto.unten{justify-content:flex-end;padding-top:230px}
+  .foto .kicker{color:#E3C892} .foto .mid em{color:#E8CF9C}
+  .foto .mid,.foto .sub{text-shadow:0 2px 30px rgba(0,0,0,.45)} .foto .sub{color:rgba(255,255,255,.9)}
+  .kilabel{position:absolute;top:150px;right:90px;z-index:3;font-family:var(--mono);font-size:22px;letter-spacing:.08em;color:rgba(255,255,255,.7)}
+
   /* outro */
   .marke{font-family:var(--serif);font-weight:500;font-size:96px;letter-spacing:-.02em;margin-top:120px}
   .marke em{font-style:italic;color:var(--gold)}
@@ -545,6 +556,8 @@ const szenen = V.szenen.map(s => {
       <div class="figbox">${figurSVG(s)}<div class="blase"></div></div>`;
   } else if (s.typ === 'geraet') {
     html = `${k}<div class="mid" style="font-size:92px">${words(s.titel)}</div>${geraetHTML(s)}`;
+  } else if (s.typ === 'foto') {
+    html = `${k}${s.titel ? `<div class="mid" style="font-size:${s.gross ? 112 : 96}px">${words(s.titel)}</div>` : ''}${s.text ? `<div class="sub">${s.text}</div>` : ''}`;
   } else if (s.typ === 'outro') {
     html = `${k}<div class="mid">${words(s.titel)}</div>
       <div class="marke">Prax<em>ura</em></div><div class="cta">${s.cta || ''}</div>`;
@@ -552,6 +565,12 @@ const szenen = V.szenen.map(s => {
     html = `${k}<div class="mid">${words(s.titel)}</div>${s.text ? `<div class="sub">${s.text}</div>` : ''}${q}`;
   }
   el.innerHTML = `<div class="inhalt">${html}</div>`;
+  if (s.typ === 'foto') {
+    // Bildpfad relativ zu sosyal/ · KI-Kennzeichnung (AI Act Art. 50) immer sichtbar, abschaltbar nur für echte Fotos
+    el.classList.add('foto'); if (s.position === 'unten') el.classList.add('unten');
+    el.insertAdjacentHTML('afterbegin', `<div class="bild" style="background-image:url('../${s.bild}')"></div><div class="verlauf"></div>
+      ${s.echt ? '' : '<div class="kilabel">KI-generiertes Bild</div>'}`);
+  }
   stage.appendChild(el);
   const seg = { s, el, a: start, b: start + s.dauer, ws: [...el.querySelectorAll('.w')],
     tippText: s.typ === 'tippen' ? plain(s.titel) : '' };
@@ -593,16 +612,26 @@ window.renderAt = t => {
   barFill.style.width = (prog(t, 0, start) * 100) + '%';
   szenen.forEach((z, i) => {
     const lt = t - z.a;
-    const aktiv = t >= z.a && t < z.b || (i === szenen.length - 1 && t >= z.b);
+    // Ein Foto blendet über die vorige Szene: die bleibt so lange stehen, bis es deckt
+    const naechste = szenen[i + 1]?.s;
+    const naechsteBlende = naechste && naechste.typ === 'foto' && naechste.uebergang !== 'schnitt';
+    const aktiv = t >= z.a && t < z.b + (naechsteBlende ? .45 : 0) || (i === szenen.length - 1 && t >= z.b);
     if (!aktiv) { z.el.style.opacity = 0; return; }
     const ersteSzene = i === 0;
     const schnitt = z.s.uebergang === 'schnitt';
-    // Auftritt: schneller Schub von unten. Szene 1 steht ab Frame 0 (Vorschaubild muss packen).
-    const ein = ersteSzene || schnitt ? 1 : E.out(prog(lt, 0, .28));
-    const naechsteSchnitt = szenen[i + 1] && szenen[i + 1].s.uebergang === 'schnitt';
-    const aus = i < szenen.length - 1 && !naechsteSchnitt ? 1 - prog(lt, z.s.dauer - .15, z.s.dauer) : 1;
+    const foto = z.s.typ === 'foto';
+    // Auftritt: schneller Schub von unten (Foto: Überblendung). Szene 1 steht ab Frame 0 (Vorschaubild muss packen).
+    const ein = ersteSzene || schnitt ? 1 : foto ? E.out(prog(lt, 0, .45)) : E.out(prog(lt, 0, .28));
+    const naechsteSchnitt = naechste && naechste.uebergang === 'schnitt';
+    const aus = i < szenen.length - 1 && !naechsteSchnitt && !naechsteBlende ? 1 - prog(lt, z.s.dauer - .15, z.s.dauer) : 1;
     z.el.style.opacity = Math.min(ein, aus);
-    z.el.style.transform = `translateY(${(1 - ein) * 80}px) scale(${1 + lt * .012})`;
+    z.el.style.transform = foto ? 'none' : `translateY(${(1 - ein) * 80}px) scale(${1 + lt * .012})`;
+    if (foto) {
+      const p = lt / (z.s.dauer + .45), raus = z.s.zoom === 'raus';
+      const sk = raus ? 1.1 - .08 * p : 1.02 + .08 * p;
+      z.el.querySelector('.bild').style.transform = `scale(${sk}) translateX(${(z.s.schwenk || 0) * p}px)`;
+      z.el.querySelector('.inhalt').style.transform = `translateY(${(1 - E.out(prog(lt, 0, .5))) * (ersteSzene ? 0 : 40)}px)`;
+    }
     z.ws.forEach((w, j) => {
       const p = ersteSzene ? 1 : E.back(prog(lt, .08 + j * .07, .38 + j * .07));
       w.style.opacity = clamp(p * 1.5);
