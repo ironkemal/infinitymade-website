@@ -21,6 +21,22 @@ import { Telegram } from './telegram.mjs';
 const MAX_VERSUCHE = 3;
 const NAMEN = { instagram: 'Instagram', facebook: 'Facebook' };
 
+// Antwort auf jede Nachricht, die kein Befehl ist
+export const HILFE = `Praxura Social — so steuerst du mich:
+
+/status — Heute gepostet? Wie viele Tage Vorrat, welche Tage gestoppt
+/test — Prüft Token, Facebook-Seite und Instagram, ohne zu posten
+/stopp MM-TT — Diesen Tag nicht posten (z. B. /stopp 10-24)
+/freigeben MM-TT — Stopp wieder aufheben
+/jetzt — Heutigen Beitrag sofort posten · /jetzt MM-TT holt einen vergangenen Tag nach
+/pause — Alles anhalten (Urlaub, Krise) · /weiter — fortsetzen
+
+Jeden Abend um 19:00 kommt die Vorschau für morgen mit einem „Nicht posten"-Knopf. Ohne Reaktion wird gepostet.`;
+const HILFE_KNOEPFE = [
+  [{ text: '📊 Status', befehl: 'status' }, { text: '🔌 Verbindung testen', befehl: 'test' }],
+  [{ text: '⏸ Pause', befehl: 'pause' }, { text: '▶ Weiter', befehl: 'weiter' }],
+];
+
 export function konfiguration(env = process.env) {
   const hier = path.dirname(fileURLToPath(import.meta.url));
   const sosyal = path.join(hier, '..');
@@ -96,7 +112,8 @@ export async function poste(key, t, { z, cfg, plattformen, telegram, log }) {
       log(`❌ ${key} ${p} (Versuch ${versuche}): ${e.message}`);
       if (versuche === 1 || versuche === MAX_VERSUCHE) {
         const ende = versuche === MAX_VERSUCHE ? `Aufgegeben. Nachholen nach Behebung: /jetzt ${t.tag}` : 'Neuer Versuch beim nächsten Durchlauf.';
-        await telegram.sende(`❌ ${t.tag} auf ${NAMEN[p] || p} fehlgeschlagen:\n${e.message}\n${ende}`).catch(() => {});
+        const knopf = versuche === MAX_VERSUCHE ? [[{ text: '🔁 Jetzt nachholen', befehl: `jetzt ${t.tag}` }, { text: '🔌 Verbindung testen', befehl: 'test' }]] : undefined;
+        await telegram.sende(`❌ ${t.tag} auf ${NAMEN[p] || p} fehlgeschlagen:\n${e.message}\n${ende}`, knopf).catch(() => {});
       }
     }
   }
@@ -107,24 +124,32 @@ async function befehleVerarbeiten(ctx) {
   const { offset, befehle } = await telegram.befehle(z.tgOffset);
   z.tgOffset = offset;
   for (const { befehl, arg } of befehle) {
-    if ((befehl === 'stopp' || befehl === 'freigeben') && !arg) { await telegram.sende('Bitte mit Datum: /stopp MM-TT'); continue; }
+    if (befehl === 'hilfe') { await telegram.sende(HILFE, HILFE_KNOEPFE); log('Hilfe gesendet'); continue; }
+    if ((befehl === 'stopp' || befehl === 'freigeben') && !arg) {
+      const heute = berlin(jetzt).tag, morgen = inTagen(1, jetzt).tag;
+      await telegram.sende(`Welcher Tag? (oder tippen: /${befehl} MM-TT)`,
+        [[{ text: `Heute ${heute}`, befehl: `${befehl} ${heute}` }, { text: `Morgen ${morgen}`, befehl: `${befehl} ${morgen}` }]]);
+      continue;
+    }
     if (befehl === 'stopp') {
       const key = schluessel(arg, jetzt);
       if (!z.gesperrt.includes(key)) z.gesperrt.push(key);
-      await telegram.sende(`⏸ ${arg} wird nicht gepostet. Rückgängig: /freigeben ${arg}`);
+      await telegram.sende(`⏸ ${arg} wird nicht gepostet.`, [[{ text: '▶ Doch posten', befehl: `freigeben ${arg}` }]]);
     } else if (befehl === 'freigeben') {
       const key = schluessel(arg, jetzt);
       z.gesperrt = z.gesperrt.filter(k => k !== key);
       await telegram.sende(`▶ ${arg} ist wieder freigegeben.`);
     } else if (befehl === 'pause') {
-      z.pausiert = true; await telegram.sende('⏸ Alle Veröffentlichungen pausiert. Fortsetzen: /weiter');
+      z.pausiert = true; await telegram.sende('⏸ Alle Veröffentlichungen pausiert.', [[{ text: '▶ Weiter', befehl: 'weiter' }]]);
     } else if (befehl === 'weiter') {
       z.pausiert = false; await telegram.sende('▶ Veröffentlichungen laufen wieder.');
     } else if (befehl === 'status') {
       const h = berlin(jetzt), key = `${h.jahr}-${h.tag}`;
       const heute = cfg.plattformen.map(p => `${NAMEN[p] || p}: ${z.tage[key]?.[p]?.id ? '✅' : (z.tage[key]?.[p]?.fehler ? '❌' : '–')}`).join(' · ');
       const vorrat = await zaehleVorrat(laden, jetzt, 60);
-      await telegram.sende(`Status ${h.tag}${z.pausiert ? ' (PAUSIERT)' : ''}\nHeute: ${heute}\nVorrat: ${vorrat} Tage\nGestoppt: ${z.gesperrt.join(', ') || '—'}`);
+      const start = cfg.startAb && key < cfg.startAb ? `\nErster Sendetag: ${cfg.startAb.slice(5)}` : '';
+      await telegram.sende(`Status ${h.tag}${z.pausiert ? ' (PAUSIERT)' : ''}\nHeute: ${heute}\nVorrat: ${vorrat} Tage\nGestoppt: ${z.gesperrt.join(', ') || '—'}${start}`,
+        [[{ text: '🔌 Verbindung testen', befehl: 'test' }, z.pausiert ? { text: '▶ Weiter', befehl: 'weiter' } : { text: '⏸ Pause', befehl: 'pause' }]]);
     } else if (befehl === 'test') {
       const text = ctx.verbindung ? await ctx.verbindung().catch(e => `❌ Verbindung gestört:\n${e.message}`) : '– Verbindungstest hier nicht verfügbar';
       await telegram.sende(text);
@@ -216,8 +241,9 @@ export async function tick(ctx) {
         await einmal(z, `${mkey}:vorschau-leer`, telegram, `⚠ Für morgen (${m.tag}) gibt es keinen fertigen Inhalt.`, log);
       } else if (!z.gesperrt.includes(mkey)) {
         const bild = t.medien.art === 'video' ? t.medien.cover : t.medien.dateien[0];
-        const text = `Morgen ${cfg.sendezeitText} (${m.tag}, ${t.medien.art === 'video' ? 'Video' : 'Post'}):\n${t.hook}\n\nNicht posten? /stopp ${m.tag}`;
-        await (existsSync(bild) ? telegram.sendeBild(bild, text) : telegram.sende(text)).catch(e => log(`Telegram: ${e.message}`));
+        const text = `Morgen ${cfg.sendezeitText} (${m.tag}, ${t.medien.art === 'video' ? 'Video' : 'Post'}):\n${t.hook}\n\nNichts tun = wird gepostet.`;
+        const knopf = [[{ text: '⏸ Nicht posten', befehl: `stopp ${m.tag}` }]];
+        await (existsSync(bild) ? telegram.sendeBild(bild, text, knopf) : telegram.sende(text, knopf)).catch(e => log(`Telegram: ${e.message}`));
       }
       const vorrat = await zaehleVorrat(laden, jetzt, cfg.vorratWarnung + 1);
       if (vorrat < cfg.vorratWarnung) {
@@ -300,9 +326,18 @@ async function main() {
   };
   if (!args.includes('--dienst')) return durchlauf();
   log(`Dienst gestartet: ${cfg.plattformen.join(', ')} · Sendezeit ${cfg.sendezeitText} · Takt ${cfg.takt} min · Telegram ${telegram.aktiv ? 'an' : 'aus'}`);
+  await telegram.menueSetzen?.().catch(e => log(`Telegram-Menü: ${e.message}`));
   for (;;) {
     await durchlauf().catch(e => log(`Fehler im Durchlauf: ${e.stack || e.message}`));
-    await new Promise(r => setTimeout(r, cfg.takt * 60000));
+    // bis zum nächsten Takt warten — aber sofort weiter, wenn eine Telegram-Nachricht/ein Knopfdruck kommt
+    const ende = Date.now() + cfg.takt * 60000;
+    while (Date.now() < ende) {
+      const sekunden = Math.max(1, Math.min(50, Math.round((ende - Date.now()) / 1000)));
+      const { tgOffset } = await ladeZustand(cfg.daten);
+      const neu = await telegram.warte(tgOffset, sekunden)
+        .catch(async e => { log(`Telegram-Warten: ${e.message}`); await new Promise(r => setTimeout(r, 30000)); return false; });
+      if (neu) { await new Promise(r => setTimeout(r, 1500)); break; } // kurze Bremse, falls ein Update hängen bleibt
+    }
   }
 }
 

@@ -5,7 +5,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { MetaClient } from './meta.mjs';
-import { tick, schluessel, letzterSchluessel } from './yayinci.mjs';
+import { tick, schluessel, letzterSchluessel, HILFE } from './yayinci.mjs';
+import { Telegram } from './telegram.mjs';
 import { berlin, inTagen } from './tag.mjs';
 
 const dir = await mkdtemp(path.join(tmpdir(), 'yayinci-'));
@@ -90,9 +91,39 @@ const cfg = { sendezeit: 735, sendezeitText: '12:15', vorschauzeit: 1140, plattf
 const inhalt = (jahr, tag) => ({ jahr, tag, caption: 'Hook\nmehr', hook: 'Hook', fehlt: [], medien: { art: 'bild', dateien: [png] } });
 const leer = () => ({ tage: {}, gesperrt: [], pausiert: false, tgOffset: 0, vorschau: {}, gemeldet: {} });
 function tg(befehle = []) {
-  const gesendet = [];
-  return { gesendet, sende: async t => gesendet.push(t), sendeBild: async (_, t) => gesendet.push(t), befehle: async o => ({ offset: o + befehle.length, befehle: befehle.splice(0) }) };
+  const gesendet = [], knoepfe = [];
+  const merke = (t, k) => { gesendet.push(t); knoepfe.push(k); };
+  return { gesendet, knoepfe, sende: async (t, k) => merke(t, k),sendeBild: async (_, t, k) => merke(t, k), befehle: async o => ({ offset: o + befehle.length, befehle: befehle.splice(0) }) };
 }
+
+test('Telegram: Text, Knopfdruck und Unbekanntes werden zu Befehlen; nur eigener Chat', async () => {
+  const aufrufe = [];
+  const updates = [
+    { update_id: 1, message: { chat: { id: 42 }, text: '/stopp 10-23' } },
+    { update_id: 2, callback_query: { id: 'cb', data: 'freigeben 10-23', message: { chat: { id: 42 } } } },
+    { update_id: 3, message: { chat: { id: 42 }, text: 'was kann der bot?' } },
+    { update_id: 4, message: { chat: { id: 99 }, text: '/pause' } },
+  ];
+  const fetch = async (url, opt) => {
+    aufrufe.push({ methode: url.split('/').pop(), body: JSON.parse(opt.body) });
+    return { json: async () => ({ ok: true, result: url.endsWith('getUpdates') ? updates : true }) };
+  };
+  const r = await new Telegram({ token: 'T', chatId: 42, fetch }).befehle(0);
+  assert.equal(r.offset, 5);
+  assert.deepEqual(r.befehle, [{ befehl: 'stopp', arg: '10-23' }, { befehl: 'freigeben', arg: '10-23' }, { befehl: 'hilfe' }]);
+  assert.ok(aufrufe.some(a => a.methode === 'answerCallbackQuery' && a.body.callback_query_id === 'cb'));
+});
+
+test('Hilfe mit Knöpfen; Vorschau hat „Nicht posten"-Knopf; /stopp ohne Datum fragt mit Knöpfen', async () => {
+  const telegram = tg([{ befehl: 'hilfe' }, { befehl: 'stopp' }]);
+  await tick({ z: leer(), cfg, jetzt: new Date('2026-10-21T18:00:00Z'), laden: async (j, t) => inhalt(j, t), telegram,
+    plattformen: { instagram: async () => ({ id: 1 }), facebook: async () => ({ id: 2 }) }, log: () => {} });
+  assert.equal(telegram.gesendet[0], HILFE);
+  assert.ok(telegram.knoepfe[0].flat().some(k => k.befehl === 'status'));
+  assert.deepEqual(telegram.knoepfe[1][0].map(k => k.befehl), ['stopp 10-21', 'stopp 10-22']);
+  const vorschau = telegram.gesendet.findIndex(t => t.startsWith('Morgen'));
+  assert.equal(telegram.knoepfe[vorschau][0][0].befehl, 'stopp 10-22');
+});
 
 test('postet heute auf jede Plattform genau einmal', async () => {
   const z = leer(), telegram = tg(); let posts = 0;

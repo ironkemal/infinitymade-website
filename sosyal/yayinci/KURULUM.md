@@ -33,6 +33,8 @@ yayinci/*.mjs        ─┘   (ssh)         19:00 → yarının önizlemesi → 
 | `/test` | Hiçbir şey atmadan bağlantıyı kontrol eder (token, sayfa, Instagram), sonucu yazar |
 | `/jetzt` · `/jetzt 10-22` | O günü (tarih yoksa bugünü) hemen atar — 3 denemede başarısız kalan ya da `/stopp`'lanan günü telafi etmek için. Yalnız bugün veya geçmiş günler |
 
+Komutlar Telegram'ın „/" menüsünde açıklamalarıyla durur. Komut olmayan her mesaja (örn. „hallo", „ne yapabilirsin") düğmeli yardım gelir; önizlemede „Nicht posten", hata mesajında „Jetzt nachholen" düğmesi vardır. Servis yeni mesajı birkaç saniyede görür (bekleme Telegram long-polling ile, port açılmaz).
+
 Telegram'dan tamir yapılmaz (kod/ayar değişmez). `/test` ❌ diyorsa mesajı Claude'ye gönder.
 
 Her akşam 19:00'da yarının kapağı ve hook'u gelir. Bir şey yapmazsan ertesi gün 12:15'te otomatik çıkar.
