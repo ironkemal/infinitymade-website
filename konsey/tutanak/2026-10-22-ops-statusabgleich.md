@@ -166,4 +166,341 @@ Die folgende Tabelle enthält jede der 336 gelesenen IDs genau einmal. Legende:
 **D** historische Schließentscheidung; **H** vorher bereits abgehakt,
 keine neue Einzelabnahme. Für P/O/G gelten die konkreten Restgrenzen oben.
 
-<!-- ID-Register wird unten deterministisch ergänzt. -->
+| Ops-ID | Einordnung | Nachweis / Grenze |
+|---|---|---|
+| #1 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #2 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #3 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #4 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #5 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #6 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #7 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #8 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #9 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #10 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #11 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #12 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #13 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #14 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #15 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #16 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #17 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #18 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #19 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #20 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #21 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #22 | D | vorher abgehakt; dokumentierte historische Schließentscheidung |
+| #23 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #24 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #25 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #26 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #27 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #28 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #29 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #30 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #31 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #32 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #33 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #34 | N | neu abgeschlossen; Cookieaudit/Pflichtreview, siehe oben |
+| #35 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #36 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #37 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #38 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #39 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #40 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #41 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #42 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #43 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #44 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #45 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #46 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #47 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #48 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #49 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #50 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #51 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #52 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #53 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #54 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #55 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #56 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #57 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #58 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #59 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #60 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #61 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #62 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #63 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #64 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #65 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #66 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #67 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #68 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #69 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #70 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #71 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #72 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #73 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #74 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #75 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #76 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #77 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #78 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #79 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #80 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #81 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #82 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #83 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #84 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #85 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #86 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #87 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #88 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #89 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #90 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #91 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #92 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #93 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #94 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #95 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #96 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #97 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #98 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #99 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #100 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #101 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #102 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #103 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #104 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #105 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #106 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #107 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #108 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #109 | G | Parent offen wegen genannter Kinder |
+| #110 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #111 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #112 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #113 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #114 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #115 | G | Parent offen wegen genannter Kinder |
+| #116 | G | Parent offen wegen genannter Kinder |
+| #117 | G | Parent offen wegen genannter Kinder |
+| #118 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #119 | G | Parent offen wegen genannter Kinder |
+| #120 | G | Parent offen wegen genannter Kinder |
+| #121 | G | Parent offen wegen genannter Kinder |
+| #122 | G | Parent offen wegen genannter Kinder |
+| #123 | G | Parent offen wegen genannter Kinder |
+| #124 | G | Parent offen wegen genannter Kinder |
+| #125 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #126 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #127 | G | Parent offen wegen genannter Kinder |
+| #128 | G | Parent offen wegen genannter Kinder |
+| #129 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #130 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #131 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #132 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #133 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #134 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #135 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #136 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #137 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #138 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #139 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #140 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #141 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #142 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #143 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #144 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #145 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #146 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #147 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #148 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #149 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #150 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #151 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #152 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #153 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #154 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #155 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #156 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #157 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #158 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #159 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #160 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #161 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #162 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #163 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #164 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #165 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #166 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #167 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #168 | G | Parent offen wegen genannter Kinder |
+| #169 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #170 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #171 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #172 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #173 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #174 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #175 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #176 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #177 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #178 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #179 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #180 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #181 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #182 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #183 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #184 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #185 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #186 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #187 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #188 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #189 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #190 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #191 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #192 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #193 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #194 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #195 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #196 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #197 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #198 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #199 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #201 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #202 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #203 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #204 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #205 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #206 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #207 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #208 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #209 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #210 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #211 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #212 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #213 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #214 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #215 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #216 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #217 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #218 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #219 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #220 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #221 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #222 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #223 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #224 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #225 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #226 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #227 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #228 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #229 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #230 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #231 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #232 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #233 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #234 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #235 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #236 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #237 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #238 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #239 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #240 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #241 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #242 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #243 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #244 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #245 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #246 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #247 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #248 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #249 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #250 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #251 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #252 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #253 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #254 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #255 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #256 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #257 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #258 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #259 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #260 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #261 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #262 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #263 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #264 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #265 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #266 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #267 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #268 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #269 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #270 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #271 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #272 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #273 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #274 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #275 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #276 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #277 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #278 | D | vorher abgehakt; dokumentierte historische Schließentscheidung |
+| #279 | D | vorher abgehakt; dokumentierte historische Schließentscheidung |
+| #280 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #281 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #282 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #283 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #284 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #285 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #286 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #287 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #288 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #289 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #290 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #291 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #292 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #293 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #294 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #295 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #296 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #297 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #298 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #299 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #300 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #301 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #302 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #303 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #304 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #305 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #306 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #307 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #308 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #309 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #310 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #313 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #314 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #315 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #316 | H | vorher abgehakt; historischer Abschlussvermerk, heute nicht neu funktional abgenommen |
+| #318 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #319 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #320 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #321 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #322 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #323 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #324 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #325 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #326 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #327 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #328 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #329 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #330 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #331 | T | vorher abgehakt; ausdrücklich in KHS übertragen, keine neue Lieferfreigabe |
+| #332 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #333 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #334 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #335 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
+| #336 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #337 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #338 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #339 | P | Teilabschluss in Kartennotiz; konkreter Restnachweis siehe Tabelle |
+| #340 | O | Gesamtanforderung offen; konkreter Restnachweis siehe Tabelle |
