@@ -169,7 +169,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden, leitsymptomatik, pat_leitsymptomatik')
+      .select('id, owner_id, status, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden, leitsymptomatik, pat_leitsymptomatik')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
@@ -179,6 +179,9 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     // liefe hier durch UEBERGAENGE-Regeln, die für sie nie gedacht waren.
     if (vRoh.therapie_bereich !== 'podo') {
       return res.status(400).json({ error: 'Diese Verordnung ist keine podologische Verordnung.' });
+    }
+    if (ziel === 'abrechenbar' && vRoh.status === 'parsed') {
+      return res.status(409).json({ code: 'VERORDNUNG_ENTWURF', error: 'Entwurf kann nicht freigegeben werden. Bitte Verordnung ergänzen, erneut prüfen und speichern.' });
     }
     const v = { ...vRoh, status: statusAusAbrechnungStatus(vRoh.abrechnung_status) };
 

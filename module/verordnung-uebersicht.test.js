@@ -226,6 +226,17 @@ test('Podologie-icd10 ist zusammengesetzt aus icd10 + icd10_2 — es darf nicht 
   assert.equal(v.diagnose, 'E11.40, E11.74 · DF2');
 });
 
+test('Entwürfe bleiben auffindbar und tragen unabhängige Entwurfsmarkierung', async () => {
+  const liste=await ladeAktiveVerordnungen(fakeSb({prescriptions:[
+    {id:'draft-physio',patient_id:'p1',status:'parsed'},
+    {id:'draft-podo',patient_id:'p1',therapie_bereich:'podo',status:'parsed',abrechnung_status:null},
+    {id:'confirmed-podo',patient_id:'p1',therapie_bereich:'podo',status:'confirmed',abrechnung_status:null},
+  ]}),OPTS);
+  assert.equal(liste.find(v=>v.id==='draft-physio').entwurf,true);
+  assert.equal(liste.find(v=>v.id==='draft-podo').entwurf,true);
+  assert.equal(liste.find(v=>v.id==='confirmed-podo').entwurf,false);
+});
+
 // Der eigentliche Anlass, Fragen-Antworten-Katalog Podologie Nr. 33:
 // parallele Verordnungen sind zulässig, und die Akte muss sie getrennt zählen.
 test('Nagelspange (UI2) und Komplexbehandlung (DF) parallel, getrennte Zähler', async () => {

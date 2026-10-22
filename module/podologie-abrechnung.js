@@ -620,7 +620,7 @@ async function loadPodologieBilling() {
           ${_hmRozet}
           ${zeigeHerkunft ? podPraxisweitMarke(v) : ''}
           ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${ctx.escapeHtml(v.rezeptart)}</span>` : ''}
-          ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
+          ${v.bearbeitung_status === 'parsed' ? '<span>Entwurf · noch zu prüfen</span>' : v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
           ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:100%;">
@@ -1258,7 +1258,7 @@ async function loadPodologieBilling() {
         .is('storniert_am', null)
         .eq('verordnung_id', _podState.selectedVordId);
       const count = tage ? abrechenbareBehandlungstage(tage) : null;
-      if (count != null && count >= vord.behandlungseinheiten) {
+      if (vord.bearbeitung_status !== 'parsed' && count != null && count >= vord.behandlungseinheiten) {
         alleVerbraucht = true;
         await ctx.supabase.from(TOPF)
           .update({ abrechnung_status: statusInTopf('abrechenbar') })
@@ -1269,6 +1269,7 @@ async function loadPodologieBilling() {
           // holt eine spät nachgetragene Behandlung eine Verordnung zurück,
           // die die Praxis bewusst auf "aktiv" gesetzt hat.
           .eq('id', _podState.selectedVordId).is('abrechnung_status', null)
+          .neq('status', 'parsed')
           .is('abrechnung_status_manuell_am', null);
         ctx.showToast('Alle Einheiten aufgebraucht — Verordnung bereit zur Abrechnung ✓', 'info');
       } else {

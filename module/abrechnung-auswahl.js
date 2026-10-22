@@ -520,6 +520,7 @@ export async function ladeAbrechnungAuswahl() {
       `)
       .eq('owner_id', ownerId)
       .eq('abrechnung_status', 'bereit')
+      .neq('status', 'parsed')
       // ⚠️ Podologie ausgeschlossen — sie läuft über den podologischen Mapper.
       // `.or()` statt `.neq()`: Altbestand führt `therapie_bereich = NULL`,
       // und `<> 'podo'` liesse NULL-Zeilen in SQL aus dem Ergebnis fallen.
@@ -531,6 +532,7 @@ export async function ladeAbrechnungAuswahl() {
       .eq('owner_id', ownerId)
       .eq('therapie_bereich', 'podo')
       .or(PODO_ARBEITSLISTE_OR)
+      .neq('status', 'parsed')
       .order('created_at', { ascending: false }),
 
     ctx.supabase.from('therapist_certificates')

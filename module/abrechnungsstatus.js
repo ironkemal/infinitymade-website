@@ -178,9 +178,9 @@ export function statusInfo(key) {
 */
 const PHYSIO_STATUS = [
   {
-    key: 'parsed', label: 'Erfasst', kurz: 'Erfasst',
+    key: 'parsed', label: 'Entwurf', kurz: 'Entwurf',
     farbe: '#b45309', bg: 'rgba(180,83,9,0.14)',
-    hilfe: 'Aus dem Rezept gelesen, noch nicht geprüft und bestätigt.',
+    hilfe: 'Gespeichert, aber noch nicht vollständig geprüft. Bitte ergänzen, erneut prüfen und speichern. Keine Abrechnungsfreigabe.',
   },
   {
     key: 'confirmed', label: 'Bestätigt', kurz: 'Bestätigt',

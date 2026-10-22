@@ -238,7 +238,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     .or('therapie_bereich.is.null,therapie_bereich.neq.podo');
   let voQ = sb.from('prescriptions')
     .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
-            'anzahl_einheiten, frequenz, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
+            'anzahl_einheiten, frequenz, status, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
             'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
             'leitsymptomatik, pat_leitsymptomatik, heilmittel, heilmittel_position, behandlungsbeginn, ' +
             'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, ' +
@@ -362,6 +362,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       leadId: rx.patient_id || null,
       erbracht, verordnet,
       status: rx.status,
+      entwurf: rx.status === 'parsed',
       rezeptart: rx.rezeptart || null,
       dringend: !!rx.is_dringend,
       hausbesuch: !!rx.hausbesuch,
@@ -393,6 +394,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       leadId: v.lead_id || null,
       erbracht, verordnet,
       status: v.status,
+      entwurf: v.bearbeitung_status === 'parsed',
       rezeptart: v.rezeptart || null,
       dringend: !!v.dringend,
       hausbesuch: !!v.hausbesuch,
@@ -526,6 +528,7 @@ function karteHtml(v, mitMenue = false) {
   const balkenFarbe = zuviel ? '#ef4444' : farbe;
 
   const marker = [
+    v.entwurf ? '<span>Entwurf · noch zu prüfen</span>' : '',
     bittePruefen ? `<span style="color:${BITTE_PRUEFEN_FARBE};font-weight:600;">Bitte prüfen</span>` : '',
     v.dringend ? '<span style="color:#ef4444;font-weight:600;">Dringend</span>' : '',
     v.hausbesuch ? '<span>Hausbesuch</span>' : '',

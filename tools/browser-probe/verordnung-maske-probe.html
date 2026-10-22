@@ -222,6 +222,34 @@ try {
   um.setzeSperre(document, {});
   pruef('Ohne Sperre wieder wählbar', !document.querySelector('#rzArtLeiste [data-art="privat"]').disabled);
 
+  // Entwurf: echte Maske + echter Sender, ausschließlich synthetische Antwort.
+  maske.maskeHeimschicken();
+  maske.setzeMaskeBruecke({ apiBasis: '/__synthetic_rezept_api' });
+  const originalFetch = window.fetch;
+  const requests = [];
+  let rejectSave = false;
+  window.fetch = async (url, options) => {
+    if (!String(url).startsWith('/__synthetic_rezept_api/')) throw new Error('Unexpected probe HTTP');
+    requests.push({ url, body: JSON.parse(options.body) });
+    return new Response(JSON.stringify(rejectSave ? { error:'Invalid token' }
+      : { success:true, prescription_id:'synthetic-draft', patient_id:'synthetic-patient', status:'parsed' }),
+      { status:rejectSave ? 401 : 200, headers:{'Content-Type':'application/json'} });
+  };
+  try {
+    const sb = { auth:{ getSession:async()=>({data:{session:{access_token:'synthetic-only'}}}) } };
+    const v = {patientId:'synthetic-patient',overridden:true,icd10:null,anzahl:null,ausstDate:null};
+    const saved = await maske.schreibeVerordnung(sb,v);
+    pruef('Entwurf: echter Speicherweg liefert parsed zurück', saved.status === 'parsed' && saved.id === 'synthetic-draft');
+    pruef('Entwurf: Lücken bleiben leer, Entscheidung wird übermittelt', requests[0].body.proceed_anyway === true
+      && requests[0].body.parsed.rezept.anzahl_einheiten === null);
+    rejectSave = true;
+    const before = document.getElementById('rzHm').value;
+    let error = '';
+    try { await maske.schreibeVerordnung(sb,v); } catch(e) { error=e.message; }
+    pruef('401: verständlicher Fehler, Eingabe erhalten, kein Wiederholungs-POST', /zweiten Tab/.test(error)
+      && document.getElementById('rzHm').value === before && requests.length === 2);
+  } finally { window.fetch = originalFetch; maske.setzeMaskeBruecke(null); }
+
 } catch (e) {
   pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
 }

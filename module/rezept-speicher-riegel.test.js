@@ -67,7 +67,7 @@ test('Save lock rejects detached, moved and closed masks',()=>{
 
 function deferred() {let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
 
-function dashboardFixture({confirmed=true,delayWarnings=false,onDoctor,showConfirmation}={}) {
+function dashboardFixture({confirmed=true,delayWarnings=false,onDoctor,showConfirmation,prüfung={befunde:[]},status='confirmed',saveError=null}={}) {
   const m=mask();m.elements.get('rzBarcodeBestaetigt').checked=confirmed;
   const counts={doctor:0,persist:0};const toasts=[],errors=[];
   const entered=deferred(),warnings=deferred();
@@ -85,11 +85,11 @@ function dashboardFixture({confirmed=true,delayWarnings=false,onDoctor,showConfi
     icdSpeicherHinweise:async()=>{entered.resolve();return delayWarnings?warnings.promise:[];},
     icdMehrAlsEinKodeJeFeld:()=>false,t:key=>key,showConfirmModal:showConfirmation || (async()=>true),
     supabase:{},lsCollect:()=>[],
-    schreibeVerordnung:async()=>{counts.persist++;return {id:'synthetic-rx',aktualisiert:true};},
+    schreibeVerordnung:async(_sb,v)=>{counts.persist++;counts.overridden=v.overridden;if(saveError)throw saveError;return {id:'synthetic-rx',aktualisiert:true,status};},
     fuehrtSitzungsbuch:()=>false,getSector:()=> 'podo',
     ladeLhbNachweisHoch:async()=>({ok:true}),currentSession:{user:{id:'synthetic-user'}},
     verordnungPatientenAbgleich:async()=>{},rzPatientCache:[],emit:()=>{},
-    pruefeMaske:async()=>{},loadBkVerordnungen:()=>{},
+    pruefeMaske:async()=>prüfung,loadBkVerordnungen:()=>{},
     console:{error:(...args)=>errors.push(args),warn:()=>{}},
   };
   const source=readFileSync(new URL('../dashboard.js',import.meta.url),'utf8');
@@ -131,9 +131,28 @@ test('Actual dashboard save checks mask again after async doctor resolution',asy
 
 test('Actual dashboard unchanged save persists once and releases all controls',async()=>{
   const f=dashboardFixture();await f.save();
-  assert.deepEqual(f.counts,{doctor:1,persist:1});assert.deepEqual(f.errors,[]);
+  assert.deepEqual(f.counts,{doctor:1,persist:1,overridden:false});assert.deepEqual(f.errors,[]);
   assert.equal(f.root.inert,false);assert.equal(f.button.disabled,false);
   assert.equal(f.otherButton.disabled,true);assert.equal(f.button.dataset.laeuft,undefined);
+});
+
+test('Actual dashboard saves warnings or unavailable checks explicitly as draft',async()=>{
+  for(const prüfung of [null,{befunde:[{schwere:'warnung',text:'LANR prüfen'}]}]) {
+    let dialog;
+    const f=dashboardFixture({prüfung,status:'parsed',showConfirmation:async options=>{dialog=options;return true;}});
+    await f.save();assert.equal(f.counts.persist,1);assert.equal(f.counts.overridden,true);
+    assert.equal(dialog.confirmText,'Als Entwurf speichern');assert.match(dialog.message,/Abrechnungsfreigabe/);
+    assert.ok(f.toasts.some(t=>/als Entwurf gespeichert/.test(t.text)));
+  }
+});
+
+test('Actual dashboard failed save keeps inputs and never announces success',async()=>{
+  const f=dashboardFixture({saveError:new Error('Sitzung konnte nicht bestätigt werden')});
+  const before=f.elements.get('rzAnzahl').value;
+  await f.save();assert.equal(f.elements.get('rzAnzahl').value,before);
+  assert.equal(f.root.inert,false);assert.equal(f.button.disabled,false);
+  assert.ok(!f.toasts.some(t=>t.kind==='success'));
+  assert.ok(f.toasts.some(t=>/Sitzung/.test(t.text)));
 });
 
 test('Actual dashboard warning closed through generic modal close releases mask without writes',async()=>{

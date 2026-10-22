@@ -54,6 +54,14 @@ const PODO = {
   ],
 };
 
+test('Entwurf ist bei Physio und Podologie sichtbar, ohne Abrechnungsstatus-Knopf', () => {
+  for (const [rx, quelle] of [[{...PHYSIO,status:'parsed'},'physio'],[{...PODO,bearbeitung_status:'parsed'},'podologie']]) {
+    const html=verordnungDetailHtml(rx,{escapeHtml:esc,quelle});
+    assert.match(html,/Entwurf/);assert.match(html,/noch zu prüfen/);
+    assert.doesNotMatch(html,/data-status-btn/);
+  }
+});
+
 /* ── Kopf: Name, Nummer, Status ───────────────────────────────────────────── */
 
 test('Kopfzeile trägt Name, Belegnummer und Status — in beiden Töpfen', () => {

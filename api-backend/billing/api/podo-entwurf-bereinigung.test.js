@@ -81,7 +81,7 @@ function createMockRes() {
 class RouteMockSupabase {
   constructor({ abrechnungen = [], prescriptions = [] } = {}) {
     this.abrechnungen = new Map(abrechnungen.map((a) => [a.id, { ...a }]));
-    this.prescriptions = new Map(prescriptions.map((p) => [p.id, { ...p }]));
+    this.prescriptions = new Map(prescriptions.map((p) => [p.id, { status: 'confirmed', ...p }]));
     this.prescriptionValidations = [];
     this.storageFiles = new Map();
     this.storageUploads = [];
@@ -251,6 +251,7 @@ class RouteMockSupabase {
         update(patch) {
           const inFilters = [];
           const eqFilters = [];
+          const neqFilters = [];
           let orFilter = null;
           let selectFields = null;
 
@@ -261,6 +262,10 @@ class RouteMockSupabase {
             },
             eq(col, val) {
               eqFilters.push({ col, val });
+              return builder;
+            },
+            neq(col, val) {
+              neqFilters.push({ col, val });
               return builder;
             },
             or(filterStr) {
@@ -350,6 +355,7 @@ class RouteMockSupabase {
                   }
                   if (!match) continue;
 
+                  if (neqFilters.some(f => row[f.col] == null || row[f.col] === f.val)) continue;
                   if (orFilter) {
                     const isClaimable = (row.abrechnung_status === null || row.abrechnung_status === 'abrechenbar' || row.abrechnung_status === 'korrigiert') && !row.abrechnung_id;
                     if (!isClaimable) {
@@ -542,6 +548,19 @@ test('happyfullpublicationONLYafterclaims, filesupsertfalse unique', async () =>
   const p1 = supabase.prescriptions.get('vo-podo-1');
   assert.equal(p1.abrechnung_status, 'abgerechnet');
   assert.equal(p1.abrechnung_id, result.ab.id);
+});
+
+test('prescription changed to draft before claim cannot publish DTA', async () => {
+  const supabase = new RouteMockSupabase({ prescriptions: [
+    {id:'vo-podo-1',therapie_bereich:'podo',status:'parsed',abrechnung_status:null,abrechnung_id:null},
+  ] });
+  const ctx=buildTestContext(supabase);
+  await executeRouteSnippet(EXTRACTED_REGION,ctx);
+  assert.equal(ctx.res.statusCode,409);
+  assert.equal(supabase.prescriptions.get('vo-podo-1').status,'parsed');
+  assert.equal(supabase.prescriptions.get('vo-podo-1').abrechnung_id,null);
+  assert.equal(supabase.registrierungen?.length || 0,0);
+  assert.equal([...supabase.abrechnungen.values()][0].status,'verworfen');
 });
 
 test('2parallelcreate sameprescriptions onepub success other409discard and cleanup ONLYits3files', async () => {

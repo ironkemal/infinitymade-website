@@ -234,7 +234,8 @@ function _merkmale(rx, esc, quelle, pruefung) {
   if (rx.zuzahlung_befreit) an.push(['Zuzahlungsbefreit', '#22c55e']);
   if (rx.bericht_angefordert || rx.therapiebericht) an.push(['Therapiebericht angefordert', '#f59e0b']);
   if (rx.unterschrift_vorhanden === false && istKasse(rx.rezeptart)) an.push(['Unterschrift fehlt', '#ef4444']);
-  if (rx.proceed_anyway) an.push(['Trotz Lücken gespeichert', '#f59e0b']);
+  if (rx.status === 'parsed' || rx.bearbeitung_status === 'parsed') an.push(['Entwurf · noch zu prüfen', BITTE_PRUEFEN_FARBE]);
+  else if (rx.proceed_anyway) an.push(['Trotz Lücken gespeichert', '#f59e0b']);
   if (!an.length) return '';
   return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">` + an.map(([txt, farbe]) =>
     `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid ${farbe};color:${farbe};">${esc(txt)}</span>`
@@ -763,7 +764,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
       <span style="font-size:15px;font-weight:700;color:var(--text-main);">${esc(name)}</span>
       ${nummer ? `<span title="${esc(nummerHerkunft)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);">${esc(nummer)}</span>` : ''}
       ${bereichBadge(quelle, { gross: true })}
-      ${quelle === 'podologie'
+      ${rx.status === 'parsed' || rx.bearbeitung_status === 'parsed' ? statusBadgeGross('physio', 'parsed') : quelle === 'podologie'
         ? `<button type="button" data-status-btn data-vord-id="${esc(rx.id)}" title="Abrechnungsstatus ändern"
              style="background:none;border:0;padding:0;cursor:pointer;">${statusBadgeGross(quelle, rx.status)}</button>`
         : statusBadgeGross(quelle, rx.status)}

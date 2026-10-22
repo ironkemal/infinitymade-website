@@ -69,3 +69,9 @@ test('Physio: pruefeVerordnungsfortschritt läuft weiter wie bisher', async () =
   assert.equal(r.einheiten, 6);
   assert.ok(schreib.some(w => w.patch.status === 'in_therapy'), 'Status wird gehoben');
 });
+
+test('Entwurf wird durch Sitzungsautomatik weder bestätigt noch abrechnungsbereit', async () => {
+  const { schreib, client } = attrappe({ anzahl_einheiten:6, therapie_bereich:'physio', status:'parsed' });
+  assert.equal(await pruefeVerordnungsfortschritt(client, 'rx-entwurf'), null);
+  assert.deepEqual(schreib, []);
+});

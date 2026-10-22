@@ -194,7 +194,7 @@ function zeileHtml(v, esc) {
     <td style="white-space:nowrap;">${nummer}</td>
     <td>${bereichBadge(v.quelle)}</td>
     <td style="text-align:center;white-space:nowrap;color:var(--text-muted);">${zaehler}</td>
-    <td>${v.quelle === 'podologie'
+    <td>${v.entwurf ? statusBadgeGross('physio', 'parsed') : v.quelle === 'podologie'
       ? `<button type="button" class="vord-status-btn" data-vord-id="${esc(v.id)}" title="Abrechnungsstatus ändern"
            style="background:none;border:0;padding:0;cursor:pointer;">${statusBadgeGross(v.quelle, v.status)}</button>`
       : statusBadgeGross(v.quelle, v.status)}</td>

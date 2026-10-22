@@ -1823,3 +1823,46 @@ aynı kalıcı sekmede `switchPanel()` ile değil.
 **Beobachtung P3 (QA-Stammdaten):** Fußzeile Public-Seiten „Harrichstr. 5 33, 53721 Nürnberg“ — Hausnummer doppelt, PLZ 53721 passt nicht zu Nürnberg. Synthetische QA-Daten, kein Produktfehler belegt.
 
 **Offen für vollständigen #24-Lauf:** Owner-Zugang der QA-Praxis lokal bereitstellen (Verordnung/Behandlung/Abrechnung); `employee_services` + `working_hours` für QA-Praxis seeden (db-ustasi).
+
+### Kalender / Verordnungen / Behandlungen / Abrechnung — lesender Live-Nachtest 2026-10-22
+
+**Erwartet:** Angemeldete Testpraxis kann vorhandene Listen und Details öffnen;
+Positionskatalog und bestehendes Abrechnungsdetail laden ohne Authentifizierungsfehler.
+Keine fachlichen Schreibaktionen im Testauftrag.
+
+**Stand:** Frontend-Dateien gegen gepushten Commit `2e5aae2d` bytegleich geprüft;
+Backend `/api/ueber` meldet `0.7.0+2e5aae2`, `/api/krankenkassen` 200/JSON.
+Benutzer hat angezeigten Mandanten ausdrücklich als reine synthetische Testpraxis
+freigegeben. Chrome mit vorhandener Anmeldung; keine Credentials/Token gelesen.
+Nach Voll-Reload `dashboard.js?v=20261021zf` (übernommener Tab davor noch `…za`).
+
+**Letzter Test:** 22.10.2026, ca. 11:04–11:09 Berlin — **TEILWEISE / KALDI**.
+
+| Ansicht | Ergebnis | Beobachtung |
+|---|---|---|
+| Kalender | PASS, lesend | Tag/Woche/Monat laden; Heute → 22.10.; vorhandene Termine sichtbar |
+| Verordnungen | PASS mit Backend-Befund | Liste und synthetisches Detail laden; Maske/Hinweise/Zuordnungen sichtbar, Positionsabruf meldet HTTP 401 |
+| Behandlungen | PASS, lesend | Liste und dokumentierte Testbehandlungen sichtbar; Mengenende 2/2 angezeigt, nichts erfasst/storniert |
+| Rechnungen | PASS, Liste | 18 Zeilen geladen; keine Rechnung erzeugt oder Zahlung ausgelöst |
+| Zahlungsjournal | GEÖFFNET, Inhalte ungeprüft | Leere Tabelle im betrachteten Zustand; keine Vollständigkeitsbehauptung |
+| §302-Historie | PASS, Liste | Vorhandene Testdateien und Statusangaben sichtbar |
+| §302-Detail | **FAIL / P1** | Bestehende Testabrechnung anklicken → „Konnte nicht geladen werden: Invalid token“; nach Voll-Reload identisch |
+| Positionskatalog | **FAIL / P1** | `[podologie-positionen] HTTP 401`, zusätzlich `[positions/load] Error: Invalid token` nach Reload |
+
+**Übergabe an Funktions-/Backend-Prüfung:** `module/podologie-positionen.js`
+GET `/billing/positions/podologie?date=…`; `module/abrechnung-detail.js:202`
+meldet Backendfehler. Browser-Sitzung/Listen funktionieren, öffentliche Backendroute
+200; daraus folgt keine bewiesene Ursache. Frischer Reload bestätigt Fortbestand.
+Keine Auth-Umgehung, keine Server-/Env-/DB-Änderung; lesende Pfadzuordnung beauftragt.
+
+**Nicht geprüft:** neue Verordnung/Behandlung speichern, DTA-Erzeugung oder Download,
+Statuswechsel/Korrektur, Übermittlung, Zahlungen, Mandantenisolation. Daher keine
+vollständige Launch-Abnahme. Bekannte `#calendarEl`-Warnung nicht als neuer Befund gezählt.
+
+**Nachtrag lokale Reparatur — BILLING-AUTH-401-20261022:**
+[Suchbarer Befund und Reproduktion](2026-10-22-billing-auth-401.md).
+Alle 20 Billing-Auth-Fehlerpfade unterscheiden jetzt Infrastrukturfehler (503) von
+Ablehnung (401), bevor fachliche Daten gelesen werden. 110/110 fokussierte Tests,
+Backend gesamt 1612/1612, Typecheck und unabhängiger Review erfolgreich.
+Nur lokal geschrieben/getestet; kein neuer Push/Deploy. **Live-P1 bleibt offen**:
+Ursache unbekannt, tatsächlicher VPS-Zugang und Frontend-/Live-Nachtest fehlen.

@@ -114,7 +114,7 @@ export function hauptbuchFuehrtStatus(therapieBereich) {
  * Prüft den Fortschritt einer Verordnung und hebt ihren Status, wenn fällig.
  *
  * Schreibt nur nach oben und nur, wenn kein Mensch bereits eingegriffen hat:
- * `status` wird ausschliesslich aus `parsed|confirmed|in_therapy` gehoben, und
+ * `status` wird ausschliesslich aus `confirmed|in_therapy` gehoben, und
  * `abrechnung_status` nur gesetzt, solange er `null` ist UND
  * `abrechnung_status_manuell_am` `null` ist (Ops #310 — vorher stand hier nur
  * die Absicht "manuelle Wahl gewinnt", ohne dass eine Spalte sie festhielt;
@@ -136,11 +136,11 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   const [offenRes, erbrachtRes, rxRes] = await Promise.all([
     zaehler().not('booking_id', 'is', null).eq('status', 'planned'),
     zaehler().eq('status', 'done'),
-    supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich').eq('id', prescriptionId).maybeSingle(),
+    supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich, status').eq('id', prescriptionId).maybeSingle(),
   ]);
 
   // Podologie: der Status gehört der Abrechnungsmaske, siehe hauptbuchFuehrtStatus().
-  if (!hauptbuchFuehrtStatus(rxRes.data?.therapie_bereich)) return null;
+  if (!hauptbuchFuehrtStatus(rxRes.data?.therapie_bereich) || rxRes.error || rxRes.data?.status === 'parsed') return null;
 
   const offen     = offenRes.count || 0;
   const erbracht  = erbrachtRes.count || 0;
@@ -150,7 +150,7 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   if (fertig) {
     await supabase.from('prescriptions')
       .update({ status: 'completed' }).eq('id', prescriptionId)
-      .in('status', ['parsed', 'confirmed', 'in_therapy']);
+      .in('status', ['confirmed', 'in_therapy']);
     // §302-Weiche: erst hier taucht das Rezept in der Kassenabrechnung auf.
     // Bewusst OHNE Bedingung an `kostentraeger_ik`: fehlt die Kasse, landet das
     // Rezept in der Gruppe „Kostenträger fehlt“ und wird dort zugewiesen.
@@ -161,12 +161,13 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
     // nicht erneut an, auch wenn spaeter noch eine Sitzung nachgetragen wird.
     await supabase.from('prescriptions')
       .update({ abrechnung_status: 'bereit' }).eq('id', prescriptionId)
+      .neq('status', 'parsed')
       .is('abrechnung_status', null)
       .is('abrechnung_status_manuell_am', null);
   } else {
     await supabase.from('prescriptions')
       .update({ status: 'in_therapy' }).eq('id', prescriptionId)
-      .in('status', ['parsed', 'confirmed']);
+      .in('status', ['confirmed']);
   }
 
   return { offen, erbracht, einheiten, fertig };

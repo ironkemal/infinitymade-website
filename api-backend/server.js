@@ -2640,6 +2640,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     const validation = validateRezept(rezeptForValidator);
 
     const rezeptTyp = rezept.is_blanko ? 'blanko' : (rezept.is_lhb_bvb ? 'lhb_bvb' : 'standard');
+    // Lücken dürfen gespeichert werden, gelten aber nie als Bestätigung.
+    const entwurf = !!proceed_anyway || !validation.ok || !!validation.warnings?.length;
 
     // --- Kostenträger-IK und Heilmittel-Position: seit Ops #289 in
     // ./lib/rezept-felder.js, weil `PATCH /api/rezept/:id` (ÄNDERN) dieselbe
@@ -2664,7 +2666,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         ...bgFelder,    // bg_* (nur bei BG) — PE-006 B
         image_storage_path: storage_path || null,
         image_uploaded_at: storage_path ? new Date().toISOString() : null,
-        status: 'confirmed',
+        status: entwurf ? 'parsed' : 'confirmed',
         rezept_typ: rezeptTyp,
         icd10: rezept.icd10 || null,
         icd10_2: rezept.icd10_2 || null,
@@ -2702,8 +2704,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         computed: computedMitErfassung(validation.computed, erfassung),
         warnings: validation.warnings || null,
         blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
-        confirmed_by: userId,
-        confirmed_at: new Date().toISOString(),
+        confirmed_by: entwurf ? null : userId,
+        confirmed_at: entwurf ? null : new Date().toISOString(),
         proceed_anyway: !!proceed_anyway,
         total_bonuses_eur: validation.computed?.total_bonuses_eur ?? null,
       })
@@ -2735,6 +2737,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       patient_id: patientId,
       arzt_id: arztId,
       rezept_typ: rezeptTyp,
+      status: entwurf ? 'parsed' : 'confirmed',
       validation
     });
   } catch (err) {
@@ -2791,7 +2794,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
     const { data: bestehend, error: findErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, computed, abrechnung_status, belegnummer, rezeptart, bg_traeger_name, bg_traeger_anschrift, bg_unfalltag, bg_aktenzeichen, bg_kostenzusage_datum, bg_kostenzusage_zeichen, bg_einverstaendnis_am')
+      .select('id, owner_id, status, computed, abrechnung_status, belegnummer, rezeptart, bg_traeger_name, bg_traeger_anschrift, bg_unfalltag, bg_aktenzeichen, bg_kostenzusage_datum, bg_kostenzusage_zeichen, bg_einverstaendnis_am')
       .eq('id', id)
       .maybeSingle();
     if (findErr) return res.status(500).json({ error: findErr.message });
@@ -2892,11 +2895,16 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       statusZuruecksetzen = wechsel.statusZuruecksetzen && bestehend.abrechnung_status === 'bereit';
     }
 
+    const entwurf = !!proceed_anyway || !validation.ok || !!validation.warnings?.length;
+    const status = entwurf ? 'parsed' : (bestehend.status === 'parsed' ? 'confirmed' : bestehend.status);
     const patch = {
+      ...(status ? { status } : {}),
+      ...(entwurf ? { confirmed_by: null, confirmed_at: null } : bestehend.status === 'parsed'
+        ? { confirmed_by: req.auth.userId, confirmed_at: new Date().toISOString() } : {}),
       ...(patientId ? { patient_id: patientId } : {}),
       ...artFelder,   // rezeptart, behandlungsanlass, nagel — nur was mitkam
       ...bgFelder,    // bg_* — nur bei BG bzw. beim ausdrücklichen Wechsel weg von BG (leert)
-      ...(statusZuruecksetzen ? { abrechnung_status: null } : {}),   // „bereit“ gilt nur für Kasse
+      ...(statusZuruecksetzen || (entwurf && bestehend.abrechnung_status === 'bereit') ? { abrechnung_status: null } : {}),
       arzt_id: arztId,
       icd10: rezept.icd10 || null,
       icd10_2: rezept.icd10_2 || null,
@@ -2968,6 +2976,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       prescription_id: id,
       patient_id: patientId,
       arzt_id: arztId,
+      status,
       validation
     });
   } catch (err) {

@@ -34,7 +34,7 @@ function productionHandler(method, route, dependencies) {
   return captured;
 }
 
-function fixture({ existing, foreignPatient=false } = {}) {
+function fixture({ existing, foreignPatient=false, validationOk=true } = {}) {
   const writes = [], reads = [], doctors = [], validationInputs = [], unexpectedErrors = [];
   const supabase = { from(table) {
     const query = { table, operation:'select', filters:[] };
@@ -74,7 +74,7 @@ function fixture({ existing, foreignPatient=false } = {}) {
     },
     validateRezept:input=>{
       validationInputs.push(input);
-      return {ok:true,computed:{...freshComputed},warnings:[],blockers:[]};
+      return {ok:validationOk,computed:{...freshComputed},warnings:[],blockers:validationOk?[]:[{code:'MISSING_FIELD'}]};
     },
     console:{error:(...args)=>unexpectedErrors.push(args)},
   };
@@ -156,4 +156,33 @@ test('Production PATCH of stored barcode rejects missing fresh confirmation befo
   const res=await f.invoke('patch',request);
   assert.equal(res.statusCode,400);assert.match(res.body.error,/erneut/);
   assert.deepEqual(f.writes,[]);assert.deepEqual(f.doctors,[]);
+});
+
+test('Production POST stores incomplete prescription as draft, never as confirmed', async () => {
+  for (const validationOk of [true, false]) {
+    const f=fixture({validationOk});const request={...body(),proceed_anyway:true};
+    const res=await f.invoke('post',request);
+    assert.equal(res.statusCode,200);assert.equal(res.body.status,'parsed');
+    const row=f.writes.find(q=>q.table==='prescriptions').value;
+    assert.equal(row.status,'parsed');assert.equal(row.confirmed_at,null);assert.equal(row.confirmed_by,null);
+    assert.equal(row.krankenkasse_ik,null);
+  }
+});
+
+test('Production POST cannot confirm a failed server validation without frontend warnings', async () => {
+  const f=fixture({validationOk:false});const res=await f.invoke('post',body());
+  assert.equal(res.statusCode,200);
+  assert.equal(f.writes.find(q=>q.table==='prescriptions').value.status,'parsed');
+});
+
+test('Production PATCH of draft confirms only a fresh clean save; warnings revoke readiness', async () => {
+  for (const overridden of [true,false]) {
+    const f=fixture({existing:{id:'synthetic-rx',owner_id:'synthetic-tenant',status:'parsed',abrechnung_status:'bereit'}});
+    const res=await f.invoke('patch',{...body(),proceed_anyway:overridden});
+    assert.equal(res.statusCode,200);
+    const row=f.writes.find(q=>q.table==='prescriptions').value;
+    assert.equal(row.status,overridden?'parsed':'confirmed');
+    if(overridden) {assert.equal(row.abrechnung_status,null);assert.equal(row.confirmed_at,null);}
+    else {assert.ok(row.confirmed_at);assert.equal(row.confirmed_by,'synthetic-user');}
+  }
 });

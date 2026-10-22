@@ -13994,12 +13994,15 @@ async function saveRezept() {
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));
 
+    const pruefung = await pruefeMaske(supabase, 'muster13');
+    if (!pruefung) formatErrors.push('Vollständige Prüfung derzeit nicht möglich.');
+    else formatErrors.push(...pruefung.befunde.filter(b => b.schwere !== 'hinweis').map(b => b.text));
     let overridden = false;
     if (missing.length || formatErrors.length) {
       const lines = [];
       if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
       if (formatErrors.length) lines.push('Hinweise:\n  • ' + formatErrors.join('\n  • '));
-      const ok = await showConfirmModal({ title: 'Verordnung speichern?', message: lines.join('\n\n') + (arzt.satz ? '\n\n' + arzt.satz : '') + '\n\nTrotzdem speichern?', confirmText: 'Trotzdem speichern', cancelText: 'Abbrechen', variant: 'warning' });
+      const ok = await showConfirmModal({ title: 'Als Entwurf speichern?', message: lines.join('\n\n') + (arzt.satz ? '\n\n' + arzt.satz : '') + '\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.', confirmText: 'Als Entwurf speichern', cancelText: 'Weiter bearbeiten', variant: 'warning' });
       if (!ok) { btn.disabled = false; return; }
       overridden = true;
     }
@@ -14016,7 +14019,7 @@ async function saveRezept() {
       isDringend, lanr: rzLanr, bsnr: rzBsnr, overridden,
       leitsymptomatik: lsCollect('rz'),
     });
-    const editId = rx.aktualisiert ? rx.id : null;
+    const editId = rx.aktualisiert ? rx.id : null; const entwurf = rx.status === 'parsed';
     // Beim Anlegen kann der Server den Patienten erst erzeugt haben; ab hier
     // gilt seine id, sonst zeigen Abgleich und Nachladen auf nichts.
     const patId = rx.patientId || patientId;
@@ -14031,12 +14034,10 @@ async function saveRezept() {
     // `bookings.verordnung_id` (module/verordnung-termine.js), nicht über ein
     // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
     // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
-    if (fuehrtSitzungsbuch(getSector())) {
+    if (!entwurf && fuehrtSitzungsbuch(getSector())) {
       await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
     }
 
-    // Die LHB-Genehmigung kann erst jetzt haengen — vorher gab es keine
-    // Verordnung, an der sie haengen koennte.
     const nw = await ladeLhbNachweisHoch(supabase, {
       ownerId, patientId: patId, prescriptionId: rx.id, userId: currentSession?.user?.id || null,
     });
@@ -14062,16 +14063,14 @@ async function saveRezept() {
       // steht dort und würde beim Neuzeichnen umziehen — sichtbar als
       // Aufblitzen, und der Cursor wäre weg. Die Liste oben zieht über das
       // Signal nach, die Markierungen an den Feldern über die Nachprüfung.
-      showToast('Verordnung aktualisiert ✓', 'success');
+      showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : 'Verordnung aktualisiert ✓', 'success');
       emit('verordnungen:changed', { id: editId });
       pruefeMaske(supabase, 'muster13').catch(() => {});
     } else {
-      // Ein gescanntes Rezept fuehrt weiter in die Terminplanung — so endete
-      // der Scan-Weg schon immer. Von Hand getippt bleibt es beim Schliessen.
       const warScan = !!scanHerkunft(); closeModal('rezeptModal');
-      const tb = await bindeAnTerminNachAnlage(supabase, { ownerId, rxId: rx.id, patientId: patId, emit });   // aus dem Termin angelegt → zuordnen statt neue Terminplanung
-      showToast(tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
-      if (warScan && !tb?.podo) {
+      const tb = entwurf ? null : await bindeAnTerminNachAnlage(supabase, { ownerId, rxId: rx.id, patientId: patId, emit });
+      showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
+      if (!entwurf && warScan && !tb?.podo) {
         const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
         window._physioFlow = vorgabe;
         sessionStorage.setItem('rxPreset', JSON.stringify(vorgabe));

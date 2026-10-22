@@ -796,6 +796,7 @@ export async function sendeAnServer(supabase, { methode, pfad, rumpf, apiBasis =
   let json = null;
   try { json = await antwort.json(); } catch { /* kein JSON — gleich unten */ }
   if (!antwort.ok || !json?.success) {
+    if (antwort.status === 401) throw new Error('Speichern fehlgeschlagen: Sitzung konnte nicht bestätigt werden. Bitte Anmeldung in einem zweiten Tab erneuern und anschließend erneut speichern. Ihre Eingaben bleiben in dieser Maske erhalten.');
     throw new Error(json?.error || `Speichern fehlgeschlagen (${antwort.status})`);
   }
   return json;
@@ -822,7 +823,7 @@ export async function schreibeVerordnung(supabase, v) {
     });
     if(erfassung) rumpf.erfassung=erfassung;
     const json = await sendeAnServer(supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf });
-    return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null };
+    return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null, status: json.status };
   }
 
   // AENDERN laeuft seit Ops #289 auch ueber den Server — derselbe Grund wie
@@ -837,5 +838,5 @@ export async function schreibeVerordnung(supabase, v) {
   // Gespeichert heisst: die Maske und die Datenbank sagen wieder dasselbe —
   // ein Neuzeichnen von aussen darf jetzt wieder durch (siehe `istVeraendert`).
   _bearbeitung.veraendert = false;
-  return { id: editId, aktualisiert: true, patientId: json.patient_id || null };
+  return { id: editId, aktualisiert: true, patientId: json.patient_id || null, status: json.status };
 }

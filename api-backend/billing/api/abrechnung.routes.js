@@ -11,6 +11,7 @@
 // Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
+import { authFehlerAntwort, authTransportFetch } from '../../lib/auth-antwort.js';
 import { ladeDtaOriginalbytes, pruefeSignedDta } from '../dta/signed-original.js';
 import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
 import { createHash, X509Certificate, randomUUID } from 'node:crypto';
@@ -81,7 +82,7 @@ const router = express.Router();
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } }
+  { auth: { persistSession: false }, global: { fetch: authTransportFetch } }
 );
 
 // ---------- helpers ----------
@@ -701,7 +702,7 @@ router.post('/abrechnung/annahmestellen', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles').select('id, role, owner_id, sector').eq('id', u.user.id).single();
@@ -754,7 +755,7 @@ router.post('/abrechnung/create', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
@@ -876,7 +877,7 @@ router.post('/abrechnung/create', async (req, res) => {
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_status, therapie_bereich, rezeptart,
+        status, abrechnung_status, therapie_bereich, rezeptart,
         bericht_angefordert,
         bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
@@ -895,6 +896,9 @@ router.post('/abrechnung/create', async (req, res) => {
     if (rxErr) return res.status(500).json({ error: rxErr.message });
     if (!rxRows || rxRows.length !== prescriptionIds.length) {
       return res.status(400).json({ error: 'Einige Rezepte wurden nicht gefunden oder gehören nicht zu Ihnen.' });
+    }
+    if (rxRows.some(r => r.status === 'parsed')) {
+      return res.status(409).json({ code: 'VERORDNUNG_ENTWURF', error: 'Entwürfe können nicht abgerechnet werden. Bitte Verordnung ergänzen, erneut prüfen und speichern.' });
     }
     // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
     const altKtMap = new Map(rxRows.map(r => [r.id, r.kostentraeger_ik]));
@@ -1264,7 +1268,7 @@ async function nurInhaber(req, res) {
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
-  if (uErr || !u?.user) { res.status(401).json({ error: 'Invalid token' }); return null; }
+  if (uErr || !u?.user) { authFehlerAntwort(res, uErr); return null; }
 
   const { data: profile } = await supabase
     .from('profiles').select('id, role, owner_id').eq('id', u.user.id).maybeSingle();
@@ -1875,7 +1879,7 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
@@ -2131,7 +2135,7 @@ export async function handleEmpfaengerPruefung(req, res, {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     // Resolve tenant ID (employees map to their owner)
     const { data: profile } = await db
@@ -2196,7 +2200,7 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     // Resolve tenant ID (employees map to their owner)
     const { data: profile } = await supabase
@@ -2305,7 +2309,7 @@ async function mandantUndAbrechnung(req, res) {
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
   const { data: u, error: uErr } = await supabase.auth.getUser(token);
-  if (uErr || !u?.user) { res.status(401).json({ error: 'Invalid token' }); return null; }
+  if (uErr || !u?.user) { authFehlerAntwort(res, uErr); return null; }
 
   const { data: profile } = await supabase
     .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
@@ -2518,7 +2522,7 @@ router.get('/positions', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     // Return the template list. UI shows x/label/kat; preis is informational.
     // `zuzahlung` fehlte hier — dadurch war _posLookup.zuzahlung im Dashboard
@@ -2551,7 +2555,7 @@ router.get('/positions/podologie', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { diagnosegruppe, date } = req.query;
     const dateStr = date || new Date().toISOString().slice(0, 10);
@@ -2580,7 +2584,7 @@ router.patch('/prescription/:id/position', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
@@ -2647,7 +2651,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (req.query.token || null);
     if (!token) return res.status(401).send('Nicht autorisiert');
     const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !user) return res.status(401).send('Ungültiges Token');
+    if (uErr || !user) return authFehlerAntwort(res, uErr, 'Ungültiges Token');
 
     const { data: profile } = await supabase
       .from('profiles').select(`id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
@@ -3022,7 +3026,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (req.query.token || null);
     if (!token) return res.status(401).send('Nicht autorisiert');
     const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !user) return res.status(401).send('Ungültiges Token');
+    if (uErr || !user) return authFehlerAntwort(res, uErr, 'Ungültiges Token');
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -3196,7 +3200,7 @@ router.get('/belegliste', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
@@ -3330,7 +3334,7 @@ router.post('/belegliste', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
@@ -3465,7 +3469,7 @@ router.get('/belegliste/export', async (req, res) => {
     
     if (!token) return res.status(401).send('Nicht autorisiert: Fehlender Token');
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).send('Nicht autorisiert: Ungültiger Token');
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr, 'Nicht autorisiert: Ungültiger Token');
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
@@ -3528,7 +3532,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
     const token = (hdr.startsWith('Bearer ') || hdr.startsWith('bearer ')) ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
@@ -3906,7 +3910,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -4008,6 +4012,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Ab hier spricht diese Route weiter podologisch (`v.status` statt
     // `v.abrechnung_status`) — uebersetzt wird nur hier, SPIEGEL von
     // `module/verordnung-topf.js` (`ausTopf`) im Frontend.
+    if (vordsRoh.some(v => v.status === 'parsed')) {
+      return res.status(409).json({ code: 'VERORDNUNG_ENTWURF', error: 'Entwürfe können nicht abgerechnet werden. Bitte Verordnung ergänzen, erneut prüfen und speichern.' });
+    }
     const vords = vordsRoh.map(v => ({ ...v, status: statusAusAbrechnungStatus(v.abrechnung_status) }));
 
     // §302 SGB V gilt nur für Leistungen zulasten der GKV. Frühzeitige Prüfung
@@ -4451,6 +4458,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
           .update({ abrechnung_status: abrechnungStatusAusStatus('abgerechnet'), abrechnung_id: ab.id })
           .in('id', verordnungIds)
           .eq('therapie_bereich', 'podo')
+          .neq('status', 'parsed')
           .or(einreichbarFilterAbrechnungStatus())
           .select('id');
         uebernommen = resClaim.data;
@@ -4697,7 +4705,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -5110,7 +5118,7 @@ router.post('/abrechnung/zeile/:id/vkz01-ausnahme', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
@@ -5183,7 +5191,7 @@ router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+    if (uErr || !u?.user) return authFehlerAntwort(res, uErr);
 
     const { data: profile } = await supabase
       .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
