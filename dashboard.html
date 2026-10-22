@@ -3955,10 +3955,25 @@
     .einrichtung-pop{ position:absolute; top:calc(100% + 8px); right:0; z-index:60; width:300px; max-width:88vw; background:var(--bg-card-solid); color:var(--text-main); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.25); padding:12px; font-size:13px; }
     .einrichtung-pop-kopf{ font-weight:700; margin-bottom:8px; }
     .einrichtung-pop ul{ list-style:none; margin:0; padding:0; }
-    .einrichtung-pop li button{ display:flex; flex-direction:column; align-items:flex-start; width:100%; text-align:left; border:0; background:transparent; color:var(--text-main); font:inherit; padding:8px 6px; border-radius:6px; cursor:pointer; min-height:40px; }
+    .einrichtung-pop li button{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:0; background:transparent; color:var(--text-main); font:inherit; padding:8px 6px; border-radius:6px; cursor:pointer; min-height:40px; }
     .einrichtung-pop li button:hover, .einrichtung-pop li button:focus-visible{ background:var(--bg-hover, rgba(127,127,127,.12)); outline:none; }
-    .einrichtung-pop li small{ color:var(--text-muted); font-size:11px; }
+    .einrichtung-pop li small{ display:block; color:var(--text-muted); font-size:11px; font-weight:400; }
     .einrichtung-pop-fuss{ margin-top:8px; font-size:11px; color:var(--text-muted); }
+    .einrichtung-pop-kopf{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+    .einrichtung-pop-zaehler{ font-weight:500; font-size:11px; color:var(--text-muted); white-space:nowrap; }
+    .einrichtung-pop-balken{ height:6px; border-radius:999px; background:var(--border); overflow:hidden; margin:0 0 8px; }
+    .einrichtung-pop-balken span{ display:block; height:100%; background:var(--primary); border-radius:inherit; transition:width .4s ease; }
+    .einrichtung-aufgabe-kreis{ flex:0 0 18px; width:18px; height:18px; border-radius:50%; border:2px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:11px; line-height:1; }
+    .einrichtung-aufgabe-text{ flex:1; min-width:0; font-weight:600; }
+    .einrichtung-aufgabe-punkte{ flex:0 0 auto; font-size:11px; font-weight:700; color:var(--primary); border:1px solid var(--primary); border-radius:999px; padding:1px 7px; }
+    .einrichtung-pop li.einrichtung-aufgabe-fertig{ display:flex; align-items:center; gap:10px; padding:6px; color:var(--text-muted); }
+    .einrichtung-aufgabe-fertig .einrichtung-aufgabe-kreis{ border-color:var(--primary); background:var(--primary); color:var(--bg-card-solid); }
+    .einrichtung-aufgabe-fertig .einrichtung-aufgabe-text{ font-weight:400; text-decoration:line-through; }
+    .einrichtung-feld-ziel{ animation:einrichtungFeldZiel 2.6s ease-out; }
+    @keyframes einrichtungFeldZiel{ 0%,40%{ box-shadow:0 0 0 4px color-mix(in srgb, var(--primary) 45%, transparent); border-color:var(--primary); } 100%{ box-shadow:0 0 0 0 transparent; } }
+    .einrichtung-ring-plus{ animation:einrichtungRingPlus .7s ease-out; }
+    @keyframes einrichtungRingPlus{ 0%{ transform:scale(1); } 35%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+    @media (prefers-reduced-motion: reduce){ .einrichtung-feld-ziel, .einrichtung-ring-plus{ animation:none; } .einrichtung-feld-ziel{ outline:3px solid var(--primary); } }
     @media (max-width:520px){ .einrichtung-ring-text{ display:none; } .einrichtung-ring{ padding:3px 4px; } .einrichtung-pop{ position:fixed; top:56px; left:8px; right:8px; width:auto; max-width:none; } }
     .branding-liste{ margin:2px 0 10px 18px; padding:0; font-size:13px; } .branding-liste a{ color:var(--primary); }
     .m13-bgblock{ display:none; margin:0 0 14px; padding:12px 14px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card-solid); }

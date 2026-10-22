@@ -9,7 +9,7 @@
 // Lizenztexte der Server-Komponente (routes/ueber.js — Begründung dort).
 
 import { SUPPORT_ADRESSE } from './support-kontakt.js';
-import { httpsUrl } from './branding.js?v=20261009rs';
+import { httpsUrl } from './branding.js?v=20261022q';
 
 export const HERSTELLER = Object.freeze({
   name: 'Yavuz Kemal Demir',

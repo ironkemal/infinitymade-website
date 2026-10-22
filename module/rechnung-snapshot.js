@@ -10,7 +10,7 @@
  *
  * Die Feldauswahl steckt in `ausstellerSnapshot` (branding.js) und `empfaengerSnapshot` (bg-angaben.js).
  */
-import { ausstellerSnapshot } from './branding.js?v=20261009rs';
+import { ausstellerSnapshot } from './branding.js?v=20261022q';
 import { empfaengerSnapshot } from './bg-angaben.js?v=20261010zc';
 
 /** `leads`-Spalten, die der Empfängerblock druckt (gleiche Auswahl wie die Rechnungsansicht, ohne Telefon/E-Mail). */

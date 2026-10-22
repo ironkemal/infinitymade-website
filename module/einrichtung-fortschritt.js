@@ -13,7 +13,7 @@
  *
  * Reine Funktionen; die Zeichnung steht in `einrichtung-ring.js`.
  */
-import { brandingAus, brandingLuecken } from './branding.js?v=20261009rs';
+import { brandingAus, brandingLuecken } from './branding.js?v=20261022q';
 
 const GEWICHT = { pflicht: 2, soll: 1 };
 const PFLICHT_ANZAHL = 5;
@@ -22,20 +22,29 @@ const GESAMT = PFLICHT_ANZAHL * GEWICHT.pflicht + SOLL_ANZAHL * GEWICHT.soll;
 
 /**
  * @param {?object} profil  Profilzeile der PRAXIS (`ownerProfile || currentProfile`)
- * @returns {{prozent:number, erfuellt:number, gesamt:number,
- *            fehlend:Array<{schluessel:string,label:string,zielAnsicht:string,stufe:'pflicht'|'soll'}>}}
+ * @returns {{prozent:number, erfuellt:number, gesamt:number, fehlend:Aufgabe[], erledigt:Aufgabe[]}}
+ *   Aufgabe = {schluessel, label, zielAnsicht, feld, stufe:'pflicht'|'soll', punkte}
+ *   `punkte` = so viele Prozent bringt die Aufgabe (Aufgabenliste wie im Spiel).
  */
 export function einrichtungFortschritt(profil) {
-  const l = brandingLuecken(brandingAus(profil));
-  const fehlend = [
-    ...l.pflicht.map((x) => ({ schluessel: x.schluessel, label: x.label, zielAnsicht: x.ziel, stufe: 'pflicht' })),
-    ...l.soll.map((x) => ({ schluessel: x.schluessel, label: x.label, zielAnsicht: x.ziel, stufe: 'soll' })),
+  const aufgaben = (l) => [
+    ...l.pflicht.map((x) => aufgabe(x, 'pflicht')),
+    ...l.soll.map((x) => aufgabe(x, 'soll')),
   ];
+  const fehlend = aufgaben(brandingLuecken(brandingAus(profil)));
+  const offen = new Set(fehlend.map((x) => x.schluessel));
+  // Alle Aufgaben = die Lücken eines leeren Profils; erledigt ist, was davon nicht mehr fehlt.
+  const erledigt = aufgaben(brandingLuecken(brandingAus({}))).filter((x) => !offen.has(x.schluessel));
   const fehlGewicht = fehlend.reduce((s, x) => s + GEWICHT[x.stufe], 0);
   const erfuellt = GESAMT - fehlGewicht;
   let prozent = Math.round((erfuellt / GESAMT) * 100);
   if (fehlend.length && prozent >= 100) prozent = 99;   // nie 100 %, solange etwas fehlt
-  return { prozent, erfuellt, gesamt: GESAMT, fehlend };
+  return { prozent, erfuellt, gesamt: GESAMT, fehlend, erledigt };
+}
+
+function aufgabe(x, stufe) {
+  return { schluessel: x.schluessel, label: x.label, zielAnsicht: x.ziel, feld: x.feld || '', stufe,
+    punkte: Math.round((GEWICHT[stufe] / GESAMT) * 100) };
 }
 
 /** SVG-Ring: Umfang und Versatz (stroke-dasharray/-dashoffset) für `prozent`. */

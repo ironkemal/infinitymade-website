@@ -94,17 +94,18 @@ const ZIEL = 'settingsBrandingSection';
  */
 export function brandingLuecken(b) {
   const pflicht = []; const soll = []; const optional = [];
-  const f = (liste, schluessel, label, ziel = ZIEL) => liste.push({ schluessel, label, ziel });
-  if (!b.name) f(pflicht, 'name', 'Praxisname', 'settingsProfileSection');
-  if (!b.strasseName || !b.plz || !b.ort) f(pflicht, 'anschrift', 'Praxisanschrift', 'settingsProfileSection');
-  if (!b.inhaber) f(pflicht, 'inhaber', 'Name der Inhaberin / des Inhabers');
-  if (!b.steuer.steuernummer && !b.steuer.ustId) f(pflicht, 'steuer_id', 'Steuernummer oder USt-IdNr.', 'settingsBillingSection');
-  if (!b.steuer.hinweis) f(pflicht, 'steuer_hinweis', 'Hinweis zur Steuerbefreiung', 'settingsBillingSection');
-  if (!b.bank.iban) f(soll, 'bank', 'Bankverbindung (IBAN)', 'settingsBillingSection');
-  if (!b.telefon) f(soll, 'telefon', 'Telefonnummer', 'settingsProfileSection');
-  if (!b.ik) f(soll, 'ik', 'Institutionskennzeichen (IK)', 'settingsBillingSection');
-  if (!b.logoUrl) f(optional, 'logo', 'Praxis-Logo');
+  // `feld` = das Eingabefeld selbst: der Ring springt nicht nur in den Abschnitt, sondern setzt den Cursor hinein.
+  const f = (liste, schluessel, label, ziel = ZIEL, feld = '') => liste.push({ schluessel, label, ziel, feld });
+  if (!b.name) f(pflicht, 'name', 'Praxisname', 'settingsProfileSection', 'setBiz');
+  if (!b.strasseName || !b.plz || !b.ort) f(pflicht, 'anschrift', 'Praxisanschrift', 'settingsProfileSection', !b.strasseName ? 'setStreet' : !b.plz ? 'setPlz' : 'setCity');
+  if (!b.inhaber) f(pflicht, 'inhaber', 'Name der Inhaberin / des Inhabers', ZIEL, 'brandingInhaber');
+  if (!b.steuer.steuernummer && !b.steuer.ustId) f(pflicht, 'steuer_id', 'Steuernummer oder USt-IdNr.', 'settingsBillingSection', 'setSteuernummer');
+  if (!b.steuer.hinweis) f(pflicht, 'steuer_hinweis', 'Hinweis zur Steuerbefreiung', 'settingsBillingSection', 'setTaxExemptSelect');
+  if (!b.bank.iban) f(soll, 'bank', 'Bankverbindung (IBAN)', 'settingsBillingSection', 'setIban');
+  if (!b.telefon) f(soll, 'telefon', 'Telefonnummer', 'settingsProfileSection', 'setPhone');
+  if (!b.ik) f(soll, 'ik', 'Institutionskennzeichen (IK)', 'settingsBillingSection', 'setIkNumber');
+  if (!b.logoUrl) f(optional, 'logo', 'Praxis-Logo', ZIEL, 'setBrandingLogo');
   if (!b.stempelPfad) f(optional, 'stempel', 'Praxisstempel');
-  if (!b.fusszeile) f(optional, 'fusszeile', 'Fußzeile');
+  if (!b.fusszeile) f(optional, 'fusszeile', 'Fußzeile', ZIEL, 'setBrandingFooter');
   return { pflicht, soll, optional };
 }

@@ -24,7 +24,7 @@
  */
 
 import { bgEmpfaengerBlock, bgAusZeile, mitKassenfeldern } from './bg-angaben.js?v=20261010zc';
-import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261009rs';
+import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261022q';
 import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';

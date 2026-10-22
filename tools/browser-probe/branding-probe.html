@@ -85,16 +85,22 @@ try {
   pruef('dashboard.html enthält den Einrichtungsring in der Kopfleiste', !!wrapRing?.querySelector('#einrichtungRing') && !!wrapRing?.querySelector('#einrichtungPopover'));
   document.getElementById('buehne').appendChild(document.importNode(wrapRing, true));
   for (const st of doc.querySelectorAll('style')) { if (st.textContent.includes('einrichtung-ring')) { const n = document.createElement('style'); n.textContent = st.textContent; document.head.appendChild(n); } }
-  const { mountEinrichtungRing } = await import('../../module/einrichtung-ring.js?v=20261006g');
-  let ringProfil = { id: 'p', business_name: 'X' }; let ringOwner = true; const spruenge = [];
-  const ring = mountEinrichtungRing({ profil: () => ringProfil, istOwner: () => ringOwner, springe: (id) => spruenge.push(id) });
+  const { mountEinrichtungRing } = await import('../../module/einrichtung-ring.js?v=20261022q');
+  let ringProfil = { id: 'p', business_name: 'X' }; let ringOwner = true; const spruenge = []; const ringToasts = [];
+  const ring = mountEinrichtungRing({ profil: () => ringProfil, istOwner: () => ringOwner, springe: (id) => spruenge.push(id), toast: (m) => ringToasts.push(m) });
+  const zielFeld = document.createElement('input'); zielFeld.id = 'setSteuernummer'; document.getElementById('buehne').appendChild(zielFeld);
   const knopf = document.getElementById('einrichtungRing'); const pop = document.getElementById('einrichtungPopover');
   pruef('Ring sichtbar, nennt Prozent', !knopf.hidden && /\d+ %/.test(knopf.textContent), knopf.textContent.trim());
   pruef('Ring hat eine zugängliche Beschriftung', /Einrichtung zu \d+ Prozent/.test(knopf.getAttribute('aria-label')));
   knopf.click();
   pruef('Klick öffnet die Liste mit den Lücken', !pop.hidden && pop.querySelectorAll('[data-ziel]').length >= 5, String(pop.querySelectorAll('[data-ziel]').length));
-  pop.querySelector('[data-ziel="settingsBillingSection"]').click();
+  pruef('Aufgabenliste: offene Aufgaben mit „+X %", erledigte abgehakt', pop.querySelectorAll('.einrichtung-aufgabe-punkte').length >= 5 && pop.querySelectorAll('.einrichtung-aufgabe-fertig').length === 1, pop.textContent.replace(/\s+/g, ' ').slice(0, 160));
+  pop.querySelector('[data-feld="setSteuernummer"]').click();
   pruef('Klick auf einen Eintrag springt zur Einstellung und schließt die Liste', spruenge[0] === 'settingsBillingSection' && pop.hidden, spruenge.join());
+  await new Promise((r) => setTimeout(r, 450));
+  pruef('… und setzt den Cursor ins fehlende Feld', document.activeElement === zielFeld && zielFeld.classList.contains('einrichtung-feld-ziel'));
+  ringProfil = { ...ringProfil, steuernummer: '1' }; document.dispatchEvent(new Event('praxis-profil:geaendert'));
+  pruef('Gespeichertes Feld: Meldung „erledigt" mit neuem Prozentwert', ringToasts.some((m) => /Steuernummer.*erledigt — Einrichtung \d+ %/.test(m)), ringToasts.join(' | '));
   knopf.click(); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   pruef('Escape schließt die Liste', pop.hidden);
   ringOwner = false; ring.aktualisieren();

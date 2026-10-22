@@ -63,3 +63,25 @@ test('ringStrich: Umfang und Versatz für den SVG-Ring, begrenzt auf 0..100', ()
   assert.equal(ringStrich(-5, 15).versatz, ringStrich(0, 15).versatz);
   assert.ok(Math.abs(ringStrich(500, 15).versatz) < 1e-9);
 });
+
+test('Aufgabenliste: jede offene Aufgabe zeigt aufs Eingabefeld und bringt Punkte', () => {
+  for (const x of einrichtungFortschritt({}).fehlend) {
+    assert.ok(/^[A-Za-z]+$/.test(x.feld), JSON.stringify(x));
+    assert.equal(x.punkte, x.stufe === 'pflicht' ? 15 : 8);
+  }
+});
+
+test('Anschrift springt ins erste leere Teilfeld', () => {
+  const feld = (p) => einrichtungFortschritt(p).fehlend.find(x => x.schluessel === 'anschrift').feld;
+  assert.equal(feld({ ...VOLL, street: '' }), 'setStreet');
+  assert.equal(feld({ ...VOLL, plz: '' }), 'setPlz');
+  assert.equal(feld({ ...VOLL, city: '' }), 'setCity');
+});
+
+test('erledigt + fehlend = alle 8 Aufgaben, ohne Überschneidung', () => {
+  const r = einrichtungFortschritt({ ...VOLL, phone: '', iban: '' });
+  assert.deepEqual(r.fehlend.map(x => x.schluessel), ['bank', 'telefon']);
+  assert.equal(r.erledigt.length, 6);
+  assert.ok(!r.erledigt.some(x => ['bank', 'telefon'].includes(x.schluessel)));
+  assert.equal(einrichtungFortschritt(VOLL).erledigt.length, 8);
+});
