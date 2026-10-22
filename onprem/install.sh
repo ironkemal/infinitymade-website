@@ -258,11 +258,15 @@ if [ "$NEUER_JETON" -eq 1 ]; then
     SITE_URL_JETON="$(env_get SITE_URL)"
     [ -n "$SITE_URL_JETON" ] || SITE_URL_JETON="https://<adresse>"
     reveal_once ""
-    reveal_once "  Einrichtung im Browser öffnen (Link einmalig, NICHT in install.log):"
+    reveal_once "  ════════════════════════════════════════════════════════════════"
+    reveal_once "  Inhaber-Konto anlegen (E-Mail + Passwort)"
+    reveal_once ""
+    reveal_once "  Diesen Link im Browser öffnen (einmalig, 14 Tage gültig, NICHT in install.log):"
     reveal_once ""
     reveal_once "    ${SITE_URL_JETON}/setup.html#${JETON}"
     reveal_once ""
-    reveal_once "  Der Link gilt 14 Tage."
+    reveal_once "  Wer den Link zuerst öffnet, legt das Inhaber-Konto an — nicht weiterleiten."
+    reveal_once "  ════════════════════════════════════════════════════════════════"
     reveal_once ""
   fi
   exit 0
@@ -580,6 +584,8 @@ else
   if [ -n "$KAYIT_CODE" ]; then
     KAYIT_MODUS="code"
     ok "Einrichtungscode erfasst (wird nicht geloggt)"
+    log "  Der Code vergibt nur Name und Zertifikat der Box. E-Mail und Passwort"
+    log "  legen Sie ganz am Ende an — über den Link, den die Einrichtung dann zeigt."
   fi
   unset RAW_CODE CLEAN_CODE
 fi
@@ -1481,21 +1487,26 @@ if [ "${BACKUP_TIMER_EINSCHALTEN:-0}" = "1" ]; then
     && ok "praxura-backup.timer aktiv" \
     || warn "praxura-backup.timer ließ sich nicht einschalten — 'sudo systemctl enable --now praxura-backup.timer'"
 fi
+log "  Lizenz:               ${SITE_URL}/LICENSE.txt (auch unter „Über diese Software“)"
+log "  Ablauf dieser Einrichtung: $LOG_FILE (ohne Geheimnisse)"
+log ""
+# Beta-Test Linux 22.10.2026: Der Setup-Link stand ÜBER „Weiter im Browser: login.html"
+# — geklickt wurde der unterste Link, die Praxis stand am Login ohne Konto. Darum hier
+# kein Login-Link mehr (den gibt es erst nach dem Konto, setup.html führt hin) und der
+# Konto-Link als LETZTE Ausgabe, eingerahmt.
 if [ "${PRAXURA_BROWSER_OEFFNEN:-}" = "1" ]; then
-  log ""
   log "  Der Browser öffnet sich am Ende der Einrichtung automatisch."
   log ""
 else
+  reveal_once "  ════════════════════════════════════════════════════════════════"
+  reveal_once "  LETZTER SCHRITT: Inhaber-Konto anlegen (E-Mail + Passwort)"
   reveal_once ""
-  reveal_once "  Einrichtung im Browser öffnen (Link einmalig, NICHT in install.log):"
+  reveal_once "  Diesen Link im Browser öffnen (einmalig, 14 Tage gültig, NICHT in install.log):"
   reveal_once ""
   reveal_once "    ${SITE_URL}/setup.html#${SETUP_TOKEN}"
   reveal_once ""
-  reveal_once "  Der Link gilt 14 Tage."
+  reveal_once "  Wer den Link zuerst öffnet, legt das Inhaber-Konto an — nicht weiterleiten."
+  reveal_once "  Link verloren/abgelaufen: sudo bash ${SCRIPT_DIR}/install.sh --neuer-jeton"
+  reveal_once "  ════════════════════════════════════════════════════════════════"
   reveal_once ""
 fi
-log "  Link abgelaufen:       sudo bash install.sh --neuer-jeton"
-log "  Weiter im Browser:     ${SITE_URL}/login.html"
-log "  Lizenz:               ${SITE_URL}/LICENSE.txt (auch unter „Über diese Software“)"
-log ""
-log "  Ablauf dieser Einrichtung: $LOG_FILE (ohne Geheimnisse)"

@@ -40,7 +40,7 @@ export function setupKapisi({ istAbgeschlossen, seit = () => process.env.SETUP_T
       return res.status(410).json({
         error: 'Der Einrichtungslink ist abgelaufen.',
         abgelaufen: true,
-        hinweis: 'Auf dem Server: sudo bash install.sh --neuer-jeton',
+        hinweis: 'Auf dem Server: sudo bash /opt/praxura/onprem/install.sh --neuer-jeton',
       });
     }
     next();

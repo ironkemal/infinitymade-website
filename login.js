@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU, API_BASE } from './supabase-config.js';
 import { minPasswortLaenge, MIN_MITARBEITER } from './module/passwort-regel.js';
 import { rechtslinksFuerKutu } from './module/ueber.js?v=20261008';
-import { einrichtungHinweisZeigen } from './module/einrichtung-hinweis.js?v=20261015';
+import { einrichtungHinweisZeigen } from './module/einrichtung-hinweis.js?v=20261022';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

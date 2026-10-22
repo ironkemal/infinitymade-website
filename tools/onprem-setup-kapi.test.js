@@ -108,7 +108,8 @@ test('setup.js: 404 bei /setup/status zeigt "bereits eingerichtet", abgelaufen e
   assert.match(s, /res\.status === 404\) \{ zeigeGeschlossen\(false\)/);
   assert.match(s, /data\.abgelaufen\) zeigeGeschlossen\(true\)/);
   assert.equal((s.match(/zeigeGeschlossen\(!!data\.abgelaufen\)/g) || []).length, 3, 'verify/owner/branding');
-  assert.match(s, /abgelaufenSub: .*install\.sh --neuer-jeton/);
+  assert.match(s, /abgelaufenSub: .*\$\{NEUER_LINK_LINUX\}/);
+  assert.match(lies('module/einrichtung-hinweis.js'), /NEUER_LINK_LINUX = 'sudo bash \/opt\/praxura\/onprem\/install\.sh --neuer-jeton'/);
 });
 
 // ── Caddy ────────────────────────────────────────────────────────────────────

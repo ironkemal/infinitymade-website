@@ -5,29 +5,34 @@
 // Lauf nie — die Praxis stand am Login, ohne je E-Mail/Passwort festgelegt zu
 // haben, und ohne Hinweis, was zu tun ist. Diese Seite sagt es jetzt.
 //
+// Beta-Test Linux 22.10.2026: Der Hinweis über dem Login-Formular reichte nicht —
+// man sah ein Formular für E-Mail/Passwort, die es noch gar nicht gibt. Gibt es
+// noch KEIN Konto, leitet die Seite deshalb direkt auf setup.html weiter (dort
+// steht, wie man an den Link kommt). Nur „Konto da, Abschluss fehlt" bleibt ein
+// Hinweis, weil Anmelden dann geht.
+//
 // Liest GET /api/setup/status genauso wie setup.js init(): 404 = Router nicht
-// eingehängt (Einrichtung fertig, SETUP_TOKEN geleert) → nichts zeigen. Nur in
+// eingehängt (Einrichtung fertig, SETUP_TOKEN geleert) → nichts tun. Nur in
 // der Box (IST_KUTU); in der SaaS gibt es den Router nicht.
 //
-// Der Ausweg ist bewusst „Praxura-Einrichtung erneut starten": install.ps1
-// öffnet bei offener Einrichtung den Setup-Link selbst (und erneuert einen
-// abgelaufenen Jeton). Den Jeton kennt diese Seite nie.
+// Den Jeton kennt diese Seite nie.
 
-/** Status-Antwort → Hinweistext oder null (nichts anzeigen). */
+export const NEUER_LINK_LINUX = 'sudo bash /opt/praxura/onprem/install.sh --neuer-jeton';
+export const NEUER_LINK_WINDOWS = '„Praxura-Einrichtung" erneut starten';
+
+/** Status-Antwort → { weiterleiten } | Hinweistext | null (nichts tun). */
 export function einrichtungHinweisText(httpStatus, daten) {
   if (httpStatus !== 200 || !daten || daten.abgeschlossen) return null;
-  const kontoDa = daten.verfuegbar === false;
+  if (daten.verfuegbar !== false) return { weiterleiten: true };
   return {
     titel: 'Einrichtung noch nicht abgeschlossen',
-    text: kontoDa
-      ? 'Das Inhaber-Konto ist angelegt, die Einrichtung aber nicht fertig. Anmelden geht; zum Abschließen auf dem PC mit der Box „Praxura-Einrichtung" erneut starten — die Einrichtung öffnet sich dann im Browser.'
-      : 'Für diese Praxis-Box gibt es noch kein Konto. Auf dem PC mit der Box „Praxura-Einrichtung" erneut starten — die Einrichtung öffnet sich dann im Browser. Dort legen Sie E-Mail und Passwort für die Anmeldung fest.',
-    linux: 'Linux-Server: sudo bash install.sh --neuer-jeton',
+    text: 'Das Inhaber-Konto ist angelegt, die Einrichtung aber nicht fertig. Anmelden geht; zum Abschließen den Einrichtungslink erneut öffnen.',
+    linux: `Neuer Link — Linux-Server: ${NEUER_LINK_LINUX} · Windows-PC: ${NEUER_LINK_WINDOWS}`,
   };
 }
 
-/** Holt den Status und setzt den Hinweis vor `vor` (Element). Fehler → still. */
-export async function einrichtungHinweisZeigen({ istKutu, apiBase, vor }) {
+/** Holt den Status; leitet weiter oder setzt den Hinweis vor `vor` (Element). Fehler → still. */
+export async function einrichtungHinweisZeigen({ istKutu, apiBase, vor, weiterleiten = (url) => location.replace(url) }) {
   if (!istKutu || !vor) return;
   let hinweis = null;
   try {
@@ -37,6 +42,7 @@ export async function einrichtungHinweisZeigen({ istKutu, apiBase, vor }) {
     return;
   }
   if (!hinweis) return;
+  if (hinweis.weiterleiten) { weiterleiten('/setup.html'); return; }
 
   const box = document.createElement('div');
   box.className = 'msg show info';
