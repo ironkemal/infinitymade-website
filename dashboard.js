@@ -147,7 +147,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261016patient2';
-import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
+import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261022a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).
@@ -13524,7 +13524,7 @@ initArztRegister({
   resolveArzt: (input, quelle) => resolveArzt(input, quelle),
   bearbeiten:  (id) => editAerzte(id),
   loeschen:    (id) => deleteAerzte(id),
-  patientName: (lead) => displayName(lead),
+  patientName: (lead) => displayName(lead), druckKopf: () => ({ ...terminzettelPraxis(), logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '' }),
 });
 
 initAnfrageBearbeiten({
