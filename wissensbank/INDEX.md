@@ -793,6 +793,34 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 
 ---
 
+## DATEV-Format (EXTF) — Steuerberater-Export, §302 DIŞI
+
+> Klasör **yalnız yerel** (`.gitignore` → `wissensbank/gemeinsam/datev-format/`, REGISTER W-13 / W-A14). Dosya bu makinede
+> yoksa REGISTER W-13'teki `curl` satırıyla yeniden üretilir. Fatura/vergi iddiası `.txt`'ye değil ham JSON'a + sürüme dayanır.
+
+### gemeinsam/datev-format/DATEV-Format_Formatbeschreibung_de_20261022.txt
+- **Ne:** DATEV Developer Portal „DATEV-Format" tam Almanca metni (HTML gövdesi aynen). ~5900 satır, ~45k token — tamamını okuma.
+- **Sürüm:** Header 700 · Buchungsstapel Formatversion 13 · Changelog son kaydı März 2025.
+- **Ne zaman lazım:** DATEV EXTF export'u (Buchungsstapel, Debitoren/Kreditoren, Sachkontenbeschriftung) yazarken/doğrularken.
+- **Anahtar bölümler** (satır no = `.txt`):
+  - 3-36 Einstieg: Technischer Aufbau (Semikolon, CR/LF, Text in "", "" verdoppeln, Dezimalkomma) + Musterdatei (satır 20 Header, satır 21 Spaltenüberschriften)
+  - 37-44 Zeichensatz (ISO-8859-1/CP1252 default; Unicode nur mit BOM; KrStaPv kein Unicode)
+  - 45-82 Formatübersicht + Volumengrenze 99.999 Buchungen/Datei
+  - **83-307 Header Satzaufbau — 31 alan** (Kennzeichen … Anwendungsinformation)
+  - **308-1213 Buchungsstapel — 125 alan** (alan tablosu ayrıca `.tsv`)
+  - 1214 Wiederkehrende Buchungen · 1856 Debitoren/Kreditoren · 3778 Zahlungsbedingungen · 4046 Sachkontenbeschriftung · 4103 Diverse Adressen
+  - 5576 Import/Export (Stapelverarbeitung, KrStaPv.exe, accounting:extf-files) · 5608 Format-Kategorie/Version tablosu · 5680 Notation für Ausdrücke · 5841 Changelog
+- ⚠️ Tablo sütun adları Musterdatei başlığından farklı yazılmış (ör. „Umsatz" ↔ „Umsatz (ohne Soll/Haben-Kz)") — 2. satır için satır 21 esas (REGISTER W-13).
+- **Sicil kaydı:** REGISTER **W-13**.
+
+### gemeinsam/datev-format/DATEV-Format_Buchungsstapel_Felder_V13_20261022.tsv
+- **Ne:** Buchungsstapel V13 alan tablosu, 125 satır, sekme ayrılmış: Nr · MUSS (orijinalde kalın = Pflicht: #1, #2, #7, #8, #10) · Überschrift · Ausdruck (regex) · Beschreibung. Deterministik parser, türev.
+- **Sicil kaydı:** REGISTER **W-13**.
+
+### gemeinsam/datev-format/Musterdaten_EXTF_Buchungsstapel.csv
+- **Ne:** DATEV'in resmî örnek dosyası (Musterdaten zip'inden). 56 satır: Header + başlık + 54 Buchung, her satır 125 alan, CRLF, BOM'suz UTF-8.
+- **Sicil kaydı:** REGISTER **W-13**.
+
 ## Depo dışı belgeler — ⛔ dağıtım kısıtlı, yalnız harita
 
 > Bu bölümdeki belgeler **depoda yoktur ve girmez** (public depo, yayıncının dağıtım kısıtı).

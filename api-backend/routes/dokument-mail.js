@@ -136,7 +136,7 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
       });
     } catch (e) {
       if (e?.status === 404) return res.status(404).json({ error: e.message });
-      console.error('[dokument/therapiebericht]', e?.code || e?.message || 'Fehler');
+      console.error('[dokument/therapiebericht]', e?.code || 'Fehler');
       return res.status(500).json({ error: 'Der Bericht konnte nicht erstellt werden.' });
     }
   });

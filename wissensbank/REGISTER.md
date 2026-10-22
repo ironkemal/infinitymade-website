@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 21.10.2026 (**W-11 Podologie-Vertrag § 125 Lesefassung girdi** — `gkv-302`’nin 21.10.2026 Zuzahlung kuralının (SPEC-RULES „Zuzahlung = nur auf ERBRACHTE Leistungen") kaynağı. Yayıncıdan `curl` ile indirildi, SHA-256 `gkv-302`’nin okuduğu kopyayla birebir; yayıncı sayfası aynı gün tarandı, daha yeni sürüm yok. Z-17’deki „elle indirme" maddesi kapandı.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 22.10.2026 (**W-13 DATEV-Format (EXTF Buchungsstapel V13, Header 700) girdi** — yayıncının API yanıtı + Musterdaten `curl` ile, yalnız yerel `gemeinsam/datev-format/`; açık madde W-A14.)
+> Önceki: 21.10.2026 (**W-11 Podologie-Vertrag § 125 Lesefassung girdi** — `gkv-302`’nin 21.10.2026 Zuzahlung kuralının (SPEC-RULES „Zuzahlung = nur auf ERBRACHTE Leistungen") kaynağı. Yayıncıdan `curl` ile indirildi, SHA-256 `gkv-302`’nin okuduğu kopyayla birebir; yayıncı sayfası aynı gün tarandı, daha yeni sürüm yok. Z-17’deki „elle indirme" maddesi kapandı.)
 > Önceki: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
 > Önceki: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
 > **W-08** Handlungsanleitung Heilmittel (Ausgabe Januar 2026) · **W-09** Gebührenverzeichnis Physiotherapie
@@ -64,7 +65,7 @@
 | Arşivdeki PDF | **58** (11.10.2026 `find` ile sayıldı: 57; +W-11 21.10.2026; W-07 PDF bu checkout'ta yok). 42'sinin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 19 (Z-01…Z-19) |
-| Tam kimlik kartı yazılmış kaynak | 11 (**W-11** Podologie-Vertrag § 125 Lesefassung + **W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Tam kimlik kartı yazılmış kaynak | 12 (**W-13** DATEV-Format — yalnız yerel + **W-11** Podologie-Vertrag § 125 Lesefassung + **W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
 | Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 5 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta; W-08/W-09/W-10 — `gemeinsam/unfallversicherung-dguv/`, PDF `*.pdf` ile, TXT `.gitignore:119` ile dışarıda) |
 | **Herkunft (indirme URL'i) kayıtlı** | **11 / 44 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
@@ -1493,6 +1494,33 @@ sayıyı düzeltir.
 - **Bütünlük:** SHA256 `7498edc138ac56d2ad89247a367613fc20eddabf2a0f1be5f7361baf5efb93ad`; 353032 bayt; 30 sayfa; 1500 çıkarılmış metin satırı + 5 metadata satırı.
 - **Format / kontrol:** `pdftotext -enc UTF-8 -layout`, 18.10.2026; kapak, §3b geçişi ve §21 okundu. Bağımsız tekrar çıkarılan 1/7/9/20/26. sayfalar metinle eşleşti. md/csv/kod türevi yok; mevcut 2025 Anlage 2/3 ve Änderungsvereinbarung değiştirilmedi.
 
+### W-13 · DATEV-Format (EXTF) — Formatbeschreibung Header 700 + Buchungsstapel Formatversion 13
+- **Dosya:** `wissensbank/gemeinsam/datev-format/` (**yalnız yerel**, `.gitignore` klasör satırı):
+  `DATEV-Format_Formatbeschreibung_strapi_20261022.json` (ham yayıncı yanıtı = orijinal, 729906 bayt) ·
+  türev `DATEV-Format_Formatbeschreibung_de_20261022.txt` (Almanca gövde, HTML aynen; bölüm başlıkları `## …[id=N]`) ·
+  türev `DATEV-Format_Buchungsstapel_Felder_V13_20261022.tsv` (125 alan: Nr · MUSS · Überschrift · Ausdruck · Beschreibung) ·
+  `Musterdaten_DATEV_Format_20261022.zip` (7 örnek dosya) + içinden `Musterdaten_EXTF_Buchungsstapel.csv`.
+- **Herkunft:** portal SPA, sayfa `https://developer.datev.de/de/file-format/details/datev-format/format-description/…`
+  JS ile çiziliyor (WebFetch boş döner). İçerik yayıncının kendi API'sinden alındı:
+  `curl -sL https://developer.datev.de/mediator/strapi/file-formats/edabeecu20kg6dhcbgxyews5` ·
+  Musterdaten: `https://developer.datev.de/assets/Musterdaten_DATEV_Format_0_7f9322b9cc.zip` ·
+  **İndirme:** 22.10.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** DATEV eG (DATEV Developer Portal).
+- **Sürüm / Stand:** Header-Versionsnummer **700** · Buchungsstapel **Formatversion 13** (Changelog: „February 2024 · 700 · booking batch · Format version increased from 12 to 13 · Field 125 … added"; son changelog kaydı „March 2025 · 700 · All formats · Improved a few regular expressions"). Anhang tablosu: Kategorie 21 Buchungsstapel Formatversion 13/12/11/10 → „ab 17.0/12.2 · ab 15.0/10.1 · ab 14.1/9.2 · ab 14.0/9.1" (DVD/Rechnungswesen). Musterdaten zip içinde `EXTF_Buchungsstapel.csv` tarihi 18.06.2025.
+- **Anzuwenden ab:** belirtilmemiş (V13 Şubat 2024'ten beri) · **Düşer:** açık uçlu (yeni Formatversion yayınlanınca).
+- **Durum:** REFERANS → `builder` DATEV export'u yazdığı gün **GEÇERLİ** olur.
+- **Neyi besler:** orijinal JSON → `.txt` + `.tsv` → (planlanan) DATEV EXTF Buchungsstapel export'u — kod dosyası **henüz yok** (22.10.2026 `grep -ri EXTF api-backend module` boş). Karar dayanağı: `compliance/LEGAL_DECISIONS.md` 17.09.2026 „Export hedefi DATEV EXTF". Kod yazıldığında yolu buraya ve INDEX'e yazılır (W-A14).
+- **Anahtar bölümler** (satır no = `.txt`): Einstieg/Technischer Aufbau + Musterdatei 3-36 (Header satırı 20, Spaltenüberschriften satırı 21) · Zeichensatz 37-44 · Volumengrenze 99.999 Buchungen 45-82 · **Header Satzaufbau 83-307 (31 alan)** · **Buchungsstapel 308-1213 (125 alan)** · Import/Export 5576 · Anhang Format-Kategorie/Version 5608 · Notation für Ausdrücke 5680 · Changelog 5841.
+- **Tazelik kontrolü:** elle, `wissensbank`. Aynı `curl` ile JSON yeniden çekilir, `Changelog [id=51]` gövdesinde „March 2025"dan yeni satır var mı bakılır; varsa `.tsv` aynı parser'la yeniden üretilip `diff`lenir. Otomatik değil. Tetik: DATEV export kodu yazılmadan önce + yılda bir (Ocak).
+- **Yeniden dağıtım:** şüpheli — içerik © DATEV eG, portalda yeniden dağıtım lisansı bulunmadı (aranmadı/doğrulanmadı). Ham + türev yalnız yerel: `.gitignore` → `wissensbank/gemeinsam/datev-format/`; `.vercelignore` → `wissensbank/`. Kodun içine 125 sütun başlığını sabit olarak yazmak arayüz uyumu için zorunlu ve ayrı bir sorudur — gerekirse `legal-de`.
+- **Yedek:** git hayır; yeniden üretim tek `curl` (URL'ler yukarıda). SHA-256: JSON `8e230c0482ca57e903ee563d99156dca97e870387bdf56e2c1898ff72d1c3344` · zip `03925e0b88f705205ac3d531c07c068759edd666c0291dcefcc177193ba6cd41` · CSV `25009cb9c4a45638b951dbdbf916a09bb6f94a2dd3da3ddc6979b0478b1dd633`.
+- **Format kararı:** JSON (makine formatı) olduğu gibi + deterministik metin çıkarımı + alan tablosu TSV (deterministik HTML-tablo parser'ı, YZ yok). md'ye çevrilmedi: satır atıfı bozulur, kazanç yok. Doğrulama: TSV 125 satır = doküman örneğindeki 125 başlık = zip örneğindeki 125 başlık (`diff` birebir aynı); her veri satırı 125 alan (54/54); 5 rastgele alan (#11, #40, #93, #104, #125) ad+Ausdruck ham JSON'a karşı eşleşti.
+- **Bilinen iç çelişkiler (yayıncının kendi belgesinde, bizim hatamız değil):**
+  1. Tablo sütun adı ≠ Musterdatei başlığı: ör. #1 „Umsatz" vs „Umsatz (ohne Soll/Haben-Kz)", #2 „Soll-/Haben-Kennzeichen" vs „Soll/Haben-Kennzeichen", #5 „Basisumsatz" vs „Basis-Umsatz", #40 „EU-Mitgliedstaat u. UStID (Bestimmung)" vs „EU-Land u. UStID (Bestimmung)", #103 „Leerfeld" vs „Buchungs GUID". **2. satır için Musterdatei başlığı esas alınır** (doküman ve zip birebir aynı).
+  2. Zeichensatz: „Default ISO-8859-1 bzw. CodePage 1252; Unicode nur mit BOM" — ama zip'teki `EXTF_Buchungsstapel.csv` **BOM'suz UTF-8**.
+  3. #9 BU-Schlüssel Ausdruck `^(["]\d{4}["])$` — örnek veride `"9"`, `"501"` gibi kısa değerler var.
+  4. Header #5 Ausdruck `^(2|4|5|13)$`, açıklamada „3 = Sachkontenbeschriftungen" (regex 3'ü içermiyor) — Buchungsstapel için önemsiz.
+
 ---
 
 ## 4. Açık maddeler
@@ -1793,6 +1821,17 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
    OCR gerekir) · Physio FAK Stand 24.03.2023 (`…/fak-_physiotherapie_stand-24.03.2023.pdf`, 14 s.) · Ergo
    Rahmenverträge DVE/BED ab 01.04.2024 · Ergo FAK Stand 10.07.2024 · EAP/ITT/ABMR Gebührenverzeichnisse · UV-GOÄ.
    Dördü de Physio/Ergo ince ayarına aittir (vertikal sıralama) ve Podologie içermez (ikisi `grep` ile ölçüldü).
+
+### W-A14 · DATEV-Format (W-13): kod zinciri boş, yeniden dağıtım, Prüfprogramm — `offen`
+1. **Zincir** (sahibi: `builder`, export yazıldığı gün) — W-13'ün „Neyi besler"i bugün planlanan bir koddur. Export dosyası
+   yazıldığında yolu W-13'e + INDEX'e eklenir, sütun sabitleri `.tsv`'ye karşı test edilir (125 başlık birebir).
+2. **Yeniden dağıtım** (sahibi: `legal-de`, yalnız ham/türev yayınlanmak istenirse) — bugün yalnız yerel, bu hâliyle `unkritisch`.
+3. **Prüfprogramm DATEV-Format 2.2.3.0** indirilmedi (çalıştırılabilir zip, güvenilmeyen ikili) —
+   `https://developer.datev.de/assets/Datev_Format_Pruefprogramm_2_2_3_0_76439824cb.zip`. Export'un ilk çıktısını
+   doğrulamak için Kemal'in makinesinde elle koşulabilir; karar `builder`/Kemal.
+4. **Formatversion 12 mi 13 mü:** belge 13'ü gösteriyor; „Schnittstellenvorgaben DATEV-Format" sayfası
+   (`developer.datev.de/datev/platform/de/schnittstellenvorgaben/dtvf`) arama özetine göre „mindestens 700 / Formatversion 12"
+   diyor — sayfa JS ile çizildiği için **okunamadı, doğrulanmadı**. 13 kullanmak bu iki ifadeyle de uyumlu.
 
 ---
 

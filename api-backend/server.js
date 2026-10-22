@@ -23,6 +23,7 @@ import { validateAuthenticatedService, validateExistingBookingTherapist } from '
 import { serienDaten, isValidCalendarDate, isStrictInteger } from './booking/series.js';
 import { patientenNameMuster } from './booking/patienten-namensabgleich.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
+import { createDatevRouter } from './billing/api/datev.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
@@ -595,6 +596,8 @@ app.use('/api/billing', billingMahnwesenRouter);
 
 // Ausfallgebühr (no-show fee) routes.
 app.use('/api/billing', billingAusfallRouter);
+// DATEV-Buchungsstapel für den Steuerberater (O-215, 22.10.2026) — nur Inhaber, nur Datei.
+app.use('/api/billing', createDatevRouter({ supabase }));
 
 // Statistik / analytics routes.
 app.use('/api/billing', billingStatistikRouter);

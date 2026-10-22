@@ -73,7 +73,7 @@ import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=2
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022tb';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
-import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
+import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
@@ -14619,7 +14619,7 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
-    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal });
+    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
