@@ -278,3 +278,17 @@ untracked und schon länger da: `.codex/`, `AGENTS.md`, `Claude outputs/`.
 4. **K3 + K4** — MCP-Token oder SQL-Editor: `0039` anwenden, Live-Stand der übrigen Migrationen klären und in die Köpfe eintragen.
 5. **Push** nach Sichtung von `git log origin/main..main` (K2, Vorbeugung 2).
 6. **K6** — Karten entscheiden (B zuerst), **K7** als Aufräumkarte.
+
+## K10
+
+### Migration `0081_warteliste_referenzen_abrechnungsrechte` — Nummer vergeben, nicht live (22.10.2026)
+
+Lokal entstanden als `0081_…`, kollidiert aber mit der Upstream-Migration `0081_ausfall_zahlung_faelligkeit`
+(live angewendet 17.10.2026). Zwei weitere lokale Dateien (`0079_ausfall_zahlung_faelligkeit`,
+`0080_request_approve_atomic`) waren Duplikate der live angewendeten `0081`/`0082` und wurden verworfen.
+Die Warteliste-Datei wurde nicht committet (Hook O-129 verlangt `-- SaaS:`-Zeile) und liegt nur lokal in
+`/tmp/praxura-migr-parked/`.
+
+**Lösung:** Datei mit Nummer `0089` neu anlegen, `db-ustasi` und `onprem` fragen, mit GO live anwenden, dann
+`-- SaaS: angewandt …` eintragen und `db/SCHEMA*.sql` im selben Commit tazelen. Details:
+[[2026-10-22_hetzner-eigener-server-und-push]].

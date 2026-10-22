@@ -36,6 +36,7 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-10-22 | Hetzner / Push | [[2026-10-22_hetzner-eigener-server-und-push]] | Eigenbetrieb auf Hetzner (Weg C) dokumentiert, **nichts live getestet** · `ff58303e` gepusht · Migrationsnummern-Kollision 0079/0080 (Duplikate), `0081_warteliste` nicht live, geparkt |
 | 2026-10-08 | KUTU M4 / Übergabe | [[2026-10-08_m4-fortschritt-und-kemal-uebergabe]] | Vollständige Codeübergabe integriert:3196Tests,49Zentraltests,Probe22/39,API14PASS;Kemal kann HatK fortführen · Remote-Abgleich: K2b.7a/7b bereits dokumentiert umgesetzt; weiter mit aktuellem Hat-K-Prompt (ORG/§5b; O-178 bereits umgesetzt) · Cold-FAIL und K3-/KI-/Produktionsgrenzen bleiben offen |
 | 2026-10-08 | KUTU M4 | [[2026-10-08_m4-qa-bericht]] | Lokal umgesetzt und erneut geprüft: 3117 Tests, Probesuite, Merkez48/48, API14/14 · NO_NER · Cold36/156 Restlecks: Freitextqualität FAIL · lokale Kemal-Weiterarbeit freigegeben; aktuelle Reihenfolge nach Remote-Abgleich: `KEMAL_M4_UEBERGABE.md` · K3-/Anbieter-/Produktionsfreigabe offen |
 | 2026-10-07 / 08 | KUTU M4 | [[2026-10-07_m4-analyse-und-plan]] | M4.1–M4.11 analysiert; Plan 1 bewertet, Plan 2 mit Gates ausgearbeitet · Umsetzung/Aktivierung nicht gestartet |
