@@ -69,7 +69,9 @@ WORKDIR /srv/www
 # in der SaaS-Version, aber referenziert hier keins der acht Box-Seiten,
 # onprem-Gegenlesen 11.09.2026 gezählt) — deshalb fehlt es hier bewusst.
 COPY login.html login.js ./
-COPY dashboard.html dashboard.css dashboard.js ./
+# dashboard-feinschliff.css (Kemal, 20.10.2026) wird von dashboard.html geladen und fehlte
+# hier bis 24.10.2026 — die Box zeigte die Oberfläche ohne Feinschliff (O-219).
+COPY dashboard.html dashboard.css dashboard-feinschliff.css dashboard.js ./
 COPY kalender.html kalender.js ./
 COPY employee-signup.html ./
 # employee-signup.js seit ecbf871 (KHS K1.1) archiviert — die Seite ist nur noch ein Hinweis auf den Einrichtungscode.

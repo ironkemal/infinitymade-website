@@ -12,6 +12,7 @@ on:
       - 'login.js'
       - 'dashboard.html'
       - 'dashboard.css'
+      - 'dashboard-feinschliff.css'
       - 'dashboard.js'
       - 'kalender.html'
       - 'kalender.js'
@@ -257,7 +258,10 @@ jobs:
       # 200 fuer /login.html heisst nur: die SEITE existiert — nicht, dass
       # ihre <link>/<script>-Ziele es auch tun (O-57, 12.09.2026: fehlendes
       # assets/system.css blieb genau deshalb unbemerkt). Jede lokale
-      # <link>/<script>-Referenz wird deshalb einzeln abgerufen.
+      # <link>/<script>-Referenz wird deshalb einzeln abgerufen — fuer
+      # login.html UND die beiden Login-Pflicht-Seiten dashboard.html und
+      # attendance.html (O-219, 24.10.2026: dashboard-feinschliff.css fehlte
+      # in der Box, weil bisher nur login.html geprueft wurde).
       #
       # Bewusst NUR <link>/<script> (unbedingt geladen), NICHT <a href> —
       # login.html verlinkt auch auf SaaS-only-Seiten (Impressum/Datenschutz/
@@ -265,11 +269,16 @@ jobs:
       # werden (O-58 a, istKutu-Flag), aber im rohen HTML weiter im href
       # stehen (curl fuehrt kein JS aus). Ein <a> auf eine nicht gepackte
       # Seite ist damit kein Baufehler dieses Images.
-      - name: Smoke test — jede lokale Asset-Referenz in /login.html laedt
+      - name: Smoke test — jede lokale Asset-Referenz in /login.html, /dashboard.html, /attendance.html laedt
         run: |
           set -e
           fail=0
-          paths="$(grep -oE '<(link|script)[^>]*(src|href)="[^"]+"' /tmp/login.html \
+          for seite in dashboard attendance; do
+            curl -fsSk --resolve smoke.local:8443:127.0.0.1 "https://smoke.local:8443/${seite}.html" > "/tmp/${seite}.html" \
+              || { echo "✗ /${seite}.html laedt nicht"; fail=1; }
+          done
+          paths="$(cat /tmp/login.html /tmp/dashboard.html /tmp/attendance.html 2>/dev/null \
+            | grep -oE '<(link|script)[^>]*(src|href)="[^"]+"' \
             | grep -oE '(src|href)="[^"]+"$' \
             | sed -E 's/^(src|href)="//;s/"$//' \
             | grep -vE '^(https?:|//)' \
@@ -285,7 +294,7 @@ jobs:
             fi
           done
           docker rm -f smoke > /dev/null
-          [ "$fail" = "0" ] || { echo "✗ Mindestens eine lokale Asset-Referenz in /login.html laedt nicht — COPY-Liste in onprem/frontend.Dockerfile pruefen."; exit 1; }
+          [ "$fail" = "0" ] || { echo "✗ Mindestens eine lokale Asset-Referenz in /login.html, /dashboard.html oder /attendance.html laedt nicht — COPY-Liste in onprem/frontend.Dockerfile pruefen."; exit 1; }
 
       - name: Build and push
         uses: docker/build-push-action@v5
