@@ -95,7 +95,9 @@ export async function oeffneDashboard(browser, o) {
     }
     if (url.pathname.startsWith('/api/')) {
       protokoll.api.push(route.request().method() + ' ' + url.pathname);
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      // Bekannte Antwortformen; alles andere {}.
+      const body = url.pathname === '/api/attendance/report' ? { records: [] } : {};
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     }
     return route.continue();
   });
