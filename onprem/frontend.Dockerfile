@@ -71,7 +71,8 @@ WORKDIR /srv/www
 COPY login.html login.js ./
 # dashboard-feinschliff.css (Kemal, 20.10.2026) wird von dashboard.html geladen und fehlte
 # hier bis 24.10.2026 — die Box zeigte die Oberfläche ohne Feinschliff (O-219).
-COPY dashboard.html dashboard.css dashboard-feinschliff.css dashboard.js ./
+# praxura-design.css: neues Erscheinungsbild hinter dem Schalter ?design=neu (Redesign 2026-10).
+COPY dashboard.html dashboard.css dashboard-feinschliff.css praxura-design.css dashboard.js ./
 COPY kalender.html kalender.js ./
 COPY employee-signup.html ./
 # employee-signup.js seit ecbf871 (KHS K1.1) archiviert — die Seite ist nur noch ein Hinweis auf den Einrichtungscode.

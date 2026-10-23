@@ -54,3 +54,4 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 | 2026-10-06 | KUTU M2 | [[2026-10-06_khs-m2-rezeptarten-bg-rechnung-branding]] | ✅* abgenommen mit E1–E5 · Migrationen 0067–0071 live · 1712/982/142 Tests grün, Proben grün · drei Live-Test-Läufe, alle Befunde behoben · offen: Teil C (Stempel, Mitarbeiter-Login), Release 0.5.0, GoBD-Praxiskopf-Snapshot |
 
 | 2026-10-03 / 04 | VPS / Live-API | [[2026-10-03_live-api-liefert-html-statt-json]] | ✅ GELÖST 04.10. · Ursache: VPS-Platte 100 % voll durch Backup-Cron (8 × 2,5 GB) → calendar-api `unhealthy` → Traefik routete `/api/*` zu n8n · Platz frei, Backup-Skript ohne `binaryData`, 5 Tage, 85-%-Sperre |
+| 2026-10-24 | Redesign | [[2026-10-24_redesign-phase0-phase1]] | Phase 0 fertig (Werkzeuge, Ausgangslage grün) · O-219 im Branch behoben · Phase 1 Schalter + `praxura-design.css` lokal getestet, ohne Schalter 0 px Abweichung · Branch `redesign/praxura-design`, nicht gepusht |

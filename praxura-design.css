@@ -1,0 +1,146 @@
+/* ============================================================================
+   praxura-design.css — neues Erscheinungsbild „kühles Grau, weiße Karten“
+   ============================================================================
+
+   Warum es das gibt
+   ─────────────────
+   Melih, 23.10.2026 (mit Kemal abgesprochen): alle Bereiche von dashboard.html
+   bekommen eine ruhigere, aufgeräumte Optik nach dem Vorbild eines
+   Finanz-Dashboards — kühles Hellgrau als Grund, weiße Karten darauf, eine
+   einzige Akzentfarbe sparsam eingesetzt. Auftrag, Vorbild und Farbtabelle:
+   redesign/AUFTRAG.md und redesign/REFERENZ.md (nicht ausgeliefert).
+
+   Umgestaltet, nicht neu gebaut: kein HTML-Umbau, keine Logik. Alles hier gilt
+   nur unter <html data-design="neu"> — gesetzt vom Schalter im <head> von
+   dashboard.html (?design=neu / ?design=alt). Ohne Schalter bleibt die App
+   pixelgleich wie vorher (geprüft mit tools/redesign-shots.mjs --vergleich).
+
+   Reihenfolge: dashboard.css → dashboard-feinschliff.css (Kemal, 20.–21.10.,
+   die Basis) → diese Datei. Zurücknehmen = eine <link>-Zeile entfernen.
+
+   Spezifität: der Feinschliff setzt seine hellen Werte unter
+   `:root:not([data-theme="dark"])` (0,2,0). Hier darum
+   `:root[data-design="neu"]:not([data-theme="dark"])` und
+   `:root[data-design="neu"][data-theme="dark"]` (0,3,0) — gewinnt ohne
+   `!important`. Bausteine später mit `[data-design="neu"] .klasse`.
+
+   Farben: Logo-Töne aus dem Kopf von dashboard-feinschliff.css (gemessen) —
+   Espresso #4F4136, Bronze #A48565, Champagner #C4A381, Creme #F3E4D2.
+   Grund und Text kühl-neutral. Kontraste prüft tools/redesign-kontrast.test.js
+   (Text ≥ 4,5:1). Bronze auf Weiß hat nur 3,4:1 → nie für normalen Text, nur
+   für Linien, Symbole und große Zahlen. Darum ist --accent (wird 18× als
+   Textfarbe benutzt) hier ein dunkleres Bronze.
+
+   Nie umfärben (bleiben unberührt): Leistungsfarben der Terminblöcke
+   (module/kalender-farben.js), Belege, Rechnungen, PDF/Druck, E-Mail-Vorlagen.
+
+   `!important` steht hier nur dort, wo ein Inline-Stil oder eine
+   `!important`-Regel aus dashboard.css/Feinschliff sonst gewinnen würde.
+   Jede Stelle sagt, wogegen.
+   ========================================================================== */
+
+/* ── 1. Farben und Maße ─────────────────────────────────────────────────── */
+
+:root[data-design="neu"] {
+  --radius: 16px;      /* Karten, Dialoge — Vorbild ~24 px, Praxura hat viele Tabellen */
+  --radius-md: 12px;   /* war nirgends definiert (Fallback griff) */
+  --radius-sm: 8px;    /* Knöpfe, Felder */
+}
+
+:root[data-design="neu"]:not([data-theme="dark"]) {
+  /* Flächen */
+  --bg-main: #F3F4F6;
+  --bg-card: #FFFFFF;
+  --bg-card-solid: #FFFFFF;
+  --bg-topbar: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-elevated: #FFFFFF;            /* war nirgends definiert */
+  --bg-hover: rgba(17, 24, 39, 0.04);
+  --bg-warm: #F6EEE4;                /* zart Creme: betonte Kartenköpfe */
+
+  /* Linien */
+  --border: #E5E7EB;
+  --border-strong: #D1D5DB;
+  --border-color: #E5E7EB;           /* war nirgends definiert */
+  --border-subtle: #EEF0F3;          /* war nirgends definiert */
+
+  /* Schrift */
+  --text-main: #1F2328;              /* 14,4:1 auf Grund */
+  --text-muted: #5F6672;             /* 5,3:1 auf Grund */
+  --text-sub: #5F6672;               /* war nirgends definiert, gleiche Rolle wie muted */
+  --text-faint: #69707B;             /* 4,5:1 auf Grund — vorher 2,1:1 */
+
+  /* Akzent */
+  --primary: #4F4136;                /* Espresso */
+  --primary-hover: #3B3028;
+  --primary-dim: #F6EEE4;            /* Creme statt durchscheinendem Grün */
+  --primary-h: 27;                   /* für hsla(var(--primary-h) …) — war nirgends definiert */
+  --primary-s: 19%;
+  --primary-l: 26%;
+  --accent: #7A5F45;                 /* dunkles Bronze, 5,4:1 — als Text tauglich */
+  --nav-active: #F6EEE4;
+  --bronze: #A48565;
+  --highlight: #C4A381;
+  --focus-ring: #A48565;
+
+  /* Bedeutung */
+  --success: #2F6B4A;
+  --danger: #9C3A3A;
+  --danger-bg: rgba(156, 58, 58, 0.08);        /* war nirgends definiert */
+  --warning-text: #8A6A2F;
+  --warning-bg: rgba(201, 168, 118, 0.12);     /* war nirgends definiert; 0.12 hält --warning-text ≥ 4,5:1 */
+  --warning-border: rgba(138, 106, 47, 0.35);  /* war nirgends definiert */
+
+  /* Kalender-Raster neutral statt warm */
+  --grid-hour: rgba(17, 24, 39, 0.10);
+  --grid-half: rgba(17, 24, 39, 0.05);
+  --grid-quarter: rgba(17, 24, 39, 0.035);
+
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);  /* war nirgends definiert */
+}
+
+:root[data-design="neu"][data-theme="dark"] {
+  --bg-main: #121417;
+  --bg-card: #1B1E23;
+  --bg-card-solid: #1B1E23;
+  --bg-topbar: #1B1E23;
+  --bg-sidebar: #16191D;
+  --bg-input: #16191D;
+  --bg-elevated: #22262C;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-warm: rgba(201, 171, 143, 0.08);
+
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+
+  --text-main: #ECEDEF;
+  --text-muted: #A3A9B3;
+  --text-sub: #A3A9B3;
+  --text-faint: #8A919B;
+
+  --primary: #C9AB8F;
+  --primary-hover: #DCC4A8;
+  --primary-dim: rgba(201, 171, 143, 0.14);
+  --primary-h: 29;
+  --primary-s: 34%;
+  --primary-l: 67%;
+  --accent: #C9AB8F;
+  --nav-active: rgba(201, 171, 143, 0.14);
+  --bronze: #C4A381;
+  --highlight: #C9AB8F;
+  --focus-ring: #C9AB8F;
+
+  /* --success/--danger/--warning-text: die vorhandenen Dunkel-Werte aus dashboard.css bleiben */
+  --danger-bg: rgba(217, 138, 138, 0.12);
+  --warning-bg: rgba(217, 189, 138, 0.12);
+  --warning-border: rgba(217, 189, 138, 0.35);
+
+  --grid-hour: rgba(255, 255, 255, 0.09);
+  --grid-half: rgba(255, 255, 255, 0.045);
+  --grid-quarter: rgba(255, 255, 255, 0.03);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+}

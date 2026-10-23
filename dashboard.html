@@ -4,8 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Theme: apply saved dark mode before paint to avoid flash of light theme -->
-  <script>(function(){try{if(localStorage.getItem('im-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <!-- Theme: apply saved dark mode before paint to avoid flash of light theme.
+       Design-Schalter (Redesign 2026-10, redesign/AUFTRAG.md 4.2): ?design=neu merkt sich das
+       neue Design (localStorage px-design) und setzt <html data-design="neu">, ?design=alt löscht
+       es. Ohne Schalter bleibt alles wie bisher; praxura-design.css wirkt nur unter dem Attribut. -->
+  <script>(function(){var h=document.documentElement;try{if(localStorage.getItem('im-theme')==='dark'){h.setAttribute('data-theme','dark');}}catch(e){}var d=null;try{d=new URLSearchParams(location.search).get('design');}catch(e){}var neu=d==='neu';try{if(d==='neu'){localStorage.setItem('px-design','neu');}else if(d==='alt'){localStorage.removeItem('px-design');}else if(localStorage.getItem('px-design')==='neu'){neu=true;}}catch(e){}if(neu){h.setAttribute('data-design','neu');}})();</script>
   <!-- Sentry error tracking (loader + custom init with PII scrub) -->
   <script src="/sentry-init.js?v=20260917"></script>
   <title>Dashboard – Praxura</title>
@@ -22,6 +25,7 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20261021ze" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
+  <link rel="stylesheet" href="praxura-design.css?v=20261023rd1" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der

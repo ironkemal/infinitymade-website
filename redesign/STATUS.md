@@ -5,7 +5,7 @@
 **Stand:** Phase 0 fertig (23.10.2026). Werkzeuge T1/T4/T5 gebaut und geprüft, Vorher-Bilder + Smoke-Referenz liegen vor.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 1
-**Nächster Schritt:** Phase 1.1 Schalter in `dashboard.html`
+**Nächster Schritt:** Phase 1.1–1.4 committen (T1/T2 vorher), dann 1.5 Neu-Bilder ansehen. Weitermach-Prompt: `redesign/WEITERMACHEN-PROMPT.md`
 **Wartet auf Melih:** – (Fragen unten blockieren nichts)
 **Auto-Fortsetzung:** geplanter T3-Task „Praxura-Redesign automatisch fortsetzen“ alle 2 h in diesem Thread. Abschalten: in T3 unter geplanten Aufgaben deaktivieren/löschen.
 
@@ -49,10 +49,10 @@
   - [x] 0.7 Klassen-Wache: 52 Klassen → `tools/redesign-klassen-baseline.txt`, Prüfung in `check-redesign-ids.mjs`
   - [ ] 0.8 Commit: `redesign/*.md`, Ignore-Einträge, Werkzeuge, `pixelmatch`/`pngjs` (devDependencies), Funktionskarte tazelen + fonksiyon-ustasi „niye + nerede“
 - [ ] **1 Variablen + Schalter**
-  - [ ] 1.1 Schalter im Inline-Script `dashboard.html:8`: `?design=neu` → `localStorage px-design='neu'` + `<html data-design="neu">`; gespeichert → setzen; `?design=alt` → löschen; try/catch. Fertig: T4 alt = vorher (0 px Diff), Attribut nur mit Schalter
-  - [ ] 1.2 `praxura-design.css` (Kopfkommentar wie Feinschliff), nach `dashboard-feinschliff.css` geladen, `?v=20261023rd1`. Token aus REFERENZ §2 unter `:root[data-design="neu"]:not([data-theme="dark"])` / `:root[data-design="neu"][data-theme="dark"]` (0,3,0). Fertig: alt 0 px Diff, neu = kühles Grau + weiße Karten
-  - [ ] 1.3 Fehlende Token (`--accent --text-sub --border-color --border-subtle --bg-elevated --shadow-sm --radius-md --danger-bg --warning-bg --warning-border --primary-h/s/l`) **nur im neu-Bereich** definieren. Fertig: neu nutzt nirgends mehr den Fallback
-  - [ ] 1.4 Kontrast-Test `tools/redesign-kontrast.test.js` (liest Token aus `praxura-design.css`, prüft Text ≥ 4,5:1, große Schrift/Symbole ≥ 3:1, hell + dunkel). Läuft in `npm test`
+  - [x] 1.1 Schalter (geschrieben, 0 px Diff alt; nicht committet) im Inline-Script `dashboard.html:8`: `?design=neu` → `localStorage px-design='neu'` + `<html data-design="neu">`; gespeichert → setzen; `?design=alt` → löschen; try/catch. Fertig: T4 alt = vorher (0 px Diff), Attribut nur mit Schalter
+  - [x] 1.2 `praxura-design.css` (geschrieben; Kutu-Image-Eintrag erledigt; nicht committet) (Kopfkommentar wie Feinschliff), nach `dashboard-feinschliff.css` geladen, `?v=20261023rd1`. Token aus REFERENZ §2 unter `:root[data-design="neu"]:not([data-theme="dark"])` / `:root[data-design="neu"][data-theme="dark"]` (0,3,0). Fertig: alt 0 px Diff, neu = kühles Grau + weiße Karten
+  - [x] 1.3 Fehlende Token (`--accent --text-sub --border-color --border-subtle --bg-elevated --shadow-sm --radius-md --danger-bg --warning-bg --warning-border --primary-h/s/l`) **nur im neu-Bereich** definieren. Fertig: neu nutzt nirgends mehr den Fallback
+  - [x] 1.4 Kontrast-Test (7/7) `tools/redesign-kontrast.test.js` (liest Token aus `praxura-design.css`, prüft Text ≥ 4,5:1, große Schrift/Symbole ≥ 3:1, hell + dunkel). Läuft in `npm test`
   - [ ] 1.5 Neu-Bilder aller Panels ansehen (hell/dunkel), grobe Ausreißer durch Token-Wechsel (Glas-Hintergründe, rgba-Warmtöne) beheben
   - [ ] 1.6 Phasenende: T1–T5, Push Branch, T6 (siehe Frage F-01)
 - [ ] **2 Feste Farben** (Hex → `var(--name, ALT)`; Ausnahmen AUFTRAG 4.4; alt muss pixelgleich bleiben)
@@ -142,6 +142,7 @@ Spalten: Optik · hell/dunkel · Inhaber/Mitarbeiter · 390 px (mobil-ui) · Fun
 ## Sitzungsprotokoll
 | Datum | Was erledigt | Commits | Nächster Schritt |
 |---|---|---|---|
+| 24.10.2026 | O-219 (Feinschliff im Kutu-Image) im Branch behoben `2a683d24`; Phase 1.1–1.4 geschrieben, Kontrast 7/7, alt 0 px Diff | `2a683d24` | 1.1–1.4 committen, 1.5 |
 | 23.10.2026 | Worktree angelegt, Ausgangslage (Tests/Proben grün), Neu-Analyse, ID-Wache, Harness + Fixture + Shots + Smoke, Vorher-Läufe, Plan | (folgt 0.8) | 0.6/0.7, Commit, Phase 1 |
 
 ## Abschlussbericht
