@@ -508,3 +508,42 @@
   }
   [data-design="neu"] .modal-close:hover { background: var(--bg-hover); }
 }
+
+/* ===== Phase 3.10 Tabs und Filter ===== */
+@media screen {
+  /* Filter: ausgewählt = ausgefüllt (Espresso), sonst weiß mit grauem Rand. */
+  [data-design="neu"] .filter-btn {
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--bg-card-solid);
+    border-color: var(--border-strong);
+    min-height: 32px;
+    border-radius: 999px;
+  }
+  [data-design="neu"] .filter-btn:hover { background: var(--bg-hover); }
+  [data-design="neu"] .filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--bg-card-solid);
+  }
+
+  /* Tabs: ruhige Unterstreichung, Text bleibt Haupttext. */
+  [data-design="neu"] :is(.tab-btn, .pd-tab) { font-size: 14px; font-weight: 500; }
+  [data-design="neu"] :is(.tab-btn, .pd-tab).active {
+    color: var(--text-main);
+    border-bottom-color: var(--primary);
+    border-bottom-width: 2px;
+  }
+  [data-design="neu"] .pd-tabs { background: var(--bg-card-solid); }
+
+  /* Kalender-Ansichtsumschalter: ausgewählt weiß auf grauem Track. */
+  [data-design="neu"] .cal-view-toggle { background: var(--bg-hover); border-color: transparent; border-radius: 10px; }
+  [data-design="neu"] .cal-view-toggle .cal-view-btn { border-radius: 8px; }
+  [data-design="neu"] .cal-view-toggle .cal-view-btn:hover { background: var(--bg-card-solid); color: var(--text-main); }
+  [data-design="neu"] .cal-view-toggle .cal-view-btn.active {
+    background: var(--bg-card-solid);
+    box-shadow: 0 0 0 1px var(--border-strong);
+    color: var(--text-main);
+    font-weight: 600;
+  }
+}
