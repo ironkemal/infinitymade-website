@@ -586,3 +586,42 @@
     box-shadow: 0 0 0 3px var(--primary-dim) !important;
   }
 }
+
+/* ===== Phase 4 (nur Optik): ruhige Übersicht ===== */
+@media screen {
+  /* Willkommen: Karte statt Bronze-Fläche. */
+  [data-design="neu"] .welcome-banner-overview {
+    background: var(--bg-card-solid);
+    border-color: var(--border);
+    border-radius: 14px;
+  }
+
+  /* Rezept-KPIs: Status nur als schmale Kante, aus den Tokens. */
+  [data-design="neu"] .rez-kpi-tile { border-radius: 14px; border-left-width: 3px; }
+  [data-design="neu"] .rez-kpi-tile:hover { transform: none; box-shadow: none; background: var(--bg-hover); }
+  [data-design="neu"] .rez-kpi-tile.rez-kpi-overdue { border-left-color: var(--danger); }
+  [data-design="neu"] .rez-kpi-tile.rez-kpi-soon { border-left-color: var(--warning-text); }
+  [data-design="neu"] .rez-kpi-tile.rez-kpi-active { border-left-color: var(--success); }
+
+  /* Freie Zeiten: weiße Karte mit gestricheltem Rand statt Goldblock. */
+  [data-design="neu"] .gap-card {
+    background: var(--bg-card-solid);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+  }
+  [data-design="neu"] .gap-card:hover { opacity: 1; transform: none; background: var(--bg-hover); }
+  [data-design="neu"] .gap-card-day { color: var(--text-main); }
+  [data-design="neu"] .gap-card-dur { background: var(--bg-hover); color: var(--px-text-2, var(--text-muted)); font-weight: 500; }
+  [data-design="neu"] .gap-card-time { color: var(--px-text-2, var(--text-muted)); }
+
+  /* Letzte Aktivität: gleiche Schrift wie alle anderen Kartenköpfe (inline Serif überschreiben). */
+  [data-design="neu"] .activity-section h3 { font-family: inherit !important; font-size: 15px !important; }
+
+  /* IK-Banner (inline blau): neutrale Tönung. */
+  [data-design="neu"] #ik-missing-banner > div {
+    background: var(--warning-dim) !important;
+    border-color: var(--warning-dim) !important;
+    border-radius: 12px !important;
+  }
+  [data-design="neu"] #ik-missing-banner a { color: var(--primary) !important; }
+}
