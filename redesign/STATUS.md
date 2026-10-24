@@ -4,8 +4,8 @@
 
 **Stand:** Phase 0 fertig (23.10.2026). Werkzeuge T1/T4/T5 gebaut und geprüft, Vorher-Bilder + Smoke-Referenz liegen vor.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
-**Aktuelle Phase:** 1
-**Nächster Schritt:** 2.1 Rest (2 `<style>`-Blöcke in dashboard.html), dann 2.2 `dashboard.js`-Strings, 2.3 `dashboard.css`. Weitermach-Prompt: `redesign/WEITERMACHEN-PROMPT.md`
+**Aktuelle Phase:** 3 — Bausteine beginnen (Phase 2 bleibt separat offen)
+**Nächster Schritt:** Auftrag 24.10.: Ausgangsstand und Phase 1.5 erneut absichern, danach 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten einzeln bauen und committen. Phase 2 jetzt nicht weiterführen; `dashboard.css` und Feinschliff bleiben unverändert.
 **Wartet auf Melih:** – (Fragen unten blockieren nichts)
 **Auto-Fortsetzung:** geplanter T3-Task „Praxura-Redesign automatisch fortsetzen“ alle 2 h in diesem Thread. Abschalten: in T3 unter geplanten Aufgaben deaktivieren/löschen.
 
@@ -53,7 +53,7 @@
   - [x] 1.2 `praxura-design.css` (geschrieben; Kutu-Image-Eintrag erledigt; nicht committet) (Kopfkommentar wie Feinschliff), nach `dashboard-feinschliff.css` geladen, `?v=20261023rd1`. Token aus REFERENZ §2 unter `:root[data-design="neu"]:not([data-theme="dark"])` / `:root[data-design="neu"][data-theme="dark"]` (0,3,0). Fertig: alt 0 px Diff, neu = kühles Grau + weiße Karten
   - [x] 1.3 Fehlende Token (`--accent --text-sub --border-color --border-subtle --bg-elevated --shadow-sm --radius-md --danger-bg --warning-bg --warning-border --primary-h/s/l`) **nur im neu-Bereich** definieren. Fertig: neu nutzt nirgends mehr den Fallback
   - [x] 1.4 Kontrast-Test (7/7) `tools/redesign-kontrast.test.js` (liest Token aus `praxura-design.css`, prüft Text ≥ 4,5:1, große Schrift/Symbole ≥ 3:1, hell + dunkel). Läuft in `npm test`
-  - [x] 1.5 Neu-Bilder aller Panels (hell+dunkel 1440, hell+dunkel 390 gesichtet 24.10.; dunkel+390 zeigen dieselben Funde, keine neuen): Token greifen überall (Grau/Weiß/Creme/Espresso). Funde für Phase 2/3, noch nicht behoben: (a) settings: Kopf „ALLGEMEIN“ mintgrün (fester Hex/rgba(34,197,94) in dashboard.css/html), (b) verordnungen: orange Randlinie je Zeile + gemischte Badge-Stile, (c) abrechnung: große dunkle „Neue Abrechnung“-Kachel (Espresso, zu schwer), (d) statistik: Kachelreihe umbricht auf 2. Zeile, (e) leere Zustände uneinheitlich, (f) kalender: grüne rgba(34,197,94)-Töne bleiben (Phase 2). Noch offen: dunkel + 390 px ansehen, Smoke `--design neu --gegen vorher`
+  - [x] 1.5 Neu-Bilder aller Panels (hell+dunkel 1440, hell+dunkel 390 gesichtet 24.10.; dunkel+390 zeigen dieselben Funde, keine neuen): Token greifen überall (Grau/Weiß/Creme/Espresso). Funde für Phase 2/3, noch nicht behoben: (a) settings: Kopf „ALLGEMEIN“ mintgrün (fester Hex/rgba(34,197,94) in dashboard.css/html), (b) verordnungen: orange Randlinie je Zeile + gemischte Badge-Stile, (c) abrechnung: große dunkle „Neue Abrechnung“-Kachel (Espresso, zu schwer), (d) statistik: Kachelreihe umbricht auf 2. Zeile, (e) leere Zustände uneinheitlich, (f) kalender: grüne rgba(34,197,94)-Töne bleiben (Phase 2). Dunkel + 390 px wurden bereits im Commit `c0fc003c` gesichtet; erneute Prüfung mit aktuellem Branch-Stand: `p1checkneu` 108 neue Bilder, `smoke-p1check.json` beide Designs/voll+leer/1440+390: 0 neue Funde (88 bekannte Funde für zwei Designs). T4: `vorher-basis7c92` gegen `p1checkalt`: 159 Bilder, 0 abweichend, 2 Rauschen, 0 fehlen. R-10 behoben.
   - [ ] 1.6 Phasenende: T1–T5, Push Branch, T6 (siehe Frage F-01)
 - [ ] **2 Feste Farben** (Hex → `var(--name, ALT)`; Ausnahmen AUFTRAG 4.4; alt muss pixelgleich bleiben)
   - [~] 2.1 `dashboard.html` Inline-`style=`: 24 Stellen auf `var(--px-*, alt)` (ok/fehler/text-2/text-3/linie, Namen im alten Design undefiniert → pixelgleich, mit p2base-Gegenprobe 0 px). Bewusst nicht umgefärbt: Beleg-Fußzeile Z.1259, Logo-Vorschau #fff, Video #000, Vorlagen-Mock, Aktionsknöpfe blau/grün/orange (Z.5004–5035). Offen: die 2 `<style>`-Blöcke
@@ -72,6 +72,15 @@
 - [ ] **6 Alle Bereiche** (Tabelle unten)
 - [ ] **7 Abnahme** (Durchläufe bis null Funde)
 - [ ] **8 Umschalten** – nur nach Melihs OK
+
+## Arbeitspakete dieser Fortsetzung (24.10.2026)
+
+Ausgangsprüfung auf `84920b8d`: T1 grün, `npm test` 4.071/4.071, alle 14 Browser-Probes grün. T4 159/159 ohne echte Abweichung (2 Rauschen); T5 beide Designs 0 neue Funde. Referenz ab jetzt **`vorher-basis7c92`** (R-10): 154 unveränderte Bilder übernommen, 5 Team-Aufnahmen aus dem Phase-0-Commit mit aktuellem Harness neu. Original `vorher` unangetastet. Bei Neuaufnahmen immer dieselbe Panel-Reihenfolge nutzen; Einzelpanel-Aufnahmen ändern Nummerierung und Navigationszustand.
+- **3.1 Topbar:** bestehende Höhe und Kalendergeometrie erhalten; feste neutrale Fläche, ruhige Typografie, Uhr mit gleich breiten Ziffern, Bedienelemente sauber gruppieren. Nur `praxura-design.css` + Cache-Nummer in `dashboard.html`.
+- **3.3 Panel-Kopf:** vorhandene `.panel-header h2` mit normalem Gewicht, 24–28 px responsiv; graue Unterzeile und klare Abstände; Texte, IDs und Aktionen unverändert.
+- **3.4 Karten:** `.card`, `.kpi-card`, `.settings-section`; Radius 16 px, 24–32 px Innenabstand am Desktop, mobil platzsparend; keine Glas-Unschärfe oder schweren Schatten. Kalender-Raster und Druck-/Belegflächen aussparen. Einstellungen erhalten einen cremefarbenen Gruppenkopf; die sechs bestehenden Statistik-Karten werden bei Desktopbreite ausgewogen 3×2 angeordnet.
+- **Abnahme je Paket:** T1 (IDs, Syntax, Größenlimit), `npm test`, Alt-Bilder mit 0 echten Abweichungen; Neu-Bilder hell/dunkel, 1440/390 ansehen. T3 passende Browser-Probes; abschließend T5 beide Designs.
+- **Grenzen:** keine neuen Funktionen/Abfragen, keine Rollenänderung; weitere Bausteine bleiben als nächste Pakete offen. Branch-Push ausdrücklich erlaubt, Merge/Live-Prüfung weiterhin offen (F-01).
 
 ## Bereiche (Phase 6)
 Spalten: Optik · hell/dunkel · Inhaber/Mitarbeiter · 390 px (mobil-ui) · Funktionen (T5) · Live (T6). Rollen/Fachbereich aus `nav-registry.js` (o = owner, e = employee).
@@ -120,6 +129,8 @@ Spalten: Optik · hell/dunkel · Inhaber/Mitarbeiter · 390 px (mobil-ui) · Fun
 | R-06 | 23.10.2026 | overview/statistik | `/api/billing/statistik` prüft keine Rolle; Aktivitäts-Feed zeigt Rechnungsbeträge auch Mitarbeitern | fonksiyon-ustasi | vorbestehend · für guvenlik vor Phase 4 | – |
 | R-07 | 23.10.2026 | overview | `renderGaps` + `renderGapsForDate` schreiben beide in `#gapsList`, erste Ausgabe sofort überschrieben | Doppelung | vorbestehend · nur notiert | – |
 | R-08 | 23.10.2026 | fussstatus | Mitarbeiterin ohne Abrechnungsrecht kommt nicht in den Fußbefund (klinische Doku) | `SIDEBAR_TO_MODULE.fussstatus = 'abrechnung'` (`dashboard.js` ~Z. 621) | vorbestehend · Frage an podoloji, nicht im Redesign ändern (Verhalten) | – |
+| R-09 | 24.10.2026 | Browser-Probes / Testserver | Barcode-Abbruchtest zunächst 38/39 | temporärer Probe-Dateiserver lieferte PDF als `application/octet-stream`, daher scheiterte Formatprüfung vor dem Abbruchpfad | behoben: Server-MIME auf `application/pdf` korrigiert; `npm run probe` anschließend alle 14 Probes grün (Barcode 39/39, Widget 55/55). Keine Produkt-/Teständerung | 1 Infrastrukturkorrektur |
+| R-10 | 24.10.2026 | T4-Referenz | Vier Team-Bilder heißen `01-team.png` statt `21-team.png`; owner-leer/Team enthält alten Attendance-Fehler und hat andere Höhe | frühere gezielte Neuaufnahme mit `--panels team` änderte Nummerierung; Harness-Korrektur nicht für owner-leer übernommen | behoben: `vorher-basis7c92`, fünf Team-Bilder aus `7c92add1` mit aktuellem Harness und identischer Panel-Reihenfolge; ursprüngliches `vorher` bleibt erhalten | 0 Produktreparaturen, Referenzvergleich grün |
 
 ## Entscheidungen
 | Datum | Frage | Entscheidung | Wer (Melih/Konsey) |
