@@ -436,3 +436,35 @@
     background: var(--bg-card-solid);
   }
 }
+
+/* ===== Phase 3.7 Tabellen ===== */
+@media screen {
+  [data-design="neu"] .table-wrap {
+    background: var(--bg-card-solid);
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  [data-design="neu"] .data-table th {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--px-text-2, var(--text-muted));
+    background: var(--bg-hover);
+    padding: 10px 16px;
+  }
+
+  [data-design="neu"] .data-table td {
+    padding: 12px 16px;
+    border-bottom-color: var(--px-linie, var(--border));
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-design="neu"] .data-table .td-muted { color: var(--px-text-2, var(--text-muted)); }
+
+  [data-design="neu"] .table-empty {
+    color: var(--px-text-2, var(--text-muted));
+    padding: 32px 24px;
+  }
+}
