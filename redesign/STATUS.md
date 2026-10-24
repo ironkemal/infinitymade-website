@@ -5,7 +5,7 @@
 **Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf und 3.4 Karten fertig und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 3 — Bausteine beginnen (Phase 2 bleibt separat offen)
-**Nächster Schritt:** 3.5 Knöpfe, danach 3.6 Felder und 3.7 Tabellen; jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd5`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
+**Nächster Schritt:** 3.6 Felder, danach 3.7 Tabellen; jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich (`vorher-vollbasis7c92`) und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd6`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
 **Wartet auf Melih:** nächste CSS-Pakete frei; vor Phase 4 bei Daten-/Rollenfragen anhalten und Melih fragen. Merge/Live-Test F-01 und Standard-Umschaltung Phase 8 weiterhin ohne Freigabe.
 **Auto-Fortsetzung:** früherer Eintrag: T3-Task alle 2 h in diesem Thread. Scheduler in dieser Fortsetzung nicht live geprüft oder geändert.
 
@@ -64,7 +64,7 @@
   - Fertig je Paket: T4 alt 0 px Diff, neu folgt Token
 - [ ] **3 Rahmen + Bausteine** (alles unter `[data-design="neu"]`)
   - [x] 3.1 Topbar · [ ] 3.2 Seitenleiste (Labels bleiben; eingeklappt = Icon-Leiste mit Tooltip — **/konsey**) · [x] 3.3 Panel-Kopf (Titel normal, graue Unterzeile)
-  - [x] 3.4 Karten (`.card .kpi-card .settings-section`, Radius 16–20, Innenabstand 24–32, kaum Schatten) · [ ] 3.5 Knöpfe (`.btn-primary/-ghost/-danger/-icon/-sm/-outline-sm/-success`: normal/hover/fokus/deaktiviert) · [ ] 3.6 Felder (`.form-*`, `.toggle-switch`, katalog-suche, patient-suche, calendar-widget)
+  - [x] 3.4 Karten (`.card .kpi-card .settings-section`, Radius 16–20, Innenabstand 24–32, kaum Schatten) · [x] 3.5 Knöpfe (`.btn-primary/-ghost/-danger/-icon/-sm/-outline-sm/-success`: normal/hover/fokus/deaktiviert) · [ ] 3.6 Felder (`.form-*`, `.toggle-switch`, katalog-suche, patient-suche, calendar-widget)
   - [ ] 3.7 Tabellen (`.data-table .table-wrap .table-empty`, `tabular-nums`, Beträge rechts) · [ ] 3.8 Badges (`.badge-*`, `.status-dot`) · [ ] 3.9 Modale (`.modal*`) · [ ] 3.10 Tabs/Filter (`.tab-bar .tab-btn .pd-tab .filter-btn`)
   - [ ] 3.11 Banner (`.dash-banner*`) · [ ] 3.12 Leerzustände (einheitliche Optik für `.upcoming-empty .gap-empty .pd-empty .emp-day-empty .table-empty`) · [ ] 3.13 Toast · [ ] 3.14 Fokusring sichtbar · [ ] 3.15 `komponenten.html` nachziehen (hat eigenes Inline-CSS)
 - [ ] **4 Übersicht** (Konzept zuerst: podoloji + /konsey; guvenlik wegen F-03)

@@ -319,3 +319,69 @@
   [data-design="neu"] .settings-section-title { padding-inline: 16px; }
   [data-design="neu"] .settings-section-body { padding: 20px 16px; }
 }
+
+/* ── 5. Knöpfe (Phase 3.5) ────────────────────────────────────────────── */
+@media screen {
+  [data-design="neu"] .btn-primary,
+  [data-design="neu"] .btn-ghost,
+  [data-design="neu"] .btn-danger,
+  [data-design="neu"] .btn-outline-sm,
+  [data-design="neu"] .btn-ghost-sm {
+    border-radius: 10px;
+    font-weight: 500;
+    min-height: 36px;
+    justify-content: center;
+    box-shadow: none;
+  }
+
+  [data-design="neu"] .btn-primary {
+    background: var(--primary);
+    color: var(--bg-card-solid);   /* Weiß im Hellen, dunkle Karte auf hellem Bronze im Dunkeln */
+    padding: 8px 16px;
+  }
+
+  [data-design="neu"] .btn-primary:hover { background: var(--primary-hover); color: var(--bg-card-solid); }
+
+  [data-design="neu"] .btn-ghost,
+  [data-design="neu"] .btn-outline-sm,
+  [data-design="neu"] .btn-ghost-sm {
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border-strong);
+    color: var(--text-main);
+  }
+
+  [data-design="neu"] .btn-ghost:hover,
+  [data-design="neu"] .btn-outline-sm:hover,
+  [data-design="neu"] .btn-ghost-sm:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-strong);
+  }
+
+  /* Gesperrte Knöpfe sichtbar flach: dashboard.css zeigt sie sonst voll deckend. */
+  [data-design="neu"] :is(.btn-primary, .btn-ghost, .btn-danger, .btn-outline-sm, .btn-ghost-sm, .btn-icon):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  [data-design="neu"] .btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid transparent;
+  }
+
+  /* Nicht Weiß auf Danger: im Dunkeln wäre das zu hell (Kontrast). */
+  [data-design="neu"] .btn-danger:hover {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  [data-design="neu"] .btn-icon { border-radius: 10px; }
+
+  /* Gegen dashboard.css 7031–7063: Anheben und Schatten auf allen Knöpfen. */
+  [data-design="neu"] :is(.btn-primary, .btn-ghost, .btn-ghost-sm, .btn-danger, .btn-icon, .btn-outline-sm):hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
