@@ -484,3 +484,27 @@
   [data-design="neu"] .badge-blue { background: var(--bg-hover); color: var(--info); }
   [data-design="neu"] .badge-gray { background: var(--bg-hover); color: var(--px-text-2, var(--text-muted)); }
 }
+
+/* ===== Phase 3.9 Modale ===== */
+@media screen {
+  [data-design="neu"] .modal-overlay {
+    background: rgba(26, 22, 17, 0.45);
+    backdrop-filter: none;
+  }
+
+  [data-design="neu"] .modal {
+    border-radius: 16px;
+    box-shadow: 0 24px 48px -16px rgba(26, 22, 17, 0.22);
+  }
+
+  [data-design="neu"] .modal-header { padding: 18px 24px; }
+  [data-design="neu"] .modal-title { font-size: 17px; font-weight: 600; }
+  [data-design="neu"] .modal-body { padding: 20px 24px; }
+  [data-design="neu"] .modal-footer { padding: 16px 24px; }
+
+  [data-design="neu"] .modal-close {
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  [data-design="neu"] .modal-close:hover { background: var(--bg-hover); }
+}
