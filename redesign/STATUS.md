@@ -5,7 +5,7 @@
 **Stand:** Phase 0 fertig (23.10.2026). Werkzeuge T1/T4/T5 gebaut und geprüft, Vorher-Bilder + Smoke-Referenz liegen vor.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 1
-**Nächster Schritt:** Phase 2.1 — feste Hex-Farben in `dashboard.html` (Inline-Styles) durch `var(--x, alt)` ersetzen; danach 2.2 `dashboard.js`-Strings, 2.3 `dashboard.css`. Weitermach-Prompt: `redesign/WEITERMACHEN-PROMPT.md`
+**Nächster Schritt:** 2.1 Rest (2 `<style>`-Blöcke in dashboard.html), dann 2.2 `dashboard.js`-Strings, 2.3 `dashboard.css`. Weitermach-Prompt: `redesign/WEITERMACHEN-PROMPT.md`
 **Wartet auf Melih:** – (Fragen unten blockieren nichts)
 **Auto-Fortsetzung:** geplanter T3-Task „Praxura-Redesign automatisch fortsetzen“ alle 2 h in diesem Thread. Abschalten: in T3 unter geplanten Aufgaben deaktivieren/löschen.
 
@@ -56,7 +56,7 @@
   - [x] 1.5 Neu-Bilder aller Panels (hell+dunkel 1440, hell+dunkel 390 gesichtet 24.10.; dunkel+390 zeigen dieselben Funde, keine neuen): Token greifen überall (Grau/Weiß/Creme/Espresso). Funde für Phase 2/3, noch nicht behoben: (a) settings: Kopf „ALLGEMEIN“ mintgrün (fester Hex/rgba(34,197,94) in dashboard.css/html), (b) verordnungen: orange Randlinie je Zeile + gemischte Badge-Stile, (c) abrechnung: große dunkle „Neue Abrechnung“-Kachel (Espresso, zu schwer), (d) statistik: Kachelreihe umbricht auf 2. Zeile, (e) leere Zustände uneinheitlich, (f) kalender: grüne rgba(34,197,94)-Töne bleiben (Phase 2). Noch offen: dunkel + 390 px ansehen, Smoke `--design neu --gegen vorher`
   - [ ] 1.6 Phasenende: T1–T5, Push Branch, T6 (siehe Frage F-01)
 - [ ] **2 Feste Farben** (Hex → `var(--name, ALT)`; Ausnahmen AUFTRAG 4.4; alt muss pixelgleich bleiben)
-  - [ ] 2.1 `dashboard.html` Inline-`style=` mit Hex (62) + die 2 `<style>`-Blöcke
+  - [~] 2.1 `dashboard.html` Inline-`style=`: 24 Stellen auf `var(--px-*, alt)` (ok/fehler/text-2/text-3/linie, Namen im alten Design undefiniert → pixelgleich, mit p2base-Gegenprobe 0 px). Bewusst nicht umgefärbt: Beleg-Fußzeile Z.1259, Logo-Vorschau #fff, Video #000, Vorlagen-Mock, Aktionsknöpfe blau/grün/orange (Z.5004–5035). Offen: die 2 `<style>`-Blöcke
   - [ ] 2.2 `dashboard.js` (263 Hex, 70 rgb) — nur gleiche Zeile, keine Zeile mehr; Ausnahmen (Alpha-Anhang `${c}22`, Canvas, Druck, `EMP_COLORS`) in Liste unten
   - [ ] 2.3 `module/*.js` gruppiert: verordnung-* · abrechnung-*/rechnung-* · kalender-*/termin-* (ohne `kalender-farben.js`) · podologie-*/fuss* · Rest. Ggf. `builder` mit Gemini
   - [ ] 2.4 Wiederkehrende Inline-Stile → Klassen in `praxura-design.css`

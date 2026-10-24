@@ -25,7 +25,7 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20261021ze" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
-  <link rel="stylesheet" href="praxura-design.css?v=20261023rd1" />
+  <link rel="stylesheet" href="praxura-design.css?v=20261024rd2" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -1774,7 +1774,7 @@
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Patienten gesamt</div>
               <div id="statPatGesamt" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
-              <div id="statPatNeu" style="font-size:11px;color:#15803d;margin-top:4px;"></div>
+              <div id="statPatNeu" style="font-size:11px;color:var(--px-ok,#15803d);margin-top:4px;"></div>
             </div>
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Sitzungen (dieser Monat)</div>
@@ -1784,7 +1784,7 @@
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Akzeptierte Abrechnungen</div>
               <div id="statAbrAkz" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
-              <div id="statAbrSumme" style="font-size:11px;color:#15803d;margin-top:4px;"></div>
+              <div id="statAbrSumme" style="font-size:11px;color:var(--px-ok,#15803d);margin-top:4px;"></div>
             </div>
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Offene Zuzahlungen</div>
@@ -1798,8 +1798,8 @@
             </div>
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Mahnungen</div>
-              <div id="statMahnBezahlt" style="font-size:30px;font-weight:700;color:#15803d;">—</div>
-              <div id="statMahnOffen" style="font-size:11px;color:#dc2626;margin-top:4px;"></div>
+              <div id="statMahnBezahlt" style="font-size:30px;font-weight:700;color:var(--px-ok,#15803d);">—</div>
+              <div id="statMahnOffen" style="font-size:11px;color:var(--px-fehler,#dc2626);margin-top:4px;"></div>
             </div>
           </div>
 
@@ -2816,7 +2816,7 @@
                       </div>
                       <input type="file" id="brandingLogoInput" accept="image/png,image/jpeg,image/webp" hidden />
                       <button class="btn-secondary btn-sm" id="brandingLogoUploadBtn" type="button">Logo hochladen</button>
-                      <button class="btn-ghost btn-sm" id="brandingLogoRemoveBtn" type="button" style="display:none;color:#f87171;">Entfernen</button>
+                      <button class="btn-ghost btn-sm" id="brandingLogoRemoveBtn" type="button" style="display:none;color:var(--px-fehler,#f87171);">Entfernen</button>
                     </div>
                   </div>
                   <details class="form-group" style="margin-bottom:12px;">
@@ -2846,7 +2846,7 @@
                         </div>
                         <input type="file" id="brandingStempelInput" accept="image/png,image/jpeg" hidden />
                         <button class="btn-secondary btn-sm" id="brandingStempelUploadBtn" type="button">Stempel hochladen</button>
-                        <button class="btn-ghost btn-sm" id="brandingStempelRemoveBtn" type="button" style="display:none;color:#f87171;">Entfernen</button>
+                        <button class="btn-ghost btn-sm" id="brandingStempelRemoveBtn" type="button" style="display:none;color:var(--px-fehler,#f87171);">Entfernen</button>
                       </div>
                       <div class="form-hint" id="brandingStempelRechte" hidden>Nur die Inhaberin bzw. der Inhaber kann Stempel und Namen ändern.</div>
                     </div>
@@ -2938,7 +2938,7 @@
                     <button class="btn-ghost" id="dsgvoExportBtn" data-dsgvo-export type="button">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Meine Daten exportieren (JSON)
                     </button>
-                    <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:#fca5a5;color:#dc2626;">
+                    <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:var(--px-fehler-rand,#fca5a5);color:var(--px-fehler,#dc2626);">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Konto &amp; Daten löschen
                     </button>
                   </div>
@@ -3289,7 +3289,7 @@
               <strong>ca. <span id="bkHbKm">— km</span></strong> · <strong>ca. <span id="bkHbMin">— min</span></strong>
               <span id="bkHbCached" style="color:var(--text-muted);font-size:11px;margin-left:6px;"></span>
             </span>
-            <div id="bkHbError" style="font-size:12px;color:#c00;margin-top:6px;display:none;"></div>
+            <div id="bkHbError" style="font-size:12px;color:var(--px-fehler,#c00);margin-top:6px;display:none;"></div>
             <div id="bkHbBufferLine" style="font-size:12px;color:var(--text-muted);margin-top:6px;display:none;">
               Termin-Block: ca. <strong id="bkHbBlockTotal">—</strong> min (Hin + Sitzung + Rück + 10 min Puffer)
             </div>
@@ -3484,7 +3484,7 @@
             </div>
           </div>
         </details>
-        <div id="sfError" style="color:#dc2626;font-size:13px;margin-top:8px;display:none;"></div>
+        <div id="sfError" style="color:var(--px-fehler,#dc2626);font-size:13px;margin-top:8px;display:none;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" id="sfCancelBtn">Abbrechen</button>
@@ -4306,7 +4306,7 @@
           <label class="form-label">ZAA-Datei</label>
           <input class="form-input" id="zaaFileInput" type="file" accept=".txt,.edi,.dat,.zaa,application/edifact,text/plain" />
         </div>
-        <div id="zaaErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
+        <div id="zaaErr" style="color:var(--px-fehler,#b91c1c);font-size:13px;margin-top:6px;"></div>
         <div id="zaaResult" style="margin-top:14px;"></div>
         <div style="display:flex;gap:8px;margin-top:14px;">
           <button class="btn-primary" id="zaaRunBtn">Hochladen &amp; analysieren</button>
@@ -4331,7 +4331,7 @@
         <div class="form-group">
           <label class="form-label">Zertifikat-Datei (.p12 / .pfx)</label>
           <input class="form-input" id="signFileInput" type="file" accept=".p12,.pfx,application/x-pkcs12" />
-          <div class="form-hint" style="font-size:12px;color:#555;margin-top:6px;">
+          <div class="form-hint" style="font-size:12px;color:var(--px-text-2,#555);margin-top:6px;">
             Das ist die <strong>ITSG-Zertifikatsdatei</strong> (Dakota.eHealth), die Sie nach Ihrer Beantragung von
             <a href="https://www.trustcenter.itsg.de" target="_blank" rel="noopener">trustcenter.itsg.de</a> per Post / Download erhalten.
             Endung: <code>.p12</code> oder <code>.pfx</code>.
@@ -4340,14 +4340,14 @@
         <div class="form-group">
           <label class="form-label">PIN / Passwort</label>
           <input class="form-input" id="signPinInput" type="password" autocomplete="current-password" />
-          <div class="form-hint" style="font-size:12px;color:#555;margin-top:6px;">
+          <div class="form-hint" style="font-size:12px;color:var(--px-text-2,#555);margin-top:6px;">
             Das ist die <strong>PIN, die Sie bei der Beantragung Ihres ITSG-/Dakota-Zertifikats selbst festgelegt</strong>
             (oder per Post erhalten) haben — schützt den privaten Schlüssel in der <code>.p12</code>-Datei.
             <em>Nicht</em> Ihr Praxura-Login-Passwort, <em>nicht</em> Ihr Krankenkassen-Portal-Passwort.
           </div>
         </div>
         <div id="signStatus" style="font-size:13px;color:var(--text-muted);margin:8px 0;"></div>
-        <div id="signErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
+        <div id="signErr" style="color:var(--px-fehler,#b91c1c);font-size:13px;margin-top:6px;"></div>
         <div style="display:flex;gap:8px;margin-top:14px;">
           <button class="btn-primary" id="signRunBtn">Signieren</button>
           <button class="btn-ghost" data-modal="signModal">Abbrechen</button>
@@ -4896,7 +4896,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);">
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Patient</div>
-              <span id="bkZuzahlungBadge" hidden style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);">Zuzahlungsbefreit</span>
+              <span id="bkZuzahlungBadge" hidden style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:rgba(34,197,94,0.15);color:var(--px-ok,#4ade80);border:1px solid rgba(34,197,94,0.3);">Zuzahlungsbefreit</span>
               <span id="bkInsuranceBadge" hidden style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;"></span>
             </div>
           </div>
@@ -4913,7 +4913,7 @@
                  Patienten gehört und nicht zum einzelnen Termin. Vorher stand
                  sie an einer ganz anderen Stelle im Panel. -->
             <div id="bkActionNoShowWarning" hidden
-              style="width:100%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#f87171;"></div>
+              style="width:100%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--px-fehler,#f87171);"></div>
           </div>
           <!-- Adresse nur bei Hausbesuch: in der Praxis fährt niemand hin. -->
           <div id="bkPatientAdresse" hidden style="padding:0 12px 10px;font-size:12px;">
@@ -5266,7 +5266,7 @@
           <label class="form-label">Aktueller Kilometerstand (Start-KM)</label>
           <input class="form-input" type="number" id="fsStartKm" min="0" placeholder="z.B. 45230" />
         </div>
-        <div id="fsError" style="color:#c00;font-size:13px;display:none;margin-top:6px;"></div>
+        <div id="fsError" style="color:var(--px-fehler,#c00);font-size:13px;display:none;margin-top:6px;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="fahrtStartModal">Abbrechen</button>
@@ -5292,7 +5292,7 @@
           <input class="form-input" type="number" id="feEndKm" min="0" placeholder="z.B. 45245" />
           <div id="feDistance" style="margin-top:6px;font-size:13px;color:#1c4d8f;display:none;"></div>
         </div>
-        <div id="feError" style="color:#c00;font-size:13px;display:none;margin-top:6px;"></div>
+        <div id="feError" style="color:var(--px-fehler,#c00);font-size:13px;display:none;margin-top:6px;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="fahrtEndModal">Abbrechen</button>
@@ -5352,7 +5352,7 @@
           <label class="form-label">Notizen</label>
           <textarea class="form-input" id="fbEditNotes" rows="2" style="resize:vertical;"></textarea>
         </div>
-        <div id="fbEditError" style="color:#c00;font-size:13px;display:none;margin-top:6px;"></div>
+        <div id="fbEditError" style="color:var(--px-fehler,#c00);font-size:13px;display:none;margin-top:6px;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-danger" id="fbEditDeleteBtn" style="margin-right:auto;">Eintrag löschen</button>
@@ -5392,7 +5392,7 @@
             <input type="checkbox" id="vehEditIsDefault" /> Als Standardfahrzeug verwenden
           </label>
         </div>
-        <div id="vehEditError" style="color:#c00;font-size:13px;display:none;"></div>
+        <div id="vehEditError" style="color:var(--px-fehler,#c00);font-size:13px;display:none;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="vehicleEditModal">Abbrechen</button>
@@ -5482,7 +5482,7 @@
         <button class="modal-close" data-modal="inputModal">✕</button>
       </div>
       <div class="modal-body">
-        <p id="inputModalText" style="margin:0 0 14px;color:#444;line-height:1.5;white-space:pre-wrap;"></p>
+        <p id="inputModalText" style="margin:0 0 14px;color:var(--px-text-2,#444);line-height:1.5;white-space:pre-wrap;"></p>
         <input type="text" id="inputModalField" class="form-input" style="width:100%;" placeholder="">
       </div>
       <div class="modal-footer">
@@ -5516,11 +5516,11 @@
       </div>
       <div class="modal-body">
         <div id="mailOfferContent">
-          <p id="mailOfferText" style="margin:0 0 12px 0;color:#444;line-height:1.5;">
+          <p id="mailOfferText" style="margin:0 0 12px 0;color:var(--px-text-2,#444);line-height:1.5;">
             Möchten Sie dem Patienten die erstellten Termine per E-Mail bestätigen?
           </p>
           <div class="form-group" id="mailOfferEmailWrap" hidden>
-            <label class="form-label">E-Mail-Adresse <span style="color:#888;font-weight:400;">(Patient fragen)</span></label>
+            <label class="form-label">E-Mail-Adresse <span style="color:var(--px-text-3,#888);font-weight:400;">(Patient fragen)</span></label>
             <input class="form-input" id="mailOfferEmail" type="email" placeholder="patient@example.com" />
           </div>
         </div>
