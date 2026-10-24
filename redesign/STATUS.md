@@ -2,10 +2,10 @@
 
 > Gedächtnis von Claude Code. Nach jedem Paket aktualisieren. Eine neue Sitzung muss allein mit dieser Datei weitermachen können.
 
-**Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten, 3.5 Knöpfe, 3.6 Felder und 3.7 Tabellen fertig und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
+**Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten, 3.5 Knöpfe, 3.6 Felder, 3.7 Tabellen und 3.8 Badges fertig und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 3 — Bausteine beginnen (Phase 2 bleibt separat offen)
-**Nächster Schritt:** 3.8 Badges (3.6 Felder, 3.7 Tabellen fertig, rd8); jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich (`vorher-vollbasis7c92`) und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd8`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
+**Nächster Schritt:** 3.9 Modale (3.6–3.8 fertig, rd9); jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich (`vorher-vollbasis7c92`) und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd9`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
 **Wartet auf Melih:** nächste CSS-Pakete frei; vor Phase 4 bei Daten-/Rollenfragen anhalten und Melih fragen. Merge/Live-Test F-01 und Standard-Umschaltung Phase 8 weiterhin ohne Freigabe.
 **Auto-Fortsetzung:** früherer Eintrag: T3-Task alle 2 h in diesem Thread. Scheduler in dieser Fortsetzung nicht live geprüft oder geändert.
 
@@ -166,3 +166,6 @@ Spalten: Optik · hell/dunkel · Inhaber/Mitarbeiter · 390 px (mobil-ui) · Fun
 ## Abschlussbericht
 
 **Zwischenabschluss 24.10.2026:** angeforderter Beginn von Phase 3 mit Topbar, Panel-Köpfen und Karten abgeschlossen, lokal getestet und einzeln committet. Dokumentation und Branch werden mit dieser Fortsetzung synchronisiert. Weitere Bausteine und die Einzelabnahme aller 27 Bereiche bleiben offen. Live/T6 ungeprüft; keine Freigabe für Merge auf `main`, Phase 4 oder Phase 8 daraus ableiten.
+
+## Offene Entscheidung (3.8)
+- Verordnungen-Status-Pillen (`module/abrechnungsstatus.js` STATUS/BEREICH, inline Hex, bewusst bunt: „In Behandlung“ rot auf Kemals Wunsch) und orange „Bitte prüfen“-Zeile sind im neuen Design noch knallig. Per CSS nicht trennbar; Umbau = Phase 2.3 (Hex → `var(--px-*, alt)`) und Farbfrage an Melih/podoloji.
