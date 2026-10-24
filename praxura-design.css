@@ -218,3 +218,36 @@
   [data-design="neu"] .topbar-left { gap: 6px; }
   [data-design="neu"] .topbar-right { gap: 4px; }
 }
+
+/* ── 3. Panel-Kopf (Phase 3.3) ────────────────────────────────────────── */
+@media screen {
+  [data-design="neu"] .panel-header {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  [data-design="neu"] .panel-header > div:first-child {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-design="neu"] .panel-header h2 {
+    font-size: clamp(24px, 1.95vw, 28px);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+  }
+
+  [data-design="neu"] .panel-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 70ch;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .panel-header { margin-bottom: 20px; }
+}
