@@ -385,3 +385,54 @@
     box-shadow: none !important;
   }
 }
+
+/* ===== Phase 3.6 Felder ===== */
+@media screen {
+  [data-design="neu"] .form-label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--px-text-2, var(--text-muted));
+  }
+
+  [data-design="neu"] :is(.form-input, .form-select, .form-textarea) {
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    min-height: 40px;
+    padding: 9px 12px;
+    box-shadow: none;
+  }
+
+  [data-design="neu"] .form-textarea { min-height: 80px; }
+
+  [data-design="neu"] :is(.form-input, .form-select, .form-textarea):hover {
+    border-color: var(--text-faint);
+  }
+
+  [data-design="neu"] :is(.form-input, .form-select, .form-textarea):focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-dim);
+  }
+
+  [data-design="neu"] :is(.form-input, .form-select, .form-textarea):disabled {
+    background: var(--bg-hover);
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Schalter: ruhiger Track, Bronze nur im Zustand "an". */
+  [data-design="neu"] .toggle-slider {
+    background: var(--border-strong);
+    border-color: transparent;
+  }
+  [data-design="neu"] .toggle-slider::before { background: var(--bg-card-solid); }
+  [data-design="neu"] .toggle-switch input:checked + .toggle-slider {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  [data-design="neu"] .toggle-switch input:checked + .toggle-slider::before {
+    background: var(--bg-card-solid);
+  }
+}
