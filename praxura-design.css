@@ -571,3 +571,18 @@
     background: var(--bg-card-solid);
   }
 }
+
+/* ===== Phase 3.14 Fokusring ===== */
+@media screen {
+  /* Ein Ring statt Ring plus Schatten: dashboard.css 7105 setzt beides mit !important. */
+  [data-design="neu"] :is(button, a, input, select, textarea, .btn-primary, .btn-ghost, .btn-ghost-sm, .btn-outline-sm, .sidebar-item):focus-visible {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+  /* Felder haben ihren eigenen Fokus (Rand + Schein): Ring bleibt, Schein entfällt nicht. */
+  [data-design="neu"] :is(.form-input, .form-select, .form-textarea):focus-visible {
+    outline-offset: 0 !important;
+    box-shadow: 0 0 0 3px var(--primary-dim) !important;
+  }
+}

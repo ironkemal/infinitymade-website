@@ -2,10 +2,10 @@
 
 > Gedächtnis von Claude Code. Nach jedem Paket aktualisieren. Eine neue Sitzung muss allein mit dieser Datei weitermachen können.
 
-**Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten, 3.5 Knöpfe, 3.6 Felder, 3.7 Tabellen, 3.8 Badges, 3.9 Modale, 3.10 Tabs/Filter und 3.11–3.13 Banner/Leerzustände/Toast fertig und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
+**Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten, 3.5 Knöpfe, 3.6 Felder, 3.7 Tabellen, 3.8 Badges, 3.9 Modale, 3.10 Tabs/Filter und 3.11–3.13 Banner/Leerzustände/Toast und 3.14 Fokusring fertig. 3.15 entfällt: komponenten.html ist eine Funktionsübersicht mit eigenem Stil, kein UI-Katalog und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 3 — Bausteine beginnen (Phase 2 bleibt separat offen)
-**Nächster Schritt:** 3.14 Fokusring, 3.15 komponenten.html (3.6–3.13 fertig, rd14); jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich (`vorher-vollbasis7c92`) und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd14`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
+**Nächster Schritt:** 3.2 Seitenleiste (Icon-Leiste, braucht /konsey), dann Phase 4 Übersicht (Konzept zuerst; Daten-/Rollenfragen → Melih). 3.6–3.14 fertig, rd15; jeweils CSS nur unter `[data-design="neu"]`, eigenes Paket/Commit mit T1, `npm test`, Altvergleich (`vorher-vollbasis7c92`) und Neu-Sichtung. Aktuell `praxura-design.css?v=20261024rd15`; nächste Änderung braucht neue Nummer. Phase 2 bleibt separat offen; `dashboard.css` und Feinschliff nicht umschreiben.
 **Wartet auf Melih:** nächste CSS-Pakete frei; vor Phase 4 bei Daten-/Rollenfragen anhalten und Melih fragen. Merge/Live-Test F-01 und Standard-Umschaltung Phase 8 weiterhin ohne Freigabe.
 **Auto-Fortsetzung:** früherer Eintrag: T3-Task alle 2 h in diesem Thread. Scheduler in dieser Fortsetzung nicht live geprüft oder geändert.
 
