@@ -547,3 +547,27 @@
     font-weight: 600;
   }
 }
+
+/* ===== Phase 3.11–3.13 Banner, Leerzustände, Toast ===== */
+@media screen {
+  /* Banner: Tönung statt Signalfarbe; Rand und Fläche aus den Tokens. */
+  [data-design="neu"] .dash-banner { border-radius: 14px; padding: 14px 20px; }
+  [data-design="neu"] .dash-banner.welcome { background: var(--success-dim); border-color: var(--success-dim); }
+  [data-design="neu"] .dash-banner.pending { background: var(--bg-hover); border-color: var(--border); }
+  [data-design="neu"] .dash-banner.trial { background: var(--warning-dim); border-color: var(--warning-dim); }
+  [data-design="neu"] .dash-banner.pastdue { background: var(--danger-dim); border-color: var(--danger-dim); }
+  [data-design="neu"] .dash-banner-action { border-radius: 10px; }
+
+  /* Leerzustände: ein gemeinsamer, ruhiger Ton. */
+  [data-design="neu"] :is(.upcoming-empty, .ov-week-empty-state, .emp-day-empty, .gap-empty, .pd-empty) {
+    color: var(--px-text-2, var(--text-muted));
+  }
+
+  /* Toast: Statusfarbe nur am Rand, Warnung ohne Fremd-Gelb. */
+  [data-design="neu"] .toast { border-radius: 12px; font-size: 14px; }
+  [data-design="neu"] .toast.success { border-left-color: var(--success); }
+  [data-design="neu"] .toast.warning {
+    border-left-color: var(--warning-text);
+    background: var(--bg-card-solid);
+  }
+}
