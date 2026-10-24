@@ -251,3 +251,71 @@
 @media screen and (max-width: 768px) {
   [data-design="neu"] .panel-header { margin-bottom: 20px; }
 }
+
+/* ── 4. Karten (Phase 3.4) ────────────────────────────────────────────── */
+@media screen {
+  [data-design="neu"] .card,
+  [data-design="neu"] .kpi-card,
+  [data-design="neu"] .settings-group,
+  [data-design="neu"] .settings-sections > .settings-section {
+    background: var(--bg-card-solid);
+    border-color: var(--border);
+    border-radius: 16px;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  /* Gegen feste Inline-Abstände an .card in dashboard.html; das Kalender-
+     Widget behält padding: 0, damit Zeilen und Spalten unverändert bleiben. */
+  [data-design="neu"] .card:not(.upcoming-bookings-card) {
+    padding: clamp(24px, 2vw, 32px) !important;
+  }
+
+  [data-design="neu"] .kpi-card { padding: 24px; }
+
+  /* Gegen dashboard.css: .kpi-card:hover erzwingt Anheben und Schatten. */
+  [data-design="neu"] .kpi-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  [data-design="neu"] .card-title { font-weight: 500; }
+  [data-design="neu"] .kpi-value { font-variant-numeric: tabular-nums; }
+
+  [data-design="neu"] .settings-group-label {
+    background: var(--bg-warm);
+    color: var(--primary);
+    padding: 14px 24px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  [data-design="neu"] .settings-section-title {
+    background: transparent;
+    padding: 16px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  [data-design="neu"] .settings-section-body { padding: 24px; }
+}
+
+/* Gegen das Inline-Raster mit auto-fit/minmax(180px): sechs Karten statt
+   einer einsamen letzten Karte in zwei ausgewogenen Reihen. Keine Datenänderung. */
+@media screen and (min-width: 1024px) {
+  [data-design="neu"] #panel-statistik > div:has(> .card > #statPatGesamt) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  /* Gegen dieselben Inline-Abstände: schmale Formulare behalten genug Raum. */
+  [data-design="neu"] .card:not(.upcoming-bookings-card) { padding: 16px !important; }
+  [data-design="neu"] .kpi-card { padding: 20px; }
+  [data-design="neu"] .settings-group-label,
+  [data-design="neu"] .settings-section-title { padding-inline: 16px; }
+  [data-design="neu"] .settings-section-body { padding: 20px 16px; }
+}
