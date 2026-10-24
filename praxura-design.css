@@ -160,3 +160,61 @@
   --px-text-3: #8A919B;
   --px-linie: rgba(255, 255, 255, 0.09);
 }
+
+/* ── 2. Topbar (Phase 3.1) ────────────────────────────────────────────── */
+/* Nur Bildschirm: Druckansichten übernehmen keine neuen Baustein-Maße.
+   --topbar-h bleibt unverändert, damit das Kalender-Raster nicht wandert. */
+@media screen {
+  [data-design="neu"] .topbar {
+    background: var(--bg-topbar);
+    border-bottom-color: var(--border);
+    padding-inline: 24px;
+    box-shadow: none;
+  }
+
+  [data-design="neu"] .topbar-left { gap: 16px; }
+  [data-design="neu"] .topbar-right { gap: 12px; }
+
+  [data-design="neu"] .biz-name {
+    margin-left: 0;
+    font-weight: 400;
+    color: var(--text-muted);
+    opacity: 1;
+  }
+
+  [data-design="neu"] .live-clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  [data-design="neu"] .live-clock::before {
+    animation: none;
+    box-shadow: none;
+  }
+
+  [data-design="neu"] .theme-toggle {
+    background: transparent;
+    border-color: transparent;
+    border-radius: 10px;
+    margin-right: 0;
+  }
+
+  [data-design="neu"] .theme-toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--border);
+    color: var(--text-main);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .topbar { padding-inline: 12px; }
+  [data-design="neu"] .topbar-left { gap: 8px; }
+  [data-design="neu"] .topbar-right { gap: 6px; }
+}
+
+@media screen and (max-width: 480px) {
+  [data-design="neu"] .topbar { padding-inline: 8px; }
+  [data-design="neu"] .topbar-left { gap: 6px; }
+  [data-design="neu"] .topbar-right { gap: 4px; }
+}
