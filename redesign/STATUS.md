@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V1.02 · Schritt: ANALYSE
+- Aktuelles Paket: V1.03 · Schritt: ANALYSE
 - Nicht committete eigene Dateien: keine
-- Cache-Nummern: praxura-design.css ?v=20261025v101
+- Cache-Nummern: praxura-design.css ?v=20261025v102
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V1.02
+- Nächstes Paket: V1.03
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -39,8 +39,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | fertig | 1f6e73ae | Statistik dunkel/390 in `v004alt`, `p37alt`, `p311alt` gegen `vorher-vollbasis7c92` jetzt ⚑ statt ✗, sonst unverändert | 0 |
 | V0.11 | V0 | Kontaktbogen (Übersichtsbild je Lauf) | Werkzeug | T4 | V0.02 | fertig | b1c2b56d | `alt-main-6fd0cce/kontakt-owner-voll-alt-hell-1440.png` 27 Bereiche, 1440×1837, gesichtet | 0 |
 | V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | fertig | 9d366ba7 | T1 grün; npm test 4.087; `npm run probe` 14/14 (Dev-Server mit erfundener Konfiguration, R-16); T4 `v012alt` 159 Bilder 0 ✗; T5 `v012` beide Designs/Rollen 0 neu gegen `smoke-alt-main`, Klick `v012klick` 0 neu gegen `klick-alt-main`; Geometrie `v012` 0 Verstöße; main hatte keine neuen Commits (Fast-Forward). T6 nach Push | 1 (Probe-Konfiguration) |
-| V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | fertig | dieser Commit | Radius-Skala 14/12/10/8/6/4, `--sp-*`, `--shadow-e1..e3` hell/dunkel; alle festen Rundungen in `praxura-design.css` auf Token; T4 `v101alt` 159 Bilder 0 ✗ (1 ⚑); Neu-Kontaktbogen hell/dunkel 1440 gesichtet; Geometrie `v101` 0 Verstöße; Kontrast 7/7 | 0 |
-| V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | offen | | | |
+| V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | fertig | 0f8272f8 | Radius-Skala 14/12/10/8/6/4, `--sp-*`, `--shadow-e1..e3` hell/dunkel; alle festen Rundungen in `praxura-design.css` auf Token; T4 `v101alt` 159 Bilder 0 ✗ (1 ⚑); Neu-Kontaktbogen hell/dunkel 1440 gesichtet; Geometrie `v101` 0 Verstöße; Kontrast 7/7 | 0 |
+| V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | fertig | dieser Commit | `--fs-*`/`--lh-*`; Seitentitel 28/34 500 (Handy 20), Kartentitel 18/24, Kennzahl 28/32, Kennzahl-Beschriftung ohne Versalien, gleich breite Ziffern in Tabellen/Badges; T4 `v102alt` 0 ✗; Geometrie 0; Neu-Kontaktbogen 1440/390 gesichtet | 0 |
 | V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`: Schwarz/Weiß-Hauptknopf, graue Auswahl, ein Blau-Akzent, Signalfarben nur bei Problemen, neutraler Warnbalken), hell + dunkel; alle Espresso/Bronze/Creme-Werte in `praxura-design.css` ersetzen | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | offen | | | |
@@ -99,6 +99,7 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 
 ## 7 Offene Fragen
 - Kemal über Wegfall der Farbregel „jeder Status eigene Farbe“ informieren (Melih). Betrifft erst V8 (Verordnungen/Abrechnung).
+- T6 für Kalender/Verordnungen braucht den Inhaber-Zugang der QA-Praxis („Podologie Nord“) lokal für `canli-test` (liegt nur außerhalb des Repos; Melih fragen, wenn T6 diese Bereiche braucht).
 - An `gkv-302` vor V6.F: eine Fristenregel; darf „≈ €“ Kassenanteil gezeigt werden; Zuzahlung Altsystem; Zählweise Podo-Leistungen.
 
 ## 8 Protokoll (nur anhängen)
@@ -118,7 +119,9 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V0.07: Zustände-Werkzeug (17 Rezepte, Fensterbilder, Ladebilder nur Sichtung); Befund R-15 | `a1a49b0a` | V0.12 |
 | 25.10.2026 | Melih: Farben neu (E11, zweimal geschärft: ruhig, Grau + ein Blau, kein Beige) → V1.03 | `c912b377`, `5e8be2d3` | V0.12 |
 | 25.10.2026 | V0.12: Phasenabschluss V0 grün, Merge nach main (Fast-Forward, `6fd0cce3..9d366ba7`), Push; T6 `canli-test` läuft (Limit-Pause) | `9d366ba7` | V1.01 |
-| 25.10.2026 | V1.01: Radius-/Abstands-/Schatten-Tokens, feste Rundungen ersetzt (`?v=20261025v101`) | dieser Commit | V1.02 |
+| 25.10.2026 | V1.01: Radius-/Abstands-/Schatten-Tokens, feste Rundungen ersetzt (`?v=20261025v101`) | `0f8272f8` | V1.02 |
+| 25.10.2026 | T6 nach V0-Merge: live angekommen (~1,5 min), ohne Schalter 0 Fehler/unverändert, mit `?design=neu` 0 Fehler. Kalender/Verordnungen live nicht prüfbar (nur Mitarbeiterinnen-Zugang lokal) → offene Frage | – | – |
+| 25.10.2026 | V1.02: Schriftstufen (`?v=20261025v102`). Für V1.03 gefunden: `--warning` (Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info` (Oliv), `--today` im Neu-Design noch nicht überschrieben | dieser Commit | V1.03 |
 
 ## 9 Abschluss
 offen

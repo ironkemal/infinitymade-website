@@ -50,6 +50,17 @@
   --radius-xs: 6px;    /* Status-Tags, kleine Icon-Knöpfe */
   --radius-xxs: 4px;   /* Checkbox, Zähler-Chips */
 
+  /* Schriftstufen v2 in px (html/body = 14 px in dashboard.css, darum kein rem).
+     Gewichte: 400 Text, 500 Titel/Zahlen, 600 nur aktiv/sortiert. Kein 700 in neuen Regeln. */
+  --fs-display: 32px; --lh-display: 36px;
+  --fs-h1: 28px;      --lh-h1: 34px;
+  --fs-h2: 20px;      --lh-h2: 26px;
+  --fs-karte: 18px;   --lh-karte: 24px;
+  --fs-kennzahl: 28px; --lh-kennzahl: 32px;
+  --fs-text: 14px;    --lh-text: 20px;
+  --fs-tabelle: 13px; --lh-tabelle: 18px;
+  --fs-meta: 12px;    --lh-meta: 16px;
+
   /* Abstände, Basis 4 px (Designsystem v2, Designer A 2.1) */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
   --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
@@ -246,13 +257,18 @@
     max-width: 100%;
   }
 
+  /* v2 (V1.02): feste Stufe statt clamp(), Gewicht 500 (Designsystem v2, Typografie). */
   [data-design="neu"] .panel-header h2 {
-    font-size: clamp(24px, 1.95vw, 28px);
-    font-weight: 400;
-    line-height: 1.25;
+    font-size: var(--fs-h1);
+    font-weight: 500;
+    line-height: var(--lh-h1);
     letter-spacing: -0.02em;
     margin-bottom: 8px;
     overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 767px) {
+    [data-design="neu"] .panel-header h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); }
   }
 
   [data-design="neu"] .panel-sub {
@@ -294,8 +310,31 @@
     box-shadow: none !important;
   }
 
-  [data-design="neu"] .card-title { font-weight: 500; }
-  [data-design="neu"] .kpi-value { font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .card-title {
+    font-size: var(--fs-karte);
+    line-height: var(--lh-karte);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  [data-design="neu"] .kpi-value {
+    font-size: var(--fs-kennzahl);
+    line-height: var(--lh-kennzahl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Kennzahl-Beschriftung normal geschrieben statt Versalien (keine „Eyebrow“-Überschriften). */
+  [data-design="neu"] .kpi-label {
+    font-size: var(--fs-meta);
+    line-height: var(--lh-meta);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  /* Zahlen, die untereinander stehen, gleich breit (Plus Jakarta Sans ist proportional). */
+  [data-design="neu"] :is(td, th, .badge, .nav-badge, .gap-card-time, .gap-card-dur, .rez-kpi-num) {
+    font-variant-numeric: tabular-nums;
+  }
 
   [data-design="neu"] .settings-group-label {
     background: var(--bg-warm);
@@ -513,7 +552,7 @@
   }
 
   [data-design="neu"] .modal-header { padding: 18px 24px; }
-  [data-design="neu"] .modal-title { font-size: 17px; font-weight: 600; }
+  [data-design="neu"] .modal-title { font-size: var(--fs-karte); line-height: var(--lh-karte); font-weight: 500; }
   [data-design="neu"] .modal-body { padding: 20px 24px; }
   [data-design="neu"] .modal-footer { padding: 16px 24px; }
 
