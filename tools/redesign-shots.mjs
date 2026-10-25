@@ -145,8 +145,9 @@ async function vergleiche() {
   if (!a || !b) { console.error('--vergleich <laufA> <laufB>'); process.exit(2); }
   const dateien = await alleBilder(join(ZIEL, a));
   const diffOrdner = join(ZIEL, `diff-${a}-${b}`);
-  let schlecht = 0, fehlt = 0, rauschen = 0, apiAnders = 0, ohneText = 0;
+  let schlecht = 0, fehlt = 0, rauschen = 0, apiAnders = 0, ohneText = 0, flake = 0;
   const [ka, kb] = [await berichtKarte(a), await berichtKarte(b)];
+  const flakes = JSON.parse(await readFile(join(WURZEL, 'tools', 'redesign-flakes.json'), 'utf8')).flakes;
   for (const rel of dateien) {
     const pb = join(ZIEL, b, rel);
     if (!existsSync(pb)) { fehlt++; console.log(`   ? fehlt in ${b}: ${rel}`); continue; }
@@ -173,8 +174,12 @@ async function vergleiche() {
       // Subpixel versetzt (beobachtet 23.10. in mahnwesen, 1.083 px in einer 12 px hohen Zeile,
       // optisch gleich). Das zählt als Warnung, nicht als Fehler — Diff-Bild trotzdem ansehen.
       const box = rahmen(diff);
+      // Bekannter Flake (tools/redesign-flakes.json): gleicher Text, gleicher Ort, begrenzte Menge.
+      const bekannt = !textAnders && flakes.find((f) => f.bild === rel && box.y >= f.yVon && box.y + box.hoehe <= f.yBis && n <= f.maxPx);
       if (anteil <= 0.001 && box.hoehe <= 24 && !textAnders) {
         rauschen++; console.log(`   ⚠ ${rel}  ${n} px in einem ${box.hoehe} px hohen Streifen (y ${box.y}) — Rauschen?`);
+      } else if (bekannt) {
+        flake++; console.log(`   ⚑ ${rel}  ${n} px, y ${box.y}–${box.y + box.hoehe} — bekannter Flake (${bekannt.quelle.split(';')[0]})`);
       } else {
         schlecht++; console.log(`   ✗ ${rel}  ${n} px (${(anteil * 100).toFixed(3)} %), Bereich y ${box.y}–${box.y + box.hoehe}${textAnders ? ' · Text anders' : ''}`);
       }
@@ -185,7 +190,7 @@ async function vergleiche() {
   for (const r of nurB.slice(0, 20)) console.log(`   + neu in ${b}: ${r}`);
   if (nurB.length > 20) console.log(`   + … und ${nurB.length - 20} weitere neu in ${b}`);
   if (ohneText) console.log(`   (${ohneText} Bildpaare ohne Text-Prüfsumme: Lauf vor V0.04 aufgenommen, Rausch-Regel nur nach Pixeln)`);
-  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen · ${nurB.length} neu in B · ${apiAnders} API anders`
+  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen · ${nurB.length} neu in B · ${apiAnders} API anders · ${flake} bekannte Flakes`
     + (schlecht ? ` · Diff-Bilder: .redesign-shots/diff-${a}-${b}/` : ''));
   process.exit(schlecht || fehlt ? 1 : 0);
 }

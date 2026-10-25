@@ -1,0 +1,13 @@
+{
+  "_zweck": "Bekannte, nachgewiesene Render-Flakes im Bildvergleich (tools/redesign-shots.mjs --vergleich). Eintrag nur nach mindestens 3 Beobachtungen am selben Ort mit gleichem Text (STATUS §5). Greift nur, wenn die Text-Prüfsumme gleich ist, der Diff-Bereich innerhalb von yVon–yBis liegt und höchstens maxPx Pixel abweichen. Nie eine Schwelle erhöhen, um einen echten Fehler zu verdecken.",
+  "flakes": [
+    {
+      "bild": "owner-voll/alt-dunkel-390/17-statistik.png",
+      "yVon": 760,
+      "yBis": 1330,
+      "maxPx": 1600,
+      "quelle": "STATUS-V1 R-11; beobachtet 24.10. (3×: Referenzwechsel, p37alt, p310alt2, p311alt) und 25.10. (v004alt gegen frische Referenz)",
+      "gesehen": 5
+    }
+  ]
+}
