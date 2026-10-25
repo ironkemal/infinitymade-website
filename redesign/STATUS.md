@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: `0a63ce0f` (v1, rd16) · npm test 4.071 grün · Alt 159 Bilder 0 ✗ gegen `vorher-vollbasis7c92`
-- Aktuelles Paket: V0.07 · Schritt: ANALYSE
+- Aktuelles Paket: V0.12 · Schritt: TESTEN (Phasenabschluss V0)
 - Nicht committete eigene Dateien: keine
 - Cache-Nummern: praxura-design.css ?v=20261024rd16
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V0.07
+- Nächstes Paket: V0.12
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -32,8 +32,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.03 | V0 | Harness `--wurzel` + Alt-Referenz aus `origin/main` | Werkzeug | T4 | V0.02 | fertig | 84cadcc9 | `tools/redesign-basis.mjs` → `_basis/6fd0cce`; `alt-main-6fd0cce` 159 Bilder: 0 ✗ / 0 ⚠ / 0 fehlen gegen `vorher-vollbasis7c92` | 0 |
 | V0.04 | V0 | Text-Hash + API-Log je Panel in Shots-Bericht und Vergleich | Werkzeug | T4 | V0.02 | fertig | ab2a5f4c | `alt-main-6fd0cce` mit Prüfsummen neu aufgenommen; gegen `v004alt`: 159 Bilder 0 ✗ / 5 ⚠ (Text gleich) / 0 API anders | 1 (zsh trennt `$x` nicht → Argumente einzeln) |
 | V0.05 | V0 | Smoke: Rolle, Theme, Klick-Navigation, numerischer Überlauf, Design im Schlüssel | Werkzeug | T5 | V0.01 | fertig | 8fd609df | Basis `smoke-alt-main` (main, beide Rollen, 100 Funde); Branch `v005` 0 neu; Klick-Lauf `v005klick`: Inhaberin alle Bereiche per Klick (außer doctors = in Podologie nicht im Menü), Mitarbeiterin ohne Inhaber-Bereiche; Schlüssel ohne Design (neu gegen alt prüfbar), mit Rolle/Theme | 0 |
-| V0.06 | V0 | Fixture: Szenarien `fehler/langsam/gross`, Uhr-Parameter (`--uhr`, Sommerzeit-fest), API-Antworttabelle `API_ANTWORTEN` im Harness (Startseiten-Daten + `/api/startseite` folgen in V6 mit dem Vertrag) | Werkzeug | Fixture | V0.03 | fertig | dieser Commit | Alt `v006alt2` 108 Bilder 0 ✗ gegen Referenz; Szenarien als Kontaktbogen gesichtet (`v006sz`); `--uhr 2026-10-26T07:45+01:00` Termine korrekt 08:00 | 2 (langsam: Start blockiert → Boot-Tabellen ausgenommen; +02:00 fest → Berliner Versatz je Tag) |
-| V0.07 | V0 | Zustände-Werkzeug (laden/leer/fehler, Flyout, Seitenpanel, 1024 px) | Werkzeug | T4 | V0.06 | offen | | | |
+| V0.06 | V0 | Fixture: Szenarien `fehler/langsam/gross`, Uhr-Parameter (`--uhr`, Sommerzeit-fest), API-Antworttabelle `API_ANTWORTEN` im Harness (Startseiten-Daten + `/api/startseite` folgen in V6 mit dem Vertrag) | Werkzeug | Fixture | V0.03 | fertig | 14e631c9 | Alt `v006alt2` 108 Bilder 0 ✗ gegen Referenz; Szenarien als Kontaktbogen gesichtet (`v006sz`); `--uhr 2026-10-26T07:45+01:00` Termine korrekt 08:00 | 2 (langsam: Start blockiert → Boot-Tabellen ausgenommen; +02:00 fest → Berliner Versatz je Tag) |
+| V0.07 | V0 | Zustände-Werkzeug (laden/leer/fehler, Flyout, Seitenpanel, 1024 px) | Werkzeug | T4 | V0.06 | fertig | dieser Commit | `tools/redesign-zustaende.mjs`, 17 Rezepte; `v007` alt+neu: 28 Bilder, Flyout/Seitenpanel/Suche = „fehlt“ (kommen in V2/V3), 0 Fehler; Kontaktbogen gesichtet | 1 (Flyout bei Leistenbreite 0 → „fehlt“ statt Absturz) |
 | V0.08 | V0 | Geometrie-Probe im Harness (Kalender-Slots, Köpfe, Hauptbreite) alt/neu | Werkzeug | T3 | V0.03 | fertig | f39f5854 | `geometrie-v008`: 12 Messungen (alt/neu × 1440/1024/390 × Tag/Woche), Slots 56/28, Kopf 44, 0 Verstöße; Gegenprobe mit manipulierter Datei meldet ✗ | 1 (versteckte Slots) |
 | V0.09 | V0 | Statische Wachen: Scope, `!important`-Kommentar, Cache-Nummer, Auslieferung (Dockerfile/Workflow), Datei-Schrumpf | Werkzeug | T1 | V0.01 | fertig | 904f215d | `tools/redesign-wachen.mjs` grün auf aktuellem Stand; 9 Tests (inkl. echte Dateien: Auslieferung + Scope in `npm test`) | 1 (Kommas in `:is()`) |
 | V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | fertig | 1f6e73ae | Statistik dunkel/390 in `v004alt`, `p37alt`, `p311alt` gegen `vorher-vollbasis7c92` jetzt ⚑ statt ✗, sonst unverändert | 0 |
@@ -78,6 +78,7 @@ Art: Produkt · Werkzeug · Flake · vorbestehend. R-01 bis R-12 siehe `STATUS-V
 | # | Datum | Art | Bereich | Fehler | Ursache | Status | Versuche |
 |---|---|---|---|---|---|---|---|
 | R-13 | 24.10.2026 | Werkzeug | Arbeitsweise | `dashboard.html` durch Python-Einzeiler geleert (`open(p,'w')` vor dem Lesen) | Skript-Überschreiben | behoben (git restore), Regel in §1 | 1 |
+| R-15 | 25.10.2026 | vorbestehend | overview (Mitarbeiterin) | Begrüßung zeigt den Namen der Inhaberin statt der eingeloggten Mitarbeiterin (Bild `v007/zustaende/*/mitarbeiterin-start.png`, Podologie-Bericht A5) | noch nicht untersucht | neue Startseite (V6) nimmt den eigenen Namen; Alt bleibt, Ops-Karte | – |
 | R-14 | 25.10.2026 | vorbestehend | viele Bereiche | Bei Datenbankfehler (Szenario `fehler`) zeigen Patienten, Verordnungen, Kalender, Dashboard leere Listen („Noch keine …“) statt eines Fehlers | Lade-Fehler werden still verschluckt | nicht im Redesign reparieren; neue Startseite (V6) bekommt echte Fehlerzustände; Ops-Karte beim Phasenabschluss | – |
 
 ## 5 Flake-Register
@@ -110,7 +111,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V0.11: Kontaktbogen `tools/redesign-kontaktbogen.mjs` (ohne Testserver) | `b1c2b56d` | V0.05 |
 | 25.10.2026 | V0.05: Smoke mit Rolle/Theme/Klick-Navigation/numerischem Überlauf; Basis `smoke-alt-main`. Für Klick-Vergleiche beim Phasenabschluss einen Klick-Basislauf aus main aufnehmen | `8fd609df` | V0.08 |
 | 25.10.2026 | V0.08: Geometrie-Probe `tools/redesign-geometrie.mjs` (alt/neu, Tag/Woche, 3 Breiten) | `f39f5854` | V0.06 |
-| 25.10.2026 | V0.06: Szenarien fehler/langsam/gross, `--uhr`, `API_ANTWORTEN`; Kontaktbogen aus dem Vergleich ausgenommen; Befund R-14 | dieser Commit | V0.07 |
+| 25.10.2026 | V0.06: Szenarien fehler/langsam/gross, `--uhr`, `API_ANTWORTEN`; Kontaktbogen aus dem Vergleich ausgenommen; Befund R-14 | `14e631c9` | V0.07 |
+| 25.10.2026 | V0.07: Zustände-Werkzeug (17 Rezepte, Fensterbilder, Ladebilder nur Sichtung); Befund R-15 | dieser Commit | V0.12 |
 
 ## 9 Abschluss
 offen
