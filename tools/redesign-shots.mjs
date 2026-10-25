@@ -9,9 +9,12 @@
  *        [--design alt|neu|beide] [--theme hell|dunkel|beide] [--breite 1440,390]
  *        [--panels overview,kunden] [--szenario voll|leer] [--rolle owner]
  *   node tools/redesign-shots.mjs --vergleich vorher nachher [--toleranz 0]
+ *        [--ueberschreiben]  vorhandene Bilder derselben Kombination ersetzen (sonst Abbruch)
  *
  * Bilder landen in .redesign-shots/<lauf>/<rolle>-<szenario>/<design>-<theme>-<breite>/NN-<panel>.png
- * (gitignored). Der Vergleich schreibt Diff-Bilder nach .redesign-shots/diff-<a>-<b>/ und
+ * (gitignored). NN ist die Stelle des Panels in PANELS (nicht in --panels), damit Teil- und
+ * Volläufe dieselben Namen tragen (Ursache von R-10). Teilläufe zeigen trotzdem einen anderen
+ * Navigationszustand: für Abnahmen immer Volläufe vergleichen. Der Vergleich schreibt Diff-Bilder nach .redesign-shots/diff-<a>-<b>/ und
  * endet mit Exit 1, sobald ein Bildpaar mehr als --toleranz Anteil abweichender Pixel hat.
  * Gedacht für „alt vorher“ gegen „alt nachher“: ohne Schalter muss die App gleich bleiben.
  */
@@ -36,11 +39,26 @@ async function aufnehmen() {
   const themes = liste(arg('theme', 'beide'), ['hell', 'dunkel']);
   const breiten = liste(arg('breite', '1440,390'), []).map(Number);
   const panels = arg('panels') ? liste(arg('panels'), []) : PANELS;
+  const unbekannt = panels.filter((p) => !PANELS.includes(p));
+  if (unbekannt.length) { console.error(`unbekannte Panels: ${unbekannt.join(', ')}`); process.exit(2); }
+  const ueberschreiben = process.argv.includes('--ueberschreiben');
   const rolle = arg('rolle', 'owner');
   const szenario = arg('szenario', 'voll');
 
+  // Kein stilles Überschreiben: ein zweiter Lauf mit gleichem Namen hätte eine Referenz ersetzt.
+  for (const design of designs) for (const theme of themes) for (const breite of breiten) {
+    const ordner = join(ZIEL, lauf, `${rolle}-${szenario}`, `${design}-${theme}-${breite}`);
+    const belegt = existsSync(ordner) && (await readdir(ordner)).some((d) => d.endsWith('.png'));
+    if (belegt && !ueberschreiben) {
+      console.error(`.redesign-shots/${relative(ZIEL, ordner)} enthält schon Bilder. Anderen --lauf wählen oder --ueberschreiben.`);
+      process.exit(2);
+    }
+  }
+
   const server = await starteServer();
   const browser = await starteBrowser();
+  const berichtPfad = join(ZIEL, lauf, `${rolle}-${szenario}`, 'bericht.json');
+  const frueher = existsSync(berichtPfad) ? JSON.parse(await readFile(berichtPfad, 'utf8')) : null;
   const bericht = { lauf, zeit: new Date().toISOString(), rolle, szenario, bilder: [] };
   try {
     for (const design of designs) for (const theme of themes) for (const breite of breiten) {
@@ -48,10 +66,10 @@ async function aufnehmen() {
       await mkdir(ordner, { recursive: true });
       const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, rolle, szenario });
       await ruhe(page, 1500); // Einrichtungs-Ring u. ä. erscheinen verzögert
-      for (const [i, panel] of panels.entries()) {
+      for (const panel of panels) {
         const vorher = { k: protokoll.konsole.length, s: protokoll.seitenfehler.length };
         const aktiv = await wechsle(page, panel);
-        const datei = join(ordner, `${String(i + 1).padStart(2, '0')}-${panel}.png`);
+        const datei = join(ordner, `${String(PANELS.indexOf(panel) + 1).padStart(2, '0')}-${panel}.png`);
         if (aktiv) await ganzesPanel(page, breite, datei);
         bericht.bilder.push({ datei: relative(ZIEL, datei), panel, design, theme, breite, aktiv,
           konsole: protokoll.konsole.slice(vorher.k), seitenfehler: protokoll.seitenfehler.slice(vorher.s) });
@@ -62,7 +80,13 @@ async function aufnehmen() {
       process.stdout.write(` ${design}-${theme}-${breite}\n`);
     }
   } finally { await browser.close(); await server.stop(); }
-  await writeFile(join(ZIEL, lauf, `${rolle}-${szenario}`, 'bericht.json'), JSON.stringify(bericht, null, 2));
+  // Mehrere Aufrufe in denselben Lauf (z. B. erst alt, dann neu) ergänzen den Bericht.
+  if (frueher) {
+    const neu = new Set(bericht.bilder.map((b) => b.datei));
+    for (const [k, v] of Object.entries(frueher)) if (k.startsWith('fixture-') && !(k in bericht)) bericht[k] = v;
+    bericht.bilder = [...frueher.bilder.filter((b) => !neu.has(b.datei)), ...bericht.bilder];
+  }
+  await writeFile(berichtPfad, JSON.stringify(bericht, null, 2));
   const inaktiv = bericht.bilder.filter((b) => !b.aktiv).map((b) => b.panel);
   const mitFehler = bericht.bilder.filter((b) => b.konsole.length || b.seitenfehler.length);
   console.log(`${bericht.bilder.length} Bilder → .redesign-shots/${lauf}/${rolle}-${szenario}/`
@@ -125,7 +149,11 @@ async function vergleiche() {
       }
     }
   }
-  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen`
+  // Bilder, die nur in B liegen: kein Fehler (z. B. neue Zustände), aber sichtbar machen.
+  const nurB = existsSync(join(ZIEL, b)) ? (await alleBilder(join(ZIEL, b))).filter((r) => !dateien.includes(r)) : [];
+  for (const r of nurB.slice(0, 20)) console.log(`   + neu in ${b}: ${r}`);
+  if (nurB.length > 20) console.log(`   + … und ${nurB.length - 20} weitere neu in ${b}`);
+  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen · ${nurB.length} neu in B`
     + (schlecht ? ` · Diff-Bilder: .redesign-shots/diff-${a}-${b}/` : ''));
   process.exit(schlecht || fehlt ? 1 : 0);
 }
