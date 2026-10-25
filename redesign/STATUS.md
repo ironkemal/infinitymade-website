@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: `0a63ce0f` (v1, rd16) · npm test 4.071 grün · Alt 159 Bilder 0 ✗ gegen `vorher-vollbasis7c92`
-- Aktuelles Paket: V0.04 · Schritt: ANALYSE
+- Aktuelles Paket: V0.05 · Schritt: TESTEN (Code im Arbeitsbaum, `tools/redesign-smoke.mjs`)
 - Nicht committete eigene Dateien: keine
 - Cache-Nummern: praxura-design.css ?v=20261024rd16
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V0.04
+- Nächstes Paket: V0.05
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -30,12 +30,12 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.01 | V0 | STATUS v2 + `tools/redesign-status-check.mjs` | Werkzeug | Doku | – | fertig | 32fa0183 | status-check grün | 0 |
 | V0.02 | V0 | Shots: Bildnamen nach globaler Panel-Reihenfolge, kein stilles Überschreiben, „neu in B“ melden | Werkzeug | T4 | V0.01 | fertig | f6587dd9 | `v002alt` 159 Bilder 0 ✗ / 2 ⚠ gegen `vorher-vollbasis7c92`; Überschreiben verweigert; Teillauf `v002teil` = 04/17 | 0 |
 | V0.03 | V0 | Harness `--wurzel` + Alt-Referenz aus `origin/main` | Werkzeug | T4 | V0.02 | fertig | 84cadcc9 | `tools/redesign-basis.mjs` → `_basis/6fd0cce`; `alt-main-6fd0cce` 159 Bilder: 0 ✗ / 0 ⚠ / 0 fehlen gegen `vorher-vollbasis7c92` | 0 |
-| V0.04 | V0 | Text-Hash + API-Log je Panel in Shots-Bericht und Vergleich | Werkzeug | T4 | V0.02 | offen | | | |
+| V0.04 | V0 | Text-Hash + API-Log je Panel in Shots-Bericht und Vergleich | Werkzeug | T4 | V0.02 | fertig | dieser Commit | `alt-main-6fd0cce` mit Prüfsummen neu aufgenommen; gegen `v004alt`: 159 Bilder 0 ✗ / 5 ⚠ (Text gleich) / 0 API anders | 1 (zsh trennt `$x` nicht → Argumente einzeln) |
 | V0.05 | V0 | Smoke: Rolle, Theme, Klick-Navigation, numerischer Überlauf, Design im Schlüssel | Werkzeug | T5 | V0.01 | offen | | | |
 | V0.06 | V0 | Fixture: Startseiten-Tabellen, `/api/startseite`-Stub, Szenarien `fehler/langsam/gross`, Uhr-Parameter | Werkzeug | Fixture | V0.03 | offen | | | |
 | V0.07 | V0 | Zustände-Werkzeug (laden/leer/fehler, Flyout, Seitenpanel, 1024 px) | Werkzeug | T4 | V0.06 | offen | | | |
 | V0.08 | V0 | Geometrie-Probe im Harness (Kalender-Slots, Köpfe, Hauptbreite) alt/neu | Werkzeug | T3 | V0.03 | offen | | | |
-| V0.09 | V0 | Statische Wachen: Scope, `!important`-Kommentar, Cache-Nummer, Auslieferung (Dockerfile/Workflow), Datei-Schrumpf | Werkzeug | T1 | V0.01 | fertig | dieser Commit | `tools/redesign-wachen.mjs` grün auf aktuellem Stand; 9 Tests (inkl. echte Dateien: Auslieferung + Scope in `npm test`) | 1 (Kommas in `:is()`) |
+| V0.09 | V0 | Statische Wachen: Scope, `!important`-Kommentar, Cache-Nummer, Auslieferung (Dockerfile/Workflow), Datei-Schrumpf | Werkzeug | T1 | V0.01 | fertig | 904f215d | `tools/redesign-wachen.mjs` grün auf aktuellem Stand; 9 Tests (inkl. echte Dateien: Auslieferung + Scope in `npm test`) | 1 (Kommas in `:is()`) |
 | V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | offen | | | |
 | V0.11 | V0 | Kontaktbogen (Übersichtsbild je Lauf) | Werkzeug | T4 | V0.02 | offen | | | |
 | V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | offen | | | |
@@ -103,7 +103,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V0.01: STATUS v2 + Status-Prüfskript | `32fa0183` | V0.02 |
 | 25.10.2026 | V0.02: Shots-Namen global, kein Überschreiben, Bericht ergänzt statt ersetzt, „neu in B“ | `f6587dd9` | V0.03 |
 | 25.10.2026 | V0.03: `--wurzel` in Harness/Shots/Smoke, `redesign-basis.mjs`, Alt-Referenz `alt-main-6fd0cce` | `84cadcc9` | V0.09 |
-| 25.10.2026 | V0.09: statische Wachen `redesign-wachen.mjs` (+ Test in npm test) | dieser Commit | V0.04 |
+| 25.10.2026 | V0.09: statische Wachen `redesign-wachen.mjs` (+ Test in npm test) | `904f215d` | V0.04 |
+| 25.10.2026 | V0.04: Text-Prüfsummen (Panel, Rahmen) + API-Aufrufe je Bild; Rauschen nur bei gleichem Text; Alt-Referenz neu mit Prüfsummen. Beobachtet: Statistik dunkel/390 (R-11) trat auch zwischen zwei frischen Läufen einmal auf → echtes Rendering-Rauschen, kommt in V0.10 ins Flake-Register | dieser Commit | V0.05 |
 
 ## 9 Abschluss
 offen

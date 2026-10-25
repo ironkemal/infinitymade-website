@@ -22,6 +22,7 @@
  */
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, relative, resolve } from 'node:path';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
@@ -69,11 +70,13 @@ async function aufnehmen() {
       const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, rolle, szenario });
       await ruhe(page, 1500); // Einrichtungs-Ring u. ä. erscheinen verzögert
       for (const panel of panels) {
-        const vorher = { k: protokoll.konsole.length, s: protokoll.seitenfehler.length };
+        const vorher = { k: protokoll.konsole.length, s: protokoll.seitenfehler.length, a: protokoll.api.length };
         const aktiv = await wechsle(page, panel);
         const datei = join(ordner, `${String(PANELS.indexOf(panel) + 1).padStart(2, '0')}-${panel}.png`);
+        const texte = aktiv ? await textHashes(page, panel) : {};
         if (aktiv) await ganzesPanel(page, breite, datei);
-        bericht.bilder.push({ datei: relative(ZIEL, datei), panel, design, theme, breite, aktiv,
+        bericht.bilder.push({ datei: relative(ZIEL, datei), panel, design, theme, breite, aktiv, ...texte,
+          api: protokoll.api.slice(vorher.a),
           konsole: protokoll.konsole.slice(vorher.k), seitenfehler: protokoll.seitenfehler.slice(vorher.s) });
         process.stdout.write(aktiv ? '.' : 'x');
       }
@@ -94,6 +97,22 @@ async function aufnehmen() {
   console.log(`${bericht.bilder.length} Bilder → .redesign-shots/${lauf}/${rolle}-${szenario}/`
     + (inaktiv.length ? `  · nicht erreichbar: ${[...new Set(inaktiv)].join(', ')}` : '')
     + (mitFehler.length ? `  · mit Konsolenfehlern: ${[...new Set(mitFehler.map((b) => b.panel))].join(', ')}` : ''));
+}
+
+/**
+ * Sichtbarer Text als Prüfsumme: Panel und Rahmen (Topbar + Leiste) getrennt.
+ * Warum: Die Rausch-Regel im Vergleich (≤ 0,1 % in ≤ 24 px) würde auch ein geändertes Wort
+ * in einer Zeile als „Rauschen“ durchlassen. Mit gleichem Text ist ein Streifen wirklich
+ * Kantenglättung; mit anderem Text ist er ein Fehler, egal wie klein.
+ */
+async function textHashes(page, panel) {
+  const roh = await page.evaluate((pid) => {
+    const t = (el) => (el ? el.innerText : '').replace(/\s+/g, ' ').trim();
+    return { panel: t(document.getElementById('panel-' + pid)),
+      rahmen: t(document.querySelector('header.topbar')) + ' | ' + t(document.getElementById('sidebar')) };
+  }, panel);
+  const h = (s) => createHash('sha1').update(s).digest('hex').slice(0, 12);
+  return { text: h(roh.panel), rahmenText: h(roh.rahmen) };
 }
 
 /** Das Panel scrollt in #mainArea, nicht im Dokument: Fenster kurz auf volle Höhe ziehen. */
@@ -126,7 +145,8 @@ async function vergleiche() {
   if (!a || !b) { console.error('--vergleich <laufA> <laufB>'); process.exit(2); }
   const dateien = await alleBilder(join(ZIEL, a));
   const diffOrdner = join(ZIEL, `diff-${a}-${b}`);
-  let schlecht = 0, fehlt = 0, rauschen = 0;
+  let schlecht = 0, fehlt = 0, rauschen = 0, apiAnders = 0, ohneText = 0;
+  const [ka, kb] = [await berichtKarte(a), await berichtKarte(b)];
   for (const rel of dateien) {
     const pb = join(ZIEL, b, rel);
     if (!existsSync(pb)) { fehlt++; console.log(`   ? fehlt in ${b}: ${rel}`); continue; }
@@ -137,6 +157,15 @@ async function vergleiche() {
     const diff = new PNG({ width: x.width, height: x.height });
     const n = pixelmatch(x.data, y.data, diff.data, x.width, x.height, { threshold: 0.1, diffColor: [255, 0, 0] });
     const anteil = n / (x.width * x.height);
+    const [ea, eb] = [ka.get(rel), kb.get(rel)];
+    if (!ea?.text || !eb?.text) ohneText++;
+    const textAnders = !!(ea?.text && eb?.text && (ea.text !== eb.text || ea.rahmenText !== eb.rahmenText));
+    if (ea?.api && eb?.api && [...ea.api].sort().join('\n') !== [...eb.api].sort().join('\n')) {
+      apiAnders++; console.log(`   ⚠ API ${rel}: ${ea.api.length} → ${eb.api.length} Aufrufe`);
+    }
+    if (textAnders && anteil <= toleranz) {
+      schlecht++; console.log(`   ✗ ${rel}  Text anders bei gleichem Bild (${ea.text !== eb.text ? 'Panel' : 'Rahmen'})`);
+    }
     if (anteil > toleranz) {
       await mkdir(join(diffOrdner, rel, '..'), { recursive: true });
       await writeFile(join(diffOrdner, rel), PNG.sync.write(diff));
@@ -144,10 +173,10 @@ async function vergleiche() {
       // Subpixel versetzt (beobachtet 23.10. in mahnwesen, 1.083 px in einer 12 px hohen Zeile,
       // optisch gleich). Das zählt als Warnung, nicht als Fehler — Diff-Bild trotzdem ansehen.
       const box = rahmen(diff);
-      if (anteil <= 0.001 && box.hoehe <= 24) {
+      if (anteil <= 0.001 && box.hoehe <= 24 && !textAnders) {
         rauschen++; console.log(`   ⚠ ${rel}  ${n} px in einem ${box.hoehe} px hohen Streifen (y ${box.y}) — Rauschen?`);
       } else {
-        schlecht++; console.log(`   ✗ ${rel}  ${n} px (${(anteil * 100).toFixed(3)} %), Bereich y ${box.y}–${box.y + box.hoehe}`);
+        schlecht++; console.log(`   ✗ ${rel}  ${n} px (${(anteil * 100).toFixed(3)} %), Bereich y ${box.y}–${box.y + box.hoehe}${textAnders ? ' · Text anders' : ''}`);
       }
     }
   }
@@ -155,7 +184,8 @@ async function vergleiche() {
   const nurB = existsSync(join(ZIEL, b)) ? (await alleBilder(join(ZIEL, b))).filter((r) => !dateien.includes(r)) : [];
   for (const r of nurB.slice(0, 20)) console.log(`   + neu in ${b}: ${r}`);
   if (nurB.length > 20) console.log(`   + … und ${nurB.length - 20} weitere neu in ${b}`);
-  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen · ${nurB.length} neu in B`
+  if (ohneText) console.log(`   (${ohneText} Bildpaare ohne Text-Prüfsumme: Lauf vor V0.04 aufgenommen, Rausch-Regel nur nach Pixeln)`);
+  console.log(`\n${dateien.length} Bilder verglichen · ${schlecht} abweichend · ${rauschen} Rauschen · ${fehlt} fehlen · ${nurB.length} neu in B · ${apiAnders} API anders`
     + (schlecht ? ` · Diff-Bilder: .redesign-shots/diff-${a}-${b}/` : ''));
   process.exit(schlecht || fehlt ? 1 : 0);
 }
@@ -169,6 +199,21 @@ function rahmen(diff) {
     }
   }
   return unten < 0 ? { y: 0, hoehe: 0 } : { y: oben, hoehe: unten - oben + 1 };
+}
+
+/** Alle bericht.json eines Laufs: Bildpfad relativ zum Lauf → Eintrag (Text-Prüfsummen, API). */
+async function berichtKarte(lauf) {
+  const karte = new Map();
+  const ordner = join(ZIEL, lauf);
+  if (!existsSync(ordner)) return karte;
+  for (const e of await readdir(ordner, { withFileTypes: true })) {
+    const pfad = join(ordner, e.name, 'bericht.json');
+    if (!e.isDirectory() || !existsSync(pfad)) continue;
+    for (const b of JSON.parse(await readFile(pfad, 'utf8')).bilder || []) {
+      karte.set(b.datei.split('/').slice(1).join('/'), b);
+    }
+  }
+  return karte;
 }
 
 async function alleBilder(ordner, basis = ordner) {
