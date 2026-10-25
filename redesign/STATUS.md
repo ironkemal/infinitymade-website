@@ -2,6 +2,8 @@
 
 > Gedächtnis von Claude Code. Nach jedem Paket aktualisieren. Eine neue Sitzung muss allein mit dieser Datei weitermachen können.
 
+> **25.10.2026: NEUER PLAN v2 → `redesign/PLAN-V2.md`.** Melih will alles deutlich moderner (Struktur, Abläufe, Startseite). Acht Analyseberichte + Entwürfe liegen lokal in `.redesign-shots/plan-v2/`. **Wartet auf Melih: OK für PLAN-V2.** Bis dahin nichts bauen. Nach dem OK: Phase V0 (Werkzeuge) beginnen und diese Datei auf die Struktur aus PLAN-V2 §9 umbauen. Die Phasen 2–8 unten sind durch PLAN-V2 ersetzt; v1-Stand (rd16, `0a63ce0f`) bleibt Grundlage.
+
 **Stand (24.10.2026):** Phase 0 fertig; Phase 1.1–1.5 lokal abgesichert. Phase 3.1 Topbar, 3.3 Panel-Kopf, 3.4 Karten, 3.5 Knöpfe, 3.6 Felder, 3.7 Tabellen, 3.8 Badges, 3.9 Modale, 3.10 Tabs/Filter und 3.11–3.13 Banner/Leerzustände/Toast und 3.14 Fokusring fertig. 3.15 entfällt: komponenten.html ist eine Funktionsübersicht mit eigenem Stil, kein UI-Katalog und einzeln committet. Einzelabnahme der 27 Bereiche und T6 live bleiben offen.
 **Arbeitsort:** Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch **`redesign/praxura-design`** (Melihs Wunsch 23.10.: eigener Worktree). Haupt-Checkout `~/infinitymade-website` nicht anfassen (fremde, nicht gespeicherte Änderungen).
 **Aktuelle Phase:** 3 — Bausteine beginnen (Phase 2 bleibt separat offen)
