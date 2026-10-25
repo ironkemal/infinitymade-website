@@ -1,35 +1,44 @@
-/* Palette v2 „Blau & Kontrast“ (Melih 25.10.2026, PLAN-V2 E11). Rollennamen wie in den Entwürfen (.redesign-shots/plan-v2/*.html); in V1.03 auf die Token von praxura-design.css abgebildet: creme* = Hellblau-Tönung (Auswahl, aktive Navigation, getönter Kopf), primary = Schwarz/Weiß-Hauptknopf, accent = Blau. Alle Text-/Grafik-Paare rechnerisch geprüft (Text ≥ 4,5:1, Grafik ≥ 3:1). */
+/* Palette v2 „Ruhig: Grau + ein Blau“ (Melih 25.10.2026, PLAN-V2 E11, überarbeitet: „nicht so bunt“, kein Beige).
+   Vorbild (Recherche 25.10.): Linear/Vercel fast achromatisch mit einem Akzent; Primer/Atlassian: Banner sparsam,
+   höchstens einer je Seite, Farbe nie allein. Regeln:
+   - Fläche, Text, Linien, Auswahl, aktive Navigation, getönter Kopf: nur Grautöne + Schwarz/Weiß.
+   - EIN Akzent Blau: Fokus, Links, Fortschritt, Hauptreihe im Diagramm, Status „Bereit zur Abrechnung“.
+   - Grün/Bernstein/Rot nur als Text-/Symbolfarbe für Bedeutung; getönte Fläche nur bei Rot (echtes Problem).
+   - Warnbalken: neutrale graue Fläche, nur das Symbol farbig.
+   Rollennamen wie in den Entwürfen (.redesign-shots/plan-v2/*.html); in V1.03 auf die Token von
+   praxura-design.css abgebildet (creme* = neutrale Auswahl-/Kopffläche, primary = Schwarz/Weiß-Hauptknopf,
+   accent = Blau). Text ≥ 4,5:1, Grafik ≥ 3:1 geprüft; chart-3/chart-rest nur als Fläche mit Beschriftung. */
 :root:root{
-  --bg-main:#F4F6F9;--bg-card:#FFFFFF;--bg-elevated:#FFFFFF;--bg-sunken:#EEF1F5;--bg-hover:#F1F4F8;
-  --creme:#E7F0FE;--creme-soft:#F3F7FE;--creme-line:#BFD5FB;
+  --bg-main:#F4F6F9;--bg-card:#FFFFFF;--bg-elevated:#FFFFFF;--bg-sunken:#EEF1F5;--bg-hover:#F2F4F7;
+  --creme:#EEF0F3;--creme-soft:#F8F9FB;--creme-line:#E4E7EC;
   --border:#DDE2E8;--border-subtle:#E8EBEF;--border-strong:#A9B1BC;--border-input:#8A93A0;
   --text-main:#0B0F17;--text-muted:#475467;--text-faint:#5B6474;
   --primary:#0B0F17;--primary-hover:#1F2633;--primary-press:#000000;--on-primary:#FFFFFF;
-  --accent:#2563EB;--bronze:#60A5FA;--champagner:#BFDBFE;--schiefer:#64748B;
-  --focus:#2563EB;--focus-halo:rgba(37,99,235,.25);
-  --st-brand-fg:#1D4ED8;--st-brand-bg:#E5EEFF;--st-brand-line:#B9CCF7;
-  --st-info-fg:#5B21B6;--st-info-bg:#EEE9FE;--st-info-line:#CFC2F7;
-  --st-ok-fg:#166534;--st-ok-bg:#DCF5E5;--st-ok-line:#A7D9B9;
-  --st-neutral-fg:#344054;--st-neutral-bg:#EEF0F3;--st-neutral-line:#C9CED6;
-  --st-warn-fg:#8A4B08;--st-warn-bg:#FEF0C7;--st-warn-line:#F1C46A;
-  --st-bad-fg:#B42318;--st-bad-bg:#FDE7E5;--st-bad-line:#F2B2AB;
-  --chart-1:#2563EB;--chart-2:#0D9488;--chart-3:#8B5CF6;--chart-4:#64748B;--chart-rest:#E2E8F0;
-  --hatch:rgba(11,15,23,.12);--skel-a:#E6EAF0;--skel-b:#F4F6F9;
+  --accent:#2563EB;--bronze:#98A2B3;--champagner:#D0D5DD;--schiefer:#64748B;
+  --focus:#2563EB;--focus-halo:rgba(37,99,235,.22);
+  --st-brand-fg:#344054;--st-brand-bg:#F2F4F7;--st-brand-line:#E4E7EC;
+  --st-info-fg:#1D4ED8;--st-info-bg:#EFF4FF;--st-info-line:#D1E0FF;
+  --st-ok-fg:#067647;--st-ok-bg:#F2F4F7;--st-ok-line:#E4E7EC;
+  --st-neutral-fg:#344054;--st-neutral-bg:#F2F4F7;--st-neutral-line:#E4E7EC;
+  --st-warn-fg:#B54708;--st-warn-bg:#F8F9FB;--st-warn-line:#E4E7EC;
+  --st-bad-fg:#B42318;--st-bad-bg:#FEF3F2;--st-bad-line:#FECDCA;
+  --chart-1:#2563EB;--chart-2:#64748B;--chart-3:#93C5FD;--chart-4:#98A2B3;--chart-rest:#E4E7EC;
+  --hatch:rgba(11,15,23,.10);--skel-a:#E9ECF1;--skel-b:#F4F6F9;
 }
 :root:root[data-theme="dark"]{
   --bg-main:#0B0D12;--bg-card:#14171D;--bg-elevated:#1A1E25;--bg-sunken:#101318;--bg-hover:#1E232B;
-  --creme:#16233A;--creme-soft:#121C2E;--creme-line:#29406A;
+  --creme:#22262F;--creme-soft:#1A1E25;--creme-line:#2F3540;
   --border:#262B33;--border-subtle:#1E232B;--border-strong:#3D4552;--border-input:#6B7482;
   --text-main:#F1F3F6;--text-muted:#A6AEBB;--text-faint:#8A93A0;
   --primary:#FFFFFF;--primary-hover:#E6E9EE;--primary-press:#CDD3DB;--on-primary:#0B0F17;
-  --accent:#60A5FA;--bronze:#3B82F6;--champagner:#1E3A8A;--schiefer:#94A3B8;
-  --focus:#60A5FA;--focus-halo:rgba(96,165,250,.35);
-  --st-brand-fg:#93B8FF;--st-brand-bg:#172540;--st-brand-line:#2C4675;
-  --st-info-fg:#C4B5FD;--st-info-bg:#241B3D;--st-info-line:#463775;
-  --st-ok-fg:#6EE7A0;--st-ok-bg:#11291C;--st-ok-line:#1F5136;
-  --st-neutral-fg:#C3CAD4;--st-neutral-bg:#1E232B;--st-neutral-line:#3D4552;
-  --st-warn-fg:#FBC968;--st-warn-bg:#2E2210;--st-warn-line:#6B4D16;
-  --st-bad-fg:#FCA5A0;--st-bad-bg:#321514;--st-bad-line:#6E2A26;
-  --chart-1:#60A5FA;--chart-2:#2DD4BF;--chart-3:#A78BFA;--chart-4:#94A3B8;--chart-rest:#262B33;
-  --hatch:rgba(241,243,246,.10);--skel-a:#1E232B;--skel-b:#262B33;
+  --accent:#60A5FA;--bronze:#667085;--champagner:#344054;--schiefer:#94A3B8;
+  --focus:#60A5FA;--focus-halo:rgba(96,165,250,.32);
+  --st-brand-fg:#CECFD2;--st-brand-bg:#22262F;--st-brand-line:#2F3540;
+  --st-info-fg:#84ADFF;--st-info-bg:#172036;--st-info-line:#2A3A5E;
+  --st-ok-fg:#47CD89;--st-ok-bg:#22262F;--st-ok-line:#2F3540;
+  --st-neutral-fg:#CECFD2;--st-neutral-bg:#22262F;--st-neutral-line:#2F3540;
+  --st-warn-fg:#FDB022;--st-warn-bg:#1A1E25;--st-warn-line:#2F3540;
+  --st-bad-fg:#F97066;--st-bad-bg:#2B1716;--st-bad-line:#55201C;
+  --chart-1:#60A5FA;--chart-2:#94A3B8;--chart-3:#3B82F6;--chart-4:#475467;--chart-rest:#262B33;
+  --hatch:rgba(241,243,246,.08);--skel-a:#1E232B;--skel-b:#262B33;
 }

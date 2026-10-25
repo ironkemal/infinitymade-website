@@ -41,7 +41,7 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | offen | | | |
 | V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | offen | | | |
 | V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | offen | | | |
-| V1.03 | V1 | Farbrollen v2 nach E11 „Blau & Kontrast“ (`redesign/palette-v2.css`: Schwarz/Weiß-Hauptknopf, Blau-Akzent, Hellblau-Auswahl, Status- und Diagrammfarben), hell + dunkel; alle Espresso/Bronze/Creme-Werte in `praxura-design.css` ersetzen | CSS global | alle (neu) | V1.01 | offen | | | |
+| V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`: Schwarz/Weiß-Hauptknopf, graue Auswahl, ein Blau-Akzent, Signalfarben nur bei Problemen, neutraler Warnbalken), hell + dunkel; alle Espresso/Bronze/Creme-Werte in `praxura-design.css` ersetzen | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | offen | | | |
 | V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | offen | | | |
@@ -93,7 +93,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | Navigation | beschriftete Leiste Standard, eingeklappt Icon-Leiste mit Kurzlabel + Gruppen-Flyout; Leiste 260 px (Kalender-Geometrie) | Team (podoloji, Designer A, Architektur, übereinstimmend) |
 | 25.10.2026 | Modulnamen Startseite | `module/startseite-*.js` (statt `uebersicht-*` aus AUFTRAG 4.5) | Claude |
 | 25.10.2026 | v1-STATUS | nach `redesign/STATUS-V1.md` verschoben, nichts gelöscht | Claude |
-| 25.10.2026 | E11 Farben | keine Beige-/Brauntöne mehr; übliche Dashboard-Farben: Schwarz/Weiß-Kontraste, Blau-Akzent, Hellblau-Auswahl. Nur Farbwerte, Struktur bleibt. Werte `redesign/palette-v2.css` (36 Kontrastpaare geprüft), Vorschau `.redesign-shots/plan-v2/blau-*.png`. Umsetzung in V1.03 | Melih |
+| 25.10.2026 | E11 Farben | keine Beige-/Brauntöne mehr; übliche Dashboard-Farben: Schwarz/Weiß-Kontraste, Blau-Akzent, Hellblau-Auswahl. Nur Farbwerte, Struktur bleibt. Umsetzung in V1.03 | Melih |
+| 25.10.2026 | E11 geschärft | „nicht so bunt“, beiger Warnbalken weg. Nach Recherche (Linear/Vercel achromatisch + ein Akzent; Primer/Atlassian Banner sparsam): Grau + Schwarz/Weiß, **ein** Blau, Signalfarben nur bei Problemen, Warnbalken neutral mit farbigem Symbol. Werte `redesign/palette-v2.css` (überschrieben), Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Hellblau-Variante (`blau-*.png`) verworfen | Melih |
 
 ## 7 Offene Fragen
 - Kemal über Wegfall der Farbregel „jeder Status eigene Farbe“ informieren (Melih). Betrifft erst V8 (Verordnungen/Abrechnung).

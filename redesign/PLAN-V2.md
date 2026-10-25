@@ -15,7 +15,7 @@
 Ein deutlich modernerer, kantigerer Praxura-Arbeitsplatz im Stil der Quicken-Referenz (angelehnt,
 nicht kopiert): ruhige Leiste, klare weiße Karten, **eine Startseite „Heute“**, die einer
 Podologin zwischen zwei Patienten in 3 Sekunden sagt, wer kommt, was offen ist und was zu
-kassieren ist. Farben (E11, 25.10.): übliche Dashboard-Farben statt Beige/Braun: Schwarz/Weiß für Kontrast, Blau als Akzent, Hellblau für Auswahl.
+kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schwarz/Weiß, ein sparsames Blau, Signalfarben nur bei echten Problemen. Kein Beige, kein Braun.
 
 ## 2. Melihs Entscheidungen (25.10.2026, verbindlich)
 
@@ -31,7 +31,7 @@ kassieren ist. Farben (E11, 25.10.): übliche Dashboard-Farben statt Beige/Braun
 | E8 | Dashboard + Überblick = **eine Startseite „Heute“** (Feed und Geburtstagsliste entfallen). |
 | E9 | Angestellte sehen den Zuzahlungs-**Einzelbetrag** ihres Patienten als Aufgabe, keine Summen. |
 | E10 | Geld-Zahl Inhaber: „Bereit zur Abrechnung n VO ≈ €“ + „Kassiert diesen Monat“. Das Wort „Umsatz“ wird nicht verwendet. |
-| E11 | **Farben neu (25.10., ersetzt die Espresso/Bronze/Creme-Palette):** keine Beige-/Brauntöne mehr, sondern übliche Dashboard-Farben: Schwarz/Weiß-Kontraste (Hauptknopf schwarz, im Dunkelmodus weiß), Blau als Akzent (Links, Fokus, Fortschritt, Diagramm), Hellblau für Auswahl und getönte Köpfe. Nur Farbwerte ändern sich; Struktur, Formsprache und Abläufe bleiben. Vorschau: `.redesign-shots/plan-v2/blau-*.png`, Werte (Rollennamen der Entwürfe, maßgeblich für V1.03): `redesign/palette-v2.css`. Logo-Datei bleibt unverändert. |
+| E11 | **Farben neu (25.10., zweimal geschärft; ersetzt Espresso/Bronze/Creme):** nicht bunt, kein Beige. Vorbild nach Recherche: Linear/Vercel (fast achromatisch, ein Akzent), Primer/Atlassian (Banner sparsam, höchstens einer je Seite, Farbe nie allein). Flächen, Text, Linien, Auswahl, aktive Navigation, getönter Kopf: nur Grau + Schwarz/Weiß. Hauptknopf schwarz (dunkel: weiß). **Ein** Akzent Blau `#2563EB` für Fokus, Links, Fortschritt, Hauptreihe im Diagramm und Status „Bereit zur Abrechnung“. Grün/Bernstein/Rot nur als Text-/Symbolfarbe mit Bedeutung; getönte Fläche nur bei Rot. Warnbalken: neutrale Fläche, nur das Symbol farbig, Titel in Haupttextfarbe. Nur Farbwerte ändern sich. Werte: `redesign/palette-v2.css`; Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Logo-Datei bleibt. |
 
 ## 3. Das neue Design
 
@@ -40,13 +40,13 @@ kassieren ist. Farben (E11, 25.10.): übliche Dashboard-Farben statt Beige/Braun
 - **Abstand:** Basis 4 px; Karten-Innenabstand 24, Kartenlücke 20, Seitenrand 32 (Desktop) / 24 / 16.
 - **Raster:** 12 Spalten ≥ 1280 px, 6 Spalten 768–1023, 1 Spalte < 768. Inhalt max. 1480 px.
 - **Form:** Radius Karte 12, Knopf/Feld 8, Status-Tag 6, Checkbox 4. Linien statt Schatten; Schatten nur für Schwebendes (Menü, Dialog, Seitenpanel, Toast). Keine runden Pillen mehr.
-- **Farben (E11, alle Paare rechnerisch geprüft):** Grund `#F4F6F9`, Karte `#FFFFFF`, Haupttext fast schwarz `#0B0F17` (17,7:1), gedämpft `#475467` (7,7:1), Linie `#DDE2E8`, Feldrand `#8A93A0` (3,1:1). Hauptknopf schwarz `#0B0F17` mit weißer Schrift (19:1). Akzent Blau `#2563EB` (5,2:1 auf Weiß) für Links, Fokus, Fortschritt. Auswahl/aktive Navigation/getönter Kopf Hellblau `#E7F0FE` (Text darauf 16,7:1). Dunkel: Grund `#0B0D12`, Karte `#14171D`, Text `#F1F3F6`, Hauptknopf weiß mit schwarzer Schrift, Akzent `#60A5FA`, Tönung `#16233A`.
-- **Akzent sparsam:** Schwarz = Hauptknopf (einer je Ansicht), aktive Filter; Blau = Links, Fokus, Fortschrittsbalken, Hauptreihe im Diagramm; Hellblau = Auswahl, aktive Navigation, getönter Kopf der wichtigsten Karte. Diagramm-Palette: Blau `#2563EB`, Petrol `#0D9488`, Violett `#8B5CF6`, Schiefer `#64748B` (+ Spur `#E2E8F0`), dunkel `#60A5FA`/`#2DD4BF`/`#A78BFA`/`#94A3B8`.
-- **Status (6 Töne + Symbol + Text, Farben nach E11):** bad Rot `#B42318` (Absetzung, Frist verpasst) · warn Bernstein `#8A4B08` (Teilabsetzung, Beginn ≤ 7 Tage) · info Violett `#5B21B6` (Bereit zur Abrechnung) · brand Blau `#1D4ED8` (In Behandlung = Normalfall) · ok Grün `#166534` (Abgerechnet) · neutral/ghost Grau (Bestätigt, Entwurf gestrichelt, Storniert, Archiviert, Abgelehnt). `DATEI_STATUS` (§302-Bildschirm) bleibt, bis `gkv-302` zustimmt.
+- **Farben (E11, alle tragenden Paare rechnerisch geprüft):** Grund `#F4F6F9`, Karte `#FFFFFF`, Haupttext `#0B0F17` (17,7:1), gedämpft `#475467` (7,7:1), Linie `#DDE2E8`, Feldrand `#8A93A0` (3,1:1). Hauptknopf schwarz mit weißer Schrift (19:1). Auswahl/aktive Navigation/getönter Kopf Grau `#EEF0F3` (Text 16,8:1). Akzent Blau `#2563EB` (5,2:1). Dunkel: Grund `#0B0D12`, Karte `#14171D`, Text `#F1F3F6`, Hauptknopf weiß, Akzent `#60A5FA`, Auswahl `#22262F`.
+- **Akzent sparsam:** Schwarz = Hauptknopf (einer je Ansicht), aktive Filter; Blau = Fokus, Links, Fortschrittsbalken, Hauptreihe im Diagramm, „Bereit zur Abrechnung“. Alles andere grau. Diagramm: Blau `#2563EB`, Schiefer `#64748B`, Hellblau `#93C5FD` und Grau nur als beschriftete Fläche, Spur `#E4E7EC`.
+- **Status (Symbol + Text, Farben nach E11):** bad Rot `#B42318` auf zartem Rot (Absetzung, Frist verpasst) · warn Bernstein-Text `#B54708` auf Grau (Teilabsetzung, Beginn ≤ 7 Tage) · info Blau `#1D4ED8` (Bereit zur Abrechnung) · In Behandlung, Bestätigt: Grau (Normalfall) · ok Grün-Text `#067647` auf Grau (Abgerechnet) · neutral/ghost Grau (Bestätigt, Entwurf gestrichelt, Storniert, Archiviert, Abgelehnt). `DATEI_STATUS` (§302-Bildschirm) bleibt, bis `gkv-302` zustimmt.
 - **Dunkelmodus:** eigene Werte, hellere Fläche + Linie statt Schatten. Jede Farbe hell und dunkel geprüft.
 
 ### 3.2 Navigation und App-Shell (Konsens Podologie + Designer A + Architektur)
-- **Standard: beschriftete Leiste** 260 px (Kalender-Geometrie bleibt), weiß, 1 px Linie. Aktiv = Hellblau-Fläche + schwarze Schrift, blaues Symbol, kein Seitenstrich. Einträge 40–44 px hoch.
+- **Standard: beschriftete Leiste** 260 px (Kalender-Geometrie bleibt), weiß, 1 px Linie. Aktiv = graue Fläche + schwarze Schrift, kein Seitenstrich. Einträge 40–44 px hoch.
 - **Eingeklappt: 64–72 px Icon-Leiste** mit Gruppen-Symbol + Kurzlabel, Klick öffnet **Gruppen-Flyout** (Tastatur, Escape, Touch ohne Hover). Zustand pro Nutzer (`sidebar_collapsed`). Statt heute „Breite 0“.
 - **Neue Gruppen (E7, Podologie):** HEUTE (Start, Behandlungen) · TERMINE (Kalender, Anfragen, Warteliste) · PATIENTEN (Patienten, Verordnungen) · ABRECHNUNG (§302, Rechnungen, Zahlungsjournal, Mahnwesen, Auswertungen) · PRAXIS (Team, Verfügbarkeit, Fahrtenbuch, Zuweiser/Ärzte, Leistungen, Patientenpost) · EINSTELLUNGEN (Einstellungen, Vorlagen, Demo, Hilfe). Tägliche Gruppen immer offen. Anamnese, Notizen, Fußbefund, Überblick: Menüzeile ausgeblendet (Registry-Zeile bleibt, `nav-registry.js:7-11`), Zugang über Akte/Behandlung.
 - **Topbar 60 px:** Praxisname · **Suche** (Patient, Verordnung, Rechnung; Taste „/“) · **„+ Neu“** (Termin, Patient, Verordnung erfassen/scannen; „Rezept scannen“ wandert hier hinein) · „Einrichtung 31 %“ beschriftet (bei 100 % weg) · Uhr · Thema · Profil.
@@ -55,7 +55,7 @@ kassieren ist. Farben (E11, 25.10.): übliche Dashboard-Farben statt Beige/Braun
 ### 3.3 Startseite „Heute“ (Podologie-Rangfolge, Entwurf `startseite.html`)
 | Rang | Karte | Inhaber | Angestellte |
 |---|---|---|---|
-| 1 | **Als Nächstes** (Hellblau-Kopf): Zeit, Name, Leistung, Diagnose, Risiko-Abzeichen, VO „noch 2 von 6“ mit Balken, Zuzahlung; Knopf [Termin starten] bzw. [Fahrt starten]; „danach …“ | ✓ | ✓ (eigene) |
+| 1 | **Als Nächstes** (grau getönter Kopf): Zeit, Name, Leistung, Diagnose, Risiko-Abzeichen, VO „noch 2 von 6“ mit Balken, Zuzahlung; Knopf [Termin starten] bzw. [Fahrt starten]; „danach …“ | ✓ | ✓ (eigene) |
 | 2 | **Zu erledigen**: Doku offen · Zuzahlung offen · Online-Anfragen · Abgesetzt (nur > 0) | ✓ mit Summen | Doku + Zuzahlung je Patient (Einzelbetrag, E9) |
 | 3 | **Termine heute** (hohe linke Karte): Liste je Behandlerin, Zustand rechts (fertig · Doku offen · jetzt · € offen · letzte Einheit · Erstbefund · Hausbesuch), Filter-Chips, Umschalter Liste/Raster | ✓ | ✓ (eigene) |
 | 4 | **Verordnungen – Handlungsbedarf** (2×2): Beginn verpasst · Beginn ≤ 7 Tage ohne Termin · 12-Wochen-Pause droht · ohne Folgetermin; „Alle anzeigen“ → gefilterte Verordnungsliste | ✓ | nur eigene Patienten im Text der Zeile |
