@@ -43,13 +43,13 @@
 /* ── 1. Farben und Maße ─────────────────────────────────────────────────── */
 
 :root[data-design="neu"] {
-  /* v2 (PLAN-V2 E6, Melih 25.10.: kantiger, mehr Kontrast): kleinere Rundungen als v1 (16). */
-  --radius: 12px;      /* Karten, Tabellenrahmen, Dialog, Seitenpanel */
-  --radius-xl: 14px;   /* höchstens eine Hauptkarte je Seite */
-  --radius-md: 10px;   /* Mini-Karten, Banner, Toast */
-  --radius-sm: 8px;    /* Knöpfe, Felder, Segment, Filter, Menüpunkte */
-  --radius-xs: 6px;    /* Status-Tags, kleine Icon-Knöpfe */
-  --radius-xxs: 4px;   /* Checkbox, Zähler-Chips */
+  /* v3 (PLAN-V2 E12, Melih 25.10.: übersichtlicher, runder, wärmer – nicht über Farben). */
+  --radius: 18px;      /* Karten, Tabellenrahmen, Dialog, Seitenpanel */
+  --radius-xl: 22px;   /* höchstens eine Hauptkarte je Seite */
+  --radius-md: 14px;   /* Mini-Karten, Banner, Toast */
+  --radius-sm: 12px;   /* Knöpfe, Felder, Segment, Menüpunkte */
+  --radius-xs: 999px;  /* Status-Tags, Filter-Chips: Pille */
+  --radius-xxs: 6px;   /* Checkbox, Zähler-Chips */
 
   /* Schriftstufen v2 in px (html/body = 14 px in dashboard.css, darum kein rem).
      Gewichte: 400 Text, 500 Titel/Zahlen, 600 nur aktiv/sortiert. Kein 700 in neuen Regeln. */
@@ -91,10 +91,10 @@
   --bg-warm: #F2F4F7;                /* betonte Kartenköpfe: neutral statt Creme */
 
   /* Linien */
-  --border: #DDE2E8;
+  --border: #E6E9EE;                 /* E12: Linie leiser, Schatten trägt die Kante */
   --border-strong: #A9B1BC;
-  --border-color: #DDE2E8;
-  --border-subtle: #E8EBEF;
+  --border-color: #E6E9EE;
+  --border-subtle: #EEF1F4;
   --border-input: #8A93A0;           /* Feldrand 3,1:1 (WCAG 1.4.11) */
 
   /* Schrift */
@@ -150,7 +150,7 @@
 
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
   /* Höhenstufen v2: Linien statt Schatten; Schatten nur für Schwebendes */
-  --shadow-e1: 0 1px 1px rgba(17, 24, 39, 0.04);                                        /* Karte */
+  --shadow-e1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px -8px rgba(16, 24, 40, 0.08); /* Karte, weich (E12) */
   --shadow-e2: 0 8px 24px -6px rgba(17, 24, 39, 0.16), 0 2px 6px rgba(17, 24, 39, 0.06); /* Menü, Toast, Popover */
   --shadow-e3: 0 24px 56px -12px rgba(17, 24, 39, 0.30);                                /* Dialog, Seitenpanel */
 
@@ -176,10 +176,10 @@
   --bg-hover: #1E232B;
   --bg-warm: #1A1E25;
 
-  --border: #262B33;
+  --border: #22262E;
   --border-strong: #3D4552;
-  --border-color: #262B33;
-  --border-subtle: #1E232B;
+  --border-color: #22262E;
+  --border-subtle: #1C2027;
   --border-input: #6B7482;
 
   --text-main: #F1F3F6;
@@ -229,7 +229,7 @@
   --grid-quarter: rgba(255, 255, 255, 0.03);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-e1: 0 1px 1px rgba(0, 0, 0, 0.30);
+  --shadow-e1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 8px 24px -10px rgba(0, 0, 0, 0.50);
   --shadow-e2: 0 8px 24px -6px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.30);
   --shadow-e3: 0 24px 56px -12px rgba(0, 0, 0, 0.70);
 
@@ -346,7 +346,7 @@
     background: var(--bg-card-solid);
     border-color: var(--border);
     border-radius: var(--radius);
-    box-shadow: none;
+    box-shadow: var(--shadow-e1);   /* E12: weicher Schatten statt harter Linie */
     backdrop-filter: none;
   }
 
@@ -550,7 +550,7 @@
   [data-design="neu"] .table-wrap {
     background: var(--bg-card-solid);
     border-radius: var(--radius);
-    box-shadow: none;
+    box-shadow: var(--shadow-e1);
   }
 
   [data-design="neu"] .data-table th {
