@@ -62,6 +62,14 @@
   --fs-tabelle: 13px; --lh-tabelle: 18px;
   --fs-meta: 12px;    --lh-meta: 16px;
 
+  /* Bewegung v2: kurz und ohne Nachschwingen. „Bewegung reduzieren“ schaltet dashboard.css
+     (7139) schon global ab; dessen Nebenwirkung auf die mobile Leiste (R-01) löst V2.11. */
+  --dur-schnell: 120ms;   /* Hover, Fokus */
+  --dur: 180ms;           /* Aufklappen, Menü, Flyout */
+  --dur-lang: 240ms;      /* Seitenpanel, Dialog */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --transition: var(--dur-schnell) var(--ease-standard);   /* v1/dashboard.css: 0.2s ease */
+
   /* Abstände, Basis 4 px (Designsystem v2, Designer A 2.1) */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
   --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
