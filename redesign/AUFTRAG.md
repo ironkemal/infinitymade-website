@@ -1,5 +1,7 @@
 # AUFTRAG: Praxura-Redesign (für Claude Code)
 
+> **Ab 25.10.2026 gilt `redesign/PLAN-V2.md`** (Melihs OK): Ziel, Phasen (V0–V10), Entscheidungen E1–E10 und Stopp-Punkte stehen dort und gehen dieser Datei vor. Weiter gültig aus dieser Datei: Schleife 3.3, Teststufen (Abschnitt 6), Reparatur-Regeln, Kontext sparen (8), Pflichten (10). Fortschritt nur in `redesign/STATUS.md` (Paketliste).
+
 > **Start-Satz für Melih im Terminal:**
 > `Lies redesign/AUFTRAG.md und führe den Auftrag vollständig aus: analysieren, planen, bauen, testen, reparieren – bis redesign/STATUS.md komplett erledigt ist.`
 >
