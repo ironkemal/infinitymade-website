@@ -36,8 +36,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.07 | V0 | Zustände-Werkzeug (laden/leer/fehler, Flyout, Seitenpanel, 1024 px) | Werkzeug | T4 | V0.06 | offen | | | |
 | V0.08 | V0 | Geometrie-Probe im Harness (Kalender-Slots, Köpfe, Hauptbreite) alt/neu | Werkzeug | T3 | V0.03 | offen | | | |
 | V0.09 | V0 | Statische Wachen: Scope, `!important`-Kommentar, Cache-Nummer, Auslieferung (Dockerfile/Workflow), Datei-Schrumpf | Werkzeug | T1 | V0.01 | fertig | 904f215d | `tools/redesign-wachen.mjs` grün auf aktuellem Stand; 9 Tests (inkl. echte Dateien: Auslieferung + Scope in `npm test`) | 1 (Kommas in `:is()`) |
-| V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | fertig | dieser Commit | Statistik dunkel/390 in `v004alt`, `p37alt`, `p311alt` gegen `vorher-vollbasis7c92` jetzt ⚑ statt ✗, sonst unverändert | 0 |
-| V0.11 | V0 | Kontaktbogen (Übersichtsbild je Lauf) | Werkzeug | T4 | V0.02 | offen | | | |
+| V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | fertig | 1f6e73ae | Statistik dunkel/390 in `v004alt`, `p37alt`, `p311alt` gegen `vorher-vollbasis7c92` jetzt ⚑ statt ✗, sonst unverändert | 0 |
+| V0.11 | V0 | Kontaktbogen (Übersichtsbild je Lauf) | Werkzeug | T4 | V0.02 | fertig | dieser Commit | `alt-main-6fd0cce/kontakt-owner-voll-alt-hell-1440.png` 27 Bereiche, 1440×1837, gesichtet | 0 |
 | V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | offen | | | |
 | V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | offen | | | |
 | V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | offen | | | |
@@ -105,7 +105,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V0.03: `--wurzel` in Harness/Shots/Smoke, `redesign-basis.mjs`, Alt-Referenz `alt-main-6fd0cce` | `84cadcc9` | V0.09 |
 | 25.10.2026 | V0.09: statische Wachen `redesign-wachen.mjs` (+ Test in npm test) | `904f215d` | V0.04 |
 | 25.10.2026 | V0.04: Text-Prüfsummen (Panel, Rahmen) + API-Aufrufe je Bild; Rauschen nur bei gleichem Text; Alt-Referenz neu mit Prüfsummen. Beobachtet: Statistik dunkel/390 (R-11) trat auch zwischen zwei frischen Läufen einmal auf → echtes Rendering-Rauschen, kommt in V0.10 ins Flake-Register | `ab2a5f4c` | V0.05 |
-| 25.10.2026 | V0.10: Flake-Register (Statistik dunkel/390 = ⚑) | dieser Commit | V0.05 (Smoke-Läufe laufen) |
+| 25.10.2026 | V0.10: Flake-Register (Statistik dunkel/390 = ⚑) | `1f6e73ae` | V0.05 (Smoke-Läufe laufen) |
+| 25.10.2026 | V0.11: Kontaktbogen `tools/redesign-kontaktbogen.mjs` (ohne Testserver) | dieser Commit | V0.05 |
 
 ## 9 Abschluss
 offen
