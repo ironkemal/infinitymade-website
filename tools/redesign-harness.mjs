@@ -40,13 +40,16 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 /** Statischer Server nur für diesen Checkout. Fester Port (REDESIGN_PORT, Standard 18081), weil die
  *  Adresse in Bildern sichtbar wird (z. B. QR-Code der Mitarbeiter-App) — ein Zufallsport
- *  erzeugte bei jedem Lauf einen Pixel-Diff. */
-export async function starteServer() {
+ *  erzeugte bei jedem Lauf einen Pixel-Diff.
+ *  `wurzel`: anderer Code-Stand, z. B. ein ausgepacktes `origin/main` (tools/redesign-basis.mjs)
+ *  für die Alt-Referenz. Fixture und Werkzeuge kommen immer aus diesem Checkout. */
+export async function starteServer({ wurzel = WURZEL } = {}) {
+  const basisOrdner = normalize(wurzel);
   const server = createServer(async (req, res) => {
     try {
       const pfad = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-      const datei = normalize(join(WURZEL, pfad === '/' ? '/dashboard.html' : pfad));
-      if (!datei.startsWith(WURZEL)) { res.writeHead(403); res.end(); return; }
+      const datei = normalize(join(basisOrdner, pfad === '/' ? '/dashboard.html' : pfad));
+      if (!datei.startsWith(basisOrdner)) { res.writeHead(403); res.end(); return; }
       if (!(await stat(datei)).isFile()) throw new Error('kein File');
       res.writeHead(200, { 'Content-Type': MIME[extname(datei)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
       res.end(await readFile(datei));

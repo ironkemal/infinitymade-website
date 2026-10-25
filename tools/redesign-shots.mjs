@@ -10,6 +10,8 @@
  *        [--panels overview,kunden] [--szenario voll|leer] [--rolle owner]
  *   node tools/redesign-shots.mjs --vergleich vorher nachher [--toleranz 0]
  *        [--ueberschreiben]  vorhandene Bilder derselben Kombination ersetzen (sonst Abbruch)
+ *        [--wurzel <ordner>]  anderen Code-Stand ausliefern (Alt-Referenz aus origin/main,
+ *                             siehe tools/redesign-basis.mjs)
  *
  * Bilder landen in .redesign-shots/<lauf>/<rolle>-<szenario>/<design>-<theme>-<breite>/NN-<panel>.png
  * (gitignored). NN ist die Stelle des Panels in PANELS (nicht in --panels), damit Teil- und
@@ -20,7 +22,7 @@
  */
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import { PANELS, WURZEL, oeffneDashboard, starteBrowser, starteServer, wechsle, fixtureLog, ruhe } from './redesign-harness.mjs';
@@ -55,7 +57,7 @@ async function aufnehmen() {
     }
   }
 
-  const server = await starteServer();
+  const server = await starteServer({ wurzel: arg('wurzel') ? resolve(arg('wurzel')) : undefined });
   const browser = await starteBrowser();
   const berichtPfad = join(ZIEL, lauf, `${rolle}-${szenario}`, 'bericht.json');
   const frueher = existsSync(berichtPfad) ? JSON.parse(await readFile(berichtPfad, 'utf8')) : null;

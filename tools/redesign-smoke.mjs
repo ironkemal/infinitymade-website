@@ -11,6 +11,7 @@
  *   node tools/redesign-smoke.mjs --lauf vorher [--design alt|neu|beide] [--breite 1440,390]
  *        [--szenario voll|leer|beide] [--panels a,b]
  *   node tools/redesign-smoke.mjs --lauf nachher --gegen vorher
+ *   [--wurzel <ordner>]  anderen Code-Stand ausliefern (siehe tools/redesign-basis.mjs)
  *
  * Mit --gegen zählen nur Funde, die es im Vergleichslauf (gleiches Panel,
  * gleiche Breite, gleiches Szenario) noch nicht gab: Exit 1, wenn es welche gibt.
@@ -18,7 +19,7 @@
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { PANELS, WURZEL, oeffneDashboard, ruhe, starteBrowser, starteServer, wechsle, fixtureLog } from './redesign-harness.mjs';
 
 const ZIEL = join(WURZEL, '.redesign-shots');
@@ -38,7 +39,7 @@ const grund = (e) => { const z = String(e.message).split('\n'); return [z[0], z.
 // Zahlen, Ports und IDs aus Meldungen nehmen, damit „gleicher Fehler“ erkennbar bleibt.
 const norm = (t) => String(t).replace(/:\d{2,5}\b/g, ':P').replace(/\b[0-9a-f]{8}-[0-9a-f-]{27}\b/g, 'UUID').replace(/\d+/g, 'N');
 
-const server = await starteServer();
+const server = await starteServer({ wurzel: arg('wurzel') ? resolve(arg('wurzel')) : undefined });
 const browser = await starteBrowser();
 const ergebnis = { lauf, zeit: new Date().toISOString(), funde: [] };
 try {
