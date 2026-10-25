@@ -1,0 +1,21 @@
+/* ============================================================================
+   design/shell.css — App-Shell des neuen Designs (Redesign v2, PLAN-V2 Phase V2)
+   ============================================================================
+
+   Warum ein eigener Ordner
+   ────────────────────────
+   praxura-design.css bleibt die Schicht für Token und Bausteine. Die Struktur
+   des neuen Designs (Leiste über volle Höhe, Icon-Leiste mit Flyout, Kopfleiste,
+   mobile Schublade) kommt in eigene Dateien unter design/, damit jede Schicht
+   klein und prüfbar bleibt (Architektur-Bericht 25.10.2026, Abschnitt 4).
+   Reihenfolge in dashboard.html: dashboard.css → dashboard-feinschliff.css →
+   praxura-design.css → design/shell.css → (später seiten.css, startseite.css).
+
+   Regeln
+   ──────
+   - Alles nur unter [data-design="neu"] und nur @media screen (Druck bleibt alt).
+     tools/redesign-wachen.mjs prüft den Scope und die Auslieferung.
+   - Ausgeliefert über onprem/frontend.Dockerfile (COPY design ./design) und
+     .github/workflows/publish-frontend.yml (design/**). Vercel liefert den Ordner aus.
+   - Jede Änderung: neue ?v=-Nummer in dashboard.html.
+   ========================================================================== */

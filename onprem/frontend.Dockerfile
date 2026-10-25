@@ -113,6 +113,8 @@ COPY sentry-init.js supabase-config.js ./
 COPY assets/system.css ./assets/system.css
 COPY manifest.json ./
 COPY module ./module
+# Redesign v2: Struktur-Schichten des neuen Designs (nur aktiv mit ?design=neu), PLAN-V2 V2.01.
+COPY design ./design
 
 # ── Vendor — lokalisiert, CDN-Rückkehr verboten (Konsey 2026-08-13 S3) ──────
 COPY vendor ./vendor

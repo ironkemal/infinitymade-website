@@ -42,6 +42,7 @@ on:
       - 'assets/system.css'
       - 'manifest.json'
       - 'module/**'
+      - 'design/**'
       - 'vendor/**'
       - 'fonts/**'
       - 'assets/img/foot/**'
