@@ -24,12 +24,13 @@
    `:root[data-design="neu"][data-theme="dark"]` (0,3,0) — gewinnt ohne
    `!important`. Bausteine später mit `[data-design="neu"] .klasse`.
 
-   Farben: Logo-Töne aus dem Kopf von dashboard-feinschliff.css (gemessen) —
-   Espresso #4F4136, Bronze #A48565, Champagner #C4A381, Creme #F3E4D2.
-   Grund und Text kühl-neutral. Kontraste prüft tools/redesign-kontrast.test.js
-   (Text ≥ 4,5:1). Bronze auf Weiß hat nur 3,4:1 → nie für normalen Text, nur
-   für Linien, Symbole und große Zahlen. Darum ist --accent (wird 18× als
-   Textfarbe benutzt) hier ein dunkleres Bronze.
+   Farben (v2, PLAN-V2 E11, Melih 25.10.2026): ruhig wie Linear/Vercel —
+   Grau + Schwarz/Weiß für Flächen, Text, Linien und Auswahl; EIN Akzent Blau
+   (#2563EB) für Fokus, Links, Fortschritt und „Bereit zur Abrechnung“;
+   Grün/Bernstein/Rot nur mit Bedeutung, getönte Fläche nur bei Rot. Kein
+   Beige/Braun mehr (v1 nutzte die Logo-Töne Espresso/Bronze/Creme). Werte und
+   Herleitung: redesign/palette-v2.css. Kontraste prüft
+   tools/redesign-kontrast.test.js (Text ≥ 4,5:1, Symbole ≥ 3:1).
 
    Nie umfärben (bleiben unberührt): Leistungsfarben der Terminblöcke
    (module/kalender-farben.js), Belege, Rechnungen, PDF/Druck, E-Mail-Vorlagen.
@@ -67,56 +68,79 @@
 }
 
 :root[data-design="neu"]:not([data-theme="dark"]) {
+  /* Palette v2 „ruhig: Grau + ein Blau“ (PLAN-V2 E11, Melih 25.10.; Werte: redesign/palette-v2.css).
+     Flächen, Text, Linien, Auswahl: nur Grau + Schwarz/Weiß. EIN Akzent Blau. Signalfarben nur mit Bedeutung. */
   /* Flächen */
-  --bg-main: #F3F4F6;
+  --bg-main: #F4F6F9;
   --bg-card: #FFFFFF;
   --bg-card-solid: #FFFFFF;
   --bg-topbar: #FFFFFF;
   --bg-sidebar: #FFFFFF;
   --bg-input: #FFFFFF;
-  --bg-elevated: #FFFFFF;            /* war nirgends definiert */
-  --bg-hover: rgba(17, 24, 39, 0.04);
-  --bg-warm: #F6EEE4;                /* zart Creme: betonte Kartenköpfe */
+  --bg-elevated: #FFFFFF;
+  --bg-sunken: #EEF1F5;              /* Tabellenkopf, Segment-Spur, „Alle anzeigen“-Leiste */
+  --bg-hover: #F2F4F7;
+  --bg-warm: #F2F4F7;                /* betonte Kartenköpfe: neutral statt Creme */
 
   /* Linien */
-  --border: #E5E7EB;
-  --border-strong: #D1D5DB;
-  --border-color: #E5E7EB;           /* war nirgends definiert */
-  --border-subtle: #EEF0F3;          /* war nirgends definiert */
+  --border: #DDE2E8;
+  --border-strong: #A9B1BC;
+  --border-color: #DDE2E8;
+  --border-subtle: #E8EBEF;
+  --border-input: #8A93A0;           /* Feldrand 3,1:1 (WCAG 1.4.11) */
 
   /* Schrift */
-  --text-main: #1F2328;              /* 14,4:1 auf Grund */
-  --text-muted: #5F6672;             /* 5,3:1 auf Grund */
-  --text-sub: #5F6672;               /* war nirgends definiert, gleiche Rolle wie muted */
-  --text-faint: #69707B;             /* 4,5:1 auf Grund — vorher 2,1:1 */
+  --text-main: #0B0F17;              /* fast schwarz, 17,7:1 auf Grund */
+  --text-muted: #475467;             /* 7,7:1 auf Weiß */
+  --text-sub: #475467;
+  --text-faint: #5B6474;             /* 6,0:1 auf Weiß */
 
-  /* Akzent */
-  --primary: #4F4136;                /* Espresso */
-  --primary-hover: #3B3028;
-  --primary-dim: #F6EEE4;            /* Creme statt durchscheinendem Grün */
-  --primary-h: 27;                   /* für hsla(var(--primary-h) …) — war nirgends definiert */
-  --primary-s: 19%;
-  --primary-l: 26%;
-  --accent: #7A5F45;                 /* dunkles Bronze, 5,4:1 — als Text tauglich */
-  --nav-active: #F6EEE4;
-  --bronze: #A48565;
-  --highlight: #C4A381;
-  --focus-ring: #A48565;
+  /* Hauptfarbe = Schwarz (Knopf, aktiver Filter), Akzent = Blau */
+  --primary: #0B0F17;
+  --primary-hover: #1F2633;
+  --primary-dim: #EEF0F3;            /* Auswahl, aktive Navigation: grau statt Creme */
+  --primary-h: 220;                  /* für hsla(var(--primary-h) …) */
+  --primary-s: 35%;
+  --primary-l: 7%;
+  --accent: #2563EB;                 /* Links, Akzenttext, 5,2:1 auf Weiß */
+  --nav-active: #EEF0F3;
+  --bronze: #64748B;                 /* Grafik/Symbole (Name aus v1), Schiefergrau 4,8:1 */
+  --highlight: #D0D5DD;              /* Zierfläche, ohne Kontrastpflicht */
+  --focus-ring: #2563EB;
+  --focus-halo: rgba(37, 99, 235, 0.22);
 
-  /* Bedeutung */
-  --success: #2F6B4A;
-  --danger: #9C3A3A;
-  --danger-bg: rgba(156, 58, 58, 0.08);        /* war nirgends definiert */
-  --warning-text: #8A6A2F;
-  --warning-bg: rgba(201, 168, 118, 0.12);     /* war nirgends definiert; 0.12 hält --warning-text ≥ 4,5:1 */
-  --warning-border: rgba(138, 106, 47, 0.35);  /* war nirgends definiert */
+  /* Bedeutung: Farbe nur, wo sie etwas sagt */
+  --success: #067647;
+  --success-dim: #F2F4F7;            /* keine grüne Fläche, nur grüner Text/Symbol */
+  --danger: #B42318;
+  --danger-dim: #FEF3F2;             /* einzige getönte Signalfläche: echtes Problem */
+  --danger-bg: #FEF3F2;
+  --warning: #DC6803;                /* Warnsymbol (statt Beige #D9BD8A), Grafik 3,3:1 */
+  --warning-text: #B54708;           /* 4,9:1 auf Grau */
+  --warning-dim: #F8F9FB;            /* Warnbalken neutral, nicht beige */
+  --warning-bg: #F8F9FB;
+  --warning-border: #E4E7EC;
+  --info: #1D4ED8;                   /* statt Oliv */
+  --today: #D92D20;                  /* Jetzt-Linie im Kalender */
+  --fc-today-bg-color: rgba(17, 24, 39, 0.025);
 
-  /* Kalender-Raster neutral statt warm */
+  /* Status (Text, Fläche, Linie) für Verordnungen/Abrechnung (V8, gkv-302) */
+  --st-brand-fg: #344054; --st-brand-bg: #F2F4F7; --st-brand-line: #E4E7EC;
+  --st-info-fg: #1D4ED8;  --st-info-bg: #EFF4FF;  --st-info-line: #D1E0FF;
+  --st-ok-fg: #067647;    --st-ok-bg: #F2F4F7;    --st-ok-line: #E4E7EC;
+  --st-neutral-fg: #344054; --st-neutral-bg: #F2F4F7; --st-neutral-line: #E4E7EC;
+  --st-warn-fg: #B54708;  --st-warn-bg: #F8F9FB;  --st-warn-line: #E4E7EC;
+  --st-bad-fg: #B42318;   --st-bad-bg: #FEF3F2;   --st-bad-line: #FECDCA;
+
+  /* Diagramme: Blau trägt den Hauptwert, sonst Grau (chart-3 und Spur nur beschriftet) */
+  --chart-1: #2563EB; --chart-2: #64748B; --chart-3: #93C5FD; --chart-4: #98A2B3; --chart-rest: #E4E7EC;
+
+  /* Kalender-Raster neutral */
   --grid-hour: rgba(17, 24, 39, 0.10);
   --grid-half: rgba(17, 24, 39, 0.05);
   --grid-quarter: rgba(17, 24, 39, 0.035);
 
-  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);  /* war nirgends definiert */
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
   /* Höhenstufen v2: Linien statt Schatten; Schatten nur für Schwebendes */
   --shadow-e1: 0 1px 1px rgba(17, 24, 39, 0.04);                                        /* Karte */
   --shadow-e2: 0 8px 24px -6px rgba(17, 24, 39, 0.16), 0 2px 6px rgba(17, 24, 39, 0.06); /* Menü, Toast, Popover */
@@ -124,51 +148,73 @@
 
   /* Eigene Namen für feste Hex-Farben aus dashboard.html (Phase 2): im alten Design
      nicht definiert → der Fallback im var() greift, Bild bleibt pixelgleich. */
-  --px-ok: #2F6B4A;
-  --px-fehler: #9C3A3A;
-  --px-fehler-rand: #E3B5B5;
-  --px-text-2: #5F6672;
-  --px-text-3: #69707B;
-  --px-linie: #E5E7EB;
+  --px-ok: #067647;
+  --px-fehler: #B42318;
+  --px-fehler-rand: #FECDCA;
+  --px-text-2: #475467;
+  --px-text-3: #5B6474;
+  --px-linie: #DDE2E8;
 }
 
 :root[data-design="neu"][data-theme="dark"] {
-  --bg-main: #121417;
-  --bg-card: #1B1E23;
-  --bg-card-solid: #1B1E23;
-  --bg-topbar: #1B1E23;
-  --bg-sidebar: #16191D;
-  --bg-input: #16191D;
-  --bg-elevated: #22262C;
-  --bg-hover: rgba(255, 255, 255, 0.05);
-  --bg-warm: rgba(201, 171, 143, 0.08);
+  --bg-main: #0B0D12;
+  --bg-card: #14171D;
+  --bg-card-solid: #14171D;
+  --bg-topbar: #14171D;
+  --bg-sidebar: #101318;
+  --bg-input: #101318;
+  --bg-elevated: #1A1E25;
+  --bg-sunken: #101318;
+  --bg-hover: #1E232B;
+  --bg-warm: #1A1E25;
 
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --border-color: rgba(255, 255, 255, 0.09);
-  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border: #262B33;
+  --border-strong: #3D4552;
+  --border-color: #262B33;
+  --border-subtle: #1E232B;
+  --border-input: #6B7482;
 
-  --text-main: #ECEDEF;
-  --text-muted: #A3A9B3;
-  --text-sub: #A3A9B3;
-  --text-faint: #8A919B;
+  --text-main: #F1F3F6;
+  --text-muted: #A6AEBB;
+  --text-sub: #A6AEBB;
+  --text-faint: #8A93A0;
 
-  --primary: #C9AB8F;
-  --primary-hover: #DCC4A8;
-  --primary-dim: rgba(201, 171, 143, 0.14);
-  --primary-h: 29;
-  --primary-s: 34%;
-  --primary-l: 67%;
-  --accent: #C9AB8F;
-  --nav-active: rgba(201, 171, 143, 0.14);
-  --bronze: #C4A381;
-  --highlight: #C9AB8F;
-  --focus-ring: #C9AB8F;
+  /* Hauptknopf weiß mit schwarzer Schrift (Knopf-Regeln nutzen color: var(--bg-card-solid)) */
+  --primary: #F1F3F6;
+  --primary-hover: #D9DEE5;
+  --primary-dim: #22262F;
+  --primary-h: 216;
+  --primary-s: 20%;
+  --primary-l: 95%;
+  --accent: #60A5FA;
+  --nav-active: #22262F;
+  --bronze: #94A3B8;
+  --highlight: #344054;
+  --focus-ring: #60A5FA;
+  --focus-halo: rgba(96, 165, 250, 0.32);
 
-  /* --success/--danger/--warning-text: die vorhandenen Dunkel-Werte aus dashboard.css bleiben */
-  --danger-bg: rgba(217, 138, 138, 0.12);
-  --warning-bg: rgba(217, 189, 138, 0.12);
-  --warning-border: rgba(217, 189, 138, 0.35);
+  --success: #47CD89;
+  --success-dim: #22262F;
+  --danger: #F97066;
+  --danger-dim: #2B1716;
+  --danger-bg: #2B1716;
+  --warning: #FDB022;
+  --warning-text: #FDB022;
+  --warning-dim: #1A1E25;
+  --warning-bg: #1A1E25;
+  --warning-border: #2F3540;
+  --info: #84ADFF;
+  --today: #F97066;
+  --fc-today-bg-color: rgba(255, 255, 255, 0.025);
+
+  --st-brand-fg: #CECFD2; --st-brand-bg: #22262F; --st-brand-line: #2F3540;
+  --st-info-fg: #84ADFF;  --st-info-bg: #172036;  --st-info-line: #2A3A5E;
+  --st-ok-fg: #47CD89;    --st-ok-bg: #22262F;    --st-ok-line: #2F3540;
+  --st-neutral-fg: #CECFD2; --st-neutral-bg: #22262F; --st-neutral-line: #2F3540;
+  --st-warn-fg: #FDB022;  --st-warn-bg: #1A1E25;  --st-warn-line: #2F3540;
+  --st-bad-fg: #F97066;   --st-bad-bg: #2B1716;   --st-bad-line: #55201C;
+
+  --chart-1: #60A5FA; --chart-2: #94A3B8; --chart-3: #3B82F6; --chart-4: #475467; --chart-rest: #262B33;
 
   --grid-hour: rgba(255, 255, 255, 0.09);
   --grid-half: rgba(255, 255, 255, 0.045);
@@ -179,12 +225,12 @@
   --shadow-e2: 0 8px 24px -6px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.30);
   --shadow-e3: 0 24px 56px -12px rgba(0, 0, 0, 0.70);
 
-  --px-ok: #7FC49E;
-  --px-fehler: #D98A8A;
-  --px-fehler-rand: rgba(217, 138, 138, 0.45);
-  --px-text-2: #A3A9B3;
-  --px-text-3: #8A919B;
-  --px-linie: rgba(255, 255, 255, 0.09);
+  --px-ok: #47CD89;
+  --px-fehler: #F97066;
+  --px-fehler-rand: #55201C;
+  --px-text-2: #A6AEBB;
+  --px-text-3: #8A93A0;
+  --px-linie: #262B33;
 }
 
 /* ── 2. Topbar (Phase 3.1) ────────────────────────────────────────────── */
@@ -452,7 +498,7 @@
 
   [data-design="neu"] :is(.form-input, .form-select, .form-textarea) {
     background: var(--bg-card-solid);
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--border-input);   /* Feldrand ≥ 3:1 (WCAG 1.4.11) */
     border-radius: var(--radius-sm);
     min-height: 40px;
     padding: 9px 12px;
@@ -542,7 +588,7 @@
 /* ===== Phase 3.9 Modale ===== */
 @media screen {
   [data-design="neu"] .modal-overlay {
-    background: rgba(26, 22, 17, 0.45);
+    background: rgba(11, 15, 23, 0.45);
     backdrop-filter: none;
   }
 
@@ -606,10 +652,11 @@
 @media screen {
   /* Banner: Tönung statt Signalfarbe; Rand und Fläche aus den Tokens. */
   [data-design="neu"] .dash-banner { border-radius: var(--radius-md); padding: 14px 20px; }
-  [data-design="neu"] .dash-banner.welcome { background: var(--success-dim); border-color: var(--success-dim); }
+  [data-design="neu"] .dash-banner.welcome { background: var(--bg-card-solid); border-color: var(--border); }
   [data-design="neu"] .dash-banner.pending { background: var(--bg-hover); border-color: var(--border); }
-  [data-design="neu"] .dash-banner.trial { background: var(--warning-dim); border-color: var(--warning-dim); }
-  [data-design="neu"] .dash-banner.pastdue { background: var(--danger-dim); border-color: var(--danger-dim); }
+  /* Warnbalken neutral (E11): Fläche grau, nur das Symbol trägt die Farbe. */
+  [data-design="neu"] .dash-banner.trial { background: var(--warning-dim); border-color: var(--border); }
+  [data-design="neu"] .dash-banner.pastdue { background: var(--danger-dim); border-color: var(--st-bad-line); }
   [data-design="neu"] .dash-banner-action { border-radius: var(--radius-sm); }
 
   /* Leerzustände: ein gemeinsamer, ruhiger Ton. */
@@ -674,7 +721,7 @@
   /* IK-Banner (inline blau): neutrale Tönung. */
   [data-design="neu"] #ik-missing-banner > div {
     background: var(--warning-dim) !important;
-    border-color: var(--warning-dim) !important;
+    border-color: var(--border) !important;
     border-radius: var(--radius-md) !important;
   }
   [data-design="neu"] #ik-missing-banner a { color: var(--primary) !important; }
