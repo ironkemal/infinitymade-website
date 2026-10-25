@@ -26,6 +26,16 @@ import { chromium } from 'playwright';
 export const WURZEL = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const TAG = '2026-10-23';
 const UHR = new Date('2026-10-23T10:15:00+02:00');
+const berlinTag = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(d);
+
+/**
+ * Antworten für `/api/*` (Express-Backend), je Pfad ein Objekt oder eine Funktion (o) => Objekt.
+ * Unbekannte Pfade bekommen `{}`. Neue Endpunkte (z. B. Startseite, PLAN-V2 V6) hier eintragen.
+ * Szenario 'fehler' → 503 für alle, 'langsam' → 2,5 s Verzögerung.
+ */
+export const API_ANTWORTEN = {
+  '/api/attendance/report': { records: [] },
+};
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */
 export const PANELS = ['overview', 'calendar', 'anfragen', 'kunden', 'podologie-billing', 'fussstatus', 'verordnungen',
@@ -63,7 +73,8 @@ export async function starteBrowser() { return chromium.launch(); }
 
 /**
  * Öffnet dashboard.html in einem frischen Kontext.
- * @param {object} o  { basis, breite, hoehe, theme: 'hell'|'dunkel', design: 'alt'|'neu', rolle, szenario }
+ * @param {object} o  { basis, breite, hoehe, theme: 'hell'|'dunkel', design: 'alt'|'neu', rolle, szenario,
+ *                      uhr?: ISO-Zeitpunkt (Standard Fr 23.10.2026 10:15 Berlin) }
  */
 export async function oeffneDashboard(browser, o) {
   const fixture = await readFile(join(WURZEL, 'tools/browser-probe/redesign-fixture.js'), 'utf8');
@@ -77,13 +88,15 @@ export async function oeffneDashboard(browser, o) {
   page.on('console', (m) => { if (m.type() === 'error') protokoll.konsole.push(m.text().slice(0, 300)); });
   page.on('pageerror', (e) => protokoll.seitenfehler.push(String(e.message).slice(0, 300)));
 
-  await page.clock.setFixedTime(UHR);
+  const uhr = o.uhr ? new Date(o.uhr) : UHR;
+  if (Number.isNaN(uhr.getTime())) throw new Error(`ungültige --uhr: ${o.uhr}`);
+  await page.clock.setFixedTime(uhr);
   await page.addInitScript(({ theme, rolle, szenario, tag }) => {
     try {
       if (theme === 'dunkel') localStorage.setItem('im-theme', 'dark'); else localStorage.setItem('im-theme', 'light');
     } catch { /* egal */ }
     window.__rsDay = tag; window.__rsRolle = rolle; window.__rsSzenario = szenario;
-  }, { theme: o.theme, rolle: o.rolle || 'owner', szenario: o.szenario || 'voll', tag: TAG });
+  }, { theme: o.theme, rolle: o.rolle || 'owner', szenario: o.szenario || 'voll', tag: o.uhr ? berlinTag(uhr) : TAG });
 
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
@@ -98,8 +111,13 @@ export async function oeffneDashboard(browser, o) {
     }
     if (url.pathname.startsWith('/api/')) {
       protokoll.api.push(route.request().method() + ' ' + url.pathname);
-      // Bekannte Antwortformen; alles andere {}.
-      const body = url.pathname === '/api/attendance/report' ? { records: [] } : {};
+      if (o.szenario === 'langsam') await new Promise((r) => setTimeout(r, 2500));
+      if (o.szenario === 'fehler') {
+        return route.fulfill({ status: 503, contentType: 'application/json',
+          body: JSON.stringify({ error: 'Redesign-Fixture: Szenario fehler', code: 'RS_FEHLER' }) });
+      }
+      const antwort = API_ANTWORTEN[url.pathname];
+      const body = typeof antwort === 'function' ? antwort(o) : (antwort ?? {});
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     }
     return route.continue();

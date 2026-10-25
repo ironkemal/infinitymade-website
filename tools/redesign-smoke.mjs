@@ -15,6 +15,7 @@
  *                                      aufklappen, mobil Hamburger) statt window.switchPanel
  *   node tools/redesign-smoke.mjs --lauf nachher --gegen vorher
  *   [--wurzel <ordner>]  anderen Code-Stand ausliefern (siehe tools/redesign-basis.mjs)
+ *   [--uhr <ISO>]  andere feste Uhrzeit · Szenarien zusätzlich: gross, fehler, langsam
  *
  * Mit --gegen zählen nur Funde, die es im Vergleichslauf (gleiches Panel, gleiche Breite,
  * gleiches Szenario, gleiche Rolle und gleiches Theme) noch nicht gab: Exit 1, wenn es welche
@@ -54,7 +55,7 @@ const browser = await starteBrowser();
 const ergebnis = { lauf, zeit: new Date().toISOString(), funde: [] };
 try {
   for (const design of designs) for (const rolle of rollen) for (const theme of themes) for (const szenario of szenarien) for (const breite of breiten) {
-    const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, szenario, rolle });
+    const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, szenario, rolle, uhr: arg('uhr') });
     await ruhe(page, 1200);
     const fund = (panel, art, text, wert) => ergebnis.funde.push({ design, rolle, theme, szenario, breite, panel, art,
       text: String(text).slice(0, 300), ...(wert != null ? { wert } : {}) });

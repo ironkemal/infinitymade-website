@@ -11,7 +11,11 @@
  * Smoke-Klick die Seite nicht abstürzen lässt. Alles wird in
  * `window.__rsFixture` protokolliert und vom Harness ausgewertet.
  *
- * Szenarien (window.__rsSzenario): 'voll' = gefüllte Praxis, 'leer' = neue Praxis.
+ * Szenarien (window.__rsSzenario): 'voll' = gefüllte Praxis, 'leer' = neue Praxis,
+ * 'gross' = große Praxis (viele Patienten, Termine, Verordnungen: Umbruch, Überlauf, Tempo),
+ * 'fehler' = jede Leseabfrage scheitert (Fehlerzustände), 'langsam' = wie voll, jede Abfrage
+ * antwortet erst nach 2,5 s (Ladezustände). 'voll' und 'leer' bleiben unverändert, weil die
+ * Alt-Referenzbilder darauf beruhen.
  * Rolle (window.__rsRolle): 'owner' (Standard) oder 'employee'.
  * Alle Daten sind erfunden. Kein Patientendatensatz, kein Schlüssel.
  */
@@ -26,7 +30,16 @@ const uid = (gruppe, n) => `${gruppe}000000-0000-4000-8000-${String(n).padStart(
 
 const log = window.__rsFixture = { reads: [], writes: [], rpc: [], storage: [], functions: [], unbekannt: [], tag: TAG };
 const clone = (v) => (v === undefined ? undefined : structuredClone(v));
-const zeit = (tag, hm) => new Date(`${tag}T${hm}:00+02:00`).toISOString();
+// Berliner Versatz des jeweiligen Tages (Sommerzeit endet So 25.10.2026): mit festem +02:00
+// stünden Termine nach der Umstellung eine Stunde zu früh (--uhr 2026-10-26…).
+const berlinVersatz = (tag) => {
+  const teil = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', timeZoneName: 'shortOffset' })
+    .formatToParts(new Date(`${tag}T12:00:00Z`)).find((p) => p.type === 'timeZoneName')?.value || 'GMT+2';
+  const m = teil.match(/GMT([+-]\d+)/);
+  const h = m ? Number(m[1]) : 2;
+  return `${h < 0 ? '-' : '+'}${String(Math.abs(h)).padStart(2, '0')}:00`;
+};
+const zeit = (tag, hm) => new Date(`${tag}T${hm}:00${berlinVersatz(tag)}`).toISOString();
 const plusTage = (n) => {
   const d = new Date(TAG + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
@@ -135,7 +148,30 @@ const leer = {
   profiles: [ownerProfil, mitarbProfil], businesses: voll.businesses, working_hours: workingHours,
   employee_business_assignments: voll.employee_business_assignments,
 };
-const tabellen = SZENARIO === 'leer' ? leer : voll;
+// Große Praxis: dieselben Bausteine, vervielfacht und deterministisch benannt.
+function grossePraxis() {
+  const VN = ['Anna', 'Bernd', 'Clara', 'Dieter', 'Elke', 'Frank', 'Gisela', 'Heinz', 'Ilse', 'Jürgen', 'Karin', 'Lothar'];
+  const NN = ['Albrecht', 'Brandt', 'Conrad', 'Dorn', 'Engel', 'Fuchs', 'Graf', 'Hahn', 'Ihle', 'Jansen', 'Krüger', 'Lange', 'Mertens', 'Nowak', 'Ott', 'Peters', 'Quast', 'Roth', 'Seidel', 'Thiel'];
+  const viele = Array.from({ length: 240 }, (_, i) => ({ ...clone(leads[i % leads.length]), id: uid('2', 100 + i),
+    first_name: VN[i % VN.length], last_name: NN[(i * 7) % NN.length], name: `${VN[i % VN.length]} ${NN[(i * 7) % NN.length]}`,
+    patientennummer: 'P-' + String(2001 + i) }));
+  const termine = Array.from({ length: 30 }, (_, i) => {
+    const min = 7 * 60 + 30 + (i % 10) * 50, mitarb = i % 3 === 0 ? OWNER : MITARB;
+    const hm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    return { ...bookingRow([i % 8, i % 4, hm(min), hm(min + 40), i < 9 ? 'completed' : 'confirmed', mitarb], 200 + i),
+      lead_id: viele[i].id, leads: clone(viele[i]), customer_name: viele[i].name };
+  });
+  const vos = Array.from({ length: 80 }, (_, i) => ({ ...clone(prescriptions[i % prescriptions.length]), id: uid('5', 100 + i),
+    patient_id: viele[i].id, lead_id: viele[i].id, patient_name: viele[i].name, leads: clone(viele[i]),
+    gueltig_bis: plusTage((i % 50) - 10), einheiten_erledigt: i % 7, anzahl_einheiten: 6 }));
+  const rechnungen = Array.from({ length: 60 }, (_, i) => ({ ...clone(invoices[i % invoices.length]), id: uid('6', 100 + i),
+    invoice_number: 'RE-2026-' + String(201 + i), rechnungsnummer: 'RE-2026-' + String(201 + i), patient_name: viele[i].name }));
+  return { ...voll, leads: viele, bookings: [...bookings, ...termine], prescriptions: vos, invoices: rechnungen };
+}
+const FEHLER = SZENARIO === 'fehler';
+const BOOT_TABELLEN = new Set(['profiles', 'businesses', 'employee_business_assignments', 'module_visibility', 'user_preferences', 'working_hours']);
+const LANGSAM_MS = SZENARIO === 'langsam' ? 2500 : 0;
+const tabellen = SZENARIO === 'leer' ? leer : SZENARIO === 'gross' ? grossePraxis() : voll;
 
 const wertAn = (row, key) => key.split('.').reduce((o, k) => o?.[k], row);
 function vergleiche(row, key, op, value) {
@@ -175,13 +211,20 @@ class Abfrage {
   csv() { return this; } returns() { return this; }
   insert(d) { this.schreib = ['insert', d]; return this; } upsert(d) { this.schreib = ['upsert', d]; return this; }
   update(d) { this.schreib = ['update', d]; return this; } delete() { this.schreib = ['delete']; return this; }
-  then(ok, fail) { return Promise.resolve().then(() => this.lauf()).then(ok, fail); }
+  then(ok, fail) {
+    // Szenario 'langsam' bremst nur Fachdaten; Start-Tabellen antworten sofort (sonst startet die App nie).
+    const bremsen = LANGSAM_MS && !this.schreib && !BOOT_TABELLEN.has(this.tabelle);
+    const warten = bremsen ? new Promise((r) => setTimeout(r, LANGSAM_MS)) : Promise.resolve();
+    return warten.then(() => this.lauf()).then(ok, fail);
+  }
   lauf() {
     if (this.schreib) {
       log.writes.push({ tabelle: this.tabelle, art: this.schreib[0] });
       return { data: null, error: { message: 'Redesign-Fixture: nur lesend', code: 'RS_READONLY' } };
     }
     log.reads.push(this.tabelle);
+    // Szenario 'fehler': Fachdaten scheitern, Start-Tabellen nicht (sonst lädt die App gar nicht).
+    if (FEHLER && !BOOT_TABELLEN.has(this.tabelle)) return { data: null, error: { message: 'Redesign-Fixture: Szenario fehler', code: 'RS_FEHLER' } };
     if (!Object.hasOwn(tabellen, this.tabelle)) log.unbekannt.push(this.tabelle);
     let rows = clone(tabellen[this.tabelle] || []).filter((r) => this.filter.every((f) => f(r)));
     const anzahl = rows.length;
@@ -221,6 +264,10 @@ export function createClient() {
     from: (t) => new Abfrage(t),
     rpc: async (name) => {
       log.rpc.push(name);
+      const start = ['get_default_business', 'get_my_permissions'].includes(name);
+      if (LANGSAM_MS && !start) await new Promise((r) => setTimeout(r, LANGSAM_MS));
+      // Auch im Szenario 'fehler' muss die App starten können (Rechte, Standort); sonst gibt es nichts zu prüfen.
+      if (FEHLER && !start) return { data: null, error: { message: 'Redesign-Fixture: Szenario fehler' } };
       if (name === 'get_default_business') return { data: BIZ, error: null };
       // Mitarbeiter-Rechte: alles außer Abrechnung (so wie eine typische Therapeutin eingerichtet ist).
       if (name === 'get_my_permissions') {

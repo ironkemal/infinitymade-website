@@ -10,6 +10,7 @@
  *        [--panels overview,kunden] [--szenario voll|leer] [--rolle owner]
  *   node tools/redesign-shots.mjs --vergleich vorher nachher [--toleranz 0]
  *        [--ueberschreiben]  vorhandene Bilder derselben Kombination ersetzen (sonst Abbruch)
+ *        [--uhr 2026-10-26T07:45:00+01:00]  andere feste Uhrzeit (Standard Fr 23.10.2026 10:15)
  *        [--wurzel <ordner>]  anderen Code-Stand ausliefern (Alt-Referenz aus origin/main,
  *                             siehe tools/redesign-basis.mjs)
  *
@@ -67,7 +68,7 @@ async function aufnehmen() {
     for (const design of designs) for (const theme of themes) for (const breite of breiten) {
       const ordner = join(ZIEL, lauf, `${rolle}-${szenario}`, `${design}-${theme}-${breite}`);
       await mkdir(ordner, { recursive: true });
-      const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, rolle, szenario });
+      const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, rolle, szenario, uhr: arg('uhr') });
       await ruhe(page, 1500); // Einrichtungs-Ring u. ä. erscheinen verzögert
       for (const panel of panels) {
         const vorher = { k: protokoll.konsole.length, s: protokoll.seitenfehler.length, a: protokoll.api.length };
@@ -226,7 +227,7 @@ async function alleBilder(ordner, basis = ordner) {
   for (const e of await readdir(ordner, { withFileTypes: true })) {
     const p = join(ordner, e.name);
     if (e.isDirectory()) out.push(...await alleBilder(p, basis));
-    else if (e.name.endsWith('.png')) out.push(relative(basis, p));
+    else if (e.name.endsWith('.png') && !e.name.startsWith('kontakt-')) out.push(relative(basis, p)); // Kontaktbogen ist kein Panelbild
   }
   return out.sort();
 }
