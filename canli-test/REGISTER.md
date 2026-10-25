@@ -1866,3 +1866,44 @@ Ablehnung (401), bevor fachliche Daten gelesen werden. 110/110 fokussierte Tests
 Backend gesamt 1612/1612, Typecheck und unabhängiger Review erfolgreich.
 Nur lokal geschrieben/getestet; kein neuer Push/Deploy. **Live-P1 bleibt offen**:
 Ursache unbekannt, tatsächlicher VPS-Zugang und Frontend-/Live-Nachtest fehlen.
+
+### Redesign-Schalter `?design=neu` (v1, T6) — Übersicht · Kalender · Patienten · Verordnungen — nav etiketleri: `overview`, `calendar`, `kunden`, `verordnungen`
+
+**Erwartet:** `dashboard.html` lädt `praxura-design.css` (alle Regeln nur unter
+`[data-design="neu"]`). Ohne Schalter oder mit `?design=alt`: kein `data-design`-Attribut,
+Aussehen wie bisher (Inline-Farben `var(--px-*, alter Wert)` fallen auf den alten Wert
+zurück). `?design=neu` setzt `<html data-design="neu">` und merkt es in localStorage
+`px-design`; späterer Aufruf ohne Parameter bleibt „neu"; `?design=alt` löscht den
+Merker. Konsole in beiden Designs ohne neue Fehler.
+**Bağımlı ekranlar:** alle Dashboard-Panels (Schalter wirkt global); Kutu-Paket
+(Dockerfile/Workflow liefern `praxura-design.css` + `dashboard-feinschliff.css` mit aus —
+live nicht prüfbar).
+
+**Letzter Test:** 25.10.2026, ca. 16:10–16:25 Berlin — **GEÇTİ im geprüften Umfang /
+TEILWEISE** (Kalender + Verordnungen mit Mitarbeiterrolle nicht prüfbar).
+
+**Stand:** `origin/main` = `9d366ba7`, lokal nichts ungepusht. Live `dashboard.html`
+bytegleich mit `origin/main`; `praxura-design.css?v=20261024rd16` 200 `text/css`,
+bytegleich mit `origin/main` (Deploy ca. 1,5 min nach Push angekommen, vorher 404).
+`dashboard.js?v=20261022qr`, `dashboard-feinschliff.css?v=20261021q` unverändert.
+Backend `/api/krankenkassen` 200/JSON. Headless Playwright, eigener frischer Kontext,
+QA-Praxis „Podologie Nord", **Mitarbeiter-Konto** (einziger lokaler Zugang).
+Schreib-Guard aktiv (PATCH/PUT/DELETE, Supabase-Insert, Backend-POST blockiert):
+0 blockierte Anfragen, also keine Schreibversuche beim Laden/Panelwechsel.
+
+| Prüfung | Ergebnis | Beobachtung |
+|---|---|---|
+| CSS-Scoping | PASS | 110 Regeln in `praxura-design.css`, alle Selektoren enthalten `[data-design="neu"]`; `--px-*` nur dort definiert. Inline: 23 `--px-`-Verweise in `dashboard.html` gezählt (Auftrag nannte 24, ohne Schalter wirkungslos) |
+| Ohne Schalter | PASS | kein `data-design`, `px-design` leer, `--bg-main` `#F7F4EF` (alt), Karten weiß; Übersicht + Patienten aktiv/sichtbar; 0 Fehler, 0 HTTP ≥400, kein horizontaler Überlauf |
+| `?design=alt` | PASS | wie ohne Schalter, 0 Fehler |
+| `?design=neu` | PASS | `data-design="neu"`, `px-design=neu`, Hintergrund `#F3F4F6` (kühles Grau), Karten `#FFFFFF`; Übersicht + Patienten aktiv/sichtbar; 0 Fehler, 0 HTTP ≥400, kein Überlauf |
+| Merker | PASS | Aufruf ohne Parameter nach `neu` → bleibt `neu`; `?design=alt` → Attribut und Merker weg, Folgeaufruf ohne Parameter alt |
+| Kalender / Verordnungen | nicht prüfbar | Mitarbeiterrolle: `switchPanel` → Toast „Keine Berechtigung für diesen Bereich." in beiden Designs; Owner-Zugang fehlt lokal |
+
+**Konsole je Phase:** nur bekannte Warnung `[initCalendar] #calendarEl not in DOM`
+(§3 Nr. 4). Bookings-400 (§3 Nr. 3) nicht gesehen — mit Mitarbeiterrolle aber nicht
+aussagekräftig. Visueller Vergleich nur über berechnete Farben, keine Screenshots
+(Patientenliste sichtbar). Browser danach mit `?design=alt` zurückgestellt und geschlossen.
+
+**Nicht geprüft:** Kalender- und Verordnungen-Panel im neuen Design (Owner-Zugang nötig),
+Dunkelmodus + `neu`, mobile Breiten, Kutu-Image mit den neuen Dateien.
