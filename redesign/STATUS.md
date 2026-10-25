@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V1.01 · Schritt: ANALYSE
+- Aktuelles Paket: V1.02 · Schritt: ANALYSE
 - Nicht committete eigene Dateien: keine
-- Cache-Nummern: praxura-design.css ?v=20261024rd16
+- Cache-Nummern: praxura-design.css ?v=20261025v101
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V1.01
+- Nächstes Paket: V1.02
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -38,8 +38,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V0.09 | V0 | Statische Wachen: Scope, `!important`-Kommentar, Cache-Nummer, Auslieferung (Dockerfile/Workflow), Datei-Schrumpf | Werkzeug | T1 | V0.01 | fertig | 904f215d | `tools/redesign-wachen.mjs` grün auf aktuellem Stand; 9 Tests (inkl. echte Dateien: Auslieferung + Scope in `npm test`) | 1 (Kommas in `:is()`) |
 | V0.10 | V0 | Flake-Register `tools/redesign-flakes.json` im Vergleich | Werkzeug | T4 | V0.04 | fertig | 1f6e73ae | Statistik dunkel/390 in `v004alt`, `p37alt`, `p311alt` gegen `vorher-vollbasis7c92` jetzt ⚑ statt ✗, sonst unverändert | 0 |
 | V0.11 | V0 | Kontaktbogen (Übersichtsbild je Lauf) | Werkzeug | T4 | V0.02 | fertig | b1c2b56d | `alt-main-6fd0cce/kontakt-owner-voll-alt-hell-1440.png` 27 Bereiche, 1440×1837, gesichtet | 0 |
-| V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | fertig | dieser Commit | T1 grün; npm test 4.087; `npm run probe` 14/14 (Dev-Server mit erfundener Konfiguration, R-16); T4 `v012alt` 159 Bilder 0 ✗; T5 `v012` beide Designs/Rollen 0 neu gegen `smoke-alt-main`, Klick `v012klick` 0 neu gegen `klick-alt-main`; Geometrie `v012` 0 Verstöße; main hatte keine neuen Commits (Fast-Forward). T6 nach Push | 1 (Probe-Konfiguration) |
-| V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | offen | | | |
+| V0.12 | V0 | Phasenabschluss V0: alles auf `0a63ce0f`-Stand grün, Merge main, Push, T6 | Abschluss | – | V0.02–V0.11 | fertig | 9d366ba7 | T1 grün; npm test 4.087; `npm run probe` 14/14 (Dev-Server mit erfundener Konfiguration, R-16); T4 `v012alt` 159 Bilder 0 ✗; T5 `v012` beide Designs/Rollen 0 neu gegen `smoke-alt-main`, Klick `v012klick` 0 neu gegen `klick-alt-main`; Geometrie `v012` 0 Verstöße; main hatte keine neuen Commits (Fast-Forward). T6 nach Push | 1 (Probe-Konfiguration) |
+| V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | fertig | dieser Commit | Radius-Skala 14/12/10/8/6/4, `--sp-*`, `--shadow-e1..e3` hell/dunkel; alle festen Rundungen in `praxura-design.css` auf Token; T4 `v101alt` 159 Bilder 0 ✗ (1 ⚑); Neu-Kontaktbogen hell/dunkel 1440 gesichtet; Geometrie `v101` 0 Verstöße; Kontrast 7/7 | 0 |
 | V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`: Schwarz/Weiß-Hauptknopf, graue Auswahl, ein Blau-Akzent, Signalfarben nur bei Problemen, neutraler Warnbalken), hell + dunkel; alle Espresso/Bronze/Creme-Werte in `praxura-design.css` ersetzen | CSS global | alle (neu) | V1.01 | offen | | | |
 | V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | offen | | | |
@@ -117,7 +117,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V0.06: Szenarien fehler/langsam/gross, `--uhr`, `API_ANTWORTEN`; Kontaktbogen aus dem Vergleich ausgenommen; Befund R-14 | `14e631c9` | V0.07 |
 | 25.10.2026 | V0.07: Zustände-Werkzeug (17 Rezepte, Fensterbilder, Ladebilder nur Sichtung); Befund R-15 | `a1a49b0a` | V0.12 |
 | 25.10.2026 | Melih: Farben neu (E11, zweimal geschärft: ruhig, Grau + ein Blau, kein Beige) → V1.03 | `c912b377`, `5e8be2d3` | V0.12 |
-| 25.10.2026 | V0.12: Phasenabschluss V0 grün, Merge nach main (Fast-Forward), Push; T6 folgt | dieser Commit | V1.01 |
+| 25.10.2026 | V0.12: Phasenabschluss V0 grün, Merge nach main (Fast-Forward, `6fd0cce3..9d366ba7`), Push; T6 `canli-test` läuft (Limit-Pause) | `9d366ba7` | V1.01 |
+| 25.10.2026 | V1.01: Radius-/Abstands-/Schatten-Tokens, feste Rundungen ersetzt (`?v=20261025v101`) | dieser Commit | V1.02 |
 
 ## 9 Abschluss
 offen
