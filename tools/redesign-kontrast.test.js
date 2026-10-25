@@ -80,3 +80,47 @@ for (const [name, t] of [['hell', hell], ['dunkel', dunkel]]) {
 test('Kontrast hell: Knopftext Weiß auf --primary ≥ 4,5:1', () => {
   assert.ok(kontrast('#FFFFFF', hell['--primary'], hell['--bg-main']) >= 4.5);
 });
+
+// v2 (PLAN-V2 V1.05, Palette E11 „ruhig: Grau + ein Blau“): Status-Töne, Grafik, Feldrand, Knöpfe.
+const TOENE = ['brand', 'info', 'ok', 'neutral', 'warn', 'bad'];
+for (const [name, t] of [['hell', hell], ['dunkel', dunkel]]) {
+  test(`Kontrast ${name}: Status-Text auf seiner Fläche ≥ 4,5:1`, () => {
+    const zuSchwach = TOENE.map((ton) => [ton, kontrast(t[`--st-${ton}-fg`], t[`--st-${ton}-bg`], t['--bg-card-solid'])])
+      .filter(([, k]) => k < 4.5).map(([ton, k]) => `${ton}: ${k.toFixed(2)}`);
+    assert.deepEqual(zuSchwach, []);
+  });
+
+  test(`Kontrast ${name}: Grafik, Feldrand, Warnsymbol, Jetzt-Linie ≥ 3:1`, () => {
+    const paare = [['--chart-1', '--bg-card-solid'], ['--chart-2', '--bg-card-solid'], ['--border-input', '--bg-card-solid'],
+      ['--border-input', '--bg-input'], ['--warning', '--bg-card-solid'], ['--warning', '--warning-dim'], ['--today', '--bg-card-solid']];
+    const zuSchwach = paare.map(([v, h]) => [v, h, kontrast(t[v], t[h], t['--bg-main'])])
+      .filter(([, , k]) => k < 3).map(([v, h, k]) => `${v} auf ${h}: ${k.toFixed(2)}`);
+    assert.deepEqual(zuSchwach, []);
+  });
+
+  test(`Kontrast ${name}: Text auf eingelassener Fläche und Hover ≥ 4,5:1`, () => {
+    const paare = [['--text-main', '--bg-sunken'], ['--text-muted', '--bg-sunken'], ['--text-muted', '--bg-hover'], ['--accent', '--bg-hover']];
+    const zuSchwach = paare.map(([v, h]) => [v, h, kontrast(t[v], t[h], t['--bg-card-solid'])])
+      .filter(([, , k]) => k < 4.5).map(([v, h, k]) => `${v} auf ${h}: ${k.toFixed(2)}`);
+    assert.deepEqual(zuSchwach, []);
+  });
+}
+
+test('Kontrast dunkel: Knopftext (Kartenfarbe) auf hellem --primary ≥ 4,5:1', () => {
+  assert.ok(kontrast(dunkel['--bg-card-solid'], dunkel['--primary'], dunkel['--bg-main']) >= 4.5);
+});
+
+test('Palette E11: kein Beige/Braun mehr in den Neu-Token', () => {
+  // Warme Töne (Rot > Blau deutlich, gesättigt, hell) sind nur als Signalfarben erlaubt.
+  const erlaubt = new Set(['--warning', '--warning-text', '--st-warn-fg', '--danger', '--st-bad-fg', '--today', '--px-fehler', '--st-bad-line',
+    '--danger-dim', '--danger-bg', '--st-bad-bg', '--px-fehler-rand']);
+  const warm = [];
+  for (const [name, t] of [['hell', block(css, ':root[data-design="neu"]:not([data-theme="dark"])')], ['dunkel', block(css, ':root[data-design="neu"][data-theme="dark"]')]]) {
+    for (const [k, v] of Object.entries(t)) {
+      if (erlaubt.has(k) || !/^#[0-9a-f]{6}$/i.test(v)) continue;
+      const [r, , b] = rgb(v);
+      if (r - b > 24) warm.push(`${name} ${k}: ${v}`);
+    }
+  }
+  assert.deepEqual(warm, []);
+});

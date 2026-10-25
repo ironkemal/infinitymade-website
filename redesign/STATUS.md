@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V1.05 · Schritt: ANALYSE
+- Aktuelles Paket: V1.06 · Schritt: TESTEN (Phasenabschluss V1)
 - Nicht committete eigene Dateien: keine
 - Cache-Nummern: praxura-design.css ?v=20261025v104
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V1.05
+- Nächstes Paket: V1.06
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -42,8 +42,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V1.01 | V1 | Tokens v2: Abstand, Radius (12/8/6/4), Linien, Schatten-Stufen | CSS global | alle (neu) | V0.12 | fertig | 0f8272f8 | Radius-Skala 14/12/10/8/6/4, `--sp-*`, `--shadow-e1..e3` hell/dunkel; alle festen Rundungen in `praxura-design.css` auf Token; T4 `v101alt` 159 Bilder 0 ✗ (1 ⚑); Neu-Kontaktbogen hell/dunkel 1440 gesichtet; Geometrie `v101` 0 Verstöße; Kontrast 7/7 | 0 |
 | V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | fertig | f27fc6b0 | `--fs-*`/`--lh-*`; Seitentitel 28/34 500 (Handy 20), Kartentitel 18/24, Kennzahl 28/32, Kennzahl-Beschriftung ohne Versalien, gleich breite Ziffern in Tabellen/Badges; T4 `v102alt` 0 ✗; Geometrie 0; Neu-Kontaktbogen 1440/390 gesichtet | 0 |
 | V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`), hell + dunkel; alle Espresso/Bronze/Creme-Werte ersetzt | CSS global | alle (neu) | V1.01 | fertig | 9ead14d9 | Token-Blöcke hell/dunkel neu inkl. bisher fehlender `--warning` (war Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info`, `--today`, `--fc-today-bg-color`; neu `--st-*`, `--chart-*`, `--bg-sunken`, `--border-input`, `--focus-halo`; Feldrand 3:1; Warn-/IK-Balken neutral; Kontrast 7/7; T4 `v103alt` 0 ✗; Smoke `v103` neu beide Rollen 0 neu; Zustände `v103z` 28 Bilder; Geometrie 0; Kontaktbögen hell/dunkel 1440/390 gesichtet. Noch bunt (fest im Code, folgt V6/V8): Rezept-Kacheln-Kanten, Verordnungs-Status, GKV/PRIVAT-Etiketten | 0 |
-| V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | fertig | dieser Commit | `--dur*`, `--ease-standard`, `--transition` 120 ms; reduzierte Bewegung regelt dashboard.css schon global (R-01 → V2.11); Alt 0 ✗, Neu-Bilder = v103 (0 Abweichung), Smoke 0 neu | 0 |
-| V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | offen | | | |
+| V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | fertig | 58ec8d28 | `--dur*`, `--ease-standard`, `--transition` 120 ms; reduzierte Bewegung regelt dashboard.css schon global (R-01 → V2.11); Alt 0 ✗, Neu-Bilder = v103 (0 Abweichung), Smoke 0 neu | 0 |
+| V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | fertig | dieser Commit | `tools/redesign-kontrast.test.js` 7 → 15 Fälle: Status-Text auf Fläche, Grafik/Feldrand/Warnsymbol/Jetzt-Linie ≥ 3:1, Text auf eingelassener Fläche/Hover, Dunkel-Knopf, Wache „kein Beige/Braun in Neu-Token“ | 0 |
 | V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | offen | | | |
 | V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | offen | | | |
 | V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | offen | | | |
@@ -123,7 +123,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | T6 nach V0-Merge: live angekommen (~1,5 min), ohne Schalter 0 Fehler/unverändert, mit `?design=neu` 0 Fehler. Kalender/Verordnungen live nicht prüfbar (nur Mitarbeiterinnen-Zugang lokal) → offene Frage | – | – |
 | 25.10.2026 | V1.02: Schriftstufen (`?v=20261025v102`). Für V1.03 gefunden: `--warning` (Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info` (Oliv), `--today` im Neu-Design noch nicht überschrieben | `f27fc6b0` | V1.03 |
 | 25.10.2026 | V1.03: ruhige Palette (Grau, Schwarz/Weiß, ein Blau) eingebaut (`?v=20261025v103`) | `9ead14d9` | V1.04 |
-| 25.10.2026 | V1.04: Bewegungs-Tokens (`?v=20261025v104`) | dieser Commit | V1.05 |
+| 25.10.2026 | V1.04: Bewegungs-Tokens (`?v=20261025v104`) | `58ec8d28` | V1.05 |
+| 25.10.2026 | V1.05: Kontrast-Test 15 Fälle inkl. Beige-Wache | dieser Commit | V1.06 |
 
 ## 9 Abschluss
 offen
