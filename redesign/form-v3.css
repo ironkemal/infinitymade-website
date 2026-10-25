@@ -1,0 +1,59 @@
+/* Palette v2 „Ruhig: Grau + ein Blau“ (Melih 25.10.2026, PLAN-V2 E11, überarbeitet: „nicht so bunt“, kein Beige).
+   Vorbild (Recherche 25.10.): Linear/Vercel fast achromatisch mit einem Akzent; Primer/Atlassian: Banner sparsam,
+   höchstens einer je Seite, Farbe nie allein. Regeln:
+   - Fläche, Text, Linien, Auswahl, aktive Navigation, getönter Kopf: nur Grautöne + Schwarz/Weiß.
+   - EIN Akzent Blau: Fokus, Links, Fortschritt, Hauptreihe im Diagramm, Status „Bereit zur Abrechnung“.
+   - Grün/Bernstein/Rot nur als Text-/Symbolfarbe für Bedeutung; getönte Fläche nur bei Rot (echtes Problem).
+   - Warnbalken: neutrale graue Fläche, nur das Symbol farbig.
+   Rollennamen wie in den Entwürfen (.redesign-shots/plan-v2/*.html); in V1.03 auf die Token von
+   praxura-design.css abgebildet (creme* = neutrale Auswahl-/Kopffläche, primary = Schwarz/Weiß-Hauptknopf,
+   accent = Blau). Text ≥ 4,5:1, Grafik ≥ 3:1 geprüft; chart-3/chart-rest nur als Fläche mit Beschriftung. */
+:root:root{
+  --bg-main:#F4F6F9;--bg-card:#FFFFFF;--bg-elevated:#FFFFFF;--bg-sunken:#EEF1F5;--bg-hover:#F2F4F7;
+  --creme:#EEF0F3;--creme-soft:#F8F9FB;--creme-line:#E4E7EC;
+  --border:#DDE2E8;--border-subtle:#E8EBEF;--border-strong:#A9B1BC;--border-input:#8A93A0;
+  --text-main:#0B0F17;--text-muted:#475467;--text-faint:#5B6474;
+  --primary:#0B0F17;--primary-hover:#1F2633;--primary-press:#000000;--on-primary:#FFFFFF;
+  --accent:#2563EB;--bronze:#98A2B3;--champagner:#D0D5DD;--schiefer:#64748B;
+  --focus:#2563EB;--focus-halo:rgba(37,99,235,.22);
+  --st-brand-fg:#344054;--st-brand-bg:#F2F4F7;--st-brand-line:#E4E7EC;
+  --st-info-fg:#1D4ED8;--st-info-bg:#EFF4FF;--st-info-line:#D1E0FF;
+  --st-ok-fg:#067647;--st-ok-bg:#F2F4F7;--st-ok-line:#E4E7EC;
+  --st-neutral-fg:#344054;--st-neutral-bg:#F2F4F7;--st-neutral-line:#E4E7EC;
+  --st-warn-fg:#B54708;--st-warn-bg:#F8F9FB;--st-warn-line:#E4E7EC;
+  --st-bad-fg:#B42318;--st-bad-bg:#FEF3F2;--st-bad-line:#FECDCA;
+  --chart-1:#2563EB;--chart-2:#64748B;--chart-3:#93C5FD;--chart-4:#98A2B3;--chart-rest:#E4E7EC;
+  --hatch:rgba(11,15,23,.10);--skel-a:#E9ECF1;--skel-b:#F4F6F9;
+}
+:root:root[data-theme="dark"]{
+  --bg-main:#0B0D12;--bg-card:#14171D;--bg-elevated:#1A1E25;--bg-sunken:#101318;--bg-hover:#1E232B;
+  --creme:#22262F;--creme-soft:#1A1E25;--creme-line:#2F3540;
+  --border:#262B33;--border-subtle:#1E232B;--border-strong:#3D4552;--border-input:#6B7482;
+  --text-main:#F1F3F6;--text-muted:#A6AEBB;--text-faint:#8A93A0;
+  --primary:#FFFFFF;--primary-hover:#E6E9EE;--primary-press:#CDD3DB;--on-primary:#0B0F17;
+  --accent:#60A5FA;--bronze:#667085;--champagner:#344054;--schiefer:#94A3B8;
+  --focus:#60A5FA;--focus-halo:rgba(96,165,250,.32);
+  --st-brand-fg:#CECFD2;--st-brand-bg:#22262F;--st-brand-line:#2F3540;
+  --st-info-fg:#84ADFF;--st-info-bg:#172036;--st-info-line:#2A3A5E;
+  --st-ok-fg:#47CD89;--st-ok-bg:#22262F;--st-ok-line:#2F3540;
+  --st-neutral-fg:#CECFD2;--st-neutral-bg:#22262F;--st-neutral-line:#2F3540;
+  --st-warn-fg:#FDB022;--st-warn-bg:#1A1E25;--st-warn-line:#2F3540;
+  --st-bad-fg:#F97066;--st-bad-bg:#2B1716;--st-bad-line:#55201C;
+  --chart-1:#60A5FA;--chart-2:#94A3B8;--chart-3:#3B82F6;--chart-4:#475467;--chart-rest:#262B33;
+  --hatch:rgba(241,243,246,.08);--skel-a:#1E232B;--skel-b:#262B33;
+}
+/* v3 „freundlich & übersichtlich“ (Melih 25.10.: übersichtlicher, runder, wärmer – nicht über Farben) */
+:root:root{
+  --radius-xxs:6px;--radius-xs:999px;--radius-sm:12px;--radius-md:14px;--radius:18px;--radius-xl:22px;
+  --border:#E6E9EE;--border-subtle:#EEF1F4;
+  --shadow-xs:0 1px 2px rgba(16,24,40,.04),0 6px 20px -8px rgba(16,24,40,.08);
+}
+:root:root[data-theme="dark"]{--border:#22262E;--border-subtle:#1C2027;--shadow-xs:0 1px 2px rgba(0,0,0,.3),0 8px 24px -10px rgba(0,0,0,.5)}
+.dash{gap:24px!important;grid-template-areas:"next next todo" "list list vo" "list list frei" "abr abr woche"!important}
+html[data-rolle="team"] .dash{grid-template-areas:"next next todo" "list list list"!important}
+.px-card{border-color:var(--border)!important}
+.band{display:none!important}            /* Zeitleiste raus: nur die nutzbaren Lücken als Liste */
+.gaps{grid-template-columns:1fr!important}
+.trow,.appt{min-height:60px!important}
+.next-body{padding:24px 28px 28px!important}
+.px-banner{border-radius:var(--radius-md)!important;padding:14px 20px!important}

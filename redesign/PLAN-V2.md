@@ -26,12 +26,13 @@ kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schw
 | E3 | Backend darf erweitert werden (Express-Router, ggf. RPC/View). **Migration live nur nach Melihs OK** (Stopp-Punkt). |
 | E4 | Geld-Kennzahlen nur Inhaber, serverseitig. R-06 wird geschlossen. |
 | E5 | Verordnungs-Status ruhiger, Rot/Orange nur für echte Probleme. Kemal wird von Melih informiert (Kemals Regel 05.09.2026 entfällt). |
-| E6 | Formsprache kantiger, mehr Kontrast (Karten 12 px, Knöpfe/Felder 8, Tags 6; dunklere Linien und Schrift). |
+| E6 | ~~Formsprache kantiger~~ (ersetzt durch E12), mehr Kontrast (Karten 12 px, Knöpfe/Felder 8, Tags 6; dunklere Linien und Schrift). |
 | E7 | Neue Abläufe **mit rein**: Schnellzugriff oben (Suche + „+ Neu“), Navigation neu gruppieren (gilt auch alt), Fußbefund/Anamnese/Notizen in die Akte, Abschlussdialog nach Behandlung. |
 | E8 | Dashboard + Überblick = **eine Startseite „Heute“** (Feed und Geburtstagsliste entfallen). |
 | E9 | Angestellte sehen den Zuzahlungs-**Einzelbetrag** ihres Patienten als Aufgabe, keine Summen. |
 | E10 | Geld-Zahl Inhaber: „Bereit zur Abrechnung n VO ≈ €“ + „Kassiert diesen Monat“. Das Wort „Umsatz“ wird nicht verwendet. |
 | E11 | **Farben neu (25.10., zweimal geschärft; ersetzt Espresso/Bronze/Creme):** nicht bunt, kein Beige. Vorbild nach Recherche: Linear/Vercel (fast achromatisch, ein Akzent), Primer/Atlassian (Banner sparsam, höchstens einer je Seite, Farbe nie allein). Flächen, Text, Linien, Auswahl, aktive Navigation, getönter Kopf: nur Grau + Schwarz/Weiß. Hauptknopf schwarz (dunkel: weiß). **Ein** Akzent Blau `#2563EB` für Fokus, Links, Fortschritt, Hauptreihe im Diagramm und Status „Bereit zur Abrechnung“. Grün/Bernstein/Rot nur als Text-/Symbolfarbe mit Bedeutung; getönte Fläche nur bei Rot. Warnbalken: neutrale Fläche, nur das Symbol farbig, Titel in Haupttextfarbe. Nur Farbwerte ändern sich. Werte: `redesign/palette-v2.css`; Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Logo-Datei bleibt. |
+| E12 | **Form „freundlich & übersichtlich“ (25.10., Melih: übersichtlicher, runder, wärmer – nicht über Farben; ersetzt E6 „kantiger“):** Karten 18 px, Hauptkarte 22, Mini-Karten/Banner 14, Knöpfe/Felder 12, Etiketten/Filter als Pillen, Checkbox 6. Weiche Schatten statt harter Linien (Linie heller `#E6E9EE`, Schatten `0 1px 2px …/.04, 0 6px 20px -8px …/.08`). Mehr Luft: Kartenlücke 24, Innenabstand 24–28, Zeilen ≥ 60 px. Startseite übersichtlicher: oben „Als Nächstes“ (breit) + „Zu erledigen“, darunter „Termine heute“ breit + rechts Verordnungen und Freie Zeit (ohne Zeitleiste, nur nutzbare Lücken), unten Abrechnung + Woche (Inhaber). Höchstens ein Etikett je Zeile. Vorschau `.redesign-shots/plan-v2/frei-*.png`, Werte `redesign/form-v3.css`. |
 
 ## 3. Das neue Design
 

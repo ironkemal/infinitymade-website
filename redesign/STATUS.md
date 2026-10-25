@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V1.06 · Schritt: TESTEN (Phasenabschluss V1)
+- Aktuelles Paket: V1.07 · Schritt: BAUEN
 - Nicht committete eigene Dateien: keine
 - Cache-Nummern: praxura-design.css ?v=20261025v104
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V1.06
+- Nächstes Paket: V1.07
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -43,8 +43,9 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V1.02 | V1 | Schriftstufen (feste px), Gewichte, `tabular-nums` | CSS global | alle (neu) | V1.01 | fertig | f27fc6b0 | `--fs-*`/`--lh-*`; Seitentitel 28/34 500 (Handy 20), Kartentitel 18/24, Kennzahl 28/32, Kennzahl-Beschriftung ohne Versalien, gleich breite Ziffern in Tabellen/Badges; T4 `v102alt` 0 ✗; Geometrie 0; Neu-Kontaktbogen 1440/390 gesichtet | 0 |
 | V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`), hell + dunkel; alle Espresso/Bronze/Creme-Werte ersetzt | CSS global | alle (neu) | V1.01 | fertig | 9ead14d9 | Token-Blöcke hell/dunkel neu inkl. bisher fehlender `--warning` (war Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info`, `--today`, `--fc-today-bg-color`; neu `--st-*`, `--chart-*`, `--bg-sunken`, `--border-input`, `--focus-halo`; Feldrand 3:1; Warn-/IK-Balken neutral; Kontrast 7/7; T4 `v103alt` 0 ✗; Smoke `v103` neu beide Rollen 0 neu; Zustände `v103z` 28 Bilder; Geometrie 0; Kontaktbögen hell/dunkel 1440/390 gesichtet. Noch bunt (fest im Code, folgt V6/V8): Rezept-Kacheln-Kanten, Verordnungs-Status, GKV/PRIVAT-Etiketten | 0 |
 | V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | fertig | 58ec8d28 | `--dur*`, `--ease-standard`, `--transition` 120 ms; reduzierte Bewegung regelt dashboard.css schon global (R-01 → V2.11); Alt 0 ✗, Neu-Bilder = v103 (0 Abweichung), Smoke 0 neu | 0 |
-| V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | fertig | dieser Commit | `tools/redesign-kontrast.test.js` 7 → 15 Fälle: Status-Text auf Fläche, Grafik/Feldrand/Warnsymbol/Jetzt-Linie ≥ 3:1, Text auf eingelassener Fläche/Hover, Dunkel-Knopf, Wache „kein Beige/Braun in Neu-Token“ | 0 |
-| V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | offen | | | |
+| V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | fertig | 748a208b | `tools/redesign-kontrast.test.js` 7 → 15 Fälle: Status-Text auf Fläche, Grafik/Feldrand/Warnsymbol/Jetzt-Linie ≥ 3:1, Text auf eingelassener Fläche/Hover, Dunkel-Knopf, Wache „kein Beige/Braun in Neu-Token“ | 0 |
+| V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | fertig | dieser Commit | npm test 2.152/1.625/318 grün; Probes 14/14; T4 `v106alt` 159 Bilder 0 ✗; T5 `v106` beide Designs/Rollen 0 neu, Klick `v106klick` 0 neu; Geometrie `v106` 0; main ohne neue Commits → Fast-Forward | 0 |
+| V1.07 | V1 | Form v3 nach E12: Radius 18/14/12/Pille/6, weiche Kartenschatten, hellere Linien, mehr Abstand (`redesign/form-v3.css`) | CSS global | alle (neu) | V1.06 | offen | | | |
 | V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | offen | | | |
 | V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | offen | | | |
 | V2.03 | V2 | Grid-Hülle (Leiste volle Höhe, Topbar rechts), ≥ 1025 px | CSS | Shell | V2.02 | offen | | | |
@@ -95,6 +96,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | Modulnamen Startseite | `module/startseite-*.js` (statt `uebersicht-*` aus AUFTRAG 4.5) | Claude |
 | 25.10.2026 | v1-STATUS | nach `redesign/STATUS-V1.md` verschoben, nichts gelöscht | Claude |
 | 25.10.2026 | E11 Farben | keine Beige-/Brauntöne mehr; übliche Dashboard-Farben: Schwarz/Weiß-Kontraste, Blau-Akzent, Hellblau-Auswahl. Nur Farbwerte, Struktur bleibt. Umsetzung in V1.03 | Melih |
+| 25.10.2026 | E12 Form | „übersichtlicher, runder, wärmer (nicht Farben)“: Radius Karten 18/Knöpfe 12/Pillen, weiche Schatten, mehr Luft, Startseite neu geordnet (PLAN-V2 E12). Umsetzung: V1.07 (Token) direkt nach V1.06, dann V2/Startseite danach | Melih |
+| 25.10.2026 | Reihenfolge | Melih: „Farben top, aber Struktur wie alt – ich will neue Struktur und Design“ (Referenz: Quicken-Bild + Entwürfe `startseite.html`, `archetyp-liste-detail.html`). Struktur zuerst: nach V1.06 → V2 App-Shell → **V6.F Startseite-Struktur mit vorhandenen Daten** (Raster, 7 Karten, Termine-Liste, „Als Nächstes“) → V4 Archetypen (Liste + Seitenpanel, Formular mit Abschnittsnavigation) → V3 Bausteine nur soweit dafür nötig → V5 Kalender → V6.B Backend-Kennzahlen → V7 → V8. Paket-IDs bleiben | Melih |
 | 25.10.2026 | E11 geschärft | „nicht so bunt“, beiger Warnbalken weg. Nach Recherche (Linear/Vercel achromatisch + ein Akzent; Primer/Atlassian Banner sparsam): Grau + Schwarz/Weiß, **ein** Blau, Signalfarben nur bei Problemen, Warnbalken neutral mit farbigem Symbol. Werte `redesign/palette-v2.css` (überschrieben), Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Hellblau-Variante (`blau-*.png`) verworfen | Melih |
 
 ## 7 Offene Fragen
@@ -124,7 +127,9 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V1.02: Schriftstufen (`?v=20261025v102`). Für V1.03 gefunden: `--warning` (Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info` (Oliv), `--today` im Neu-Design noch nicht überschrieben | `f27fc6b0` | V1.03 |
 | 25.10.2026 | V1.03: ruhige Palette (Grau, Schwarz/Weiß, ein Blau) eingebaut (`?v=20261025v103`) | `9ead14d9` | V1.04 |
 | 25.10.2026 | V1.04: Bewegungs-Tokens (`?v=20261025v104`) | `58ec8d28` | V1.05 |
-| 25.10.2026 | V1.05: Kontrast-Test 15 Fälle inkl. Beige-Wache | dieser Commit | V1.06 |
+| 25.10.2026 | V1.05: Kontrast-Test 15 Fälle inkl. Beige-Wache | `748a208b` | V1.06 |
+| 25.10.2026 | Melih: Struktur zuerst; E12 Form freundlich/übersichtlich (Vorschau `frei-*.png`) | – | V1.07 |
+| 25.10.2026 | V1.06: Phasenabschluss V1 grün, Merge main, Push | dieser Commit | V1.07 |
 
 ## 9 Abschluss
 offen
