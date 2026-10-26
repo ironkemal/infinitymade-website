@@ -64,11 +64,11 @@ neue `statistik.routes.test.js`, `berlin-tag.js`, `berlin-tag.test.js`.
 Damit ist der frühere ACK-Stopp für genau B01/B02 aufgehoben. Weitere Backend-Dateien,
 insbesondere `server.js`, sind noch nicht zugeteilt. PRIMARY bleibt unverändert bei Claude.
 
-B01 ist lokal fertig, von Astra unabhängig abgenommen und in diesem Commit:
+B01 ist lokal fertig, von Astra unabhängig abgenommen und als `e94acaae` committet:
 drei Zeilen Owner-Gate sowie neuer echter Router-/SDK-Grenztest. Sol hat ausschließlich
 Route und Test bearbeitet. Der erste Modelllauf endete am Nutzungslimit; die automatische
 Fortsetzung ist abgeschlossen, kein zweiter Schreiber wurde gestartet. B02 ist separat
-gebaut und in Prüfung; seine beiden Dateien gehören nicht zum B01-Commit.
+gebaut und unabhängig geprüft; seine beiden Dateien gehören nicht zum B01-Commit.
 
 ## Fragen und Prüfgrenzen
 
@@ -151,6 +151,29 @@ beim Wechsel auf 1024 px wird `aria-expanded=false` nach der Rollenbereinigung
 erneut gesetzt, obwohl die mobile Gruppe offen ist. Exakte Reproduktionen per
 Queue übergeben. Claude führt sie in PRIMARY als R-18/R-19 und Paket V2.07b.
 T3-Inkognito-Probetab anschließend geschlossen, keine Referenzbilder verändert.
+
+### B02: lokale Paketnachweise
+
+- Neuer Export `berlinMonatsgrenzen(jetzt = new Date())` in bestehendem Modul:
+  17 Zeilen, ausschließlich Wiederverwendung von `berlinHeute` und
+  `berlinTagesgrenzen`; Rückgabe `{monat, von, bisExklusiv}`, ungültige Eingaben `null`.
+  Erste Verwendung nur in Tests; alte UTC-Statistik ruft den Helfer nicht auf.
+- Rotphase: fehlender Export. Danach 13/13 grün, acht neue Tests und alle alten
+  Assertions erhalten. März 743 Stunden, Oktober 745 Stunden, Schaltjahr,
+  Monats-/Jahreswechsel und exklusives Ende mit festen Erwartungswerten geprüft.
+- Funktionsmeister hat Absicht und Erstverwendung erhalten, keine Fehler gefunden;
+  Tests eigenständig lokal sowie mit UTC, New York und Kiritimati ausgeführt.
+- Eigener vollständiger Lauf `npm test`: 4.121 bestanden (2.154 Frontend,
+  1.649 Backend, 318 Werkzeuge), null Fehler und null übersprungen, Exit 0.
+  Protokoll `/tmp/praxura-codex-b02-8ze1yeuq.log`.
+- T1 nach gezieltem Staging: Syntax, Dashboard-Größe, IDs 1.271/52, Wachen,
+  STATUS-Wache und Whitespaceprüfung grün. B02 ist der zweite eigene Produktcommit.
+- Funktionskarte/STATUS bleiben ausschließlich beim Integrator. Neue Funktion dort
+  im Integrationscommit ergänzen; B02 ist lokal geprüft, noch nicht live ausgeliefert.
+
+Sitzungsstand auf Melihs Wunsch mit `context-save` außerhalb des Repos gesichert:
+`~/.gstack/projects/ironkemal-infinitymade-website/checkpoints/20261026-134426-praxura-sitzung-bis-b01.md`.
+Der aktive B01/B02-Auftrag bleibt erhalten; keine Produktdatei durch das Speichern verändert.
 
 Neue Funktionen vorab im INDEX suchen und beim Funktionsmeister anfragen;
 nachher Absicht und Erstverwendung melden. Funktionskarte und zentrale STATUS-Datei

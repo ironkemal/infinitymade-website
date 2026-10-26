@@ -65,3 +65,20 @@ export function berlinTagesgrenzen(tag) {
   });
   return bounds.every(Boolean) ? { tag, von: bounds[0], bisExklusiv: bounds[1] } : null;
 }
+
+/**
+ * UTC-Grenzen des aktuellen Berliner Kalendermonats; Ende ist exklusiv.
+ * Für die spätere Startseite; die bestehende UTC-Statistik bleibt unverändert.
+ * @param {Date} [jetzt]
+ * @returns {{monat: string, von: string, bisExklusiv: string} | null}
+ */
+export function berlinMonatsgrenzen(jetzt = new Date()) {
+  if (!(jetzt instanceof Date) || !Number.isFinite(jetzt.getTime())) return null;
+  const monat = berlinHeute(jetzt).slice(0, 7);
+  const [jahr, nummer] = monat.split('-').map(Number);
+  const folgejahr = String(nummer === 12 ? jahr + 1 : jahr).padStart(4, '0');
+  const folgemonat = String(nummer === 12 ? 1 : nummer + 1).padStart(2, '0');
+  const start = berlinTagesgrenzen(`${monat}-01`);
+  const ende = berlinTagesgrenzen(`${folgejahr}-${folgemonat}-01`);
+  return start && ende ? { monat, von: start.von, bisExklusiv: ende.von } : null;
+}
