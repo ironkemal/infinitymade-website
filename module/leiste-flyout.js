@@ -11,7 +11,7 @@
  * Muster wie module/kalender-kontextmenue.js: erst Lage setzen, dann einhängen, Fokus ohne Scroll.
  */
 
-import { naechsterIndex } from './kopf-menue.js?v=20261026s211';
+import { naechsterIndex } from './kopf-menue.js?v=20261026s212';
 
 const RAND = 8;
 const ABSTAND = 8;
@@ -81,6 +81,7 @@ function oeffne(gruppe, kopf) {
     knopf.type = 'button';
     knopf.className = 'px-flyout-eintrag' + (orig.classList.contains('active') ? ' active' : '');
     knopf.setAttribute('role', 'menuitem');
+    knopf.tabIndex = -1;   // R-21: Wandern per Pfeiltasten, nicht per Tab
     if (orig.classList.contains('active')) knopf.setAttribute('aria-current', 'page');
     const symbol = orig.querySelector('.icon');
     if (symbol) knopf.appendChild(symbol.cloneNode(true));
@@ -135,6 +136,17 @@ export function verdrahteFlyout() {
   document.addEventListener('keydown', (e) => {
     if (!feld) return;
     if (e.key === 'Escape') { e.preventDefault(); schliesseFlyout({ fokusZurueck: true }); }
+    else if (e.key === 'Tab') {
+      // R-21 (Codex, V2.07): Das Feld hängt am body-Ende; Tab würde dorthin bzw. aus dem Dokument
+      // springen. Stattdessen schließen und in der Leiste weiter: Shift+Tab → eigener Gruppenkopf,
+      // Tab → nächster Gruppenkopf bzw. „Menü einklappen“.
+      e.preventDefault();
+      const kopf = offenerKopf;
+      schliesseFlyout();
+      const kette = [...document.querySelectorAll('#sidebarNav .nav-group-header, #sidebar .px-einklappen')];
+      const ziel = e.shiftKey ? kopf : kette[kette.indexOf(kopf) + 1] || kopf;
+      ziel?.focus({ preventScroll: true });
+    }
     else if (e.key === 'ArrowDown') { e.preventDefault(); bewege(1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); bewege(-1); }
     else if (e.key === 'Home') { e.preventDefault(); fokussiere(eintraege()[0]); }

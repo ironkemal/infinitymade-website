@@ -19,9 +19,9 @@
  * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s211';
-import { verdrahteProfil } from './kopf-profil.js?v=20261026s211';
-import { verdrahteNeu } from './kopf-neu.js?v=20261026s211';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s212';
+import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
+import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
@@ -87,8 +87,12 @@ function einklappKnopf() {
     knopf.title = zu ? 'Menü ausklappen' : 'Menü einklappen';
     knopf.querySelector('span').textContent = knopf.title;
   };
-  knopf.addEventListener('click', () => { alt.click(); spiegeln(); kopfRollen(); });
+  knopf.addEventListener('click', () => alt.click());
   spiegeln();
+  // R-20 (Codex, V2.06): Die Shell lädt per import() und kann vor oder nach der Wiederherstellung
+  // von sidebar_collapsed in dashboard.js starten. Darum nicht nur beim Start/Klick spiegeln,
+  // sondern jede Klassenänderung an der Leiste beobachten.
+  new MutationObserver(() => { spiegeln(); kopfRollen(); }).observe(leiste, { attributes: true, attributeFilter: ['class'] });
   leiste.append(knopf);
 }
 

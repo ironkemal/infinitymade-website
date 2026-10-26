@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-26",
  "dateien": 483,
- "funktionen": 3847,
+ "funktionen": 3848,
  "module": [
   "abrechnung",
   "anamnese",
@@ -36331,7 +36331,6 @@
     "log"
    ],
    "calledBy": [
-    "eintraege",
     "eintrag",
     "kopfMenue",
     "oeffne",
@@ -103012,6 +103011,7 @@
    "calls": [],
    "calledBy": [
     "alleKodes",
+    "kopfMenue",
     "onIcdChange",
     "start",
     "verdrahteIcdDg"
@@ -121719,6 +121719,7 @@
    "calls": [],
    "calledBy": [
     "alleKodes",
+    "kopfMenue",
     "onIcdChange",
     "start",
     "verdrahteIcdDg"
@@ -122419,7 +122420,6 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "eintraege",
     "eintrag",
     "kopfMenue",
     "oeffne",
@@ -126998,8 +126998,8 @@
    "lang": "js",
    "file": "module/kopf-menue.js",
    "start": 26,
-   "end": 91,
-   "lines": 66,
+   "end": 93,
+   "lines": 68,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -127011,7 +127011,8 @@
     "eintrag",
     "fuellen",
     "naechsterIndex",
-    "schliesse"
+    "schliesse",
+    "zeige"
    ],
    "calledBy": [
     "verdrahteNeu",
@@ -127068,17 +127069,15 @@
    "lang": "js",
    "file": "module/kopf-menue.js",
    "start": 42,
-   "end": 49,
-   "lines": 8,
+   "end": 44,
+   "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [
-    "schliesse"
-   ],
+   "calls": [],
    "calledBy": [
     "bewege",
     "kopfMenue",
@@ -127131,12 +127130,79 @@
    ]
   },
   {
+   "name": "zeige",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/kopf-menue.js",
+   "start": 44,
+   "end": 44,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "alleKodes",
+    "kopfMenue",
+    "onIcdChange",
+    "start",
+    "verdrahteIcdDg"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "schliesse",
    "kind": "function",
    "lang": "js",
    "file": "module/kopf-menue.js",
-   "start": 44,
-   "end": 49,
+   "start": 46,
+   "end": 51,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -127146,7 +127212,6 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "eintraege",
     "eintrag",
     "kopfMenue",
     "oeffne",
@@ -127203,8 +127268,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kopf-menue.js",
-   "start": 51,
-   "end": 62,
+   "start": 53,
+   "end": 64,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -132681,8 +132746,8 @@
    "lang": "js",
    "file": "module/leiste-flyout.js",
    "start": 63,
-   "end": 115,
-   "lines": 53,
+   "end": 116,
+   "lines": 54,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -132751,9 +132816,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 119,
-   "end": 151,
-   "lines": 33,
+   "start": 120,
+   "end": 163,
+   "lines": 44,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -132822,8 +132887,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 154,
-   "end": 163,
+   "start": 166,
+   "end": 175,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -166248,8 +166313,8 @@
    "lang": "js",
    "file": "module/shell-neu.js",
    "start": 76,
-   "end": 93,
-   "lines": 18,
+   "end": 97,
+   "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -166376,8 +166441,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 96,
-   "end": 105,
+   "start": 100,
+   "end": 109,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -220149,7 +220214,7 @@
    "orte": [
     "api-backend/server.js:3889",
     "module/kalender-kontextmenue.js:92",
-    "module/kopf-menue.js:44"
+    "module/kopf-menue.js:46"
    ],
    "aynalar": []
   },
@@ -220204,6 +220269,15 @@
     "api-backend/preise_pruefen.mjs:111",
     "dashboard.js:13977",
     "module/rezept-barcode-bestaetigung.js:60"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "zeige",
+   "orte": [
+    "module/app-installieren.js:26",
+    "module/icd-dg-verdrahtung.js:177",
+    "module/kopf-menue.js:44"
    ],
    "aynalar": []
   },
@@ -221314,14 +221388,6 @@
    "orte": [
     "module/abrechnung-verlauf.js:227",
     "module/termin-panel.js:280"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "zeige",
-   "orte": [
-    "module/app-installieren.js:26",
-    "module/icd-dg-verdrahtung.js:177"
    ],
    "aynalar": []
   },

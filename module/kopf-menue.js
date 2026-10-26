@@ -40,6 +40,8 @@ export function kopfMenue({ klasse, id, fuellen }) {
   wrap.append(knopf, menue);
 
   const eintraege = () => [...menue.querySelectorAll(`.${klasse}-eintrag`)];
+  // R-22 (Codex, V2.08): Fokus ohne die App zu verschieben, im (scrollenden) Feld sichtbar machen.
+  const zeige = (el) => { if (!el) return; el.focus({ preventScroll: true }); el.scrollIntoView?.({ block: 'nearest' }); };
 
   function schliesse({ fokusZurueck = false } = {}) {
     if (menue.hidden) return;
@@ -68,7 +70,7 @@ export function kopfMenue({ klasse, id, fuellen }) {
     if (!eintraege().length) return;
     menue.hidden = false;
     knopf.setAttribute('aria-expanded', 'true');
-    eintraege()[0].focus({ preventScroll: true });
+    zeige(eintraege()[0]);
   });
   document.addEventListener('keydown', (e) => {
     if (menue.hidden) return;
@@ -82,7 +84,7 @@ export function kopfMenue({ klasse, id, fuellen }) {
     else if (e.key === 'End') ziel = liste.length - 1;
     if (ziel < -1) return;
     e.preventDefault();
-    liste[ziel]?.focus({ preventScroll: true });
+    zeige(liste[ziel]);
   });
   document.addEventListener('pointerdown', (e) => { if (!wrap.contains(e.target)) schliesse(); }, true);
   document.addEventListener('focusin', (e) => { if (!wrap.contains(e.target)) schliesse(); });

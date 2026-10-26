@@ -348,6 +348,10 @@
   [data-design="neu"] .px-profil[aria-expanded="true"] { border-color: var(--border-strong); }
   [data-design="neu"] :is(.px-profil-menue, .px-neu-menue) {
     position: absolute;
+    /* R-22: nie länger als der Platz unter der Kopfleiste, sonst intern scrollen. */
+    max-height: calc(100vh - var(--topbar-h) - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     right: 0;
     top: calc(100% + 8px);
     z-index: 450;

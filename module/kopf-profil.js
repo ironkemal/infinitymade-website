@@ -8,7 +8,7 @@
  * Modul steht (Klasse px-profil-bereit am <html>), damit es nie keinen Abmeldeweg gibt.
  * Menü-Mechanik (Öffnen, Tastatur, Außenklick) seit V2.10 in module/kopf-menue.js.
  */
-import { kopfMenue } from './kopf-menue.js?v=20261026s211';
+import { kopfMenue } from './kopf-menue.js?v=20261026s212';
 
 /** Reine Hilfe (testbar): bis zu zwei Initialen aus einem Namen oder einer E-Mail. */
 export function initialen(name) {

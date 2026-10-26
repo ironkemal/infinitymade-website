@@ -11,7 +11,7 @@
  * Rechte: ein Eintrag erscheint nur, wenn sein Bereich in der Leiste steht (Rolle/Plan/Sichtbarkeit
  * entscheidet dashboard.js) bzw. der Scan-Knopf von initBarcodeDialog freigeschaltet wurde.
  */
-import { kopfMenue } from './kopf-menue.js?v=20261026s211';
+import { kopfMenue } from './kopf-menue.js?v=20261026s212';
 
 const SVG = (pfad) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pfad}</svg>`;
 const SYMBOL = {
