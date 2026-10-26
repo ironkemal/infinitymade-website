@@ -85,39 +85,44 @@ export const NAV_REGISTRY = {
     { id: 'settings',      key: 'nav_settings',      label: 'Einstellungen',   roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   podologie: [
+    // Redesign v2, E7 (Melih 25.10.2026, Gruppen nach podoloji-Bericht, PLAN-V2 3.2):
+    // Heute · Termine · Patienten · Abrechnung · Praxis · Einstellungen. Reihenfolge der
+    // Zeilen = Reihenfolge in Leiste und admin-Sichtbarkeit. Wirkt in beiden Designs.
     { id: 'overview',          key: 'nav_overview',          label: 'Dashboard',            roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'ueberblick',        key: 'nav_ueberblick',        label: 'Überblick',            roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'calendar',          key: 'nav_calendar',          label: 'Terminkalender',       roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'anfragen',          key: 'nav_anfragen',          label: 'Termin-Anfragen',      roles: ['owner'],             group: 'termine' },
-    { id: 'warteliste',        key: 'nav_warteliste',        label: 'Warteliste',           roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'kunden',            key: 'nav_kunden',            label: 'Patienten',            roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'anamnese',          key: 'nav_anamnese',          label: 'Anamnese',             roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'notizen',           key: 'nav_notizen',           label: 'Notizen',              roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'fahrtenbuch',       key: 'nav_fahrtenbuch',       label: 'Fahrtenbuch',          roles: ['owner', 'employee'], group: 'team' },
-    { id: 'hours',             key: 'nav_hours',             label: 'Verfügbarkeit',        roles: ['owner', 'employee'], group: 'team' },
-    { id: 'team',              key: 'nav_team',              label: 'Team',                 roles: ['owner', 'employee'], group: 'team' },
-    { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'patienten' },
     // Seit 09.09.2026 heisst dieser Bildschirm „Behandlungen" und traegt nur
     // noch Tagesbehandlung + Verordnungsliste. Der §302-Teil ist nach
     // `abrechnung` umgezogen — EIN Abrechnungsbildschirm fuer alle vier
     // Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 0 Nr. 1).
-    { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Behandlungen',         roles: ['owner'],             group: 'abrechnung' },
+    // Seit E7 (26.10.2026) in „Heute“: Tagesarbeit, nicht Abrechnung.
+    { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Behandlungen',         roles: ['owner'],             group: 'uebersicht' },
+    { id: 'calendar',          key: 'nav_calendar',          label: 'Terminkalender',       roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'anfragen',          key: 'nav_anfragen',          label: 'Termin-Anfragen',      roles: ['owner'],             group: 'termine' },
+    { id: 'warteliste',        key: 'nav_warteliste',        label: 'Warteliste',           roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'kunden',            key: 'nav_kunden',            label: 'Patienten',            roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'anamnese',          key: 'nav_anamnese',          label: 'Anamnese',             roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'notizen',           key: 'nav_notizen',           label: 'Notizen',              roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'patienten' },
+    // Bleibt unter Abrechnung (Meeting 30.08.2026, module/nav-registry.test.js); PLAN-V2 sah Praxis vor → offene Frage.
+    { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
     // ⚠️ Mit diesem Eintrag gilt die Planschranke has302Access() (Professional+)
     // ab jetzt auch fuer die Podologie — eine Regel, kein Sonderweg
     // (Kemal, 08.09.2026; geprueft: kein Konto verliert eine genutzte Funktion).
     { id: 'abrechnung',        key: 'nav_abrechnung',        label: '§302-Abrechnung',      roles: ['owner'],             group: 'abrechnung' },
     { id: 'rechnungen',        key: 'nav_rechnungen',        label: 'Rechnungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'belegliste',        key: 'nav_belegliste',        label: 'Zahlungsjournal',      roles: ['owner'],             group: 'abrechnung' },
     { id: 'mahnwesen',         key: 'nav_mahnwesen',         label: 'Mahnwesen',            roles: ['owner'],             group: 'abrechnung' },
     { id: 'statistik',         key: 'nav_statistik',         label: 'Auswertungen',         roles: ['owner'],             group: 'abrechnung' },
+    { id: 'team',              key: 'nav_team',              label: 'Team',                 roles: ['owner', 'employee'], group: 'team' },
+    { id: 'hours',             key: 'nav_hours',             label: 'Verfügbarkeit',        roles: ['owner', 'employee'], group: 'team' },
+    { id: 'fahrtenbuch',       key: 'nav_fahrtenbuch',       label: 'Fahrtenbuch',          roles: ['owner', 'employee'], group: 'team' },
     { id: 'b2b',               key: 'nav_b2b',               label: 'Zuweiser',             roles: ['owner', 'employee'], group: 'team' },
-    { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback',          key: 'nav_feedback',          label: 'Feedback & Support',      roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'team' },
+    { id: 'settings',          key: 'nav_settings',          label: 'Einstellungen',        roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',          key: 'nav_vorlagen',          label: 'Vorlagen',             roles: ['owner'],             group: 'einstellungen' },
-    { id: 'settings',          key: 'nav_settings',          label: 'Einstellungen',        roles: ['owner', 'employee'], group: 'einstellungen' }
+    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback',          key: 'nav_feedback',          label: 'Feedback & Support',      roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   praxis: [
     { id: 'overview',      key: 'nav_overview',      label: 'Dashboard',       roles: ['owner', 'employee'], group: 'uebersicht' },

@@ -123,9 +123,11 @@ test('Podologie-Menue: Verteilung nach Arbeitsablauf', () => {
   const gruppe = (id) => eintrag('podologie', id).group;
   assert.equal(gruppe('overview'), 'uebersicht');
   for (const id of ['calendar', 'anfragen', 'warteliste']) assert.equal(gruppe(id), 'termine', id);
-  for (const id of ['kunden', 'anamnese', 'notizen', 'verordnungen', 'fussstatus', 'b2c']) assert.equal(gruppe(id), 'patienten', id);
-  for (const id of ['podologie-billing', 'abrechnung', 'rechnungen', 'belegliste', 'mahnwesen', 'statistik', 'services']) assert.equal(gruppe(id), 'abrechnung', id);
-  for (const id of ['hours', 'team', 'fahrtenbuch', 'b2b']) assert.equal(gruppe(id), 'team', id);
+  // Redesign v2, E7 (26.10.2026): Behandlungen = Tagesarbeit → Heute; Patientenpost → Praxis.
+  assert.equal(gruppe('podologie-billing'), 'uebersicht');
+  for (const id of ['kunden', 'anamnese', 'notizen', 'verordnungen', 'fussstatus']) assert.equal(gruppe(id), 'patienten', id);
+  for (const id of ['abrechnung', 'rechnungen', 'belegliste', 'mahnwesen', 'statistik', 'services']) assert.equal(gruppe(id), 'abrechnung', id);
+  for (const id of ['hours', 'team', 'fahrtenbuch', 'b2b', 'b2c']) assert.equal(gruppe(id), 'team', id);
   for (const id of ['vorlagen', 'settings', 'feedback']) assert.equal(gruppe(id), 'einstellungen', id);
 });
 
