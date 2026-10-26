@@ -414,6 +414,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.06.2024
 - **Ne zaman lazım:** Ergotherapie (ergoterapi) hizmetlerinin, geçici atellerin ve ev ziyaretlerinin faturalandırılması ile ücret listesinin kontrol edilmesi gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, X4002 (38,43 Euro), X4102 (52,77 Euro)
+- **⚠️ ESKİMİŞ (gkv-302, 26.10.2026):** üç kez değişti — Fassung 25.07.2025 (pencereler 01.08.2025 / 01.10.2025) ve **Lesefassung Stand 01.07.2026** (Schiedsstelle 1 HE 12-26) geçerli; arşivde yok, `wissensbank` girişi bekliyor. Ayrıca bu `.txt` (-layout) sütun kaymalı — tablo `-raw` ile okunmalı. Ayrıntı: `sitzungen/2026-10-26_katalog-physio-ergo-logo.md`
 
 ### wissensbank/_archiv/20220421_Lesefassung_Anlage_3_Ernaehrungstherapie.txt
 - **Ne:** Anlage 3: notwendige Angaben auf der Heilmittelverordnung und einheitliche Regelungen zur Abrechnung zum Vertrag nach § 125 Absatz 1 SGB V für Ernährungstherapie über die Versorgung mit Leistungen der Ernährungstherapie und deren Vergütung.

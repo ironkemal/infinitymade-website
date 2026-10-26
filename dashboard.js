@@ -107,6 +107,7 @@ import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mai
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
+import { migrierePhysioAltlast } from './module/physio-katalog-migration.js?v=20261026p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -8313,6 +8314,7 @@ async function loadServices({ throwOnError = false } = {}) {
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
   await migratePodologieLegacyServices();
+  if (getSector() === 'physiotherapy' || getSector() === 'praxis') await migrierePhysioAltlast({ supabase, services: servicesCache, katalog: GKV_LEISTUNGSKATALOG.physiotherapy });
 
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
   await autoSeedGkvServices();
@@ -8390,7 +8392,7 @@ const GKV_PRICES = {
 const GKV_LEISTUNGSKATALOG = {
   physiotherapy: [
     { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, price_min: 29.63, price_max: 29.63, locked: true },
-    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '20–30', price: 35.59, price_min: 35.59, price_max: 35.59, locked: true },
+    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '15–25', price: 35.59, price_min: 35.59, price_max: 35.59, locked: true },
     { code: 'X0201', kuerzel: 'MLD45', title: 'Manuelle Lymphdrainage 45 min',            duration: 45, price: 53.94, price_min: 53.94, price_max: 53.94, locked: true },
     { code: 'X0202', kuerzel: 'MLD60', title: 'Manuelle Lymphdrainage 60 min',            duration: 60, price: 71.94, price_min: 71.94, price_max: 71.94, locked: true },
     { code: 'X0507', kuerzel: 'KGG',   title: 'KG-Gerät (bis 3 Pat., parallel)',          duration: 60, price: 55.81, price_min: 55.81, price_max: 55.81, locked: true },
@@ -8398,7 +8400,7 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'X0711', kuerzel: 'VOJ',   title: 'KG-ZNS Vojta Erwachsene Einzel',          duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, price_min: 88.94, price_max: 88.94, locked: true },
-    { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, price_min: 33.75, price_max: 33.75, locked: true },
+    { code: 'X0106', kuerzel: 'KMT',   title: 'Klassische Massagetherapie (KMT)',         duration: 20, duration_label: '15–20', price: 21.63, price_min: 21.63, price_max: 21.63, locked: true }, // bis 26.10.2026 falsch X0102 (= Unterwasserdruckstrahlmassage), s. module/physio-katalog-migration.js
     { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
   // Podologie: echte Heilmittelpositionsnummern (HPNR), keine Platzhalter.
@@ -8464,19 +8466,10 @@ const GKV_LEISTUNGSKATALOG = {
       preise: { '2025-07-01': 13.60, '2026-07-01': 16.66 },
       hinweis: 'Bei mehreren Patienten in derselben Einrichtung. Nur mit „Hausbesuch = Ja" auf Muster 13.' },
   ],
-  ergotherapie: [
-    { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, price_min: 55.00, price_max: 55.00, locked: true },
-    { code: 'ET2', kuerzel: 'SP',  title: 'Sensomotorisch-perzeptive Behandlung',       duration: 60, price: 78.00, price_min: 78.00, price_max: 78.00, locked: true },
-    { code: 'ET3', kuerzel: 'HLT', title: 'Hirnleistungstraining / neuropsych. Üben',  duration: 60, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
-    { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, price_min: 95.00, price_max: 95.00, locked: true },
-  ],
-  logopaedie: [
-    { code: '09560', kuerzel: 'ST30', title: 'Sprachtherapie Einzel 30 Min', duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
-    { code: '09561', kuerzel: 'ST45', title: 'Sprachtherapie Einzel 45 Min', duration: 45, price: 72.00, price_min: 72.00, price_max: 72.00, locked: true },
-    { code: '09562', kuerzel: 'ST60', title: 'Sprachtherapie Einzel 60 Min', duration: 60, price: 92.00, price_min: 92.00, price_max: 92.00, locked: true },
-    { code: '09570', kuerzel: 'SLK',  title: 'Schlucktherapie',       duration: 45, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
-    { code: '09580', kuerzel: 'STM',  title: 'Stimmtherapie',         duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
-  ],
+  // Ergo/Logo: die alten Einträge (ET1–ET4, 09560–09580) waren erfundene Codes mit falschen Preisen
+  // (gkv-302, 26.10.2026: wissensbank/sitzungen/2026-10-26_katalog-physio-ergo-logo.md). Leer, bis der Bereich dran ist.
+  ergotherapie: [],
+  logopaedie: [],
 };
 GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
 
