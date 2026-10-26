@@ -420,3 +420,31 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - B03 bleibt bis unabhängiger Nachprüfung R3 und vollständiger Suite gesperrt.
   Neue Runde `praxura-b03-befreiung-nachpruefung-20261027-r3`; Fullsuite-Log
   `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b03-fix-npm-momfkb4c.log`.
+
+## B03/B04 lokal abgenommen und Übergabe
+
+- B04-Produktcommit `a99d3b8a`, Basis `7f21652e`. Selektiver Patch mit nur den
+  zwei Routerdateien an Claude übergeben, `git apply --check` in PRIMARY grün:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b04-a99d3b8a-uboz78ji.patch`.
+  Eigene Koordinationsdatei ausdrücklich nicht integrieren. Pre-commit markierte
+  zunächst den Variablennamen eines synthetischen Fehlertexts als Secret;
+  Umbenennung in `fehlerDetails`, identische Assertions, erneut 55/55 grün.
+  Keine Hook-Ausnahme oder SKIP-Variable verwendet.
+- B03-R3 abgeschlossen: lokaler Befreiungsbefund geschlossen, kein belegter
+  Restblocker. Reviewer bestätigte getrennt gkv-/guvenlik-/onprem-Pfade;
+  35/35 B03-Tests plus 37/37 eigene Proben grün. B03-Dateien während der
+  Nachprüfung unverändert. Keine Live-/Release-/Transaktionssnapshotfreigabe.
+- Gesamtsuite nach Fix: 2.154 / 1.739 / 318 = 4.211 grün, null Fehler/Skip.
+  Logpfad wie oben. B03 wird separat mit genau seinen zwei neuen Produktdateien
+  committet und selektiv übergeben. Zentrale Register/Funktionskarte bleiben
+  bei Claude; Absicht weiter spätere Startseiten-Zuzahlungsblöcke, zuerst Tests.
+- Integration noch erforderlich: B03-Adapter für B04, weitere Geld-/Mahn-/
+  Abrechnungs-/Verfügbarkeitsblöcke und Router-Mount sind keine abgeschlossenen
+  Kennzahlen. B03 zählt nur GKV-Zuzahlung und VKZ03, keine Privat-/Ausfallreste.
+- V3.W `102211f7` unabhängig gelesen und isoliert gerendert: globaler Emoji-
+  Filter verändert auch Nutzdatenanzeige; `contenteditable` ohne explizites
+  `="true"` wird trotz echter Editierbarkeit verändert. Repros an Claude,
+  keine Frontendänderung. Dynamische Titel und implizite Optionswerte als
+  zusätzliche Integrationsgrenzen gemeldet, regulärer App-Auslöser dort nicht
+  belegt. Warntext-Kontrast 9,93:1 hell / 10,73:1 dunkel; keine vollständige
+  Kalender-/Performanceabnahme. Claude besitzt alle Korrekturen dieses Pakets.
