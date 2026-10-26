@@ -530,16 +530,17 @@
     box-shadow: var(--shadow-e1);
   }
   [data-design="neu"] .dash-banner.pastdue { border-color: var(--st-bad-line); }
+  /* Melih 26.10.: Hintergrund weiß, nur das Symbol farbig (Warnung Orange, Fehler Rot). */
   [data-design="neu"] .dash-banner-icon {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--bg-hover);
+    width: 28px;
+    height: 28px;
+    background: transparent;
     color: var(--text-muted);
     font-size: 18px;
   }
+  [data-design="neu"] .dash-banner.trial .dash-banner-icon { color: var(--warning); }
   [data-design="neu"] .dash-banner-icon svg { width: 18px; height: 18px; }
   [data-design="neu"] .dash-banner.pastdue .dash-banner-icon { color: var(--st-bad-fg, var(--danger)); }
   [data-design="neu"] .dash-banner-content strong { color: var(--text-main); font-weight: 600; }

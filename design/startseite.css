@@ -118,7 +118,10 @@
   [data-design="neu"] .px-todo-zeile:disabled { cursor: default; }
   [data-design="neu"] .px-todo-zeile .kachel { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-hover); color: var(--text-muted); }
   [data-design="neu"] .px-todo-zeile.px-ton-bad .kachel { color: var(--st-bad-fg, var(--danger)); background: var(--st-bad-bg, var(--bg-hover)); border-color: var(--st-bad-line, var(--border)); }
-  [data-design="neu"] .px-todo-zeile.px-ton-warn .kachel { color: var(--warning-text, var(--text-muted)); }
+  [data-design="neu"] .px-todo-zeile.px-ton-warn .kachel { color: var(--warning); }
+  /* Melih 26.10.: Kachel-Hintergrund weiß, nur das Symbol farbig. */
+  [data-design="neu"] .px-todo-zeile .kachel,
+  [data-design="neu"] .px-todo-zeile.px-ton-bad .kachel { background: var(--bg-card-solid); }
   [data-design="neu"] .px-todo-zeile.px-ton-info .kachel { color: var(--info, var(--accent)); }
   [data-design="neu"] .px-todo-zeile b { display: block; font-size: 14px; line-height: 20px; font-weight: 500; }
   [data-design="neu"] .px-todo-zeile small { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

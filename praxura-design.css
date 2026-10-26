@@ -123,9 +123,10 @@
   --danger: #B42318;
   --danger-dim: #FEF3F2;             /* einzige getönte Signalfläche: echtes Problem */
   --danger-bg: #FEF3F2;
-  /* V3.W (Melih 26.10.: kein dominantes Orange, „soll nicht nach KI aussehen“): Warnung ruhig in
-     Schiefer/Grau; die Bedeutung trägt der Wortlaut + Symbol. Rot bleibt nur für echte Probleme. */
-  --warning: #64748B;                /* Warnsymbol Schiefer, Grafik 4,8:1 */
+  /* V3.W (Melih 26.10.): Flächen weiß, Text neutral, NUR das Warnsymbol in modernem Orange
+     (Claude-Ton; #D97757 hätte auf --warning-dim nur 2,96:1, darum etwas dunkler).
+     Die Bedeutung trägt der Wortlaut. Rot bleibt nur für echte Probleme. */
+  --warning: #CC6B49;                /* Warnsymbol Orange, Grafik 3,6:1 auf Weiß */
   --warning-text: #344054;           /* Warntext dunkelgrau, 10:1 */
   --warning-dim: #F8F9FB;            /* Warnbalken neutral, nicht beige */
   --warning-bg: #F8F9FB;
@@ -208,7 +209,7 @@
   --danger: #F97066;
   --danger-dim: #2B1716;
   --danger-bg: #2B1716;
-  --warning: #A6AEBB;
+  --warning: #D97757;                /* Claude-Orange, 5,8:1 auf Karte dunkel */
   --warning-text: #CECFD2;
   --warning-dim: #1A1E25;
   --warning-bg: #1A1E25;
