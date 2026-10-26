@@ -286,6 +286,12 @@ jobs:
             | sort -u)"
           for path in $paths; do
             case "$path" in /*) ;; *) path="/$path" ;; esac
+            # /manifest.json leitet Caddy an api:3000 weiter (O-214) — im Smoke
+            # läuft kein api-Container, 502 wäre hier kein fehlendes Asset.
+            if [ "$path" = "/manifest.json" ]; then
+              echo "↷ ${path} -> api (O-214), hier nicht geprüft"
+              continue
+            fi
             code="$(curl -sk -o /dev/null -w '%{http_code}' --resolve smoke.local:8443:127.0.0.1 "https://smoke.local:8443${path}")"
             if [ "$code" = "200" ]; then
               echo "✓ ${path} -> 200"
