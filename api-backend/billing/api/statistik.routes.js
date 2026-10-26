@@ -46,6 +46,9 @@ router.get('/statistik', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
+    if (auth.profile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur für Praxisinhaber verfügbar', code: 'NUR_INHABER' });
+    }
     const { tenantId } = auth;
 
     // Clamp monate: 1..12, default 6

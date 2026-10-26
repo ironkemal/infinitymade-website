@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-26",
  "dateien": 483,
- "funktionen": 3846,
+ "funktionen": 3847,
  "module": [
   "abrechnung",
   "anamnese",
@@ -14213,8 +14213,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 176,
-   "end": 189,
+   "start": 179,
+   "end": 192,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -14304,8 +14304,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 328,
-   "end": 353,
+   "start": 331,
+   "end": 356,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -14328,8 +14328,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/billing/api/statistik.routes.js",
-   "start": 375,
-   "end": 430,
+   "start": 378,
+   "end": 433,
    "lines": 56,
    "spiegelHinweis": null,
    "tables": [],
@@ -29408,6 +29408,7 @@
    "calls": [],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatsgrenzen",
     "berlinTagVon",
     "bgFelderAusRezept",
     "buildUNB",
@@ -29592,6 +29593,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatsgrenzen",
     "nurZiffern",
     "tagesgrenzen"
    ],
@@ -29639,6 +29641,29 @@
    "uiPfad": [
     "ortak yardımcı — 38 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "berlinMonatsgrenzen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/berlin-tag.js",
+   "start": 75,
+   "end": 84,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "berlinHeute",
+    "berlinTagesgrenzen"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "istKutu",
@@ -107132,6 +107157,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatsgrenzen",
     "nurZiffern",
     "tagesgrenzen"
    ],
@@ -182540,6 +182566,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "berlinMonatsgrenzen",
     "berlinTagVon",
     "bgFelderAusRezept",
     "buildUNB",
@@ -219476,7 +219503,7 @@
    "name": "r2",
    "orte": [
     "api-backend/billing/api/abrechnung.routes.js:2339",
-    "api-backend/billing/api/statistik.routes.js:176",
+    "api-backend/billing/api/statistik.routes.js:179",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",
     "api-backend/billing/dta/preflight.js:781",
