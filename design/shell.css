@@ -513,3 +513,57 @@
   [data-design="neu"] .px-neu span { display: none; }
   [data-design="neu"] .px-neu-menue { left: auto; right: -96px; }
 }
+
+/* ── V3.W Hinweise ruhig (Melih 26.10.: kein dominantes Orange, keine Emojis) ──────
+   Ein Banner-Baustein für alle Varianten: weiße Karte, feine Linie, Symbol monochrom in
+   einem grauen Kreis, Titel dunkel (nicht farbig), Text gedämpft, Aktion als Zweitknopf.
+   Die Dringlichkeit trägt der Wortlaut. Nur „pastdue“ (Zahlung fehlgeschlagen) bekommt
+   das Rot – als Symbolfarbe und feiner Rand, nie als Fläche. Emojis: module/ohne-emoji.js. */
+@media screen {
+  [data-design="neu"] .dash-banner,
+  [data-design="neu"] .dash-banner:is(.welcome, .pending, .trial, .pastdue) {
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card-solid);
+    box-shadow: var(--shadow-e1);
+  }
+  [data-design="neu"] .dash-banner.pastdue { border-color: var(--st-bad-line); }
+  [data-design="neu"] .dash-banner-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+  [data-design="neu"] .dash-banner-icon svg { width: 18px; height: 18px; }
+  [data-design="neu"] .dash-banner.pastdue .dash-banner-icon { color: var(--st-bad-fg, var(--danger)); }
+  [data-design="neu"] .dash-banner-content strong { color: var(--text-main); font-weight: 600; }
+  [data-design="neu"] .dash-banner-content p { color: var(--text-muted); }
+  [data-design="neu"] .dash-banner-action {
+    border-color: var(--border-strong);
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font-weight: 500;
+  }
+  [data-design="neu"] .dash-banner-action:hover { background: var(--bg-hover); }
+
+  /* IK-Hinweis (dashboard.js:1086 rendert ihn mit Inline-Farben): auf den Banner-Baustein bringen. */
+  [data-design="neu"] #ik-missing-banner > div {
+    background: var(--bg-card-solid) !important;  /* gegen Inline-Blau */
+    border: 1px solid var(--border) !important;    /* gegen Inline-Blau */
+    border-radius: var(--radius-md) !important;    /* gegen Inline 8px */
+    padding: 14px 18px !important;                 /* gegen Inline 12/14 */
+    box-shadow: var(--shadow-e1);
+    font-size: 14px !important;                    /* gegen Inline 13px */
+  }
+  [data-design="neu"] #ik-missing-banner > div a { color: var(--accent) !important; font-weight: 500; } /* gegen Inline-Gold */
+
+  /* Symbole aus module/ohne-emoji.js: Textfarbe, Grundlinie wie Text. */
+  [data-design="neu"] .px-sym-wrap { display: inline-flex; vertical-align: -0.15em; }
+  [data-design="neu"] .px-sym { flex-shrink: 0; }
+}

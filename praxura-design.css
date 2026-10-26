@@ -123,8 +123,10 @@
   --danger: #B42318;
   --danger-dim: #FEF3F2;             /* einzige getönte Signalfläche: echtes Problem */
   --danger-bg: #FEF3F2;
-  --warning: #DC6803;                /* Warnsymbol (statt Beige #D9BD8A), Grafik 3,3:1 */
-  --warning-text: #B54708;           /* 4,9:1 auf Grau */
+  /* V3.W (Melih 26.10.: kein dominantes Orange, „soll nicht nach KI aussehen“): Warnung ruhig in
+     Schiefer/Grau; die Bedeutung trägt der Wortlaut + Symbol. Rot bleibt nur für echte Probleme. */
+  --warning: #64748B;                /* Warnsymbol Schiefer, Grafik 4,8:1 */
+  --warning-text: #344054;           /* Warntext dunkelgrau, 10:1 */
   --warning-dim: #F8F9FB;            /* Warnbalken neutral, nicht beige */
   --warning-bg: #F8F9FB;
   --warning-border: #E4E7EC;
@@ -137,7 +139,7 @@
   --st-info-fg: #1D4ED8;  --st-info-bg: #EFF4FF;  --st-info-line: #D1E0FF;
   --st-ok-fg: #067647;    --st-ok-bg: #F2F4F7;    --st-ok-line: #E4E7EC;
   --st-neutral-fg: #344054; --st-neutral-bg: #F2F4F7; --st-neutral-line: #E4E7EC;
-  --st-warn-fg: #B54708;  --st-warn-bg: #F8F9FB;  --st-warn-line: #E4E7EC;
+  --st-warn-fg: #344054;  --st-warn-bg: #F8F9FB;  --st-warn-line: #E4E7EC;
   --st-bad-fg: #B42318;   --st-bad-bg: #FEF3F2;   --st-bad-line: #FECDCA;
 
   /* Diagramme: Blau trägt den Hauptwert, sonst Grau (chart-3 und Spur nur beschriftet) */
@@ -206,8 +208,8 @@
   --danger: #F97066;
   --danger-dim: #2B1716;
   --danger-bg: #2B1716;
-  --warning: #FDB022;
-  --warning-text: #FDB022;
+  --warning: #A6AEBB;
+  --warning-text: #CECFD2;
   --warning-dim: #1A1E25;
   --warning-bg: #1A1E25;
   --warning-border: #2F3540;
@@ -219,7 +221,7 @@
   --st-info-fg: #84ADFF;  --st-info-bg: #172036;  --st-info-line: #2A3A5E;
   --st-ok-fg: #47CD89;    --st-ok-bg: #22262F;    --st-ok-line: #2F3540;
   --st-neutral-fg: #CECFD2; --st-neutral-bg: #22262F; --st-neutral-line: #2F3540;
-  --st-warn-fg: #FDB022;  --st-warn-bg: #1A1E25;  --st-warn-line: #2F3540;
+  --st-warn-fg: #CECFD2;  --st-warn-bg: #1A1E25;  --st-warn-line: #2F3540;
   --st-bad-fg: #F97066;   --st-bad-bg: #2B1716;   --st-bad-line: #55201C;
 
   --chart-1: #60A5FA; --chart-2: #94A3B8; --chart-3: #3B82F6; --chart-4: #475467; --chart-rest: #262B33;

@@ -17,6 +17,7 @@
  * V2.09: Patientensuche in der Kopfleiste (module/kopf-suche.js), Kontext aus neu-start.js.
  * V2.10: „+ Neu“ (module/kopf-neu.js); Menü-Mechanik gemeinsam in module/kopf-menue.js.
  * V6.F01: Startseite „Heute“ (module/startseite-neu.js) im Bereich overview.
+ * V3.W: keine Emojis in der Oberfläche (module/ohne-emoji.js), Melih 26.10.2026.
  * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
@@ -24,6 +25,7 @@ import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
 import { verdrahteStartseite } from './startseite-neu.js?v=20261026s213';
+import { emojisAus } from './ohne-emoji.js?v=20261026s214';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
@@ -37,6 +39,7 @@ export function start({ kontext } = {}) {
   gestartet = true;
   const html = document.documentElement;
   html.dataset.pxShell = 'v2';
+  emojisAus();
   const setze = (id) => { const p = panelId(id); if (p) html.dataset.pxPanel = p; };
   setze(document.querySelector('.panel.active')?.id?.replace(/^panel-/, ''));
   markeInLeiste();

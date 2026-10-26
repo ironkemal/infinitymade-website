@@ -3,7 +3,7 @@
 > Üretim: 2026-10-26 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3881 fonksiyon** (3759 JS · 95 bash · 27 ps1) · 485 dosya · 42 sidebar modülü
+**3888 fonksiyon** (3766 JS · 95 bash · 27 ps1) · 486 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -489,7 +489,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
-- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:40 · module/termin-folge.js:194 · module/termin-heute.js:86
+- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:43 · module/termin-folge.js:194 · module/termin-heute.js:86
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:292 · module/fussbefund.js:792 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:828
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:140 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223 · module/startseite-rechnen.js:89
