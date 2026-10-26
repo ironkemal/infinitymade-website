@@ -552,6 +552,18 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     .filter(s => s.status === 'done')
     .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
+  // Kombi-Termin-Zeilen mit heilmittel_index > 0 meinen ein ANDERES Heilmittel
+  // der Verordnung. Der Mapper kennt dafür noch keine Position und hätte
+  // still die des ersten Heilmittels abgerechnet (falsche Position, falscher
+  // Preis — gkv-302, 26.10.2026). Lieber anhalten als falsch abrechnen.
+  const fremdesHeilmittel = doneSessions.find(s => (s.heilmittel_index || 0) > 0);
+  if (fremdesHeilmittel) {
+    const e = new Error(`Verordnung ${rx.id.slice(0, 8)}: Sitzung ${fremdesHeilmittel.session_number} gehört zum ` +
+      `${(fremdesHeilmittel.heilmittel_index || 0) + 1}. Heilmittel der Verordnung. Für weitere Heilmittel ist die ` +
+      'Abrechnung noch nicht freigeschaltet — bitte nicht abrechnen und den Support informieren.');
+    e.status = 422; e.code = 'WEITERES_HEILMITTEL_NICHT_UNTERSTUETZT'; throw e;
+  }
+
   const sessions = doneSessions.map(s => {
     const booking = s.bookings || s.booking_id || {};
     const service = booking.services || booking.service_id || booking.service || {};
@@ -886,7 +898,7 @@ router.post('/abrechnung/create', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id (
             id, user_id, service_id,
             services:service_id (id, required_certificate)
@@ -3615,7 +3627,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id (
             id, user_id, service_id,
             services:service_id (id, required_certificate)
@@ -4823,7 +4835,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer, street, plz, city),
         aerzte:arzt_id   (id, arzt_name, lanr, bsnr),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
         )
       `)
