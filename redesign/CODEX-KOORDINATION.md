@@ -398,3 +398,25 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Nächste Schritte: Reviewbefunde auswerten, höchstens drei gezielte Reparaturen,
   T1 nach explizitem Staging, kleine eigene Commits und selektive Produktpatches
   mit API-Vertrag/Grenzen an Claude. Zentrale Funktionskarte beim Integrator.
+
+## Pflichtreview und erste Produktübergabe
+
+- Unabhängiger Astra-Review R2 abgeschlossen: B04 ohne belegten Blocker,
+  guvenlik/onprem bestanden im lokalen Umfang. Reviewer führte 88/88 Focused-
+  Tests und neun zusätzliche B04-Proben grün aus. Keine Livefreigabe.
+- B04 wird als eigenes Paket committet: nur neuer Router und Vertragstests,
+  keine Fachadapter und kein `server.js`-Mount. Vor Fix bestand Gesamtsuite
+  einschließlich unverändertem B04 mit 4.209 Tests; dessen Reviewdateien danach
+  unverändert. API-Erfolg `status: "ok"`, Fehler fester Blockcode;
+  Ladervertrag `lader[name]({ tenantId })`. Mitarbeiter-Default leere Blöcke,
+  explizite Finanzanforderung 403. Fehlende Lader ergeben unavailable/503,
+  keine fertige Geld-/Wochenkarte aus dieser Routinggrundlage ableiten.
+- B03-R2 fand P2: Befreiung übersprang Journal-/Altbetragsvalidierung und
+  Überzahlungsanomalie. Parent ergänzte zwei Regressionstests (beide zunächst
+  rot). Fix setzt Befreiungssoll auf null Euro, validiert Journal/Altbetrag vor
+  Rückgabe und nutzt bestehende Restprüfung für Überzahlung. Zweite Reparatur
+  erhielt den vorhandenen VKZ03-Grund bei unklarem Patientensaldo durch
+  Weitergabe von `empfangen`. Bestehende Assertions unverändert; 90/90 grün.
+- B03 bleibt bis unabhängiger Nachprüfung R3 und vollständiger Suite gesperrt.
+  Neue Runde `praxura-b03-befreiung-nachpruefung-20261027-r3`; Fullsuite-Log
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b03-fix-npm-momfkb4c.log`.
