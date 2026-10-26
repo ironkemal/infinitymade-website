@@ -117,6 +117,13 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 26.10.2026 · Unterbrechungsgrenze nach Fachbereich (`module/frequenz-pruefung.js`, 05188181)
+- Neu: `unterbrechungsGrenze(istPodo, soll)` + Konstante `UNTERBRECHUNG_TAGE_HEILM_RL = 14`. Niye: Physio/Ergo/Logo
+  liefen mit unbelegten 84 Tagen; HeilM-RL §16 Abs. 4 S. 1 = 14 Kalendertage. Podologie bleibt bei 84 (Vertrag §7 Abs. 7).
+  Erster Schritt der Physio-Feinabstimmung.
+- Verwendung: in `pruefeFrequenz()` → an `bewerteAbstand(…, grenze)` und `baueMeldung` übergeben. `bewerteAbstand`
+  hat neuen 5. Parameter `grenzeTage` (Default 84, rückwärtskompatibel). Karte: bereits in 4c644a6f erfasst.
+
 ### 11.10.2026 · Einbettbares Termin-Anfrage-Widget (`widget/`) + `/api/booking-request/status|praxis` (noch nicht committet)
 - `widget/` (booking-widget.js/.logic.js/.mock.js, embed.js) — Termin-Anfrage als Script-Tag auf der Website der
   Praxis, ohne Login, **ohne Supabase-Client im Browser**. Niye: `booking-request.html` hängt an `supabase-config`
