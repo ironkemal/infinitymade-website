@@ -42,8 +42,8 @@ Neustarts/Unterbrechungen. Übergaben per `t3_thread_send`, `mode=queue`, an
   Luna nur begrenzte Recherche/Extraktion. Keine doppelten Plan-/Inventuraufträge.
 - Native T3-Auswahl mit echten Modelloptionen; Registry unverändert,
   `agent-router validate`: `structure_valid`, Verfügbarkeit nicht geprüft.
-- Pflichtberater: Funktionsmeister, DB-Meister, guvenlik und onprem haben lokal
-  lesend geprüft; onprem nennt kein Veto. podoloji/gkv-302 prüfen die Gelddefinitionen.
+- Pflichtberater: Funktionsmeister, DB-Meister, guvenlik, onprem, podoloji und
+  gkv-302 haben lokal lesend geprüft; onprem nennt kein Veto.
   Die technischen Beraterberichte ersetzen Claudes Datei-ACK nicht.
 
 ## Konkrete nächste Backend-Pakete
@@ -62,10 +62,25 @@ Antwort noch offen. Bis dahin keine produktiven Backend-Änderungen.
 
 ## Fragen und Prüfgrenzen
 
-Keine erneute Frage zu E1–E12 oder main/V10. Vor Finanzkarten echte offene
-Definitionen prüfen: Standortumfang, tatsächlich kassierte Eingänge versus
-Ausbuchungen/Stornos, Mitarbeiterzugang zu freien Zeiten. Erst vorhandene
-Entscheidungen und Pflichtberater auswerten, dann verbleibende Produktfragen bündeln.
+Keine erneute Frage zu E1–E12 oder main/V10. Melih hat am 26.10.2026 die vier
+gebündelten Produktfragen ausdrücklich beantwortet:
+
+| Thema | Entscheidung |
+|---|---|
+| Kassiert diesen Monat | Patienteneingänge als Hauptzahl; Kassenzahlungen separat. Tatsächliche Eingänge minus Stornos, ohne Ausbuchungen. |
+| Mitarbeiter: freie Zeit | Nur eigene nutzbare Lücken, ohne Geldangaben; kein neuer Praxisschalter. |
+| Podologie: Pause droht | Warnung 7 Tage vorher; bestehende Gültigkeitsregel unverändert wiederverwenden. |
+| VKZ 03 | Eigene Zeile „Bei Kasse gefordert“; übertragene Forderung zählt nicht mehr als offene Patientenzahlung. |
+
+Finanzkarten bleiben wie der vorhandene Statistikvertrag praxisweit; keine
+Standortzuordnung aus Tabellen ohne Standortspalte vortäuschen. Fachliche Umsetzung
+nutzt bestehende Fristen-/Saldo-/Statusfunktionen; kein neues Schema nötig behaupten,
+bevor der konkrete VKZ-03-Datenpfad geprüft ist.
+
+Quellenwiderspruch aus den Beraterberichten geklärt: Der ältere Kommentar
+„Privatrechnungsbeleg nur bei Barzahlung“ ist durch die ausführbare RPC überholt.
+`db/SCHEMA-RLS.sql:4879–4899` schreibt den Beleg bei jeder Zahlart; Belegjournal und
+`rechnung_zahlungen` daher nicht addieren. Das ist lokaler Quellbeleg, keine Live-Prüfung.
 
 R-06-Gate schließt weder direkte RLS-Zugriffe noch den alten Rechnungsfeed.
 Diese Grenzen separat benennen; keine Live-Migration im Redesign-Auftrag.
@@ -94,6 +109,11 @@ Die abweichende Empfehlung, zusätzlich Auth-Fehler auf 503 umzustellen oder die
 gesamte Auth-Middleware auszutauschen, wird nicht beiläufig in R-06 übernommen.
 Bestehende Owner-Antworten, UTC-Statistikmonate und Auth-Fehler bleiben in B01 gleich.
 Weitere Zugangssperren/Altbefunde werden separat behandelt.
+
+Luna hat R-06 zusätzlich am tatsächlichen Handler mit installiertem SDK und strikt
+synthetischem Fetch reproduziert: Owner, Mitarbeiter und unbekannte Rolle jeweils
+HTTP 200, 1 Auth-/1 Profil-/11 Fachabfragen. Kein Ziel außerhalb `synthetic.invalid`.
+Dieser Nachweis bestätigt den Fehler im Bestand und ist kein erfolgreicher Grenztest.
 
 Neue Funktionen vorab im INDEX suchen und beim Funktionsmeister anfragen;
 nachher Absicht und Erstverwendung melden. Funktionskarte und zentrale STATUS-Datei
