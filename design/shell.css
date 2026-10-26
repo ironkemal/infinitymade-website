@@ -396,3 +396,85 @@
   [data-design="neu"] .einrichtung-ring-text::before { content: none; }
   [data-design="neu"] .topbar .biz-name { font-size: 14px; }
 }
+
+/* ── V2.09 Suche in der Kopfleiste (module/kopf-suche.js) ──────────────────────
+   Feld mit Lupe und Tastenhinweis „/“; Trefferliste ist die gemeinsame
+   .patient-search-list (patient-suche.js), hier nur an die Form v3 angepasst.
+   Unter 1025 px vorerst aus (Platz; mobile Suche mit der Schublade V2.11 prüfen). */
+@media screen and (min-width: 1025px) {
+  [data-design="neu"] .px-suche {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: clamp(240px, 26vw, 360px);
+    height: 36px;
+    margin-left: 8px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    color: var(--text-muted);
+  }
+  [data-design="neu"] .px-suche[hidden] { display: none; }
+  [data-design="neu"] .px-suche:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-halo); background: var(--bg-card-solid); }
+  [data-design="neu"] .px-suche svg { flex-shrink: 0; }
+  [data-design="neu"] .px-suche-feld {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 14px;
+  }
+  [data-design="neu"] .px-suche-feld::placeholder { color: var(--text-faint); }
+  /* Gegen `input:focus-visible { outline … !important }` (dashboard.css, Abschnitt 4):
+     den Fokus zeigt hier die ganze Hülle (:focus-within mit Halo), kein zweiter Rahmen im Feld. */
+  [data-design="neu"] .px-suche-feld:focus-visible { outline: none !important; box-shadow: none !important; }
+  [data-design="neu"] .px-suche-feld::-webkit-search-cancel-button { display: none; }
+  [data-design="neu"] .px-suche-taste {
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xxs);
+    background: var(--bg-card-solid);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1;
+  }
+  [data-design="neu"] .px-suche:focus-within .px-suche-taste { display: none; }
+
+  [data-design="neu"] .px-suche .patient-search-list {
+    top: calc(100% + 6px);
+    left: 0;
+    right: auto;
+    min-width: 100%;
+    width: max-content;
+    max-width: 440px;
+    max-height: min(420px, calc(100vh - 80px));
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    z-index: 450;
+  }
+  /* Block statt Flex: in Flex-Zeilen verschwindet das Leerzeichen vor der Treffer-Hervorhebung. */
+  [data-design="neu"] .px-suche .patient-search-list li {
+    padding: 10px;
+    line-height: 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+  }
+  [data-design="neu"] .px-suche .patient-search-list li .match-hl { color: var(--text-main); font-weight: 700; }
+}
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] .px-suche { display: none; }
+}

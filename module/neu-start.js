@@ -11,8 +11,17 @@
  */
 export const istNeu = () => typeof document !== 'undefined' && document.documentElement.dataset.design === 'neu';
 
+/**
+ * V2.09: dashboard.js reicht hier einmal seine Helfer herein (ensureLeadsCache = gemeinsamer
+ * Patienten-Cache mit bizScope, Patienten-Suchregeln). Die Neu-Teile bekommen nur einen Getter, weil die Shell
+ * per import() geladen wird und vor oder nach diesem Aufruf starten kann. Im alten Design wird
+ * der Kontext nur gemerkt und nie benutzt.
+ */
+let kontext = null;
+export function neuKontext(k) { kontext = k && typeof k === 'object' ? k : null; }
+
 if (istNeu()) {
-  import('./shell-neu.js?v=20261026s209')
-    .then((m) => m.start())
+  import('./shell-neu.js?v=20261026s210')
+    .then((m) => m.start({ kontext: () => kontext }))
     .catch((e) => console.warn('[neu-start] Shell nicht geladen:', e));
 }
