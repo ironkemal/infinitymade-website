@@ -349,3 +349,52 @@ V9-Abschluss Zeitplan deaktivieren; offene Abnahme nicht als fertig ausweisen.
 - Verspätetes ursprüngliches gkv-B03-Gutachten eingetroffen. Abweichungen zum
   Astra-Vertrag insbesondere bei `paid`, Teilzahlung und Sollherkunft vor einem
   späteren Bau gezielt abgleichen; kein ungeprüftes Gutachten als Codefreigabe.
+
+## Aktueller Abnahmestand B03/B04 (Fortsetzung nach Nutzungslimit)
+
+Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
+
+- Claude hat B03/B04 ausdrücklich exklusiv zugeteilt: neue Dateien
+  `api-backend/lib/offene-forderungen.js` und `.test.js` sowie
+  `api-backend/routes/startseite.js` und `.test.js`. `server.js`, Frontend,
+  Funktionskarte, STATUS und Integration bleiben bei Claude. Keine zusätzlichen
+  Dateigrenzen aus dem allgemeinen Beschleunigungsauftrag abgeleitet.
+- Beide Pakete von Sol geschrieben, noch untracked und nicht zur Integration
+  freigegeben. B03 umfasst ausschließlich GKV-Zuzahlungsreste und VKZ03,
+  vollständige Owner-Keyset-Pagination, getrennte bekannte Teilsummen und
+  unbekannte Beträge. Keine allgemeine Praxisforderungssumme behaupten.
+- B04 ist eine injizierbare Routing-/Rollengrenze ohne Finanzadapter und ohne
+  Mount. Mitarbeiter-Default liefert leere Blöcke und ruft keine Lader auf;
+  explizite Finanzanforderung wird abgewiesen. Fehlende Adapter sind Fehler,
+  keine erfundenen Nullbestände. Adapter und Einhängen bleiben ausstehend.
+- Fachvertrag durch Astra nach Quellenabgleich präzisiert; Podo nur mit
+  belastbarem Snapshot, `paid` allein beweist keinen Geldfluss. Pflichtabsicht
+  an Funktionsmeister im Vertrags-/Bauauftrag gemeldet: spätere Startseiten-
+  Zuzahlungsblöcke, erste Verwendung nur Tests, alte Statistik unverändert.
+- Parent-Focused-Lauf: B03/B04 zusammen 88/88 grün. Wiederholte vollständige
+  Suite: 2.154 / 1.737 / 318 = 4.209 grün, null Fehler/Skip. Log:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b03-b04-npm-dty9e7bi.log`.
+  Vorheriger Lauf vor B03 hatte ausschließlich Stripe-Testprozess-Timeout
+  (`tools/stripe-url-contract.test.js:144`, `spawnSync ETIMEDOUT`); derselbe
+  isolierte Fall anschließend 1/1 grün. Keine Tests geändert/abgeschwächt.
+- Erster B04-Pflichtreview scheiterte am Nutzungslimit ohne Gutachten. Nach
+  Wiederaufnahme läuft genau eine kombinierte unabhängige Astra-Runde mit
+  getrennten Rollen guvenlik/onprem/fonksiyon/gkv:
+  `praxura-b03-b04-guvenlik-onprem-review-20261027-r2`. Kein zweiter Reviewlauf.
+- V2.10 Öffner/Freigaben gezielt grün. V2.10b `d287f880` R-20/R-21 durch
+  unabhängige Node-Probes bestätigt; R-22 zusätzlich gerendert mit Original-CSS
+  und Profilmodul bei 1440×240 geprüft: Menü unten 219,5, Abmelden sichtbar,
+  Topbar bleibt 0–60, App/Seite scrollen nicht. Keine vollständige Live-Abnahme.
+- V6.F01 `1e428c61` nur gelesen: Employee-Abfrage lädt ownerweite Termine und
+  filtert `user_id` erst danach; lokales RLS erlaubt Teamzeilen. An Claude
+  empfohlen: Employee-Filter in Query, fehlende UID fail closed. Zweiter
+  Quellbefund: minütliches `wurzel.innerHTML` ersetzt fokussierte Elemente;
+  Fokuspfad zur gerenderten Nachprüfung übergeben. Browser-Repro dieser Runde
+  scheiterte an isolierter Auflösung relativer Subimporte; keine gerenderte
+  Bestätigung behauptet. Keine Änderung an Claudes Dateien.
+- PRIMARY zuletzt `6b5d8557`: Claude hat erledigte/doppelte Queue-Einträge
+  bereinigt, Besitzgrenzen und kein-main/V10 festgehalten. Aktuell V3.W
+  Warnoptik/Emojis, danach V6.F02. Codex beginnt dort keine parallele Umsetzung.
+- Nächste Schritte: Reviewbefunde auswerten, höchstens drei gezielte Reparaturen,
+  T1 nach explizitem Staging, kleine eigene Commits und selektive Produktpatches
+  mit API-Vertrag/Grenzen an Claude. Zentrale Funktionskarte beim Integrator.
