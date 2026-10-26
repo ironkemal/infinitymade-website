@@ -24,5 +24,18 @@ export function start() {
   html.dataset.pxShell = 'v2';
   const setze = (id) => { const p = panelId(id); if (p) html.dataset.pxPanel = p; };
   setze(document.querySelector('.panel.active')?.id?.replace(/^panel-/, ''));
+  markeInLeiste();
   on('panel:changed', (d) => setze(d?.id));
+}
+
+/** Marke oben in der Leiste (Desktop-Hülle V2.03). Kopie, damit die mobile Kopfleiste ihre behält. */
+function markeInLeiste() {
+  const leiste = document.getElementById('sidebar');
+  const marke = document.querySelector('.topbar .brand');
+  if (!leiste || !marke || leiste.querySelector('.px-leiste-marke')) return;
+  const kopie = document.createElement('a');
+  kopie.className = 'px-leiste-marke';
+  kopie.href = marke.getAttribute('href') || '/';
+  kopie.textContent = marke.textContent.trim() || 'Praxura';
+  leiste.prepend(kopie);
 }

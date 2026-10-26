@@ -12,7 +12,7 @@
 export const istNeu = () => typeof document !== 'undefined' && document.documentElement.dataset.design === 'neu';
 
 if (istNeu()) {
-  import('./shell-neu.js?v=20261026s202')
+  import('./shell-neu.js?v=20261026s203')
     .then((m) => m.start())
     .catch((e) => console.warn('[neu-start] Shell nicht geladen:', e));
 }

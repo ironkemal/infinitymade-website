@@ -19,3 +19,52 @@
      .github/workflows/publish-frontend.yml (design/**). Vercel liefert den Ordner aus.
    - Jede Änderung: neue ?v=-Nummer in dashboard.html.
    ========================================================================== */
+
+/* ── V2.03 Hülle: Leiste über die volle Höhe, Kopfleiste rechts daneben ────────
+   Ab 1025 px (darunter bleibt die Schublade von dashboard.css). #app wird Raster,
+   .dashboard-layout gibt seine Kinder per display: contents an das Raster weiter
+   (Kiosk-`inert` hängt am DOM-Baum, nicht an der Box – unverändert wirksam).
+   Spalte 1 = auto: folgt der Leistenbreite, auch eingeklappt (Breite 0 bzw. später Icon-Leiste).
+   Kein !important an display, damit das Inline-display:none beim Laden weiter gewinnt. */
+@media screen and (min-width: 1025px) {
+  [data-design="neu"] #app {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+  }
+  [data-design="neu"] #app > .topbar { grid-column: 2; grid-row: 1; }
+  [data-design="neu"] #app > .dashboard-layout { display: contents; }
+  [data-design="neu"] #app .sidebar { grid-column: 1; grid-row: 1 / 3; min-height: 0; }
+  [data-design="neu"] #app .main-area { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; }
+
+  /* Marke: Kopie oben in der Leiste (module/shell-neu.js), Original in der Kopfleiste aus. */
+  [data-design="neu"] .topbar .brand { display: none; }
+  [data-design="neu"] .px-leiste-marke {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: var(--topbar-h);
+    flex-shrink: 0;
+    padding: 0 20px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    text-decoration: none;
+  }
+  [data-design="neu"] .px-leiste-marke::before {
+    content: 'P';
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] .px-leiste-marke { display: none; }
+}
