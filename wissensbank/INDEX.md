@@ -398,6 +398,12 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.01.2026
 - **Ne zaman lazım:** Physiotherapie (fizyoterapi) hizmetlerinin ve ev ziyaretlerinin faturalandırılması ile ücret listesinin ve pozisyon numaralarının kontrol edilmesi gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, X0102 (33,75 Euro), X0201 (21,63 Euro)
+- **Anahtar bölümler** (26.10.2026, gkv-302; ⚠️ `-layout` sütunları kaymış, fiyat için `pdftotext -raw`):
+  - Z.1-3 başlık (Lesefassung gültig ab 01.01.2026) · Z.17-35 LEGS + X-Präfix (1/2/6/8)
+  - Z.299-347 X2001 · X9701 Übermittlungsgebühr · X9950/X9951 Hausbesuch (X9933→X9950, X9934→X9951 umbenannt zum 01.01.2026; Begriff soziale Einrichtung)
+  - Z.356-374 X9922 HB Kurzzeit-/Verhinderungs-/Tagespflege + betreutes Wohnen · X1906 Bericht auf schriftliche Anforderung („Kreuz nicht ausreichend")
+  - Z.387-435 Teil B: (1) nur verordnete Leistungen · (3) keine Zuzahlung X9701/X1906/21901/21904 · (4) HB-Pauschalen · (5) HB nicht kombinierbar, 1×/Tag, Praxissitz=Ort ausgeschlossen, Bestätigung auf VO
+  - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 1 Leistungsbeschreibung + Anlage 3 (Verordnungsangaben)
 
 ### wissensbank/logopaedie/20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung.txt
 - **Ne:** Anlage 2: Vergütungsvereinbarung i. d. F. vom 12.02.2026 zum Vertrag nach § 125 Absatz 1 SGB V für Stimm-, Sprech-, Sprach- und Schlucktherapie über die Versorgung mit Leistungen der Stimm-, Sprech-, Sprach- und Schlucktherapie und deren Vergütung.

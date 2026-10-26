@@ -675,6 +675,9 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       // Karten-IK: Pflicht (oben geprüft), KEIN Rückfall auf kostentraegerIk.
       krankenkasseIk:           rx.krankenkasse_ik,
       berichtAngefordert:       rx.bericht_angefordert,
+      // ZHE Feld „Therapiebericht": builder.js liest DIESEN Schlüssel. Bis 26.10.2026 fehlte er,
+      // das Kennzeichen ging nie mit (Anlage 1 TP5 V21 §5.5.3.3: bei Kreuz „1" zwingend) — gkv-302.
+      therapieberichtAngefordert: !!rx.bericht_angefordert,
       berichtStatus:            rx.bericht_status,
     },
     tarif: {
