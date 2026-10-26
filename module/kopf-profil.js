@@ -6,7 +6,9 @@
  * (#logoutBtn, #topbarAdminLink, Leisteneintrag „Einstellungen“) — Abmelde-Logik, Admin-Prüfung
  * und Rechte bleiben in dashboard.js. Die Originale versteckt design/shell.css erst, wenn dieses
  * Modul steht (Klasse px-profil-bereit am <html>), damit es nie keinen Abmeldeweg gibt.
+ * Menü-Mechanik (Öffnen, Tastatur, Außenklick) seit V2.10 in module/kopf-menue.js.
  */
+import { kopfMenue } from './kopf-menue.js?v=20261026s211';
 
 /** Reine Hilfe (testbar): bis zu zwei Initialen aus einem Namen oder einer E-Mail. */
 export function initialen(name) {
@@ -27,33 +29,11 @@ const SYMBOL = {
 };
 
 let knopf = null;
-let menue = null;
 let nameQuelle = () => '';
 
 const sichtbar = (el) => !!el && el.style.display !== 'none' && !el.hidden;
 
-function schliesse({ fokusZurueck = false } = {}) {
-  if (!menue || menue.hidden) return;
-  menue.hidden = true;
-  knopf.setAttribute('aria-expanded', 'false');
-  if (fokusZurueck) knopf.focus({ preventScroll: true });
-}
-
-function eintrag(text, symbol, handeln, href) {
-  const el = document.createElement(href ? 'a' : 'button');
-  el.className = 'px-profil-eintrag';
-  el.setAttribute('role', 'menuitem');
-  if (href) el.href = href; else el.type = 'button';
-  el.innerHTML = symbol;
-  const s = document.createElement('span');
-  s.textContent = text;
-  el.appendChild(s);
-  el.addEventListener('click', (e) => { schliesse(); handeln?.(e); });
-  return el;
-}
-
-function fuellen() {
-  menue.replaceChildren();
+function fuellen({ menue, eintrag }) {
   const name = nameQuelle();
   const kopf = document.createElement('div');
   kopf.className = 'px-profil-kopf';
@@ -87,40 +67,10 @@ export function verdrahteProfil(liesName) {
   if (!rechts || !abmelden) return;
   if (typeof liesName === 'function') nameQuelle = () => { try { return String(liesName() || '').trim(); } catch { return ''; } };
 
-  const wrap = document.createElement('div');
-  wrap.className = 'px-profil-wrap';
-  knopf = document.createElement('button');
-  knopf.type = 'button';
-  knopf.className = 'px-profil';
-  knopf.setAttribute('aria-haspopup', 'menu');
-  knopf.setAttribute('aria-expanded', 'false');
-  knopf.setAttribute('aria-controls', 'pxProfilMenue');
-  menue = document.createElement('div');
-  menue.className = 'px-profil-menue';
-  menue.id = 'pxProfilMenue';
-  menue.setAttribute('role', 'menu');
-  menue.hidden = true;
-  wrap.append(knopf, menue);
-  rechts.insertBefore(wrap, abmelden);
+  const m = kopfMenue({ klasse: 'px-profil', id: 'pxProfilMenue', fuellen });
+  knopf = m.knopf;
+  rechts.insertBefore(m.wrap, abmelden);
   profilAuffrischen();
-
-  knopf.addEventListener('click', () => {
-    if (!menue.hidden) { schliesse(); return; }
-    fuellen();
-    menue.hidden = false;
-    knopf.setAttribute('aria-expanded', 'true');
-    menue.querySelector('.px-profil-eintrag')?.focus({ preventScroll: true });
-  });
-  document.addEventListener('keydown', (e) => {
-    if (menue.hidden) return;
-    const liste = [...menue.querySelectorAll('.px-profil-eintrag')];
-    const i = liste.indexOf(document.activeElement);
-    if (e.key === 'Escape') { e.preventDefault(); schliesse({ fokusZurueck: true }); }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); liste[(i + 1) % liste.length]?.focus(); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); liste[(i - 1 + liste.length) % liste.length]?.focus(); }
-  });
-  document.addEventListener('pointerdown', (e) => { if (!wrap.contains(e.target)) schliesse(); }, true);
-  document.addEventListener('focusin', (e) => { if (!wrap.contains(e.target)) schliesse(); });
 
   // Erst jetzt die Originale verstecken: es gibt immer einen Abmeldeweg.
   document.documentElement.classList.add('px-profil-bereit');

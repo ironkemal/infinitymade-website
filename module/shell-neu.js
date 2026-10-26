@@ -15,11 +15,13 @@
  *   #welcomeText taugt nicht als Quelle (zeigt bei Angestellten den Inhabernamen, R-15);
  *   den eigenen Namen liefert später die Startseite (V6.F) über verdrahteProfil(liesName).
  * V2.09: Patientensuche in der Kopfleiste (module/kopf-suche.js), Kontext aus neu-start.js.
- * Folgt: „+ Neu“ (V2.10), Schublade (V2.11).
+ * V2.10: „+ Neu“ (module/kopf-neu.js); Menü-Mechanik gemeinsam in module/kopf-menue.js.
+ * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s209';
-import { verdrahteProfil } from './kopf-profil.js?v=20261026s208';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s211';
+import { verdrahteProfil } from './kopf-profil.js?v=20261026s211';
+import { verdrahteNeu } from './kopf-neu.js?v=20261026s211';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
@@ -41,6 +43,7 @@ export function start({ kontext } = {}) {
   verdrahteFlyout();
   verdrahteProfil();
   verdrahteSuche(kontext);
+  verdrahteNeu();
   kopfRollen();
   on('panel:changed', (d) => { setze(d?.id); schliesseFlyout(); });
   on('nav:gerendert', () => { kurzlabelSetzen(); kopfRollen(); sucheSichtbarkeit(); });

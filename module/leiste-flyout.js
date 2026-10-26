@@ -11,6 +11,8 @@
  * Muster wie module/kalender-kontextmenue.js: erst Lage setzen, dann einhängen, Fokus ohne Scroll.
  */
 
+import { naechsterIndex } from './kopf-menue.js?v=20261026s211';
+
 const RAND = 8;
 const ABSTAND = 8;
 
@@ -55,9 +57,7 @@ function eintraege() {
 function bewege(schritt) {
   const liste = eintraege();
   if (!liste.length) return;
-  const jetzt = liste.indexOf(document.activeElement);
-  const ziel = jetzt === -1 ? (schritt > 0 ? 0 : liste.length - 1) : (jetzt + schritt + liste.length) % liste.length;
-  fokussiere(liste[ziel]);
+  fokussiere(liste[naechsterIndex(liste.indexOf(document.activeElement), schritt, liste.length)]);
 }
 
 function oeffne(gruppe, kopf) {

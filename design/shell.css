@@ -329,7 +329,7 @@
   [data-design="neu"].px-profil-bereit #logoutBtn,
   [data-design="neu"].px-profil-bereit #topbarAdminLink { display: none !important; }
 
-  [data-design="neu"] .px-profil-wrap { position: relative; }
+  [data-design="neu"] :is(.px-profil-wrap, .px-neu-wrap) { position: relative; }
   [data-design="neu"] .px-profil {
     display: grid;
     place-items: center;
@@ -346,7 +346,7 @@
   }
   [data-design="neu"] .px-profil:hover,
   [data-design="neu"] .px-profil[aria-expanded="true"] { border-color: var(--border-strong); }
-  [data-design="neu"] .px-profil-menue {
+  [data-design="neu"] :is(.px-profil-menue, .px-neu-menue) {
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
@@ -361,7 +361,7 @@
     flex-direction: column;
     gap: 2px;
   }
-  [data-design="neu"] .px-profil-menue[hidden] { display: none; }
+  [data-design="neu"] :is(.px-profil-menue, .px-neu-menue)[hidden] { display: none; }
   [data-design="neu"] .px-profil-kopf {
     padding: 8px 10px 6px;
     font-size: var(--fs-meta, 12px);
@@ -371,7 +371,7 @@
     margin-bottom: 4px;
   }
   [data-design="neu"] .px-profil-kopf strong { display: block; color: var(--text-main); font-size: 14px; line-height: 20px; font-weight: 600; }
-  [data-design="neu"] .px-profil-eintrag {
+  [data-design="neu"] :is(.px-profil-eintrag, .px-neu-eintrag) {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -388,8 +388,8 @@
     text-decoration: none;
     cursor: pointer;
   }
-  [data-design="neu"] .px-profil-eintrag:hover { background: var(--bg-hover); }
-  [data-design="neu"] .px-profil-eintrag svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+  [data-design="neu"] :is(.px-profil-eintrag, .px-neu-eintrag):hover { background: var(--bg-hover); }
+  [data-design="neu"] :is(.px-profil-eintrag, .px-neu-eintrag) svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
 }
 @media screen and (max-width: 768px) {
   /* Schmal: nur der Ring, ohne Wort (Platz). */
@@ -477,4 +477,35 @@
 }
 @media screen and (max-width: 1024px) {
   [data-design="neu"] .px-suche { display: none; }
+}
+
+/* ── V2.10 „+ Neu“ (module/kopf-neu.js) ────────────────────────────────────────
+   Ein schwarzer Hauptknopf der Kopfleiste; Menü-Stile teilt er mit dem Profilmenü (V2.08).
+   „Rezept scannen“ steht jetzt im Menü, der alte Knopf ist aus, sobald das Menü steht. */
+@media screen {
+  /* Gegen das Inline-display von #rezeptScanBtn (rezept-barcode-dialog.js schaltet es per style). */
+  [data-design="neu"].px-neu-bereit #rezeptScanBtn { display: none !important; }
+
+  [data-design="neu"] .px-neu {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  [data-design="neu"] .px-neu:hover { background: var(--primary-hover, var(--primary)); }
+  [data-design="neu"] .px-neu-menue { right: auto; left: 0; }
+}
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .px-neu { width: 36px; padding: 0; justify-content: center; }
+  [data-design="neu"] .px-neu span { display: none; }
+  [data-design="neu"] .px-neu-menue { left: auto; right: -96px; }
 }
