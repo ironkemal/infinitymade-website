@@ -1102,3 +1102,13 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `module/patient-ueberweisung-upload.js` bindet Dateiauswahl an ursprünglichen Patienten/Inhaber und verwirft Dateilesen/Rückmeldungen nach Aktenwechsel. Erste Verwendung: Dashboard-Überweisungsupload.
 - Bestehender Fußbefund bleibt einziger Editor; Ladegeneration und Schreibsnapshot verhindern gemischte Patienten-/Versionsketten. Patiententermine verwenden Telefonnummer nur bei unzugeordneten Altterminen.
 - Absicht und erste Verwendung an `fonksiyon-ustasi` vor und nach Änderung mitgeteilt; Funktionskarte erneuert. Nur lokale Nachweise, kein Live-Release.
+
+### 26.10.2026 · Physio-Altlast „Massage Einzel“ X0102 → X0106 (commit aee3148a)
+- `module/physio-katalog-migration.js` — `physioAltlastPatches(services, kmt)` (reine Patch-Berechnung) +
+  `migrierePhysioAltlast({supabase, services, katalog})`. Niye: `GKV_LEISTUNGSKATALOG.physiotherapy` hatte
+  „Massage Einzel“ an X0102 (Unterwasserdruckstrahlmassage, 33,75 €) gebunden, richtig ist X0106 KMT 21,63 €;
+  `autoSeedGkvServices` hat die falsche Karte in jede Physio-Praxis geschrieben — einmalige Korrektur.
+- Nerede: `dashboard.js` `loadServices()` direkt nach `migratePodologieLegacyServices()`, vor autoSeed, nur Sektor
+  physiotherapy/praxis. Physio-Zwilling von `migratePodologieLegacyServices` (gleiches Muster: existiert Ziel schon,
+  verliert die Altkarte nur die GKV-Bindung) — bewusste Parallele je Fachbereich, keine Kopie zum Zusammenlegen;
+  bei einem dritten Fall gemeinsamen Kern erwägen.
