@@ -1508,7 +1508,7 @@ sayıyı düzeltir.
 - **Yayıncı:** DATEV eG (DATEV Developer Portal).
 - **Sürüm / Stand:** Header-Versionsnummer **700** · Buchungsstapel **Formatversion 13** (Changelog: „February 2024 · 700 · booking batch · Format version increased from 12 to 13 · Field 125 … added"; son changelog kaydı „March 2025 · 700 · All formats · Improved a few regular expressions"). Anhang tablosu: Kategorie 21 Buchungsstapel Formatversion 13/12/11/10 → „ab 17.0/12.2 · ab 15.0/10.1 · ab 14.1/9.2 · ab 14.0/9.1" (DVD/Rechnungswesen). Musterdaten zip içinde `EXTF_Buchungsstapel.csv` tarihi 18.06.2025.
 - **Anzuwenden ab:** belirtilmemiş (V13 Şubat 2024'ten beri) · **Düşer:** açık uçlu (yeni Formatversion yayınlanınca).
-- **Durum:** GEÇERLİ (22.10.2026, commit `df1a85c6` — export kodu bu belgeye dayanıyor).
+- **Durum:** GEÇERLİ (22.10.2026, commit `123b060f` — export kodu bu belgeye dayanıyor).
 - **Neyi besler:** orijinal JSON → `.txt` + `.tsv` + Musterdatei → `api-backend/lib/datev.js` (`EXTF_SPALTEN` = Musterdatei 2. satırından makineyle kopyalandı; Formatversion 13, Festschreibung 0, ISO-8859-1) → test `api-backend/lib/datev.test.js` („Spaltenüberschriften = Zeile 2 der offiziellen DATEV-Musterdatei": yerel Musterdatei'ye karşı birebir; Musterdatei gitignore'lu olduğu için CI'da **skip** — yalnız yerel checkout'ta koşar). DB tablosu yok. Karar dayanağı: `compliance/LEGAL_DECISIONS.md` 17.09.2026 „Export hedefi DATEV EXTF". Kaynak güncellenirse: `.tsv` yeniden üret → `EXTF_SPALTEN` + Formatversion sabitini değiştir → testi yerelde koş.
 - **Anahtar bölümler** (satır no = `.txt`): Einstieg/Technischer Aufbau + Musterdatei 3-36 (Header satırı 20, Spaltenüberschriften satırı 21) · Zeichensatz 37-44 · Volumengrenze 99.999 Buchungen 45-82 · **Header Satzaufbau 83-307 (31 alan)** · **Buchungsstapel 308-1213 (125 alan)** · Import/Export 5576 · Anhang Format-Kategorie/Version 5608 · Notation für Ausdrücke 5680 · Changelog 5841.
 - **Tazelik kontrolü:** elle, `wissensbank`. Aynı `curl` ile JSON yeniden çekilir, `Changelog [id=51]` gövdesinde „March 2025"dan yeni satır var mı bakılır; varsa `.tsv` aynı parser'la yeniden üretilip `diff`lenir. Otomatik değil. Tetik: DATEV export kodu yazılmadan önce + yılda bir (Ocak).
@@ -1823,7 +1823,7 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
    Dördü de Physio/Ergo ince ayarına aittir (vertikal sıralama) ve Podologie içermez (ikisi `grep` ile ölçüldü).
 
 ### W-A14 · DATEV-Format (W-13): yeniden dağıtım, Prüfprogramm, 12/13 doğrulaması — `offen` (zincir kapandı 22.10.2026)
-1. ~~**Zincir**~~ — **kapandı 22.10.2026** (commit `df1a85c6`): `api-backend/lib/datev.js` + `datev.test.js`, W-13'e ve INDEX'e yazıldı.
+1. ~~**Zincir**~~ — **kapandı 22.10.2026** (commit `123b060f`): `api-backend/lib/datev.js` + `datev.test.js`, W-13'e ve INDEX'e yazıldı.
    Kalan zayıflık (`unkritisch`): başlık testi Musterdatei yalnız yerel olduğu için CI'da skip — tazelik turunda yerelde `node --test api-backend/lib/datev.test.js` koşulur.
 2. **Yeniden dağıtım** (sahibi: `legal-de`, yalnız ham/türev yayınlanmak istenirse) — bugün yalnız yerel, bu hâliyle `unkritisch`.
 3. **Prüfprogramm DATEV-Format 2.2.3.0** indirilmedi (çalıştırılabilir zip, güvenilmeyen ikili) —
