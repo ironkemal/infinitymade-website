@@ -549,9 +549,11 @@ bağımlılığı geçiş maliyetini büyütür.
 - Başka alanda bulunan eksik → not edilir, hemen yapılmaz
 - **Fachbereich filtresi (`strict`)** — `attachDiagnoseSearch(..., { strict: true })`
   diagnoz listesinden fachfremd kodları tamamen çıkarır (ayraç altına itmek yerine).
-  Bugün sadece podolojide (`podNewIcd10`) açık. **Her alan için düşünülmüştür**;
-  `icd_sector_ranges` dördü için de dolu, sırası gelen alanın alan tanımına
-  `strict: true` eklenir — modülde yapılacak iş yok
+  ⚠️ **Bugün hiçbir alanda açık değil** (26.10.2026 doğrulandı): eskiden açık olduğu
+  `podNewIcd10` alanı podolojik hızlı yol kodu ile birlikte silindi (`2ae131c3`).
+  Kalan alan `rzIcd` mandanten-bağımlı — `strict` bugün sabit bool, alan bazlı açmak
+  için küçük bir modül değişikliği gerekir. Açmadan önce o alanın `icd_sector_ranges`
+  kapsamı doğrulanmalı (eksikse doğru kodlar da gizlenir)
 - Örnek: Ergotherapie Blankoverordnung sözleşmesi 01.04.2024'ten beri yürürlükte ve kodumuz
   onu blokluyor. Gelir etkisi var ama **bilinçli olarak beklemede** (Ops-Dashboard → **Teknik**)
 
