@@ -6,12 +6,12 @@
 ## 0 Kurzzustand
 - Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
 - Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V2.02 · Schritt: ANALYSE
+- Aktuelles Paket: V2.03 · Schritt: ANALYSE
 - Nicht committete eigene Dateien: keine
 - Cache-Nummern: praxura-design.css ?v=20261025v107 · design/shell.css ?v=20261025s201
 - Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
 - Wartet auf Melih: nichts
-- Nächstes Paket: V2.02
+- Nächstes Paket: V2.03
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
 - Melihs Entscheidungen E1–E10 (PLAN-V2 §2). Stopp-Punkte nur PLAN-V2 §7. Bei Stopp: hier „Wartet auf Melih“ setzen, betroffene Pakete `wartet-Melih`, unabhängige weiter.
@@ -46,8 +46,8 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | fertig | 748a208b | `tools/redesign-kontrast.test.js` 7 → 15 Fälle: Status-Text auf Fläche, Grafik/Feldrand/Warnsymbol/Jetzt-Linie ≥ 3:1, Text auf eingelassener Fläche/Hover, Dunkel-Knopf, Wache „kein Beige/Braun in Neu-Token“ | 0 |
 | V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | fertig | ab77c9a1 | npm test 2.152/1.625/318 grün; Probes 14/14; T4 `v106alt` 159 Bilder 0 ✗; T5 `v106` beide Designs/Rollen 0 neu, Klick `v106klick` 0 neu; Geometrie `v106` 0; main ohne neue Commits → Fast-Forward | 0 |
 | V1.07 | V1 | Form v3 nach E12: Radius 18/14/12/Pille/6, weiche Kartenschatten, hellere Linien, mehr Abstand (`redesign/form-v3.css`) | CSS global | alle (neu) | V1.06 | fertig | 646c12c0 | Radius 18/22/14/12/Pille/6, Karten und Tabellen mit weichem Schatten, Linien heller; Kontrast 15/15; Alt `v107alt` 0 ✗; Geometrie 0; Smoke 0 neu; Kontaktbögen gesichtet | 0 |
-| V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | fertig | dieser Commit | `design/shell.css` (Kopf, noch ohne Regeln), `<link>` nach praxura-design.css (gleiche Zeile), Dockerfile `COPY design ./design`, Workflow `design/**`; Wachen + Auslieferungstest grün; Alt hell 1440 0 ✗; `onprem` OK (Nachtrag O-219) | 0 |
-| V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | offen | | | |
+| V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | fertig | a4f9e7f5 | `design/shell.css` (Kopf, noch ohne Regeln), `<link>` nach praxura-design.css (gleiche Zeile), Dockerfile `COPY design ./design`, Workflow `design/**`; Wachen + Auslieferungstest grün; Alt hell 1440 0 ✗; `onprem` OK (Nachtrag O-219) | 0 |
+| V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | fertig | dieser Commit | `module/neu-start.js` (nur bei neu: lädt `shell-neu.js`), `module/shell-neu.js` (setzt `data-px-shell`, `data-px-panel`), Test 2/2; dashboard.js 3 Ein-Zeilen-Eingriffe (Import, `emit('nav:gerendert')`, `emit('panel:changed')`), Größe gleich; modul-probe 95/95; Alt 0 ✗, alt ohne Attribut, neu `kunden`; Funktionskarte neu; `fonksiyon-ustasi`: kein Duplikat, keine Signal-Kollision | 0 |
 | V2.03 | V2 | Grid-Hülle (Leiste volle Höhe, Topbar rechts), ≥ 1025 px | CSS | Shell | V2.02 | offen | | | |
 | V2.04 | V2 | Leiste v2 (Optik, Aktiv Creme, 40–44 px Einträge, Zählerplakette) | CSS | Shell | V2.03 | offen | | | |
 | V2.05 | V2 | Navigation neu gruppiert (`nav-registry.js`, E7, wirkt auch alt → Alt-Referenz bewusst neu aufnehmen) + Menüzeilen Anamnese/Notizen/Fußbefund/Überblick ausgeblendet (nur neu) | JS + Verhalten (E7) | Shell, alt | V2.04 | offen | | | |
@@ -131,7 +131,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | Melih: Struktur zuerst; E12 Form freundlich/übersichtlich (Vorschau `frei-*.png`) | – | V1.07 |
 | 25.10.2026 | V1.06: Phasenabschluss V1 grün, Merge main (`9d366ba7..ab77c9a1`), Push | `ab77c9a1` | V1.07 |
 | 25.10.2026 | V1.07: Form v3 runder/weicher (`?v=20261025v107`) | `646c12c0` | V2.01 |
-| 25.10.2026 | V2.01: Ordner `design/` mit Auslieferung (Box + Vercel) | dieser Commit | V2.02 |
+| 25.10.2026 | V2.01: Ordner `design/` mit Auslieferung (Box + Vercel) | `a4f9e7f5` | V2.02 |
+| 26.10.2026 | V2.02: Boot-Modul + Shell-Modul + Signale | dieser Commit | V2.03 |
 
 ## 9 Abschluss
 offen

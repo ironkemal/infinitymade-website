@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-10-22 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-26 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3803 fonksiyon** (3681 JS · 95 bash · 27 ps1) · 476 dosya · 42 sidebar modülü
+**3807 fonksiyon** (3685 JS · 95 bash · 27 ps1) · 478 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -489,6 +489,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
+- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:25 · module/termin-folge.js:194 · module/termin-heute.js:86
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:292 · module/fussbefund.js:792 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:828
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
@@ -500,7 +501,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `loadServices` — booking-request.js:529 · booking.js:176 · dashboard.js:8303 · kalender.js:643
 - `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 - `norm` — katalog-suche.js:414 · module/patienten-import.js:74 · module/termin-aktionen.js:608 · ops/tools/regroup.mjs:59
-- `onEsc` — dashboard.js:6309 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 
 ## Shell (onprem/)
 
@@ -651,6 +651,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `bildirim_alani_oku()` — Zeile 359 · calledBy: bildirim_degerlendir, onprem/update.sh
 - `bildirim_kaydet()` — Zeile 371 · calledBy: bildirim_degerlendir
 - `bildirim_degerlendir()` — Zeile 388 · calledBy: durumu_yaz
-- `geri_yukle()` — Zeile 541 · calledBy: onprem/update.sh
-- `anahtarlari_oku()` — Zeile 560 · calledBy: onprem/update.sh
-- `deger_oku()` — Zeile 564 · calledBy: onprem/update.sh
+- `geri_yukle()` — Zeile 547 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 566 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 570 · calledBy: onprem/update.sh

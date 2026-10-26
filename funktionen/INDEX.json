@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-22",
- "dateien": 476,
- "funktionen": 3803,
+ "erzeugt": "2026-10-26",
+ "dateien": 478,
+ "funktionen": 3807,
  "module": [
   "abrechnung",
   "anamnese",
@@ -48374,6 +48374,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "emit",
     "error",
     "getSidebarItems",
     "has302Access",
@@ -48654,6 +48655,7 @@
     "checkB2bSetup",
     "checkB2cSetup",
     "closeSidebar",
+    "emit",
     "formatDateDE",
     "fussbefundCtx",
     "getSidebarItems",
@@ -81837,6 +81839,7 @@
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl",
+    "start",
     "verdrahteSerienStarttag"
    ],
    "modules": [
@@ -103172,6 +103175,7 @@
     "(datei) api-backend/ai/ki-jeton.js",
     "(datei) ops/app.js",
     "(datei) widget/booking-widget.js",
+    "istNeu",
     "withTimeout"
    ],
    "modules": [
@@ -133094,6 +133098,28 @@
    "storage": [],
    "calls": [
     "closeModal"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istNeu",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/neu-start.js",
+   "start": 12,
+   "end": 18,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "start"
    ],
    "calledBy": [],
    "modules": [],
@@ -163468,6 +163494,7 @@
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl",
+    "start",
     "verdrahteSerienStarttag"
    ],
    "modules": [
@@ -163560,6 +163587,217 @@
    "uiPfad": []
   },
   {
+   "name": "panelId",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/shell-neu.js",
+   "start": 15,
+   "end": 17,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "setze",
+    "start"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "start",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/shell-neu.js",
+   "start": 20,
+   "end": 28,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "on",
+    "panelId",
+    "setze"
+   ],
+   "calledBy": [
+    "(datei) api-backend/ai/ki-jeton.js",
+    "(datei) ops/app.js",
+    "(datei) widget/booking-widget.js",
+    "istNeu",
+    "withTimeout"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "setze",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/shell-neu.js",
+   "start": 25,
+   "end": 25,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "panelId"
+   ],
+   "calledBy": [
+    "baueHeuteIndex",
+    "erstelleCloudflare",
+    "finde",
+    "gkvFarbwahl",
+    "nurZiffern",
+    "oeffneFolgetermin",
+    "openGkvEditForm",
+    "openServiceEdit",
+    "resetServiceForm",
+    "srvFarbwahl",
+    "start",
+    "verdrahteSerienStarttag"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "setDebug",
    "kind": "function",
    "lang": "js",
@@ -163621,6 +163859,7 @@
     "registerWaechter",
     "renderAICopilot",
     "standardPruefungen",
+    "start",
     "starteDevServer",
     "verordnungenListeLaden",
     "wagnerNachziehenAnmelden",
@@ -163799,9 +164038,11 @@
     "neuerBkKanal",
     "rebindeNoShowSitzungen",
     "refreshBookingViews",
+    "renderSidebar",
     "saveRezept",
     "setzeStatus",
     "speichern",
+    "switchPanel",
     "verordnungPatientenAbgleich",
     "waehle"
    ],
@@ -168184,6 +168425,7 @@
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl",
+    "start",
     "verdrahteSerienStarttag"
    ],
    "modules": [
@@ -168758,6 +169000,7 @@
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl",
+    "start",
     "verdrahteSerienStarttag"
    ],
    "modules": [
@@ -196252,8 +196495,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 541,
-   "end": 553,
+   "start": 547,
+   "end": 559,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -196279,8 +196522,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 560,
-   "end": 563,
+   "start": 566,
+   "end": 569,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -196306,8 +196549,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 564,
-   "end": 572,
+   "start": 570,
+   "end": 578,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -198204,6 +198447,7 @@
     "(datei) api-backend/ai/ki-jeton.js",
     "(datei) ops/app.js",
     "(datei) widget/booking-widget.js",
+    "istNeu",
     "withTimeout"
    ],
    "modules": [
@@ -209517,6 +209761,7 @@
     "(datei) api-backend/ai/ki-jeton.js",
     "(datei) ops/app.js",
     "(datei) widget/booking-widget.js",
+    "istNeu",
     "withTimeout"
    ],
    "modules": [
@@ -216905,6 +217150,17 @@
    "aynalar": []
   },
   {
+   "name": "setze",
+   "orte": [
+    "merkez/cloudflare.js:30",
+    "module/serien-termine.js:200",
+    "module/shell-neu.js:25",
+    "module/termin-folge.js:194",
+    "module/termin-heute.js:86"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "speichern",
    "orte": [
     "cookie-consent.js:119",
@@ -217028,12 +217284,12 @@
    "aynalar": []
   },
   {
-   "name": "setze",
+   "name": "start",
    "orte": [
-    "merkez/cloudflare.js:30",
-    "module/serien-termine.js:200",
-    "module/termin-folge.js:194",
-    "module/termin-heute.js:86"
+    "module/app-installieren.js:43",
+    "module/shell-neu.js:20",
+    "ops/app.js:400",
+    "widget/booking-widget.js:556"
    ],
    "aynalar": []
   },
@@ -217271,15 +217527,6 @@
     "admin.js:22",
     "dashboard.js:939",
     "module/kiosk.js:55"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "start",
-   "orte": [
-    "module/app-installieren.js:43",
-    "ops/app.js:400",
-    "widget/booking-widget.js:556"
    ],
    "aynalar": []
   },
