@@ -1028,7 +1028,9 @@ Heilmittel-Richtlinie …).
 - **Seit:** 25.07.2026 · `icd_diagnose_search_schema`
 - **Status:** aktiv (Referenz)
 - **Wer:** nur die RPC `search_diagnosen()` (Feld `in_sector`).
-- **Achtung:** Für **alle vier** Fachbereiche gefüllt. `strict: true` ist heute nur in der Podologie eingeschaltet — datenseitig ist für die anderen nichts mehr zu tun, es fehlt allein der Schalter im Frontend.
+- **Achtung:** Für **alle vier** Fachbereiche gefüllt — „gefüllt“ heißt aber **nicht vollständig**. `strict: true` ist heute in **keinem** Bereich eingeschaltet: der einzige Schalter (`podNewIcd10`) wurde in `2ae131c3` entfernt, CLAUDE.md in `88c81de9` nachgezogen. Die frühere Aussage „nur Podologie aktiv, datenseitig nichts mehr zu tun, es fehlt allein der Schalter im Frontend“ war falsch und ist überholt.
+- **Befund 26.10.2026 (db-ustasi) — Physio-Abdeckung lückenhaft:** Die Physio-Bereiche lassen **16 `icd_ranges`-Einträge der Diagnosegruppen mit zusammen 399 ICD-Kodes** außen vor; die Gruppen **GE** sowie **SO3/SO5** fallen **vollständig** heraus. Würde `strict: true` für Physio heute eingeschaltet, verschwänden diese verordnungsfähigen Diagnosen aus der Auswahl. Vor jedem Einschalten ist also zuerst der Dateninhalt zu klären, nicht nur der Frontend-Schalter.
+- **Offen:** Welche Bereiche fachlich in den Physio-Sektor gehören, entscheidet `gkv-302` (Inhalt), nicht db-ustasi (Struktur). **Bereichsinhalt wartet auf gkv-302-Entscheidung** — bis dahin keine Migration, kein Einschalten von `strict` außerhalb einer Einzelprüfung. Ergo/Logo/Podologie gleich prüfen, bevor dort eingeschaltet wird.
 
 ### `krankenkassen`
 - **Warum:** Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 21.09.2026), gesetzt am 02.06.2026.
