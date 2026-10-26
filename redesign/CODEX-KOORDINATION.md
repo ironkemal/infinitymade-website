@@ -318,3 +318,34 @@ aktualisieren. Codex pusht keinen Integrations- oder main-Stand.
 Eigener bestehender T3-Zeitplan bleibt aktiv: alle zwei Stunden, keine zweite
 Einrichtung. Fertige Kindaufträge melden sich automatisch. Bei tatsächlichem
 V9-Abschluss Zeitplan deaktivieren; offene Abnahme nicht als fertig ausweisen.
+
+## Fortsetzung am 26.10., abends
+
+- PRIMARY zuletzt `758df107`: Claude hat B01/B02 selektiv integriert und lokal
+  getestet. Claude arbeitet wieder aktiv an V2.10b (R-20–R-22); kein aktueller
+  Nutzungsausfall belegt. Keine doppelte Frontend-Implementierung beginnen.
+- Melih priorisiert schnellere sichtbare Ergebnisse. Neue Startseite früh
+  vorziehen, gemeinsame Bausteine nutzen; Pflichtprüfungen erhalten. Zusätzliche
+  Vorgabe: dominante orange Warnoptik überarbeiten, keine Emojis in der Oberfläche.
+  Beide Aufträge per Queue an Claude übermittelt.
+- B03/B04 weiterhin nicht exklusiv zugeteilt. Melihs vorherige ausdrückliche Wahl
+  „Dateizuteilung weiter über Claude abwarten“ bleibt maßgeblich. Bei späterem
+  Nutzungsausfall nur unabhängige zugeteilte Arbeit übernehmen; fremde Änderungen
+  bleiben unberührt. ACK erneut mit konkreten vier neuen Pfaden angefragt.
+- V2.09 `6e6eecb9` begrenzt unabhängig geprüft: Original-Suchmodul, gemeinsamer
+  Picker und Signalbus in isoliertem T3-Browser mit CSP-Netzwerksperre und
+  synthetischen Daten. `leads:changed` aktualisiert offene Treffer; HTML-artiger
+  Name erzeugt keine HTML-Elemente; Auswahl gibt richtige ID weiter, leert Feld
+  und schließt Liste. Sechs Zusatzprüfungen für Schrägstrich/Input/Ctrl/IME,
+  `inert` und fehlende Patientenberechtigung grün. Standortwechsel macht laut
+  Originalquelle `dashboard.js:14530–14544` einen Reload; Patientenabfrage nutzt
+  `bizScope` in Zeile 7108. Keine neue belegte Regression in diesen Punkten.
+  Keine vollständige App-, Kontrast- oder Live-Abnahme. Bericht an Claude:
+  `praxura-codex-v209-teilpruefung-20261026-r1`. Browser-Tab geschlossen,
+  Port 18081 nicht benutzt, keine Produktdatei verändert.
+- `agy-context --local-only` für Koordinationskontext genutzt, Provider nicht
+  aufgerufen. Keine gemessene Netto-Tokenersparnis behauptet. Bekannte Quellen
+  gezielt gelesen; unvollständiger Kontext ersetzt keine Quellenprüfung.
+- Verspätetes ursprüngliches gkv-B03-Gutachten eingetroffen. Abweichungen zum
+  Astra-Vertrag insbesondere bei `paid`, Teilzahlung und Sollherkunft vor einem
+  späteren Bau gezielt abgleichen; kein ungeprüftes Gutachten als Codefreigabe.
