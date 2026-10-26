@@ -51,9 +51,13 @@ const grund = (e) => { const z = String(e.message).split('\n'); return [z[0], z.
 const norm = (t) => String(t).replace(/:\d{2,5}\b/g, ':P').replace(/\b[0-9a-f]{8}-[0-9a-f-]{27}\b/g, 'UUID').replace(/\d+/g, 'N');
 
 const server = await starteServer({ wurzel: arg('wurzel') ? resolve(arg('wurzel')) : undefined });
-const browser = await starteBrowser();
+// Aufräumen robust (Codex-Hinweis 26.10.): Browserstart innerhalb try, Schließen mit Frist,
+// Server wird auch gestoppt, wenn browser.close() wirft oder hängt.
+const mitFrist = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), new Promise((r) => setTimeout(r, ms))]);
+let browser = null;
 const ergebnis = { lauf, zeit: new Date().toISOString(), funde: [] };
 try {
+  browser = await starteBrowser();
   for (const design of designs) for (const rolle of rollen) for (const theme of themes) for (const szenario of szenarien) for (const breite of breiten) {
     const { kontext, page, protokoll } = await oeffneDashboard(browser, { basis: server.basis, breite, theme, design, szenario, rolle, uhr: arg('uhr') });
     await ruhe(page, 1200);
@@ -116,10 +120,13 @@ try {
     const fx = await fixtureLog(page);
     if (fx.writes.length) fund('(fixture)', 'schreibversuch', fx.writes.map((w) => w.tabelle + '.' + w.art).join(', '));
     if (protokoll.fremd.length) fund('(netz)', 'fremder-host', [...new Set(protokoll.fremd)].join(', '));
-    await kontext.close();
+    await mitFrist(kontext.close(), 10000);
     process.stdout.write(` ${design}-${rolle}-${theme}-${szenario}-${breite}\n`);
   }
-} finally { await browser.close(); await server.stop(); }
+} finally {
+  if (browser) await mitFrist(browser.close(), 15000);
+  await mitFrist(server.stop(), 5000);
+}
 
 await mkdir(ZIEL, { recursive: true });
 await writeFile(join(ZIEL, `smoke-${lauf}.json`), JSON.stringify(ergebnis, null, 2));
