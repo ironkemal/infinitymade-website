@@ -290,3 +290,105 @@
     line-height: 18px;
   }
 }
+
+/* ── V2.08 Kopfleiste v2: Praxisname, „Einrichtung n %“ beschriftet, Profilmenü ─
+   PLAN-V2 3.2. Abmelden und Admin wandern ins Profilmenü (module/kopf-profil.js);
+   Suche (V2.09) und „+ Neu“ (V2.10) kommen zwischen Praxisname und Einrichtung. */
+@media screen {
+  [data-design="neu"] .topbar .biz-name {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  [data-design="neu"] .topbar-right { gap: 8px; }
+
+  [data-design="neu"] .einrichtung-ring {
+    min-height: 36px;
+    padding: 0 12px 0 6px;
+    gap: 8px;
+    border-color: var(--border);
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+  [data-design="neu"] .einrichtung-ring:hover { background: var(--bg-hover); }
+  [data-design="neu"] .einrichtung-ring svg { width: 22px; height: 22px; }
+  [data-design="neu"] .einrichtung-ring-text { font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .einrichtung-ring-text::before { content: 'Einrichtung '; color: var(--text-muted); }
+
+  [data-design="neu"] .live-clock { color: var(--text-muted); font-family: inherit; font-size: 13px; letter-spacing: 0; }
+
+  /* Gegen Inline-display der beiden (dashboard.html/dashboard.js schalten sie per style);
+     Ersatz: Einträge im Profilmenü, die die Originale auslösen. */
+  [data-design="neu"].px-profil-bereit #logoutBtn,
+  [data-design="neu"].px-profil-bereit #topbarAdminLink { display: none !important; }
+
+  [data-design="neu"] .px-profil-wrap { position: relative; }
+  [data-design="neu"] .px-profil {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background: var(--nav-active);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  [data-design="neu"] .px-profil:hover,
+  [data-design="neu"] .px-profil[aria-expanded="true"] { border-color: var(--border-strong); }
+  [data-design="neu"] .px-profil-menue {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 450;
+    min-width: 220px;
+    padding: 6px;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  [data-design="neu"] .px-profil-menue[hidden] { display: none; }
+  [data-design="neu"] .px-profil-kopf {
+    padding: 8px 10px 6px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
+  }
+  [data-design="neu"] .px-profil-kopf strong { display: block; color: var(--text-main); font-size: 14px; line-height: 20px; font-weight: 600; }
+  [data-design="neu"] .px-profil-eintrag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  [data-design="neu"] .px-profil-eintrag:hover { background: var(--bg-hover); }
+  [data-design="neu"] .px-profil-eintrag svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+}
+@media screen and (max-width: 768px) {
+  /* Schmal: nur der Ring, ohne Wort (Platz). */
+  [data-design="neu"] .einrichtung-ring-text::before { content: none; }
+  [data-design="neu"] .topbar .biz-name { font-size: 14px; }
+}
