@@ -16,12 +16,14 @@
  *   den eigenen Namen liefert später die Startseite (V6.F) über verdrahteProfil(liesName).
  * V2.09: Patientensuche in der Kopfleiste (module/kopf-suche.js), Kontext aus neu-start.js.
  * V2.10: „+ Neu“ (module/kopf-neu.js); Menü-Mechanik gemeinsam in module/kopf-menue.js.
+ * V6.F01: Startseite „Heute“ (module/startseite-neu.js) im Bereich overview.
  * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
 import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s212';
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
+import { verdrahteStartseite } from './startseite-neu.js?v=20261026s213';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
@@ -44,6 +46,7 @@ export function start({ kontext } = {}) {
   verdrahteProfil();
   verdrahteSuche(kontext);
   verdrahteNeu();
+  verdrahteStartseite(kontext);
   kopfRollen();
   on('panel:changed', (d) => { setze(d?.id); schliesseFlyout(); });
   on('nav:gerendert', () => { kurzlabelSetzen(); kopfRollen(); sucheSichtbarkeit(); });

@@ -1,0 +1,262 @@
+/**
+ * startseite-neu.js — Startseite „Heute“ des neuen Designs (Redesign v2, PLAN-V2 V6.F01, E8/E12).
+ *
+ * Nur im neuen Design (geladen über module/shell-neu.js). Legt im Bereich „overview“ eine neue
+ * Startseite an und blendet die alte Übersicht per CSS aus (sie läuft weiter im Hintergrund, damit
+ * nichts in dashboard.js bricht). Raster nach E12: oben „Als Nächstes“ (breit) + „Zu erledigen“,
+ * darunter „Termine heute“ (breit) + rechts „Verordnungen“ und „Freie Zeit“. Abrechnung und Woche
+ * (nur Inhaber, Geld) folgen mit dem Startseiten-Endpunkt (V6.B).
+ *
+ * Datenwege in F01 — bewusst ohne neue Fachregeln:
+ *  - Termine heute: eine schlanke bookings-Abfrage (Berliner Tagesgrenzen über termin-heute.js,
+ *    nur owner_id wie loadScheduleBookings dashboard.js:1313; Angestellte nur eigene).
+ *    Kopie-Kandidat zu loadScheduleBookings, im Neu-Design ersetzt sie die ausgeblendete alte Liste.
+ *  - Verordnungen: die Zahlen, die loadPhysioRezKpis ohnehin in #rezKpi* schreibt (beobachtet).
+ *  - Online-Anfragen: die Zahl der Leisten-Plakette #anfragenNavBadge (beobachtet).
+ *  - Freie Zeit: die vorhandene .gaps-section wird in die Karte umgehängt (IDs bleiben,
+ *    renderGaps füllt sie weiter). Bekannte Grenze: ignoriert Pausen/Abwesenheiten (V6.B).
+ */
+import { on } from './signal.js?v=20260813';
+import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
+import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-rechnen.js?v=20261026s213';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICON = {
+  pfeil: SVG('<path d="M9 6l6 6-6 6"/>', 16),
+  rechts: SVG('<path d="M5 12h14M13 6l6 6-6 6"/>', 16),
+  kalender: SVG('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'),
+  akte: SVG('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
+  haus: SVG('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>', 14),
+  warn: SVG('<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'),
+  uhr: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  post: SVG('<path d="M4 4h16v16H4z"/><path d="M4 7l8 6 8-6"/>'),
+  haken: SVG('<path d="M20 6L9 17l-5-5"/>'),
+};
+const TODO_ICON = { 'vo-ueberfaellig': ICON.warn, 'vo-bald': ICON.uhr, anfragen: ICON.post };
+
+let kontext = () => null;
+let wurzel = null;
+let zustand = { laden: true, fehler: false, liste: [], stand: null };
+let laufNr = 0;
+
+const inLeiste = (panel) => document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
+const geheZu = (panel) => inLeiste(panel)?.click();
+const zahlAus = (id) => {
+  const el = document.getElementById(id);
+  if (!el || el.style.display === 'none') return null;
+  const n = parseInt(el.textContent, 10);
+  return Number.isFinite(n) ? n : null;
+};
+/** Verordnungszahlen gelten nur, wenn loadPhysioRezKpis den Block sichtbar geschaltet hat. */
+const voKpiDa = () => { const k = document.getElementById('physioRezKpi'); return !!k && k.style.display !== 'none' && !k.hidden; };
+const istOwner = () => kontext()?.rolle?.() === 'owner';
+// formatToParts: de-DE formatiert die Stunde allein als „10 Uhr“.
+const berlinStunde = (d) => Number(new Intl.DateTimeFormat('de-DE', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).formatToParts(d).find((x) => x.type === 'hour')?.value);
+const datumLang = (d) => new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Berlin' }).format(d);
+const leistung = (b) => b.services?.title || 'Termin';
+
+async function ladeTermine() {
+  const k = kontext();
+  const grenzen = tagesgrenzen(new Date());
+  if (!k?.supabase || !grenzen) throw new Error('Kontext fehlt');
+  const { data, error } = await k.supabase.from('bookings')
+    .select('id,user_id,lead_id,start_time,end_time,customer_name,status,hausbesuch,group_parent_id,services(title,is_internal)')
+    .eq('owner_id', k.getOwnerId())
+    .gte('start_time', grenzen.von).lt('start_time', grenzen.bisExklusiv)
+    .neq('status', 'cancelled')
+    .order('start_time');
+  if (error) throw error;
+  return heutigeTermine(data || [], { jetzt: new Date(), uid: k.uid?.(), nurEigene: !istOwner() });
+}
+
+export async function aktualisieren() {
+  if (!wurzel) return;
+  const nr = ++laufNr;
+  zustand = { ...zustand, laden: !zustand.stand, fehler: false };
+  zeichne();
+  try {
+    const liste = await ladeTermine();
+    if (nr !== laufNr) return;
+    zustand = { laden: false, fehler: false, liste, stand: new Date() };
+  } catch (e) {
+    if (nr !== laufNr) return;
+    console.warn('[startseite] Termine nicht ladbar:', e);
+    zustand = { ...zustand, laden: false, fehler: true };
+  }
+  zeichne();
+}
+
+function kopfHtml() {
+  const jetzt = new Date();
+  const zeile = zustand.laden ? 'Termine werden geladen …' : zustand.fehler ? 'Termine konnten nicht geladen werden' : tageszeile(zustand.liste);
+  return `<div class="px-start-kopf"><h1>${esc(begruessung(berlinStunde(jetzt)))}</h1>
+    <p>${esc(datumLang(jetzt))} · ${esc(zeile)}</p></div>`;
+}
+
+function fehlerHtml(text) {
+  return `<div class="px-karte-zustand"><p>${esc(text)}</p><button type="button" class="px-knopf px-knopf--zweit" data-aktion="neu-laden">Erneut versuchen</button></div>`;
+}
+
+function naechstesHtml() {
+  let inhalt;
+  if (zustand.laden) inhalt = '<div class="px-karte-zustand"><div class="px-skelett"></div><div class="px-skelett px-skelett--kurz"></div></div>';
+  else if (zustand.fehler) inhalt = fehlerHtml('Der nächste Termin konnte nicht geladen werden.');
+  else {
+    const { termin, danach } = alsNaechstes(zustand.liste);
+    if (!termin) {
+      inhalt = `<div class="px-naechstes-kopf"><div class="px-zeile"><h2>Als Nächstes</h2></div>
+        <p class="px-naechstes-leer">${zustand.liste.length ? 'Für heute sind alle Termine vorbei.' : 'Heute stehen keine Termine an.'}</p></div>
+        <div class="px-naechstes-rumpf"><div class="px-aktionen"><button type="button" class="px-knopf" data-aktion="kalender">${ICON.kalender}<span>Zum Kalender</span></button></div></div>`;
+    } else {
+      const d = dauerMin(termin);
+      const sub = [esc(leistung(termin)), d ? `${d} Min` : '', termin.hausbesuch ? `${ICON.haus}Hausbesuch` : ''].filter(Boolean).map((x) => `<span>${x}</span>`).join('');
+      const danachHtml = danach.length
+        ? `<div class="px-danach"><h3>Danach</h3><ul>${danach.map((b) => `<li><span class="t">${esc(uhrzeitBerlin(b.start_time))}</span><span class="n">${esc(b.customer_name || 'Ohne Namen')} · ${esc(leistung(b))}</span>${b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>' : '<span></span>'}</li>`).join('')}</ul></div>`
+        : '<div class="px-danach"><h3>Danach</h3><p class="px-leise">Keine weiteren Termine heute.</p></div>';
+      inhalt = `<div class="px-naechstes-kopf">
+          <div class="px-zeile"><h2>Als Nächstes</h2><span class="px-pille px-pille--voll">${esc(abstandText(termin))}</span></div>
+          <div class="px-naechstes-haupt"><span class="zeit">${esc(uhrzeitBerlin(termin.start_time))}</span><span class="name">${esc(termin.customer_name || 'Ohne Namen')}</span></div>
+          <div class="px-naechstes-sub">${sub}</div>
+        </div>
+        <div class="px-naechstes-rumpf">
+          <div class="px-aktionen">
+            <button type="button" class="px-knopf" data-aktion="kalender">${ICON.kalender}<span>Im Kalender öffnen</span></button>
+            ${termin.lead_id ? `<button type="button" class="px-knopf px-knopf--zweit" data-aktion="akte" data-lead="${esc(termin.lead_id)}">${ICON.akte}<span>Patientenakte</span></button>` : ''}
+          </div>
+          ${danachHtml}
+        </div>`;
+    }
+  }
+  return `<section class="px-karte px-k-next" aria-label="Als Nächstes">${inhalt}</section>`;
+}
+
+function todoHtml() {
+  const quellen = {
+    anfragen: inLeiste('anfragen') ? zahlAus('anfragenNavBadge') : null,
+    voUeberfaellig: voKpiDa() ? zahlAus('rezKpiOverdue') : null,
+    voBald: voKpiDa() ? zahlAus('rezKpiSoon') : null,
+  };
+  const zeilen = zuErledigen(quellen);
+  // „Nichts offen“ nur, wenn wirklich Zahlen da sind — sonst keine falsche Entwarnung.
+  const bekannt = quellen.voUeberfaellig !== null || quellen.voBald !== null;
+  const rumpf = zeilen.length
+    ? `<div class="px-todo">${zeilen.map((z) => {
+      const ziel = inLeiste(z.ziel) ? z.ziel : '';
+      return `<button type="button" class="px-todo-zeile px-ton-${z.ton}" ${ziel ? `data-ziel="${ziel}"` : 'disabled'}>
+        <span class="kachel">${TODO_ICON[z.id] || ''}</span>
+        <span class="text"><b>${esc(z.titel)}</b><small>${esc(z.text)}</small></span>
+        <span class="zahl">${z.zahl}</span><span class="pfeil">${ziel ? ICON.pfeil : ''}</span></button>`;
+    }).join('')}</div>`
+    : bekannt
+      ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
+      : '<div class="px-karte-zustand"><p>Hinweise sind gerade nicht verfügbar.</p></div>';
+  return `<section class="px-karte px-k-todo" aria-labelledby="pxTodoTitel">
+    <div class="px-karte-kopf"><div><h2 id="pxTodoTitel">Zu erledigen</h2><p>Was heute Aufmerksamkeit braucht</p></div></div>${rumpf}</section>`;
+}
+
+function listeHtml() {
+  let rumpf;
+  if (zustand.laden) rumpf = '<div class="px-karte-zustand"><div class="px-skelett"></div><div class="px-skelett"></div><div class="px-skelett px-skelett--kurz"></div></div>';
+  else if (zustand.fehler) rumpf = fehlerHtml('Die Termine von heute konnten nicht geladen werden.');
+  else if (!zustand.liste.length) rumpf = '<div class="px-karte-zustand px-karte-zustand--ruhig"><p>Heute sind keine Termine eingetragen.</p></div>';
+  else {
+    const l = zustand.liste;
+    const vorbei = l.filter((b) => b.zustand === 'vorbei').length;
+    const hb = l.filter((b) => b.hausbesuch).length;
+    const naechster = alsNaechstes(l).termin;
+    const meta = [vorbei ? `${vorbei} vorbei` : '', `${l.length - vorbei} offen`, hb ? `${hb} ${hb === 1 ? 'Hausbesuch' : 'Hausbesuche'}` : ''].filter(Boolean).join(' · ');
+    rumpf = `<div class="px-summe"><div><b>Gesamt</b><small>${esc(meta)}</small></div><span class="zahl">${l.length}</span></div>
+      <ul class="px-termine">${l.map((b) => {
+        const ende = b === naechster ? '<span class="px-pille px-pille--voll">als Nächstes</span>'
+          : b.zustand === 'laeuft' ? '<span class="px-pille">läuft</span>'
+          : b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>'
+          : b.zustand === 'vorbei' ? '<span class="px-leise">vorbei</span>' : '';
+        const klick = b.lead_id ? `data-aktion="akte" data-lead="${esc(b.lead_id)}"` : 'disabled';
+        return `<li><button type="button" class="px-termin${b.zustand === 'vorbei' ? ' ist-vorbei' : ''}${b === naechster ? ' ist-naechster' : ''}" ${klick}>
+          <span class="t">${esc(uhrzeitBerlin(b.start_time))}</span>
+          <span class="mitte"><span class="n">${esc(b.customer_name || 'Ohne Namen')}${b.hausbesuch ? ICON.haus : ''}</span><span class="s">${esc(leistung(b))}</span></span>
+          <span class="ende">${ende}</span></button></li>`;
+      }).join('')}</ul>`;
+  }
+  const datum = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Berlin' }).format(new Date());
+  return `<section class="px-karte px-k-list" aria-labelledby="pxListeTitel">
+    <div class="px-karte-kopf"><div><h2 id="pxListeTitel">Termine heute</h2><p>${esc(datum)}${istOwner() ? '' : ' · nur Ihre Termine'}</p></div></div>
+    ${rumpf}
+    <div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-aktion="kalender">Zum Kalender ${ICON.rechts}</button></div></section>`;
+}
+
+function voHtml() {
+  if (!voKpiDa()) return '';
+  const werte = [
+    ['Überfällig', zahlAus('rezKpiOverdue'), 'bad'],
+    ['Läuft ab ≤ 7 Tage', zahlAus('rezKpiSoon'), 'warn'],
+    ['In Behandlung', zahlAus('rezKpiActive'), ''],
+  ];
+  const ziel = inLeiste('verordnungen');
+  return `<section class="px-karte px-k-vo" aria-labelledby="pxVoTitel">
+    <div class="px-karte-kopf"><div><h2 id="pxVoTitel">Verordnungen</h2><p>Gültigkeit im Blick</p></div></div>
+    <div class="px-minis">${werte.map(([t, v, ton]) => `<div class="px-mini${ton && v ? ` px-ton-${ton}` : ''}"><span class="zahl">${v ?? '–'}</span><span class="lbl">${esc(t)}</span></div>`).join('')}</div>
+    ${ziel ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-aktion="gehe" data-ziel="verordnungen">Alle Verordnungen ${ICON.rechts}</button></div>` : ''}
+  </section>`;
+}
+
+function zeichne() {
+  if (!wurzel) return;
+  const frei = document.querySelector('.gaps-section');
+  // Freie-Zeit-Sektion vor dem Neuzeichnen sichern (sie wird nur umgehängt, nie neu gebaut).
+  if (frei && wurzel.contains(frei)) frei.remove();
+  wurzel.innerHTML = `${kopfHtml()}<div class="px-start-raster${istOwner() ? '' : ' ist-team'}">
+    ${naechstesHtml()}${todoHtml()}${listeHtml()}${voHtml()}
+    <section class="px-karte px-k-frei" aria-labelledby="pxFreiTitel">
+      <div class="px-karte-kopf"><div><h2 id="pxFreiTitel">Freie Zeit heute</h2><p>Lücken im Terminplan</p></div></div>
+      <div class="px-frei-ziel"></div>
+    </section></div>`;
+  if (frei) wurzel.querySelector('.px-frei-ziel').appendChild(frei);
+}
+
+function klick(e) {
+  const el = e.target.closest('[data-aktion], [data-ziel]');
+  if (!el || !wurzel.contains(el) || el.disabled) return;
+  const aktion = el.dataset.aktion;
+  if (aktion === 'kalender') geheZu('calendar');
+  else if (aktion === 'akte' && typeof window.openPatientDetail === 'function') window.openPatientDetail(el.dataset.lead);
+  else if (aktion === 'neu-laden') aktualisieren();
+  else if (el.dataset.ziel) geheZu(el.dataset.ziel);
+}
+
+/** Einmal einhängen. `k` liefert { supabase, getOwnerId, rolle(), uid() } oder null. */
+export function verdrahteStartseite(k) {
+  if (wurzel || typeof k !== 'function') return;
+  const panel = document.getElementById('panel-overview');
+  if (!panel) return;
+  kontext = k;
+  wurzel = document.createElement('div');
+  wurzel.id = 'pxStartseite';
+  wurzel.className = 'px-start';
+  panel.prepend(wurzel);
+  document.documentElement.classList.add('px-startseite-bereit');
+  wurzel.addEventListener('click', klick);
+
+  // Zahlen, die dashboard.js nachträglich schreibt, sofort übernehmen (ohne neue Abfrage).
+  let warte = 0;
+  const nachziehen = () => { cancelAnimationFrame(warte); warte = requestAnimationFrame(zeichne); };
+  for (const id of ['physioRezKpi', 'anfragenNavBadge']) {
+    const el = document.getElementById(id);
+    if (el) new MutationObserver(nachziehen).observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'hidden'] });
+  }
+  on('nav:gerendert', () => {
+    const b = document.getElementById('anfragenNavBadge');
+    if (b && !b.dataset.pxBeobachtet) { b.dataset.pxBeobachtet = '1'; new MutationObserver(nachziehen).observe(b, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] }); }
+    nachziehen();
+  });
+  on('bookings:changed', () => aktualisieren());
+  on('panel:changed', (d) => { if (d?.id === 'overview') aktualisieren(); });
+  // Uhr: „in 15 Min“ und Zustände minütlich nachführen (ohne neue Abfrage).
+  setInterval(() => {
+    if (!document.getElementById('panel-overview')?.classList.contains('active') || zustand.laden || zustand.fehler) return;
+    zustand = { ...zustand, liste: heutigeTermine(zustand.liste, { jetzt: new Date() }) };
+    zeichne();
+  }, 60000);
+  aktualisieren();
+}
