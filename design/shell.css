@@ -68,3 +68,70 @@
 @media screen and (max-width: 1024px) {
   [data-design="neu"] .px-leiste-marke { display: none; }
 }
+
+/* ── V2.04 Leiste v2: ruhig, beschriftet, 40 px Einträge ────────────────────────
+   PLAN-V2 3.2: weiß, 1 px Linie, aktiv = graue Fläche + schwarze Schrift, kein Seitenstrich.
+   Gruppenköpfe als leise Überschrift (Gruppensymbol erst in der Icon-Leiste, V2.06).
+   Spezifität über [data-design] + #sidebarNav, damit dashboard-feinschliff.css und das
+   <style> „Grouped sidebar navigation" in dashboard.html ohne !important überstimmt werden. */
+@media screen {
+  [data-design="neu"] .sidebar {
+    background: var(--bg-card-solid);
+    border-right: 1px solid var(--border);
+    backdrop-filter: none;
+  }
+  [data-design="neu"] .sidebar.collapsed { border-right: none; }
+  [data-design="neu"] .sidebar nav { padding: 8px 12px 16px; gap: 0; }
+
+  [data-design="neu"] #sidebarNav .nav-group { margin: 0; }
+  [data-design="neu"] #sidebarNav .nav-group + .nav-group { margin-top: 8px; }
+  [data-design="neu"] #sidebarNav .nav-group-header {
+    min-height: 32px;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"] #sidebarNav .nav-group-header:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"] #sidebarNav .nav-group-icon { display: none; }
+  [data-design="neu"] #sidebarNav .nav-group-chevron { opacity: 0.7; transition: transform var(--dur) var(--ease-standard); }
+  [data-design="neu"] #sidebarNav .nav-group-items { padding: 2px 0 4px; gap: 2px; }
+
+  [data-design="neu"] #sidebarNav .sidebar-item {
+    min-height: 40px;
+    padding: 0 12px;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"] #sidebarNav .sidebar-item::before { border-radius: var(--radius-sm); }
+  [data-design="neu"] #sidebarNav .sidebar-item .icon,
+  [data-design="neu"] #sidebarNav .sidebar-item .icon svg { width: 18px; height: 18px; }
+  [data-design="neu"] #sidebarNav .sidebar-item .icon { color: var(--text-muted); }
+  [data-design="neu"] #sidebarNav .sidebar-item:hover { color: var(--text-main); }
+  [data-design="neu"] #sidebarNav .sidebar-item:hover .icon { color: var(--text-main); }
+  [data-design="neu"] #sidebarNav .sidebar-item.active { font-weight: 600; }
+  [data-design="neu"] #sidebarNav .sidebar-item.active::before { background: var(--nav-active); }
+  [data-design="neu"] #sidebarNav .sidebar-item.active .icon { color: var(--primary); }
+
+  /* Zählerplakette (heute nur Anfragen): rechtsbündig, schwarz, eckig-rund wie Zähler-Chips. */
+  [data-design="neu"] #sidebarNav .nav-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-xxs);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+}
