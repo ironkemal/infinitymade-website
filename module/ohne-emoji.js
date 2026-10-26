@@ -10,7 +10,8 @@
  *  - reine Dekoration → entfernt (samt Leerzeichen dahinter),
  *  - würde ein Element dadurch leer (Knopf nur aus Emoji, ohne Ersatzsymbol), bleibt das Original.
  * Typografische Zeichen wie ✓ ✕ ✗ → ← sind keine Emojis und bleiben.
- * Eingabefelder, <option>-Texte (kein SVG möglich: nur entfernen), Skripte und Styles werden geachtet.
+ * Nur FÜHRENDE Emojis eines Textstücks (UI-Beschriftung, Symbolknopf); Emojis mitten im Text sind Nutzdaten
+ * (Namen, Notizen) und bleiben. Eingaben (isContentEditable), <select>/<option>, title, Skripte, Styles: unberührt.
  * Später ersetzen die Bereichspakete die Zeichen direkt im Quelltext; dann wird dieses Modul kleiner.
  */
 
@@ -47,6 +48,8 @@ const ERSATZ = {
 const KLASSE = '[\\u{1F000}-\\u{1FAFF}⚠⚡⏳⏰⌛⌚✏✎✉✍⭐✔✅❌⚕❗❓☎☀✨❤⛔]';
 const BILD = new RegExp(`${KLASSE}\\uFE0F?`, 'u');
 const TEIL = new RegExp(`(${KLASSE})\\uFE0F?(\\s?)`, 'gu');
+/** Führender Lauf aus Emojis (mit Leerraum davor/dazwischen). */
+const FUEHREND = new RegExp(`^\\s*(?:${KLASSE}\\uFE0F?\\s?)+`, 'u');
 /** Bildzeichen mit typografischem Gegenstück: als Text behalten. */
 const ALS_TEXT = { '✔': '✓', '✅': '✓', '❌': '✕' };
 
@@ -56,17 +59,21 @@ const ALS_TEXT = { '✔': '✓', '✅': '✓', '❌': '✕' };
  */
 export function zerlege(text) {
   const s = String(text ?? '');
-  if (!BILD.test(s)) return null;
+  // Nur führende Emojis (UI-Beschriftung „🖨 Drucken“, Symbolknopf). Emojis mitten im Text sind
+  // Nutzdaten (Name, Notiz) und bleiben unverändert (Codex-Prüfung V3.W, 26.10.2026).
+  const fuehrend = s.match(FUEHREND);
+  if (!fuehrend) return null;
+  const kopf = fuehrend[0];
   const teile = [];
   let rest = 0;
-  for (const m of s.matchAll(TEIL)) {
+  for (const m of kopf.matchAll(TEIL)) {
     const [ganz, zeichen, raum] = m;
     if (m.index > rest) teile.push({ text: s.slice(rest, m.index) });
     if (ALS_TEXT[zeichen]) teile.push({ text: ALS_TEXT[zeichen] + raum });
     else if (ERSATZ[zeichen]) teile.push({ symbol: ERSATZ[zeichen] }, ...(raum ? [{ text: raum }] : []));
     rest = m.index + ganz.length;
   }
-  if (rest < s.length) teile.push({ text: s.slice(rest) });
+  if (rest < s.length) teile.push({ text: s.slice(rest) });  // Rest inkl. allem nach dem Kopf unverändert
   // Zusammenfassen und überzählige Leerzeichen am Rand der Dekor-Lücken glätten.
   const out = [];
   for (const t of teile) {
@@ -77,7 +84,7 @@ export function zerlege(text) {
   return out.filter((t) => t.symbol || t.text);
 }
 
-/** Reine Hilfe: nur Text, ohne Emojis (für <option>, title usw.). */
+/** Reine Hilfe: nur Text ohne führende Emojis (für Tests/Aufrufer; DOM-Titel und Optionen werden nicht umgeschrieben). */
 export function nurText(text) {
   const teile = zerlege(text);
   if (!teile) return String(text ?? '');
@@ -88,10 +95,10 @@ const AUSLASSEN = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', '
 
 function bearbeite(knoten) {
   const el = knoten.parentElement;
-  if (!el || AUSLASSEN.has(el.tagName) || el.closest('[contenteditable="true"], textarea, script, style')) return;
+  // Eingaben, Auswahllisten und Titel nie anfassen (Werte/Auswahl dürfen sich nicht ändern).
+  if (!el || AUSLASSEN.has(el.tagName) || el.isContentEditable || el.closest('textarea, script, style, select, option, title, [contenteditable]')) return;
   const teile = zerlege(knoten.nodeValue);
   if (!teile) return;
-  if (el.tagName === 'OPTION' || el.tagName === 'TITLE') { knoten.nodeValue = nurText(knoten.nodeValue); return; }
   const bleibtEtwas = teile.some((t) => t.symbol || t.text.trim()) || (el.textContent.replace(knoten.nodeValue, '').trim() !== '') || el.querySelector('svg, img');
   if (!bleibtEtwas) return; // Element würde leer: Original lassen
   const frag = document.createDocumentFragment();
@@ -112,7 +119,6 @@ function durchlaufe(wurzel) {
   const liste = [];
   while (gang.nextNode()) liste.push(gang.currentNode);
   liste.forEach(bearbeite);
-  for (const el of wurzel.querySelectorAll?.('[title]') || []) if (BILD.test(el.title)) el.title = nurText(el.title);
 }
 
 let laeuft = false;

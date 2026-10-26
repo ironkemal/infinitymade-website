@@ -25,7 +25,7 @@ import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
 import { verdrahteStartseite } from './startseite-neu.js?v=20261026s216';
-import { emojisAus } from './ohne-emoji.js?v=20261026s214';
+import { emojisAus } from './ohne-emoji.js?v=20261026s217';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
