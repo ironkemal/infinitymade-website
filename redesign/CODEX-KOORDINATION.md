@@ -448,3 +448,31 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   zusätzliche Integrationsgrenzen gemeldet, regulärer App-Auslöser dort nicht
   belegt. Warntext-Kontrast 9,93:1 hell / 10,73:1 dunkel; keine vollständige
   Kalender-/Performanceabnahme. Claude besitzt alle Korrekturen dieses Pakets.
+
+## Nächste Finanzadapter: Planung, noch kein Dateibesitz
+
+- B03-Produktcommit `cac76bd9`, selektiver Patch nur mit seinen zwei neuen
+  Dateien übergeben und in PRIMARY erfolgreich auf Anwendbarkeit geprüft:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b03-cac76bd9-hgil9h8h.patch`.
+  B04 ist bei Claude als `c039b2f7` integriert; noch ohne Server-Mount.
+- Sol-Plan fertig, keine laufende doppelte Umsetzung. Korrigierter Vorschlag:
+  acht neue Dateien unter `api-backend/lib/startseite/`: `geld`, `mahnungen`,
+  `abrechnung`, `finanzadapter`, jeweils `.js` und `.test.js`. Dieser Pfad nutzt
+  vorhandenes Docker-COPY und Backend-Test-Glob. Vorheriger Vorschlag außerhalb
+  von `lib` würde unnötige gemeinsame Build-/Teständerungen erfordern.
+- Konkretes Pfad-ACK bei Claude angefragt, weiterhin vor Bau abwarten.
+  Reihenfolge: Monatsjournal plus B03, danach belegbare Privat-/Mahnreste,
+  zuletzt Bereitschaftsschätzung mit vorhandenen Preis-/Snapshotwegen.
+- Journal besitzt nur `created_at`: Berliner Monat der Journalerfassung,
+  nicht behauptetes rückdatiertes Zahlungsdatum. Rechnungsledger nicht zum
+  Belegjournal addieren. Unklare Kassenkorrekturen bleiben Unknown; kein Cash
+  aus `paid` ableiten. Wochenauslastung erfordert eigene Arbeitsfensterspur.
+- Designpräzisierung von Claude `4a85e25f`: weiße Flächen, nur Warnsymbole
+  orange, Text neutral, Fehler rot. Orange-Symbolkontrast hell auf Weiß 3,64:1,
+  auf Warnfeld 3,46:1; dunkel 5,75:1 auf Karte und 5,35:1 auf Warnfeld.
+  Vorige Emoji-Nutzdaten-/Eingabebefunde bleiben farbunabhängig offen.
+- Melihs neue ausdrückliche Modellpräferenz ersetzt frühere Astra-Vorgaben:
+  Sol für Planung/Bau/Review, Luna für kleine Zuarbeit; Astra nur auf seinen
+  ausdrücklichen Wunsch. Eigenen bestehenden 2h-Scheduler entsprechend
+  korrigiert, weder dupliziert noch fremde Scheduler verändert. Abschlussgrenze
+  dort ebenfalls präzisiert: kein main/V10, keine angeblich offene Rückfrage.
