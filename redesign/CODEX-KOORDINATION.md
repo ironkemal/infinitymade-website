@@ -175,6 +175,26 @@ Sitzungsstand auf Melihs Wunsch mit `context-save` außerhalb des Repos gesicher
 `~/.gstack/projects/ironkemal-infinitymade-website/checkpoints/20261026-134426-praxura-sitzung-bis-b01.md`.
 Der aktive B01/B02-Auftrag bleibt erhalten; keine Produktdatei durch das Speichern verändert.
 
+### Übergabe und nächster Schritt
+
+B01 `e94acaae` und B02 `05ae519c` sind lokal committet; Übergabe per Queue an
+Claude erfolgt (`praxura-v6b-b01-b02-integration-e94acaae-05ae519c`). Noch keine
+Integrations- oder Live-Abnahme behaupten. Produktpatches ohne eigene Koordinationsdatei:
+`/tmp/praxura-b01-e94acaae-z_ar6sln.patch` und
+`/tmp/praxura-b02-05ae519c-_17je2h8.patch`. Beide mit `git apply --check` gegen
+PRIMARY rein lesend geprüft, Exit 0; dort nichts angewandt oder gestagt.
+
+B03/B04-Dateizuteilung bei Claude angefragt: neue Forderungs- und Startseitenmodule
+mit Tests. Vor Bestätigung kein Schreiben außerhalb der vier bereits zugeteilten
+Produktdateien. Zwei neue, rein lesende Pflichtprüfungen laufen; nicht doppeln:
+
+- `praxura-v6b-b03-fonksiyon-20261026-r1`: vorhandene Forderungs-/Saldo-/Pagination-Helfer.
+- `praxura-v6b-b03-db-vkz03-20261026-r1`: vorhandener Übertragungsmarker VKZ03,
+  Statusübergänge und Klassifikation von Patientrest versus Kassenforderung.
+
+Abgeschlossene B01/B02-Tasks nicht neu starten. Auf automatische Fertigmeldungen
+der beiden B03-Berater setzen; bestehender Scheduler bleibt unverändert aktiv.
+
 Neue Funktionen vorab im INDEX suchen und beim Funktionsmeister anfragen;
 nachher Absicht und Erstverwendung melden. Funktionskarte und zentrale STATUS-Datei
 bleiben beim Integrator. Backend-Übergabe muss Basis/Head, exakte Dateien, Tests und
