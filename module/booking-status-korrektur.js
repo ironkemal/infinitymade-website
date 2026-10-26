@@ -1,6 +1,6 @@
 import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { emit } from './signal.js?v=20260813';
-import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260916b';
+import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20261026p';
 
 /**
  * booking-status-korrektur.js — nachträgliche bookings.status-Korrektur
@@ -38,7 +38,7 @@ export async function pruefeAbrechnungssperre(supabase, booking) {
   try {
     if (!booking?.id) throw new Error('Termin fehlt.');
     let abfrage = supabase.from('bookings')
-      .select('id, owner_id, status, verordnung_id, no_show_session_links').eq('id', booking.id);
+      .select('id, owner_id, status, start_time, verordnung_id, no_show_session_links').eq('id', booking.id);
     if (booking.owner_id) abfrage = abfrage.eq('owner_id', booking.owner_id);
     const { data: aktuell, error: terminFehler } = await abfrage.maybeSingle();
     if (terminFehler || !aktuell) throw new Error('Termin konnte nicht geprüft werden.');
@@ -127,7 +127,10 @@ export async function korrigiereNoShow(ctx, booking) {
   //     `bookings.no_show_session_links`. Ohne Schritt 2 waere die Korrektur
   //     stillschweigend wirkungslos — der Termin stuende auf `completed`, die
   //     Einheit bliebe unerbracht.
-  await supabase.from('prescription_sessions').update({ status: 'done' }).eq('booking_id', booking.id);
+  // done_at = Leistungsdatum der Abrechnung (Mapper fiel ohne es auf das Ausstellungsdatum zurück).
+  await supabase.from('prescription_sessions')
+    .update({ status: 'done', done_at: aktuelleBuchung.start_time || new Date().toISOString() })
+    .eq('booking_id', booking.id);
   await rebindeNoShowSitzungen(supabase, aktuelleBuchung);
 
   const { data: sess } = await supabase.auth.getSession();

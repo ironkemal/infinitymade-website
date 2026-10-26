@@ -298,7 +298,7 @@ export async function rebindeNoShowSitzungen(supabase, booking, opts = {}) {
   for (const l of einmalJeSitzung(links)) {
     const { data, error } = await supabase
       .from('prescription_sessions')
-      .update({ booking_id: booking.id, status: 'done' })
+      .update({ booking_id: booking.id, status: 'done', done_at: booking.start_time || new Date().toISOString() })
       .eq('id', l.session_id)
       .is('booking_id', null)
       .select('id');

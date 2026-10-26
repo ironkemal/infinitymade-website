@@ -58,8 +58,8 @@ import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverz
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261021v'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261021v';
-import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
-import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
+import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
+import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261026p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
@@ -3732,7 +3732,7 @@ async function handleTerminStarten() {
       else b.fahrt_status = 'fahrt_return_pending';
     }
     if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
-    markPrescriptionSession(b.id, 'done');
+    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
     await renderBkActionFahrtState(b, true);
     return;
   }
@@ -3758,9 +3758,9 @@ async function handleTerminStarten() {
     cancelText: 'Ohne Notiz',
   });
   if (sessionNote === null) {
-    markPrescriptionSession(b.id, 'done', undefined);
+    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
   } else {
-    markPrescriptionSession(b.id, 'done', sessionNote || undefined);
+    markPrescriptionSession(b.id, 'done', sessionNote || undefined, b.start_time);
   }
 
   // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
@@ -6473,11 +6473,11 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   return true;
 }
 
-async function markPrescriptionSession(bookingId, status, notes) {
+async function markPrescriptionSession(bookingId, status, notes, terminStart) {
   if (!bookingId) return;
   try {
     const patch = { status };
-    if (status === 'done') patch.done_at = new Date().toISOString();
+    if (status === 'done') patch.done_at = terminStart || new Date().toISOString(); // Leistungsdatum = Termintag, nicht Klickzeit
     if (notes !== undefined && notes !== null) patch.notes = notes;
     // Kombi-Termin = mehrere Sitzungen je booking_id → kein maybeSingle() (PGRST116, Rezept nie 'bereit').
     const { data: rows, error } = await supabase
