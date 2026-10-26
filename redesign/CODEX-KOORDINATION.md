@@ -24,7 +24,7 @@ dieser Backend-Spur. Bestehende Buchungsfehler werden nicht beiläufig korrigier
 | Claude | Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch `redesign/praxura-design` |
 | Claude allein | Frontend, gemeinsame STATUS-Datei, Funktionskarte, Referenzbilder, Integration und Browser-Port 18081 |
 | Codex zunächst | Eigene Koordination, unabhängige Prüfung, lokale Analyse und Ausgangstests |
-| Produktiver Backend-Dateibesitz | Noch nicht bestätigt; vor Änderungen ausdrückliches Datei-ACK von Claude abwarten |
+| Produktiver Backend-Dateibesitz | Melih hat am 26.10.2026 die vier B01/B02-Dateien ausdrücklich exklusiv Codex zugewiesen und den sofortigen Bau bestätigt |
 
 Haupt-Checkout niemals bearbeiten. Fremde Änderungen in Claudes Arbeitskopie
 weder stagen noch committen, zurücknehmen oder überschreiben. Keine gegenseitigen
@@ -58,7 +58,17 @@ Neustarts/Unterbrechungen. Übergaben per `t3_thread_send`, `mode=queue`, an
 
 ACK-Anfragen bereits gesendet: `praxura-codex-kooperation-20261026-01`,
 präzisiert durch `praxura-codex-astra-plan-abgleich-20261026-01` (B01/B02).
-Antwort noch offen. Bis dahin keine produktiven Backend-Änderungen.
+Claude erreichte vor einer Antwort sein Sessionlimit bis 12:50 Uhr. Daraufhin
+hat Melih die vier genannten Dateien unmittelbar zugewiesen: `statistik.routes.js`,
+neue `statistik.routes.test.js`, `berlin-tag.js`, `berlin-tag.test.js`.
+Damit ist der frühere ACK-Stopp für genau B01/B02 aufgehoben. Weitere Backend-Dateien,
+insbesondere `server.js`, sind noch nicht zugeteilt. PRIMARY bleibt unverändert bei Claude.
+
+B01 ist lokal fertig, von Astra unabhängig abgenommen und in diesem Commit:
+drei Zeilen Owner-Gate sowie neuer echter Router-/SDK-Grenztest. Sol hat ausschließlich
+Route und Test bearbeitet. Der erste Modelllauf endete am Nutzungslimit; die automatische
+Fortsetzung ist abgeschlossen, kein zweiter Schreiber wurde gestartet. B02 ist separat
+gebaut und in Prüfung; seine beiden Dateien gehören nicht zum B01-Commit.
 
 ## Fragen und Prüfgrenzen
 
@@ -114,6 +124,33 @@ Luna hat R-06 zusätzlich am tatsächlichen Handler mit installiertem SDK und st
 synthetischem Fetch reproduziert: Owner, Mitarbeiter und unbekannte Rolle jeweils
 HTTP 200, 1 Auth-/1 Profil-/11 Fachabfragen. Kein Ziel außerhalb `synthetic.invalid`.
 Dieser Nachweis bestätigt den Fehler im Bestand und ist kein erfolgreicher Grenztest.
+
+### B01: lokale Paketnachweise
+
+- Neuer Rollen-Grenztest vor dem Gate rot: sechs Fälle lieferten 200 statt 403.
+  Auth-Fixture korrigiert, fachliche Erwartungen unverändert.
+- Nach Gate: neuer Test plus unveränderter Therapeuten-Test 25/25 grün, kein SKIP.
+  Nicht-Owner nur Auth/Profil, null Fachabfragen; Owner behält 13 Antwortschlüssel
+  sowie Tenantfilter einschließlich Zahlungsnachladung.
+- Eigener vollständiger Lauf `npm test`: 4.113 bestanden (2.154 Frontend,
+  1.641 Backend, 318 Werkzeuge), null Fehler und null übersprungen, Exit 0.
+  Protokoll `/tmp/praxura-codex-b01-sx8_fj22.log`.
+- Astra: keine Blocker; neuer Test plus Therapeuten-Test eigenständig 25/25 grün.
+  Sieben absichtliche Fehler nur im Speicher erkannt; sechs direkte Fetchzaun-Proben
+  bestanden. Ein weiterer Endpoint-Mutationslauf wurde nach 30 Sekunden abgebrochen;
+  die direkte Endpoint-Zaunprobe bestand. Keine Dateien durch Review verändert.
+- T1 nach gezieltem Staging: Syntax, Dashboard-Größe, IDs 1.271/52, Wachen,
+  STATUS-Wache und Whitespaceprüfung grün. Frontend-/Bild-/Live-Abnahme gehört
+  nicht zu diesem lokalen API-Paket; `dashboard.js`/CSS unverändert.
+
+### Zusätzliche Frontend-Prüfung an Claude übergeben
+
+V2.07 (`355fefc3`) isoliert mit originalem Modul/CSS und synthetischem DOM geprüft,
+ohne Port 18081: bei 1440×240 ragt das nicht scrollbare Flyout unter das Fenster;
+beim Wechsel auf 1024 px wird `aria-expanded=false` nach der Rollenbereinigung
+erneut gesetzt, obwohl die mobile Gruppe offen ist. Exakte Reproduktionen per
+Queue übergeben. Claude führt sie in PRIMARY als R-18/R-19 und Paket V2.07b.
+T3-Inkognito-Probetab anschließend geschlossen, keine Referenzbilder verändert.
 
 Neue Funktionen vorab im INDEX suchen und beim Funktionsmeister anfragen;
 nachher Absicht und Erstverwendung melden. Funktionskarte und zentrale STATUS-Datei
