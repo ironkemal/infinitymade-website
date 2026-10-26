@@ -30,8 +30,9 @@
  *
  *   • ±2 WERKTAGE Abweichung vom Sollabstand → unbedenklich, keine Meldung.
  *     Darüber: Absprache mit dem Arzt nötig, Dokumentation auf der VO.
- *   • 12 WOCHEN Unterbrechung → NUR für Physio/Ergo/Logo ein eigener,
- *     deutlicherer Hinweis (s. u. — für Podologie gilt sie NICHT).
+ *   • Unterbrechung → eigener, deutlicherer Hinweis. Die Grenze hängt am
+ *     Fachbereich: Physio/Ergo/Logo 14 Kalendertage (HeilM-RL § 16 Abs. 4 S. 1),
+ *     Podologie 12 Wochen (Podologie-Vertrag § 7 Abs. 7, s. u.).
  *
  * Werktage, nicht Kalendertage — so steht es in der Quelle. Ein Termin, der
  * über ein Wochenende rutscht, ist deshalb kein Verstoss.
@@ -46,13 +47,15 @@
  * Abs. 4 S. 4 verweist auf den Vertrag). Bei Terminen HINWEIS, nie Sperre (PE-008). Die Frequenz­warnung
  * (die ±2-Werktage-Schwelle) bleibt unverändert ein Warn-, kein Block-Hinweis.
  *
- * Physio/Ergo/Logo behalten die 12-Wochen-Schwelle vorerst unverändert — sie
- * ist dort weiterhin unbelegt geschätzt, nicht durch `gkv-302` bestätigt
- * (`gkv-302`, 29.09.2026: die tatsächliche Schwelle könnte für Physio bei
- * 14 Tagen statt 12 Wochen liegen). Das ist eine eigene, noch offene Aufgabe
- * für die Physio-Feinabstimmung (CLAUDE.md, Vertikal-Reihenfolge — Podologie
- * zuerst) und wird hier bewusst NICHT mitgelöst; nur der Text unten wurde von
- * einer falschen Quellenbehauptung befreit.
+ * Physio/Ergo/Logo (26.10.2026, Start Physio-Feinabstimmung): bis dahin galt
+ * auch hier die unbelegte 12-Wochen-Schwelle. HeilM-RL § 16 Abs. 4 S. 1
+ * (wissensbank Z-16, HeilM-RL Z.698-700): „Wird die Behandlung länger als
+ * 14 Kalendertage ohne angemessene Begründung unterbrochen, verliert die
+ * Verordnung ihre Gültigkeit." Begründete Unterbrechungen werden auf der VO
+ * dokumentiert (S. 2) — deshalb auch hier HINWEIS, keine Sperre.
+ * Annahme (nicht aus der Quelle): verordnet der Arzt selbst einen Abstand über
+ * 14 Tagen, ist der planmässige Abstand keine Unterbrechung — die Grenze ist
+ * dann der verordnete Höchstabstand.
  *
  * Blockiert wird bei der Frequenz NIE. Beta-2 hat das am 12.08.2026
  * ausdrücklich so gewollt, und es ist sachlich richtig: Nachholtermine,
@@ -66,7 +69,14 @@ import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20261010
 import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
 
 export const TOLERANZ_WERKTAGE = 2;
-export const UNTERBRECHUNG_TAGE = 12 * 7;   // keine Quelle — Physio-Grenze laut HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16), Anpassung ist eigene Aufgabe
+export const UNTERBRECHUNG_TAGE = 12 * 7;          // Podologie-Vertrag § 7 Abs. 7
+export const UNTERBRECHUNG_TAGE_HEILM_RL = 14;      // Physio/Ergo/Logo, HeilM-RL § 16 Abs. 4 S. 1
+
+/** Unterbrechungsgrenze in Kalendertagen für eine Verordnung (s. Dateikopf). */
+export function unterbrechungsGrenze(istPodo, soll) {
+  if (istPodo) return UNTERBRECHUNG_TAGE;
+  return Math.max(UNTERBRECHUNG_TAGE_HEILM_RL, soll?.max ?? 0);
+}
 
 /**
  * Sollabstand zweier Sitzungen in Kalendertagen, als Spanne.
@@ -224,14 +234,12 @@ export function kalendertage(a, b) {
 /**
  * Bewertet EINEN Abstand gegen den Sollabstand.
  *
- * @param {boolean} [pruefeUnterbrechung=true]  Podologie schaltet das aus —
- *        FAK Nr. 11 begründet nur "kürzer als 12 Wochen bleibt gültig", nicht
- *        deren Umkehrung. Physio/Ergo/Logo behalten die Schwelle (eigene,
- *        noch offene Aufgabe, s. Dateikopf).
+ * @param {boolean} [pruefeUnterbrechung=true]  false = nur Frequenz prüfen
+ * @param {number} [grenzeTage=UNTERBRECHUNG_TAGE]  s. unterbrechungsGrenze()
  * @returns {'ok'|'zu_dicht'|'zu_selten'|'unterbrechung'}
  */
-export function bewerteAbstand(abstandTage, werktage, soll, pruefeUnterbrechung = true) {
-  if (pruefeUnterbrechung && abstandTage > UNTERBRECHUNG_TAGE) return 'unterbrechung';
+export function bewerteAbstand(abstandTage, werktage, soll, pruefeUnterbrechung = true, grenzeTage = UNTERBRECHUNG_TAGE) {
+  if (pruefeUnterbrechung && abstandTage > grenzeTage) return 'unterbrechung';
   if (!soll) return 'ok';
   // Die Toleranz zählt in Werktagen (Quelle Nr. 11), der Sollabstand in
   // Kalendertagen. Verglichen wird deshalb der Werktage-Abstand gegen den
@@ -322,6 +330,7 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
   }
   if (!vorher && !nachher) return { ok: true };
 
+  const grenze = unterbrechungsGrenze(istPodo, soll);
   const seiten = [];
   for (const [rolle, treffer] of [['vorher', vorher], ['nachher', nachher]]) {
     if (!treffer) continue;
@@ -330,7 +339,7 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     // Podologie: 12-Wochen-Pause als HINWEIS — Prüfmaßstab ist Podologie-Vertrag § 7 Abs. 7
     // (gkv-302 21.10.2026: kein Konflikt, HeilM-RL § 16 Abs. 4 S. 4 verweist auf den Vertrag).
     // Bei der Terminvergabe nie gesperrt: der Termin kann auf eine neue VO laufen (PE-008).
-    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, true) });
+    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, true, grenze) });
   }
 
   const problem = seiten.find(s => s.urteil !== 'ok');
@@ -339,9 +348,9 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
   return {
     ok: false,
     titel: problem.urteil === 'unterbrechung'
-      ? 'Behandlungspause über 12 Wochen'
+      ? (istPodo ? 'Behandlungspause über 12 Wochen' : `Behandlungspause über ${grenze} Tage`)
       : 'Frequenz der Verordnung',
-    meldung: baueMeldung({ soll, seiten, problem, neu, istPodo }),
+    meldung: baueMeldung({ soll, seiten, problem, neu, istPodo, grenze }),
     befund: { soll, seiten, urteil: problem.urteil },
   };
 }
@@ -385,7 +394,7 @@ function datumStr(d) {
   return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function baueMeldung({ soll, seiten, problem, neu, istPodo = false }) {
+function baueMeldung({ soll, seiten, problem, neu, istPodo = false, grenze = UNTERBRECHUNG_TAGE_HEILM_RL }) {
   const zeilen = [];
 
   // Bewusst ohne Spalten-Ausrichtung: der Dialog rendert in einer
@@ -417,9 +426,10 @@ function baueMeldung({ soll, seiten, problem, neu, istPodo = false }) {
     zeilen.push(`für diesen Termin wird eine neue Verordnung benötigt.`);
   } else if (problem.urteil === 'unterbrechung') {
     zeilen.push('');
-    zeilen.push(`Zwischen den Terminen liegen mehr als 12 Wochen.`);
-    zeilen.push(`Lange Behandlungsunterbrechung — bitte die Gültigkeit der Verordnung`);
-    zeilen.push(`prüfen (HeilM-RL § 16 Abs. 4).`);
+    zeilen.push(`Zwischen den Terminen liegen mehr als ${grenze} Kalendertage.`);
+    zeilen.push(`Ohne angemessene Begründung verliert die Verordnung damit ihre`);
+    zeilen.push(`Gültigkeit (HeilM-RL § 16 Abs. 4). Gibt es einen Grund (z. B. Krankheit,`);
+    zeilen.push(`Urlaub), bitte auf der Verordnung dokumentieren.`);
   } else if (problem.urteil === 'zu_dicht') {
     zeilen.push('');
     zeilen.push(`Der Termin liegt DICHTER als verordnet. Abweichungen über 2 Werktage`);

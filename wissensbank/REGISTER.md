@@ -559,6 +559,11 @@ Frist; für Physio/Ergo/Logo gilt Satz 1 (14 Kalendertage ohne Begründung). Die
 unbelegt. Podologie unberührt.
 ✅ **11.10.2026 gemessen:** die falsche Quellenangabe ist korrigiert — der Kommentar lautet jetzt „keine Quelle —
 Physio-Grenze laut HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16)". **Der Wert ist weiterhin 84** — offen bleibt nur er.
+✅ **26.10.2026 geschlossen** (Start Physio-Feinabstimmung): `UNTERBRECHUNG_TAGE_HEILM_RL = 14` +
+`unterbrechungsGrenze(istPodo, soll)` — Physio/Ergo/Logo 14 KT (HeilM-RL § 16 Abs. 4 S. 1, Z.698-700),
+Podologie bleibt 84 (Vertrag § 7 Abs. 7). Hinweis, nie Sperre (S. 2: begründete Unterbrechung wird
+auf der VO dokumentiert). Annahme ohne Quelle: verordneter Abstand > 14 Tage gilt nicht als
+Unterbrechung (Grenze = verordneter Höchstabstand) — `gkv-302` bei Gelegenheit bestätigen lassen.
 **Bei neuer HeilM-RL-Fassung:** § 15 und § 16 Abs. 4 neu lesen → `BEHANDLUNGSBEGINN_TAGE` und
 den `!istPodo`-Schalter prüfen. Bei neuer Anlage 3 Podologie: lit. e. Neuer FAK: Nr. 11/34.
 
