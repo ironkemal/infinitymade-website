@@ -227,3 +227,66 @@
 @media screen and (max-width: 1024px) {
   [data-design="neu"] .px-einklappen { display: none; }
 }
+
+/* ── V2.07 Gruppen-Flyout der Icon-Leiste (module/leiste-flyout.js) ────────────
+   Eingeklappt klappt eine Gruppe nicht mehr in der Leiste auf; die Einträge erscheinen im
+   Feld rechts daneben. Lage setzt das Modul (fixed, im Fenster geklemmt). */
+@media screen and (min-width: 1025px) {
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group .nav-group-items { display: none; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-header[aria-expanded="true"] { background: var(--bg-hover); color: var(--text-main); }
+
+  [data-design="neu"] .px-flyout {
+    position: fixed;
+    z-index: 400;
+    width: 240px;
+    padding: 6px;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  [data-design="neu"] .px-flyout-titel {
+    padding: 6px 10px 4px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  [data-design="neu"] .px-flyout-eintrag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  [data-design="neu"] .px-flyout-eintrag .icon { display: grid; place-items: center; width: 18px; height: 18px; flex-shrink: 0; }
+  [data-design="neu"] .px-flyout-eintrag .icon svg { width: 18px; height: 18px; }
+  [data-design="neu"] .px-flyout-eintrag:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"] .px-flyout-eintrag.active { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+  [data-design="neu"] .px-flyout-eintrag.active .icon { color: var(--primary); }
+  [data-design="neu"] .px-flyout .nav-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-xxs);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+}

@@ -10,9 +10,11 @@
  * V2.06: Kurzlabel je Gruppe (data-kurz) für die eingeklappte Icon-Leiste und ein eigener
  * Einklappknopf unten in der Leiste, der den alten #sidebarCollapseBtn auslöst (dessen
  * Handler in dashboard.js schaltet .collapsed und localStorage sidebar_collapsed).
- * Folgt: Flyout (V2.07), Suche (V2.09), „+ Neu“ (V2.10), Schublade (V2.11).
+ * V2.07: Gruppen-Flyout der eingeklappten Leiste (module/leiste-flyout.js).
+ * Folgt: Suche (V2.09), „+ Neu“ (V2.10), Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s207';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
 export function panelId(wert) {
@@ -30,8 +32,10 @@ export function start() {
   markeInLeiste();
   kurzlabelSetzen();
   einklappKnopf();
-  on('panel:changed', (d) => setze(d?.id));
-  on('nav:gerendert', kurzlabelSetzen);
+  verdrahteFlyout();
+  kopfRollen();
+  on('panel:changed', (d) => { setze(d?.id); schliesseFlyout(); });
+  on('nav:gerendert', () => { kurzlabelSetzen(); kopfRollen(); });
 }
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };
@@ -72,7 +76,7 @@ function einklappKnopf() {
     knopf.title = zu ? 'Menü ausklappen' : 'Menü einklappen';
     knopf.querySelector('span').textContent = knopf.title;
   };
-  knopf.addEventListener('click', () => { alt.click(); spiegeln(); });
+  knopf.addEventListener('click', () => { alt.click(); spiegeln(); kopfRollen(); });
   spiegeln();
   leiste.append(knopf);
 }
