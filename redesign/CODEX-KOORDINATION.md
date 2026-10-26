@@ -186,14 +186,75 @@ PRIMARY rein lesend geprüft, Exit 0; dort nichts angewandt oder gestagt.
 
 B03/B04-Dateizuteilung bei Claude angefragt: neue Forderungs- und Startseitenmodule
 mit Tests. Vor Bestätigung kein Schreiben außerhalb der vier bereits zugeteilten
-Produktdateien. Zwei neue, rein lesende Pflichtprüfungen laufen; nicht doppeln:
+Produktdateien. Beide rein lesenden Pflichtprüfungen sind abgeschlossen; nicht doppeln:
 
 - `praxura-v6b-b03-fonksiyon-20261026-r1`: vorhandene Forderungs-/Saldo-/Pagination-Helfer.
 - `praxura-v6b-b03-db-vkz03-20261026-r1`: vorhandener Übertragungsmarker VKZ03,
   Statusübergänge und Klassifikation von Patientrest versus Kassenforderung.
 
-Abgeschlossene B01/B02-Tasks nicht neu starten. Auf automatische Fertigmeldungen
-der beiden B03-Berater setzen; bestehender Scheduler bleibt unverändert aktiv.
+Funktionsmeister und DB-Meister belegen die vorhandenen Saldo-/Altzahlungshelfer,
+die vollständige Pagination und den VKZ03-Pfad über den Ursprung der Abrechnungszeile.
+Entwurf (`erstellt`, `heruntergeladen`) ist noch keine übertragene Forderung;
+`gesendet`, `accepted`, `paid` sind übertragen, `rejected` bleibt eine eigene
+Ablehnungsklasse und `verworfen` wird ignoriert. Unbekannte Preise und nach einer
+DSGVO-Löschung fehlende Rezeptzuordnungen dürfen keine Nullforderung vortäuschen.
+
+Die enge gkv-Nachprüfung `praxura-v6b-b03-gkv-restvertrag-20261026-r1` ist am
+Claude-API-Limit fehlgeschlagen, ohne fachliches Ergebnis oder Dateiänderung.
+Auch Claudes Integrator-Thread meldet beim Abgleich ein API-Limit; kein aktiver
+Integrator-Lauf. Seine zwölf gestagten Frontend-Dateien bleiben unangetastet.
+
+Luna hat anschließend den bestehenden Kassenzahlungs-Vertrag lokal extrahiert
+(`praxura-v6b-b03-luna-kassenzahlung-20261026-r1`, abgeschlossen):
+`abrechnung_zahlung` kennt Zahlung, Rücklastschrift, Abschreibung und Korrektur.
+Der INSERT-Trigger berechnet die Deckung mit Vorzeichen und 0,005-Toleranz aus
+dem Ledger; bei Unterschreitung wird ein bisheriger `paid`-Kopf `accepted`.
+Quellen: `db/SCHEMA.sql:367–409`, `db/SCHEMA-RLS.sql:2816–2844` und `:5657`.
+Das ist Forderungsdeckung; Abschreibungen sind weiterhin kein Geldeingang.
+Ein eigener gespeicherter Restbetrag oder exakter reiner Resthelfer wurde nicht gefunden.
+
+Aktiv ist ausschließlich die starke Vertrags-/Planprüfung
+`praxura-v6b-b03-astra-vertrag-plan-20261026-r2` (native T3, `gpt-6-astra`,
+`reasoningEffort=xhigh`, `serviceTier=default`). Sie führt die bisherigen Berater-
+und Luna-Ergebnisse zusammen und klärt Podologie-Sollquelle, negativen Saldo und
+VKZ03-Rest nach Zahlung/Ablehnung. Keine Produktdateien durch den Planauftrag ändern.
+Das ist ein Astra-Lauf nach ausgefallenem Opus-Lauf, kein behauptetes Opus-Ergebnis.
+
+Die vier vorgeschlagenen neuen B03/B04-Dateien sind in beiden Arbeitskopien noch
+nicht vorhanden und ohne fremde Änderungen. Wegen des ausgefallenen Integrators
+ist Melih eine konkrete Dateizuteilung gestellt: Forderungsmodul plus Test sowie
+Startseitenrouter plus Test. Die Antwort steht beim Schreiben dieser Notiz aus;
+kein allgemeines Plan-OK wird erneut angefragt. `server.js` bleibt unzugeteilt.
+
+Abgeschlossene B01/B02-Tasks nicht neu starten. Auf automatische Fertigmeldung
+der Astra-Prüfung setzen; bestehender Scheduler bleibt unverändert aktiv.
+
+### Weitere unabhängige Frontend-Prüfungen (nur gelesen)
+
+- V2.06 `4f0345ac`: Reload-Rennen reproduziert. Bei verzögertem Konfigurationsladen
+  startet die Shell vor der Wiederherstellung von `sidebar_collapsed=1`; die Leiste
+  ist danach 72 px breit, der Knopf meldet weiter `aria-expanded=true` und
+  „Menü einklappen“. Originalmodule, CSS, Renderer und Legacy-Handler im isolierten
+  T3-Browser; synthetischer Konfigurations-Promise und Storage. Tastatur/Fokus und
+  Defaultrollen geprüft. Screenreader-Baum wegen Snapshot-Timeout ungeprüft;
+  Kalendernachweis umfasst nur Shell-Boxen, keine vollständige Kalender-Geometrie.
+- V2.07 `355fefc3`, ergänzende Prüfung: Tab durchläuft die Menüeinträge und verlässt
+  danach das Dokument, das Flyout bleibt offen. Shift+Tab vom ersten Eintrag springt
+  zur letzten Hauptaktion. Zweifachklick/Doppelklick, Anfragebadge und Weiterleitung
+  genau eines Originalklicks grün; Kiosk-`inert` nur synthetisch geprüft. Originale
+  reine Tests 2/2 grün. R-18/R-19 aus der ersten Prüfung nicht erneut bearbeitet;
+  V2.07b `416a68ac` ist bekannt, noch nicht unabhängig nachgeprüft.
+- V2.08 `aca08f93`: Profilmenü ohne Höhenbegrenzung. Bei 1440×240 mit Admin-Eintrag
+  und längerem synthetischem Praxisnamen liegt „Abmelden“ bei y235,5–275,5; nur
+  4,5 px bleiben im Fenster. Pfeiltaste erreicht den Eintrag, scrollt dabei aber
+  `#app` um 35,5 px und schiebt den Profilknopf auf y−24. Admin-Freigabe und
+  tatsächliches Linkziel, Original-Abmeldehandler mit geschlossenem Auth-/Window-
+  Double, Tab-Schließen, Popover-Wechsel und Kiosk-`inert` synthetisch grün.
+  Originaltests 2/2 grün, Detektor auf exakten Dateien ohne Funde. Keine echte
+  Abmeldung, Admin-/DB-Abfrage, PIN-/Vollbild-/Live-Abnahme.
+
+Alle drei Berichte mit Datei/Zeile und Reproduktion per Queue an Claude übergeben.
+Keine Produkt-, Index- oder Referenzänderungen und kein Lauf auf Port 18081.
 
 Neue Funktionen vorab im INDEX suchen und beim Funktionsmeister anfragen;
 nachher Absicht und Erstverwendung melden. Funktionskarte und zentrale STATUS-Datei
