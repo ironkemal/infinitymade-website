@@ -218,6 +218,9 @@ if (!DSN) {
     // Sentry 11 streamt Spans standardmäßig (`traceLifecycle: 'stream'`) und
     // ruft beforeSendTransaction dann NICHT mehr auf — der Sanitizer oben wäre
     // stumm umgangen. 'static' hält den Fail-closed-Pfad (Upgrade 26.10.2026).
+    // Gepinnt ist 10.76.2 (Default dort schon 'static'): 11.x zieht über
+    // @sentry/bundler-plugins die Sentry-CLI (FSL-1.1) ins Image, der Lizenztor
+    // lehnt sie ab. Die Zeile bleibt, damit ein späteres 11-Upgrade sicher ist.
     traceLifecycle: 'static',
 
     beforeSendTransaction(event) {

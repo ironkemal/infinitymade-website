@@ -15,7 +15,7 @@
     "preise:autoupdate:dry": "node preise_autoupdate.mjs --dry-run"
   },
   "dependencies": {
-    "@sentry/node": "^11.9.0",
+    "@sentry/node": "10.76.2",
     "@supabase/supabase-js": "^2.39.0",
     "asn1js": "^3.0.10",
     "cors": "^2.8.5",
