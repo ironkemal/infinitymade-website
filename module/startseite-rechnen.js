@@ -92,3 +92,21 @@ export function zuErledigen({ anfragen, voUeberfaellig, voBald } = {}) {
   if (zahl(anfragen) > 0) zeilen.push({ id: 'anfragen', titel: 'Online-Anfragen', text: 'warten auf Antwort', zahl: zahl(anfragen), ton: 'info', ziel: 'anfragen' });
   return zeilen;
 }
+
+/**
+ * Baut die Termin-Abfrage des Tages auf ein Supabase-Abfrageobjekt (rein, mit Doppel testbar).
+ * Codex-Befund V6.F01 (26.10.2026): RLS lässt Angestellte Teamtermine derselben Praxis lesen
+ * (SCHEMA-RLS bookings_owner_read / „Employees can view team bookings“). Deshalb filtert die
+ * Abfrage für Angestellte schon auf user_id = eigene uid — keine Kollegentermine in der Antwort.
+ * @returns {object|null} null = nicht abfragen (Rolle unbekannt oder uid fehlt)
+ */
+export function terminAbfrage(abfrage, { rolle, uid, ownerId, von, bisExklusiv } = {}) {
+  if (!abfrage || !ownerId || !von || !bisExklusiv) return null;
+  if (rolle !== 'owner' && rolle !== 'employee') return null;
+  if (rolle === 'employee' && !uid) return null;
+  let q = abfrage
+    .select('id,user_id,lead_id,start_time,end_time,customer_name,status,hausbesuch,group_parent_id,services(title,is_internal)')
+    .eq('owner_id', ownerId);
+  if (rolle === 'employee') q = q.eq('user_id', uid);
+  return q.gte('start_time', von).lt('start_time', bisExklusiv).neq('status', 'cancelled').order('start_time');
+}

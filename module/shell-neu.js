@@ -24,7 +24,7 @@ import { on } from './signal.js?v=20260813';
 import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s212';
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
-import { verdrahteStartseite } from './startseite-neu.js?v=20261026s213';
+import { verdrahteStartseite } from './startseite-neu.js?v=20261026s216';
 import { emojisAus } from './ohne-emoji.js?v=20261026s214';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 

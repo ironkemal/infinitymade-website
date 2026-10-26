@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { begruessung, heutigeTermine, alsNaechstes, minutenBis, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-rechnen.js';
+import { begruessung, heutigeTermine, alsNaechstes, minutenBis, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage } from './startseite-rechnen.js';
 
 const jetzt = new Date('2026-10-23T08:15:00Z'); // 10:15 Berlin (Sommerzeit)
 const t = (id, von, bis, extra = {}) => ({ id, start_time: von, end_time: bis, status: 'confirmed', user_id: 'u1', ...extra });
@@ -68,4 +68,23 @@ test('zuErledigen: nur Zahlen > 0, dringend zuerst, unbekannt = keine Zeile', ()
   assert.deepEqual(zuErledigen({ anfragen: 2, voUeberfaellig: 1, voBald: 0 }).map((z) => [z.id, z.zahl]), [['vo-ueberfaellig', 1], ['anfragen', 2]]);
   assert.deepEqual(zuErledigen({ anfragen: '', voUeberfaellig: null, voBald: undefined }), []);
   assert.deepEqual(zuErledigen(), []);
+});
+
+test('terminAbfrage: Angestellte filtert user_id schon in der Abfrage, Inhaber nicht', () => {
+  const doppel = () => { const log = []; const q = new Proxy({}, { get: (_, m) => (...a) => { log.push([m, ...a]); return q; } }); return { q, log }; };
+  const o = { ownerId: 'own', von: 'v', bisExklusiv: 'b' };
+  const ang = doppel(); assert.ok(terminAbfrage(ang.q, { ...o, rolle: 'employee', uid: 'u7' }));
+  assert.deepEqual(ang.log.filter(([m]) => m === 'eq'), [['eq', 'owner_id', 'own'], ['eq', 'user_id', 'u7']]);
+  const inh = doppel(); assert.ok(terminAbfrage(inh.q, { ...o, rolle: 'owner', uid: 'own' }));
+  assert.deepEqual(inh.log.filter(([m]) => m === 'eq'), [['eq', 'owner_id', 'own']]);
+  assert.ok(inh.log.some(([m, a]) => m === 'neq' && a === 'status'));
+});
+
+test('terminAbfrage: ohne uid, unbekannte Rolle oder fehlende Grenzen → keine Abfrage', () => {
+  const q = new Proxy({}, { get: () => () => { throw new Error('darf nicht abfragen'); } });
+  const o = { ownerId: 'own', von: 'v', bisExklusiv: 'b' };
+  assert.equal(terminAbfrage(q, { ...o, rolle: 'employee' }), null);
+  assert.equal(terminAbfrage(q, { ...o, rolle: undefined, uid: 'u' }), null);
+  assert.equal(terminAbfrage(q, { ...o, rolle: 'admin', uid: 'u' }), null);
+  assert.equal(terminAbfrage(q, { rolle: 'owner', uid: 'u' }), null);
 });

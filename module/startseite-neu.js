@@ -18,7 +18,7 @@
  */
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
-import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-rechnen.js?v=20261026s213';
+import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage } from './startseite-rechnen.js?v=20261026s216';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -60,12 +60,11 @@ async function ladeTermine() {
   const k = kontext();
   const grenzen = tagesgrenzen(new Date());
   if (!k?.supabase || !grenzen) throw new Error('Kontext fehlt');
-  const { data, error } = await k.supabase.from('bookings')
-    .select('id,user_id,lead_id,start_time,end_time,customer_name,status,hausbesuch,group_parent_id,services(title,is_internal)')
-    .eq('owner_id', k.getOwnerId())
-    .gte('start_time', grenzen.von).lt('start_time', grenzen.bisExklusiv)
-    .neq('status', 'cancelled')
-    .order('start_time');
+  const q = terminAbfrage(k.supabase.from('bookings'), {
+    rolle: k.rolle?.(), uid: k.uid?.(), ownerId: k.getOwnerId(), von: grenzen.von, bisExklusiv: grenzen.bisExklusiv,
+  });
+  if (!q) throw new Error('Rolle oder Benutzer unbekannt');
+  const { data, error } = await q;
   if (error) throw error;
   return heutigeTermine(data || [], { jetzt: new Date(), uid: k.uid?.(), nurEigene: !istOwner() });
 }
@@ -201,8 +200,27 @@ function voHtml() {
   </section>`;
 }
 
+/** Schlüssel für das fokussierte Element, damit es nach dem Neuzeichnen wiedergefunden wird (Codex-Befund V6.F01). */
+function fokusSchluessel(el) {
+  if (!el || !wurzel?.contains(el) || el === wurzel) return null;
+  const d = el.dataset || {};
+  const sel = `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : ''}`
+    + ['aktion', 'lead', 'ziel'].filter((n) => d[n]).map((n) => `[data-${n}="${CSS.escape(d[n])}"]`).join('');
+  const gleiche = [...wurzel.querySelectorAll(sel)];
+  return { sel, nr: Math.max(0, gleiche.indexOf(el)) };
+}
+
 function zeichne() {
   if (!wurzel) return;
+  const fokus = fokusSchluessel(document.activeElement);
+  zeichneInnen();
+  if (fokus) {
+    const ziel = wurzel.querySelectorAll(fokus.sel)[fokus.nr] || wurzel.querySelector(fokus.sel);
+    ziel?.focus({ preventScroll: true });
+  }
+}
+
+function zeichneInnen() {
   const frei = document.querySelector('.gaps-section');
   // Freie-Zeit-Sektion vor dem Neuzeichnen sichern (sie wird nur umgehängt, nie neu gebaut).
   if (frei && wurzel.contains(frei)) frei.remove();

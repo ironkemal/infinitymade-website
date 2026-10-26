@@ -3,7 +3,7 @@
 > Üretim: 2026-10-26 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3889 fonksiyon** (3767 JS · 95 bash · 27 ps1) · 487 dosya · 42 sidebar modülü
+**3892 fonksiyon** (3770 JS · 95 bash · 27 ps1) · 487 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -475,7 +475,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · merkez/db.js:125
 - `t` — api-backend/lib/rechnung-snapshot.js:14 · api-backend/server.js:4101 · dashboard.js:522 · module/anamnese.js:386 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:56 · module/termin-rechtstexte.js:20
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
-- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:541 · module/patienten-import.js:350 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:441 · module/startseite-neu.js:204
+- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:541 · module/patienten-import.js:350 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:441 · module/startseite-neu.js:213
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:358
 - `cleanup` — dashboard.js:6215 · dashboard.js:6302 · dashboard.js:18017 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:81 · module/bestaetigungs-dialog.js:20

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-26",
  "dateien": 487,
- "funktionen": 3889,
+ "funktionen": 3892,
  "module": [
   "abrechnung",
   "anamnese",
@@ -89875,7 +89875,7 @@
     "zeitraumAusZeilen"
    ],
    "calledBy": [
-    "zeichne",
+    "zeichneInnen",
     "zeigeAbrechnungDetail"
    ],
    "modules": [
@@ -169147,8 +169147,8 @@
    "lang": "js",
    "file": "module/startseite-neu.js",
    "start": 53,
-   "end": 71,
-   "lines": 19,
+   "end": 70,
+   "lines": 18,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -169162,7 +169162,8 @@
     "heutigeTermine",
     "kontext",
     "ladeTermine",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "terminAbfrage"
    ],
    "calledBy": [
     "$",
@@ -169174,7 +169175,8 @@
     "listeHtml",
     "mountBrandingExtras",
     "mountEinrichtungRing",
-    "zeichne"
+    "zeichne",
+    "zeichneInnen"
    ],
    "modules": [
     "abrechnung",
@@ -169227,8 +169229,8 @@
    "lang": "js",
    "file": "module/startseite-neu.js",
    "start": 55,
-   "end": 71,
-   "lines": 17,
+   "end": 70,
+   "lines": 16,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -169243,7 +169245,8 @@
     "istOwner",
     "kontext",
     "ladeTermine",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "terminAbfrage"
    ],
    "calledBy": [
     "kopfHtml"
@@ -169299,8 +169302,8 @@
    "lang": "js",
    "file": "module/startseite-neu.js",
    "start": 56,
-   "end": 71,
-   "lines": 16,
+   "end": 70,
+   "lines": 15,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -169315,7 +169318,8 @@
     "istOwner",
     "kontext",
     "ladeTermine",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "terminAbfrage"
    ],
    "calledBy": [
     "kopfHtml"
@@ -169371,8 +169375,8 @@
    "lang": "js",
    "file": "module/startseite-neu.js",
    "start": 57,
-   "end": 71,
-   "lines": 15,
+   "end": 70,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -169387,7 +169391,8 @@
     "istOwner",
     "kontext",
     "ladeTermine",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "terminAbfrage"
    ],
    "calledBy": [
     "listeHtml",
@@ -169444,8 +169449,8 @@
    "lang": "js",
    "file": "module/startseite-neu.js",
    "start": 59,
-   "end": 71,
-   "lines": 13,
+   "end": 70,
+   "lines": 12,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -169459,7 +169464,8 @@
     "heutigeTermine",
     "istOwner",
     "kontext",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "terminAbfrage"
    ],
    "calledBy": [
     "aktualisieren",
@@ -169518,8 +169524,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 73,
-   "end": 88,
+   "start": 72,
+   "end": 87,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -169591,8 +169597,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 90,
-   "end": 95,
+   "start": 89,
+   "end": 94,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -169608,7 +169614,7 @@
     "tageszeile"
    ],
    "calledBy": [
-    "zeichne",
+    "zeichneInnen",
     "zeigeAbrechnungDetail"
    ],
    "modules": [
@@ -169661,8 +169667,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 97,
-   "end": 99,
+   "start": 96,
+   "end": 98,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -169727,8 +169733,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 101,
-   "end": 132,
+   "start": 100,
+   "end": 131,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -169746,7 +169752,7 @@
     "uhrzeitBerlin"
    ],
    "calledBy": [
-    "zeichne"
+    "zeichneInnen"
    ],
    "modules": [
     "abrechnung",
@@ -169798,8 +169804,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 134,
-   "end": 150,
+   "start": 133,
+   "end": 149,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -169815,7 +169821,7 @@
     "zuErledigen"
    ],
    "calledBy": [
-    "zeichne"
+    "zeichneInnen"
    ],
    "modules": [
     "abrechnung",
@@ -169867,8 +169873,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 158,
-   "end": 187,
+   "start": 157,
+   "end": 186,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -169885,7 +169891,7 @@
     "uhrzeitBerlin"
    ],
    "calledBy": [
-    "zeichne"
+    "zeichneInnen"
    ],
    "modules": [
     "abrechnung",
@@ -169937,8 +169943,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 189,
-   "end": 202,
+   "start": 188,
+   "end": 201,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -169952,6 +169958,69 @@
     "voKpiDa",
     "zahlAus"
    ],
+   "calledBy": [
+    "zeichneInnen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "fokusSchluessel",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-neu.js",
+   "start": 204,
+   "end": 211,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
    "calledBy": [
     "zeichne"
    ],
@@ -170005,9 +170074,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 204,
-   "end": 216,
-   "lines": 13,
+   "start": 213,
+   "end": 221,
+   "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -170015,12 +170084,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "istOwner",
-    "kopfHtml",
-    "listeHtml",
-    "naechstesHtml",
-    "todoHtml",
-    "voHtml"
+    "fokusSchluessel",
+    "zeichneInnen"
    ],
    "calledBy": [
     "(datei) module/abrechnung-auswahl.js",
@@ -170088,12 +170153,82 @@
    ]
   },
   {
+   "name": "zeichneInnen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-neu.js",
+   "start": 223,
+   "end": 234,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istOwner",
+    "kopfHtml",
+    "listeHtml",
+    "naechstesHtml",
+    "todoHtml",
+    "voHtml"
+   ],
+   "calledBy": [
+    "zeichne"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "klick",
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 218,
-   "end": 226,
+   "start": 236,
+   "end": 244,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -170115,8 +170250,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 229,
-   "end": 262,
+   "start": 247,
+   "end": 280,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
@@ -170185,8 +170320,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/startseite-neu.js",
-   "start": 243,
-   "end": 243,
+   "start": 261,
+   "end": 261,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -170840,8 +170975,77 @@
    "lang": "js",
    "file": "module/startseite-rechnen.js",
    "start": 89,
-   "end": 95,
-   "lines": 7,
+   "end": 103,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "terminAbfrage"
+   ],
+   "calledBy": [
+    "gpsCheckinErgebnisRein",
+    "rechnungsSummen",
+    "sollAbstand",
+    "terminVorgabeAusMaske",
+    "zuErledigen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "terminAbfrage",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-rechnen.js",
+   "start": 103,
+   "end": 112,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -170850,11 +171054,12 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "gpsCheckinErgebnisRein",
-    "rechnungsSummen",
-    "sollAbstand",
-    "terminVorgabeAusMaske",
-    "zuErledigen"
+    "berlinStunde",
+    "datumLang",
+    "istOwner",
+    "ladeTermine",
+    "leistung",
+    "zahl"
    ],
    "modules": [
     "abrechnung",
@@ -222676,7 +222881,7 @@
     "module/patienten-import.js:350",
     "module/praxis-standort.js:115",
     "module/rezeptinfo-geld.js:441",
-    "module/startseite-neu.js:204"
+    "module/startseite-neu.js:213"
    ],
    "aynalar": []
   },
@@ -223306,7 +223511,7 @@
   {
    "name": "aktualisieren",
    "orte": [
-    "module/startseite-neu.js:73",
+    "module/startseite-neu.js:72",
     "module/verordnung-podo.js:1071"
    ],
    "aynalar": []
@@ -223814,7 +224019,7 @@
    "name": "kopfHtml",
    "orte": [
     "module/abrechnung-detail.js:257",
-    "module/startseite-neu.js:90"
+    "module/startseite-neu.js:89"
    ],
    "aynalar": []
   },
@@ -223893,7 +224098,7 @@
   {
    "name": "nachziehen",
    "orte": [
-    "module/startseite-neu.js:243",
+    "module/startseite-neu.js:261",
     "module/verordnung-uebersicht.js:601"
    ],
    "aynalar": []
