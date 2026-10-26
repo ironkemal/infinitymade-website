@@ -6657,3 +6657,42 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | Caddy `file_server` (`onprem/Caddyfile` `handle` bloğu) `/dashboard-feinschliff.css` için 404 döner; dashboard Kemal'in 20-21.10 takvim/ay/genel bakış düzenlemeleri olmadan, SaaS'tan farklı görünür. Dosya değiştiğinde frontend image'ı da yeniden **build edilmez** (paths'te yok). Koddan türetildi, kutuda ölçülmedi |
 | **Çözüm** | Faz 2.1b'nin kalanı, `builder`, **main'de ayrı küçük commit** (redesign'ı beklemez): (1) `frontend.Dockerfile:72`'ye `dashboard-feinschliff.css` ekle + `publish-frontend.yml` paths'e aynı sırada. (2) Smoke testinin asset turu `/dashboard.html` ve `/attendance.html` için de koşsun (O-57 kapanışında "aynı testle o sayfalar için de tekrarlanabilir" diye bırakılmıştı — bırakılan delik buydu). (3) Redesign'ın `praxura-design.css`'i (`dashboard.html:28`) aynı iki yere girer — redesign commit'iyle. Bilinçli olarak `check-onprem.sh`'a **konmadı**: pre-commit'te `<link>`↔COPY karşılaştırması mümkün ama smoke testi gerçek 200'ü ölçüyor, ikincisi tek doğru yer |
 | **Durum** | (1)+(2) branch `redesign/praxura-design`'de ayrı commit olarak yapıldı (24.10.2026, "fix(onprem): O-219 …"): COPY + `paths:` + smoke asset turu artık `/login.html`, `/dashboard.html`, `/attendance.html`. Yerelde doğrulandı: üç sayfanın tüm yerel `<link>`/`<script>` hedefleri COPY listesinde. CI'da koşmadı (yalnız `main` push'unda tetiklenir). **main'e cherry-pick Melih'in onayını bekliyor** — redesign merge'ünü beklemesine gerek yok. (3) redesign commit'iyle birlikte gelir |
+
+## 7BD — Güvenlik taraması 26.10.2026: bağımlılık yükseltmeleri (bildirim) + iki sürüm borcu
+
+> **Bildirim (26.10.2026, push yok) — GEÇER, kayıt gerekmez.** api-backend: nodemailer 6→10.2.1 ·
+> googleapis 134→188 · @sentry/node 8.55→11.9 (+ `instrument.js` `traceLifecycle: 'static'`, yoksa
+> Sentry 11 span'ları akıtır ve `beforeSendTransaction` DSGVO süzgeci atlanır) · express/body-parser/
+> proxy-addr lockfile. Kök: nodemailer, @sentry/node, node-forge 1.4.0 + `vendor/node-forge.js`
+> yeniden üretildi. merkez: body-parser lockfile. Kutuya etkisi: yeni env yok, yeni dış host yok,
+> kapı sayaçları değişmez. Sentry kutuda hâlâ kapalı: `instrument.js:24` + `:193` DSN yoksa init yok
+> (O-06/G4). googleapis kutuda kapalı uçlarda (O-08). nodemailer müşterinin kendi SMTP'sine çıkar
+> (O-14) — major sıçrama olduğu için ilk gerçek SMTP'li kutuda O-50'nin "250 değil teslim" ölçümü bu
+> sürümle yapılmalı. `vendor/**` `publish-frontend.yml:45` paths'inde → frontend image yeniden
+> build edilir. Testler: node:22-alpine'da backend 1639/1639, merkez 107/107, `start.mjs` /health OK.
+>
+> **Yan bulgu:** yerel `onprem/.env` (gitignore'lu) hâlâ `VERSION_CADDY=2.9-alpine` taşıyor. Ölü
+> satır: Caddy sürümü `onprem/frontend.Dockerfile:52` `ARG VERSION_CADDY=2.11.6`'dan gelir, şablondan
+> 06.10.2026'da silindi (§7Z notu, K2b.4). `unkritisch` — yalnız yerel dosyayı okuyanı yanıltır.
+
+### O-220 — Supabase yığını 11.09.2026 setinde donmuş: GoTrue/PostgREST/Realtime/Storage upstream'in 2-40 minor gerisinde, Postgres 17.6 (17.11 çıktı) 🟡 **geplant (sıradaki kutu sürümü, builder)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/.env.template:27-32` setini 11.09.2026'dan beri kimse yükseltmedi. Upstream ile fark (26.10.2026 ölçümü, `supabase/supabase` master `docker/docker-compose.yml` + Docker Hub): Postgres `17.6.1.136` (upstream compose da **aynı** pin'de; Hub'da `17.11.0.007` 22.10.2026) · GoTrue v2.189.0 → v2.197.0 · PostgREST v14.12 → v14.18 · Realtime v2.102.3 → v2.143.3 · Storage v1.60.4 → v1.81.0 · Kong 3.9.1 (upstream Kong'u bıraktı, Envoy v1.39.1'e geçti) |
+| **Nerede** | `onprem/.env.template:27-32` (şablonun kendi kuralı `:20-25`: "set birlikte test edildi, satırlar tek tek yükseltilmez") · dağıtım yolu `onprem/update.sh` VERSION_* birleştirmesi (§7J tablosu: "bizim != taban ve onun == taban → bizimki yazılır") · O-45 (c) / O-43 `releases.json` hâlâ açık |
+| **Tip** | G + F (kutunun bileşen bakımı). Dış çağrı, sır, şema yok |
+| **Kutuda ne olur** | Bugün müşteri kutusu yok → maliyet bugün en düşük. Kutu çıktıktan sonra her bump `update.sh` üzerinden canlı veriye iner; Postgres CVE'si açık bir kutu da CRA/D10 bildirim yükümlülüğünün tam konusu. PG 17.6→17.11 aynı major: `pg_upgrade` gerekmez, veri dizini uyumlu; ama supabase/postgres image'ı eklenti sürümlerini de taşır — init script'leri yalnız boş veritabanında koşar, mevcut kutuda eklenti yükseltmesi (`ALTER EXTENSION … UPDATE`) kendiliğinden olmaz |
+| **Çözüm** | **Karar (onprem, 26.10.2026): set yükseltmesi sıradaki kutu sürümüne bağlanır, ayrı commit, builder.** Kural: (1) GoTrue/PostgREST/Realtime/Storage **upstream compose'un o günkü pin'leri** alınır (Supabase'in birlikte test ettiği set) — tek tek seçilmez. (2) Postgres upstream pin'inden **bilinçli sapar**: `17.11.0.007` (düz etiket; `-orioledb`/`-multigres` değil), gerekçe 13.08.2026 PG güvenlik sürümü. Sapma `.env.template` yorumuna yazılır. (3) Kong 3.9.1 kalır (Envoy'a geçiş ayrı ve büyük iş, bu turun kapsamı dışında); Kong OSS'un güvenlik durumu ayrı kontrol edilir. (4) Kabul ölçümü WSL test kutusunda, iki yol: **boş kurulum** (baseline + tüm migration'lar, signup, Storage yükleme, Realtime, `selbstcheck` yeşil) ve **yükseltme** (eski setle kurulmuş kutuda `update.sh --jetzt` → 6/6 healthy, migration runner temiz, `SELECT extversion FROM pg_extension` öncesi/sonrası kaydı). (5) Digest yorumları yeni etiketlerle tazelenir. (6) Tekrar etmemesi için: aylık upstream kontrolü — **Ops kartı (Teknik)** açılmalı, sahibi onprem/builder |
+| **Durum** | `geplant` — sıradaki kutu sürümü. Kanıt gelince (`commit` + iki ölçüm) `gelöst` |
+
+### O-221 — SaaS VPS: Traefik/n8n/Umami sürümleri ne repo'da sabitlenmiş ne güncel; `/opt/n8n/` için drift aracı yok 🔴 **offen (Ops kartı gerekli)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Canlıda traefik 3.5.6 (destek dışı seri; CVE-2026-40912 fix 3.6.14+), n8n 2.18.5 (CVE-2026-65591 fix 2.29.8/2.30.1), umami + n8n eski Node taşıyor; host'ta `/var/run/reboot-required` |
+| **Nerede** | Repo: `api-backend/docker-compose.yml:3` `traefik:v3.5` · `:29` `n8n:latest` · `:140` `umami:postgresql-latest`. Gerçek dosya `/opt/n8n/docker-compose.yml` (git görmez, §8) — `latest` repo'da yazarken canlının 2.18.5'te durması VPS dosyasının farklı olduğunu ya da hiç `pull` edilmediğini gösterir |
+| **Tip** | Merkez tarafı (G) — kutuya girmez (n8n K8/G3 gereği zaten pakette yok). §8 drift sınıfı |
+| **Kutuda ne olur** | Kutuda hiçbir şey. Merkezde: Traefik `n8n.infinitymade.de/api/*`'i calendar-api'ye yönlendiren tek kapı — auth bypass sınıfı bir açık bütün SaaS backend'inin önünde durur |
+| **Çözüm** | (1) Güncelleme öncesi `sh tools/check-vps-drift.sh` (yalnız calendar-api bloğunu görür) + `/opt/n8n/docker-compose.yml`'in elle `diff`'i repo'nun traefik/n8n/umami bloklarına karşı. (2) n8n volume yedeği, sonra sürüm. (3) Repo'da **açık sürüm pin'i**: `traefik:v3.6` (en az 3.6.14), n8n açık sürüm (≥2.29.8), umami açık etiket — `latest` drift'i görünmez kılar. (4) Aynı commit'te repo kopyası VPS'in gerçek hâline senkron (§8 madde 2). (5) Reboot host işi, repo'ya iz bırakmaz; calendar-api `restart: unless-stopped` ile döner, sonrası `docker ps` + `/api/health`. (6) Kalıcı boşluk: `check-vps-drift.sh`'a `/opt/n8n` karşılığı — §8'in "kendi maddesini hak ediyor" dediği iş bu madde |
+| **Durum** | `offen` — Ops kartı (Teknik) açılınca `geplant` |

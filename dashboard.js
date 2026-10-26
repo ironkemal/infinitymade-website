@@ -6479,15 +6479,15 @@ async function markPrescriptionSession(bookingId, status, notes) {
     const patch = { status };
     if (status === 'done') patch.done_at = new Date().toISOString();
     if (notes !== undefined && notes !== null) patch.notes = notes;
-    const { data: sess, error } = await supabase
+    // Kombi-Termin = mehrere Sitzungen je booking_id → kein maybeSingle() (PGRST116, Rezept nie 'bereit').
+    const { data: rows, error } = await supabase
       .from('prescription_sessions')
       .update(patch).eq('booking_id', bookingId)
-      .select('prescription_id').maybeSingle();
+      .select('prescription_id');
     if (error) { console.warn('[session update]', error); return; }
-    if (!sess?.prescription_id) return;
     // Fortschritt + §302-Weiche: module/sitzungsfortschritt.js (Warum dort: leere
     // Platzhalter-Sitzungen hielten das Rezept sonst ewig von 'bereit' fern).
-    await pruefeVerordnungsfortschritt(supabase, sess.prescription_id);
+    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) await pruefeVerordnungsfortschritt(supabase, rxId);
   } catch (e) {
     console.warn('[markPrescriptionSession]', e);
   }
@@ -15315,7 +15315,7 @@ async function showZaaErrors(abrechnungId) {
 let _forgeMod = null;
 async function loadForge() {
   if (_forgeMod) return _forgeMod;
-  const m = await import('./vendor/node-forge.js?v=20260813');
+  const m = await import('./vendor/node-forge.js?v=20261026');
   _forgeMod = m.default || m;
   return _forgeMod;
 }

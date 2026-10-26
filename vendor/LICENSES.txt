@@ -33,7 +33,7 @@ node-forge wird unter der BSD-3-Clause-Lizenz genutzt (Wahl aus „BSD-3-Clause 
 cropperjs@1.6.1  —  MIT
 fullcalendar@6.1.11  —  MIT
 iceberg-js@0.8.1  —  MIT
-node-forge@1.3.1  —  BSD-3-Clause OR GPL-2.0
+node-forge@1.4.0  —  BSD-3-Clause OR GPL-2.0
 pdfjs-dist@4.10.38  —  Apache-2.0
 preact@10.12.1  —  MIT
 ts-custom-error@3.3.1  —  MIT
@@ -1505,7 +1505,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ==============================================================================
-node-forge@1.3.1  —  BSD-3-Clause OR GPL-2.0
+node-forge@1.4.0  —  BSD-3-Clause OR GPL-2.0
 Quelle: https://github.com/digitalbazaar/forge
 ==============================================================================
 You may use the Forge project under the terms of either the BSD License or the

@@ -215,6 +215,11 @@ if (!DSN) {
       return sanitizeEvent(event, hint);
     },
 
+    // Sentry 11 streamt Spans standardmäßig (`traceLifecycle: 'stream'`) und
+    // ruft beforeSendTransaction dann NICHT mehr auf — der Sanitizer oben wäre
+    // stumm umgangen. 'static' hält den Fail-closed-Pfad (Upgrade 26.10.2026).
+    traceLifecycle: 'static',
+
     beforeSendTransaction(event) {
       return sanitizeTransaction(event);
     },
