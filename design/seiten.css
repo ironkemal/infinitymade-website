@@ -67,3 +67,36 @@
 @media screen {
   [data-design="neu"] .m13-art-btns button.on { color: var(--bg-card-solid); }
 }
+
+/* ── V4.01 Patienten: Akte als Seitenpanel ─────────────────────────────────────
+   #patientDetailModal (dashboard.html:4122) ist heute ein großes, mittiges Modal. Im Neu-Design
+   fährt es ab 1025 px als Seitenpanel rechts über die volle Höhe ein; die Liste bleibt links
+   sichtbar (leicht abgedunkelt). Öffnen/Schließen/Escape/Fokus bleiben bei dashboard.js. */
+@keyframes pxPanelEin { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media screen and (min-width: 1025px) {
+  [data-design="neu"] #patientDetailModal {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+    background: rgba(11, 15, 23, 0.18);
+    backdrop-filter: none;
+  }
+  [data-design="neu"] #patientDetailModal > .modal {
+    width: min(820px, 62vw);
+    max-width: none;
+    height: 100vh;
+    max-height: none;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    border-right: 0;
+    box-shadow: var(--shadow-e3);
+    animation: pxPanelEin var(--dur-lang, 240ms) var(--ease-standard, ease);
+  }
+}
+@media screen and (prefers-reduced-motion: reduce) {
+  [data-design="neu"] #patientDetailModal > .modal { animation: none; }
+}
+
+/* Patientenliste: Nummer nicht umbrechen („P-1008“). */
+@media screen {
+  [data-design="neu"] #panel-kunden .data-table td:first-child { white-space: nowrap; }
+}

@@ -77,8 +77,12 @@ function kurzlabelSetzen() {
   // (Menüzeile versteckt, Registry-Zeile bleibt; erreichbar über die Startseite).
   const start = document.querySelector('#sidebarNav .sidebar-item[data-panel="overview"] > span:not(.icon):not(.nav-badge)');
   if (start) start.textContent = 'Start';
-  const ueberblick = document.querySelector('#sidebarNav .sidebar-item[data-panel="ueberblick"]');
-  if (ueberblick) ueberblick.hidden = true;
+  // E7/V2.05: Anamnese, Fußbefund, Notizen stehen als Reiter in der Patientenakte (Seitenpanel, V4.01);
+  // ihre Menüzeilen sind im Neu-Design aus. Die Bereiche bleiben (Kalender springt z. B. in den Fußbefund).
+  for (const id of ['ueberblick', 'anamnese', 'fussstatus', 'notizen']) {
+    const zeile = document.querySelector(`#sidebarNav .sidebar-item[data-panel="${id}"]`);
+    if (zeile) zeile.hidden = true;
+  }
   document.querySelectorAll('#sidebarNav .sidebar-item').forEach((e) => {
     if (!e.title) e.title = e.textContent.trim();
   });
