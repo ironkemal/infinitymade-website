@@ -135,3 +135,95 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ── V2.06 Eingeklappt: Icon-Leiste 72 px statt Breite 0 ───────────────────────
+   PLAN-V2 3.2: Gruppen-Symbol + Kurzlabel (data-kurz aus module/shell-neu.js), Einträge als
+   40-px-Symbolknöpfe mit title/aria-Namen (Beschriftung nur visuell versteckt). Bis zum
+   Flyout (V2.07) klappt ein Klick auf die Gruppe ihre Symbole darunter auf.
+   Einklappen über den Knopf unten in der Leiste (.px-einklappen); er löst den alten,
+   schwebenden #sidebarCollapseBtn aus, der Zustand bleibt localStorage sidebar_collapsed. */
+@media screen and (min-width: 1025px) {
+  /* Gegen das Inline-display:flex des alten Knopfs (dashboard.html); Ersatz ist .px-einklappen. */
+  [data-design="neu"] #sidebarCollapseBtn { display: none !important; }
+
+  [data-design="neu"] .sidebar.collapsed {
+    width: 72px;
+    border-right: 1px solid var(--border);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  [data-design="neu"] .sidebar.collapsed .px-leiste-marke { justify-content: center; padding: 0; gap: 0; font-size: 0; }
+  [data-design="neu"] .sidebar.collapsed nav { padding: 4px 8px 12px; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group + .nav-group { margin-top: 4px; }
+
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    padding: 6px 0;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-icon { display: flex; width: 20px; height: 20px; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-icon svg { width: 20px; height: 20px; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-label,
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-chevron { display: none; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-header::after { content: attr(data-kurz); }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-group-header.has-active { color: var(--text-main); background: var(--nav-active); }
+
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .sidebar-item { justify-content: center; padding: 0; }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .sidebar-item > span:not(.icon):not(.nav-badge) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  [data-design="neu"] .sidebar.collapsed #sidebarNav .nav-badge {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  [data-design="neu"] .px-einklappen {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    min-height: 40px;
+    margin: auto 12px 12px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  [data-design="neu"] .px-einklappen:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"] .px-einklappen svg { flex-shrink: 0; transition: transform var(--dur) var(--ease-standard); }
+  [data-design="neu"] .sidebar.collapsed .px-einklappen { justify-content: center; margin: auto 8px 12px; padding: 0; }
+  [data-design="neu"] .sidebar.collapsed .px-einklappen svg { transform: scaleX(-1); }
+  [data-design="neu"] .sidebar.collapsed .px-einklappen span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] .px-einklappen { display: none; }
+}

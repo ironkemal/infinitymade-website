@@ -44,9 +44,9 @@ export const REZEPTE = [
   { name: 'tablet-1024-kalender', breite: 1024, aktion: async (p) => wechsle(p, 'calendar') },
   { name: 'mitarbeiterin-start', rolle: 'employee', breite: 1440, aktion: async (p) => wechsle(p, 'overview') },
   // Ab V2/V3 vorhanden (bis dahin „fehlt“):
-  { name: 'leiste-eingeklappt', breite: 1440, aktion: async (p) => klickNach(p, 'overview', '#sidebarCollapseBtn') },
+  { name: 'leiste-eingeklappt', breite: 1440, aktion: async (p) => klickNach(p, 'overview', '.px-einklappen, #sidebarCollapseBtn') },
   { name: 'flyout-gruppe', breite: 1440, aktion: async (p) => {
-    if ((await klickNach(p, 'overview', '#sidebarCollapseBtn')) !== true) return 'fehlt';
+    if ((await klickNach(p, 'overview', '.px-einklappen, #sidebarCollapseBtn')) !== true) return 'fehlt';
     // Heute klappt die Leiste auf Breite 0 zu: kein sichtbarer Gruppenkopf → Flyout gibt es noch nicht.
     const leiste = await p.locator('#sidebar').boundingBox();
     const kopf = p.locator('#sidebarNav .nav-group-header').nth(2);
