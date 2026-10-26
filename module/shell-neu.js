@@ -17,7 +17,7 @@
  * Folgt: Suche (V2.09), „+ Neu“ (V2.10), Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s207';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s209';
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s208';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */

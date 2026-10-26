@@ -239,6 +239,10 @@
     position: fixed;
     z-index: 400;
     width: 240px;
+    /* R-18: nie höher als das Fenster (Rand 8 oben/unten wie flyoutLage), sonst intern scrollen. */
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 6px;
     background: var(--bg-card-solid);
     border: 1px solid var(--border);

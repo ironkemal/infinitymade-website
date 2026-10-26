@@ -41,6 +41,13 @@ export function schliesseFlyout({ fokusZurueck = false } = {}) {
   offenerKopf = null;
 }
 
+/** Fokus ohne Seiten-Scroll, aber im (scrollenden) Feld sichtbar machen (R-18). */
+function fokussiere(el) {
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  el.scrollIntoView?.({ block: 'nearest' });
+}
+
 function eintraege() {
   return feld ? [...feld.querySelectorAll('.px-flyout-eintrag')] : [];
 }
@@ -50,7 +57,7 @@ function bewege(schritt) {
   if (!liste.length) return;
   const jetzt = liste.indexOf(document.activeElement);
   const ziel = jetzt === -1 ? (schritt > 0 ? 0 : liste.length - 1) : (jetzt + schritt + liste.length) % liste.length;
-  liste[ziel].focus({ preventScroll: true });
+  fokussiere(liste[ziel]);
 }
 
 function oeffne(gruppe, kopf) {
@@ -104,7 +111,7 @@ function oeffne(gruppe, kopf) {
   offenerKopf = kopf;
   kopf.setAttribute('aria-expanded', 'true');
   kopf.setAttribute('aria-controls', 'pxFlyout');
-  (neu.querySelector('.px-flyout-eintrag.active') || eintraege()[0])?.focus({ preventScroll: true });
+  fokussiere(neu.querySelector('.px-flyout-eintrag.active') || eintraege()[0]);
 }
 
 let verdrahtet = false;
@@ -130,8 +137,8 @@ export function verdrahteFlyout() {
     if (e.key === 'Escape') { e.preventDefault(); schliesseFlyout({ fokusZurueck: true }); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); bewege(1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); bewege(-1); }
-    else if (e.key === 'Home') { e.preventDefault(); eintraege()[0]?.focus({ preventScroll: true }); }
-    else if (e.key === 'End') { e.preventDefault(); eintraege().at(-1)?.focus({ preventScroll: true }); }
+    else if (e.key === 'Home') { e.preventDefault(); fokussiere(eintraege()[0]); }
+    else if (e.key === 'End') { e.preventDefault(); fokussiere(eintraege().at(-1)); }
   });
   document.addEventListener('pointerdown', (e) => {
     if (feld && !feld.contains(e.target) && !offenerKopf?.contains(e.target)) schliesseFlyout();
@@ -146,9 +153,11 @@ export function verdrahteFlyout() {
 /** Eingeklappt sind Gruppenköpfe Menüknöpfe; ausgeklappt nicht. Bei jedem Rendern und Umschalten. */
 export function kopfRollen() {
   const zu = istEingeklappt();
+  // Erst schließen, dann aufräumen: schliesseFlyout setzt aria-expanded am offenen Kopf,
+  // das darf ausgeklappt nicht stehen bleiben (R-18/R-19, Codex-Prüfung 26.10.2026).
+  if (!zu) schliesseFlyout();
   document.querySelectorAll('#sidebarNav .nav-group-header').forEach((k) => {
     if (zu) { k.setAttribute('aria-haspopup', 'menu'); if (k !== offenerKopf) k.setAttribute('aria-expanded', 'false'); }
     else { k.removeAttribute('aria-haspopup'); k.removeAttribute('aria-expanded'); k.removeAttribute('aria-controls'); }
   });
-  if (!zu) schliesseFlyout();
 }

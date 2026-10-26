@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-26",
  "dateien": 480,
- "funktionen": 3829,
+ "funktionen": 3830,
  "module": [
   "abrechnung",
   "anamnese",
@@ -131470,12 +131470,77 @@
    ]
   },
   {
+   "name": "fokussiere",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/leiste-flyout.js",
+   "start": 45,
+   "end": 49,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "bewege",
+    "oeffne",
+    "verdrahteFlyout"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "eintraege",
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 44,
-   "end": 46,
+   "start": 51,
+   "end": 53,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -131539,8 +131604,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 48,
-   "end": 54,
+   "start": 55,
+   "end": 61,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -131549,7 +131614,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "eintraege"
+    "eintraege",
+    "fokussiere"
    ],
    "calledBy": [
     "verdrahteFlyout",
@@ -131605,8 +131671,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 56,
-   "end": 108,
+   "start": 63,
+   "end": 115,
    "lines": 53,
    "spiegelHinweis": null,
    "tables": [],
@@ -131617,6 +131683,7 @@
    "calls": [
     "eintraege",
     "flyoutLage",
+    "fokussiere",
     "schliesseFlyout"
    ],
    "calledBy": [
@@ -131675,8 +131742,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 112,
-   "end": 144,
+   "start": 119,
+   "end": 151,
    "lines": 33,
    "spiegelHinweis": null,
    "tables": [],
@@ -131687,6 +131754,7 @@
    "calls": [
     "bewege",
     "eintraege",
+    "fokussiere",
     "istEingeklappt",
     "kopfRollen",
     "oeffne",
@@ -131745,9 +131813,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/leiste-flyout.js",
-   "start": 147,
-   "end": 154,
-   "lines": 8,
+   "start": 154,
+   "end": 163,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -218809,7 +218877,7 @@
    "name": "oeffne",
    "orte": [
     "module/kalender-kontextmenue.js:120",
-    "module/leiste-flyout.js:56",
+    "module/leiste-flyout.js:63",
     "module/leistungen-liste.js:190",
     "module/verordnung-liste.js:219"
    ],
@@ -219225,7 +219293,7 @@
    "name": "bewege",
    "orte": [
     "module/kalender-kontextmenue.js:103",
-    "module/leiste-flyout.js:48"
+    "module/leiste-flyout.js:55"
    ],
    "aynalar": []
   },
