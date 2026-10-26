@@ -1,0 +1,69 @@
+/* ============================================================================
+   design/seiten.css — Seiten-Archetypen des neuen Designs (PLAN-V2 V4)
+   ============================================================================
+   Einmal zentral statt je Ansicht neu (Melih 26.10.: „schneller“, Bausteine bündeln).
+   Nur [data-design="neu"], nur @media screen. Reihenfolge: nach design/startseite.css.
+
+   Archetyp „Liste + Seitenpanel“ (Entwurf .redesign-shots/plan-v2/archetyp-liste-detail.html):
+   ab 1280 px Liste links, ausgewählter Datensatz rechts als mitlaufendes Panel; darunter
+   bleibt die Anordnung untereinander. Nur Anordnung und Form — Daten, Klicks und Detail-
+   Inhalt kommen unverändert aus den bestehenden Modulen (verordnung-liste/-detail.js).
+   ========================================================================== */
+
+/* ── V4.01 Verordnungen ─────────────────────────────────────────────────────── */
+/* Klassisches Liste-Detail: ohne geöffnete Verordnung volle Liste; mit geöffneter (oder neuer)
+   Verordnung wird die Liste schmal (Nachname, Vorname, Status; Datum steht im Detail) und das Detail breit – das
+   Detail enthält die Muster-13-Maske und braucht Platz. „Offen“ = #vordDetailContent hat
+   Elemente; der reine Hinweistext „Wählen Sie oben …“ zählt nicht. */
+@media screen {
+  [data-design="neu"] #panel-verordnungen #vordDetailPanel:not(:has(#vordDetailContent *)) { display: none; }
+}
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] #panel-verordnungen.active:has(#vordDetailContent *) {
+    display: grid;
+    grid-template-columns: minmax(420px, 0.85fr) minmax(0, 1.6fr);
+    grid-template-areas: "kopf kopf" "liste detail";
+    gap: 24px;
+    align-items: start;
+  }
+  [data-design="neu"] #panel-verordnungen > .panel-header { grid-area: kopf; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) > .panel-header { margin-bottom: 0; }
+  [data-design="neu"] #panel-verordnungen > .card:not(#vordDetailPanel) { grid-area: liste; min-width: 0; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) .data-table :is(th, td):nth-child(n+3):nth-child(-n+6) { display: none; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) .table-wrap { overflow-x: auto; }
+  [data-design="neu"] #panel-verordnungen > #vordDetailPanel {
+    grid-area: detail;
+    min-width: 0;
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - var(--topbar-h) - 32px);
+    overflow: auto;
+    /* Gegen Inline-margin-top:14px (dashboard.html): im Raster steht das Panel neben der Liste. */
+    margin-top: 0 !important;
+  }
+}
+
+@media screen {
+  [data-design="neu"] #panel-verordnungen > .card { border-radius: var(--radius); box-shadow: var(--shadow-e1); }
+  [data-design="neu"] #vordDetailPanel { padding: 20px 24px; }
+  [data-design="neu"] #vordDetailName { font-size: 18px !important; line-height: 24px; font-weight: 500 !important; } /* gegen Inline 16/700 */
+  [data-design="neu"] #vordDetailContent { font-size: 14px !important; } /* gegen Inline 13px */
+
+  /* Zeilen ruhig: 56 px, ausgewählte Zeile grau getönt mit dunklem Text. */
+  [data-design="neu"] #vordTbody .vord-row td { height: 56px; }
+  [data-design="neu"] #vordTbody .vord-row:hover { background: var(--bg-hover); }
+  [data-design="neu"] #vordTbody .vord-row.vord-row-gewaehlt { background: var(--nav-active) !important; } /* gegen Inline-Fläche */
+  [data-design="neu"] #vordTbody .vord-row.vord-row-gewaehlt td:first-child { box-shadow: inset 3px 0 0 var(--text-main); }
+
+  /* „Bitte prüfen“ (abrechnungsstatus.js BITTE_PRUEFEN_FARBE, Orange inline): nach Melihs Regel
+     Text neutral, kein farbiger Balken – nur das Warnsymbol trägt das Orange. */
+  [data-design="neu"] #vordTbody .vord-row { border-left-color: transparent !important; } /* gegen Inline-Orangebalken */
+  [data-design="neu"] #vordTbody .vord-row td:first-child { color: var(--text-main) !important; white-space: nowrap; } /* gegen Inline-Orange */
+  [data-design="neu"] #vordTbody .vord-row td:first-child .px-sym { color: var(--warning); margin-right: 4px; }
+}
+
+/* Muster-13-Maske: aktiver Abrechnungsweg. dashboard.html:3950 setzt color:#fff fest; im
+   dunklen Neu-Design ist --primary Weiß → weiße Schrift auf Weiß. */
+@media screen {
+  [data-design="neu"] .m13-art-btns button.on { color: var(--bg-card-solid); }
+}
