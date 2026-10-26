@@ -213,21 +213,70 @@ Quellen: `db/SCHEMA.sql:367–409`, `db/SCHEMA-RLS.sql:2816–2844` und `:5657`.
 Das ist Forderungsdeckung; Abschreibungen sind weiterhin kein Geldeingang.
 Ein eigener gespeicherter Restbetrag oder exakter reiner Resthelfer wurde nicht gefunden.
 
-Aktiv ist ausschließlich die starke Vertrags-/Planprüfung
+Abgeschlossen ist die starke Vertrags-/Planprüfung
 `praxura-v6b-b03-astra-vertrag-plan-20261026-r2` (native T3, `gpt-6-astra`,
 `reasoningEffort=xhigh`, `serviceTier=default`). Sie führt die bisherigen Berater-
 und Luna-Ergebnisse zusammen und klärt Podologie-Sollquelle, negativen Saldo und
 VKZ03-Rest nach Zahlung/Ablehnung. Keine Produktdateien durch den Planauftrag ändern.
 Das ist ein Astra-Lauf nach ausgefallenem Opus-Lauf, kein behauptetes Opus-Ergebnis.
+Es läuft kein weiterer B03-Kindauftrag; keinen zweiten Plan-/Bauauftrag starten.
+
+#### B03: Ergebnis des Astra-Vertragsabgleichs (nur lokal geplant)
+
+- Podologie: gespeichertes Soll allein besitzt vor Festschreibung keine belegte
+  Aktualitätsgarantie. `podoZuzahlungSoll` zieht die Altzahlung bereits ab; diese
+  nicht ein zweites Mal abziehen. Konservativ nur einen echten, eindeutig
+  zugeordneten Einreichungssnapshot mit übereinstimmender Rezeptspalte verwenden,
+  andernfalls Betrag unbekannt. Keine neue Preisformel. Quellen:
+  `abrechnung.routes.js:3312`, `:4614`, Podologie-Vertrag §8.
+- Negativer Patientensaldo: unbekannt plus Anomalie. Weder höhere Forderung noch
+  Deckelung ist belastbarer Bestandsvertrag. Zusätzlich widersprechen vorhandene
+  Belege mit Nullsaldo dem reinen Altvermerk-Fallback in `bezahlt.js`; diesen
+  Konflikt ausweisen, Zentralhelfer und Altstatistik unverändert lassen.
+- VKZ03: Entwurf löst keinen Schuldnerwechsel aus. Übertragene und abgelehnte
+  Forderungen werden nicht wieder patientenoffen. Rest aus Zeilensoll, bezifferter
+  Absetzung und vorzeichenbehaftetem Kassenledger ableiten; `paid` kann auch durch
+  Abschreibung entstehen und beweist keinen Geldeingang. Unklare Ablehnung,
+  widersprüchliches `paid`, spätere Patientenzahlung oder verwaiste Rezeptzuordnung
+  bleiben unbekannt. Der Bestand hat Zahlungs- und Absetzungswege in
+  `abrechnung.routes.js:2447` und `:5188`.
+- Korrektur der Luna-Kurzfassung: Der Trigger greift beim Zeilensoll **0** auf den
+  Kopf zurück, nicht ausschließlich bei NULL (`SCHEMA-RLS.sql:2823`).
+- Vorgesehener reiner Rechner `berechneOffeneForderungen` erhält Rezepte, Belege,
+  Abrechnungsköpfe/-zeilen und Zahlungen. Lader `ladeOffeneForderungen` lädt alle
+  fünf Tabellen mit `owner_id`, stabiler ID-Sortierung und Pagination; abhängige
+  IDs zusätzlich in 200er-Blöcken. Kein Standort-/Zeitraumfilter, kein `gt(0)`,
+  jeder Fehler auf einer Folgeseite wirft. Keine Änderungen an Bestandsrouten.
+- Ausgabe: Positionen mit Quelle/Status/Anomalie, bekannte Teilsummen und
+  `gesamtCent=null` bei unbekannten Beträgen. Dezimalwerte prüfen; 0,005-Toleranz
+  vor Cent-Rundung, sichere Integer-Cent. Befreiung ist echter Nullbetrag;
+  Preis-NULL ist unbekannt. Altzahlung genau einmal berücksichtigen.
+- Geplante Tests: Teil-/Altzahlung, Befreiung, Altvermerk/Nullsaldo-Widerspruch,
+  Storno/Überzahlung, 0,0049/0,005/0,0051, fehlender Preis/Podo-Snapshot,
+  alle VKZ03-Status, Kassen-Teilzahlung/Absetzung/Abschreibung/Korrektur,
+  verlorene Zuordnung, normale Kassenabrechnung ohne Patientenzahlung,
+  >1.000 Zeilen/>200 IDs, Folgeseitenfehler und Fremdtenant.
+
+Der fachliche Bauplan ist konservativ ausführbar, aber noch **nicht geschrieben
+oder getestet**. Insbesondere vollständige Podo-Summen werden ohne belastbare
+Sollquelle nicht behauptet. Dateizuteilung bleibt gemäß Melih bei Claude.
 
 Die vier vorgeschlagenen neuen B03/B04-Dateien sind in beiden Arbeitskopien noch
 nicht vorhanden und ohne fremde Änderungen. Wegen des ausgefallenen Integrators
 ist Melih eine konkrete Dateizuteilung gestellt: Forderungsmodul plus Test sowie
-Startseitenrouter plus Test. Die Antwort steht beim Schreiben dieser Notiz aus;
-kein allgemeines Plan-OK wird erneut angefragt. `server.js` bleibt unzugeteilt.
+Startseitenrouter plus Test. Melih hat ausdrücklich entschieden, die Zuteilung
+weiter über Claude abzuwarten. Bis zu dessen ACK keine produktiven Änderungen an
+B03/B04; lokale Quellen- und Planprüfungen bleiben möglich. Kein allgemeines
+Plan-OK wird erneut angefragt. `server.js` bleibt unzugeteilt.
 
-Abgeschlossene B01/B02-Tasks nicht neu starten. Auf automatische Fertigmeldung
-der Astra-Prüfung setzen; bestehender Scheduler bleibt unverändert aktiv.
+Claudes bestätigendes ACK für die vier B01/B02-Pfade (Stand `a6fe9b47`) ist
+eingetroffen. B01/B02 waren bereits auf Melihs unmittelbare Zuteilung gebaut und
+committet; nicht erneut bauen. Commits, genaue Produktpfade, vorhandene
+Testausgaben und selektive Produktpatches erneut zur Integration bestätigen.
+
+Abgeschlossene B01/B02-Tasks und B03-Prüfungen nicht neu starten. Keine aktiven
+B03-Kindaufträge; nächste produktive Arbeit wartet auf Claudes Datei-ACK.
+Bestehender Scheduler bleibt unverändert aktiv, keine zweite Einrichtung.
 
 ### Weitere unabhängige Frontend-Prüfungen (nur gelesen)
 
@@ -243,7 +292,11 @@ der Astra-Prüfung setzen; bestehender Scheduler bleibt unverändert aktiv.
   zur letzten Hauptaktion. Zweifachklick/Doppelklick, Anfragebadge und Weiterleitung
   genau eines Originalklicks grün; Kiosk-`inert` nur synthetisch geprüft. Originale
   reine Tests 2/2 grün. R-18/R-19 aus der ersten Prüfung nicht erneut bearbeitet;
-  V2.07b `416a68ac` ist bekannt, noch nicht unabhängig nachgeprüft.
+  V2.07b `416a68ac` anschließend unabhängig nachgeprüft: bei 1440×240 bleibt
+  das Feld y8–232 (224 px), intern scrollbar; Ende erreicht Eintrag 6 vollständig,
+  Pos1 erreicht Eintrag 1, App-/Seitenscroll jeweils 0. Wechsel 1440→1024 entfernt
+  Feld und alle drei Menü-ARIA-Attribute trotz weiter offener Inline-Gruppe.
+  Damit R-18/R-19 lokal bestätigt behoben; separater Tab-Befund bleibt eigenständig.
 - V2.08 `aca08f93`: Profilmenü ohne Höhenbegrenzung. Bei 1440×240 mit Admin-Eintrag
   und längerem synthetischem Praxisnamen liegt „Abmelden“ bei y235,5–275,5; nur
   4,5 px bleiben im Fenster. Pfeiltaste erreicht den Eintrag, scrollt dabei aber
