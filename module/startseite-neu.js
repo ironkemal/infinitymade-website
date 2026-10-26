@@ -150,8 +150,11 @@ function todoHtml() {
     : bekannt
       ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
       : '<div class="px-karte-zustand"><p>Hinweise sind gerade nicht verfügbar.</p></div>';
+  // V6.F02 (E8): der frühere „Überblick“ (Fristen, No-Shows, Abwesenheiten, Geburtstage) ist von hier aus erreichbar.
+  const mehr = inLeiste('ueberblick')
+    ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="ueberblick">Fristen, No-Shows und Abwesenheiten ${ICON.rechts}</button></div>` : '';
   return `<section class="px-karte px-k-todo" aria-labelledby="pxTodoTitel">
-    <div class="px-karte-kopf"><div><h2 id="pxTodoTitel">Zu erledigen</h2><p>Was heute Aufmerksamkeit braucht</p></div></div>${rumpf}</section>`;
+    <div class="px-karte-kopf"><div><h2 id="pxTodoTitel">Zu erledigen</h2><p>Was heute Aufmerksamkeit braucht</p></div></div>${rumpf}${mehr}</section>`;
 }
 
 function listeHtml() {

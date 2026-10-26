@@ -30,6 +30,9 @@
       "next next todo"
       "list list vo"
       "list list frei";
+    /* Letzte Zeile nimmt den Rest: sonst teilt „Termine heute“ seine Höhe auf beide Zeilen
+       und zwischen Verordnungen und Freie Zeit entsteht eine Lücke. */
+    grid-template-rows: auto auto 1fr;
     align-items: start;
   }
   [data-design="neu"] .px-start-raster:not(:has(.px-k-vo)) {

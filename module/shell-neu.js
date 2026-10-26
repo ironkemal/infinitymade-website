@@ -21,10 +21,10 @@
  * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s212';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s218';
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
-import { verdrahteStartseite } from './startseite-neu.js?v=20261026s216';
+import { verdrahteStartseite } from './startseite-neu.js?v=20261026s218';
 import { emojisAus } from './ohne-emoji.js?v=20261026s217';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
@@ -73,6 +73,12 @@ function kurzlabelSetzen() {
     kopf.dataset.kurz = kurzlabel(g.dataset.groupId, lang);
     kopf.title = lang;
   });
+  // V6.F02 (E8): „Dashboard“ heißt im Neu-Design „Start“; „Überblick“ geht in der Startseite auf
+  // (Menüzeile versteckt, Registry-Zeile bleibt; erreichbar über die Startseite).
+  const start = document.querySelector('#sidebarNav .sidebar-item[data-panel="overview"] > span:not(.icon):not(.nav-badge)');
+  if (start) start.textContent = 'Start';
+  const ueberblick = document.querySelector('#sidebarNav .sidebar-item[data-panel="ueberblick"]');
+  if (ueberblick) ueberblick.hidden = true;
   document.querySelectorAll('#sidebarNav .sidebar-item').forEach((e) => {
     if (!e.title) e.title = e.textContent.trim();
   });

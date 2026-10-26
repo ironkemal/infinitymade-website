@@ -568,3 +568,8 @@
   [data-design="neu"] .px-sym-wrap { display: inline-flex; vertical-align: -0.15em; }
   [data-design="neu"] .px-sym { flex-shrink: 0; }
 }
+
+/* ── V6.F02: versteckte Menüzeilen (z. B. „Überblick“, in der Startseite aufgegangen) ── */
+@media screen {
+  [data-design="neu"] #sidebarNav .sidebar-item[hidden] { display: none; }
+}

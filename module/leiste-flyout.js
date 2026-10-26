@@ -62,7 +62,7 @@ function bewege(schritt) {
 
 function oeffne(gruppe, kopf) {
   schliesseFlyout();
-  const originale = [...gruppe.querySelectorAll('.nav-group-items .sidebar-item')];
+  const originale = [...gruppe.querySelectorAll('.nav-group-items .sidebar-item:not([hidden])')];
   if (!originale.length) return;
 
   const neu = document.createElement('div');
