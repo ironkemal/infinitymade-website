@@ -146,6 +146,7 @@ export function geldKarteHtml(z = {}, mahnungen = {}, abrechnung = {}) {
       ${zeile('Von Krankenkassen eingegangen', d.kassiert?.kasse)}
       ${zuzahlungHtml(d.offen?.zuzahlung)}
       <p class="px-geld-fuss">Vollständige offene Privat-, BG-, Selbstzahler- und Ausfallforderungen sind hier noch nicht enthalten.</p>
+      ${z.fehler ? '<p class="px-geld-hinweis">Aktualisierung fehlgeschlagen. Zuletzt geladener Stand.</p>' : ''}
     </div>`;
   }
   const unter = z.daten ? [monatText(z.daten.monat), 'alle Standorte'].filter(Boolean).join(' · ') : 'Dieser Monat';
@@ -163,11 +164,14 @@ export async function holeGeld({ supabase, apiBase, fetchFn = (...a) => fetch(..
   const { data } = await supabase.auth.getSession();
   const token = data?.session?.access_token;
   if (!token || !apiBase) throw new Error('KEINE_SITZUNG');
-  const res = await fetchFn(`${String(apiBase).replace(/\/+$/, '')}/startseite/zusammenfassung?bloecke=${blockName}`, {
-    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`HTTP_${res.status}`);
-  const block = (await res.json())?.bloecke?.[blockName];
-  if (block?.status !== 'ok' || !block.daten || typeof block.daten !== 'object') throw new Error('BLOCK_NICHT_VERFUEGBAR');
-  return block.daten;
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetchFn(`${String(apiBase).replace(/\/+$/, '')}/startseite/zusammenfassung?bloecke=${blockName}`, {
+      headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP_${res.status}`);
+    const block = (await res.json())?.bloecke?.[blockName];
+    if (block?.status !== 'ok' || !block.daten || typeof block.daten !== 'object') throw new Error('BLOCK_NICHT_VERFUEGBAR');
+    return block.daten;
+  } finally { clearTimeout(timer); }
 }

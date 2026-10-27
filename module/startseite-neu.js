@@ -19,7 +19,7 @@
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { API_BASE } from '../supabase-config.js';
-import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s236';
+import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s240';
 import { freieZeitHtml, wocheHtml, holeVerfuegbarkeit } from './startseite-verfuegbarkeit.js?v=20261027s237';
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
@@ -46,6 +46,7 @@ let laufNr = 0;
 let geld = { laden: false, fehler: false, daten: null, stand: 0 };
 let mahnungen = { laden: false, fehler: false, daten: null };
 let abrechnung = { laden: false, fehler: false, daten: null };
+let geldLaedt = false;
 let verf = { tag: { laden: false, daten: null }, woche: { laden: false, daten: null } };
 let verfStand = 0, verfLaedt = false, verfErneut = false, verfScope = '';
 
@@ -105,25 +106,26 @@ async function ladeTermine() {
 /** Geld-Block laden (nur Inhaber). Fehler bleiben in der Karte, die übrige Startseite läuft weiter. */
 async function ladeGeldKarte({ erzwingen = false } = {}) {
   const k = kontext();
-  if (!istOwner() || !k?.supabase) return;
-  if (!erzwingen && (geld.laden || Date.now() - geld.stand < 60000)) return;
+  if (!istOwner() || !k?.supabase || geldLaedt) return;
+  if (!erzwingen && Date.now() - geld.stand < 60000) return;
+  geldLaedt = true;
   geld = { ...geld, laden: true, fehler: false };
   mahnungen = { ...mahnungen, laden: true, fehler: false };
   abrechnung = { ...abrechnung, laden: true, fehler: false };
   if (!geld.daten) zeichne();
   try {
-    const [g, m, a] = await Promise.allSettled(['geld', 'mahnungen', 'abrechnung'].map(blockName =>
-      holeGeld({ supabase: k.supabase, apiBase: API_BASE, blockName })));
-    geld = { laden: false, fehler: g.status === 'rejected', daten: g.status === 'fulfilled' ? g.value : geld.daten, stand: Date.now() };
-    mahnungen = { laden: false, fehler: m.status === 'rejected', daten: m.status === 'fulfilled' ? m.value : mahnungen.daten };
-    abrechnung = { laden: false, fehler: a.status === 'rejected', daten: a.status === 'fulfilled' ? a.value : abrechnung.daten };
-  } catch (e) {
-    console.warn('[startseite] Abrechnungszahlen nicht ladbar:', e?.message);
-    geld = { ...geld, laden: false, fehler: true, stand: Date.now() };
-    mahnungen = { ...mahnungen, laden: false, fehler: true };
-    abrechnung = { ...abrechnung, laden: false, fehler: true };
-  }
-  zeichne();
+    await Promise.allSettled(['geld', 'mahnungen', 'abrechnung'].map(async blockName => {
+      let daten, fehler = false;
+      try { daten = await holeGeld({ supabase: k.supabase, apiBase: API_BASE, blockName }); }
+      catch { fehler = true; }
+      const vorher = blockName === 'geld' ? geld : blockName === 'mahnungen' ? mahnungen : abrechnung;
+      const next = { laden: false, fehler, daten: fehler ? vorher.daten : daten };
+      if (blockName === 'geld') geld = { ...next, stand: Date.now() };
+      else if (blockName === 'mahnungen') mahnungen = next;
+      else abrechnung = next;
+      zeichne();
+    }));
+  } finally { geldLaedt = false; }
 }
 
 export async function aktualisieren() {
