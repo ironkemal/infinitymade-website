@@ -999,3 +999,29 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Rückwirkung auf laufende Sitzung ungeklärt; niedrigere Modellgrenze gilt.
   Claude/Gemini nicht als technisch konfiguriert behaupten. Kein History-/
   Dateilöschen; Freigaben/Dateigrenzen nach Komprimierung erhalten.
+
+## Unabhängige Nachprüfung F07–F09, 27.10., Integrator 92217e75
+
+- Beide Worktrees sauber; eigener HEAD vor Notiz c184dacc. Integrator-Thread
+  completed, keine aktive Ausführung. Geprüft ausschließlich gepinnte Quellen
+  aus 92217e75 in temporärer Kopie, keine Produkt-/Index-/Referenzänderungen.
+- 31/31 gezielte Tests grün, 0 Skip: Altfeed10, Finanzzustand3,
+  Anfragenzustand18. Originalfunktionen im VM beziehungsweise echte reine
+  Formatter/Transportfunktion; Fetch/TCP/TLS/HTTP(S)/Serverlisten gesperrt.
+- Gegenproben mit echten Vorgängerquellen ausschließlich in Temp: F07 vor
+  050a3502 8/10 rot, F08 vor 2f9ca54d 3/3 rot, F09 vor 92217e75 16/18 rot.
+  Aktueller Snapshot danach wiederhergestellt. Logs:
+  /var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-f070809-review-78o_sg0v/
+- Befundumfang lokal geschlossen: Feed verweigert vor getOwnerId/Fachreads
+  und verwirft verspätete Rollen-/Mandanten-/Designantworten; Finanzblöcke
+  zeichnen unabhängig, hängender Fetch wird nach30s abgebrochen; Entwarnung
+  benötigt alle berechtigten Quellen bekannt0, Fehler/fehlende Werte Unknown,
+  jüngste Pending-Antwort unabhängig vom sichtbaren Anfragentab.
+- Grenzen: keine eigene Browser-/Live-/RLS-/App-Gesamtabnahme. Vollsuite nicht
+  erneut ausgeführt; Watchdog4720pass/1bestehenderSkip separat fremder Nachweis.
+  V7 offen, V8.03 unfreigegeben, V10-Kandidat53e08f05 weiterhin veraltet.
+- ACK-Korrektur: Reservierung50f17d5b/STATUS §0 bestätigt exklusiv neue
+  module/startseite-handlungsbedarf.js samt Test. Frühere Notizen „ACK fehlt“
+  sind überholt. Nur versionierter reiner Rechner, vorhandene Fristen-/
+  Pausehelfer wiederverwenden, je Quelle Vollständigkeit/Unknown; Loader/UI/
+  Rechte/INDEX/STATUS/Integration bleiben Integrator. Noch kein Produktbau.
