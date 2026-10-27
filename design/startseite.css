@@ -201,3 +201,44 @@
   [data-design="neu"] .px-summe { margin-left: 16px; margin-right: 16px; }
   [data-design="neu"] .px-frei-ziel { padding-left: 16px; padding-right: 16px; }
 }
+
+/* ── V6.F03 Karte „Abrechnung“ (module/startseite-geld.js, nur Inhaber) ─────────
+   Rechte Spalte unter „Zu erledigen“. Raster nur, wenn die Karte da ist (:has), sonst bleibt alles wie oben. */
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] .px-start-raster:has(.px-k-geld) {
+    grid-template-areas: "next next todo" "list list geld" "list list vo" "list list frei";
+    grid-template-rows: auto auto auto 1fr;
+  }
+  [data-design="neu"] .px-start-raster:has(.px-k-geld):not(:has(.px-k-vo)) {
+    grid-template-areas: "next next todo" "list list geld" "list list frei";
+    grid-template-rows: auto auto 1fr;
+  }
+}
+@media screen and (min-width: 769px) and (max-width: 1279px) {
+  [data-design="neu"] .px-start-raster:has(.px-k-geld) { grid-template-areas: "next next" "todo geld" "list list" "vo frei"; }
+  [data-design="neu"] .px-start-raster:has(.px-k-geld):not(:has(.px-k-vo)) { grid-template-areas: "next next" "todo geld" "list list" "frei frei"; }
+}
+@media screen {
+  [data-design="neu"] .px-k-geld { grid-area: geld; }
+  [data-design="neu"] .px-geld { display: flex; flex-direction: column; padding: 4px 24px 8px; }
+  [data-design="neu"] .px-geld-haupt { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 14px; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-geld-haupt .lbl { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-haupt .zahl { font-size: var(--fs-kennzahl, 28px); line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); }
+  [data-design="neu"] .px-geld-zeile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  [data-design="neu"] .px-geld-zeile .lbl { font-size: 14px; color: var(--text-main); }
+  [data-design="neu"] .px-geld-zeile .zahl { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); white-space: nowrap; }
+  [data-design="neu"] .px-geld-zeile .px-geld-hinweis { grid-column: 1 / -1; }
+  [data-design="neu"] .px-geld-hinweis { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-hinweis .px-sym { color: var(--warning); flex-shrink: 0; }
+  [data-design="neu"] .px-geld-fuss { margin: 12px 0 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+}
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .px-geld { padding-left: 16px; padding-right: 16px; }
+}

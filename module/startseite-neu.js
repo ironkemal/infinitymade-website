@@ -18,6 +18,8 @@
  */
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
+import { API_BASE } from '../supabase-config.js';
+import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s232';
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -39,6 +41,8 @@ let kontext = () => null;
 let wurzel = null;
 let zustand = { laden: true, fehler: false, liste: [], stand: null };
 let laufNr = 0;
+// V6.F03 Abrechnungskarte (nur Inhaber): eigener Zustand, höchstens einmal je Minute neu laden (Server-Rate-Limit).
+let geld = { laden: false, fehler: false, daten: null, stand: 0 };
 
 const inLeiste = (panel) => document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const geheZu = (panel) => inLeiste(panel)?.click();
@@ -69,11 +73,28 @@ async function ladeTermine() {
   return heutigeTermine(data || [], { jetzt: new Date(), uid: k.uid?.(), nurEigene: !istOwner() });
 }
 
+/** Geld-Block laden (nur Inhaber). Fehler bleiben in der Karte, die übrige Startseite läuft weiter. */
+async function ladeGeldKarte({ erzwingen = false } = {}) {
+  const k = kontext();
+  if (!istOwner() || !k?.supabase) return;
+  if (!erzwingen && (geld.laden || Date.now() - geld.stand < 60000)) return;
+  geld = { ...geld, laden: true, fehler: false };
+  if (!geld.daten) zeichne();
+  try {
+    geld = { laden: false, fehler: false, daten: await holeGeld({ supabase: k.supabase, apiBase: API_BASE }), stand: Date.now() };
+  } catch (e) {
+    console.warn('[startseite] Abrechnungszahlen nicht ladbar:', e?.message);
+    geld = { ...geld, laden: false, fehler: true, stand: Date.now() };
+  }
+  zeichne();
+}
+
 export async function aktualisieren() {
   if (!wurzel) return;
   const nr = ++laufNr;
   zustand = { ...zustand, laden: !zustand.stand, fehler: false };
   zeichne();
+  ladeGeldKarte();
   try {
     const liste = await ladeTermine();
     if (nr !== laufNr) return;
@@ -233,7 +254,7 @@ function zeichneInnen() {
   // Freie-Zeit-Sektion vor dem Neuzeichnen sichern (sie wird nur umgehängt, nie neu gebaut).
   if (frei && wurzel.contains(frei)) frei.remove();
   wurzel.innerHTML = `${kopfHtml()}<div class="px-start-raster${istOwner() ? '' : ' ist-team'}">
-    ${naechstesHtml()}${todoHtml()}${listeHtml()}${voHtml()}
+    ${naechstesHtml()}${todoHtml()}${istOwner() ? geldKarteHtml(geld) : ''}${listeHtml()}${voHtml()}
     <section class="px-karte px-k-frei" aria-labelledby="pxFreiTitel">
       <div class="px-karte-kopf"><div><h2 id="pxFreiTitel">Freie Zeit heute</h2><p>Lücken im Terminplan</p></div></div>
       <div class="px-frei-ziel"></div>
@@ -248,6 +269,7 @@ function klick(e) {
   if (aktion === 'kalender') geheZu('calendar');
   else if (aktion === 'akte' && typeof window.openPatientDetail === 'function') window.openPatientDetail(el.dataset.lead);
   else if (aktion === 'neu-laden') aktualisieren();
+  else if (aktion === 'geld-neu') ladeGeldKarte({ erzwingen: true });
   else if (el.dataset.ziel) geheZu(el.dataset.ziel);
 }
 

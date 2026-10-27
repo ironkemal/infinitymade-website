@@ -35,6 +35,16 @@ const berlinTag = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Be
  */
 export const API_ANTWORTEN = {
   '/api/attendance/report': { records: [] },
+  // V6.F03: Startseite-Geld (nur Inhaber; Angestellte bekämen 403 — das Frontend fragt sie gar nicht an).
+  '/api/startseite/zusammenfassung': (o) => (o.rolle === 'employee' ? { bloecke: {} } : { bloecke: { geld: { status: 'ok', daten: {
+    scope: 'mandant', monat: '2026-10',
+    umfang: { patient: 'Kassiert diesen Monat (erfasst im Kassenbuch)' },
+    kassiert: { patient: { bekanntCent: 184250, gesamtCent: 184250, unbekanntAnzahl: 0, gruende: [] },
+      kasse: { bekanntCent: 412080, gesamtCent: 412080, unbekanntAnzahl: 0, gruende: [] } },
+    offen: { zuzahlung: { bekanntCent: 8640, gesamtCent: null, unbekanntAnzahl: 1, gruende: ['PATIENT_SOLL_UNBEKANNT'] },
+      privat: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: null, gruende: ['PRIVAT_NICHT_GELADEN'] },
+      ausfall: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: null, gruende: ['AUSFALL_NICHT_GELADEN'] } },
+    anomalien: [] } } } }),
 };
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */
