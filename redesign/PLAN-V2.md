@@ -17,15 +17,15 @@ nicht kopiert): ruhige Leiste, klare weiße Karten, **eine Startseite „Heute�
 Podologin zwischen zwei Patienten in 3 Sekunden sagt, wer kommt, was offen ist und was zu
 kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schwarz/Weiß, ein sparsames Blau, Signalfarben nur bei echten Problemen. Kein Beige, kein Braun.
 
-**Verbindliches Endziel / aktives GOAL (Melih, 27.10.2026):** Nach vollständiger Fertigstellung ersetzt das neue Design das bisherige Dashboard als Standard für sämtliche Nutzer, einschließlich bestehender Kunden-Dashboards. Keine dauerhaft separate Vorschau oder nur per Opt-in erreichbare Endlösung. Laufende Pakete fertigstellen, vollständig integrieren und testen, dann die Umstellung reviewbar vorbereiten. Die tatsächliche Veröffentlichung benötigt weiterhin eine gesonderte Freigabe.
+**Verbindliches Endziel (Melih, 27.10.2026):** Nach vollständiger Fertigstellung ersetzt das neue Design das bisherige Dashboard als Standard für sämtliche Nutzer, einschließlich bestehender Kunden-Dashboards. Keine dauerhaft separate Vorschau oder nur per Opt-in erreichbare Endlösung. Laufende Pakete fertigstellen, vollständig integrieren und testen, dann die Umstellung reviewbar vorbereiten. **V10-Vorbereitung ist ausdrücklich erlaubt und Bestandteil des Endziels**; tatsächliche Veröffentlichung und Standardaktivierung benötigen weiterhin gesonderte Freigabe. Eine technische Usage-Sperre des Goal-Tools ändert diesen Auftrag nicht.
 
 ### V10: verbindliche Abnahme der Standardumstellung
 
 | Fall | Erforderlicher Nachweis vor Freigabe |
 |---|---|
 | Bestehende und neue Zugänge | Nackte `/dashboard.html`-URLs und frische Browserprofile starten Neu ohne Opt-in; vorhandener `localStorage` (fehlendes, `neu`, altes/abweichendes `px-design`, Theme und Panelwahl) verhindert den neuen Standard nicht. Gesperrter Storage wird mitgeprüft. |
-| Rollen und Bereiche | Besitzer und Mitarbeiter, direkte Panel-Einstiege sowie sämtliche Dashboard-Bereiche und bestehende Kunden-Zugänge funktionieren; Rechte, Mandantentrennung, Funktionen und Kundendaten bleiben erhalten. |
-| Box-Auslieferung | Dashboard, Module und Design im gebauten Auslieferungsartefakt prüfen. `onprem/frontend.Dockerfile:75/115–117` kopiert sie bereits; das beweist keine Installation bei Kunden. Installations-/Updateweg und tatsächlicher Kundenstand sind getrennt nachzuweisen; unbekannte Installation bleibt unbekannt. |
+| Rollen und Bereiche | Alle27 Dashboard-Bereiche und bestehenden Einstiege, Besitzer/Mitarbeiter sowie Physio, Ergo, Logopädie, Podologie und interdisziplinäre Praxen abdecken; jeweils gültige Bereichs-/Rollensichtbarkeit erhalten. Rechte, Mandantentrennung, Funktionen und Kundendaten bleiben erhalten. |
+| Box-Auslieferung und Bestands-Caches | Dashboard, Module und Design im gebauten Auslieferungsartefakt prüfen. `onprem/frontend.Dockerfile:75/115–117` kopiert sie bereits; das beweist keine Installation bei Kunden. Update aus einer bestehenden Installation mit alten HTML-/JS-/CSS-Caches prüfen: zusammenpassende Versionen und neue Standardwahl ohne manuelles Opt-in. Installations-/Updateweg und tatsächlich installierter Kundenstand getrennt nachweisen; unbekannte Installation bleibt unbekannt. |
 | Umstellung und Rückfall | Reviewbarer Standardwechsel mit Cache-/Versionsverhalten, geprüftem Rückfall und befristetem `?design=alt`-Notausgang (eine Woche gemäß V10); keine dauerhafte Opt-in-Endlösung. Veröffentlichung erst nach Melihs Freigabe. |
 
 Aktuelle Ausgangslage: `dashboard.html:8–11` aktiviert Neu nur über `?design=neu` oder gespeichertes `px-design=neu`. Bestehende Kunden ohne diese Wahl bleiben derzeit Alt. Dieser Entwicklungszustand erfüllt das Endziel noch nicht.
