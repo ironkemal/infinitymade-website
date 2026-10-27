@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
- "dateien": 501,
- "funktionen": 3998,
+ "dateien": 502,
+ "funktionen": 4001,
  "module": [
   "abrechnung",
   "anamnese",
@@ -29645,6 +29645,73 @@
    "uiPfad": []
   },
   {
+   "name": "arbeitsfensterFuerTag",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/arbeitsfenster.js",
+   "start": 20,
+   "end": 60,
+   "lines": 41,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push",
+    "toMinutes"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "toMinutes",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/arbeitsfenster.js",
+   "start": 43,
+   "end": 46,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "arbeitsfensterFuerTag"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zieheIntervalleAb",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/arbeitsfenster.js",
+   "start": 73,
+   "end": 85,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "normalizeArztName",
    "kind": "function",
    "lang": "js",
@@ -30405,6 +30472,7 @@
     "aktualisieren",
     "anzeigeWert",
     "anzeigeZeilen",
+    "arbeitsfensterFuerTag",
     "auswahlHinweis",
     "auswahlStand",
     "autoSelectDg",
@@ -30700,6 +30768,7 @@
     "zeilenAusBehandlungen",
     "zeilenAusDta",
     "zerlege",
+    "zieheIntervalleAb",
     "ziffern",
     "zuErledigen",
     "zusammenfassung",
@@ -39018,6 +39087,7 @@
     "utcToBerlinMinutes"
    ],
    "calledBy": [
+    "(datei) api-backend/lib/arbeitsfenster.js",
     "(datei) api-backend/server.js",
     "createBookingsFromRequestFactory",
     "slotIstFrei"
