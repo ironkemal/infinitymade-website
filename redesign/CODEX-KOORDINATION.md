@@ -961,3 +961,41 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Detektor/Quellprüfung belegen keine gerenderte Kontrast-/Responsive-/
   Tastatur-/Touch-Abnahme. Keine Produktänderung, kein Browser/Server/Netz.
   Neues Handlungsbedarfspaket weiter ohne Datei-ACK, daher nicht begonnen.
+
+## KOMPAKT-WIEDERAUFNAHME 27.10.2026
+
+- **Ziel:** Dashboard vollständig nach PLAN-V2 bis V9; danach Neu als Standard
+  für alle einschließlich Bestandskunden reviewbar vorbereiten. Tatsächliche
+  Umschaltung/main-Push/Deploy weiterhin nur ausdrückliches Veröffentlichungs-GO;
+  keine Live-DB, keine Secrets/realen Patientendaten.
+- **Eigener Root:** /Users/melihdonmez/.t3/worktrees/infinitymade-website/
+  redesign-praxura-codex-backend; Branch redesign/praxura-codex-backend.
+  Prüf-HEAD vor diesem Notizcommit 07fa516a; vorher sauber. Nur diese Notiz
+  geändert. Nach Wiederaufnahme git status/log neu lesen.
+- **Integrator:** Thread41dfb91a-9993-4695-a4df-427735fa1a15, PRIMARY
+  redesign-praxura-design, zuletzt bcc45e08. Aktuell fremd dirty: dashboard.html,
+  dashboard.js, STATUS und neu tools/redesign-altfeed.test.js. Nicht anfassen.
+- **Besitz:** Codex nur zugeteilte Backenddateien Statistik/Berlin/B03/B04,
+  lib/startseite/{geld,finanzadapter,mahnungen,abrechnung,verfuegbarkeit} samt
+  Tests und lib/arbeitsfenster samt Test. Backendpakete integriert.
+  Frontend/server.js/PLAN/STATUS/INDEX/Referenzen/18081 beim Integrator.
+  Handlungsbedarf-Modul nur angeboten, Datei-ACK weiterhin nicht belegt.
+- **Modelle:** Sol Standard für Plan/Bau/Review, Luna kleine Zuarbeit; Astra
+  nur ausdrücklicher Wunsch. Keine neuen Agenten wegen Kompakt-Koordination.
+- **Befunde:** P1 Altfeed-Mitarbeiterfinanzread jetzt beim Integrator V6.F07
+  in TESTEN (dessen Meldung10/10, eigene Nachprüfung fertigen Commits offen).
+  P2 Finanzrequest-Barriere und Anfragen-Unknown als V6.F08 weiterhin offen.
+  Checkboxname in cffbe0ee laut Commit korrigiert; noch nicht nachgeprüft.
+- **Nachweise:** Eigene Backendfullsuite zuletzt2154/1993/318 grün,0skip;
+  unabhängige B08-Integrationsprobe d86fe7c5 145+2 grün, kein Live-Nachweis.
+  F06-Komponentensnapshot c7fcf75e7/7; vollständiger Frontendauftrag neu unter
+  PRIMARY redesign/V6F06-PRUEFAUFTRAG.md, noch lesen/gezielt bearbeiten.
+  V8.02 499dbf5d nur Quellreview+Detektor[], keine eigene Browserabnahme.
+- **Nächster Schritt:** aktuelle Git-/Thread-/STATUS-Stände lesen, fertigen
+  V6.F07-Commit abwarten; F06-Prüfauftrag lesen, Doppelarbeit ausschließen;
+  angebotenen Handlungsbedarf nur nach ACK bauen. Keine breite Wiederholungs-
+  suite ohne neuen Diff. Keine Status-only-Schleifen.
+- **Kontextlimit:** Melih meldet Codex-Appserver250000/total global geprüft.
+  Rückwirkung auf laufende Sitzung ungeklärt; niedrigere Modellgrenze gilt.
+  Claude/Gemini nicht als technisch konfiguriert behaupten. Kein History-/
+  Dateilöschen; Freigaben/Dateigrenzen nach Komprimierung erhalten.
