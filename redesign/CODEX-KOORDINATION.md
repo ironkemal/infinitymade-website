@@ -831,3 +831,25 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Globaler Rollback darf alte persistierte Vorschauwerte nicht versehentlich
   weiter auf neu halten. Integrator bereitet exakten Release-/Rückfall-Diff
   reviewbar vor; tatsächliche Umschaltung/Veröffentlichung weiterhin separat GO.
+
+## V6.F06 vorläufige Komponentenprüfung ohne Frontendänderung
+
+- Fertiger Commit noch nicht vorhanden, PRIMARY weiter `d86fe7c5` mit fremdem
+  uncommittetem V6.F06-Diff. Nur zwei neue Komponenten-/Testdateien einmalig in
+  temporären Ordner kopiert; keine fremde Datei verändert oder aufgenommen.
+- `module/startseite-verfuegbarkeit.js` plus Test: 7/7 grün. Quellinhalt nach
+  Lauf bytegleich; SHA256 Komponente
+  `16537013378ca579ace4da3aed682ce973218e682c3063b5f1d95d60260e91ea`.
+  Ergebnis ist vorläufig an diesen Inhalt gebunden, keine bewegliche
+  Gesamtänderung und kein noch nicht vorhandener Commit abgenommen.
+- Geprüft: belegte freie Minuten statt Slotzählung, separate Gruppenreststarts,
+  Employee-Renderer verwirft fremde Nutzerdaten, Woche Unknown ohne Nullquote,
+  echter Leerzustand 0/0 ohne Quote, Escape von Behandler-/Leistungslabels,
+  geschützte Fetch-Pfade und Timeout ohne Blockade anderer Karte.
+- Zustands-/Quellcode gezielt gelesen: offene Startlisten werden vor Neuaufbau
+  gespeichert und wieder geöffnet; Rollen-/Nutzer-Scope schützt neue Karten;
+  parallele Tag-/Wochenantworten behalten eigenen Lade-/Fehlerzustand.
+  Kein neu belegter Blocker in dieser Teilprüfung.
+- Offen bleiben fertiger Integrationscommit, echte Fokus-/Tastatur-/Layout-
+  und Alt-/Neu-Browsernachweise; diese Pure-Tests beweisen keine vollständige
+  V6-/27-Bereiche-/Bestandskunden-/Standardumschaltungsabnahme.
