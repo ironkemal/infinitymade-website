@@ -3702,7 +3702,7 @@
                 <div><input class="m13-v m13-center" id="rzAnzahl" type="number" min="1" placeholder=""></div>
               </div>
               <div class="m13-hmline">
-                <div><div class="m13-cap">Ergänzendes Heilmittel</div><input class="m13-v" id="rzHmErg" placeholder=""></div>
+                <div><div class="m13-cap">Ergänzendes Heilmittel</div><input class="m13-v" id="rzHmErg" autocomplete="off" placeholder=""><input type="hidden" id="rzHmErgPosition" /></div>
                 <div><input class="m13-v m13-center" id="rzAnzahlErg" type="number" min="1" placeholder=""></div>
               </div>
             </div>
@@ -3719,6 +3719,7 @@
                   </select>
                 </div>
                 <label class="m13-th"><input type="checkbox" id="rzDringend" class="m13-cbx"><span class="m13-chk"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
+                <label class="m13-th" title="Nur wenn der Arzt Doppelbehandlung ausdrücklich verordnet hat: ein Termin zählt zwei Einheiten."><input type="checkbox" id="rzDoppel" class="m13-cbx"><span class="m13-chk"></span> Doppelbehandlung</label>
               </div>
               <div style="display:flex;flex-direction:column;gap:12px;">
                 <div class="m13-optline">
@@ -3726,6 +3727,11 @@
                   <label class="m13-th"><span class="m13-chk" data-hb="ja"></span> ja</label>
                   <label class="m13-th"><span class="m13-chk" data-hb="nein"></span> nein</label>
                   <input type="checkbox" id="rzHausbesuch" style="display:none;">
+                  <select class="form-select m13-inline-sel" id="rzHbOrt" title="Ort des Hausbesuchs — bestimmt die Pauschale">
+                    <option value="">Wohnung</option>
+                    <option value="soziale_einrichtung">Heim / soziale Einrichtung</option>
+                    <option value="tagespflege_kurzzeit_betreut">Tages-/Kurzzeitpflege, betreutes Wohnen</option>
+                  </select>
                 </div>
                 <div class="m13-freq">
                   <span class="m13-cap" style="white-space:nowrap;">Therapie&shy;frequenz</span>
@@ -5875,7 +5881,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261022dv"></script>
+  <script type="module" src="dashboard.js?v=20261027p"></script>
 </body>
 
 </html>

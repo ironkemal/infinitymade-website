@@ -2685,6 +2685,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         heilmittel: rezept.heilmittel || null,
         ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
         ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
+        // Physio-Zusatzpositionen (0089): nur gueltige Werte, sonst NULL — CHECKs in der DB.
+        ergaenzend_position: /^[X0-9][0-9]{4}$/.test(rezept.ergaenzend_position || '') ? rezept.ergaenzend_position : null,
+        hausbesuch_ort: rezept.hausbesuch && ['haeuslich', 'soziale_einrichtung', 'tagespflege_kurzzeit_betreut'].includes(rezept.hausbesuch_ort) ? rezept.hausbesuch_ort : null,
+        doppelbehandlung: !!rezept.doppelbehandlung,
         heilmittel_feld_text: rezept.heilmittel_feld_text || null,
         heilmittel_position: heilmittelPosition,
         anzahl_einheiten: rezept.anzahl_einheiten ?? null,
@@ -2922,6 +2926,10 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       heilmittel: rezept.heilmittel || null,
       ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
       ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
+      // Physio-Zusatzpositionen (0089): nur gueltige Werte, sonst NULL — CHECKs in der DB.
+      ergaenzend_position: /^[X0-9][0-9]{4}$/.test(rezept.ergaenzend_position || '') ? rezept.ergaenzend_position : null,
+      hausbesuch_ort: rezept.hausbesuch && ['haeuslich', 'soziale_einrichtung', 'tagespflege_kurzzeit_betreut'].includes(rezept.hausbesuch_ort) ? rezept.hausbesuch_ort : null,
+      doppelbehandlung: !!rezept.doppelbehandlung,
       heilmittel_feld_text: rezept.heilmittel_feld_text || null,
       heilmittel_position: heilmittelPosition,
       anzahl_einheiten: rezept.anzahl_einheiten ?? null,

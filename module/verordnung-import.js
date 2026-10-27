@@ -29,8 +29,8 @@ import { behandlungsbeginnFrist } from './heilmittel-fristen.js?v=20261004m113';
 import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20260918';
-import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261006b';
-import { sendeAnServer } from './verordnung-maske.js?v=20261021v';
+import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261027p';
+import { sendeAnServer } from './verordnung-maske.js?v=20261027p';
 import { alsBerlinDatum } from './berlin-datum.js';
 
 // ── Spalten ─────────────────────────────────────────────────────────────

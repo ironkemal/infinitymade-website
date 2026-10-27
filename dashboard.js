@@ -63,7 +63,7 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261021v'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261027p'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -108,6 +108,7 @@ import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDa
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { migrierePhysioAltlast } from './module/physio-katalog-migration.js?v=20261026p';
+import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -6486,9 +6487,8 @@ async function markPrescriptionSession(bookingId, status, notes, terminStart) {
       .update(patch).eq('booking_id', bookingId)
       .select('prescription_id');
     if (error) { console.warn('[session update]', error); return; }
-    // Fortschritt + §302-Weiche: module/sitzungsfortschritt.js (Warum dort: leere
-    // Platzhalter-Sitzungen hielten das Rezept sonst ewig von 'bereit' fern).
-    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) await pruefeVerordnungsfortschritt(supabase, rxId);
+    // Ergänzendes Heilmittel mitbuchen (module/ergaenzend-mitbuchen.js), dann Fortschritt + §302-Weiche (module/sitzungsfortschritt.js).
+    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) { if (status === 'done') await bucheErgaenzendMit(supabase, rxId, bookingId); await pruefeVerordnungsfortschritt(supabase, rxId); }
   } catch (e) {
     console.warn('[markPrescriptionSession]', e);
   }
@@ -13730,7 +13730,7 @@ const DIAGNOSE_FIELDS = {
 // Bei Auswahl wird zusätzlich das versteckte Positionsnummer-Feld gesetzt;
 // vorher musste `aiMatchHeilmittel` den getippten Text erraten.
 const HEILMITTEL_FIELDS = {
-  rzHm:  { posField: 'rzHmPosition' },
+  rzHm:  { posField: 'rzHmPosition' }, rzHmErg: { posField: 'rzHmErgPosition' }, // ergänzend: Position für den §302-Mapper (0089)
 };
 
 document.addEventListener('focusin', (e) => {
@@ -13867,13 +13867,13 @@ async function openRezeptModal(phone, leadId) {
   g('rzDringend').checked = false;
   g('rzHausbesuch').checked = false;
   g('rzBlanko').checked = false;
-  g('rzLhbBvb').checked = false;
+  g('rzLhbBvb').checked = false; { const d = g('rzDoppel'); if (d) d.checked = false; }
   g('rzZuzahlungBefreit').checked = false;
   g('rzBerichtAngefordert').checked = false;
   g('rzBerichtStatus').value = 'offen';
   // Neue Muster-13-Felder
   ['rzPatKasse','rzKkNum','rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',
-   'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzIcd2','rzDiagnoseText','rzHmErg','rzAnzahlErg',
+   'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzIcd2','rzDiagnoseText','rzHmErg','rzHmErgPosition','rzHbOrt','rzAnzahlErg',
    'rzHinweise','rzIkLE','rzPodoNagel','rzPodoAnlass'].forEach(k => { const el = g(k); if (el) el.value = ''; });
   g('rzUnterschrift').checked = false;
   // Therapiebereich nach Praxis-Sektor vorbelegen (spart Klicks)

@@ -42,7 +42,7 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261027p';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
@@ -491,6 +491,9 @@ export function fuelleMuster13(rx, opt = {}) {
   setz('rzAnzahl', rx.vorrangig_einheiten || rx.anzahl_einheiten || '');
   setz('rzHmErg', rx.ergaenzendes_heilmittel || '');
   setz('rzAnzahlErg', rx.ergaenzend_einheiten || '');
+  setz('rzHmErgPosition', rx.ergaenzend_position || '');
+  setz('rzHbOrt', rx.hausbesuch_ort === 'haeuslich' ? '' : (rx.hausbesuch_ort || ''));
+  haken('rzDoppel', rx.doppelbehandlung);
   setz('rzHinweise', rx.hinweise || '');
   _bruecke?.setFrequenz?.('rzFreq', rx.frequenz || '');
   _bruecke?.setTherapiebereich?.(rx.therapie_bereich || '');
@@ -738,6 +741,11 @@ export function nutzlastAusMaske(v) {
     diagnose_freitext: txt('rzDiagnoseText') || null,
     ergaenzendes_heilmittel: txt('rzHmErg') || null,
     ergaenzend_einheiten: parseInt(txt('rzAnzahlErg'), 10) || null,
+    // Physio-Zusatzpositionen (0089). Position nur, solange das Heilmittel dasteht;
+    // Ort nur bei „Hausbesuch: ja" — sonst rechnete der Mapper etwas Gelöschtes ab.
+    ergaenzend_position: txt('rzHmErg') ? (txt('rzHmErgPosition') || null) : null,
+    hausbesuch_ort: an('rzHausbesuch') ? (txt('rzHbOrt') || 'haeuslich') : null,
+    doppelbehandlung: an('rzDoppel'),
     therapie_bereich: txt('rzTherapieBereich') || null,
     hinweise: txt('rzHinweise') || null,
     unterschrift_vorhanden: an('rzUnterschrift'),
