@@ -1,0 +1,19 @@
+{
+  "baseCommit": "53e08f05e5ad70716bc8c9eb719f16a50824c3b1",
+  "state": "REVIEW_ONLY_NOT_APPLIED",
+  "htmlSha256": {
+    "base": "42197c90617220050b80c8e89ab4be25a40dd52b73394ab3b7aa4eb3c503b2bb",
+    "release": "38957d52dfdf498a74a9290a7063e48cd2e8901b59ffa1aabf01720f10da9d45",
+    "rollback": "2239768558c3568b1ef48fecf79fa34ac83ad525a3f4e5b32f743e4356823289"
+  },
+  "protectedFiles": {
+    "dashboard.js": "e730f257bb6ea858b9b8fe00cc1e170cbe88a1c60ba21c54292b420b26d50648",
+    "module/neu-start.js": "27ced46fdd6c083e104eb5fe51e85a106d8ded58ecc0596b4a1faa5b3c10851a",
+    "module/shell-neu.js": "77d1ef64f7c98ebe02b6068b04b8157d3efcc791aaa95a7e4bf59098cba8ee3f",
+    "module/startseite-neu.js": "6ffae13893a650013a7781e5205b377fce7a903c93a4ce1ef3a149270f1781a0",
+    "design/shell.css": "93c74742c5e622c11f4bddc501b9a7d320613846339967992ee5e6418ce778ba",
+    "design/startseite.css": "8c51d92e499cc6821667727e547bfec8bae53740a87a36362b06385a5bbb444a",
+    "design/seiten.css": "7629d9bf497b566924fe03363e20ac0c5744f9a0f3fad30ff1b1ad700a4817b4",
+    "design/kalender.css": "d43ff6532476e1d98894e40ab2bc9621fb3b0c4134673e2d0cf7c982644b52b8"
+  }
+}

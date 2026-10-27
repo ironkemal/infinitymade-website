@@ -1,0 +1,17 @@
+--- a/dashboard.html
++++ b/dashboard.html
+@@ -5,10 +5,10 @@
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <!-- Theme: apply saved dark mode before paint to avoid flash of light theme.
+-       Design-Schalter (Redesign 2026-10, redesign/AUFTRAG.md 4.2): ?design=neu merkt sich das
+-       neue Design (localStorage px-design) und setzt <html data-design="neu">, ?design=alt löscht
+-       es. Ohne Schalter bleibt alles wie bisher; praxura-design.css wirkt nur unter dem Attribut. -->
+-  <script>(function(){var h=document.documentElement;try{if(localStorage.getItem('im-theme')==='dark'){h.setAttribute('data-theme','dark');}}catch(e){}var d=null;try{d=new URLSearchParams(location.search).get('design');}catch(e){}var neu=d==='neu';try{if(d==='neu'){localStorage.setItem('px-design','neu');}else if(d==='alt'){localStorage.removeItem('px-design');}else if(localStorage.getItem('px-design')==='neu'){neu=true;}}catch(e){}if(neu){h.setAttribute('data-design','neu');}})();</script>
++       V10-Kandidat: Neu ist Standard, unabhängig von px-design und verfügbaren Storage-Rechten.
++       Nur ?design=alt aktiviert den befristeten Notausgang; Theme bleibt erhalten.
++       Keine Speicherbereinigung oder gespeicherte Designwahl ist Voraussetzung. -->
++  <script>(function(){var h=document.documentElement;try{if(localStorage.getItem('im-theme')==='dark'){h.setAttribute('data-theme','dark');}}catch(e){}var d=null;try{d=new URLSearchParams(location.search).get('design');}catch(e){}if(d!=='alt'){h.setAttribute('data-design','neu');}else{h.removeAttribute('data-design');}})();</script>
+   <!-- Sentry error tracking (loader + custom init with PII scrub) -->
+   <script src="/sentry-init.js?v=20260917"></script>
+   <title>Dashboard – Praxura</title>
