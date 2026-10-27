@@ -1025,3 +1025,37 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   sind überholt. Nur versionierter reiner Rechner, vorhandene Fristen-/
   Pausehelfer wiederverwenden, je Quelle Vollständigkeit/Unknown; Loader/UI/
   Rechte/INDEX/STATUS/Integration bleiben Integrator. Noch kein Produktbau.
+
+## Handlungsbedarf: reiner Rechner v1, 27.10.2026
+
+- ACK50f17d5b im PRIMARY-STATUS frisch verifiziert; exklusiv nur neue
+  module/startseite-handlungsbedarf.js und .test.js. Loader/UI/Auth/Queries/
+  gemeinsame Fristenhelfer/INDEX/STATUS unberührt. Eigene Basis74b4ed7f.
+- Vorberatung Funktionsmeister und gkv-302 abgeschlossen; Podologieperspektive
+  im Fachgutachten selbst angewandt, keine unabhängige Doppelabnahme behauptet.
+  Native Sol, Registry/Katalog frisch; agy-context lokal lieferte irrelevante
+  Teilquellen, daher gezielt vorhandene Helfer/INDEX/PLAN gelesen. Kein externer
+  agy-/agent-router-Provideraufruf; native Sol-Beratung/Review separat genutzt.
+- berechneHandlungsbedarf({version:1,heute,verordnungen}) kapselt normalisierte
+  Quellen mit status/vollstaendig/daten. Kategorieweise bekanntAnzahl und IDs;
+  anzahl:null bei Unknown, feste Gründe. Keine Gesamtfallzahl aus mehrfachen
+  Unknown-Kategorien ableiten. Entwarnung nur alle Kategorien bekannt0.
+- Vorhandene 14/28-Tage-Frist, Podo-Pause>84 und7TageWarnvorlauf wiederverwendet;
+  heutige Behandlung ausdrücklich berücksichtigt. Kein Nichtbeginn aus fehlender
+  Historie, kein fehlender Folgetermin ohne belegten Restbedarf/Terminquelle.
+  Geplanter Ersttermin nach Frist ist kein erfolgter Beginn; vor Fristablauf
+  entsteht daraus im engen Umfang keine eigene Aufgabe.
+- Rot: Modul fehlt. Danach Testfixture korrigiert:21.10. ist8 statt7Tage vor
+  29.10.; Grenze22.10. geprüft,21.10. separat als außerhalb abgesichert. Eine
+  Implementierungsrunde, ungültiger Stornovermerk zusätzlich Unknown.
+- 43neue+10bestehendeHelfertests53/53 grün. Vollsuite auf diesem Stand
+  2197+1993+318=4508pass,0fail,0skip; Log
+  /var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-handlungsbedarf-npm-guo906bk.log.
+  Danach nur vier zusätzliche Kalendergrenztests (DST/Schaltjahr/Jahreswechsel):
+  neuer Teststand47/47 unter Kiritimati und NewYork grün.
+- Unabhängiger Sol-Review: kein konkreter Blocker,43/43 lokal und Auckland,
+  20zusätzlicheFristproben über5TZ grün; neue vier Tests nicht erneut unabhängig
+  geprüft, Produktcode unverändert. Syntaxprüfungen sauber. Keine Testabschwächung.
+- Zweck/erste Nutzung an Funktionsmeister gemeldet: Startseite und spätere
+  Verordnungsliste gemeinsam berechnen; bisher ausschließlich synthetische Tests.
+  Karte erzeugt Integrator im Integrationscommit. Keine Live-/UI-/Loaderabnahme.
