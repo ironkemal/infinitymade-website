@@ -2325,3 +2325,18 @@
   `anzahl: 1` aus (`abrechnung.routes.js:574`), Builder fasst nicht zusammen (`dta/builder.js:502-526`);
   Tages-Höchstzahl-Prüfung `preflight.js:603-614` kennt nur 78010/78020/78610 (Podologie).
 - **Kapsam:** Physiotherapie, Ergotherapie; Logopädie siehe Regel „SSSST … Doppelbehandlung" oben.
+
+### Physio: Hausbesuch — ZHE-Kennzeichen folgt der Verordnung, X9950/X9951/X9922 folgt dem Behandlungstag (Ergänzung 27.10.2026, gkv-302)
+- **Kural:** ZHE „Hausbesuch = 1" wird gesetzt, sobald der Verordner „Hausbesuch" angekreuzt hat — unabhängig davon,
+  ob/wie oft tatsächlich ein HB stattfand. Die HB-Pauschale (X9950/X9951/X9922) wird dagegen **nur für Tage
+  abgerechnet, an denen der HB tatsächlich durchgeführt wurde** (Durchführung je Datum auf dem Verordnungsblatt zu
+  bestätigen). Tag in der Praxis trotz HB-„Ja" → keine Pauschale an diesem Tag. HB-„Ja" ohne einen einzigen HB →
+  keine Pauschale, Kennzeichen trotzdem „1".
+- **Kaynak:** Anlage 1 TP5 V21 § 5.5.3.3 ZHE (`Anlage_1_TP5_V21_20260115.txt:3390-3393`) · Physio Anlage 2 ab
+  01.01.2026 B (4)/(5) (`20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.txt:423-435`)
+- **Geçerlilik:** TA V21 ab 01.10.2025 · Anlage 2 ab 01.01.2026
+- **Kodda:** Kennzeichen `dta/builder.js:540` (aus `rx.hausbesuch`); Tages-Pauschale uygulanmamış (Migration 0089 geplant,
+  Quelle Tag = `bookings.hausbesuch`)
+- **Nicht verifiziert:** ob eine Kasse absetzt, wenn HB verordnet, aber nie durchgeführt wurde (stünde im
+  Physio-Rahmenvertrag § 125 — nicht im Archiv).
+- **Kapsam:** Physiotherapie (Ergo/Logo analog prüfen; Podologie siehe 79933/79934-Regel)
