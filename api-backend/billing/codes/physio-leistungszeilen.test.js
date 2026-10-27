@@ -48,3 +48,8 @@ test('Hausbesuch-Termin, Verordnung ohne „Hausbesuch: ja" → keine Pauschale'
   const z = physioLeistungszeilen({ ...rx, hausbesuch: false }, [s('1', { bookings: { hausbesuch: true } })]);
   assert.equal(z.some(x => x.art === 'hausbesuch'), false);
 });
+
+test('Doppelbehandlung bei ungerader Menge: letzte Sitzung nur Anzahl 1', () => {
+  const z = physioLeistungszeilen({ ...rx, anzahl_einheiten: 7, doppelbehandlung: true }, [s('1'), s('2'), s('3'), s('4')]);
+  assert.deepEqual(z.map(x => x.anzahl), [2, 2, 2, 1]);
+});

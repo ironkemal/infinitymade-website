@@ -83,7 +83,18 @@ export function fehlendeSitzungsnummern(vorhandene, anzahlEinheiten) {
  */
 export const ABGESCHLOSSEN = ['completed', 'billed', 'cancelled'];
 
-export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0 }) {
+/**
+ * Wie viele Termine braucht eine Verordnung? Bei Doppelbehandlung zählt ein
+ * Termin zwei verordnete Einheiten (HeilM-RL §12 Abs. 8 S. 6, gkv-302 27.10.2026):
+ * 6 Einheiten = 3 Termine. Ungerade Menge → der letzte Termin ist einfach.
+ */
+export function terminZiel(anzahlEinheiten, doppelbehandlung = false) {
+  const n = Number.parseInt(anzahlEinheiten, 10);
+  if (!Number.isFinite(n) || n <= 0) return anzahlEinheiten;
+  return doppelbehandlung ? Math.ceil(n / 2) : n;
+}
+
+export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false }) {
   if (!supabase || !prescriptionId) return { ergaenzt: 0, fehler: null };
   if (status && ABGESCHLOSSEN.includes(status)) return { ergaenzt: 0, fehler: null };
 
@@ -93,7 +104,7 @@ export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinhe
     .eq('prescription_id', prescriptionId);
   if (leseFehler) return { ergaenzt: 0, fehler: leseFehler.message };
 
-  const fehlt = fehlendeSitzungsnummern(vorhandene, anzahlEinheiten);
+  const fehlt = fehlendeSitzungsnummern(vorhandene, terminZiel(anzahlEinheiten, doppelbehandlung));
   if (!fehlt.length) return { ergaenzt: 0, fehler: null };
 
   const zeilen = fehlt.map(n => ({

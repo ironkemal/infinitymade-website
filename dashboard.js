@@ -32,7 +32,7 @@ import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAb
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261021f';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
@@ -59,7 +59,7 @@ import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } 
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261021v'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261021v';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
-import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261026p';
+import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261027p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
@@ -139,7 +139,7 @@ import {
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
-import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
+import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20261027p';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
@@ -5503,7 +5503,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
-    .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz,therapie_bereich')
+    .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz,therapie_bereich,doppelbehandlung')
     .eq('id', prescriptionId)
     .maybeSingle();
   if (!rx) return zeichneSitzungenLeer('ladefehler', { t });
@@ -5515,7 +5515,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   // lassen sich nicht auf den Kalender ziehen. Begründung und Fundstelle:
   // module/sitzung-abgleich.js.
   const abgleich = await gleicheSitzungenAb({
-    supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status,
+    supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status, doppelbehandlung: rx.doppelbehandlung,
   });
   if (abgleich.fehler) console.warn('[sitzung-abgleich]', abgleich.fehler);
   // Wurden Zeilen ergänzt, zeigen die übrigen Bereiche (Verordnungskarten,
@@ -6517,7 +6517,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     // Fetch prescription cap
     const { data: rx } = await supabase
       .from('prescriptions')
-      .select('anzahl_einheiten, heilmittel, status')
+      .select('anzahl_einheiten, heilmittel, status, doppelbehandlung')
       .eq('id', prescriptionId)
       .maybeSingle();
 
@@ -6526,7 +6526,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     // je *Termin* an — und die Verordnung hatte am Ende so viele Sitzungen, wie zufällig gebucht
     // wurden, statt so viele wie verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
     const _abgl = await gleicheSitzungenAb({
-      supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status,
+      supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status, doppelbehandlung: rx?.doppelbehandlung,
     });
     if (_abgl.fehler) console.warn('[sitzung-abgleich/link]', _abgl.fehler);
 
@@ -14028,7 +14028,7 @@ async function saveRezept() {
     // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
     // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
     if (!entwurf && fuehrtSitzungsbuch(getSector())) {
-      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
+      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!g('rzDoppel')?.checked });
     }
 
     const nw = await ladeLhbNachweisHoch(supabase, {

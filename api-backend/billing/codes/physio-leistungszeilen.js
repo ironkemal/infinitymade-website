@@ -47,9 +47,16 @@ export function physioLeistungszeilen(rx, sessions) {
   const hbOrt = HAUSBESUCH_POSITION[rx?.hausbesuch_ort] || HAUSBESUCH_POSITION.haeuslich;
   let ergAnzahl = 0;
 
+  // Doppelbehandlung bei ungerader Menge: nie mehr Einheiten abrechnen als verordnet
+  // (7 Einheiten → 2+2+2+1). gkv-302 27.10.2026: Höchstmenge wächst durch Doppel nicht.
+  const verordnet = Number(rx?.vorrangig_einheiten) || Number(rx?.anzahl_einheiten) || Infinity;
+  let verbraucht = 0;
+
   for (const s of sessions || []) {
     const basis = { sessionId: s.id, done_at: s.done_at || null, session: s };
-    zeilen.push({ ...basis, id: s.id, code: vorrangig, anzahl: anzahlVorrangig, art: 'vorrangig' });
+    const anzahl = Math.max(1, Math.min(anzahlVorrangig, verordnet - verbraucht));
+    verbraucht += anzahl;
+    zeilen.push({ ...basis, id: s.id, code: vorrangig, anzahl, art: 'vorrangig' });
 
     if (s.ergaenzend_erbracht) {
       if (!rx?.ergaenzend_position) {

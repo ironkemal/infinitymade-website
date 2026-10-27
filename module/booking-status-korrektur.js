@@ -1,6 +1,6 @@
 import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { emit } from './signal.js?v=20260813';
-import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20261026p';
+import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20261027p';
 
 /**
  * booking-status-korrektur.js — nachträgliche bookings.status-Korrektur

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
  "dateien": 486,
- "funktionen": 3865,
+ "funktionen": 3866,
  "module": [
   "abrechnung",
   "anamnese",
@@ -16119,8 +16119,8 @@
    "lang": "js",
    "file": "api-backend/billing/codes/physio-leistungszeilen.js",
    "start": 42,
-   "end": 73,
-   "lines": 32,
+   "end": 80,
+   "lines": 39,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -16129,6 +16129,7 @@
    "storage": [],
    "calls": [
     "fehler",
+    "min",
     "push"
    ],
    "calledBy": [
@@ -52150,6 +52151,7 @@
     "parseOriginalDtaMessage",
     "parseSeriesFeedback",
     "performRefresh",
+    "physioLeistungszeilen",
     "positioniertPopover",
     "preflight",
     "pruefeTrustAnchorFrische",
@@ -72251,6 +72253,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -72415,6 +72418,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -72981,6 +72985,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -73200,6 +73205,7 @@
     "emit",
     "error",
     "fuehrtSitzungsbuch",
+    "g",
     "getOwnerId",
     "getSector",
     "gleicheSitzungenAb",
@@ -160637,6 +160643,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -161481,6 +161488,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -163019,6 +163027,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -163730,6 +163739,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -167730,12 +167740,77 @@
    ]
   },
   {
+   "name": "terminZiel",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/sitzung-abgleich.js",
+   "start": 91,
+   "end": 95,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "gleicheSitzungenAb",
+    "pruefeVerordnungsfortschritt",
+    "zaehler"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "gleicheSitzungenAb",
    "kind": "function",
    "lang": "js",
    "file": "module/sitzung-abgleich.js",
-   "start": 86,
-   "end": 112,
+   "start": 97,
+   "end": 123,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -167748,7 +167823,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "fehlendeSitzungsnummern"
+    "fehlendeSitzungsnummern",
+    "terminZiel"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -168145,8 +168221,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/sitzungsfortschritt.js",
-   "start": 84,
-   "end": 89,
+   "start": 86,
+   "end": 91,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -168209,8 +168285,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/sitzungsfortschritt.js",
-   "start": 109,
-   "end": 111,
+   "start": 111,
+   "end": 113,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -168273,9 +168349,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/sitzungsfortschritt.js",
-   "start": 128,
-   "end": 174,
-   "lines": 47,
+   "start": 130,
+   "end": 177,
+   "lines": 48,
    "spiegelHinweis": null,
    "tables": [
     "prescription_sessions",
@@ -168291,6 +168367,7 @@
     "all",
     "hauptbuchFuehrtStatus",
     "istFertigBehandelt",
+    "terminZiel",
     "zaehler"
    ],
    "calledBy": [
@@ -168305,9 +168382,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/sitzungsfortschritt.js",
-   "start": 131,
-   "end": 167,
-   "lines": 37,
+   "start": 133,
+   "end": 170,
+   "lines": 38,
    "spiegelHinweis": null,
    "tables": [
     "prescription_sessions",
@@ -168322,7 +168399,8 @@
    "calls": [
     "all",
     "hauptbuchFuehrtStatus",
-    "istFertigBehandelt"
+    "istFertigBehandelt",
+    "terminZiel"
    ],
    "calledBy": [
     "pruefeVerordnungsfortschritt",
@@ -179490,6 +179568,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -186461,6 +186540,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -187457,6 +187537,7 @@
     "nachweisVerwerfen",
     "oeffneAnlegenWahl",
     "openRezeptModal",
+    "saveRezept",
     "scan",
     "schliesseAnlegenWahl",
     "set",
@@ -216667,9 +216748,9 @@
       {
        "name": "pruefeVerordnungsfortschritt",
        "file": "module/sitzungsfortschritt.js",
-       "start": 128,
-       "end": 174,
-       "lines": 47,
+       "start": 130,
+       "end": 177,
+       "lines": 48,
        "writes": [
         "prescriptions:update"
        ],
@@ -216679,9 +216760,9 @@
       {
        "name": "zaehler",
        "file": "module/sitzungsfortschritt.js",
-       "start": 131,
-       "end": 167,
-       "lines": 37,
+       "start": 133,
+       "end": 170,
+       "lines": 38,
        "writes": [
         "prescriptions:update"
        ],
@@ -218955,8 +219036,8 @@
       {
        "name": "gleicheSitzungenAb",
        "file": "module/sitzung-abgleich.js",
-       "start": 86,
-       "end": 112,
+       "start": 97,
+       "end": 123,
        "lines": 27,
        "writes": [
         "prescription_sessions:upsert"
@@ -223348,7 +223429,7 @@
   {
    "name": "zaehler",
    "orte": [
-    "module/sitzungsfortschritt.js:131",
+    "module/sitzungsfortschritt.js:133",
     "widget/booking-widget.js:254"
    ],
    "aynalar": []

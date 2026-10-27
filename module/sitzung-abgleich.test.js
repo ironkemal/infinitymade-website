@@ -125,3 +125,21 @@ test('ohne prescriptionId passiert nichts', async () => {
   assert.equal(r.ergaenzt, 0);
   assert.equal(geschrieben.length, 0);
 });
+
+// ── Doppelbehandlung (0089, gkv-302 27.10.2026): ein Termin = zwei Einheiten ──
+
+import { terminZiel } from './sitzung-abgleich.js';
+
+test('terminZiel: Doppelbehandlung halbiert, ungerade rundet auf', () => {
+  assert.equal(terminZiel(6, false), 6);
+  assert.equal(terminZiel(6, true), 3);
+  assert.equal(terminZiel(7, true), 4);
+  assert.equal(terminZiel(null, true), null);
+});
+
+test('gleicheSitzungenAb legt bei Doppelbehandlung nur halb so viele Zeilen an', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ vorhandene: [] });
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', anzahlEinheiten: 6, doppelbehandlung: true });
+  assert.equal(r.ergaenzt, 3);
+  assert.deepEqual(geschrieben[0].zeilen.map(z => z.session_number), [1, 2, 3]);
+});

@@ -76,6 +76,8 @@
  * auseinander.
  */
 
+import { terminZiel } from './sitzung-abgleich.js?v=20261027p';
+
 /**
  * Die Regel allein — ohne Datenbank, damit sie prüfbar bleibt.
  *
@@ -136,7 +138,7 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   const [offenRes, erbrachtRes, rxRes] = await Promise.all([
     zaehler().not('booking_id', 'is', null).eq('status', 'planned'),
     zaehler().eq('status', 'done'),
-    supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich, status').eq('id', prescriptionId).maybeSingle(),
+    supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich, status, doppelbehandlung').eq('id', prescriptionId).maybeSingle(),
   ]);
 
   // Podologie: der Status gehört der Abrechnungsmaske, siehe hauptbuchFuehrtStatus().
@@ -144,7 +146,8 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
 
   const offen     = offenRes.count || 0;
   const erbracht  = erbrachtRes.count || 0;
-  const einheiten = rxRes.data?.anzahl_einheiten ?? null;
+  // Doppelbehandlung: ein Termin = zwei Einheiten → fertig nach halb so vielen Sitzungen.
+  const einheiten = terminZiel(rxRes.data?.anzahl_einheiten ?? null, rxRes.data?.doppelbehandlung);
   const fertig    = istFertigBehandelt({ offen, erbracht, einheiten });
 
   if (fertig) {

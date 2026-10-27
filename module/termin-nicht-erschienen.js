@@ -1,5 +1,5 @@
 import { emit } from './signal.js?v=20260813';
-import { pruefeVerordnungsfortschritt } from './sitzungsfortschritt.js?v=20260914';
+import { pruefeVerordnungsfortschritt } from './sitzungsfortschritt.js?v=20261027p';
 
 /**
  * termin-nicht-erschienen.js — „Patient nicht erschienen" an EINER Stelle.

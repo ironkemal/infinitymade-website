@@ -3,7 +3,7 @@
 > Üretim: 2026-10-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3865 fonksiyon** (3743 JS · 95 bash · 27 ps1) · 486 dosya · 42 sidebar modülü
+**3866 fonksiyon** (3744 JS · 95 bash · 27 ps1) · 486 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -86,8 +86,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `downloadDmrzForInvoice()` — [module/rechnung-dmrz.js:109](module/rechnung-dmrz.js#L109-L183) · 75 satır · prescriptions:update
 
 **Yol 8 — `pruefeVerordnungsfortschritt()`** · Ekran: _UI yolu çözülemedi_
-- `pruefeVerordnungsfortschritt()` — [module/sitzungsfortschritt.js:128](module/sitzungsfortschritt.js#L128-L174) · 47 satır · prescriptions:update
-- `zaehler()` — [module/sitzungsfortschritt.js:131](module/sitzungsfortschritt.js#L131-L167) · 37 satır · prescriptions:update
+- `pruefeVerordnungsfortschritt()` — [module/sitzungsfortschritt.js:130](module/sitzungsfortschritt.js#L130-L177) · 48 satır · prescriptions:update
+- `zaehler()` — [module/sitzungsfortschritt.js:133](module/sitzungsfortschritt.js#L133-L170) · 38 satır · prescriptions:update
 
 **Yol 9 — `speichereEinheiten()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `speichereEinheiten()` — [module/verordnung-einheiten.js:126](module/verordnung-einheiten.js#L126-L160) · 35 satır · prescriptions:update
@@ -241,7 +241,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 3 — `linkBookingsToPrescriptionSessions()`** · Ekran: _UI yolu çözülemedi_
 - `linkBookingsToPrescriptionSessions()` — [dashboard.js:6510](dashboard.js#L6510-L6600) · 91 satır · prescription_sessions:update, prescription_sessions:insert
-- `gleicheSitzungenAb()` — [module/sitzung-abgleich.js:86](module/sitzung-abgleich.js#L86-L112) · 27 satır · prescription_sessions:upsert
+- `gleicheSitzungenAb()` — [module/sitzung-abgleich.js:97](module/sitzung-abgleich.js#L97-L123) · 27 satır · prescription_sessions:upsert
 
 **Yol 4 — `markiereNichtErschienen()`** · Ekran: _UI yolu çözülemedi_
 - `korrigiereNoShow()` — [module/booking-status-korrektur.js:94](module/booking-status-korrektur.js#L94-L151) · 58 satır · prescription_sessions:update
