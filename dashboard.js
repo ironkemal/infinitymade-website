@@ -58,8 +58,8 @@ import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverz
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261021v'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261021v';
-import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261016six1';
-import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
+import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
+import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261026p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
@@ -70,10 +70,10 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261021v';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261021v';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022tb';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
-import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
+import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
@@ -105,8 +105,9 @@ import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereL
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021v';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261021w';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
+import { migrierePhysioAltlast } from './module/physio-katalog-migration.js?v=20261026p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -147,7 +148,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261016patient2';
-import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
+import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261022a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).
@@ -3732,7 +3733,7 @@ async function handleTerminStarten() {
       else b.fahrt_status = 'fahrt_return_pending';
     }
     if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
-    markPrescriptionSession(b.id, 'done');
+    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
     await renderBkActionFahrtState(b, true);
     return;
   }
@@ -3758,9 +3759,9 @@ async function handleTerminStarten() {
     cancelText: 'Ohne Notiz',
   });
   if (sessionNote === null) {
-    markPrescriptionSession(b.id, 'done', undefined);
+    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
   } else {
-    markPrescriptionSession(b.id, 'done', sessionNote || undefined);
+    markPrescriptionSession(b.id, 'done', sessionNote || undefined, b.start_time);
   }
 
   // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
@@ -6473,21 +6474,21 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   return true;
 }
 
-async function markPrescriptionSession(bookingId, status, notes) {
+async function markPrescriptionSession(bookingId, status, notes, terminStart) {
   if (!bookingId) return;
   try {
     const patch = { status };
-    if (status === 'done') patch.done_at = new Date().toISOString();
+    if (status === 'done') patch.done_at = terminStart || new Date().toISOString(); // Leistungsdatum = Termintag, nicht Klickzeit
     if (notes !== undefined && notes !== null) patch.notes = notes;
-    const { data: sess, error } = await supabase
+    // Kombi-Termin = mehrere Sitzungen je booking_id → kein maybeSingle() (PGRST116, Rezept nie 'bereit').
+    const { data: rows, error } = await supabase
       .from('prescription_sessions')
       .update(patch).eq('booking_id', bookingId)
-      .select('prescription_id').maybeSingle();
+      .select('prescription_id');
     if (error) { console.warn('[session update]', error); return; }
-    if (!sess?.prescription_id) return;
     // Fortschritt + §302-Weiche: module/sitzungsfortschritt.js (Warum dort: leere
     // Platzhalter-Sitzungen hielten das Rezept sonst ewig von 'bereit' fern).
-    await pruefeVerordnungsfortschritt(supabase, sess.prescription_id);
+    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) await pruefeVerordnungsfortschritt(supabase, rxId);
   } catch (e) {
     console.warn('[markPrescriptionSession]', e);
   }
@@ -8313,6 +8314,7 @@ async function loadServices({ throwOnError = false } = {}) {
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
   await migratePodologieLegacyServices();
+  if (getSector() === 'physiotherapy' || getSector() === 'praxis') await migrierePhysioAltlast({ supabase, services: servicesCache, katalog: GKV_LEISTUNGSKATALOG.physiotherapy });
 
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
   await autoSeedGkvServices();
@@ -8390,7 +8392,7 @@ const GKV_PRICES = {
 const GKV_LEISTUNGSKATALOG = {
   physiotherapy: [
     { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, price_min: 29.63, price_max: 29.63, locked: true },
-    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '20–30', price: 35.59, price_min: 35.59, price_max: 35.59, locked: true },
+    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '15–25', price: 35.59, price_min: 35.59, price_max: 35.59, locked: true },
     { code: 'X0201', kuerzel: 'MLD45', title: 'Manuelle Lymphdrainage 45 min',            duration: 45, price: 53.94, price_min: 53.94, price_max: 53.94, locked: true },
     { code: 'X0202', kuerzel: 'MLD60', title: 'Manuelle Lymphdrainage 60 min',            duration: 60, price: 71.94, price_min: 71.94, price_max: 71.94, locked: true },
     { code: 'X0507', kuerzel: 'KGG',   title: 'KG-Gerät (bis 3 Pat., parallel)',          duration: 60, price: 55.81, price_min: 55.81, price_max: 55.81, locked: true },
@@ -8398,7 +8400,7 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'X0711', kuerzel: 'VOJ',   title: 'KG-ZNS Vojta Erwachsene Einzel',          duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, price_min: 88.94, price_max: 88.94, locked: true },
-    { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, price_min: 33.75, price_max: 33.75, locked: true },
+    { code: 'X0106', kuerzel: 'KMT',   title: 'Klassische Massagetherapie (KMT)',         duration: 20, duration_label: '15–20', price: 21.63, price_min: 21.63, price_max: 21.63, locked: true }, // bis 26.10.2026 falsch X0102 (= Unterwasserdruckstrahlmassage), s. module/physio-katalog-migration.js
     { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
   // Podologie: echte Heilmittelpositionsnummern (HPNR), keine Platzhalter.
@@ -8464,19 +8466,10 @@ const GKV_LEISTUNGSKATALOG = {
       preise: { '2025-07-01': 13.60, '2026-07-01': 16.66 },
       hinweis: 'Bei mehreren Patienten in derselben Einrichtung. Nur mit „Hausbesuch = Ja" auf Muster 13.' },
   ],
-  ergotherapie: [
-    { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, price_min: 55.00, price_max: 55.00, locked: true },
-    { code: 'ET2', kuerzel: 'SP',  title: 'Sensomotorisch-perzeptive Behandlung',       duration: 60, price: 78.00, price_min: 78.00, price_max: 78.00, locked: true },
-    { code: 'ET3', kuerzel: 'HLT', title: 'Hirnleistungstraining / neuropsych. Üben',  duration: 60, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
-    { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, price_min: 95.00, price_max: 95.00, locked: true },
-  ],
-  logopaedie: [
-    { code: '09560', kuerzel: 'ST30', title: 'Sprachtherapie Einzel 30 Min', duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
-    { code: '09561', kuerzel: 'ST45', title: 'Sprachtherapie Einzel 45 Min', duration: 45, price: 72.00, price_min: 72.00, price_max: 72.00, locked: true },
-    { code: '09562', kuerzel: 'ST60', title: 'Sprachtherapie Einzel 60 Min', duration: 60, price: 92.00, price_min: 92.00, price_max: 92.00, locked: true },
-    { code: '09570', kuerzel: 'SLK',  title: 'Schlucktherapie',       duration: 45, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
-    { code: '09580', kuerzel: 'STM',  title: 'Stimmtherapie',         duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
-  ],
+  // Ergo/Logo: die alten Einträge (ET1–ET4, 09560–09580) waren erfundene Codes mit falschen Preisen
+  // (gkv-302, 26.10.2026: wissensbank/sitzungen/2026-10-26_katalog-physio-ergo-logo.md). Leer, bis der Bereich dran ist.
+  ergotherapie: [],
+  logopaedie: [],
 };
 GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
 
@@ -13524,7 +13517,7 @@ initArztRegister({
   resolveArzt: (input, quelle) => resolveArzt(input, quelle),
   bearbeiten:  (id) => editAerzte(id),
   loeschen:    (id) => deleteAerzte(id),
-  patientName: (lead) => displayName(lead),
+  patientName: (lead) => displayName(lead), druckKopf: () => ({ ...terminzettelPraxis(), logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '' }),
 });
 
 initAnfrageBearbeiten({
@@ -14619,7 +14612,7 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
-    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal });
+    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
@@ -15315,7 +15308,7 @@ async function showZaaErrors(abrechnungId) {
 let _forgeMod = null;
 async function loadForge() {
   if (_forgeMod) return _forgeMod;
-  const m = await import('./vendor/node-forge.js?v=20260813');
+  const m = await import('./vendor/node-forge.js?v=20261026');
   _forgeMod = m.default || m;
   return _forgeMod;
 }

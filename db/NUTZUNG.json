@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-10-21",
+ "erzeugt": "2026-10-22",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-10-21)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-21)",
+  "schema": "db/SCHEMA.sql (Stand 2026-10-22)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-22)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 96,
+ "anzahl": 97,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -89,6 +89,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -97,7 +98,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -150,6 +151,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -158,7 +160,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -227,6 +229,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -235,7 +238,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -295,6 +298,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -497,6 +501,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -505,7 +510,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -546,6 +551,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -624,6 +630,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -632,7 +639,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -671,6 +678,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -679,7 +687,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -733,6 +741,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -828,6 +837,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -836,7 +846,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -875,6 +885,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -883,7 +894,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -941,6 +952,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -989,6 +1001,13 @@
      "uiPfad": []
     },
     {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "load",
      "file": "module/rezept-patientenkopf.js",
      "start": 23,
@@ -1024,6 +1043,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1032,7 +1052,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1071,6 +1091,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1079,7 +1100,55 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "oeffneBerichtDialog",
+     "file": "module/therapiebericht.js",
+     "start": 136,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1118,10 +1187,12 @@
    ],
    "dateien": [
     "api-backend/lib/arzt-registry.js",
+    "api-backend/lib/therapiebericht.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/rechnung-dmrz.js",
-    "module/rezept-patientenkopf.js"
+    "module/rezept-patientenkopf.js",
+    "module/therapiebericht.js"
    ],
    "module": [
     "abrechnung",
@@ -1155,6 +1226,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -1223,6 +1295,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1231,7 +1304,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1283,6 +1356,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -1361,6 +1435,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1369,7 +1444,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1408,6 +1483,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1416,7 +1492,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1455,6 +1531,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1463,7 +1540,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -1502,6 +1579,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1510,7 +1588,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1551,6 +1629,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1559,7 +1638,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1601,6 +1680,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1609,7 +1689,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1653,6 +1733,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -1719,7 +1800,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3874,
+     "start": 3883,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1752,6 +1833,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1760,7 +1842,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1803,6 +1885,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -1950,6 +2033,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -1958,7 +2042,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -1999,6 +2083,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2007,7 +2092,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2051,6 +2136,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2059,7 +2145,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2102,6 +2188,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -2185,6 +2272,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2193,7 +2281,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2246,6 +2334,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2254,7 +2343,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -2301,6 +2390,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -2368,6 +2458,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2376,7 +2467,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2424,6 +2515,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2432,7 +2524,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -2474,6 +2566,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2482,7 +2575,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2525,6 +2618,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -2592,6 +2686,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2600,7 +2695,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2646,6 +2741,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2654,7 +2750,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -2708,6 +2804,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -2746,7 +2843,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4049,
+     "start": 4058,
      "module": [],
      "uiPfad": []
     }
@@ -2857,7 +2954,7 @@
     {
      "name": "_terminBearbeiten",
      "file": "module/verordnung-detail.js",
-     "start": 895,
+     "start": 900,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2890,6 +2987,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2898,7 +2996,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -2937,6 +3035,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -2945,7 +3044,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3053,6 +3152,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3061,7 +3161,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3100,6 +3200,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3108,7 +3209,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3154,6 +3255,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3162,7 +3264,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3201,6 +3303,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3209,13 +3312,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -3255,6 +3358,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3263,13 +3367,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1824,
+     "start": 1833,
      "module": [],
      "uiPfad": []
     },
@@ -3309,6 +3413,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3317,7 +3422,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3370,6 +3475,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3378,7 +3484,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3417,6 +3523,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3425,7 +3532,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3464,6 +3571,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3472,7 +3580,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3511,6 +3619,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3519,7 +3628,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3606,6 +3715,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3614,7 +3724,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3653,6 +3763,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3661,7 +3772,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3700,6 +3811,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3708,7 +3820,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3747,6 +3859,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3755,7 +3868,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3794,6 +3907,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3802,7 +3916,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3841,6 +3955,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3849,7 +3964,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3888,6 +4003,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3896,7 +4012,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3935,6 +4051,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3943,7 +4060,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -3989,6 +4106,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -3997,7 +4115,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4036,6 +4154,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4044,7 +4163,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4083,6 +4202,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4091,7 +4211,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4130,6 +4250,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4138,7 +4259,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4177,6 +4298,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4185,7 +4307,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4224,6 +4346,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4232,7 +4355,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4271,6 +4394,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4279,7 +4403,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4332,6 +4456,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4340,7 +4465,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4386,6 +4511,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4394,7 +4520,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4433,6 +4559,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4441,7 +4568,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4480,6 +4607,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4488,7 +4616,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4527,6 +4655,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4535,7 +4664,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4574,6 +4703,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4582,7 +4712,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4595,7 +4725,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4049,
+     "start": 4058,
      "module": [],
      "uiPfad": []
     },
@@ -4635,6 +4765,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4643,7 +4774,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4656,7 +4787,7 @@
     {
      "name": "wendePresetAn",
      "file": "module/fussbefund.js",
-     "start": 1612,
+     "start": 1619,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4689,6 +4820,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4697,7 +4829,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4736,6 +4868,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4744,7 +4877,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -4783,6 +4916,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4791,7 +4925,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -4832,6 +4966,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4840,7 +4975,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4902,6 +5037,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4910,7 +5046,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4952,6 +5088,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -4960,7 +5097,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5012,6 +5149,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5020,7 +5158,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5092,6 +5230,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5100,7 +5239,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5142,6 +5281,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5150,7 +5290,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5222,6 +5362,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5230,7 +5371,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5292,6 +5433,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5300,7 +5442,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5415,14 +5557,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1824,
+     "start": 1833,
      "module": [],
      "uiPfad": []
     }
@@ -5464,6 +5606,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5472,7 +5615,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5515,6 +5658,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5523,7 +5667,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5566,6 +5710,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5574,7 +5719,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5618,6 +5763,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -5666,7 +5812,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -5720,6 +5866,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5728,7 +5875,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -5800,6 +5947,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5808,7 +5956,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5850,6 +5998,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5858,7 +6007,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5900,6 +6049,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -5908,7 +6058,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5973,6 +6123,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -6006,7 +6157,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -6046,6 +6197,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6054,7 +6206,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -6095,6 +6247,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6103,7 +6256,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6155,6 +6308,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6163,7 +6317,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6209,6 +6363,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -6296,14 +6451,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1824,
+     "start": 1833,
      "module": [],
      "uiPfad": []
     },
@@ -6343,6 +6498,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6351,7 +6507,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -6390,6 +6546,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6398,7 +6555,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -6437,6 +6594,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6445,7 +6603,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -6498,6 +6656,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -6717,6 +6876,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6725,7 +6885,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -6764,6 +6924,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6772,7 +6933,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -6811,6 +6972,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6819,7 +6981,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -6873,6 +7035,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -6940,6 +7103,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6948,7 +7112,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -6987,6 +7151,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -6995,7 +7160,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -7036,6 +7201,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7044,7 +7210,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7086,6 +7252,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7094,7 +7261,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7136,6 +7303,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7144,7 +7312,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -7186,6 +7354,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7194,7 +7363,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -7236,6 +7405,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7244,7 +7414,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -7288,6 +7458,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7296,7 +7467,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7338,6 +7509,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7346,7 +7518,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -7389,6 +7561,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7397,7 +7570,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -7439,6 +7612,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7447,7 +7621,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -7489,6 +7663,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7497,7 +7672,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7542,6 +7717,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -7632,6 +7808,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7640,7 +7817,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -7682,6 +7859,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7690,7 +7868,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7733,6 +7911,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -7814,7 +7993,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -7861,6 +8040,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7869,7 +8049,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -7908,6 +8088,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7916,7 +8097,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -7957,6 +8138,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -7965,7 +8147,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8018,6 +8200,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8026,7 +8209,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8069,6 +8252,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8077,7 +8261,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -8119,6 +8303,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8127,7 +8312,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -8173,6 +8358,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -8237,6 +8423,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8245,7 +8432,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -8284,6 +8471,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8292,7 +8480,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -8331,6 +8519,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8339,7 +8528,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -8378,6 +8567,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8386,7 +8576,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -8439,6 +8629,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -8504,6 +8695,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8512,7 +8704,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -8553,6 +8745,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8561,7 +8754,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8614,6 +8807,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8622,7 +8816,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8666,6 +8860,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -8732,6 +8927,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8740,7 +8936,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -8788,6 +8984,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8796,7 +8993,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8849,6 +9046,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -8857,7 +9055,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8926,6 +9124,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -8999,6 +9198,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9007,7 +9207,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9046,6 +9246,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9054,7 +9255,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -9115,6 +9316,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -9231,6 +9433,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9239,7 +9442,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
+      "ortak yardımcı — 39 modülden çağrılıyor"
      ]
     }
    ],
@@ -9281,6 +9484,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -9345,6 +9549,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9353,7 +9558,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9392,6 +9597,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9400,7 +9606,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9439,6 +9645,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9447,7 +9654,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -9499,6 +9706,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -9745,6 +9953,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9753,7 +9962,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9792,6 +10001,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9800,7 +10010,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9839,6 +10049,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9847,7 +10058,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9886,6 +10097,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9894,7 +10106,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9933,6 +10145,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9941,7 +10154,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -9980,6 +10193,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -9988,7 +10202,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10034,6 +10248,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10042,7 +10257,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -10083,6 +10298,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10091,7 +10307,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -10133,6 +10349,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10141,7 +10358,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -10204,6 +10421,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -10253,6 +10471,7 @@
     "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/dta/preflight.test.js",
+    "api-backend/billing/dta/software-hersteller-ik.js",
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/parser.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
@@ -10306,6 +10525,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10314,7 +10534,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10381,6 +10601,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10389,7 +10610,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10441,6 +10662,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -10509,6 +10731,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10517,7 +10740,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10572,6 +10795,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -10674,6 +10898,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10682,7 +10907,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10721,6 +10946,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10729,7 +10955,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -10772,6 +10998,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -10847,6 +11074,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10855,7 +11083,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10915,6 +11143,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10923,7 +11152,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -10969,6 +11198,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -10977,7 +11207,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11016,6 +11246,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11024,7 +11255,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11077,6 +11308,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11085,7 +11317,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11124,6 +11356,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11132,7 +11365,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11171,6 +11404,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11179,7 +11413,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11225,6 +11459,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11233,7 +11468,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11272,6 +11507,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11280,7 +11516,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11319,6 +11555,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11327,13 +11564,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladePatienten",
      "file": "module/arzt-register.js",
-     "start": 479,
+     "start": 481,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11366,6 +11603,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11374,7 +11612,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11413,6 +11651,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11421,8 +11660,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "ladeVorgeschichte",
@@ -11460,6 +11706,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11468,7 +11715,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11514,6 +11761,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11522,7 +11770,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11561,6 +11809,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11569,7 +11818,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11608,6 +11857,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11616,7 +11866,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11655,6 +11905,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11663,7 +11914,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11702,6 +11953,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11710,7 +11962,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11749,6 +12001,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11757,7 +12010,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11796,6 +12049,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11804,7 +12058,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11843,6 +12097,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11851,7 +12106,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11890,6 +12145,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11898,7 +12154,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -11937,6 +12193,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11945,13 +12202,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "mountFussbefund",
      "file": "module/fussbefund.js",
-     "start": 1541,
+     "start": 1548,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11984,6 +12241,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -11992,7 +12250,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12031,6 +12289,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12039,7 +12298,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12078,6 +12337,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12086,7 +12346,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12125,6 +12385,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12133,7 +12394,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12172,6 +12433,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12180,7 +12442,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12219,6 +12481,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12227,13 +12490,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1478,
+     "start": 1487,
      "module": [],
      "uiPfad": []
     },
@@ -12273,6 +12536,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12281,7 +12545,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12327,6 +12591,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12335,7 +12600,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -12407,6 +12672,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12415,7 +12681,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12518,6 +12784,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12526,7 +12793,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12589,6 +12856,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12597,7 +12865,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12611,6 +12879,7 @@
     "api-backend/booking/lead-aus-anfrage.js",
     "api-backend/booking/public-guards.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/lib/therapiebericht.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/anamnese.js",
@@ -12668,6 +12937,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -12781,6 +13051,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12789,7 +13060,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -12831,6 +13102,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12839,7 +13111,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -12881,6 +13153,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -12944,6 +13217,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -12952,7 +13226,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -13014,6 +13288,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -13106,6 +13381,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13114,7 +13390,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13153,6 +13429,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13161,7 +13438,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13200,6 +13477,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13208,7 +13486,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13247,6 +13525,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13255,8 +13534,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "ladeVerlauf",
@@ -13294,6 +13580,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13302,7 +13589,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13341,6 +13628,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13349,7 +13637,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13388,6 +13676,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13396,13 +13685,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "verdrahteFussbefundKnopf",
      "file": "module/fussbefund.js",
-     "start": 1713,
+     "start": 1720,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13435,6 +13724,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13443,7 +13733,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -13451,7 +13741,7 @@
     {
      "name": "renderBefundListe",
      "file": "module/fussbefund.js",
-     "start": 1053,
+     "start": 1055,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13484,6 +13774,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13492,7 +13783,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -13534,6 +13825,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13542,7 +13834,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -13550,6 +13842,7 @@
     }
    ],
    "dateien": [
+    "api-backend/lib/therapiebericht.js",
     "module/anamnese-daten.js",
     "module/fussbefund-archiv.js",
     "module/fussbefund.js",
@@ -13589,6 +13882,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -13657,6 +13951,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13665,7 +13960,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13704,6 +13999,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13712,7 +14008,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -13753,6 +14049,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13761,7 +14058,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -13803,6 +14100,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13811,7 +14109,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -13853,6 +14151,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -13921,6 +14220,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13929,7 +14229,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -13968,6 +14268,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -13976,7 +14277,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14015,6 +14316,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14023,7 +14325,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14062,6 +14364,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14070,7 +14373,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -14111,6 +14414,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14119,7 +14423,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -14162,6 +14466,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14170,7 +14475,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -14214,6 +14519,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -14373,6 +14679,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14381,7 +14688,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14420,6 +14727,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14428,7 +14736,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14467,6 +14775,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14475,7 +14784,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14514,6 +14823,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14522,7 +14832,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14568,6 +14878,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14576,8 +14887,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "ladeVerlauf",
@@ -14615,6 +14933,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14623,7 +14942,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14662,6 +14981,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14670,7 +14990,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14709,6 +15029,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14717,7 +15038,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14756,6 +15077,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14764,7 +15086,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14803,6 +15125,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14811,7 +15134,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14850,6 +15173,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14858,7 +15182,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14897,6 +15221,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14905,7 +15230,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14944,6 +15269,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14952,7 +15278,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -14991,6 +15317,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -14999,7 +15326,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15071,6 +15398,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15079,7 +15407,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -15121,6 +15449,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15129,7 +15458,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -15141,6 +15470,7 @@
     "api-backend/billing/api/podo-empfangsnachweis.routes.js",
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/zuzahlung/erbrachte-sitzungen.js",
+    "api-backend/lib/therapiebericht.js",
     "module/abrechnung-auswahl.js",
     "module/abrechnungsstatus.js",
     "module/behandlungsbeginn.js",
@@ -15189,6 +15519,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -15295,7 +15626,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 539,
+     "start": 546,
      "module": [],
      "uiPfad": []
     },
@@ -15446,6 +15777,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15454,7 +15786,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15493,6 +15825,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15501,8 +15834,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "loadCalRpUnverga",
@@ -15540,6 +15880,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15548,7 +15889,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15587,6 +15928,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15595,7 +15937,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15634,6 +15976,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15642,7 +15985,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15709,6 +16052,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15717,7 +16061,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -15756,6 +16100,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15764,7 +16109,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -15815,6 +16160,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15823,7 +16169,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -15865,6 +16211,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -15873,7 +16220,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -15933,6 +16280,7 @@
    ],
    "dateien": [
     "api-backend/billing/api/statistik.routes.js",
+    "api-backend/lib/therapiebericht.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/booking-status-korrektur.js",
@@ -15978,6 +16326,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -16046,6 +16395,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16054,7 +16404,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -16097,6 +16447,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -16189,6 +16540,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16197,7 +16549,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16264,6 +16616,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16272,7 +16625,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16311,6 +16664,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16319,7 +16673,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16358,6 +16712,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16366,7 +16721,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16405,6 +16760,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16413,7 +16769,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16459,6 +16815,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16467,7 +16824,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16506,6 +16863,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16514,7 +16872,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16553,6 +16911,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16561,7 +16920,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16600,6 +16959,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16608,8 +16968,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "ladeTerminVerordnungen",
@@ -16647,6 +17014,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16655,7 +17023,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16694,6 +17062,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16702,7 +17071,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16741,6 +17110,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16749,7 +17119,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16788,6 +17158,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16796,13 +17167,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeZuweisungen",
      "file": "module/arzt-register.js",
-     "start": 461,
+     "start": 463,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16835,6 +17206,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16843,7 +17215,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16889,6 +17261,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16897,7 +17270,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16936,6 +17309,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16944,7 +17318,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -16990,6 +17364,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -16998,7 +17373,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17037,6 +17412,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17045,7 +17421,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17084,6 +17460,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17092,7 +17469,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17131,6 +17508,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17139,7 +17517,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17185,6 +17563,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17193,7 +17572,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17232,6 +17611,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17240,7 +17620,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17279,6 +17659,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17287,7 +17668,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17340,6 +17721,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17348,7 +17730,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17394,6 +17776,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17402,7 +17785,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17448,6 +17831,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17456,7 +17840,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17495,6 +17879,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17503,7 +17888,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17556,6 +17941,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17564,7 +17950,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -17577,7 +17963,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 975,
+     "start": 980,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17610,6 +17996,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17618,7 +18005,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -17659,6 +18046,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17667,8 +18055,18 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "createDokumentMailRouter",
+     "file": "api-backend/routes/dokument-mail.js",
+     "start": 49,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -17719,6 +18117,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17727,7 +18126,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -17769,6 +18168,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17777,7 +18177,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -17859,6 +18259,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17867,7 +18268,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -17909,6 +18310,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17917,7 +18319,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -17989,6 +18391,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -17997,7 +18400,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -18014,6 +18417,8 @@
     "api-backend/billing/utils/kostentraeger-frisch.js",
     "api-backend/billing/zaa/anwenden.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/lib/therapiebericht.js",
+    "api-backend/routes/dokument-mail.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/abrechnung-auswahl.js",
@@ -18079,6 +18484,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -18091,7 +18497,7 @@
   },
   {
    "name": "profiles",
-   "spalten": 89,
+   "spalten": 90,
    "fkRaus": [
     "auth.users",
     "profiles"
@@ -18162,6 +18568,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18170,13 +18577,20 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
      "start": 276,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createManifestRouter",
+     "file": "api-backend/routes/manifest.js",
+     "start": 58,
      "module": [],
      "uiPfad": []
     },
@@ -18197,14 +18611,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4024,
+     "start": 4033,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -18272,6 +18686,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18280,7 +18695,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18319,6 +18734,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18327,7 +18743,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18377,6 +18793,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18385,7 +18802,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18424,6 +18841,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18432,8 +18850,15 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 108,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "loadAusfallConfig",
@@ -18485,6 +18910,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18493,7 +18919,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18532,6 +18958,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18540,7 +18967,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18579,6 +19006,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18587,7 +19015,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18626,6 +19054,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18634,7 +19063,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18673,6 +19102,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18681,7 +19111,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18727,6 +19157,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18735,7 +19166,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18774,6 +19205,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18782,7 +19214,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18828,6 +19260,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18836,7 +19269,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18896,6 +19329,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18904,7 +19338,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -18957,6 +19391,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -18965,7 +19400,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19011,6 +19446,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19019,7 +19455,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19065,6 +19501,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19073,7 +19510,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19112,6 +19549,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19120,7 +19558,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19159,6 +19597,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19167,7 +19606,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19206,6 +19645,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19214,7 +19654,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19253,6 +19693,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19261,7 +19702,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19300,6 +19741,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19308,7 +19750,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19347,6 +19789,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19355,7 +19798,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19394,6 +19837,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19402,7 +19846,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19448,6 +19892,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19456,7 +19901,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19502,6 +19947,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19510,7 +19956,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -19629,6 +20075,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19637,7 +20084,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19689,6 +20136,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19697,7 +20145,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19739,6 +20187,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19747,7 +20196,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19809,6 +20258,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19817,7 +20267,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19879,6 +20329,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19887,7 +20338,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19929,6 +20380,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19937,7 +20389,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -19979,6 +20431,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -19987,7 +20440,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20006,7 +20459,7 @@
     {
      "name": "renderLegendeSettings",
      "file": "module/fussbefund.js",
-     "start": 1797,
+     "start": 1804,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20069,6 +20522,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20077,7 +20531,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20119,6 +20573,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20127,7 +20582,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20189,6 +20644,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20197,7 +20653,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20239,6 +20695,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20247,7 +20704,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20289,6 +20746,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20297,7 +20755,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20339,6 +20797,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20347,7 +20806,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -20374,6 +20833,8 @@
     "api-backend/dsgvo/loeschen.js",
     "api-backend/fix_db.js",
     "api-backend/lib/status.js",
+    "api-backend/lib/therapiebericht.js",
+    "api-backend/routes/manifest.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
     "api-backend/setup/owner-passwort-reset.mjs",
@@ -20437,6 +20898,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -20444,7 +20906,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 338,
+   "sqlTreffer": 341,
    "codeStumm": false
   },
   {
@@ -20560,6 +21022,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20568,7 +21031,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -20619,6 +21082,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -20662,7 +21126,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4336,
+     "start": 4345,
      "module": [],
      "uiPfad": []
     },
@@ -20716,6 +21180,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20724,7 +21189,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20763,6 +21228,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20771,13 +21237,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -20831,6 +21297,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20839,7 +21306,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20885,6 +21352,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20893,7 +21361,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20932,6 +21400,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20940,7 +21409,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -20979,6 +21448,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -20987,7 +21457,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21026,6 +21496,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21034,7 +21505,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21073,6 +21544,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21081,7 +21553,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21136,6 +21608,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21144,7 +21617,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -21197,6 +21670,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21205,7 +21679,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -21259,6 +21733,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21267,7 +21742,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -21343,6 +21818,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -21443,6 +21919,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21451,7 +21928,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21490,6 +21967,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21498,7 +21976,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21553,6 +22031,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21561,7 +22040,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -21603,6 +22082,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21611,7 +22091,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -21658,6 +22138,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -21666,6 +22147,137 @@
     "warteliste"
    ],
    "sqlTreffer": 43,
+   "codeStumm": false
+  },
+  {
+   "name": "therapieberichte",
+   "spalten": 19,
+   "fkRaus": [
+    "aerzte",
+    "leads",
+    "auth.users",
+    "prescriptions",
+    "therapieberichte"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Therapiebericht an den verordnenden Arzt — so, wie er hinausging (Mail/Fax/Druck). Vorher gab es nur das Flag `prescriptions.bericht_angefordert`/`bericht_status`, aber keinen Ort für den Bericht selbst. Eigene Tabelle statt Spalten in `prescriptions`, weil es je VO mehrere Berichte geben kann (Zwischen-/Abschlussbericht). `prescription_documents` passt nicht: Datei-Anhang mit `storage_path NOT NULL`, ohne Text, Empfänger, Versandweg und Festschreibung.",
+   "seit": "22.10.2026 · `0087_therapieberichte` · SaaS `20261022153644`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "zeichneListe",
+     "file": "module/therapiebericht.js",
+     "start": 97,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "createDokumentMailRouter",
+     "file": "api-backend/routes/dokument-mail.js",
+     "start": 49,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/routes/dokument-mail.js",
+    "module/therapiebericht.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "sqlTreffer": 14,
    "codeStumm": false
   },
   {
@@ -21724,6 +22336,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21732,7 +22345,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -21771,6 +22384,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21779,7 +22393,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -21820,6 +22434,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21828,7 +22443,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -21871,6 +22486,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -21879,7 +22495,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -21924,6 +22540,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -21959,14 +22576,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1824,
+     "start": 1833,
      "module": [],
      "uiPfad": []
     },
@@ -22013,6 +22630,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22021,7 +22639,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22060,6 +22678,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22068,7 +22687,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22107,6 +22726,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22115,7 +22735,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22154,6 +22774,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22162,7 +22783,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -22201,6 +22822,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22209,7 +22831,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -22250,6 +22872,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22258,7 +22881,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -22300,6 +22923,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22308,7 +22932,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -22350,6 +22974,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22358,7 +22983,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -22401,6 +23026,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22409,7 +23035,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -22451,6 +23077,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22459,7 +23086,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -22514,6 +23141,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -22631,6 +23259,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22639,7 +23268,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -22680,6 +23309,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22688,7 +23318,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -22740,6 +23370,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22748,7 +23379,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -22791,6 +23422,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -22887,6 +23519,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22895,7 +23528,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -22936,6 +23569,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22944,7 +23578,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -22986,6 +23620,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -22994,7 +23629,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -23048,6 +23683,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -23138,6 +23774,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23146,7 +23783,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -23199,6 +23836,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -23271,6 +23909,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23279,7 +23918,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -23334,6 +23973,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -23367,7 +24007,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 821,
+     "start": 830,
      "module": [],
      "uiPfad": []
     },
@@ -23407,6 +24047,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23415,13 +24056,13 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1824,
+     "start": 1833,
      "module": [],
      "uiPfad": []
     },
@@ -23461,6 +24102,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23469,7 +24111,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23515,6 +24157,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23523,7 +24166,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23569,6 +24212,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23577,7 +24221,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23616,6 +24260,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23624,7 +24269,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -23663,6 +24308,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23671,7 +24317,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -23723,6 +24369,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23731,7 +24378,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -23773,6 +24420,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23781,7 +24429,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -23830,6 +24478,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -23896,6 +24545,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -23904,7 +24554,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -23944,6 +24594,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -24011,6 +24662,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -24019,7 +24671,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     },
     {
@@ -24058,6 +24710,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -24066,7 +24719,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ]
     }
    ],
@@ -24107,6 +24760,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -24115,7 +24769,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -24158,6 +24812,7 @@
       "rezeptModal",
       "services",
       "settings",
+      "statistik",
       "team",
       "ueberblick",
       "vehEditSaveBtn",
@@ -24166,7 +24821,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 37 modülden çağrılıyor"
+      "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -24209,6 +24864,7 @@
     "rezeptModal",
     "services",
     "settings",
+    "statistik",
     "team",
     "ueberblick",
     "vehEditSaveBtn",
@@ -24425,6 +25081,7 @@
    "scraper_data",
    "services",
    "terapeut_zertifikat",
+   "therapieberichte",
    "therapist_certificates",
    "time_offs",
    "ueberweisungen",

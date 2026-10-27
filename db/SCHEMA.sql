@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261021104136 0086_altsystem_uebernahme
--- EXPORTED AT:        2026-10-21T10:45:00.000Z
--- ERZEUGT AM:         2026-10-21
+-- LAST MIGRATION:     20261022153702 0088_datev_einstellungen
+-- EXPORTED AT:        2026-10-22T15:40:00.000Z (gezielt fortgeschrieben: 0087, 0088)
+-- ERZEUGT AM:         2026-10-22
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       96
---   table_columns:       1408
+--   public_tables:       97
+--   table_columns:       1428
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        166
---   functions:           111
---   triggers:            98
---   indexes:             338
+--   rls_policies:        167
+--   functions:           112
+--   triggers:            99
+--   indexes:             342
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -3073,7 +3073,8 @@ CREATE TABLE public.profiles (
   praxis_stempel_path text,
   praxis_inhaber text,
   praxis_impressum_url text,
-  praxis_datenschutz_url text
+  praxis_datenschutz_url text,
+  datev_einstellungen jsonb DEFAULT '{}'::jsonb NOT NULL
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -3091,6 +3092,7 @@ COMMENT ON COLUMN public.profiles.praxis_stempel_path IS 'Pfad des Praxisstempel
 COMMENT ON COLUMN public.profiles.praxis_inhaber IS 'Buergerlicher Name der Inhaberin/des Inhabers fuer Rechnungen (§ 14 Abs. 4 Nr. 1 UStG, Einzelpraxis).';
 COMMENT ON COLUMN public.profiles.praxis_impressum_url IS 'Impressum der Praxis (§ 5 DDG), nur https, ≤500. Leer -> Patientenseite zeigt kein Impressum, nur Klartext Praxisname · Anschrift (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
 COMMENT ON COLUMN public.profiles.praxis_datenschutz_url IS 'Datenschutzerklärung der Praxis (Art. 13 DSGVO), nur https, ≤500. Leer -> erzeugte Seite „Datenschutzhinweise zur Terminanfrage" (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
+COMMENT ON COLUMN public.profiles.datev_einstellungen IS 'DATEV-EXTF-Kopf + Erlöskonten: {beraternummer, mandantennummer, wj_beginn (MM-TT), sachkontenlaenge, kontenrahmen (SKR03|SKR04), erloeskonten:{gkv,privat,selbstzahler,bg,zuzahlung,ausfall}, gkv_geldkonto}. Leer = Export verweigert mit Hinweis. Form und Standardwerte in module/datev-einstellungen.js.';
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
@@ -3373,6 +3375,70 @@ ALTER TABLE ONLY public.terapeut_zertifikat
 
 ALTER TABLE ONLY public.terapeut_zertifikat
   ADD CONSTRAINT terapeut_zertifikat_pkey PRIMARY KEY (owner_id);
+
+CREATE TABLE public.therapieberichte (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  prescription_id uuid NOT NULL,
+  lead_id uuid,
+  arzt_id uuid,
+  art text DEFAULT 'zwischenbericht'::text NOT NULL,
+  verlauf text,
+  empfehlung text,
+  empfehlung_code text,
+  inhalt_snapshot jsonb NOT NULL,
+  versand_weg text NOT NULL,
+  empfaenger text,
+  verschluesselt boolean DEFAULT false NOT NULL,
+  versendet_am timestamp with time zone DEFAULT now() NOT NULL,
+  versendet_von uuid,
+  passwort_telefonisch boolean DEFAULT false NOT NULL,
+  vorgaenger_id uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK arzt_id -> aerzte(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK versendet_von -> auth.users(id)
+--   FK vorgaenger_id -> therapieberichte(id)
+ALTER TABLE ONLY public.therapieberichte OWNER TO postgres;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_art_check CHECK (art = ANY (ARRAY['zwischenbericht'::text, 'abschlussbericht'::text]));
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_arzt_id_fkey FOREIGN KEY (arzt_id) REFERENCES aerzte(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_empfehlung_code_check CHECK (empfehlung_code IS NULL OR empfehlung_code = ANY (ARRAY['fortsetzung'::text, 'ziel_erreicht'::text, 'abklaerung'::text]));
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_versand_weg_check CHECK (versand_weg = ANY (ARRAY['mail'::text, 'fax'::text, 'druck'::text]));
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_versendet_von_fkey FOREIGN KEY (versendet_von) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.therapieberichte
+  ADD CONSTRAINT therapieberichte_vorgaenger_id_fkey FOREIGN KEY (vorgaenger_id) REFERENCES therapieberichte(id) ON DELETE RESTRICT;
+
+COMMENT ON TABLE public.therapieberichte IS 'Versandte Therapieberichte an den verordnenden Arzt. Zeile entsteht beim Versand und ist festgeschrieben (§ 630f BGB). Passwort des PDFs wird nie gespeichert (legal-de 22.10.2026).';
+COMMENT ON COLUMN public.therapieberichte.inhalt_snapshot IS 'Eingefrorener automatischer Teil zum Versandzeitpunkt: praxis, patient, arzt, verordnung, behandlungen, befund. Quelle für die Neuerzeugung des PDFs.';
+COMMENT ON COLUMN public.therapieberichte.verschluesselt IS 'true = PDF war passwortgeschützt (Mail). Fax/Druck: false.';
+COMMENT ON COLUMN public.therapieberichte.passwort_telefonisch IS 'Vermerk der Praxis: Passwort auf separatem Kanal (Telefon) übermittelt. Einzige Spalte, die nach dem Versand noch gesetzt werden darf (false → true).';
 
 CREATE TABLE public.therapist_certificates (
   id uuid DEFAULT gen_random_uuid() NOT NULL,

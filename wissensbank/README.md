@@ -45,6 +45,8 @@ gemeinsam/positionsnummern/       Heilmittelpositionsnummernverzeichnis (tüm be
 gemeinsam/icd-10-gm/              BfArM ICD-10-GM veri paketi
 gemeinsam/unfallversicherung-dguv/ DGUV (BG/Unfallkasse) — Handlungsanleitung, Gebührenverzeichnisse.
                                   §302 DIŞI. PDF + TXT yalnız yerel (.gitignore), bkz. REGISTER W-08
+gemeinsam/datev-format/          DATEV-Format (EXTF) Formatbeschreibung + Musterdaten — Steuerberater-Export.
+                                  §302 DIŞI. Klasörün tamamı yalnız yerel (.gitignore), bkz. REGISTER W-13
 ```
 
 **Kararsız kaldığında `gemeinsam/`.** Bir alanın belgesini ortak klasöre koymak ucuz bir

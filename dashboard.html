@@ -1589,6 +1589,7 @@
               </select>
             </div>
             <button class="btn-ghost" id="blExportCsvBtn" style="margin-top:14px;padding:6px 12px;font-size:13px;">CSV Export (Finanzamt)</button>
+            <button class="btn-ghost" id="blDatevExportBtn" type="button" style="margin-top:14px;padding:6px 12px;font-size:13px;" title="Geldeingänge im gewählten Zeitraum als DATEV-Buchungsstapel für den Steuerberater">DATEV-Export</button>
           </div>
 
           <div class="card" style="background:var(--bg-card);border:1px solid var(--border);">
@@ -2626,6 +2627,12 @@
                     <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
                   </div>
                 </div>
+              </div>
+
+              <!-- DATEV-Export (22.10.2026) — Inhalt rendert module/datev-einstellungen.js -->
+              <div class="settings-section" id="settingsDatevSection" hidden>
+                <div class="settings-section-title">DATEV-Export</div>
+                <div class="settings-section-body"></div>
               </div>
 
               <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
@@ -5466,6 +5473,7 @@
       </div>
       <div class="modal-body">
         <p class="text-muted" id="arztDetailMeta" style="margin:0 0 14px;font-size:13px;"></p>
+        <div id="arztDetailFax" style="margin:0 0 14px;"></div>
         <div id="arztDetailBody"></div>
       </div>
       <div class="modal-footer">
@@ -5867,7 +5875,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261027s223"></script>
+  <script type="module" src="dashboard.js?v=20261027s225"></script>
 </body>
 
 </html>

@@ -70,6 +70,13 @@ export const TABELLEN = [
     anmerkung: 'Podologischer Fussbefund, Versionierung',
   },
   {
+    table: 'therapieberichte',
+    kategorie: 'behandlung',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'versendet_von',
+    anmerkung: 'Versandter Therapiebericht an den Arzt, festgeschrieben (§ 630f BGB), Passwort nie gespeichert',
+  },
+  {
     table: 'messreihen',
     kategorie: 'behandlung',
     export: { filter: 'owner_id' },
@@ -631,6 +638,7 @@ export const LEAD_BEZUEGE = [
   ['invoices', 'lead_id'],
   ['anamnese', 'patient_id'],
   ['pat_fussbefund', 'lead_id'],
+  ['therapieberichte', 'lead_id'],
   ['patient_consents', 'patient_id'],
   ['prescriptions', 'patient_id'],
   ['bookings', 'lead_id'],

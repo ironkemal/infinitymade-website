@@ -164,6 +164,8 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   └── _archiv/                   düşmüş · kapsam dışı · mükerrer
 ├── Podoloji/                      ⚠️ Artık BELGE yok — yalnız kendi ürettiğimiz iş:
 │                                  prototip, ürün kararı, loop promptu, HPNR referansı
+├── Physio/                        Podoloji/ karşılığı (26.10.2026): ürün kararları +
+│                                  PARTNER-FRAGEN.md (partnersiz girildi, sorular birikir)
 ├── .claude/agents/ + skills/konsey/  ★ Ajanlar ve /konsey (aşağıya bak) — git'te İZLENİR,
 │                                  depo public: hassas satır yazma. `.claude/` geri kalanı ignore'lu
 ├── praxissoftware-*.html          SEO landing sayfaları (4 Fachbereich + TI)
@@ -547,9 +549,11 @@ bağımlılığı geçiş maliyetini büyütür.
 - Başka alanda bulunan eksik → not edilir, hemen yapılmaz
 - **Fachbereich filtresi (`strict`)** — `attachDiagnoseSearch(..., { strict: true })`
   diagnoz listesinden fachfremd kodları tamamen çıkarır (ayraç altına itmek yerine).
-  Bugün sadece podolojide (`podNewIcd10`) açık. **Her alan için düşünülmüştür**;
-  `icd_sector_ranges` dördü için de dolu, sırası gelen alanın alan tanımına
-  `strict: true` eklenir — modülde yapılacak iş yok
+  ⚠️ **Bugün hiçbir alanda açık değil** (26.10.2026 doğrulandı): eskiden açık olduğu
+  `podNewIcd10` alanı podolojik hızlı yol kodu ile birlikte silindi (`2ae131c3`).
+  Kalan alan `rzIcd` mandanten-bağımlı — `strict` bugün sabit bool, alan bazlı açmak
+  için küçük bir modül değişikliği gerekir. Açmadan önce o alanın `icd_sector_ranges`
+  kapsamı doğrulanmalı (eksikse doğru kodlar da gizlenir)
 - Örnek: Ergotherapie Blankoverordnung sözleşmesi 01.04.2024'ten beri yürürlükte ve kodumuz
   onu blokluyor. Gelir etkisi var ama **bilinçli olarak beklemede** (Ops-Dashboard → **Teknik**)
 
@@ -732,6 +736,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
 | `guvenlik` | ★ Güvenlik sorumlusu + kurumsal güvenlik hafızası. Sızıntı, mandant sınırı, açık yüzey. Sicili `guvenlik/REGISTER.md` tutar — neyin ÇÜRÜTÜLDÜĞÜNÜ de bilir. Konseyin daimi üyesi, dört konuda sert veto | ❌ |
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
+| `physio` | ★ Physio vertikalinin "sanal praxis ortağı" (26.10.2026, partner yokken). Empfang/terapist günü, Rezeptprüfung, Serienplanung, Zertifikatsleistungen, tık-ekonomisi; kendiliğinden eksik/öneri listesi çıkarır. Belgeden çıkmayanı `Physio/PARTNER-FRAGEN.md`'ye biriktirir, kararlar `Physio/PRODUKT-ENTSCHEIDUNGEN.md` | ❌ |
 | `wissensbank` | ★ Dışarıdan indirilen resmî verinin kütüphanecisi. Her PDF/XML/XLSX nereden geldi, hangi sürüm, ne zaman düşer, **hangi kod satırını ve hangi tabloyu besler**. "Bu bilgi nerede", "bunu indirmiş miydik", "yeni sürüm var mı", "bu PDF'i neye çevirelim" sorularının cevabı. Sicili `wissensbank/REGISTER.md`. Konsey üyesi, vetosu yok | ❌ (sicil + türev üretimi hariç) |
 | `onprem` | ★ İki dağıtım bekçisi + on-prem geçişin kurumsal hafızası. Tek soru: "bu değişiklik müşterinin kutusunda ne yapar, merkezden oraya nasıl varır?" Sicili `onprem/REGISTER.md`. Dış çağrı · şema · env var · zamanlanmış iş · sabit adres · yetki kontrolü yazılmadan ÖNCE sor. Dört korkulukta sert veto (G1/G2/G3/G8) | ❌ (sicil + kapı hariç) |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |

@@ -27,7 +27,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Muss zu vendor/README.md und fonts/*.css passen.
 const PAKETE = [
   '@supabase/supabase-js@2.112.3',
-  'node-forge@1.3.1',
+  'node-forge@1.4.0',
   'fullcalendar@6.1.11',
   '@fullcalendar/core@6.1.11',
   'cropperjs@1.6.1',

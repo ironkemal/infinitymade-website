@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261021104136 0086_altsystem_uebernahme
--- EXPORTED AT:        2026-10-21T10:45:00.000Z
--- ERZEUGT AM:         2026-10-21
+-- LAST MIGRATION:     20261022153702 0088_datev_einstellungen
+-- EXPORTED AT:        2026-10-22T15:40:00.000Z (gezielt fortgeschrieben: 0087, 0088)
+-- ERZEUGT AM:         2026-10-22
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       96
---   table_columns:       1408
+--   public_tables:       97
+--   table_columns:       1428
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        166
---   functions:           111
---   triggers:            98
---   indexes:             338
+--   rls_policies:        167
+--   functions:           112
+--   triggers:            99
+--   indexes:             342
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -263,6 +263,8 @@ ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 -- [EXTENSION OWNED] Table public.spatial_ref_sys RLS (rowsecurity: false, force: false)
 ALTER TABLE public.terapeut_zertifikat ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.therapieberichte ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.therapist_certificates ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.time_offs ENABLE ROW LEVEL SECURITY;
@@ -1317,6 +1319,14 @@ CREATE POLICY zertifikat_owner_all ON public.terapeut_zertifikat
   USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
    FROM profiles
   WHERE (profiles.owner_id = terapeut_zertifikat.owner_id)))));
+
+CREATE POLICY therapieberichte_select_policy ON public.therapieberichte
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING (((owner_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.owner_id = therapieberichte.owner_id))))));
 
 CREATE POLICY therapist_certificates_delete ON public.therapist_certificates
   AS PERMISSIVE
@@ -5440,6 +5450,43 @@ $function$
 ;
 ALTER FUNCTION public.sync_profiles_clinic_location() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.therapieberichte_festschreibung()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+begin
+  if tg_op = 'DELETE' then
+    raise exception 'Ein versandter Therapiebericht ist unveraenderlich (§ 630f Abs. 1 S. 2 BGB). Eine Korrektur erfolgt durch einen neuen Bericht.';
+  end if;
+
+  if new.owner_id         is distinct from old.owner_id
+  or new.business_id      is distinct from old.business_id
+  or new.prescription_id  is distinct from old.prescription_id
+  or new.lead_id          is distinct from old.lead_id
+  or new.art              is distinct from old.art
+  or new.verlauf          is distinct from old.verlauf
+  or new.empfehlung       is distinct from old.empfehlung
+  or new.empfehlung_code  is distinct from old.empfehlung_code
+  or new.inhalt_snapshot  is distinct from old.inhalt_snapshot
+  or new.versand_weg      is distinct from old.versand_weg
+  or new.empfaenger       is distinct from old.empfaenger
+  or new.verschluesselt   is distinct from old.verschluesselt
+  or new.versendet_am     is distinct from old.versendet_am
+  or new.vorgaenger_id    is distinct from old.vorgaenger_id
+  or new.created_at       is distinct from old.created_at
+  or (new.arzt_id is distinct from old.arzt_id and new.arzt_id is not null)
+  or (new.versendet_von is distinct from old.versendet_von and new.versendet_von is not null)
+  or (old.passwort_telefonisch and not new.passwort_telefonisch)
+  then
+    raise exception 'Ein versandter Therapiebericht ist unveraenderlich (§ 630f Abs. 1 S. 2 BGB). Eine Korrektur erfolgt durch einen neuen Bericht.';
+  end if;
+
+  return new;
+end $function$
+;
+ALTER FUNCTION public.therapieberichte_festschreibung() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.touch_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5805,6 +5852,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON services FOR EACH ROW EXECUT
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER zertifikat_updated_at BEFORE UPDATE ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+
+CREATE TRIGGER therapieberichte_festschreibung BEFORE DELETE OR UPDATE ON therapieberichte FOR EACH ROW EXECUTE FUNCTION therapieberichte_festschreibung();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON time_offs FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -6537,6 +6586,15 @@ CREATE INDEX idx_zertifikat_expiring ON terapeut_zertifikat USING btree (cert_va
 
 -- Index terapeut_zertifikat_pkey ON public.terapeut_zertifikat is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX terapeut_zertifikat_pkey ON terapeut_zertifikat USING btree (owner_id);
+
+CREATE INDEX therapieberichte_lead_idx ON therapieberichte USING btree (lead_id);
+
+CREATE INDEX therapieberichte_owner_idx ON therapieberichte USING btree (owner_id, versendet_am DESC);
+
+-- Index therapieberichte_pkey ON public.therapieberichte is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX therapieberichte_pkey ON therapieberichte USING btree (id);
+
+CREATE INDEX therapieberichte_rx_idx ON therapieberichte USING btree (prescription_id);
 
 -- Index therapist_certificates_pkey ON public.therapist_certificates is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX therapist_certificates_pkey ON therapist_certificates USING btree (id);
@@ -12604,6 +12662,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=therapieberichte_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=therapieberichte_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=time_dist(time without time zone, time without time zone) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=time_dist(time without time zone, time without time zone) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=time_dist(time without time zone, time without time zone) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -15282,6 +15342,11 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapist_certificates column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapist_certificates column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapist_certificates column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO

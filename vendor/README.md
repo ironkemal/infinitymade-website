@@ -25,7 +25,7 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 | Dosya | Kaynak | Nerede kullanılıyor |
 |---|---|---|
 | `supabase-js.js` | `@supabase/supabase-js@2.112.3` | ~12 sayfa/modül (`createClient`; güncel liste: `grep -rl vendor/supabase-js`) |
-| `node-forge.js` | `node-forge@1.3.1` | `dashboard.js` → `loadForge()`, §302 PKCS#7 imzalama (tembel yüklenir) |
+| `node-forge.js` | `node-forge@1.4.0` | `dashboard.js` → `loadForge()`, §302 PKCS#7 imzalama (tembel yüklenir) |
 | `fullcalendar/index.global.min.js` | `fullcalendar@6.1.11` (Standard, MIT — 05.10.2026 Premium/Scheduler entfernt: NonCommercial-Key, legal-de; sha256 8b8bc35b…d481, jsDelivr = unpkg) | `kalender.html` |
 | `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
 | `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html` (cropper `<link>`/`<script>`) → Logo/Profilbild zuschneiden (`dashboard.js`, `new Cropper(`) |

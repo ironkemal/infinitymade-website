@@ -398,6 +398,12 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.01.2026
 - **Ne zaman lazım:** Physiotherapie (fizyoterapi) hizmetlerinin ve ev ziyaretlerinin faturalandırılması ile ücret listesinin ve pozisyon numaralarının kontrol edilmesi gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, X0102 (33,75 Euro), X0201 (21,63 Euro)
+- **Anahtar bölümler** (26.10.2026, gkv-302; ⚠️ `-layout` sütunları kaymış, fiyat için `pdftotext -raw`):
+  - Z.1-3 başlık (Lesefassung gültig ab 01.01.2026) · Z.17-35 LEGS + X-Präfix (1/2/6/8)
+  - Z.299-347 X2001 · X9701 Übermittlungsgebühr · X9950/X9951 Hausbesuch (X9933→X9950, X9934→X9951 umbenannt zum 01.01.2026; Begriff soziale Einrichtung)
+  - Z.356-374 X9922 HB Kurzzeit-/Verhinderungs-/Tagespflege + betreutes Wohnen · X1906 Bericht auf schriftliche Anforderung („Kreuz nicht ausreichend")
+  - Z.387-435 Teil B: (1) nur verordnete Leistungen · (3) keine Zuzahlung X9701/X1906/21901/21904 · (4) HB-Pauschalen · (5) HB nicht kombinierbar, 1×/Tag, Praxissitz=Ort ausgeschlossen, Bestätigung auf VO
+  - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 1 Leistungsbeschreibung + Anlage 3 (Verordnungsangaben)
 
 ### wissensbank/logopaedie/20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung.txt
 - **Ne:** Anlage 2: Vergütungsvereinbarung i. d. F. vom 12.02.2026 zum Vertrag nach § 125 Absatz 1 SGB V für Stimm-, Sprech-, Sprach- und Schlucktherapie über die Versorgung mit Leistungen der Stimm-, Sprech-, Sprach- und Schlucktherapie und deren Vergütung.
@@ -414,6 +420,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.06.2024
 - **Ne zaman lazım:** Ergotherapie (ergoterapi) hizmetlerinin, geçici atellerin ve ev ziyaretlerinin faturalandırılması ile ücret listesinin kontrol edilmesi gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, X4002 (38,43 Euro), X4102 (52,77 Euro)
+- **⚠️ ESKİMİŞ (gkv-302, 26.10.2026):** üç kez değişti — Fassung 25.07.2025 (pencereler 01.08.2025 / 01.10.2025) ve **Lesefassung Stand 01.07.2026** (Schiedsstelle 1 HE 12-26) geçerli; arşivde yok, `wissensbank` girişi bekliyor. Ayrıca bu `.txt` (-layout) sütun kaymalı — tablo `-raw` ile okunmalı. Ayrıntı: `sitzungen/2026-10-26_katalog-physio-ergo-logo.md`
 
 ### wissensbank/_archiv/20220421_Lesefassung_Anlage_3_Ernaehrungstherapie.txt
 - **Ne:** Anlage 3: notwendige Angaben auf der Heilmittelverordnung und einheitliche Regelungen zur Abrechnung zum Vertrag nach § 125 Absatz 1 SGB V für Ernährungstherapie über die Versorgung mit Leistungen der Ernährungstherapie und deren Vergütung.
@@ -792,6 +799,35 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Yayın:** `.vercelignore` bütün wissensbank'ı dışlar; TXT yeniden dağıtım izni belirsiz; legal-de açıklığa kavuşturmadan ham PDF/TXT kopyalama, staging veya push yok (REGISTER W-07). Burada yalnız kaynak kimliği ve bölüm haritası yayımlanır.
 
 ---
+
+## DATEV-Format (EXTF) — Steuerberater-Export, §302 DIŞI
+
+> Klasör **yalnız yerel** (`.gitignore` → `wissensbank/gemeinsam/datev-format/`, REGISTER W-13 / W-A14). Dosya bu makinede
+> yoksa REGISTER W-13'teki `curl` satırıyla yeniden üretilir. Fatura/vergi iddiası `.txt`'ye değil ham JSON'a + sürüme dayanır.
+
+### gemeinsam/datev-format/DATEV-Format_Formatbeschreibung_de_20261022.txt
+- **Ne:** DATEV Developer Portal „DATEV-Format" tam Almanca metni (HTML gövdesi aynen). ~5900 satır, ~45k token — tamamını okuma.
+- **Sürüm:** Header 700 · Buchungsstapel Formatversion 13 · Changelog son kaydı März 2025.
+- **Ne zaman lazım:** DATEV EXTF export'u (Buchungsstapel, Debitoren/Kreditoren, Sachkontenbeschriftung) yazarken/doğrularken.
+- **Anahtar bölümler** (satır no = `.txt`):
+  - 3-36 Einstieg: Technischer Aufbau (Semikolon, CR/LF, Text in "", "" verdoppeln, Dezimalkomma) + Musterdatei (satır 20 Header, satır 21 Spaltenüberschriften)
+  - 37-44 Zeichensatz (ISO-8859-1/CP1252 default; Unicode nur mit BOM; KrStaPv kein Unicode)
+  - 45-82 Formatübersicht + Volumengrenze 99.999 Buchungen/Datei
+  - **83-307 Header Satzaufbau — 31 alan** (Kennzeichen … Anwendungsinformation)
+  - **308-1213 Buchungsstapel — 125 alan** (alan tablosu ayrıca `.tsv`)
+  - 1214 Wiederkehrende Buchungen · 1856 Debitoren/Kreditoren · 3778 Zahlungsbedingungen · 4046 Sachkontenbeschriftung · 4103 Diverse Adressen
+  - 5576 Import/Export (Stapelverarbeitung, KrStaPv.exe, accounting:extf-files) · 5608 Format-Kategorie/Version tablosu · 5680 Notation für Ausdrücke · 5841 Changelog
+- **Kodda karşılığı:** `api-backend/lib/datev.js` (`EXTF_SPALTEN`, Formatversion 13) · test `api-backend/lib/datev.test.js`.
+- ⚠️ Tablo sütun adları Musterdatei başlığından farklı yazılmış (ör. „Umsatz" ↔ „Umsatz (ohne Soll/Haben-Kz)") — 2. satır için satır 21 esas (REGISTER W-13).
+- **Sicil kaydı:** REGISTER **W-13**.
+
+### gemeinsam/datev-format/DATEV-Format_Buchungsstapel_Felder_V13_20261022.tsv
+- **Ne:** Buchungsstapel V13 alan tablosu, 125 satır, sekme ayrılmış: Nr · MUSS (orijinalde kalın = Pflicht: #1, #2, #7, #8, #10) · Überschrift · Ausdruck (regex) · Beschreibung. Deterministik parser, türev.
+- **Sicil kaydı:** REGISTER **W-13**.
+
+### gemeinsam/datev-format/Musterdaten_EXTF_Buchungsstapel.csv
+- **Ne:** DATEV'in resmî örnek dosyası (Musterdaten zip'inden). 56 satır: Header + başlık + 54 Buchung, her satır 125 alan, CRLF, BOM'suz UTF-8.
+- **Sicil kaydı:** REGISTER **W-13**.
 
 ## Depo dışı belgeler — ⛔ dağıtım kısıtlı, yalnız harita
 

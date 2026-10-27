@@ -94,6 +94,8 @@ ueber.html
 # nur noch EIGENE Arbeit (Prototypen, Produktentscheidungen, loop-Prompts).
 wissensbank/
 Podoloji/
+# Physio/ = Podoloji/ karsiligi (26.10.2026): Produktentscheidungen + Partnerfragen
+Physio/
 
 # Captured browser traffic (contained live auth tokens) & junk screenshots
 *.har

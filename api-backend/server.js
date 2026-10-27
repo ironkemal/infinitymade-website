@@ -23,6 +23,7 @@ import { validateAuthenticatedService, validateExistingBookingTherapist } from '
 import { serienDaten, isValidCalendarDate, isStrictInteger } from './booking/series.js';
 import { patientenNameMuster } from './booking/patienten-namensabgleich.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
+import { createDatevRouter } from './billing/api/datev.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
@@ -33,6 +34,7 @@ import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import ueberRouter from './routes/ueber.js';
 import { createManifestRouter } from './routes/manifest.js';
+import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -594,6 +596,8 @@ app.use('/api/billing', billingMahnwesenRouter);
 
 // Ausfallgebühr (no-show fee) routes.
 app.use('/api/billing', billingAusfallRouter);
+// DATEV-Buchungsstapel für den Steuerberater (O-215, 22.10.2026) — nur Inhaber, nur Datei.
+app.use('/api/billing', createDatevRouter({ supabase }));
 
 // Statistik / analytics routes.
 app.use('/api/billing', billingStatistikRouter);
@@ -615,6 +619,8 @@ app.use('/api', mitarbeiterZugangRouter);
 app.use('/api', dsgvoRouter);
 // „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
 app.use('/api', ueberRouter);
+// Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
+app.use('/api', createDokumentMailRouter({ supabase }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {

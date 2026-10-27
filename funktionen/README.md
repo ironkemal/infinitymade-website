@@ -117,6 +117,13 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 26.10.2026 · Unterbrechungsgrenze nach Fachbereich (`module/frequenz-pruefung.js`, 05188181)
+- Neu: `unterbrechungsGrenze(istPodo, soll)` + Konstante `UNTERBRECHUNG_TAGE_HEILM_RL = 14`. Niye: Physio/Ergo/Logo
+  liefen mit unbelegten 84 Tagen; HeilM-RL §16 Abs. 4 S. 1 = 14 Kalendertage. Podologie bleibt bei 84 (Vertrag §7 Abs. 7).
+  Erster Schritt der Physio-Feinabstimmung.
+- Verwendung: in `pruefeFrequenz()` → an `bewerteAbstand(…, grenze)` und `baueMeldung` übergeben. `bewerteAbstand`
+  hat neuen 5. Parameter `grenzeTage` (Default 84, rückwärtskompatibel). Karte: bereits in 4c644a6f erfasst.
+
 ### 11.10.2026 · Einbettbares Termin-Anfrage-Widget (`widget/`) + `/api/booking-request/status|praxis` (noch nicht committet)
 - `widget/` (booking-widget.js/.logic.js/.mock.js, embed.js) — Termin-Anfrage als Script-Tag auf der Website der
   Praxis, ohne Login, **ohne Supabase-Client im Browser**. Niye: `booking-request.html` hängt an `supabase-config`
@@ -1095,3 +1102,13 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - `module/patient-ueberweisung-upload.js` bindet Dateiauswahl an ursprünglichen Patienten/Inhaber und verwirft Dateilesen/Rückmeldungen nach Aktenwechsel. Erste Verwendung: Dashboard-Überweisungsupload.
 - Bestehender Fußbefund bleibt einziger Editor; Ladegeneration und Schreibsnapshot verhindern gemischte Patienten-/Versionsketten. Patiententermine verwenden Telefonnummer nur bei unzugeordneten Altterminen.
 - Absicht und erste Verwendung an `fonksiyon-ustasi` vor und nach Änderung mitgeteilt; Funktionskarte erneuert. Nur lokale Nachweise, kein Live-Release.
+
+### 26.10.2026 · Physio-Altlast „Massage Einzel“ X0102 → X0106 (commit aee3148a)
+- `module/physio-katalog-migration.js` — `physioAltlastPatches(services, kmt)` (reine Patch-Berechnung) +
+  `migrierePhysioAltlast({supabase, services, katalog})`. Niye: `GKV_LEISTUNGSKATALOG.physiotherapy` hatte
+  „Massage Einzel“ an X0102 (Unterwasserdruckstrahlmassage, 33,75 €) gebunden, richtig ist X0106 KMT 21,63 €;
+  `autoSeedGkvServices` hat die falsche Karte in jede Physio-Praxis geschrieben — einmalige Korrektur.
+- Nerede: `dashboard.js` `loadServices()` direkt nach `migratePodologieLegacyServices()`, vor autoSeed, nur Sektor
+  physiotherapy/praxis. Physio-Zwilling von `migratePodologieLegacyServices` (gleiches Muster: existiert Ziel schon,
+  verliert die Altkarte nur die GKV-Bindung) — bewusste Parallele je Fachbereich, keine Kopie zum Zusammenlegen;
+  bei einem dritten Fall gemeinsamen Kern erwägen.

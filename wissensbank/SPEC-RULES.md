@@ -8,7 +8,10 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-10-11 (`wissensbank` temizlik turu — **2 yeni kural:** „Leistungsbereich yalnız UNB S005'te" ·
+> Son güncelleme: 2026-10-26 (`gkv-302`, Physio-Feinschliff — 4 neue Regeln am Dateiende: Hausbesuch X9950/X9951/X9922 ·
+> ergänzendes Heilmittel als eigene EHE · Therapiebericht-Kennzeichen vs. X1906/X9701 (ZHE-Feld heute immer leer, Key-Mismatch) ·
+> Doppelbehandlung = 1 EHE Anzahl 2.)
+> Önceki: 2026-10-11 (`wissensbank` temizlik turu — **2 yeni kural:** „Leistungsbereich yalnız UNB S005'te" ·
 > „SUM diye segment yok" (silinen bir hafıza kaydının „yaygın yanılgılar" listesindeydi; kaynak + kod okundu).
 > Bayat `Kodda:` satırları koda karşı güncellendi: Logischer/Physikalischer Dateiname, Auftragsdatei, EnvelopedData,
 > Höchstmenge kopyası (artık import), GES, `heilmittel_position`, Behandlungsbeginn, `UNTERBRECHUNG_TAGE` atfı.
@@ -2162,3 +2165,163 @@
 - **Belegt (Analogie Physio/Ergo, nicht Podologie):** DGUV-Verordnung F 2400 hat Kopffeld „Unfallversicherungsträger" und „Unfalltag und ggf. Aktenzeichen"; DGUV-Rechnung: Rechnungsnummer, IK (sonst IBAN).
 - **Nicht verifiziert (nichts als Pflichtfeld bauen):** DGUV-Vertrag/Gebührenverzeichnis für Podologie (Negativbefund: DGUV-Vergütungsseite nennt keine Podologie; FAQ Vertragswesen: ohne Vertrag Empfehlung Vergütung nach vdek-Verträgen, nicht verbindlich) · UV-Verordnungsformular Podologie · D-Arzt-Pflicht/Fristen/Preise für Podologie · elektronischer UV-Rechnungsweg.
 - Produktfolgen: `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` PE-006 B. Quelle seit 10.10.2026 registriert: DGUV Handlungsanleitung „Heilmittel und Rehabilitationsverfahren in der gesetzlichen Unfallversicherung", Ausgabe Januar 2026 (Webcode p022302), `wissensbank/gemeinsam/unfallversicherung-dguv/` — Anlage 1 (F 2400) Kopffelder, Teil A §2–§4 → `REGISTER.md` **W-08**, Kette **Z-19**. Negativbefund Podologie dort gemessen (Handlungsanleitung, Gebührenverzeichnisse Physio/Ergo, DGUV-Vergütungsseite: keine Podologie); FAQ-Zitat vdek wörtlich in Z-19. Nur Quellennachweis ergänzt — Regeltext unverändert (Auslegung: `gkv-302`).
+
+---
+
+## Heilmittelpositionsnummern / Vergütung Physio · Ergo · Logo (Ergänzung 26.10.2026, gkv-302)
+
+### Heilmittelpositionsnummer önekleri (Physio 1/2, Ergo 5, Logo 3, Podologie 7)
+- **Kural:** Anlage 2'deki `X` ilk hane LE-Status'a göre değiştirilir: Physio 1 = Masseur/med. Bademeister, 2 = Krankengymnast/Physiotherapeut, 6 = Krankenhaus, 8 = Kurort; Ergo 5 = zugelassener LE (§124 Abs. 1), 6 = KH, 8 = Kurort; Logo numaraları açık yazılı (ZL 3xxxx, KH 6xxxx, KB 8xxxx). Podologie 78xxx/79xxx.
+- **Kaynak:** Physio Anlage 2 Lesefassung ab 01.01.2026 Teil A; Ergo Anlage 2 Lesefassung Stand 01.07.2026 Teil A; SSSST Anlage 2 i. d. F. 12.02.2026 §5/§6; HPNR-Verzeichnis gültig ab 01.01.2026
+- **Geçerlilik:** 01.01.2026 (Physio/HPNR), 01.07.2026 (Ergo/Logo)
+- **Kodda:** Physio `api-backend/billing/codes/physio_positions.js` `resolvePositionsnummer()`; Ergo/Logo uygulanmamış. ⚠️ `api-backend/billing/codes/README.md` önek listesi (2=Podo, 4=Ergo) yanlış.
+- **Kapsam:** Physio · Ergo · Logo · Podologie
+
+### Ergo Vergütung: geçerli Fassung Lesefassung Stand 01.07.2026
+- **Kural:** Ergo fiyatları dört pencerede: ab 01.06.2024 · 01.08.–30.09.2025 · ab 01.10.2025 · ab 01.07.2026 (Schiedsstelle 1 HE 12-26; abrechenbar frühestens 01.08.2026). 01.08.2025'ten beri HB 59952/59953 (eski 59933/59934), Übermittlungsgebühr 59702 (eski 59701).
+- **Kaynak:** Ergo Anlage 2 Lesefassung Stand 01.07.2026 Teil A + B(8)/(9); Änderungsvereinbarung 25.07.2025 (1 HE 4-25); HPNR CSV Z.1636/1915/1918
+- **Geçerlilik:** 01.07.2026
+- **Kodda:** uygulanmamış — `dashboard.js:8467-8472` uydurma `ET1`–`ET4`; arşivdeki `wissensbank/ergotherapie/20240531_…` eskimiş (wissensbank girişi bekliyor)
+- **Kapsam:** Ergo, tüm Verordnungsart
+
+### Logo: fiyat Heilmittel'e değil Regelbehandlungszeit'e bağlı
+- **Kural:** Stimm-/Sprech-/Sprach-/Schlucktherapie tek pozisyon ailesidir; Einzel 33102 (30 Min) 57,06 · 33103 (45) 76,06 · 33104 (60) 95,10; Doppelbehandlung = aynı pozisyon iki kez.
+- **Kaynak:** SSSST Anlage 2 i. d. F. 12.02.2026 §6 (ab 01.07.2026)
+- **Geçerlilik:** 01.07.2026
+- **Kodda:** uygulanmamış — `dashboard.js:8473-8479` uydurma `09560`–`09580`
+- **Kapsam:** Logopädie
+
+### Anlage 2 tablosu `-layout` txt'den okunmaz
+- **Kural:** Physio/Ergo/Logo Anlage 2 `.txt` (`-layout`) dosyalarında Pos.-Nr ve fiyat sütunları kaymış; kod↔fiyat eşlemesi `pdftotext -enc UTF-8 -raw` çıktısından yapılır.
+- **Kaynak:** ör. SSSST `.txt` Z.199 (33103 ↔ 95,10 görünüyor; doğrusu 33104), Ergo 2024 `.txt` Z.54
+- **Geçerlilik:** 26.10.2026'dan itibaren okuma kuralı
+- **Kodda:** yok (okuma protokolü) — denetim: `wissensbank/sitzungen/2026-10-26_katalog-physio-ergo-logo.md`
+- **Kapsam:** tüm Anlage 2 tabloları
+
+---
+
+## Physio: Zusatzpositionen je Verordnung — ergänzendes Heilmittel · Hausbesuch · Bericht · Doppelbehandlung (Ergänzung 26.10.2026, gkv-302, Physio-Feinschliff)
+
+> Anlass: Physio-DTA-Mapper `mapPrescriptionToDtaShape()` (`api-backend/billing/api/abrechnung.routes.js`)
+> schreibt je erbrachter Sitzung genau EINE Position (`rx.heilmittel_position`). Quellen gezielt gelesen
+> (INDEX → grep): Physio Anlage 2 Lesefassung ab 01.01.2026 (`physiotherapie/20251201_…_barrierefrei.txt`,
+> Preise per `pdftotext -raw` gegengeprüft, siehe Regel „Anlage 2 -layout Spalten verschoben") ·
+> Anlage 1 TP5 V21 (Stand 15.01.2026, anzuwenden ab 01.10.2025) · HeilM-RL 15.05.2025 (iK 05.08.2025) ·
+> Positionsnummernverzeichnis gültig ab 01.01.2026 (xlsx-Original).
+> ⚠️ Physio-**Rahmenvertrag** § 125 und **Anlage 1 Leistungsbeschreibung / Anlage 3** Physio liegen
+> NICHT im Archiv — alles, was nur dort stehen kann, ist unten als „nicht verifiziert" markiert.
+
+### Physio: Hausbesuch = eigene Position X9950 / X9951 / X9922 (nicht X9933/X9934)
+- **Kural:** Ein verordneter und erbrachter Hausbesuch wird als **eigene EHE-Position** am Behandlungstag
+  abgerechnet, zusätzlich zum ZHE-Kennzeichen „Hausbesuch = 1". Auswahl nach Ort:
+  häusliches Umfeld → **X9950** (22,78 € / Zuzahlung 2,28 €) · soziale Einrichtung/Gemeinschaft
+  (Alten-, Pflege-, Behinderteneinrichtung, Hospiz …) → **X9951** (13,09 € / 1,31 €), **auch wenn
+  nur eine Person besucht wird** · Kurzzeit-/Verhinderungspflege (§ 42 SGB XI), Tagespflege (§ 41 SGB XI)
+  **und betreutes Wohnen** → **X9922** (22,78 € / 2,28 €). Die drei sind je Behandlung nicht kombinierbar
+  und **in der Regel nur einmal täglich** je Versicherten. Wegegeld ist **in der Pauschale enthalten**
+  (kein km-Feld, keine km-Position). Nicht abrechenbar, wenn Praxissitz = Ort der Leistung (z. B. Praxis
+  in der Einrichtung). Hausbesuch-Positionen sind **zuzahlungspflichtig** (10 %). Seit 01.01.2026 heißen
+  X9933 → X9950 und X9934 → X9951; X9933/X9934 haben ab 01.01.2026 **keinen Preis** in Anlage 2 mehr
+  (im HPNR-Verzeichnis stehen sie noch mit gültig bis 9999-12-31 — das Verzeichnis ist nicht die
+  Vergütungsgrundlage).
+- **Bedingung:** nur bei **„Hausbesuch: ja" auf der Verordnung** — Anlage 2 B (4) spricht von
+  „Aufwendungen für **verordnete** Hausbesuche"; Änderung auf „ja" nur mit erneuter Unterschrift +
+  Datum des Verordners (HeilM-RL Anlage 3 lit. c). Durchführung ist auf dem Verordnungsblatt mit Datum
+  + durchgeführter Leistung zu bestätigen (Anlage 2 B (5)). Ausnahme ohne HB-Verordnung (Kinder in
+  ganztägiger Fördereinrichtung, HeilM-RL § 11 Abs. 2) erlaubt die Behandlung außerhalb der Praxis,
+  begründet aber **keine** Hausbesuchsposition.
+- **Kaynak:** Physio Anlage 2 Lesefassung gültig ab 01.01.2026 — Tabelle S. 7–8
+  (`20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.txt:322-347` X9950/X9951 inkl.
+  „umbenannt"-Hinweise und Begriff soziale Einrichtung; `:356-365` X9922 inkl. betreutes Wohnen),
+  B (4) `:423-427`, B (5) `:429-435` · Preise per `-raw` verifiziert 26.10.2026 · HPNR-Verzeichnis
+  ab 01.01.2026 (xlsx, Blatt Titelblatt: 29950/29951 „am 11.04.2025 neu aufgenommen") ·
+  Anlage 1 TP5 V21 § 5.5.3.3 ZHE „"1" = Hausbesuch … ist das Kennzeichen „1" zwingend zu setzen"
+  (`Anlage_1_TP5_V21_20260115.txt:3390-3393`), EHE „Gefahrene Kilometer … in einer Pauschale"
+  (`:3172-3193`, Kannfeld) · HeilM-RL § 11 Abs. 1 S. 2-3, Abs. 2 (`:516-536`), Anlage 3 lit. c (`:2349`)
+- **Geçerlilik:** Leistungen ab 01.01.2026 (Anlage 2) · TA V21 ab 01.10.2025
+- **Kodda:** **uygulanmamış.** Bugün yalnız ZHE bayrağı: `abrechnung.routes.js` `mapPrescriptionToDtaShape`
+  → `verordnung.hausbesuch: !!rx.hausbesuch` (Z.649) → `dta/builder.js:540`. Preise vorhanden und
+  korrekt: `api-backend/billing/codes/physio_positions.js:102-104`. Hedef: Mapper erzeugt je Tag mit
+  Hausbesuch eine zusätzliche Session-Zeile (Position aus Ort), Sperre analog
+  `api-backend/billing/dta/hausbesuch-regeln.js` (Podologie 79933/79934) für X9922/X9950/X9951.
+- **Kapsam:** Physiotherapie (LEGS 2100501/2200501/2700511/2800511/2900511; X = Präfix nach Anlage 2
+  Z.26-35). Ergo/Logo haben eigene Nummern (z. B. 59952/59953 ab 01.08.2025) — vor Übernahme je
+  Anlage 2 prüfen.
+
+### Physio: ergänzendes Heilmittel = eigene EHE je Tag, eigene Zuzahlung, nicht in die Höchstmenge des vorrangigen
+- **Kural:** Das ergänzende Heilmittel (Muster 13, 4. Zeile) wird mit **seiner eigenen 5-stelligen
+  Positionsnummer** in einem **eigenen EHE-Segment** abgerechnet — gleiche Positionen am selben Tag
+  werden zusammengefasst, sonst je Tag ein EHE. Zuzahlung wird **je Abrechnungsposition** berechnet
+  (Einzelbetrag × 10 %, kaufmännisch gerundet), also auch für die ergänzende Position (z. B. X1302
+  Elektrotherapie 8,43 € / 0,84 €). Die 10-€-Verordnungsblattgebühr bleibt einmal je Verordnung.
+  **Menge:** die Einheiten des ergänzenden Heilmittels zählen **nicht** zur orientierenden
+  Behandlungsmenge; seine Höchstmenge je Verordnung = verordnete Einheiten des vorrangigen
+  (bei Aufteilung: Summe der vorrangigen). **Tag:** „Eine Behandlung umfasst in der Regel ein
+  vorrangiges Heilmittel und sofern verordnet ein ergänzendes" — also regelhaft **am selben Tag**
+  wie das vorrangige. **Isoliert** (ohne vorrangiges) nur Elektrotherapie, Elektrostimulation oder
+  Ultraschall-Wärmetherapie, und nur wenn der Katalog sie in der Diagnosegruppe als ergänzend vorsieht;
+  dann ist es das einzige Heilmittel der Verordnung. Doppelbehandlung ist für ergänzende Heilmittel
+  ausgeschlossen.
+- **Kaynak:** Anlage 1 TP5 V21 § 5.5.3.3 EHE (`Anlage_1_TP5_V21_20260115.txt:3119-3138`
+  „Gleiche Abrechnungspositionen sind in einem EHE-Segment zusammenzufassen, wenn sie am selben Tag
+  erbracht worden sind … Andernfalls ist für jeden Tag … ein eigenes EHE-Segment zu erstellen";
+  `:3169-3187` „Einzelbetrag der prozentualen gesetzlichen Zuzahlung ist zwingend je
+  Abrechnungsposition zu berechnen") · HeilM-RL § 7 Abs. 2 S. 2 (`:401-404`), § 7 Abs. 5 S. 2-3
+  (`:419-426`), § 12 Abs. 3 (`:562-568`), § 12 Abs. 8 S. 2 + S. 5 (`:589-595`) · Physio Anlage 2
+  B (1) „ausschließlich die auf der Verordnung verordneten Leistungen" (`:387-399`) · X1302-Preis
+  per `-raw` verifiziert.
+- **Geçerlilik:** HeilM-RL 05.08.2025 · TA V21 ab 01.10.2025 · Preise ab 01.01.2026
+- **Kodda:** **uygulanmamış.** `prescriptions.ergaenzendes_heilmittel` (text) + `ergaenzend_einheiten`
+  (int) werden gespeichert (`module/verordnung-maske.js:739-740`), aber es gibt **keine Positionsspalte**
+  und keine Sitzungen dafür; Mapper liest nur `rx.heilmittel_position` (`abrechnung.routes.js:540-545`)
+  und setzt sie auf JEDE Sitzung (`:570-583`). `prescription_sessions.heilmittel_index` (Migration 0017,
+  Kombi-Termin) wird vom Mapper **ignoriert**. Hedef: Position je Heilmittel-Index auflösen.
+- **Nicht verifiziert:** ob ein ergänzendes Heilmittel an einem Tag OHNE vorrangiges (bei nicht
+  isolierter Verordnung) abgesetzt wird — „in der Regel" (§ 12 Abs. 8) ist kein harter Satz; eine
+  Vertragsregel dazu stünde im Physio-Rahmenvertrag/Anlage 1, die nicht im Archiv sind. Bis dahin:
+  **Warnung, keine Sperre.**
+- **Kapsam:** Physiotherapie (Ergo analog nach HeilM-RL, Preise eigene Anlage 2; Logo/Podo: kein ergänzendes HM)
+
+### Physio: Therapiebericht-Kreuz ≠ X1906 — Kennzeichen immer, X1906 nur mit schriftlicher Anforderung
+- **Kural:** (1) Ist auf der Verordnung „Therapiebericht" angekreuzt, ist im ZHE das Kennzeichen
+  **„1" zwingend** zu setzen (unabhängig davon, ob der Bericht schon geschrieben ist). (2) Die Position
+  **X1906** „Physiotherapeutischer Bericht auf schriftliche Anforderung" (67,69 €, **keine Zuzahlung**)
+  ist **nur** abrechenbar, wenn Krankenkasse, behandelnder Arzt oder Medizinischer Dienst den Bericht
+  **schriftlich** angefordert hat — „Ein Kreuz auf der Verordnung ist hier nicht ausreichend. Die
+  schriftliche Anforderung ist der Abrechnung beizufügen." (3) Für Mitteilung/Bericht an den Arzt gibt
+  es die **Übermittlungsgebühr X9701** (1,40 €, keine Zuzahlung).
+- **Kaynak:** Anlage 1 TP5 V21 § 5.5.3.3 ZHE (`Anlage_1_TP5_V21_20260115.txt:3364`, `:3385-3388`) ·
+  Physio Anlage 2 ab 01.01.2026 X1906 (`…_barrierefrei.txt:366-374`), X9701 (`:319-320`), B (3)
+  keine Zuzahlung für X9701/X1906 (`:419-421`) · HeilM-RL § 16 Abs. 7 (`:726-729`, Bericht „nach Ende
+  der Behandlungsserie" auf dem Verordnungsvordruck anforderbar), Anlage 3 lit. d (`:2350`, Kreuz nur
+  im Einvernehmen änderbar)
+- **Geçerlilik:** TA V21 ab 01.10.2025 · Anlage 2 ab 01.01.2026
+- **Kodda:** ⛔ **(1) KAPUTT:** Mapper schreibt `verordnung.berichtAngefordert` (`abrechnung.routes.js:677`),
+  Builder liest `verordnung.therapieberichtAngefordert` (`api-backend/billing/dta/builder.js:539`) →
+  ZHE-Feld ist **immer leer**. Die Kommentare `module/abrechnung-freigabe.js:16-20` und
+  `abrechnung.routes.js:940-945` behaupten das Gegenteil. (2) X1906 bewusst nicht erzeugt
+  (`module/abrechnung-freigabe.js:22-26`) — richtig für das reine Kreuz; Weg mit schriftlicher
+  Anforderung fehlt (Ablage möglich: `prescription_documents.art` hat schon `'therapiebericht'`,
+  `db/SCHEMA.sql:2705`). (3) X9701 nirgends erzeugt. Preise vorhanden: `physio_positions.js:96,100`.
+- **Nicht verifiziert:** (a) ob X9701 automatisch an das Verordnungskreuz gebunden ist (Wortlaut
+  Anlage 2 sagt nur „Übermittlungsgebühr für Mitteilung/Bericht an die Ärztin oder den Arzt"; die
+  Bedingung stünde im Rahmenvertrag/Anlage 1 Physio — nicht im Archiv). (b) Welches Leistungsdatum
+  X1906/X9701 im EHE tragen (Tag der Erstellung/Versendung naheliegend, nicht belegt). (c) Wie die
+  „beizufügende" Anforderung bei Image-Link/Papier mitgeht.
+- **Kapsam:** Physiotherapie (Kennzeichen-Regel (1) gilt für ALLE Heilmittel-Bereiche inkl. Podologie —
+  Podo-Mapper setzt `berichtAngefordert: false` fest, `abrechnung.routes.js:3895`, gesondert prüfen)
+
+### Physio: Doppelbehandlung = ein EHE mit Anzahl 2, nur wenn verordnet
+- **Kural:** Doppelbehandlung (dasselbe vorrangige Heilmittel zusammenhängend) nur bei Vermerk auf der
+  Verordnung; nicht für ergänzende Heilmittel, standardisierte Heilmittelkombinationen (X2001) und
+  Podologie. Sie erhöht Höchstmenge und orientierende Menge **nicht** (verbraucht also 2 Einheiten).
+  DTA: **ein** EHE-Segment, Anzahl = 2, gleiches Leistungsdatum — nicht zwei EHE mit Anzahl 1.
+  Ohne Doppelbehandlungs-Vermerk: je Tag eine Behandlung.
+- **Kaynak:** HeilM-RL § 12 Abs. 8 S. 1-6 (`:589-597`), § 13 Abs. 2 lit. h (`:621-622`) · Anlage 1
+  TP5 V21 § 5.5.3.3 EHE (`:3132-3138` „z.B. bei Doppelbehandlungen")
+- **Geçerlilik:** HeilM-RL 05.08.2025 · TA V21 ab 01.10.2025
+- **Kodda:** uygulanmamış — Doppelbehandlung existiert nur in der Termin-Anfrage
+  (`api-backend/server.js:4230`, `dashboard.js:18144`), nicht in `prescriptions`. Mapper gibt je Sitzung
+  `anzahl: 1` aus (`abrechnung.routes.js:574`), Builder fasst nicht zusammen (`dta/builder.js:502-526`);
+  Tages-Höchstzahl-Prüfung `preflight.js:603-614` kennt nur 78010/78020/78610 (Podologie).
+- **Kapsam:** Physiotherapie, Ergotherapie; Logopädie siehe Regel „SSSST … Doppelbehandlung" oben.

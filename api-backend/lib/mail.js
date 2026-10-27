@@ -15,12 +15,16 @@
 
 import nodemailer from 'nodemailer';
 
-export function createSMTPTransport() {
+// `requireTLS` nur auf Wunsch (Dokumentenversand, legal-de 22.10.2026: ohne TLS kein
+// Versand). Ohne Argument bleibt der Transport byte-gleich wie bisher — Buchungsmails
+// und Testmail rufen ohne Optionen (onprem O-216).
+export function createSMTPTransport({ requireTLS = false } = {}) {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: Number(process.env.SMTP_PORT) === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    ...(requireTLS ? { requireTLS: true } : {}),
   });
 }
 

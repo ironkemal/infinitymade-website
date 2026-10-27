@@ -55,3 +55,4 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | 2026-10-03 / 04 | VPS / Live-API | [[2026-10-03_live-api-liefert-html-statt-json]] | ✅ GELÖST 04.10. · Ursache: VPS-Platte 100 % voll durch Backup-Cron (8 × 2,5 GB) → calendar-api `unhealthy` → Traefik routete `/api/*` zu n8n · Platz frei, Backup-Skript ohne `binaryData`, 5 Tage, 85-%-Sperre |
 | 2026-10-24 | Redesign | [[2026-10-24_redesign-phase0-phase1]] | Phase 0 fertig (Werkzeuge, Ausgangslage grün) · O-219 im Branch behoben · Phase 1 Schalter + `praxura-design.css` lokal getestet, ohne Schalter 0 px Abweichung · Branch `redesign/praxura-design`, nicht gepusht |
+| 2026-10-26 | Katalog | [[2026-10-26_katalog-physio-ergo-logo]] | GKV_LEISTUNGSKATALOG Physio/Ergo/Logo denetimi · 9 sahte kod (Ergo 4, Logo 5), 9 yanlış fiyat, Physio X0102 etiketi yanlış · Ergo arşivi eskimiş (geçerli: Stand 01.07.2026) · kod yazılmadı |

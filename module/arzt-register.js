@@ -59,6 +59,7 @@
 // Dieselbe Version wie in `dashboard.js` — eine abweichende Query-Zeichenkette
 // wäre für den Browser ein zweites Modul.
 import { attachArztSearch, arztMetaText } from '../arzt-suche.js?v=20261001a';
+import { mountFaxDeckblatt } from './fax-deckblatt.js?v=20261022a';
 
 /** @type {object|null} Von `initArztRegister` gesetzter Zugang zur Dashboard-Umgebung. */
 let ctx = null;
@@ -72,6 +73,7 @@ let ctx = null;
  *   resolveArzt(input, q) → Promise<{arzt, arzt_id, created, enriched}|null>
  *   bearbeiten(id) / loeschen(id)
  *   patientName(lead)     → string
+ *   druckKopf()           → {praxis, logoUrl}  (Fax-Deckblatt)
  */
 export function initArztRegister(c) { ctx = c; }
 
@@ -506,6 +508,8 @@ export async function oeffneArztDetail(arztId) {
   const { nachname, vorname } = splitArztName(a.arzt_name);
   titel.textContent = nachname ? `${nachname}${vorname ? ', ' + vorname : ''}` : a.arzt_name;
   meta.textContent = arztMetaText(a) || '';
+  // Fax-Deckblatt (22.10.2026): Faxnummer steht hier, also gehört der Knopf hierher.
+  mountFaxDeckblatt(document.getElementById('arztDetailFax'), { arzt: a, ...(ctx.druckKopf?.() || {}) });
   body.innerHTML = '<p class="text-muted">Zuweisungen werden geladen …</p>';
   ctx.openModal('arztDetailModal');
 

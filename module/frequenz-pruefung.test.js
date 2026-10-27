@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   sollAbstand, werktageZwischen, bewerteAbstand, pruefeFrequenz, pruefeErsttermin,
   sitzungenProWoche, verteileWochentage,
-  TOLERANZ_WERKTAGE, UNTERBRECHUNG_TAGE,
+  TOLERANZ_WERKTAGE, UNTERBRECHUNG_TAGE, UNTERBRECHUNG_TAGE_HEILM_RL, unterbrechungsGrenze,
 } from './frequenz-pruefung.js';
 
 // Die Schwellen stammen aus wissensbank/podologie/20230524_Podologie_FAK_bf.txt Nr. 11
@@ -11,7 +11,21 @@ import {
 // Sinn dieser Datei: wer sie ändert, ändert eine Abrechnungsregel.
 test('die Schwellen stehen, wo die Quelle sie hinschreibt', () => {
   assert.equal(TOLERANZ_WERKTAGE, 2);
-  assert.equal(UNTERBRECHUNG_TAGE, 84);
+  assert.equal(UNTERBRECHUNG_TAGE, 84);              // Podologie-Vertrag § 7 Abs. 7
+  assert.equal(UNTERBRECHUNG_TAGE_HEILM_RL, 14);     // HeilM-RL § 16 Abs. 4 S. 1
+});
+
+test('Unterbrechungsgrenze je Fachbereich', () => {
+  assert.equal(unterbrechungsGrenze(true, null), 84);
+  assert.equal(unterbrechungsGrenze(false, null), 14);
+  assert.equal(unterbrechungsGrenze(false, { min: 7, max: 7 }), 14);
+  // Verordneter Abstand über 14 Tagen ist keine Unterbrechung (Annahme, s. Dateikopf).
+  assert.equal(unterbrechungsGrenze(false, { min: 28, max: 28 }), 28);
+});
+
+test('bewerteAbstand mit 14-Tage-Grenze (Physio/Ergo/Logo)', () => {
+  assert.equal(bewerteAbstand(14, 10, wochentakt, true, 14), 'zu_selten');
+  assert.equal(bewerteAbstand(15, 11, wochentakt, true, 14), 'unterbrechung');
 });
 
 // ── Sollabstand aus dem Freitext ───────────────────────────────────────────
@@ -166,11 +180,11 @@ test('„Flex" beanstandet weder eine noch acht Wochen Abstand', async () => {
   }
 });
 
-test('Pause über 12 Wochen bekommt eine eigene Überschrift', async () => {
+test('Unterbrechung bekommt eine eigene Überschrift', async () => {
   const supabase = doppel([sitzung(1, '2026-05-04T09:00:00Z')]);
   const r = await pruefeFrequenz({ supabase, rx: rxWoche, neuesDatum: new Date('2026-08-10T09:00:00Z') });
   assert.equal(r.ok, false);
-  assert.equal(r.titel, 'Behandlungspause über 12 Wochen');
+  assert.equal(r.titel, 'Behandlungspause über 14 Tage');
   assert.match(r.meldung, /§ 16 Abs. 4/);
 });
 
@@ -300,14 +314,16 @@ test('UI1/UI2-Diagnosegruppen: keine Frequenzwarnung (Anlage 3 Podologie lit. i)
   assert.equal(r.ok, true);
 });
 
-// ── Physio/Ergo/Logo: unverändertes Verhalten (kein therapie_bereich) ──────
+// ── Physio/Ergo/Logo: 14 Kalendertage (HeilM-RL § 16 Abs. 4 S. 1), seit 26.10.2026 ──
 
-test('Physio/Ergo/Logo: 12-Wochen-Unterbrechung bleibt unverändert scharf', async () => {
-  const supabase = doppel([sitzung(1, '2026-05-04T09:00:00Z')]);
+test('Physio/Ergo/Logo: Pause über 14 Kalendertage ist eine Unterbrechung', async () => {
+  const supabase = doppel([sitzung(1, '2026-07-20T09:00:00Z')]); // 21 Tage vor dem Zieldatum
   const r = await pruefeFrequenz({ supabase, rx: rxWoche, neuesDatum: new Date('2026-08-10T09:00:00Z') });
   assert.equal(r.ok, false);
-  assert.equal(r.titel, 'Behandlungspause über 12 Wochen');
+  assert.equal(r.befund.urteil, 'unterbrechung');
+  assert.equal(r.titel, 'Behandlungspause über 14 Tage');
   assert.match(r.meldung, /HeilM-RL § 16 Abs. 4/);
+  assert.match(r.meldung, /auf der Verordnung dokumentieren/);
   assert.doesNotMatch(r.meldung, /Gültigkeit — die Kasse kann die Leistung absetzen/);
 });
 
