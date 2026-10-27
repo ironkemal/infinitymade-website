@@ -153,3 +153,90 @@
   [data-design="neu"] .px-abschnitt.aktiv { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
   [data-design="neu"] #panel-settings .settings-section { scroll-margin-top: 16px; }
 }
+
+/* ── V8.01 Status- und Bereichsetiketten ruhig (E5, Melih 25.10.; Töne: gkv-302 27.10.) ─────
+   module/abrechnungsstatus.js rendert Etiketten mit Inline-Farben (statusBadge, statusBadgeGross,
+   bereichBadge). Im Neu-Design: Text neutral, ein kleiner Punkt trägt den Ton. Nur ECHTE
+   Probleme farbig: Absetzung (#be185d) → Rot; Teilabsetzung (#ea580c) → Orange; „Bereit zur
+   Abrechnung“ (#2563eb) → ruhiges Blau; alles andere grau. Erkannt am festen Inline-Muster
+   (Test: tools/redesign-etiketten.test.js) — keine JS-Änderung, Altdesign unberührt.
+   !important nur gegen die Inline-Stile der Etiketten. */
+@media screen {
+  [data-design="neu"] :is(span[style*="padding:2px 8px"][style*="border-radius:10px"][style*="background:"], span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"]) {
+    display: inline-flex !important;          /* gegen Inline inline-block */
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card-solid) !important; /* gegen Inline-Tönung */
+    color: var(--text-main) !important;          /* gegen Inline-Farbe */
+    border: 1px solid var(--border) !important;  /* gegen Inline-Farbrand (groß) */
+    border-radius: var(--radius-xs) !important;  /* gegen Inline 10/14px */
+    font-weight: 500 !important;                 /* gegen Inline 600/700 */
+    font-size: 12px !important;                  /* gegen Inline 11/13px */
+    line-height: 16px !important;                /* gegen Inline 1.3 */
+    padding: 3px 10px 3px 8px !important;        /* gegen Inline-Abstände */
+    white-space: nowrap;
+  }
+  [data-design="neu"] span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"] {
+    font-size: 13px !important;                  /* groß: Kopf der Verordnung */
+    padding: 5px 12px 5px 10px !important;       /* gegen Inline 5px 14px */
+    border-radius: var(--radius-sm) !important;  /* darf in schmaler Liste umbrechen (Inline white-space:normal) */
+    white-space: normal;
+  }
+  [data-design="neu"] :is(span[style*="padding:2px 8px"][style*="border-radius:10px"][style*="background:"], span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"])::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    flex-shrink: 0;
+  }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#2563eb"]::before { background: var(--accent); }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#be185d"]::before { background: var(--danger); }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#ea580c"]::before { background: var(--warning); }
+
+  /* Bereich (Heilmittel/Podologie): Ortsangabe, kein Signal — grau, normale Schreibung. */
+  [data-design="neu"] :is(span[style*="text-transform:uppercase"][style*="color:#15803d"], span[style*="text-transform:uppercase"][style*="color:#0e7490"]) {
+    color: var(--text-muted) !important;       /* gegen Inline-Grün/Cyan */
+    text-transform: none !important;           /* gegen Inline-Versalien */
+    letter-spacing: 0 !important;              /* gegen Inline-Sperrung */
+    font-weight: 500 !important;               /* gegen Inline 700 */
+    font-size: 13px !important;                /* gegen Inline 11px */
+    background: transparent !important;        /* gegen Inline-Tönung (groß) */
+    border-color: var(--border) !important;    /* gegen Inline-Rand (groß) */
+  }
+
+  /* „ohne Akte“ (verordnung-liste.js): Hinweis, kein Alarm — grau statt Orange. */
+  [data-design="neu"] span[style*="color:var(--warning,#f59e0b)"][title*="keiner Patientenakte"] {
+    color: var(--text-muted) !important;       /* gegen Inline-Orange */
+    font-size: 12px !important;                /* gegen Inline 11px */
+  }
+}
+
+/* V8.01 Merkmale im Verordnungskopf (verordnung-detail.js _merkmale: „Bitte prüfen“, „Unterschrift fehlt“ …)
+   und Kassenart-Kürzel in der Patientenliste (patientenliste.js: GKV/PRIVAT): Text neutral, Ton als Punkt. */
+@media screen {
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-main) !important;          /* gegen Inline-Farbe */
+    border-color: var(--border) !important;      /* gegen Inline-Farbrand */
+    background: var(--bg-card-solid);
+    border-radius: var(--radius-xs) !important;  /* gegen Inline 12px */
+    font-weight: 500 !important;                 /* gegen Inline 600 */
+    font-size: 12px !important;                  /* gegen Inline 11px */
+    padding: 3px 10px 3px 8px !important;        /* gegen Inline-Abstände */
+  }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid"]::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0;
+  }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid #ef4444"]::before { background: var(--danger); }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid #f59e0b"]::before { background: var(--warning); }
+
+  [data-design="neu"] span[style*="padding:1px 5px"][style*="border-radius:8px"][style*="margin-left:5px"] {
+    background: var(--bg-hover) !important;      /* gegen Inline-Blau/-Gelb */
+    color: var(--text-muted) !important;         /* gegen Inline-Farbe */
+    border-radius: var(--radius-xxs) !important; /* gegen Inline 8px */
+    font-weight: 500 !important;                 /* gegen Inline 600 */
+  }
+}

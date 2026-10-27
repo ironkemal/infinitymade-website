@@ -108,13 +108,15 @@ const bookings = [
   ...TERMINE.slice(2, 6).map((t, i) => bookingRow(t, i + 20, plusTage(-3))),
 ];
 
+// Status nur aus prescriptions_status_check (db/SCHEMA.sql): parsed/confirmed/in_therapy/completed/billed/cancelled.
+// Bis V8.01 standen hier 'in_behandlung'/'abgeschlossen' — die gibt es in der DB nicht, die Liste zeigte Rohwerte.
 const VO = [ // [patient, gueltig_bis-Offset, einheiten gesamt, erledigt, status]
-  [0, -2, 6, 5, 'in_behandlung'], [1, 4, 6, 3, 'in_behandlung'], [2, 6, 3, 1, 'in_behandlung'],
-  [3, 21, 6, 0, 'confirmed'], [4, 40, 6, 6, 'abgeschlossen'], [6, 12, 4, 2, 'in_behandlung'],
+  [0, -2, 6, 5, 'in_therapy'], [1, 4, 6, 3, 'in_therapy'], [2, 6, 3, 1, 'in_therapy'],
+  [3, 21, 6, 0, 'confirmed'], [4, 40, 6, 6, 'completed'], [6, 12, 4, 2, 'in_therapy'],
 ];
 const prescriptions = VO.map(([p, off, ges, erl, status], i) => ({
   id: uid('5', i + 1), owner_id: OWNER, user_id: OWNER, patient_id: leads[p].id, lead_id: leads[p].id,
-  patient_name: leads[p].name, therapie_bereich: 'podo', status, abrechnung_status: status === 'abgeschlossen' ? 'bereit' : 'offen',
+  patient_name: leads[p].name, therapie_bereich: 'podo', status, abrechnung_status: status === 'completed' ? 'bereit' : 'offen',
   rezeptart: 'kassen', ausstellungsdatum: plusTage(off - 60), gueltig_bis: plusTage(off), behandlungsbeginn: plusTage(off - 55),
   heilmittel: 'Podologische Komplexbehandlung', heilmittel_position: '78010', heilmittel_items: [],
   anzahl_einheiten: ges, behandlungseinheiten: ges, einheiten_erledigt: erl, sessions_done: erl, frequenz: '1x alle 4 Wochen',
