@@ -731,3 +731,21 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Wochenbasis auch Vergangenheit. Legacy slots allein reichen nicht. Fehlender
   Nachweis ergibt Unknown; ungeklärte DST-Minutenbasis bleibt Unknown.
   B08 ist dadurch lokal abgenommener Adapter, keine fertige Live-Verfügbarkeit.
+
+## Wiederaufnahme: B08-Integration unabhängig prüfen
+
+- Eigener Worktree sauber auf `887d4ad1`. B08 selektiven Zwei-Dateien-Patch
+  an Integrator übergeben (PRIMARY-Anwendbarkeit grün):
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b08-887d4ad1-9tyu3mva.patch`.
+- PRIMARY inzwischen `d86fe7c5`: Engine-Nachweise/Wochenrohgrundlage integriert,
+  davor `f7db2158` Engine-Beobachtung, `84bcbffd` Bereit-Integration und
+  `52d42ef8` Bereit-Karte. Dateibestand/Commit-Titel geprüft, keine ungeprüfte
+  Integrationsabnahme daraus abgeleitet. Integrator baut V6.F06-Frontend.
+- Gezielter unabhängiger read-only Review auf fixierten Integrationscommits
+  gestartet: `praxura-b08-integration-sol-review-20261027-r1`. Schwerpunkt
+  authentifizierter Scope, genau verwendete Engine-Reads, Pagination/Gruppen,
+  Googlefehler und vollständige Wochenbasis; keine Bildmatrix/Ports/Live-DB.
+  Keine zweite Umsetzung, keine Produktdatei verändert.
+- Lokale Kontextbrücke lieferte zur breiten Integrationsfrage irrelevante
+  Fixture-/SQL-Treffer; nicht als Audit akzeptiert. Statt Wiederholung direkte
+  bekannte Integrationspfade und Commit-Diffs für den Review verwendet.
