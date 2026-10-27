@@ -3,7 +3,7 @@
 > Üretim: 2026-10-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4083 fonksiyon** (3961 JS · 95 bash · 27 ps1) · 511 dosya · 42 sidebar modülü
+**4097 fonksiyon** (3975 JS · 95 bash · 27 ps1) · 512 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -496,19 +496,19 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:32 · module/mail-entwurf.js:41 · module/verordnung-pruefen-knopf.js:43 · setup.js:327
 - `zahl` — api-backend/lib/datev.js:280 · api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223 · module/startseite-rechnen.js:89
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
+- `lesen` — api-backend/lib/startseite/abrechnung.js:195 · cookie-consent.js:100 · module/einstellungen-nav.js:26 · module/rezept-barcode-scan.js:90 · module/startseite-handlungsbedarf-laden.js:123
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `markiere` — module/einstellungen-nav.js:40 · module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
 - `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:46 · module/termin-folge.js:194 · module/termin-heute.js:86
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fussbefund.js:792 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:833
+- `tag` — module/podo-vorgeschichte.js:21 · module/rechnung-dmrz.js:38 · module/rezeptinfo-geld.js:246 · module/startseite-handlungsbedarf-laden.js:13 · module/startseite-handlungsbedarf.js:7
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
 - `cent` — api-backend/lib/offene-forderungen.js:29 · api-backend/lib/startseite/abrechnung.js:18 · api-backend/lib/startseite/geld.js:56 · module/rechnung-zahlungseingang.js:113
 - `closeModal` — dashboard.js:921 · dashboard.js:11158 · dashboard.js:11579 · ops/app.js:162
 - `DE` — module/behandlungsbestaetigung.js:41 · module/fax-deckblatt.js:33 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:109
 - `escHtml` — api-backend/booking/html-escape.js:5 · api/_lib/mail-html.js:4 · booking-request.js:1408 · patient-suche.js:34
-- `fail` — api-backend/lib/startseite/verfuegbarkeit-kontext.js:3 · api-backend/lib/startseite/verfuegbarkeit.js:9 · module/ki-client.js:6 · ops/app.js:79
-- `fail` — onprem/deinstallieren.sh:40 · onprem/install.sh:97 · onprem/reset-owner-passwort.sh:22 · onprem/update.sh:79
 
 ## Shell (onprem/)
 

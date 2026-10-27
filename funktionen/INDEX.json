@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
- "dateien": 511,
- "funktionen": 4083,
+ "dateien": 512,
+ "funktionen": 4097,
  "module": [
   "abrechnung",
   "anamnese",
@@ -2010,6 +2010,7 @@
     "getEnvOverride",
     "has",
     "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
     "nurSchluessel",
     "pruefeWidgetAnfrage",
     "scanOutputPII",
@@ -2742,6 +2743,7 @@
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeMahnungen",
     "ladePodVerordnung",
@@ -6918,6 +6920,7 @@
     "ladeAbrechnung",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeHandlungsbedarfInput",
     "ladePhysiositzungen",
     "leseLeinwand",
     "listeVollstaendig",
@@ -7464,6 +7467,7 @@
     "ladeAktiveVerordnungen",
     "ladeBetriebsart",
     "ladeDateieinheiten",
+    "ladeHandlungsbedarfInput",
     "ladeMahnungen",
     "ladeOffeneForderungen",
     "ladePhysiositzungen",
@@ -7783,6 +7787,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeKonfiguration",
     "ladeMahnungen",
@@ -7865,6 +7870,7 @@
     "togglePopover",
     "treffer",
     "unmaskStreng",
+    "verarbeite",
     "verdrahteDatevExport",
     "vergleiche",
     "verifyOAuthState",
@@ -8187,6 +8193,7 @@
     "ladeAktiveVerordnungen",
     "ladeBetriebsart",
     "ladeDateieinheiten",
+    "ladeHandlungsbedarfInput",
     "ladeMahnungen",
     "ladeOffeneForderungen",
     "ladePhysiositzungen",
@@ -29649,6 +29656,7 @@
     "fields",
     "kontoLoeschenIntern",
     "saveRezept",
+    "seiten",
     "snapshot"
    ],
    "modules": [
@@ -30789,6 +30797,7 @@
     "initBkGroupPatientAutocomplete",
     "initCalendar",
     "insertBooking",
+    "instantTag",
     "isProtected",
     "komponentenTrennen",
     "kontoLoeschen",
@@ -30801,6 +30810,7 @@
     "ladeAktiveVerordnungen",
     "ladeChunks",
     "ladeFahrtenAenderungen",
+    "ladeHandlungsbedarfInput",
     "ladeItsgTrustAnchors",
     "ladeMahnungen",
     "ladeMandantenZeilen",
@@ -30845,8 +30855,10 @@
     "neuEintraege",
     "newTodo",
     "normName",
+    "normalisiereBehandlung",
     "normalisiereKonten",
     "normalisiereStufen",
+    "normalisiereTermin",
     "normalizedCurrent",
     "oeffnePatientenImport",
     "oeffneVerordnungImport",
@@ -30929,6 +30941,7 @@
     "schreibeItsgTrustAnchors",
     "seedeVorlagen",
     "segmenteTrennen",
+    "seiten",
     "senden",
     "serienDaten",
     "setAnamChecks",
@@ -30955,8 +30968,10 @@
     "uhrGenau",
     "unbekannt",
     "union",
+    "unvollstaendig",
     "updateCalendarForEmployee",
     "uploadPicked",
+    "uuid",
     "val",
     "validateBlanko",
     "validateLhbBvb",
@@ -34883,11 +34898,13 @@
     "erstelleApp",
     "init",
     "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
     "markiereNichtErschienen",
     "pruefeMaske",
     "renderBookingCalendar",
     "scanneRezeptLokal",
-    "sichtbar"
+    "sichtbar",
+    "verarbeite"
    ],
    "modules": [
     "abrechnung",
@@ -35318,10 +35335,13 @@
     "createSlotAdapter",
     "createVerfuegbarkeitRouter",
     "gruppiereHistorie",
+    "ladeHandlungsbedarfInput",
     "ladeMahnungen",
     "listeVollstaendig",
     "minutenGenau",
+    "pruefeScope",
     "run",
+    "seiten",
     "uhrGenau"
    ],
    "modules": [
@@ -35597,10 +35617,13 @@
     "createSlotAdapter",
     "createVerfuegbarkeitRouter",
     "gruppiereHistorie",
+    "ladeHandlungsbedarfInput",
     "ladeMahnungen",
     "listeVollstaendig",
     "minutenGenau",
+    "pruefeScope",
     "run",
+    "seiten",
     "uhrGenau"
    ],
    "modules": [
@@ -36039,6 +36062,7 @@
     "fields",
     "kontoLoeschenIntern",
     "saveRezept",
+    "seiten",
     "snapshot"
    ],
    "modules": [
@@ -37844,6 +37868,7 @@
    "calls": [],
    "calledBy": [
     "createVerfuegbarkeit",
+    "ladeHandlungsbedarfInput",
     "run"
    ],
    "modules": [
@@ -39486,6 +39511,7 @@
     "ladeAbrechnung",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeHandlungsbedarfInput",
     "ladePhysiositzungen",
     "leseLeinwand",
     "listeVollstaendig",
@@ -42514,10 +42540,13 @@
     "createSlotAdapter",
     "createVerfuegbarkeitRouter",
     "gruppiereHistorie",
+    "ladeHandlungsbedarfInput",
     "ladeMahnungen",
     "listeVollstaendig",
     "minutenGenau",
+    "pruefeScope",
     "run",
+    "seiten",
     "uhrGenau"
    ],
    "modules": [
@@ -45494,6 +45523,7 @@
     "fields",
     "kontoLoeschenIntern",
     "saveRezept",
+    "seiten",
     "snapshot"
    ],
    "modules": [
@@ -54345,11 +54375,13 @@
     "erstelleApp",
     "init",
     "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
     "markiereNichtErschienen",
     "pruefeMaske",
     "renderBookingCalendar",
     "scanneRezeptLokal",
-    "sichtbar"
+    "sichtbar",
+    "verarbeite"
    ],
    "modules": [
     "abrechnung",
@@ -72399,6 +72431,7 @@
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeMahnungen",
     "ladePodVerordnung",
@@ -90005,6 +90038,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeKonfiguration",
     "ladeMahnungen",
@@ -90087,6 +90121,7 @@
     "togglePopover",
     "treffer",
     "unmaskStreng",
+    "verarbeite",
     "verdrahteDatevExport",
     "vergleiche",
     "verifyOAuthState",
@@ -114833,7 +114868,9 @@
     "heute",
     "historienstand",
     "insertDatensatz",
+    "instantTag",
     "nurZiffern",
+    "quelle",
     "quelleOk",
     "renderMonat",
     "tag",
@@ -118731,6 +118768,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeKonfiguration",
     "ladeMahnungen",
@@ -118813,6 +118851,7 @@
     "togglePopover",
     "treffer",
     "unmaskStreng",
+    "verarbeite",
     "verdrahteDatevExport",
     "vergleiche",
     "verifyOAuthState",
@@ -121803,11 +121842,13 @@
     "erstelleApp",
     "init",
     "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
     "markiereNichtErschienen",
     "pruefeMaske",
     "renderBookingCalendar",
     "scanneRezeptLokal",
-    "sichtbar"
+    "sichtbar",
+    "verarbeite"
    ],
    "modules": [
     "abrechnung",
@@ -148952,6 +148993,8 @@
     "d"
    ],
    "calledBy": [
+    "(datei) module/startseite-handlungsbedarf-laden.js",
+    "aktuell",
     "bestaetigeUnveraendert",
     "kopieOeffnen",
     "openEinwilligungFlow",
@@ -149553,6 +149596,8 @@
     "get"
    ],
    "calledBy": [
+    "(datei) module/startseite-handlungsbedarf-laden.js",
+    "aktuell",
     "bestaetigeUnveraendert",
     "kopieOeffnen",
     "openEinwilligungFlow",
@@ -158785,7 +158830,9 @@
     "buildDmrzXml",
     "d",
     "historienstand",
+    "ladeHandlungsbedarfInput",
     "ladePodoZuzahlung",
+    "normalisiereBehandlung",
     "pruefeVorgeschichte",
     "quelleOk",
     "tagesabstand",
@@ -158986,6 +159033,7 @@
     "ladeAbrechnung",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeHandlungsbedarfInput",
     "ladePhysiositzungen",
     "leseLeinwand",
     "listeVollstaendig",
@@ -164663,7 +164711,9 @@
     "buildDmrzXml",
     "d",
     "historienstand",
+    "ladeHandlungsbedarfInput",
     "ladePodoZuzahlung",
+    "normalisiereBehandlung",
     "pruefeVorgeschichte",
     "quelleOk",
     "tagesabstand",
@@ -170707,8 +170757,10 @@
    ],
    "calledBy": [
     "createJetonClient",
+    "ladeHandlungsbedarfInput",
     "mountBarcodeBestaetigung",
-    "validateTokenPayload"
+    "validateTokenPayload",
+    "verarbeite"
    ],
    "modules": [
     "abrechnung",
@@ -171978,11 +172030,13 @@
     "erstelleApp",
     "init",
     "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
     "markiereNichtErschienen",
     "pruefeMaske",
     "renderBookingCalendar",
     "scanneRezeptLokal",
-    "sichtbar"
+    "sichtbar",
+    "verarbeite"
    ],
    "modules": [
     "abrechnung",
@@ -173558,6 +173612,7 @@
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
     "ladeGeld",
+    "ladeHandlungsbedarfInput",
     "ladeKassen",
     "ladeMahnungen",
     "ladePodVerordnung",
@@ -175455,7 +175510,9 @@
     "buildDmrzXml",
     "d",
     "historienstand",
+    "ladeHandlungsbedarfInput",
     "ladePodoZuzahlung",
+    "normalisiereBehandlung",
     "pruefeVorgeschichte",
     "quelleOk",
     "tagesabstand",
@@ -179982,6 +180039,720 @@
    ]
   },
   {
+   "name": "quelle",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 12,
+   "end": 13,
+   "lines": 2,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "alsBerlinDatum"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "tag",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 13,
+   "end": 13,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "alsBerlinDatum"
+   ],
+   "calledBy": [
+    "(datei) api-backend/lib/startseite/verfuegbarkeit.js",
+    "(datei) module/podo-behandlungen-oeffnen.js",
+    "add",
+    "berechneHandlungsbedarf",
+    "buildDmrzXml",
+    "d",
+    "historienstand",
+    "ladeHandlungsbedarfInput",
+    "ladePodoZuzahlung",
+    "normalisiereBehandlung",
+    "pruefeVorgeschichte",
+    "quelleOk",
+    "tagesabstand",
+    "terminstand",
+    "treffer",
+    "vorgeschichteAlsBehandlungen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "instantTag",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 14,
+   "end": 20,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "alsBerlinDatum",
+    "push",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput",
+    "normalisiereBehandlung",
+    "normalisiereTermin"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "uuid",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 15,
+   "end": 20,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "anomalie",
+    "createSlotAdapter",
+    "createVerfuegbarkeitRouter",
+    "gruppiereHistorie",
+    "ladeHandlungsbedarfInput",
+    "ladeMahnungen",
+    "listeVollstaendig",
+    "minutenGenau",
+    "pruefeScope",
+    "run",
+    "seiten",
+    "uhrGenau"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "unvollstaendig",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 17,
+   "end": 20,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push"
+   ],
+   "calledBy": [
+    "instantTag",
+    "ladeHandlungsbedarfInput",
+    "lesen",
+    "normalisiereBehandlung",
+    "normalisiereTermin",
+    "unknown",
+    "uuid",
+    "verarbeite"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "pruefeScope",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 22,
+   "end": 27,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "uuid"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "aktuell",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 29,
+   "end": 32,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istAktuell"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput",
+    "seiten"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "seiten",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 35,
+   "end": 61,
+   "lines": 27,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "aktuell",
+    "pruefe",
+    "push",
+    "uuid"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput",
+    "lesen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "normalisiereBehandlung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 63,
+   "end": 72,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "instantTag",
+    "push",
+    "tag",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "normalisiereTermin",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 74,
+   "end": 82,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "instantTag",
+    "push",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ladeHandlungsbedarfInput",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 115,
+   "end": 210,
+   "lines": 96,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "add",
+    "aktuell",
+    "check",
+    "get",
+    "has",
+    "hasOwn",
+    "instantTag",
+    "istBehandlungseinheit",
+    "lesen",
+    "normalisiereBehandlung",
+    "normalisiereTermin",
+    "pruefeScope",
+    "push",
+    "quelle",
+    "rxGeschlossen",
+    "seiten",
+    "set",
+    "tag",
+    "unknown",
+    "unvollstaendig",
+    "uuid",
+    "verarbeite"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "unknown",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 118,
+   "end": 118,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "createVerfuegbarkeit",
+    "ladeHandlungsbedarfInput",
+    "run"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "lesen",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 123,
+   "end": 132,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "has",
+    "push",
+    "seiten",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "(datei) api-backend/db/schema-zaehler.js",
+    "(datei) api-backend/lib/startseite/geld.js",
+    "(datei) module/anamnese.js",
+    "(datei) module/termin-leistungen.js",
+    "_speichereBetriebsart",
+    "einstellungenNavAufbauen",
+    "erstelleApp",
+    "init",
+    "ladeAbrechnung",
+    "ladeHandlungsbedarfInput",
+    "markiereNichtErschienen",
+    "pruefeMaske",
+    "renderBookingCalendar",
+    "scanneRezeptLokal",
+    "sichtbar",
+    "verarbeite"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "verarbeite",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/startseite-handlungsbedarf-laden.js",
+   "start": 153,
+   "end": 160,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "check",
+    "get",
+    "lesen",
+    "unvollstaendig"
+   ],
+   "calledBy": [
+    "ladeHandlungsbedarfInput"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "tag",
    "kind": "arrow",
    "lang": "js",
@@ -180006,7 +180777,9 @@
     "buildDmrzXml",
     "d",
     "historienstand",
+    "ladeHandlungsbedarfInput",
     "ladePodoZuzahlung",
+    "normalisiereBehandlung",
     "pruefeVorgeschichte",
     "quelleOk",
     "tagesabstand",
@@ -192653,6 +193426,7 @@
    ],
    "calledBy": [
     "(datei) module/termin-panel.js",
+    "ladeHandlungsbedarfInput",
     "rendereVeroKarten",
     "zeichnePodoEinheiten"
    ],
@@ -207848,6 +208622,7 @@
     "has"
    ],
    "calledBy": [
+    "ladeHandlungsbedarfInput",
     "podoBelegung"
    ],
    "modules": [
@@ -237259,6 +238034,17 @@
    "aynalar": []
   },
   {
+   "name": "lesen",
+   "orte": [
+    "api-backend/lib/startseite/abrechnung.js:195",
+    "cookie-consent.js:100",
+    "module/einstellungen-nav.js:26",
+    "module/rezept-barcode-scan.js:90",
+    "module/startseite-handlungsbedarf-laden.js:123"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "main",
    "orte": [
     "api-backend/check_diagnosegruppen_icd.js:94",
@@ -237310,6 +238096,17 @@
     "module/fussbefund.js:792",
     "module/praxis-rechtslinks-einstellungen.js:100",
     "module/verordnung-detail.js:833"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "tag",
+   "orte": [
+    "module/podo-vorgeschichte.js:21",
+    "module/rechnung-dmrz.js:38",
+    "module/rezeptinfo-geld.js:246",
+    "module/startseite-handlungsbedarf-laden.js:13",
+    "module/startseite-handlungsbedarf.js:7"
    ],
    "aynalar": []
   },
@@ -237426,16 +238223,6 @@
    "aynalar": []
   },
   {
-   "name": "lesen",
-   "orte": [
-    "api-backend/lib/startseite/abrechnung.js:195",
-    "cookie-consent.js:100",
-    "module/einstellungen-nav.js:26",
-    "module/rezept-barcode-scan.js:90"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "loadServices",
    "orte": [
     "booking-request.js:529",
@@ -237486,16 +238273,6 @@
    "aynalar": []
   },
   {
-   "name": "tag",
-   "orte": [
-    "module/podo-vorgeschichte.js:21",
-    "module/rechnung-dmrz.js:38",
-    "module/rezeptinfo-geld.js:246",
-    "module/startseite-handlungsbedarf.js:7"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "tick",
    "orte": [
     "api-backend/dsgvo/fristen.js:97",
@@ -237512,6 +238289,16 @@
     "api-backend/server.js:4140",
     "module/startseite-handlungsbedarf.js:74",
     "module/startseite-verfuegbarkeit.js:20"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "uuid",
+   "orte": [
+    "api-backend/lib/startseite/mahnungen.js:8",
+    "api-backend/lib/startseite/verfuegbarkeit-engine.js:3",
+    "api-backend/routes/startseite-verfuegbarkeit.js:4",
+    "module/startseite-handlungsbedarf-laden.js:15"
    ],
    "aynalar": []
   },
@@ -237792,15 +238579,6 @@
     "api-backend/lib/startseite/abrechnung.js:77",
     "module/rezept-barcode-bestaetigung.js:61",
     "module/rezept-speicher-riegel.js:8"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "uuid",
-   "orte": [
-    "api-backend/lib/startseite/mahnungen.js:8",
-    "api-backend/lib/startseite/verfuegbarkeit-engine.js:3",
-    "api-backend/routes/startseite-verfuegbarkeit.js:4"
    ],
    "aynalar": []
   },
@@ -238905,6 +239683,14 @@
    "orte": [
     "module/abrechnung-verlauf.js:71",
     "module/verordnung-maske.js:704"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "unknown",
+   "orte": [
+    "api-backend/lib/startseite/verfuegbarkeit.js:133",
+    "module/startseite-handlungsbedarf-laden.js:118"
    ],
    "aynalar": []
   },
