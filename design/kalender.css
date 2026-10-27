@@ -1,0 +1,73 @@
+/* ============================================================================
+   design/kalender.css — Terminkalender im neuen Design (PLAN-V2 V5)
+   ============================================================================
+   Kemals Aufbau bleibt (dashboard-feinschliff.css §5, dashboard.js day/week/month):
+   nur Optik. Geometrie unberührt — Slot-Höhen, Spaltenkopf 44 px, Zeitleiste und
+   `--sidebar-w` werden hier nicht angefasst (tools/redesign-geometrie.mjs prüft das).
+   Leistungsfarben der Blöcke (kalender-farben.js) bleiben unangetastet.
+   Nur [data-design="neu"], nur @media screen. Reihenfolge: nach design/seiten.css.
+   ========================================================================== */
+
+/* ── V5.01 Kopfzeile ──────────────────────────────────────────────────────────
+   Ein Höhenmaß (36 px) für alle Bedienelemente. Reihenfolge wie in gängigen Kalendern:
+   „Heute“, dann ‹ › zusammen, dann das Datum als Überschrift; rechts Ansicht und Aktionen.
+   Umgestellt nur per `order` — ids und HTML-Reihenfolge bleiben (dashboard.js). */
+@media screen {
+  [data-design="neu"] #panel-calendar .cal-view-toolbar { gap: 8px; }
+  [data-design="neu"] #panel-calendar #calTodayBtn { order: -1; }
+  [data-design="neu"] #panel-calendar .cal-view-nav { gap: 4px; }
+  [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { order: 3; padding-left: 10px; }
+
+  [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext) {
+    width: 36px;
+    height: 36px;
+    border-color: var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+  [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext):hover { background: var(--bg-hover); color: var(--text-main); }
+
+  [data-design="neu"] #panel-calendar :is(#calTodayBtn, #myBookingCopy, #calAddLeaveBtn, #calAddBookingBtn) {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"] #panel-calendar #calAddBookingBtn { font-weight: 600; }
+  /* dashboard.css setzt .btn-sm mit !important auf 11 px; hier gleich groß wie die Nachbarn. */
+  [data-design="neu"] #panel-calendar :is(#myBookingCopy, #calAddLeaveBtn) { font-size: 14px !important; }
+
+  /* Tag | Woche | Monat: ein Segment auf grauem Track, ohne Trennstriche. */
+  [data-design="neu"] #panel-calendar .cal-view-toggle {
+    height: 36px;
+    padding: 3px;
+    gap: 2px;
+    margin-left: auto;
+    background: var(--bg-hover);
+    border: 0;
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn {
+    height: 30px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn + .cal-view-btn { border-left: 0; }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn.active {
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font-weight: 600;
+    box-shadow: var(--shadow-e1);
+  }
+}
+@media screen and (max-width: 768px) {
+  /* Schmal: Datum etwas kleiner, Ansicht nicht nach rechts drücken (bricht ohnehin um). */
+  [data-design="neu"] #panel-calendar .cal-view-date { font-size: 18px; min-width: 0; }
+  [data-design="neu"] #panel-calendar .cal-view-toggle { margin-left: 0; }
+}
