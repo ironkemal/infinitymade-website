@@ -107,7 +107,7 @@ try {
           if (rest) {
             fund(panel, 'dialog', 'Dialog des Hauptknopfs ließ sich nicht schließen: ' + rest);
             await page.reload({ waitUntil: 'domcontentloaded' });
-            await page.waitForSelector('#sidebarNav .sidebar-item', { timeout: 20000 });
+            await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached', timeout: 20000 });  // V2.11: geschlossene Schublade (neu, < 1025 px) ist visibility: hidden
             await ruhe(page, 800);
           }
         }

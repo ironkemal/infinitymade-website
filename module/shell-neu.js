@@ -19,7 +19,7 @@
  * V6.F01: Startseite „Heute“ (module/startseite-neu.js) im Bereich overview.
  * V3.W: keine Emojis in der Oberfläche (module/ohne-emoji.js), Melih 26.10.2026.
  * V4.02: Abschnittsnavigation der Einstellungen (module/einstellungen-nav.js).
- * Folgt: Schublade (V2.11).
+ * V2.11: Menü-Schublade unter 1025 px (module/schublade-neu.js), R-01 über `translate` in design/shell.css.
  */
 import { on } from './signal.js?v=20260813';
 import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s218';
@@ -27,6 +27,7 @@ import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
 import { verdrahteStartseite } from './startseite-neu.js?v=20261026s218';
 import { einstellungenNavAufbauen } from './einstellungen-nav.js?v=20261027s222';
+import { verdrahteSchublade } from './schublade-neu.js?v=20261027s223';
 import { emojisAus } from './ohne-emoji.js?v=20261026s217';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
@@ -48,6 +49,7 @@ export function start({ kontext } = {}) {
   kurzlabelSetzen();
   einklappKnopf();
   verdrahteFlyout();
+  verdrahteSchublade();
   verdrahteProfil();
   verdrahteSuche(kontext);
   verdrahteNeu();

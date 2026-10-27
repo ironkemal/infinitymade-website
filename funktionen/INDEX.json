@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
- "dateien": 489,
- "funktionen": 3919,
+ "dateien": 490,
+ "funktionen": 3923,
  "module": [
   "abrechnung",
   "anamnese",
@@ -50225,7 +50225,8 @@
    "calls": [],
    "calledBy": [
     "(datei) dashboard.js",
-    "switchPanel"
+    "switchPanel",
+    "verdrahteSchublade"
    ],
    "modules": [
     "abrechnung",
@@ -123763,8 +123764,10 @@
     "markiere"
    ],
    "calledBy": [
+    "fokussierbar",
     "mountLeistungsart",
-    "verdrahteAuswahl"
+    "verdrahteAuswahl",
+    "verdrahteSchublade"
    ],
    "modules": [
     "abrechnung",
@@ -128769,7 +128772,8 @@
    "calls": [],
    "calledBy": [
     "bewege",
-    "kopfMenue"
+    "kopfMenue",
+    "verdrahteSchublade"
    ],
    "modules": [
     "abrechnung",
@@ -158182,8 +158186,10 @@
     "zeilenSteuerVon"
    ],
    "calledBy": [
+    "fokussierbar",
     "mountLeistungsart",
-    "verdrahteAuswahl"
+    "verdrahteAuswahl",
+    "verdrahteSchublade"
    ],
    "modules": [
     "abrechnung",
@@ -167554,6 +167560,274 @@
    ]
   },
   {
+   "name": "schubladenZustand",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/schublade-neu.js",
+   "start": 20,
+   "end": 23,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "anwenden",
+    "fokussierbar"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "fokussierbar",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/schublade-neu.js",
+   "start": 25,
+   "end": 56,
+   "lines": 32,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "anwenden",
+    "schubladenZustand"
+   ],
+   "calledBy": [
+    "anwenden",
+    "verdrahteSchublade"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "anwenden",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/schublade-neu.js",
+   "start": 30,
+   "end": 56,
+   "lines": 27,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fokussierbar",
+    "schubladenZustand"
+   ],
+   "calledBy": [
+    "fokussierbar",
+    "mountLeistungsart",
+    "verdrahteAuswahl",
+    "verdrahteSchublade"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "verdrahteSchublade",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/schublade-neu.js",
+   "start": 60,
+   "end": 86,
+   "lines": 27,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "anwenden",
+    "closeSidebar",
+    "fokussierbar",
+    "naechsterIndex"
+   ],
+   "calledBy": [
+    "start"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "normalisiereStufen",
    "kind": "function",
    "lang": "js",
@@ -168241,8 +168515,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 34,
-   "end": 36,
+   "start": 35,
+   "end": 37,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -168305,9 +168579,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 39,
-   "end": 62,
-   "lines": 24,
+   "start": 40,
+   "end": 64,
+   "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -168329,6 +168603,7 @@
     "verdrahteFlyout",
     "verdrahteNeu",
     "verdrahteProfil",
+    "verdrahteSchublade",
     "verdrahteStartseite",
     "verdrahteSuche"
    ],
@@ -168389,8 +168664,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 45,
-   "end": 45,
+   "start": 46,
+   "end": 46,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -168465,8 +168740,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 67,
-   "end": 71,
+   "start": 69,
+   "end": 73,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -168528,8 +168803,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 74,
-   "end": 95,
+   "start": 76,
+   "end": 97,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -168593,8 +168868,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 98,
-   "end": 119,
+   "start": 100,
+   "end": 121,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -168659,8 +168934,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 106,
-   "end": 111,
+   "start": 108,
+   "end": 113,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -168722,8 +168997,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/shell-neu.js",
-   "start": 122,
-   "end": 131,
+   "start": 124,
+   "end": 133,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -224734,7 +225009,7 @@
    "orte": [
     "merkez/cloudflare.js:30",
     "module/serien-termine.js:200",
-    "module/shell-neu.js:45",
+    "module/shell-neu.js:46",
     "module/termin-folge.js:194",
     "module/termin-heute.js:86"
    ],
@@ -224878,7 +225153,7 @@
    "name": "start",
    "orte": [
     "module/app-installieren.js:43",
-    "module/shell-neu.js:39",
+    "module/shell-neu.js:40",
     "ops/app.js:400",
     "widget/booking-widget.js:556"
    ],
@@ -224910,6 +225185,15 @@
     "api-backend/ai/pii-mask.js:121",
     "api-backend/lib/verbindungen.js:26",
     "module/podo-vorgeschichte.js:30"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "anwenden",
+   "orte": [
+    "module/kalender-auswahl.js:60",
+    "module/rechnung-steuer.js:262",
+    "module/schublade-neu.js:30"
    ],
    "aynalar": []
   },
@@ -225210,14 +225494,6 @@
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:45",
     "module/verordnung-maske.js:705"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "anwenden",
-   "orte": [
-    "module/kalender-auswahl.js:60",
-    "module/rechnung-steuer.js:262"
    ],
    "aynalar": []
   },

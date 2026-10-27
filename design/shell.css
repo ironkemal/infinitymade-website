@@ -573,3 +573,31 @@
 @media screen {
   [data-design="neu"] #sidebarNav .sidebar-item[hidden] { display: none; }
 }
+
+/* ── V2.11 Schublade unter 1025 px (module/schublade-neu.js) ──────────────────────
+   R-01: dashboard.css setzt bei „Bewegung reduzieren“ `* { transform: none !important }` und hebt
+   damit `.sidebar { transform: translateX(-100%) }` auf — die Leiste blieb offen über dem Inhalt.
+   Im Neu-Design schiebt die eigene Eigenschaft `translate` (von `transform: none` unberührt);
+   geschlossen zusätzlich `visibility: hidden`, damit nichts Unsichtbares fokussierbar bleibt. */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] .sidebar {
+    transform: none;
+    translate: -100% 0;
+    visibility: hidden;
+    width: min(300px, 86vw);
+    transition: translate var(--dur, 180ms) var(--ease-standard, ease), visibility 0s linear var(--dur, 180ms);
+  }
+  [data-design="neu"] .sidebar.open {
+    translate: 0 0;
+    visibility: visible;
+    box-shadow: var(--shadow-e3);
+    transition: translate var(--dur, 180ms) var(--ease-standard, ease);
+  }
+  [data-design="neu"] .sidebar.collapsed { width: min(300px, 86vw); }
+  [data-design="neu"] .sidebar-overlay { background: rgba(11, 15, 23, 0.32); }
+  [data-design="neu"] .sidebar .sidebar-item { min-height: 44px; }   /* Fingerziel */
+}
+@media screen and (max-width: 1024px) and (prefers-reduced-motion: reduce) {
+  [data-design="neu"] .sidebar,
+  [data-design="neu"] .sidebar.open { transition: none; }
+}
