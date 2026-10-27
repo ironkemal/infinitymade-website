@@ -650,3 +650,29 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   grundsätzlich passend. Keine Frontendänderung, keine pauschale Liveabnahme.
 - Mahnungen `eaee3e72` selektiv übergeben (zwei Produktdateien, Anwendbarkeit
   PRIMARY grün), Bereit-Lader weiterhin separat im Bau.
+
+## Fortsetzung mit Sol 6.1 nach Nutzungslimit
+
+- B06 bei Integrator als `1a3f423a` integriert, inklusive expliziter Lader-
+  Injection. B07 als `930c73c3` integriert, noch ohne Slotverdrahtung.
+  Keine zweite Anwendung oder neuer Bau dieser Pakete.
+- B08-Datei-ACK erhalten: nur neue `lib/startseite/verfuegbarkeit.js` und
+  `.test.js`; Serveradapter, Router und Frontend bleiben beim Integrator,
+  inzwischen ebenfalls Sol 6.1 im bisherigen Thread. Keine Änderung der
+  Grenzen main/V10/Live-DB.
+- B08-Vertragsanalyse nach Limit wieder eingetroffen: bestehende Engine per
+  Injection, kein zweiter Slotgenerator. `vollstaendig:true` muss Erfolge,
+  vollständige Seiten, Gruppen und externe Belegung genau desselben Aufrufs
+  belegen. Geschluckte DB-/Googlefehler sind durch try/catch außen nicht
+  nachweisbar. Integrator über nötige Serverinstrumentierung informiert.
+  Fehlender Nachweis bleibt Unknown; Wochenbasis nicht aus Slotanzahl bilden.
+- V6.F03b `e2804e11` gezielt nachgeprüft: sechs Originaltests grün, beide
+  Semantik-Repros geschlossen (Teilsumme statt Mindestbetrag, E16 getrennt).
+  Per Queue bestätigt, keine Produkt-/Frontenddatei geändert.
+- Bereit-Bau nach Limit abgebrochen, hinterließ aber beide vollständigen
+  zugeteilten Dateien: 48/48 fokussierte Tests vom Parent erneut grün.
+  Kein doppelter Bau gestartet. Unabhängiger Sol-Review läuft als
+  `praxura-bereit-sol-review-20261027-r1` (MCP-Instanz d3a1abd6).
+  Gesamtsuite läuft, Log
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-bereit-npm-hnjaqdma.log`.
+  Bereit-Dateien bleiben vor Review ungestagt.
