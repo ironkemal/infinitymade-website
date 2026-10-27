@@ -37,6 +37,7 @@ import { createManifestRouter } from './routes/manifest.js';
 import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { createStartseiteRouter } from './routes/startseite.js';
 import { createFinanzlader } from './lib/startseite/finanzadapter.js';
+import { ladeMahnungen } from './lib/startseite/mahnungen.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -634,7 +635,8 @@ const startseiteLimiter = rateLimit({
   message: { code: 'ZU_VIELE_ANFRAGEN' },
 });
 app.use('/api/startseite', startseiteLimiter);
-app.use('/api', createStartseiteRouter({ lader: createFinanzlader({ supabase }) }));
+// Mahnungen (Codex B06, eaee3e72) explizit injiziert; abrechnung folgt.
+app.use('/api', createStartseiteRouter({ lader: createFinanzlader({ supabase, lader: { mahnungen: ladeMahnungen } }) }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
