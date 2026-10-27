@@ -921,3 +921,26 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   keine Erlaubnis für Codex, Frontenddateien des Integrators zu bearbeiten.
   V9 muss diese Vertragszeilen einzeln prüfen; grüne Backend-/Komponententests
   allein schließen V6 und damit das Standarddesign-Ziel nicht ab.
+
+## Nächstes Bauangebot: reine Handlungsbedarfskarte, Datei-ACK ausstehend
+
+- Integrator aktuell `c7fcf75e`, aktiv an V8.02. V8.03/V8.04 inzwischen
+  anderen Helfern exklusiv reserviert; keine Überschneidung übernehmen.
+- Angebot per eindeutiger Queue-Nachricht: nur neue
+  `module/startseite-handlungsbedarf.js` + `.test.js`, reiner Rechner ohne
+  DOM/Query/Schreibwege. Bis Datei-ACK keine Produktdateien anlegen.
+- Wiederverwendung im INDEX.json bestätigt: `behandlungsbeginnFrist`,
+  `pruefeBehandlungsbeginn` und `pauseLage`; bestehende Module in beiden
+  Worktrees bytegleich. Kontextbrücke lieferte unpassende Teilbelege, deshalb
+  gezielt Originalmodule gelesen; null Provideraufrufe, keine Sparmessung.
+- Vertragsanforderungen vor Bau: normierte Tagesdaten und bestätigte
+  Vollständigkeit je Quelle. Fehlende Termin-/Behandlungshistorie darf weder
+  „noch nicht begonnen“ noch „ohne Folgetermin“ beweisen. Nicht bekannte
+  Teilmengen bleiben Unknown mit Grund, niemals Nullzahl/Entwarnung.
+- Beginn: bestehende Frist und bereits erfolgten Beginn getrennt beachten;
+  reine Datumsgültigkeit alter `gueltig_bis`-Kacheln nicht übernehmen.
+  Pause: nur Podologie, bestehendes `pauseLage` (>84 ungültig,84 noch gültig)
+  bleibt maßgeblich; E15-Warnvorlauf7 ist Darstellung, keine neue Sperre.
+  Folgetermin nur bei belegtem Restbedarf und vollständiger Terminquelle.
+- Nach ACK zuerst Funktionsmeister-Abgleich und Fachgrenzen bestätigen, dann
+  kleiner Bau + synthetische Grenztests. Loader/UI/STATUS/Index bleiben Integrator.
