@@ -117,6 +117,14 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 27.10.2026 · Physio-Leistungszeilen (`api-backend/billing/codes/physio-leistungszeilen.js`, 1f204f82)
+- Neu: `physioLeistungszeilen(rx, sessions)` + Konstante `HAUSBESUCH_POSITION`. Niye: Physio-§302 schrieb je Sitzung
+  nur `heilmittel_position`; ergänzendes Heilmittel, Hausbesuch-Pauschale (X9950/X9951/X9922) und Doppelbehandlung
+  (Anzahl 2) wurden nicht abgerechnet. Eine Quelle, damit DTA und ZU-Beleg aus denselben Zeilen rechnen.
+- Verwendung: `abrechnung.routes.js` `mapPrescriptionToDtaShape` (sessions) und `billing/zuzahlung/erbrachte-sitzungen.js`
+  `ladeErbrachteSitzungen` (Physio-Zweig; Anzahl 2 → zwei Zeilen). Podologie-Gegenstück: `hausbesuch-regeln.js` +
+  `flacheBehandlungen` — eigenes Sitzungsmodell, bewusste Parallele, keine Kopie zum Zusammenlegen.
+
 ### 26.10.2026 · Unterbrechungsgrenze nach Fachbereich (`module/frequenz-pruefung.js`, 05188181)
 - Neu: `unterbrechungsGrenze(istPodo, soll)` + Konstante `UNTERBRECHUNG_TAGE_HEILM_RL = 14`. Niye: Physio/Ergo/Logo
   liefen mit unbelegten 84 Tagen; HeilM-RL §16 Abs. 4 S. 1 = 14 Kalendertage. Podologie bleibt bei 84 (Vertrag §7 Abs. 7).
