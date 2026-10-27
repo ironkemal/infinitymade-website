@@ -749,3 +749,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Lokale Kontextbrücke lieferte zur breiten Integrationsfrage irrelevante
   Fixture-/SQL-Treffer; nicht als Audit akzeptiert. Statt Wiederholung direkte
   bekannte Integrationspfade und Commit-Diffs für den Review verwendet.
+
+## B08-Integrationsprüfung nach Limit selbst durchgeführt
+
+- Delegierter Review am Nutzungslimit gescheitert, kein verwertbares Urteil.
+  Anschließend gezielte unabhängige Parent-Prüfung des fixierten Integrator-
+  Commits `d86fe7c5`, nicht der beweglichen Arbeitsdateien.
+- Temporärer Quellsnapshot (11 gezielt geladene Module und Servertext), keine
+  Produktänderung. Netzwerk/HTTP/TLS/Serverstarts gesperrt; Serverfunktion
+  nur aus Text in VM ausgeführt, kein Bootstrap-/Env-/DB-Zugriff. Initiale
+  Testumgebung brauchte GIT_DIR und Backend-Abhängigkeiten, danach 145/145 grün.
+- Zwei zusätzliche Single-/MaybeSingle-Leerproben grün: Mitarbeiter ohne
+  eigene Arbeitszeit nutzt Owner-Fallback; fehlende Owner-Arbeitszeit liefert
+  bekannten Leerzustand. Kein Befund, beobachteter Zweig nutzt schon maybeSingle.
+- Im geprüften lokalen Umfang kein neuer belegter Blocker. Nachweise decken
+  Quellenfehler, Counts/Pagination, Gruppen, Googlefehler, vergangene Wochentage
+  sowie Rollen-/Tenantgrenzen ab. Keine vollständige Buchungsaktionsparität,
+  Live-/Echtkalender-/Frontend-V6.F06-Abnahme behauptet.
+- Ergebnis mit Grenzen an Integrator per Queue übergeben. Frontend-V6.F06-
+  Übergabe angefordert, damit gezielter Review auf fertigem Commit erfolgen kann.
