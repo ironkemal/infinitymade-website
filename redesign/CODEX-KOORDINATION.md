@@ -695,3 +695,19 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   `verfuegbarkeit.js` und `.test.js`, injizierter Kontext-/Slotadapter statt
   zweiter Slotengine. Bei fehlendem Vollständigkeitsnachweis Unknown. Server-
   instrumentierung/Router bleiben beim Integrator; keine Buchungsänderung.
+
+## Bereit-Lader nach Korrektur grün; B08 gebaut
+
+- Bereit-P1-Regressionsfälle geschlossen: 50/50 Tests, nach Korrektur volle
+  Gesamtsuite 2.154 / 1.915 / 318 = 4.387 bestanden, null Fehler/Skip.
+  Voriger unabhängiger Review deckte die unveränderten Rollen-/Owner-/Snapshot-
+  Grenzen ab; kleine Korrekturen vom Parent nach Rotnachweis vorgenommen.
+  Noch keine Preis-/Abrechnungs-Bestandsdatei verändert.
+- B08-Worker fertig: nur neue Verfügbarkeitsdateien, 78/78 grün (auch New York),
+  Syntax grün. Factory `createVerfuegbarkeit({ladeKontext,slotAdapter,jetzt})`
+  mit vollständig dokumentiertem v1-Normvertrag; kein Serverimport/DB-Client.
+  Sources erhalten ISO-Uhr, Mitarbeiter nur eigener Tag, Woche nur Inhaber.
+  Keine Vollständigkeits-/Onlinegarantie ohne instrumentierten Serveradapter.
+- Unabhängiger B08-Review läuft `praxura-b08-sol-review-20261027-r1`;
+  B08 bleibt separat ungestagt. Gemeinsame Gesamtsuite erneut gestartet,
+  um neu hinzugekommene B08-Tests ebenfalls einzuschließen.
