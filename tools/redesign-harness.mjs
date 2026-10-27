@@ -51,7 +51,12 @@ export const API_ANTWORTEN = {
         { stufe: 1, anzahl: 2, bekanntAnzahl: 2, rest: { bekanntCent: 7500, gesamtCent: 7500, unbekanntAnzahl: 0 } },
         { stufe: 2, anzahl: null, bekanntAnzahl: 1, rest: { bekanntCent: 2500, gesamtCent: null, unbekanntAnzahl: 1 } },
         { stufe: 3, anzahl: 0, bekanntAnzahl: 0, rest: { bekanntCent: 0, gesamtCent: 0, unbekanntAnzahl: 0 } }
-      ], anomalien: [] } } } }),
+      ], anomalien: [] } }, abrechnung: { status: 'ok', daten: {
+        bereit: { anzahl: 3, bekanntCent: 12345, gesamtCent: null, unbekanntAnzahl: 2,
+          gruende: [{ code: 'BEFREIUNG_UNGEKLAERT', anzahl: 2 }, { code: 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT', anzahl: 1 }] },
+        abgesetzt: { anzahl: 4 }, teilabgesetzt: { anzahl: 1 }, scope: 'mandant', ungefaehr: true,
+        quelle: 'prescriptions.abrechnung_status', umfang: 'praxisweit; Kassenanteil-Schätzung; kein Transaktionssnapshot'
+      } } } }),
 };
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */

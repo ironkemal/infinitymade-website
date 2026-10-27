@@ -222,6 +222,11 @@
   [data-design="neu"] .px-k-geld { grid-area: geld; }
   /* Neuer Mahnwesen-Einstieg: Touchziel mindestens 44 px, bestehende Fußleisten unverändert. */
   [data-design="neu"] .px-k-geld [data-ziel="mahnwesen"] { min-height: 44px; }
+  [data-design="neu"] .px-k-geld [data-ziel="abrechnung"] { min-height: 44px; }
+  [data-design="neu"] .px-bereit-gruende { margin: 12px 0 0; padding-left: 18px; font-size: 12px; line-height: 18px; color: var(--text-muted); overflow-wrap: anywhere; }
+  /* Schätzung kann „≈ Teilsumme“ plus lange Geldzahl tragen: volle Zeile verhindert Textkollision. */
+  [data-design="neu"] .px-k-geld .px-bereit-betrag { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  [data-design="neu"] .px-k-geld .px-bereit-betrag .zahl { justify-self: end; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: right; }
   [data-design="neu"] .px-geld { display: flex; flex-direction: column; padding: 4px 24px 8px; }
   [data-design="neu"] .px-geld-haupt { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 14px; border-bottom: 1px solid var(--border); }
   [data-design="neu"] .px-geld-haupt .lbl { font-size: 13px; line-height: 18px; color: var(--text-muted); }

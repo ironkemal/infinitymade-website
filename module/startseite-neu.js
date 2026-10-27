@@ -19,7 +19,7 @@
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { API_BASE } from '../supabase-config.js';
-import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s235';
+import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s236';
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -44,6 +44,7 @@ let laufNr = 0;
 // V6.F03 Abrechnungskarte (nur Inhaber): eigener Zustand, höchstens einmal je Minute neu laden (Server-Rate-Limit).
 let geld = { laden: false, fehler: false, daten: null, stand: 0 };
 let mahnungen = { laden: false, fehler: false, daten: null };
+let abrechnung = { laden: false, fehler: false, daten: null };
 
 const inLeiste = (panel) => document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const geheZu = (panel) => inLeiste(panel)?.click();
@@ -81,16 +82,19 @@ async function ladeGeldKarte({ erzwingen = false } = {}) {
   if (!erzwingen && (geld.laden || Date.now() - geld.stand < 60000)) return;
   geld = { ...geld, laden: true, fehler: false };
   mahnungen = { ...mahnungen, laden: true, fehler: false };
+  abrechnung = { ...abrechnung, laden: true, fehler: false };
   if (!geld.daten) zeichne();
   try {
-    const [g, m] = await Promise.allSettled(['geld', 'mahnungen'].map(blockName =>
+    const [g, m, a] = await Promise.allSettled(['geld', 'mahnungen', 'abrechnung'].map(blockName =>
       holeGeld({ supabase: k.supabase, apiBase: API_BASE, blockName })));
     geld = { laden: false, fehler: g.status === 'rejected', daten: g.status === 'fulfilled' ? g.value : geld.daten, stand: Date.now() };
     mahnungen = { laden: false, fehler: m.status === 'rejected', daten: m.status === 'fulfilled' ? m.value : mahnungen.daten };
+    abrechnung = { laden: false, fehler: a.status === 'rejected', daten: a.status === 'fulfilled' ? a.value : abrechnung.daten };
   } catch (e) {
     console.warn('[startseite] Abrechnungszahlen nicht ladbar:', e?.message);
     geld = { ...geld, laden: false, fehler: true, stand: Date.now() };
     mahnungen = { ...mahnungen, laden: false, fehler: true };
+    abrechnung = { ...abrechnung, laden: false, fehler: true };
   }
   zeichne();
 }
@@ -260,7 +264,7 @@ function zeichneInnen() {
   // Freie-Zeit-Sektion vor dem Neuzeichnen sichern (sie wird nur umgehängt, nie neu gebaut).
   if (frei && wurzel.contains(frei)) frei.remove();
   wurzel.innerHTML = `${kopfHtml()}<div class="px-start-raster${istOwner() ? '' : ' ist-team'}">
-    ${naechstesHtml()}${todoHtml()}${istOwner() ? geldKarteHtml(geld, mahnungen) : ''}${listeHtml()}${voHtml()}
+    ${naechstesHtml()}${todoHtml()}${istOwner() ? geldKarteHtml(geld, mahnungen, abrechnung) : ''}${listeHtml()}${voHtml()}
     <section class="px-karte px-k-frei" aria-labelledby="pxFreiTitel">
       <div class="px-karte-kopf"><div><h2 id="pxFreiTitel">Freie Zeit heute</h2><p>Lücken im Terminplan</p></div></div>
       <div class="px-frei-ziel"></div>

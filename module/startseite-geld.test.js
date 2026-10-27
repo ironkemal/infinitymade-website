@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summeText, monatText, geldKarteHtml, holeGeld, zuzahlungHtml, unbekanntHinweis, mahnungenHtml } from './startseite-geld.js';
+import { summeText, monatText, geldKarteHtml, holeGeld, zuzahlungHtml, unbekanntHinweis, mahnungenHtml, bereitHtml } from './startseite-geld.js';
 
 const NBSP = / /g;
 const t = (s) => s.replace(NBSP, ' ');
@@ -62,6 +62,63 @@ const mahndaten = () => ({ stufen: [
   { stufe: 2, anzahl: null, bekanntAnzahl: 1, rest: { bekanntCent: 2500, gesamtCent: null, unbekanntAnzahl: 1 } },
   { stufe: 3, anzahl: 1, bekanntAnzahl: 1, rest: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: 1 } }
 ] });
+
+const bereitdaten = () => ({ bereit: { anzahl: 3, bekanntCent: 12345, gesamtCent: null, unbekanntAnzahl: 2,
+  gruende: [{ code: 'BEFREIUNG_UNGEKLAERT', anzahl: 2 }, { code: 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT', anzahl: 1 }] },
+  abgesetzt: { anzahl: 4 }, teilabgesetzt: { anzahl: 1 }, scope: 'mandant', ungefaehr: true });
+
+test('Bereit: Statuszahl, geschätzte Teilsumme und Verordnungen mit unbekanntem Betrag getrennt', () => {
+  const html = t(bereitHtml({ daten: bereitdaten() }));
+  assert.match(html, /Bereit zur Abrechnung \(GKV\)/);
+  assert.match(html, /Verordnungen mit Status „bereit“[\s\S]*class="zahl">3</);
+  assert.match(html, /Geschätzter Kassenanteil[\s\S]*≈ Teilsumme 123,45 €/);
+  assert.match(html, /Gesamtbetrag unbekannt · 2 Verordnungen mit unbekanntem Betrag/);
+  assert.match(html, /Kassenanteil ohne belegte Befreiung hier nicht ermittelbar: 2 Verordnungen/);
+  assert.match(html, /Leistung keiner eindeutigen Heilmittelposition zugeordnet: 1 Verordnung/);
+  assert.match(html, /Mehrere Gründe je Verordnung möglich/);
+  assert.match(html, /Abgesetzt \(Verordnungen\)[\s\S]*class="zahl">4</);
+  assert.match(html, /Teilabgesetzt \(Verordnungen\)[\s\S]*class="zahl">1</);
+  assert.match(html, /unabhängig vom Abrechnungsmonat/);
+  assert.match(html, /keine technische Versandfreigabe/);
+  assert.doesNotMatch(html, /mind\.|BEFREIUNG_UNGEKLAERT|HEILMITTEL_ZUORDNUNG/);
+});
+test('Bereit: kompletter und belegter leerer Betrag bleiben Schätzung', () => {
+  for (const cent of [0, 12345]) {
+    const d = bereitdaten(); d.bereit = { anzahl: cent === 0 ? 0 : 1, bekanntCent: cent, gesamtCent: cent, unbekanntAnzahl: 0, gruende: [] };
+    const html = t(bereitHtml({ daten: d }));
+    assert.match(html, new RegExp(cent === 0 ? '≈ 0,00 €' : '≈ 123,45 €'));
+    assert.doesNotMatch(html, /Teilsumme|Gesamtbetrag unbekannt|Mehrere Gründe/);
+  }
+});
+test('Bereit: unbekannte Gründe bleiben neutral, Rohcode und HTML verlassen Formatter nicht', () => {
+  const d = bereitdaten(); d.bereit.gruende = [{ code: '<img src=x onerror=alert(1)>', anzahl: 2 }];
+  const html = bereitHtml({ daten: d });
+  assert.match(html, /Kassenanteil noch zu klären: 2 Verordnungen/);
+  assert.doesNotMatch(html, /<img|onerror/);
+});
+test('Bereit: Laden, Fehler, fehlende Kennzahlen und Altstand ausdrücklich', () => {
+  assert.match(bereitHtml({ laden: true }), /wird geladen/);
+  assert.match(bereitHtml({ fehler: true }), /gerade nicht verfügbar/);
+  assert.match(bereitHtml({ daten: {} }), /gerade nicht verfügbar/);
+  const d = bereitdaten(); d.abgesetzt.anzahl = null;
+  assert.match(bereitHtml({ daten: d }), /gerade nicht verfügbar/);
+  assert.match(bereitHtml({ daten: bereitdaten(), fehler: true }), /Zuletzt geladener Stand/);
+});
+test('Bereit: unbekannter Gesamtbetrag bei bekannter Teilsumme null bleibt Unknown', () => {
+  const d = bereitdaten(); d.bereit.bekanntCent = 0;
+  const html = t(bereitHtml({ daten: d }));
+  assert.match(html, /≈ Teilsumme 0,00 €/);
+  assert.match(html, /Gesamtbetrag unbekannt/);
+});
+test('Bereitblock: eigener Fetch ohne Änderung bestehender Geld-/Mahnantworten', async () => {
+  const supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'synthetic' } } }) } };
+  let pfad;
+  const daten = bereitdaten();
+  assert.deepEqual(await holeGeld({ supabase, apiBase: '/api', blockName: 'abrechnung', fetchFn: async u => {
+    pfad = u; return { ok: true, json: async () => ({ bloecke: { abrechnung: { status: 'ok', daten } } }) };
+  } }), daten);
+  assert.equal(pfad, '/api/startseite/zusammenfassung?bloecke=abrechnung');
+});
 
 test('Mahnstufen: Umfang, Anzahl und aktueller Rest getrennt; Unknown niemals Mindestbetrag', () => {
   const html = t(mahnungenHtml({ daten: mahndaten() }));
