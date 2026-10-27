@@ -94,3 +94,41 @@
   [data-design="neu"][data-theme="dark"] #panel-calendar .dv-col-highlight { background: rgba(255, 255, 255, 0.018); }
   [data-design="neu"][data-theme="dark"] #panel-calendar .dv-slot--past { background-color: rgba(255, 255, 255, 0.022); }
 }
+
+/* ── V5.03 Blöcke, Kontextmenü, Kopfzeile neben dem Terminpanel ─────────────────
+   Leistungsfarben (kalender-farben.js, inline) bleiben; nur Rundung und Auswahl. */
+@media screen {
+  [data-design="neu"] #panel-calendar :is(.dv-booking-block, .wv-booking-block) { border-radius: var(--radius-xxs); }
+
+  /* Kontextmenü (module/kalender-kontextmenue.js): Fokus innen statt eines Rings, der über den
+     Menürand ragt. Gegen den globalen Fokusring mit !important (praxura-design.css Fokus-Block). */
+  [data-design="neu"] .kal-kontextmenue-eintrag { font-size: 14px; border-radius: var(--radius-xxs); }
+  [data-design="neu"] .kal-kontextmenue-eintrag:hover:not(:disabled) { background: var(--bg-hover); }
+  [data-design="neu"] .kal-kontextmenue-eintrag:focus-visible {
+    background: var(--bg-hover);
+    outline-offset: -2px !important; /* gegen globalen Fokusring (offset 2px) */
+  }
+  /* Terminpanel: Zähler „n offen / m ges.“ (dashboard.html Inline color:#fff auf --primary) war im
+     Dunkelmodus weiß auf weiß. Ruhiger Zähler-Chip wie in der Leiste. */
+  [data-design="neu"] #bkRxSessionsBadge {
+    background: var(--bg-hover) !important; /* gegen Inline-Fläche */
+    color: var(--text-main) !important;     /* gegen Inline #fff */
+    border-radius: var(--radius-xxs) !important; /* gegen Inline 20px */
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Offenes Terminpanel (#bkActionModal, rechts 440 px) schiebt #mainArea per Inline-padding zur
+   Seite; die Kopfzeile brach dann in drei Zeilen um. Bei schmalem Kalender kompakter:
+   Buchungslink nur als Symbol (Name bleibt über title), Datum und Segment enger. */
+@media screen {
+  [data-design="neu"] #panel-calendar { container: pxkalender / inline-size; }
+}
+@media screen {
+  @container pxkalender (max-width: 900px) {
+    [data-design="neu"] #panel-calendar #myBookingCopy { width: 36px; padding: 0; justify-content: center; }
+    [data-design="neu"] #panel-calendar #myBookingCopy > span { display: none; }
+    [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { font-size: 18px; min-width: 0; padding-left: 6px; }
+    [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn { padding: 0 10px; }
+  }
+}
