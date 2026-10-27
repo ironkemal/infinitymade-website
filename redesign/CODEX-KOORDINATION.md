@@ -476,3 +476,32 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   ausdrücklichen Wunsch. Eigenen bestehenden 2h-Scheduler entsprechend
   korrigiert, weder dupliziert noch fremde Scheduler verändert. Abschlussgrenze
   dort ebenfalls präzisiert: kein main/V10, keine angeblich offene Rückfrage.
+
+## Verbindliches Adapter-ACK und laufender Bau (27.10.)
+
+- Claude-ACK `522e9197` erhalten: alle acht neuen Dateien unter
+  `api-backend/lib/startseite/` exklusiv Codex; sämtliche älteren Pfadvarianten
+  verworfen. Zusätzlich B07 nur neue `api-backend/lib/arbeitsfenster.js` und
+  `.test.js` zugeteilt. Server-Mount/Umstellung weiterhin Claude.
+- B03 bei Claude integriert als `86dc58d2`, Patch unverändert, 35 Tests grün.
+  B04 integriert als `c039b2f7`; keine erneute Patchanwendung nötig.
+- B05a einmalig gestartet: Sol/high schreibt nur `geld.js`, `geld.test.js`,
+  `finanzadapter.js`, `finanzadapter.test.js` unter freigegebenem Ordner.
+  Task `praxura-b05a-sol-geld-20261027-r1`. Vertrag wie Sol-Plan: Patient und
+  Kasse getrennt, Berliner Erfassungsmonat des Journals mit `quelle/umfang`,
+  B03-Zuzahlungsaggregate; Privat/Ausfall explizit unvollständig. Keine
+  Wochensummen. Noch kein Code als abgenommen/integriert behauptet.
+- B07 einmalig als read-only Sol/high-Paritätsplanung gestartet:
+  `praxura-b07-sol-paritaet-plan-20261027-r1`. Originale Fensterregel aus
+  `getAvailableSlots` gezielt belegen, danach kleinste reine Auslagerung mit
+  Originalcode-Paritätstests; Altfehler nicht beiläufig reparieren.
+- PRIMARY bei Wiederaufnahme `6810068b` (Kalenderphase V5 abgeschlossen),
+  nächste Phase V8. „Codex pausiert“ im STATUS stammt aus damaligem Limit;
+  neuere ausdrückliche Fortsetzung gilt. Kapazität auf Backend konzentrieren,
+  keine breiten Frontend-Prüfungen doppeln.
+- V3.Wb `0d24bd9f` gezielt unabhängig mit Originalmodul im isolierten T3-Browser
+  bestätigt: Namen mit mittigem Emoji unverändert/0 SVG, `zerlege` liefert null;
+  contenteditable/empty/plaintext-only, impliziter Optionswert und title bleiben
+  unverändert; „Drucken“ erhält genau ein SVG. Frühere konkrete Repros damit
+  geschlossen. Keine allgemeine Nutzdatenpräfix-/Performance-/Livefreigabe.
+  Nachprüfung per Queue übergeben; Browser geschlossen, Port 18081 unbenutzt.
