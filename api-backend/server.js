@@ -846,14 +846,17 @@ app.post('/api/apify/search', requireAuthAI, async (req, res) => {
 const SLOT_STEP_MINUTES = 15;
 
 // Helper to calculate available slots for a user and date
-async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = SLOT_STEP_MINUTES, serviceId = null) {
+async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = SLOT_STEP_MINUTES, serviceId = null, nachweis = null) {
+  // B08: Nachweis ausschließlich aus tatsächlich verwendeten Reads. Standardaufrufe unverändert.
+  const lese = (quelle, query, optionen) => nachweis ? nachweis.lese(quelle, query, optionen) : query;
+  const liste = nachweis ? { count: 'exact' } : undefined;
   const dayOfWeek = berlinDayOfWeek(date);
   const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
   // Reject past dates entirely
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
-  if (date < todayStr) return { slots: [] };
+  if (date < todayStr) { nachweis?.unbekannt('VERGANGENHEIT_OHNE_ROHBASIS'); return { slots: [] }; }
 
   // For today, compute current Berlin minute for filtering below
   let nowBerlinMinutes = null;
@@ -863,21 +866,21 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 
   // 1. Resolve owner_id
   let ownerId = userId;
-  const { data: profile } = await supabase
+  const { data: profile } = await lese('PROFIL', supabase
     .from('profiles')
     .select('owner_id')
     .eq('id', userId)
-    .single();
+    .single());
   if (profile?.owner_id) ownerId = profile.owner_id;
 
   // 1.1 Fetch requested service if serviceId is provided to check if it's a group service
   let isRequestedServiceGroup = false;
   if (serviceId) {
-    const { data: svc } = await supabase
+    const { data: svc } = await lese('LEISTUNG', supabase
       .from('services')
       .select('is_group')
       .eq('id', serviceId)
-      .maybeSingle();
+      .maybeSingle());
     if (svc && svc.is_group) {
       isRequestedServiceGroup = true;
     }
@@ -886,11 +889,11 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // 1.4 Check business closed_days (multi-business açılış günleri)
   let activeBiz = null;
   if (businessId) {
-    const { data: explicitBiz } = await supabase
+    const { data: explicitBiz } = await lese('STANDORT', supabase
       .from('businesses')
       .select('id, closed_days, owner_id')
       .eq('id', businessId)
-      .maybeSingle();
+      .maybeSingle());
     // Güvenlik: business gerçekten bu owner'a ait mi?
     if (explicitBiz && explicitBiz.owner_id === ownerId) {
       activeBiz = explicitBiz;
@@ -898,10 +901,10 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
   if (!activeBiz && profile?.owner_id) {
     // Employee — owner'in altinda employee'nin atandigi business'i bul
-    const { data: assigned } = await supabase
+    const { data: assigned } = await lese('ZUORDNUNGEN', supabase
       .from('employee_business_assignments')
-      .select('business_id, businesses(id, closed_days, is_default)')
-      .eq('employee_id', userId);
+      .select('business_id, businesses(id, closed_days, is_default)', liste)
+      .eq('employee_id', userId), { liste: true });
     if (assigned && assigned.length) {
       // Default'a atanmissa onu, degilse ilk
       const def = assigned.find(a => a.businesses?.is_default);
@@ -910,12 +913,12 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
   if (!activeBiz) {
     // Owner kendisi veya employee'nin atamasi yoksa: owner'in default business
-    const { data: defaultBiz } = await supabase
+    const { data: defaultBiz } = await lese('STANDARDSTANDORT', supabase
       .from('businesses')
       .select('id, closed_days')
       .eq('owner_id', ownerId)
       .eq('is_default', true)
-      .maybeSingle();
+      .maybeSingle(), { optional: true });
     activeBiz = defaultBiz || null;
   }
 
@@ -923,39 +926,41 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
     const jsDow = berlinDayOfWeek(date);
     if (activeBiz.closed_days.includes(jsDow)) {
+      nachweis?.abschluss();
       return { slots: [], reason: 'business_closed_day' };
     }
   }
 
   // 1.5 Check custom_days (shop-wide closed/holiday/special)
-  const { data: customDay } = await supabase
+  const { data: customDay } = await lese('SONDERTAG', supabase
     .from('custom_days')
     .select('type,start_time,end_time')
     .eq('owner_id', ownerId)
     .eq('date', date)
-    .maybeSingle();
+    .maybeSingle(), { optional: true });
 
   if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
+    nachweis?.abschluss();
     return { slots: [], reason: 'custom_day_closed' };
   }
 
   // 2. Get Working Hours — employee first, fallback to owner
-  let wh = (await supabase
+  const whQuery = supabase
     .from('working_hours')
     .select('*')
     .eq('user_id', userId)
-    .eq('day_of_week', dayOfWeek)
-    .single()).data;
+    .eq('day_of_week', dayOfWeek);
+  let wh = (await lese('ARBEITSZEIT', nachweis ? whQuery.maybeSingle() : whQuery.single(), { optional: true })).data;
 
   // Correct fallback logic: only fall back if the employee has no record at all (wh is null)
   if (!wh) {
     if (profile?.owner_id) {
-      wh = (await supabase
+      const ownerWhQuery = supabase
         .from('working_hours')
         .select('*')
         .eq('user_id', profile.owner_id)
-        .eq('day_of_week', dayOfWeek)
-        .single()).data;
+        .eq('day_of_week', dayOfWeek);
+      wh = (await lese('OWNER_ARBEITSZEIT', nachweis ? ownerWhQuery.maybeSingle() : ownerWhQuery.single(), { optional: true })).data;
     }
   }
 
@@ -964,6 +969,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   if (!wh || !wh.is_active) {
+    nachweis?.abschluss();
     return { slots: [], reason: 'working_hours_inactive' };
   }
 
@@ -973,24 +979,24 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
   // Only query bookings where group_parent_id IS NULL to prevent child bookings
   // from incorrectly blocking the time slots.
-  const { data: bookings } = await supabase
+  const { data: bookings } = await lese('BUCHUNGEN', supabase
     .from('bookings')
-    .select('id, start_time, end_time, is_group, group_capacity, service_id')
+    .select('id, start_time, end_time, is_group, group_capacity, service_id', liste)
     .eq('user_id', userId)
     .eq('status', 'confirmed')
     .is('group_parent_id', null)
     .gte('start_time', dayStart)
-    .lte('start_time', dayEnd);
+    .lte('start_time', dayEnd), { liste: true });
 
   // Query actual participant counts for group parent slots
   const parentIds = (bookings || []).filter(b => b.is_group).map(b => b.id);
   const participantCounts = {};
   if (parentIds.length > 0) {
-    const { data: participants } = await supabase
+    const { data: participants } = await lese('TEILNEHMER', supabase
       .from('bookings')
-      .select('group_parent_id')
+      .select('group_parent_id', liste)
       .in('group_parent_id', parentIds)
-      .eq('status', 'confirmed');
+      .eq('status', 'confirmed'), { liste: true });
     (participants || []).forEach(p => {
       participantCounts[p.group_parent_id] = (participantCounts[p.group_parent_id] || 0) + 1;
     });
@@ -1024,11 +1030,11 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   // 2.6 Get Breaks/Pauses for this employee
-  const { data: breaksData } = await supabase
+  const { data: breaksData } = await lese('PAUSEN', supabase
     .from('breaks')
-    .select('start_time, end_time')
+    .select('start_time, end_time', liste)
     .eq('user_id', userId)
-    .eq('day_of_week', dayOfWeek);
+    .eq('day_of_week', dayOfWeek), { liste: true });
 
   (breaksData || []).forEach(b => {
     bookedIntervals.push({
@@ -1038,12 +1044,12 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   });
 
   // 2.5 Get Time Offs (Beurlaubt) for this employee
-  const { data: timeOffs } = await supabase
+  const { data: timeOffs } = await lese('ABWESENHEITEN', supabase
     .from('time_offs')
-    .select('start_date, end_date')
+    .select('start_date, end_date', liste)
     .eq('employee_id', userId)
     .lte('start_date', dayEnd)
-    .gte('end_date', dayStart);
+    .gte('end_date', dayStart), { liste: true });
 
   if (timeOffs) {
     const dayStartMs = new Date(dayStart).getTime();
@@ -1059,12 +1065,13 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   // 3. Get Google Calendar Busy slots
-  const { data: integ } = await supabase
+  const integQuery = supabase
     .from('calendar_integrations')
     .select('*')
     .eq('user_id', userId)
-    .eq('provider', 'google')
-    .single();
+    .eq('provider', 'google');
+  const { data: integ } = await lese('GOOGLE_VERBINDUNG', nachweis ? integQuery.maybeSingle() : integQuery.single(), { optional: true });
+  if (integ && !integ.access_token) nachweis?.unbekannt('GOOGLE_VERBINDUNG_DEFEKT');
 
   if (integ && integ.access_token) {
     const auth = newOAuthClient();
@@ -1080,6 +1087,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
           items: [{ id: 'primary' }]
         }
       }, { timeout: 10000 });
+      nachweis?.googleAntwort(freeBusyRes);
       const busy = freeBusyRes.data.calendars.primary.busy || [];
       busy.forEach(b => {
         bookedIntervals.push({
@@ -1088,6 +1096,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
         });
       });
     } catch (err) {
+      nachweis?.unbekannt('GOOGLE_FEHLER');
       console.error('Google API error, tokens might be expired', err.message);
     }
   }
@@ -1105,6 +1114,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     currentMins += step;
   }
 
+  nachweis?.abschluss();
   return { slots };
 }
 
