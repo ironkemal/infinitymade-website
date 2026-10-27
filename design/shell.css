@@ -404,8 +404,8 @@
 /* ── V2.09 Suche in der Kopfleiste (module/kopf-suche.js) ──────────────────────
    Feld mit Lupe und Tastenhinweis „/“; Trefferliste ist die gemeinsame
    .patient-search-list (patient-suche.js), hier nur an die Form v3 angepasst.
-   Unter 1025 px vorerst aus (Platz; mobile Suche mit der Schublade V2.11 prüfen). */
-@media screen and (min-width: 1025px) {
+   Ab 900 px sichtbar (V2.12: Tablet quer hat Platz); darunter aus (Hochformat/Telefon: Patienten-Liste). */
+@media screen and (min-width: 900px) {
   [data-design="neu"] .px-suche {
     position: relative;
     display: flex;
@@ -479,8 +479,15 @@
   }
   [data-design="neu"] .px-suche .patient-search-list li .match-hl { color: var(--text-main); font-weight: 700; }
 }
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 899px) {
   [data-design="neu"] .px-suche { display: none; }
+}
+/* V2.12 Tablet (769–1279 px): Kopfleiste entlasten, damit der Praxisname lesbar bleibt —
+   Uhr aus, Einrichtung nur Ring + Prozent, Suche schmaler. */
+@media screen and (min-width: 769px) and (max-width: 1279px) {
+  [data-design="neu"] .live-clock { display: none; }
+  [data-design="neu"] .einrichtung-ring-text::before { content: none; }
+  [data-design="neu"] .px-suche { width: clamp(180px, 22vw, 260px); }
 }
 
 /* ── V2.10 „+ Neu“ (module/kopf-neu.js) ────────────────────────────────────────
