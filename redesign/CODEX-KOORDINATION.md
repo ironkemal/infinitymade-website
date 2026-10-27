@@ -569,3 +569,19 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Befund geschlossen und Claude per Queue übergeben, keine Frontendänderung.
 - B05a in PRIMARY als `29da1de9` gesehen. Eigener Patch damit integriert;
   Mount und Frontendkarte nicht ungeprüft als fertig bezeichnet.
+
+## B06 Mahnungen: Vertrag geprüft, Bau gestartet
+
+- Read-only Sol-Vertragsprüfung abgeschlossen: höchste Mahnstufe je
+  Forderungsart/FK, aktuelle belegte Reste statt Summe historischer Mahnbeträge.
+  B03 nur für eindeutig zugeordnete Patientenposten nutzen; fehlende Zuordnung
+  nach VKZ03 bleibt Unknown. Widersprüchlicher Status gleicher Höchststufe
+  bleibt Unknown, terminale Höchststufe fällt nicht auf offene Unterstufe zurück.
+- Exklusiver Bau einmalig gestartet: `praxura-b06-sol-bau-20261027-r1`, Sol/high.
+  Nur neue `api-backend/lib/startseite/mahnungen.js` und `.test.js`.
+  Factory unterstützt Injektion bereits und wird nicht geändert. Restquellen
+  bei leerem Mahnbestand nicht laden. Owner-Keysetreader aus B05a wiederverwenden.
+- B07 selektiv an Claude übergeben (Commit `ebcfac63`, zwei Produktdateien),
+  PRIMARY-Anwendbarkeit grün. Patch:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b07-ebcfac63-4ik_mzo0.patch`.
+  B07-Integration nicht vorweggenommen, server.js bleibt Claude.
