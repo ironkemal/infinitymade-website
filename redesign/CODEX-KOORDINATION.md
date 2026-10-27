@@ -528,3 +528,25 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Fensterparität ist kein Nachweis vollständiger Onlinebuchbarkeit (B08 offen).
 - PRIMARY enthält fremde gestagte Frontend-/Index-/STATUS-Dateien; unangetastet.
   Selektive Übergabe enthält ausschließlich die vier B05a-Produktdateien.
+
+## Übergabe B05a und gezielte B07-Testnachprüfung
+
+- B05a committet als `bb64ac46`, Hook und T1 ohne Umgehung grün. Selektiver
+  Vier-Dateien-Patch erfolgreich in PRIMARY auf Anwendbarkeit geprüft und
+  Claude per Queue übergeben:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b05a-bb64ac46-crr3qz3h.patch`.
+  Integration/Mount noch nicht als erfolgt behauptet.
+- B07-R1: kein Produktfehler, zwei belegte Testlücken. Direkte Tests für
+  getrennte Owner-/Mitarbeiterdaten und rückwärts gerichtete Grenzberührungen
+  ergänzt; Produktcode unverändert. 91/91 jeweils unter UTC, Berlin und New
+  York grün. Vier zuvor überlebende In-memory-Mutationen jetzt Exit 1.
+- Original-Testbasis auf gemeinsamen Featurecommit `dc134770` umgestellt;
+  Originalfunktionshash unverändert. Dadurch verlangt der selektive Patch
+  keinen ausschließlich auf Codex liegenden Dokumentationscommit als Oracle.
+- Eng begrenzte unabhängige Nachprüfung läuft als
+  `praxura-b07-sol-testnachpruefung-20261027-r2`. Finale Gesamtsuite läuft,
+  Log `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b07-final-npm-iqwwcec9.log`.
+  B07 bleibt bis Ergebnis ungestagt, server.js unangetastet.
+- Nächster unabhängiger Schritt: read-only Vertragsprüfung Mahnungen mit
+  Pflichtberaterperspektiven gestartet, `praxura-b06-sol-vertrag-20261027-r1`.
+  Noch keine Mahnungsdatei erzeugt; keine doppelte Arbeit am selben Paket.
