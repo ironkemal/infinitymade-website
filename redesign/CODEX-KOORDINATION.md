@@ -1059,3 +1059,80 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Zweck/erste Nutzung an Funktionsmeister gemeldet: Startseite und spätere
   Verordnungsliste gemeinsam berechnen; bisher ausschließlich synthetische Tests.
   Karte erzeugt Integrator im Integrationscommit. Keine Live-/UI-/Loaderabnahme.
+
+## F10b: lesende Ladevorbereitung, 27.10.2026
+
+- F10a frisch als c899017b im sauberen PRIMARY bestätigt; eigener Ausgangspunkt
+  31dd0537 sauber, hooksPath=.githooks. Integrator ohne aktive Ausführung,
+  letzte zwei Läufe failed; Ursache nicht belegt. Keine Wiederholung grüner
+  Tests ohne Produktdiff. Keine neue Datei übernommen oder Produktdatei geändert.
+- Vorschlag zur Entlastung: ausschließlich neue
+  module/startseite-handlungsbedarf-laden.js samt .test.js an Codex abgeben;
+  noch KEIN ACK. UI/Runtime-Kontext/Cache/INDEX/STATUS bleiben Integrator.
+  Vor Bau Daten-/Rechtevertrag durch db-ustasi und Funktionsmeister bestätigen.
+  Folgendes ist Quellbefund/Bauvorbereitung, keine fachliche Gesamtfreigabe.
+
+### Datenwege und Normalisierung
+
+- Quelle db/README.md und REGISTER.md:210,421,452,489; tatsächliche Spalten
+  SCHEMA.sql:2539,2719,2780. prescriptions ist gemeinsame VO-Tabelle.
+  GKV-Werte kassen/Alt-NULL, nicht gkv; rezept_typ ist andere Achse.
+  status und abrechnung_status nicht vermischen. Aktive bestätigte geeignete
+  VO explizit auswählen; parsed/unklare Bereichs- oder Statuszuordnung nicht
+  durch stilles Weglassen zu vollständiger Nullmenge machen.
+- Minimalprojektion VO: id,owner_id,patient_id,status,rezeptart,therapie_bereich,
+  ausstellungsdatum,is_dringend,behandlungsbeginn,anzahl_einheiten; weitere
+  Mengenfelder nur nach belegter Kombi-Regel. Keine Namen, KVNR, Bilder,
+  Signaturen, Diagnosen, Freitexte oder Geldfelder erforderlich.
+- Podo: raw Bereich podo auf podologie normalisieren. Tatsächliche Historie
+  aus podologie_behandlungen: id,owner_id,verordnung_id,behandlungsdatum,
+  hpnr_codes,storniert_am. Auch Kontrolltermine zählen als erfolgte Historie
+  für Pause; Einheitenverbrauch ist gesonderte Frage. Nicht nur abrechenbare
+  Therapiepositionen als Historie nehmen. Altsystem zählt, NULL employee_id
+  beweist keine Zuständigkeit. Zukunft/ungültige Daten bleiben Unknown.
+- Podo-Termine: bookings.verordnung_id; Physio/Ergo/Logo dagegen über
+  prescription_sessions.booking_id. Keine erfundene gemeinsame Rezept-FK.
+  Sessions: id,prescription_id,booking_id,status,done_at,heilmittel_index,
+  gegebenenfalls planned_date als Planwert. Keine owner_id an Sessions:
+  Parent-Owner-Join und Antwortprüfung nötig. done + gültiges done_at ist
+  Durchführung; geplantes Datum oder Booking allein kein Nachweis.
+- Je Termin tatsächliches Booking prüfen: Owner/VO-Verknüpfung, start_time,
+  status/no_show. Abgesagt/No-show kein Folgetermin. Unbekannten Rohstatus
+  nicht mit permissivem istVergeben ungeprüft als gültig behandeln.
+  Rechnervertrag ist taggenau: heute zählt als vorhanden; kein unbemerkter
+  Wechsel auf sekundengenaue Zukunft ohne Vertragsänderung/Test.
+- Bestehende Helfer module/verordnung-termine.js:49,59,147,169 sind nützlich,
+  vorhandene Loader aber nicht vollständig: Fehler werden zu data||[], keine
+  Pagination; Kandidatenlimit12. Nicht als vollständige Quelle wiederverwenden.
+  podoBelegung.offen zieht auch undokumentierte Termine ab; damit nicht blind
+  restbedarf für fehlende Folgetermine bestimmen. Vergangener undokumentierter
+  Termin ist keine erbrachte Einheit. Kombi-Heilmittel getrennt berücksichtigen;
+  unbelegter Restbedarf bleibt null statt neuer Mengen-/Frequenzformel.
+
+### Berechtigung, Vollständigkeit, Tests
+
+- Lokaler RLS-Dump erlaubt Teamlesen: SCHEMA-RLS.sql:628 bookings,
+  :1160 Podo, :1193 Sessions, :1213 prescriptions. Das begründet Mandantenzugriff,
+  nicht PLAN-V2 §3.3 „nur eigene Patienten“. bizScope (dashboard.js:14565)
+  ist Standort-/Teilungsregel mit NULL-Altbestand, keine Patienten-Zuordnung.
+  Employee-Scope vor Fachreads autoritativ herstellen; weder Behandlung durch
+  Mitarbeiter noch ein beliebiger eigener Termin beweist dauerhafte Zuordnung.
+  Fehlt belegte Regel: Employee-Quelle unbekannt, keine tenantweite Ersatzliste,
+  keine falsche Entwarnung. Keine neue RLS/Migration in diesem Paket.
+- Jede Quelle vollständig mit stabiler ID-Pagination, auch jede abhängige
+  ID-Gruppe; Owner-/Parent-/ID-Zugehörigkeit jeder Seite prüfen. Leere finale
+  Seite beweist nur innerhalb autorisierten, unverändert abgegrenzten Scopes
+  Abschluss. Seitenfehler/fehlende Zuordnung markieren betroffenen Teil Unknown;
+  bestätigte Teiltreffer behalten. Mehrere Reads sind kein Transaktionssnapshot.
+- Version1 an reinen Rechner liefern: Quellenstatus/vollstaendig/daten; kein
+  catch=>[] mit vollstaendig:true. Kein Kategorien-Summieren zu Fallgesamtzahl.
+  UI Entwarnung ausschließlich aus Rechner.entwarnung; je Kategorie Teilmenge,
+  unbekannte Quelle und Wiederholen getrennt. Bei Rollen-/Tenantwechsel oder
+  älterer überholter Antwort nichts zeichnen; Minutentakt darf Fokus nicht verlieren.
+- Harte Tests für späteren Bau: denied/unknown role ->0Reads; Fremdtenant auf
+  Folgeseite; Servercap1/volle/leere Schlussseite/>200IDs; Fehler letzte Seite;
+  fehlende Parent-Zuordnung; Podo vs Physio-FK; Kombi-Heilmittel; cancelled/no_show;
+  heute Behandlung; NULL/Future/invalid done_at; Restbedarf unbekannt; Altbestand;
+  Rollen-/Tenantwechsel während Reads; leere echte Daten vs Fehler; DST/Berlin.
+- Nur lokale Quellprüfung; kein Loaderbau, kein Netz/DB-/Browser-/Live-/RLS-Test.
+  agy-context ausschließlich local-only, kein externer Provideraufruf.
