@@ -117,6 +117,16 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 27.10.2026 · Ergänzend mitbuchen + Doppelbehandlung-Terminziel (967758a5, 9669380b)
+- Neu: `module/ergaenzend-mitbuchen.js` → `ergaenzendMitbuchen({rx, bereitsErbracht})` + `bucheErgaenzendMit(supabase, rxId, bookingId)`.
+  Niye: nach 0089 wird das ergänzende Heilmittel je Sitzung über `ergaenzend_erbracht` abgerechnet; ohne Extra-Klick
+  bis zur verordneten Menge automatisch markieren. Nerede: `dashboard.js` `markPrescriptionSession`, bei Status
+  'done' vor `pruefeVerordnungsfortschritt`.
+- Neu: `module/sitzung-abgleich.js` → `terminZiel(anzahlEinheiten, doppelbehandlung)`. Niye: Doppelbehandlung
+  1 Termin = 2 Einheiten (HeilM-RL §12 Abs. 8 S. 6); Sitzungszeilen und „fertig"-Entscheidung halbieren sich.
+  Nerede: `gleicheSitzungenAb` (3 Aufrufer reichen `doppelbehandlung` durch) und `sitzungsfortschritt.js`
+  `pruefeVerordnungsfortschritt`.
+
 ### 27.10.2026 · Physio-Leistungszeilen (`api-backend/billing/codes/physio-leistungszeilen.js`, 1f204f82)
 - Neu: `physioLeistungszeilen(rx, sessions)` + Konstante `HAUSBESUCH_POSITION`. Niye: Physio-§302 schrieb je Sitzung
   nur `heilmittel_position`; ergänzendes Heilmittel, Hausbesuch-Pauschale (X9950/X9951/X9922) und Doppelbehandlung
