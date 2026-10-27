@@ -102,7 +102,7 @@
 
   /* Kontextmenü (module/kalender-kontextmenue.js): Fokus innen statt eines Rings, der über den
      Menürand ragt. Gegen den globalen Fokusring mit !important (praxura-design.css Fokus-Block). */
-  [data-design="neu"] .kal-kontextmenue-eintrag { font-size: 14px; border-radius: var(--radius-xxs); }
+  [data-design="neu"] .kal-kontextmenue-eintrag { min-height: 36px; font-size: 14px; border-radius: var(--radius-xxs); }
   [data-design="neu"] .kal-kontextmenue-eintrag:hover:not(:disabled) { background: var(--bg-hover); }
   [data-design="neu"] .kal-kontextmenue-eintrag:focus-visible {
     background: var(--bg-hover);
@@ -130,7 +130,13 @@
     [data-design="neu"] #panel-calendar #myBookingCopy > span { display: none; }
     [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { font-size: 18px; min-width: 0; padding-left: 6px; }
     [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn { padding: 0 10px; }
+    [data-design="neu"] #panel-calendar .cal-view-toggle { margin-left: 0; }
+    /* Schmaler Knopf, damit die Chips daneben sichtbar bleiben (mobil-ui V5.05). */
+    [data-design="neu"] #panel-calendar #calAddLeaveBtn { font-size: 13px !important; padding: 0 10px; } /* gegen eigene 14px !important oben */
   }
+}
+@media screen and (max-width: 480px) {
+  [data-design="neu"] #panel-calendar #calAddLeaveBtn { font-size: 13px !important; padding: 0 10px; } /* gegen eigene 14px !important oben */
 }
 
 /* ── V5.04 Monat, Woche, Mitarbeiter-Chips ────────────────────────────────────
@@ -155,7 +161,7 @@
 
   /* Mitarbeiter-Chips: gleiche Höhe wie die Kopfzeile darüber, ruhige Pille. */
   [data-design="neu"] #panel-calendar .cal-emp-leiste { border-bottom: 0; margin-bottom: 12px; }
-  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 32px; padding: 0 12px; font-size: 13px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 36px; padding: 0 12px; font-size: 13px; }
   [data-design="neu"] #panel-calendar .cal-emp-chip:hover { border-color: var(--border-strong); background: var(--bg-hover); }
   [data-design="neu"] #panel-calendar .cal-emp-chip.active { border-color: var(--text-main); background: var(--nav-active); }
 }
