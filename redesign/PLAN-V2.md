@@ -110,6 +110,8 @@ Zuordnung als Map `PANEL_ARCHETYP` in einem Modul mit Vollständigkeitstest gege
 
 ## 5. Phasen und Pakete
 
+**Parallele Dateigrenzen (Melih, 27.10., korrigiert):** Hauptrolle behält V8.02 und sämtliche gemeinsame Integration. V8.03 ausschließlich Formular-Kollege: neue `design/formulare.css` + `redesign/V803-UEBERGABE.md`, eigener Worktree `/private/tmp/praxura-v803-formulare`, Branch `redesign/praxura-formulare` ab `c7fcf75e`. V8.04 ausschließlich Zusatzagent: neue `design/verwaltung.css` + `redesign/V804-UEBERGABE.md`; Panel-/Selektorgrenzen vor Baubeginn mit Hauptrolle abstimmen. Kollegen ändern weder `seiten.css`, `dashboard.*`, STATUS, Index noch Backend. Links, Cache und Auslieferung integriert allein Hauptrolle; kein Push/Deploy-GO durch Zuteilung.
+
 Jedes Paket = ein Durchlauf der Schleife (`AUFTRAG.md` 3.3) = ein Produkt-Commit, 30–90 Min, Wirkbereich vorher festgelegt. CSS, Backend und Werkzeug nie im selben Paket. **Nach jeder Phase:** T1–T5 auf dem Integrationsstand. Melihs spätere Grenze gilt: kein main-Push, keine Standardumschaltung und keine Live-DB ohne ausdrückliche Freigabe; Push nur `redesign/praxura-design` im Hauptkontext/Vordergrund. T6 erst auf einem gesondert freigegebenen veröffentlichten Stand.
 
 | Phase | Inhalt | Pakete (ca.) | Fertig, wenn … |

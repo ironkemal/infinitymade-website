@@ -9,5 +9,7 @@ Lies CLAUDE.md, redesign/PLAN-V2.md (Melihs OK vom 25.10.2026), redesign/STATUS.
 
 Verbindliches Endziel / aktives GOAL (Melih 27.10.): Nach vollständiger Fertigstellung ersetzt Neu Alt als Standard für alle Nutzer, auch bestehende Kunden-Dashboards. Kein dauerhaftes Vorschau-/Opt-in-Endprodukt. Laufende Pakete fertigstellen, vollständig integrieren/testen, dann Umstellung reviewbar vorbereiten. V10-Abnahme aus PLAN-V2 §1 und STATUS: nackte /dashboard.html-URLs, frische Profile, vorhandener/fehlender/abweichender oder gesperrter localStorage, Besitzer/Mitarbeiter, direkte Panel-Einstiege, alle Bereiche/Zugänge, Box-Auslieferung. Funktionen/Rollen/Tenants/Daten erhalten; Umstellungsweg/Cache/Rückfall prüfen. Dockerfile-COPY belegt keine Kundeninstallation; Kundenstand separat nachweisen. Tatsächliche Veröffentlichung weiterhin nur nach gesonderter Freigabe; kein sofortiger Push/Deploy.
 
+Dateigrenzen 27.10. (korrigiert): V8.02 bleibt Hauptrolle; V8.03 extern exklusiv design/formulare.css + redesign/V803-UEBERGABE.md (/private/tmp/praxura-v803-formulare, redesign/praxura-formulare ab c7fcf75e); V8.04 Zusatzagent exklusiv design/verwaltung.css + redesign/V804-UEBERGABE.md, vor Baubeginn Panel-/Selektorgrenzen abstimmen. Gemeinsame Dateien, Links/Cache/Auslieferung, STATUS und Index nur Hauptrolle. Externe Dateien nicht parallel bauen oder überschreiben; auf selektive Übergabe warten und integrieren.
+
 Start jeder Sitzung: git status, git log -1, Kurzzustand lesen, eigene halbe Arbeit testen oder verwerfen, node tools/redesign-status-check.mjs.
 ```

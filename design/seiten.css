@@ -10,6 +10,64 @@
    Inhalt kommen unverändert aus den bestehenden Modulen (verordnung-liste/-detail.js).
    ========================================================================== */
 
+/* ── V8.02 Listen: eine Hülle, einheitliche Zeilen und erreichbare Aktionen.
+   Nur Verwaltungslisten; Rechnungsdokument, Editor und Druck bleiben außerhalb. */
+@media screen {
+  [data-design="neu"] :is(#panel-belegliste, #panel-mahnwesen, #panel-warteliste) > .card:has(> .table-wrap) { padding: 0 !important; overflow: hidden; } /* gegen zentrale .card-Padding-Regeln mit !important */
+  [data-design="neu"] :is(#panel-belegliste, #panel-mahnwesen, #panel-warteliste) > .card > .table-wrap { border: 0; border-radius: inherit; box-shadow: none; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table th { height: 44px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table td { height: 60px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table :is(button, a) { min-height: 44px; min-width: 44px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .td-actions { flex-wrap: wrap; }
+  [data-design="neu"] #panel-belegliste > .card:has(#blFilterFrom) { gap: 16px !important; } /* gegen Inline-gap:12px */
+  [data-design="neu"] #panel-belegliste :is(.form-input, .form-select) { min-height: 44px; max-width: 100%; }
+  [data-design="neu"] #panel-belegliste .form-label { font-size: 12px !important; } /* gegen Inline-11px */
+  [data-design="neu"] :is(#blExportCsvBtn, #blDatevExportBtn) { min-height: 44px; }
+  [data-design="neu"] #wlStatusTabs { flex-wrap: wrap; }
+  [data-design="neu"] #wlStatusTabs button { min-height: 44px; }
+  [data-design="neu"] :is(#invNewBtn, #wlAddBtn) { min-height: 44px; min-width: 44px; }
+
+  [data-design="neu"] .anfragen-list { gap: 0; background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  [data-design="neu"] .anfragen-card { border: 0; border-radius: 0; padding: 20px 24px; background: transparent; }
+  [data-design="neu"] .anfragen-card + .anfragen-card { border-top: 1px solid var(--border); }
+  [data-design="neu"] .anfragen-card:hover { background: var(--bg-hover); }
+  [data-design="neu"] .anfragen-card :is(strong, span) { overflow-wrap: anywhere; }
+  [data-design="neu"] .anfragen-card-top { gap: 12px; }
+  [data-design="neu"] .anfragen-card-patient { min-width: 0; }
+  [data-design="neu"] .anfragen-card-footer { flex-wrap: wrap; gap: 12px; }
+  [data-design="neu"] .anfragen-card-actions { flex-wrap: wrap; }
+  [data-design="neu"] .anfragen-card-actions button { min-height: 44px; }
+  [data-design="neu"] .anfragen-card-actions .btn-success { background: var(--bg-card-solid); color: var(--text-main); border-color: var(--border); }
+  [data-design="neu"] .anfragen-card-actions .btn-success:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  [data-design="neu"] .anfragen-card-actions .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+  [data-design="neu"] .anfragen-badge { background: var(--bg-hover) !important; color: var(--text-muted) !important; border-color: var(--border) !important; font-weight: 500; letter-spacing: 0; } /* gegen Inline-Kassenartfarben; Text bleibt */
+  [data-design="neu"] .anfragen-tabs .tab-btn { min-height: 44px; }
+  [data-design="neu"] .anfragen-tabs .tab-btn.active { background: var(--nav-active) !important; color: var(--text-main) !important; } /* gegen Inline-transparent/Textfarbe */
+  [data-design="neu"] #bookingRequestLinkInput { min-width: 0; min-height: 44px; border: 1px solid var(--border-input); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-main); padding: 8px 12px; }
+  [data-design="neu"] #copyBookingLinkBtn { min-height: 44px; }
+
+  /* Vorbestehende Anfragen-Markupabweichung: .slider statt .toggle-slider und
+     classList.hidden statt hidden-Attribut. Vorhandene Zustandslogik sichtbar machen. */
+  [data-design="neu"] #autoAcceptTypes.hidden { display: none; }
+  [data-design="neu"] #panel-anfragen .toggle-switch { width: 44px; height: 44px; }
+  [data-design="neu"] #panel-anfragen .slider { position: absolute; inset: 11px 3px; border: 1px solid var(--border-input); border-radius: 11px; background: var(--bg-input); cursor: pointer; }
+  [data-design="neu"] #panel-anfragen .slider::before { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-muted); }
+  [data-design="neu"] #autoAcceptToggle:checked + .slider { background: var(--primary); }
+  [data-design="neu"] #autoAcceptToggle:checked + .slider::before { transform: translateX(16px); background: var(--bg-card-solid); }
+  [data-design="neu"] #autoAcceptToggle:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 3px; }
+}
+@media screen and (min-width: 1200px) {
+  [data-design="neu"] .anfragen-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 1.2fr); gap: 24px; align-items: center; }
+  [data-design="neu"] .anfragen-card-top, [data-design="neu"] .anfragen-card-info { margin-bottom: 0; }
+}
+@media screen and (max-width: 600px) {
+  [data-design="neu"] .anfragen-card { padding: 16px; }
+  [data-design="neu"] #panel-anfragen .auto-accept-card { width: 100%; justify-content: space-between; }
+  [data-design="neu"] #panel-anfragen div:has(> #bookingRequestLinkInput) { flex-wrap: wrap; }
+  [data-design="neu"] #bookingRequestLinkInput { flex-basis: 100%; }
+  [data-design="neu"] #wlStatusTabs { margin-left: 0 !important; } /* gegen Inline-auto, mobil unter Zusammenfassung */
+}
+
 /* ── V4.01 Verordnungen ─────────────────────────────────────────────────────── */
 /* Klassisches Liste-Detail: ohne geöffnete Verordnung volle Liste; mit geöffneter (oder neuer)
    Verordnung wird die Liste schmal (Nachname, Vorname, Status; Datum steht im Detail) und das Detail breit – das
