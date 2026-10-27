@@ -78,3 +78,17 @@
 - **Cevap "hayır" ise değişen:** Praxis istiyorsa hatırlatma, Arzt-Register + Fax-Deckblatt'tan (`module/fax-deckblatt.js`) "Folgeverordnung anfordern" faksına bağlanır.
 - **Öncelik:** 🟠 her gün sürtünme
 - **Eklendi:** 2026-10-26 · **Cevap:** —
+
+### #9 — Ergänzendes Heilmittel her seansta mı?
+- **Soru (Almanca, partnere aynen):** „Wenn ein ergänzendes Heilmittel verordnet ist (z. B. KG + Wärme): geben Sie es praktisch immer im selben Termin — oder kommt es vor, dass es an einem Termin ausfällt?"
+- **Varsayımımız:** Neredeyse her zaman aynı Termin'de. Bu yüzden seans kapatılınca ergänzend otomatik işaretleniyor (`module/ergaenzend-mitbuchen.js`), verordnete Menge dolana kadar.
+- **Cevap "hayır" ise değişen:** Seans kapatma ekranına "ergänzend heute nicht" seçeneği gerekir; yoksa verilmeyen leistung faturalanır.
+- **Öncelik:** 🔴 para/hata
+- **Eklendi:** 2026-10-27 · **Cevap:** —
+
+### #10 — Aynı reçetede Hausbesuch yeri değişir mi?
+- **Soru (Almanca, partnere aynen):** „Kommt es vor, dass ein Patient mit derselben Verordnung mal zu Hause und mal im Heim/in der Tagespflege behandelt wird?"
+- **Varsayımımız:** Hayır, yer reçete boyunca sabit (`prescriptions.hausbesuch_ort`).
+- **Cevap "evet" ise değişen:** Yer seans başına tutulmalı (`prescription_sessions.hausbesuch_ort`, yeni migration); X9950/X9951 gün gün seçilir.
+- **Öncelik:** 🟢 nadir
+- **Eklendi:** 2026-10-27 · **Cevap:** —
