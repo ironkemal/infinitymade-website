@@ -2,6 +2,8 @@
 
 Kopieren und in neue Sitzung **im Worktree** einfügen (Hauptrolle aktuell Sol 6.1):
 
+Neueste Dateigrenze F10b: Externer Kollege exklusiv NEUE module/startseite-handlungsbedarf-laden.js+.test.js (ACK nachc899017b). Nicht parallel bauen. Quellenvertrag ausc87d20f1 gelesen, eigene CODEX-KOORDINATION nicht integrieren. Employee ohne belegten Scope Unknown/0Fachreads. Hiesige Pflichtberater endeten Usage-Limit, kein abgeschlossenes Urteil; Kollege vorBau db-ustasi/Funktionsmeister zu konkreter Scope-/Restregel. UI/Kontext/Cache/Server/INDEX/STATUS Hauptrolle. V8.03/V8.04 unverändert.
+
 Neuester Integrationsstand F10a: Handlungsbedarfrechner31dd0537 unverändert selektiv übernommen (nur module/startseite-handlungsbedarf.js+.test.js), Hash/Apply-/Reversecheck grün. Export berechneHandlungsbedarf(v1), Vertrag im JSDoc. Berlin57/57inklHelfer, Kiritimati47/47; Fullsuite4767pass/1bestehenderSkip/0fail. INDEX frisch. Keine Loader-/UI-Nutzung: nächste Aufgabe F10b, berechtigte aktive geeignete Heilmittel-VO, vollständige Historie/Termine und bestätigten Restbedarf normalisieren; keine pauschale Vollständigkeit. NULL bleibt Unknown, unabhängige Unknown-Anzahlen nicht summieren. Gemeinsame Dateien/Loader/UI weiter Hauptrolle, V8.03/V8.04 unberührt. Ältere Reservierungs-/Nächster-Schritt-Angaben unten dadurch überholt; aktuellen STATUS lesen.
 
 Neuester Nachprüfstand: F07/F08/F09 auf92217e75 unabhängig31/31grün,0Skip; echte Vorgänger als Rotgegenprobe. Kein belegter Restblocker in diesen drei Befundumfängen. Ältere Offen-Vermerke unten sind damit überholt; Browser/RLS/Live/Gesamtabnahme nicht daraus ableiten. STATUS enthält genaue Grenzen. Handlungsbedarf-Reservation50f17d5b erneut bestätigt; V7/V8.03/V10 offen.
