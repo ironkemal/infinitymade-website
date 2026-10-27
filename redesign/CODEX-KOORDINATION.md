@@ -585,3 +585,20 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   PRIMARY-Anwendbarkeit grün. Patch:
   `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b07-ebcfac63-4ik_mzo0.patch`.
   B07-Integration nicht vorweggenommen, server.js bleibt Claude.
+
+## B06 gebaut, unabhängige Abnahme läuft
+
+- Sol-Bau fertig: ausschließlich neue `mahnungen.js` und `.test.js`, 21/21
+  gezielte Tests ohne Skip, Syntax grün. Keine bestehenden Adapter geändert.
+  Zweck: vorhandene Mahngruppen sicher aggregieren; erste Verwendung Tests,
+  spätere Karte über explizite Factory-Injektion. Keine vollständige Forderungs-
+  übersicht und kein Transaktionssnapshot.
+- Unabhängiger Sol-Review mit Pflichtberaterperspektiven läuft einmalig als
+  `praxura-b06-sol-review-20261027-r1`. Gesamtsuite parallel gestartet, Log
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b06-npm-qx4x5qko.log`.
+  Produktdateien bleiben bis Abnahme ungestagt.
+- Parallel weiterhin nur lesende, eng begrenzte Vorbereitung der Bereit-Kennzahl:
+  `praxura-bereit-sol-vertrag-20261027-r1`. Keine zweite Umsetzung, keine
+  neue Abrechnungsdatei. Preis-/Snapshotquelle vor Bau belegen.
+- PRIMARY inzwischen `26ae4dbe`: Claude hat Zusammenfassung mit Rate-Limit
+  eingehängt. Nur Commit-Titel gesehen, tatsächliche Integration nicht geprüft.
