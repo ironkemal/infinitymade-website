@@ -71,3 +71,26 @@
   [data-design="neu"] #panel-calendar .cal-view-date { font-size: 18px; min-width: 0; }
   [data-design="neu"] #panel-calendar .cal-view-toggle { margin-left: 0; }
 }
+
+/* ── V5.02 Raster und Köpfe ──────────────────────────────────────────────────
+   Nur Farben und Schrift; Höhen (Slots, Kopf 44 px, Zeitleiste) bleiben bei Kemals Aufbau.
+   dashboard-feinschliff.css tönt die eigene Spalte und die vergangene Zeit noch bräunlich
+   (rgba 164,133,101 bzw. 43,35,28) — im neuen Design neutral aus der Grau-Palette. */
+@media screen {
+  [data-design="neu"] #panel-calendar .dv-time-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  [data-design="neu"] #panel-calendar .dv-col-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    border-bottom-color: var(--border);
+  }
+  [data-design="neu"] #panel-calendar .dv-col-highlight { background: rgba(17, 24, 39, 0.018); }
+  [data-design="neu"] #panel-calendar .dv-col-highlight .dv-col-header { background: transparent; font-weight: 600; }
+  [data-design="neu"] #panel-calendar .dv-slot--past { background-color: rgba(17, 24, 39, 0.02); }
+  [data-design="neu"][data-theme="dark"] #panel-calendar .dv-col-highlight { background: rgba(255, 255, 255, 0.018); }
+  [data-design="neu"][data-theme="dark"] #panel-calendar .dv-slot--past { background-color: rgba(255, 255, 255, 0.022); }
+}
