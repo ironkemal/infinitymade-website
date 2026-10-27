@@ -110,3 +110,21 @@ export function terminAbfrage(abfrage, { rolle, uid, ownerId, von, bisExklusiv }
   if (rolle === 'employee') q = q.eq('user_id', uid);
   return q.gte('start_time', von).lt('start_time', bisExklusiv).neq('status', 'cancelled').order('start_time');
 }
+
+/** Datenattribute, die ein Bedienelement der Startseite stabil benennen (Reihenfolge = Selektor). */
+const FOKUS_DATEN = ['aktion', 'lead', 'ziel', 'termin'];
+
+/**
+ * Selektor, mit dem ein fokussiertes Element nach dem Neuzeichnen wiedergefunden wird (rein, testbar).
+ * Identität = Tag + erste (Struktur-)Klasse + stabile Datenattribute. Zustandsklassen wie
+ * `ist-naechster`/`ist-vorbei` wechseln mit der Uhr und gehören nicht dazu (Codex-Befund V6.F01b,
+ * 27.10.2026: Termin wurde während des Fokus „vorbei“ → Fokus fiel auf <body>).
+ * @param {{tag: string, klasse?: string, daten?: object}} el
+ */
+export function fokusSelektor({ tag, klasse = '', daten = {} } = {}) {
+  if (!tag) return null;
+  const erste = String(klasse).trim().split(/\s+/)[0];
+  const esc = (v) => String(v).replace(/["\\]/g, '\\$&');
+  return `${String(tag).toLowerCase()}${erste ? '.' + erste : ''}`
+    + FOKUS_DATEN.filter((n) => daten[n]).map((n) => `[data-${n}="${esc(daten[n])}"]`).join('');
+}

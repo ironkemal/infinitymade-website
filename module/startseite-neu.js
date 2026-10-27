@@ -18,7 +18,7 @@
  */
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
-import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage } from './startseite-rechnen.js?v=20261026s216';
+import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -174,7 +174,7 @@ function listeHtml() {
           : b.zustand === 'laeuft' ? '<span class="px-pille">läuft</span>'
           : b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>'
           : b.zustand === 'vorbei' ? '<span class="px-leise">vorbei</span>' : '';
-        const klick = b.lead_id ? `data-aktion="akte" data-lead="${esc(b.lead_id)}"` : 'disabled';
+        const klick = (b.lead_id ? `data-aktion="akte" data-lead="${esc(b.lead_id)}"` : 'disabled') + (b.id ? ` data-termin="${esc(b.id)}"` : '');
         return `<li><button type="button" class="px-termin${b.zustand === 'vorbei' ? ' ist-vorbei' : ''}${b === naechster ? ' ist-naechster' : ''}" ${klick}>
           <span class="t">${esc(uhrzeitBerlin(b.start_time))}</span>
           <span class="mitte"><span class="n">${esc(b.customer_name || 'Ohne Namen')}${b.hausbesuch ? ICON.haus : ''}</span><span class="s">${esc(leistung(b))}</span></span>
@@ -203,14 +203,15 @@ function voHtml() {
   </section>`;
 }
 
-/** Schlüssel für das fokussierte Element, damit es nach dem Neuzeichnen wiedergefunden wird (Codex-Befund V6.F01). */
+/** Schlüssel für das fokussierte Element, damit es nach dem Neuzeichnen wiedergefunden wird
+ *  (Codex-Befunde V6.F01, V6.F01b): stabile Identität ohne Zustandsklassen + Karte als Rückfall. */
 function fokusSchluessel(el) {
   if (!el || !wurzel?.contains(el) || el === wurzel) return null;
-  const d = el.dataset || {};
-  const sel = `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : ''}`
-    + ['aktion', 'lead', 'ziel'].filter((n) => d[n]).map((n) => `[data-${n}="${CSS.escape(d[n])}"]`).join('');
+  const sel = fokusSelektor({ tag: el.tagName, klasse: el.className, daten: el.dataset || {} });
+  if (!sel) return null;
   const gleiche = [...wurzel.querySelectorAll(sel)];
-  return { sel, nr: Math.max(0, gleiche.indexOf(el)) };
+  const karte = [...(el.closest('section.px-karte')?.classList || [])].find((k) => k.startsWith('px-k-'));
+  return { sel, nr: Math.max(0, gleiche.indexOf(el)), karte };
 }
 
 function zeichne() {
@@ -218,8 +219,12 @@ function zeichne() {
   const fokus = fokusSchluessel(document.activeElement);
   zeichneInnen();
   if (fokus) {
-    const ziel = wurzel.querySelectorAll(fokus.sel)[fokus.nr] || wurzel.querySelector(fokus.sel);
-    ziel?.focus({ preventScroll: true });
+    // Rückfall, wenn das Element weg ist: erstes bedienbares Element derselben Karte, sonst die Karte.
+    const karte = fokus.karte ? wurzel.querySelector(`section.${fokus.karte}`) : null;
+    const ziel = wurzel.querySelectorAll(fokus.sel)[fokus.nr] || wurzel.querySelector(fokus.sel)
+      || karte?.querySelector('button:not([disabled]), a[href]');
+    if (ziel) ziel.focus({ preventScroll: true });
+    else if (karte) { karte.tabIndex = -1; karte.focus({ preventScroll: true }); }
   }
 }
 

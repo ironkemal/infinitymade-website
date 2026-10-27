@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { begruessung, heutigeTermine, alsNaechstes, minutenBis, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage } from './startseite-rechnen.js';
+import { begruessung, heutigeTermine, alsNaechstes, minutenBis, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js';
 
 const jetzt = new Date('2026-10-23T08:15:00Z'); // 10:15 Berlin (Sommerzeit)
 const t = (id, von, bis, extra = {}) => ({ id, start_time: von, end_time: bis, status: 'confirmed', user_id: 'u1', ...extra });
@@ -87,4 +87,19 @@ test('terminAbfrage: ohne uid, unbekannte Rolle oder fehlende Grenzen → keine 
   assert.equal(terminAbfrage(q, { ...o, rolle: undefined, uid: 'u' }), null);
   assert.equal(terminAbfrage(q, { ...o, rolle: 'admin', uid: 'u' }), null);
   assert.equal(terminAbfrage(q, { rolle: 'owner', uid: 'u' }), null);
+});
+
+test('fokusSelektor: Zustandsklassen zählen nicht zur Identität (Codex V6.F01b)', () => {
+  const vorher = fokusSelektor({ tag: 'BUTTON', klasse: 'px-termin ist-naechster', daten: { aktion: 'akte', lead: 'p-1', termin: 'b-7' } });
+  const nachher = fokusSelektor({ tag: 'BUTTON', klasse: 'px-termin ist-vorbei', daten: { aktion: 'akte', lead: 'p-1', termin: 'b-7' } });
+  assert.equal(vorher, nachher);
+  assert.equal(vorher, 'button.px-termin[data-aktion="akte"][data-lead="p-1"][data-termin="b-7"]');
+});
+
+test('fokusSelektor: zwei Termine desselben Patienten bleiben unterscheidbar; Anführungszeichen maskiert', () => {
+  const a = fokusSelektor({ tag: 'button', klasse: 'px-termin', daten: { lead: 'p-1', termin: 'b-1' } });
+  const b = fokusSelektor({ tag: 'button', klasse: 'px-termin', daten: { lead: 'p-1', termin: 'b-2' } });
+  assert.notEqual(a, b);
+  assert.equal(fokusSelektor({ tag: 'button', daten: { ziel: 'x"y' } }), 'button[data-ziel="x\\"y"]');
+  assert.equal(fokusSelektor({}), null);
 });
