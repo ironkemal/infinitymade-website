@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261022153702 0088_datev_einstellungen
--- EXPORTED AT:        2026-10-22T15:40:00.000Z (gezielt fortgeschrieben: 0087, 0088)
--- ERZEUGT AM:         2026-10-22
+-- LAST MIGRATION:     20261027222343 0089_physio_zusatzpositionen
+-- EXPORTED AT:        2026-10-27T22:30:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089)
+-- ERZEUGT AM:         2026-10-27
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       97
---   table_columns:       1428
+--   table_columns:       1432
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        167
@@ -3873,6 +3873,13 @@ begin
   or new.is_lhb_bvb           is distinct from old.is_lhb_bvb
   or new.behandlungsbeginn    is distinct from old.behandlungsbeginn
   or new.gueltig_bis          is distinct from old.gueltig_bis
+  -- 0089 (gkv-302, 27.10.2026): ergänzendes Heilmittel, Hausbesuch-Ort, Doppelbehandlung
+  or new.ergaenzendes_heilmittel is distinct from old.ergaenzendes_heilmittel
+  or new.ergaenzend_einheiten is distinct from old.ergaenzend_einheiten
+  or new.vorrangig_einheiten  is distinct from old.vorrangig_einheiten
+  or new.ergaenzend_position  is distinct from old.ergaenzend_position
+  or new.hausbesuch_ort       is distinct from old.hausbesuch_ort
+  or new.doppelbehandlung     is distinct from old.doppelbehandlung
   then
     raise exception 'Eingereichte Verordnung ist festgeschrieben (GoBD, §302 SGB V). Offen bleiben nur status/absetzung_*/storno_*/zuzahlung_kassiert_* und die Anonymisierung.';
   end if;

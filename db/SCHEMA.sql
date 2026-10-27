@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261022153702 0088_datev_einstellungen
--- EXPORTED AT:        2026-10-22T15:40:00.000Z (gezielt fortgeschrieben: 0087, 0088)
--- ERZEUGT AM:         2026-10-22
+-- LAST MIGRATION:     20261027222343 0089_physio_zusatzpositionen
+-- EXPORTED AT:        2026-10-27T22:30:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089)
+-- ERZEUGT AM:         2026-10-27
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       97
---   table_columns:       1428
+--   table_columns:       1432
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        167
@@ -2702,7 +2702,7 @@ ALTER TABLE ONLY public.prescription_documents OWNER TO postgres;
 COMMENT ON TABLE public.prescription_documents IS 'Nachweise/Anhänge zu einer Verordnung (Befreiungsausweis, LHB-Genehmigung, korrigierte Verordnung, Therapiebericht)';
 
 ALTER TABLE ONLY public.prescription_documents
-  ADD CONSTRAINT prescription_documents_art_check CHECK (art = ANY (ARRAY['befreiungsausweis'::text, 'lhb_genehmigung'::text, 'korrigierte_verordnung'::text, 'therapiebericht'::text, 'sonstiges'::text]));
+  ADD CONSTRAINT prescription_documents_art_check CHECK (art = ANY (ARRAY['befreiungsausweis'::text, 'lhb_genehmigung'::text, 'korrigierte_verordnung'::text, 'therapiebericht'::text, 'sonstiges'::text, 'berichtsanforderung'::text]));
 
 ALTER TABLE ONLY public.prescription_documents
   ADD CONSTRAINT prescription_documents_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
@@ -2725,12 +2725,14 @@ CREATE TABLE public.prescription_sessions (
   done_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   notes text,
-  heilmittel_index integer DEFAULT 0
+  heilmittel_index integer DEFAULT 0,
+  ergaenzend_erbracht boolean DEFAULT false NOT NULL
 );
 --   FK booking_id -> bookings(id)
 --   FK prescription_id -> prescriptions(id)
 ALTER TABLE ONLY public.prescription_sessions OWNER TO postgres;
 COMMENT ON COLUMN public.prescription_sessions.notes IS 'Per-session therapist notes entered when marking session done';
+COMMENT ON COLUMN public.prescription_sessions.ergaenzend_erbracht IS 'An dieser Sitzung wurde zusätzlich das ergänzende Heilmittel (prescriptions.ergaenzend_position) erbracht → eigene EHE am selben Tag.';
 
 ALTER TABLE ONLY public.prescription_sessions
   ADD CONSTRAINT prescription_sessions_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
@@ -2870,7 +2872,10 @@ CREATE TABLE public.prescriptions (
   bg_einverstaendnis_version text,
   zuzahlung_altsystem_eur numeric(10,2),
   zuzahlung_altsystem_am date,
-  zuzahlung_altsystem_beleg text
+  zuzahlung_altsystem_beleg text,
+  ergaenzend_position text,
+  hausbesuch_ort text,
+  doppelbehandlung boolean DEFAULT false NOT NULL
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK abrechnung_status_manuell_von -> auth.users(id)
@@ -2886,6 +2891,9 @@ COMMENT ON COLUMN public.prescriptions.abrechnung_status IS 'Abrechnungsachse. S
 COMMENT ON COLUMN public.prescriptions.leitsymptomatik IS '§302 Heilmittel Leitsymptomatik: 4-char a/b/c/d (each 0|1), e.g. 1010; 0000 requires free-text patientenLeitsymptomatik';
 COMMENT ON COLUMN public.prescriptions.diagnose_freitext IS 'Muster 13: Freitext-Diagnose neben ICD-10 (z. B. "Unguis incarnatus rechts")';
 COMMENT ON COLUMN public.prescriptions.ergaenzendes_heilmittel IS 'Muster 13: Ergänzendes Heilmittel (Freitext)';
+COMMENT ON COLUMN public.prescriptions.ergaenzend_position IS 'Physio/Ergo/Logo: Positionsnummer des ergänzenden Heilmittels (X-Vorlage wie heilmittel_position). Abgerechnet je Sitzung mit prescription_sessions.ergaenzend_erbracht.';
+COMMENT ON COLUMN public.prescriptions.hausbesuch_ort IS 'Ort des Hausbesuchs als Kategorie (keine Adresse): haeuslich→X9950, soziale_einrichtung→X9951, tagespflege_kurzzeit_betreut→X9922. NULL = Altbestand, Mapper fällt auf hausbesuch zurück.';
+COMMENT ON COLUMN public.prescriptions.doppelbehandlung IS 'Doppelbehandlung ausdrücklich verordnet (HeilM-RL §12 Abs. 8): eine Sitzung = zwei Einheiten, DTA eine EHE mit Anzahl 2. Nicht für ergänzende Heilmittel.';
 COMMENT ON COLUMN public.prescriptions.therapie_bereich IS 'Muster 13: angekreuzter Therapiebereich (physio|podo|stimme|ergo|ernaehrung)';
 COMMENT ON COLUMN public.prescriptions.hinweise IS 'Muster 13: ggf. Therapieziele / weitere med. Befunde und Hinweise';
 COMMENT ON COLUMN public.prescriptions.icd10_2 IS 'Zweiter behandlungsrelevanter ICD-10-Code (Muster 13, 2. Diagnose)';
@@ -2938,6 +2946,12 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_ergaenzend_position_format CHECK (ergaenzend_position IS NULL OR ergaenzend_position ~ '^[X0-9][0-9]{4}$'::text);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_hausbesuch_ort_check CHECK (hausbesuch_ort IS NULL OR (hausbesuch_ort = ANY (ARRAY['haeuslich'::text, 'soziale_einrichtung'::text, 'tagespflege_kurzzeit_betreut'::text])));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_krankenkasse_ik_format CHECK (krankenkasse_ik IS NULL OR krankenkasse_ik ~ '^[0-9]{9}$'::text);
