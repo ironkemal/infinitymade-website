@@ -1556,7 +1556,7 @@ function formatActivityTimestamp(iso) {
 
 async function loadActivityFeed() {
   const container = document.getElementById('activityFeedList');
-  if (!container) return;
+  if (!container || currentProfile?.role !== 'owner' || document.documentElement.dataset.design === 'neu') { container?.replaceChildren(); return; }
   
   try {
     const ownerId = getOwnerId();
@@ -1589,7 +1589,7 @@ async function loadActivityFeed() {
         .limit(10), 'activities')
     ]);
 
-    const activities = [];
+    const activities = []; if (currentProfile?.role !== 'owner' || document.documentElement.dataset.design === 'neu' || getOwnerId() !== ownerId) { container.replaceChildren(); return; }
 
     if (notesRes.data) {
       notesRes.data.forEach(item => {
