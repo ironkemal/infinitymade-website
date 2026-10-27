@@ -18,6 +18,7 @@
  * V2.10: „+ Neu“ (module/kopf-neu.js); Menü-Mechanik gemeinsam in module/kopf-menue.js.
  * V6.F01: Startseite „Heute“ (module/startseite-neu.js) im Bereich overview.
  * V3.W: keine Emojis in der Oberfläche (module/ohne-emoji.js), Melih 26.10.2026.
+ * V4.02: Abschnittsnavigation der Einstellungen (module/einstellungen-nav.js).
  * Folgt: Schublade (V2.11).
  */
 import { on } from './signal.js?v=20260813';
@@ -25,6 +26,7 @@ import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
 import { verdrahteStartseite } from './startseite-neu.js?v=20261026s218';
+import { einstellungenNavAufbauen } from './einstellungen-nav.js?v=20261027s222';
 import { emojisAus } from './ohne-emoji.js?v=20261026s217';
 import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261026s210';
 
@@ -51,7 +53,11 @@ export function start({ kontext } = {}) {
   verdrahteNeu();
   verdrahteStartseite(kontext);
   kopfRollen();
-  on('panel:changed', (d) => { setze(d?.id); schliesseFlyout(); });
+  on('panel:changed', (d) => {
+    setze(d?.id); schliesseFlyout();
+    // Einstellungen: Abschnitte werden je Rolle/Plan nachgeladen bzw. eingeblendet → zweimal aufbauen.
+    if (d?.id === 'settings') { einstellungenNavAufbauen(); setTimeout(einstellungenNavAufbauen, 900); }
+  });
   on('nav:gerendert', () => { kurzlabelSetzen(); kopfRollen(); sucheSichtbarkeit(); });
 }
 

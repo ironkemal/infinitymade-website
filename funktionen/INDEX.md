@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-10-26 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3914 fonksiyon** (3792 JS · 95 bash · 27 ps1) · 488 dosya · 42 sidebar modülü
+**3919 fonksiyon** (3797 JS · 95 bash · 27 ps1) · 489 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -488,8 +488,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeile` — module/branding-ui.js:39 · module/rechnung-druck.js:33 · module/verordnung-detail.js:275 · module/verordnung-detail.js:404 · module/verordnung-detail.js:461 · module/verordnung-pruefen-knopf.js:116
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
+- `markiere` — module/einstellungen-nav.js:40 · module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
-- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:43 · module/termin-folge.js:194 · module/termin-heute.js:86
+- `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:45 · module/termin-folge.js:194 · module/termin-heute.js:86
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:292 · module/fussbefund.js:792 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:828
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:140 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223 · module/startseite-rechnen.js:89
@@ -500,7 +501,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fehler` — installieren/install.sh:22 · onprem/backup.sh:50 · onprem/restore.sh:47 · onprem/update.sh:65
 - `invalidate` — api-backend/ai/ki-jeton.js:146 · module/patient-notizen.js:9 · module/patient-ueberweisung-upload.js:4 · module/rezept-patientenkopf.js:19
 - `loadServices` — booking-request.js:529 · booking.js:176 · dashboard.js:8303 · kalender.js:643
-- `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 
 ## Shell (onprem/)
 

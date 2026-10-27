@@ -21,7 +21,7 @@ let kontext = null;
 export function neuKontext(k) { kontext = k && typeof k === 'object' ? k : null; }
 
 if (istNeu()) {
-  import('./shell-neu.js?v=20261027s220')
+  import('./shell-neu.js?v=20261027s222')
     .then((m) => m.start({ kontext: () => kontext }))
     .catch((e) => console.warn('[neu-start] Shell nicht geladen:', e));
 }
