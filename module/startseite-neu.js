@@ -19,7 +19,7 @@
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { API_BASE } from '../supabase-config.js';
-import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s232';
+import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s234';
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

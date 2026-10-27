@@ -238,6 +238,12 @@
   [data-design="neu"] .px-geld-hinweis { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
   [data-design="neu"] .px-geld-hinweis .px-sym { color: var(--warning); flex-shrink: 0; }
   [data-design="neu"] .px-geld-fuss { margin: 12px 0 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  /* Offene Zuzahlungen: Gruppe mit Unterzeilen Patient / Kasse / Klärung (Codex V6.F03 P2, E16). */
+  [data-design="neu"] .px-geld-gruppe { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-geld-gruppe-titel { font-size: 14px; color: var(--text-main); margin-bottom: 4px; }
+  [data-design="neu"] .px-geld-zeile--unter { padding: 4px 0 4px 12px; border-bottom: 0; }
+  [data-design="neu"] .px-geld-zeile--unter .lbl { font-size: 13px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-zeile--unter .zahl { font-size: 14px; }
 }
 @media screen and (max-width: 768px) {
   [data-design="neu"] .px-geld { padding-left: 16px; padding-right: 16px; }

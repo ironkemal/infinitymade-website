@@ -6,7 +6,10 @@
  * E13 (Melih): Hauptzahl = Patienteneingänge des Monats laut Kassenbuch (Erfassungsdatum),
  * Kasseneingänge getrennt; offene Zuzahlungen aus B03. Privat/Ausfall sind serverseitig noch nicht
  * geladen — die Karte sagt das, statt 0 € zu zeigen.
- * Unbekannte Beträge: gezeigt wird die bekannte Teilsumme als „mind.“, nie eine geschätzte Summe.
+ * Unbekannte Beträge: gezeigt wird die bekannte Teilsumme als „Teilsumme … · Gesamtbetrag unbekannt“.
+ * KEIN „mind.“: ungeklärte Einträge können Stornos/Rückflüsse sein, die bekannte Teilsumme ist keine
+ * Untergrenze (Codex-Befund V6.F03 P2, 27.10.2026). Offene Zuzahlungen getrennt nach Patient,
+ * Kasse (E16 VKZ 03 „Bei Kasse gefordert“) und Klärung — keine gemeinsame Patientensumme.
  */
 
 import { fmtEur } from './geld.js?v=20260909';
@@ -15,14 +18,36 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const WARN = '<svg class="px-sym" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
 const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
+/** Reine Hilfe (testbar): Hinweis für ein unvollständiges Aggregat („Gesamtbetrag unbekannt · n ungeklärt“). */
+export function unbekanntHinweis(s) {
+  if (!s || Number.isSafeInteger(s.gesamtCent)) return '';
+  const offen = Number.isSafeInteger(s.unbekanntAnzahl) ? s.unbekanntAnzahl : 0;
+  return 'Gesamtbetrag unbekannt' + (offen > 0 ? ` · ${offen} ${offen === 1 ? 'Eintrag' : 'Einträge'} ungeklärt` : '');
+}
+
 /** Reine Hilfe (testbar): Betrag eines Aggregats als Text + Hinweis bei unbekannten Posten. */
 export function summeText(s) {
   if (!s || !Number.isSafeInteger(s.bekanntCent)) return { betrag: '–', hinweis: '' };
-  const offen = Number.isSafeInteger(s.unbekanntAnzahl) ? s.unbekanntAnzahl : 0;
   const voll = Number.isSafeInteger(s.gesamtCent);
-  const betrag = (voll ? '' : 'mind. ') + fmtEur(s.bekanntCent / 100);
-  const hinweis = offen > 0 ? `${offen} ${offen === 1 ? 'Eintrag' : 'Einträge'} ohne gültigen Betrag` : (voll ? '' : 'Teilsumme');
-  return { betrag, hinweis };
+  return { betrag: (voll ? '' : 'Teilsumme ') + fmtEur((voll ? s.gesamtCent : s.bekanntCent) / 100), hinweis: unbekanntHinweis(s) };
+}
+
+/** Reine Hilfe (testbar): Teilbetrag eines Unterblocks; unvollständig, wenn der Block es ist. */
+function teilText(cent, vollstaendig) {
+  if (!Number.isSafeInteger(cent)) return '–';
+  return (vollstaendig ? '' : 'Teilsumme ') + fmtEur(cent / 100);
+}
+
+/** Reine Hilfe (testbar): HTML „Offene Zuzahlungen“ getrennt nach Patient / Kasse / Klärung. */
+export function zuzahlungHtml(z) {
+  if (!z || !Number.isSafeInteger(z.bekanntCent)) return zeile('Offene Zuzahlungen', null);
+  const voll = Number.isSafeInteger(z.gesamtCent);
+  const reihen = [['Bei Patienten offen', z.patientBekanntCent], ['Bei Kasse gefordert', z.kasseBekanntCent]];
+  if (!voll || (Number.isSafeInteger(z.klaerungBekanntCent) && z.klaerungBekanntCent > 0)) reihen.push(['In Klärung', z.klaerungBekanntCent]);
+  const hinweis = unbekanntHinweis(z);
+  return `<div class="px-geld-gruppe"><span class="px-geld-gruppe-titel">Offene Zuzahlungen (GKV)</span>
+    ${reihen.map(([t, c]) => `<div class="px-geld-zeile px-geld-zeile--unter"><span class="lbl">${esc(t)}</span><span class="zahl">${esc(teilText(c, voll))}</span></div>`).join('')}
+    ${hinweis ? `<span class="px-geld-hinweis">${WARN}${esc(hinweis)}</span>` : ''}</div>`;
 }
 
 /** Reine Hilfe (testbar): „2026-10“ → „Oktober 2026“. */
@@ -56,7 +81,7 @@ export function geldKarteHtml(z = {}) {
         <span class="zahl">${esc(patient.betrag)}</span>
         ${patient.hinweis ? `<span class="px-geld-hinweis">${WARN}${esc(patient.hinweis)}</span>` : ''}</div>
       ${zeile('Von Krankenkassen eingegangen', d.kassiert?.kasse)}
-      ${zeile('Offene Zuzahlungen', d.offen?.zuzahlung)}
+      ${zuzahlungHtml(d.offen?.zuzahlung)}
       <p class="px-geld-fuss">Offene Privat- und Ausfallrechnungen sind hier noch nicht enthalten.</p>
     </div>`;
   }

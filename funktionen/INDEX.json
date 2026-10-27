@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
  "dateien": 503,
- "funktionen": 4008,
+ "funktionen": 4011,
  "module": [
   "abrechnung",
   "anamnese",
@@ -22165,7 +22165,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -22183,6 +22182,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -22639,7 +22639,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -22657,6 +22656,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -23102,7 +23102,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -23170,7 +23171,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -23188,6 +23188,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -23577,7 +23578,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -23595,6 +23595,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -24323,7 +24324,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -24341,6 +24341,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -24730,7 +24731,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -24748,6 +24748,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -30789,7 +30790,8 @@
     "ziffern",
     "zuErledigen",
     "zusammenfassung",
-    "zuzahlungFuerPodoVerordnung"
+    "zuzahlungFuerPodoVerordnung",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -35495,7 +35497,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -45823,7 +45826,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -83442,7 +83446,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -83662,7 +83667,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -89082,7 +89088,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -91096,7 +91103,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -93253,7 +93261,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -96557,7 +96566,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -103108,7 +103118,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -107635,7 +107646,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -112558,7 +112570,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -112887,7 +112900,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -114266,7 +114280,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -117173,7 +117188,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -120755,7 +120771,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -126241,7 +126258,6 @@
     "_leisteAktualisieren",
     "detailTabelleHtml",
     "erstelleZahlungsjournalLader",
-    "esc",
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
@@ -126259,6 +126275,7 @@
     "renderZuzahlungsrechnung",
     "storniereZuzahlung",
     "summeText",
+    "teilText",
     "verlaufZusammenfassung",
     "zeichneVerlauf",
     "zeileHtml"
@@ -136791,7 +136808,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -140371,7 +140389,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -144100,7 +144119,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -146388,7 +146408,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -147435,7 +147456,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -150532,7 +150554,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -154326,7 +154349,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -160656,7 +160680,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -164555,7 +164580,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -174788,9 +174814,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 14,
+   "start": 17,
    "end": 26,
-   "lines": 13,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -174798,8 +174824,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "fmtEur",
-    "summeText"
+    "unbekanntHinweis"
    ],
    "calledBy": [
     "$",
@@ -174959,7 +174984,73 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "unbekanntHinweis",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-geld.js",
+   "start": 22,
+   "end": 26,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "esc",
+    "summeText",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -175011,9 +175102,77 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 19,
-   "end": 26,
-   "lines": 8,
+   "start": 29,
+   "end": 33,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fmtEur",
+    "unbekanntHinweis"
+   ],
+   "calledBy": [
+    "geldKarteHtml",
+    "kopf",
+    "zeile"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "teilText",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-geld.js",
+   "start": 36,
+   "end": 39,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -175024,10 +175183,77 @@
     "fmtEur"
    ],
    "calledBy": [
+    "zuzahlungHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "zuzahlungHtml",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/startseite-geld.js",
+   "start": 42,
+   "end": 51,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
     "esc",
-    "geldKarteHtml",
-    "kopf",
+    "push",
+    "teilText",
+    "unbekanntHinweis",
     "zeile"
+   ],
+   "calledBy": [
+    "geldKarteHtml",
+    "kopf"
    ],
    "modules": [
     "abrechnung",
@@ -175079,8 +175305,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 29,
-   "end": 32,
+   "start": 54,
+   "end": 57,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -175142,8 +175368,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 34,
-   "end": 39,
+   "start": 59,
+   "end": 64,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -175165,7 +175391,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -175217,8 +175444,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 45,
-   "end": 66,
+   "start": 70,
+   "end": 91,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -175231,7 +175458,8 @@
     "kopf",
     "monatText",
     "summeText",
-    "zeile"
+    "zeile",
+    "zuzahlungHtml"
    ],
    "calledBy": [
     "zeichneInnen"
@@ -175286,8 +175514,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 46,
-   "end": 62,
+   "start": 71,
+   "end": 87,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -175298,7 +175526,8 @@
    "calls": [
     "esc",
     "summeText",
-    "zeile"
+    "zeile",
+    "zuzahlungHtml"
    ],
    "calledBy": [
     "geldKarteHtml"
@@ -175353,8 +175582,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/startseite-geld.js",
-   "start": 72,
-   "end": 83,
+   "start": 97,
+   "end": 108,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -175588,7 +175817,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -178270,7 +178500,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -182688,7 +182919,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -187561,7 +187793,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -188493,7 +188726,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -191018,7 +191252,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -191304,7 +191539,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -191517,7 +191753,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -192939,7 +193176,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -200367,7 +200605,8 @@
     "erzeugeBerichtPdf",
     "fuelleBelegPositionen",
     "geldKarteHtml",
-    "kopf"
+    "kopf",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -203129,7 +203368,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -206113,7 +206353,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -206402,7 +206643,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -211024,7 +211266,8 @@
     "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml",
-    "zuordnungsSchritt"
+    "zuordnungsSchritt",
+    "zuzahlungHtml"
    ],
    "modules": [
     "abrechnung",
@@ -231109,7 +231352,7 @@
     "module/podo-einheiten.js:380",
     "module/podo-vorgeschichte-form.js:17",
     "module/rechnung-zahlungseingang.js:225",
-    "module/startseite-geld.js:14",
+    "module/startseite-geld.js:17",
     "module/startseite-neu.js:25",
     "module/startseite-rechnen.js:127",
     "module/termin-hinweise.js:37",
@@ -231319,7 +231562,7 @@
     "module/branding-ui.js:39",
     "module/fax-deckblatt.js:61",
     "module/rechnung-druck.js:33",
-    "module/startseite-geld.js:34",
+    "module/startseite-geld.js:59",
     "module/verordnung-detail.js:279",
     "module/verordnung-detail.js:408",
     "module/verordnung-detail.js:465",
