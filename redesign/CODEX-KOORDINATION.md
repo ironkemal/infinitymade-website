@@ -871,3 +871,21 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Ergebnisse übernehmen und zeichnen, begrenzter Abort pro Finanzrequest,
   Altstand/Fehler nur betroffener Karte. Keine fremden Dateien verändert,
   keine echten Requests; Vergleich mit B08-Lader nur als vorhandenes Muster.
+
+## Mitarbeiter-Abnahme: versteckter Altfeed liest Finanzbeträge
+
+- Prüfstand PRIMARY `c7fcf75e`, eigene Produktdateien unverändert.
+- Originalfunktionen `loadActivityFeed`, `getOwnerId`, `bizScope` aus diesem
+  Git-Commit isoliert in Node-VM mit synthetischem Employee/Querydouble ausgeführt.
+  Fünf Reads, darunter `invoices.total_patient` für den Owner; synthetischer
+  Betrag 123,45 wird im Altfeed-DOM verarbeitet. Null echte Netzaufrufe.
+- Beleg: dashboard.js:790–793/1097/1502 ruft Feed weiterhin auf; :1557–1592
+  liest ohne Rollen-/Neu-Gate; getOwnerId:528 liefert Employee-Owner,
+  bizScope:14558 grenzt nur Standort ein. startseite.css:12 versteckt Altinhalt.
+- Lokaler Schema-Dump SCHEMA-RLS.sql:981 enthält Employee-Erlaubnis für invoices;
+  keine Aussage über aktuell installierte Live-Policies. Abnahmekriterium
+  Mitarbeiter ohne Geld in Netzwerkantworten daher noch nicht erfüllt.
+- P1 an Integrator übergeben: Altfeed bei Neu gemäß E8 nicht starten,
+  Finanzprojektion rollenfest sperren und Employee-Start/Refresh mit null
+  Alt-Invoice-Reads prüfen. Direkter RLS-Zugriff bleibt getrennte Sicherheitsgrenze;
+  keine Migration oder fremde Produktänderung innerhalb dieses Prüfschritts.
