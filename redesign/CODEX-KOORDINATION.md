@@ -711,3 +711,23 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Unabhängiger B08-Review läuft `praxura-b08-sol-review-20261027-r1`;
   B08 bleibt separat ungestagt. Gemeinsame Gesamtsuite erneut gestartet,
   um neu hinzugekommene B08-Tests ebenfalls einzuschließen.
+
+## B08 lokal abgenommen; Bereit übergeben
+
+- Bereit-Lader committet `c3c42079`, selektiver Zwei-Dateien-Patch an Integrator
+  übergeben, PRIMARY-Anwendbarkeit grün:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-bereit-c3c42079-98hk19m7.patch`.
+  Keine Bestandsdatei-/Server-/Frontendänderung im Patch.
+- B08 unabhängiger Review abgeschlossen: kein belegter Blocker im lokalen
+  Adapterumfang; 78/78 Tests unter Berlin/New York, zusätzlich 117 Proben,
+  darunter 50 unabhängige Wochen-Minutenorakel. Rollen-/Owner-Grenze,
+  vollständige Quellen, variable Dauer und Gruppen-/Überlappungsbehandlung
+  getrennt von Engine-/Liveintegration geprüft.
+- Gemeinsame Gesamtsuite vollständig grün: 2.154 / 1.993 / 318 = 4.465,
+  null Fehler/Skip. Log
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-bereit-b08-npm-o_8ghczr.log`.
+- Offene Integrator-Gates bleiben zwingend: Scope aus Auth/Profile; Instrumentierung
+  genau verwendeter Engine-Reads mit Fehlern/Pagination/Gruppen/Google; vollständige
+  Wochenbasis auch Vergangenheit. Legacy slots allein reichen nicht. Fehlender
+  Nachweis ergibt Unknown; ungeklärte DST-Minutenbasis bleibt Unknown.
+  B08 ist dadurch lokal abgenommener Adapter, keine fertige Live-Verfügbarkeit.
