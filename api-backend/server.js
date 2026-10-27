@@ -39,6 +39,10 @@ import { createStartseiteRouter } from './routes/startseite.js';
 import { createFinanzlader } from './lib/startseite/finanzadapter.js';
 import { ladeMahnungen } from './lib/startseite/mahnungen.js';
 import { ladeAbrechnung } from './lib/startseite/abrechnung.js';
+import { createVerfuegbarkeit } from './lib/startseite/verfuegbarkeit.js';
+import { createVerfuegbarkeitKontext } from './lib/startseite/verfuegbarkeit-kontext.js';
+import { createSlotAdapter } from './lib/startseite/verfuegbarkeit-engine.js';
+import { createVerfuegbarkeitRouter } from './routes/startseite-verfuegbarkeit.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -638,6 +642,10 @@ const startseiteLimiter = rateLimit({
 app.use('/api/startseite', startseiteLimiter);
 // Mahnungen (Codex B06, eaee3e72) explizit injiziert; abrechnung folgt.
 app.use('/api', createStartseiteRouter({ lader: createFinanzlader({ supabase, lader: { mahnungen: ladeMahnungen, abrechnung: ladeAbrechnung } }) }));
+app.use('/api', createVerfuegbarkeitRouter({ createLader: () => {
+  const { slotAdapter, ladeBasis } = createSlotAdapter({ engine: getAvailableSlots });
+  return createVerfuegbarkeit({ ladeKontext: createVerfuegbarkeitKontext({ supabase, ladeBasis, rasterMin: SLOT_STEP_MINUTES }), slotAdapter });
+} }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
@@ -851,13 +859,15 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // B08: Nachweis ausschließlich aus tatsächlich verwendeten Reads. Standardaufrufe unverändert.
   const lese = (quelle, query, optionen) => nachweis ? nachweis.lese(quelle, query, optionen) : query;
   const liste = nachweis ? { count: 'exact' } : undefined;
+  const mitBasis = nachweis?.basisErforderlich === true;
+  let geschlossen = null;
   const dayOfWeek = berlinDayOfWeek(date);
   const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
   // Reject past dates entirely
-  const now = new Date();
+  const now = nachweis?.jetzt ? new Date(nachweis.jetzt) : new Date();
   const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
-  if (date < todayStr) { nachweis?.unbekannt('VERGANGENHEIT_OHNE_ROHBASIS'); return { slots: [] }; }
+  if (date < todayStr && !nachweis?.nurBasis) { nachweis?.unbekannt('VERGANGENHEIT_OHNE_ROHBASIS'); return { slots: [] }; }
 
   // For today, compute current Berlin minute for filtering below
   let nowBerlinMinutes = null;
@@ -869,7 +879,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   let ownerId = userId;
   const { data: profile } = await lese('PROFIL', supabase
     .from('profiles')
-    .select('owner_id')
+    .select(mitBasis ? 'id,owner_id,role,is_active' : 'owner_id')
     .eq('id', userId)
     .single());
   if (profile?.owner_id) ownerId = profile.owner_id;
@@ -879,11 +889,21 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   if (serviceId) {
     const { data: svc } = await lese('LEISTUNG', supabase
       .from('services')
-      .select('is_group')
+      .select(mitBasis ? 'id,owner_id,user_id,duration_minutes,is_internal,is_group,business_id,required_certificate' : 'is_group')
       .eq('id', serviceId)
       .maybeSingle());
     if (svc && svc.is_group) {
       isRequestedServiceGroup = true;
+    }
+    if (mitBasis) {
+      await lese('LEISTUNGSZUORDNUNG', supabase.from('employee_services')
+        .select('id,employee_id,service_id,business_id').eq('employee_id', userId).eq('service_id', serviceId).maybeSingle());
+      if (svc?.required_certificate) {
+        const { data: zertifikate } = await lese('ZERTIFIKATE', supabase.from('therapist_certificates')
+          .select('id,owner_id,profile_id,certificate', liste).eq('owner_id', ownerId)
+          .eq('profile_id', userId).eq('certificate', svc.required_certificate), { liste: true });
+        if (!zertifikate?.some(c => c.certificate === svc.required_certificate)) nachweis.unbekannt('QUELLEN_UNVOLLSTAENDIG');
+      }
     }
   }
 
@@ -904,7 +924,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     // Employee — owner'in altinda employee'nin atandigi business'i bul
     const { data: assigned } = await lese('ZUORDNUNGEN', supabase
       .from('employee_business_assignments')
-      .select('business_id, businesses(id, closed_days, is_default)', liste)
+      .select(mitBasis ? 'id,employee_id,business_id,businesses(id,owner_id,closed_days,is_default)' : 'business_id, businesses(id, closed_days, is_default)', liste)
       .eq('employee_id', userId), { liste: true });
     if (assigned && assigned.length) {
       // Default'a atanmissa onu, degilse ilk
@@ -916,7 +936,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     // Owner kendisi veya employee'nin atamasi yoksa: owner'in default business
     const { data: defaultBiz } = await lese('STANDARDSTANDORT', supabase
       .from('businesses')
-      .select('id, closed_days')
+      .select(mitBasis ? 'id,owner_id,closed_days' : 'id, closed_days')
       .eq('owner_id', ownerId)
       .eq('is_default', true)
       .maybeSingle(), { optional: true });
@@ -927,22 +947,22 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
     const jsDow = berlinDayOfWeek(date);
     if (activeBiz.closed_days.includes(jsDow)) {
-      nachweis?.abschluss();
-      return { slots: [], reason: 'business_closed_day' };
+      if (!mitBasis) { nachweis?.abschluss(); return { slots: [], reason: 'business_closed_day' }; }
+      geschlossen = 'business_closed_day';
     }
   }
 
   // 1.5 Check custom_days (shop-wide closed/holiday/special)
   const { data: customDay } = await lese('SONDERTAG', supabase
     .from('custom_days')
-    .select('type,start_time,end_time')
+    .select(mitBasis ? 'id,owner_id,type,start_time,end_time' : 'type,start_time,end_time')
     .eq('owner_id', ownerId)
     .eq('date', date)
     .maybeSingle(), { optional: true });
 
   if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
-    nachweis?.abschluss();
-    return { slots: [], reason: 'custom_day_closed' };
+    if (!mitBasis) { nachweis?.abschluss(); return { slots: [], reason: 'custom_day_closed' }; }
+    geschlossen ||= 'custom_day_closed';
   }
 
   // 2. Get Working Hours — employee first, fallback to owner
@@ -970,24 +990,31 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   if (!wh || !wh.is_active) {
-    nachweis?.abschluss();
-    return { slots: [], reason: 'working_hours_inactive' };
+    if (!mitBasis) { nachweis?.abschluss(); return { slots: [], reason: 'working_hours_inactive' }; }
+    geschlossen ||= 'working_hours_inactive';
   }
 
-  const startMinutes = timeToMins(wh.start_time);
-  const endMinutes = timeToMins(wh.end_time);
+  const startMinutes = wh?.is_active ? timeToMins(wh.start_time) : 0;
+  const endMinutes = wh?.is_active ? timeToMins(wh.end_time) : 0;
 
   // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
   // Only query bookings where group_parent_id IS NULL to prevent child bookings
   // from incorrectly blocking the time slots.
-  const { data: bookings } = await lese('BUCHUNGEN', supabase
+  let bookingsQuery = supabase
     .from('bookings')
-    .select('id, start_time, end_time, is_group, group_capacity, service_id', liste)
+    .select(mitBasis ? 'id,owner_id,user_id,business_id,businesses(owner_id),start_time,end_time,is_group,group_capacity,service_id' : 'id, start_time, end_time, is_group, group_capacity, service_id', liste)
     .eq('user_id', userId)
     .eq('status', 'confirmed')
-    .is('group_parent_id', null)
-    .gte('start_time', dayStart)
-    .lte('start_time', dayEnd), { liste: true });
+    .is('group_parent_id', null);
+  // Observation covers cross-day occupants too; their ambiguous minute projection
+  // remains Unknown below. Standard booking reads keep their original semantics.
+  bookingsQuery = mitBasis ? bookingsQuery.lte('start_time', dayEnd).or(`start_time.gte.${dayStart},end_time.gt.${dayStart}`)
+    : bookingsQuery.gte('start_time', dayStart).lte('start_time', dayEnd);
+  const { data: bookings } = await lese('BUCHUNGEN', bookingsQuery, { liste: true });
+  if (mitBasis && (bookings || []).some(b => !Number.isFinite(Date.parse(b.start_time)) || !Number.isFinite(Date.parse(b.end_time))
+    || Date.parse(b.start_time) < Date.parse(dayStart) || Date.parse(b.end_time) > Date.parse(dayEnd)
+    || Date.parse(b.end_time) <= Date.parse(b.start_time)
+    || (b.is_group && (!Number.isInteger(b.group_capacity) || b.group_capacity <= 0)))) nachweis.unbekannt('INTERVALL_UNGUELTIG');
 
   // Query actual participant counts for group parent slots
   const parentIds = (bookings || []).filter(b => b.is_group).map(b => b.id);
@@ -995,7 +1022,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   if (parentIds.length > 0) {
     const { data: participants } = await lese('TEILNEHMER', supabase
       .from('bookings')
-      .select('group_parent_id', liste)
+      .select(mitBasis ? 'id,owner_id,user_id,group_parent_id' : 'group_parent_id', liste)
       .in('group_parent_id', parentIds)
       .eq('status', 'confirmed'), { liste: true });
     (participants || []).forEach(p => {
@@ -1003,7 +1030,9 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     });
   }
 
-  const bookedIntervals = [];
+  const bookedIntervals = [], offeneGruppen = [];
+  const rohBuchungen = mitBasis ? (bookings || []).map(b => ({ start: utcToBerlinMinutes(new Date(b.start_time)),
+    end: utcToBerlinMinutes(new Date(b.end_time)), gruppenServiceId: b.is_group ? b.service_id : null })) : [];
 
   (bookings || []).forEach(b => {
     // If it's a group booking, and we are searching for slots for the SAME group service,
@@ -1012,6 +1041,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
       const count = participantCounts[b.id] || 0;
       const cap = b.group_capacity || 1;
       if (isRequestedServiceGroup && b.service_id === serviceId && count < cap) {
+        if (mitBasis) offeneGruppen.push({ start: utcToBerlinMinutes(new Date(b.start_time)), end: utcToBerlinMinutes(new Date(b.end_time)) });
         // Safe to book here! Do not block this interval
         return;
       }
@@ -1033,7 +1063,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // 2.6 Get Breaks/Pauses for this employee
   const { data: breaksData } = await lese('PAUSEN', supabase
     .from('breaks')
-    .select('start_time, end_time', liste)
+    .select(mitBasis ? 'id,user_id,start_time,end_time' : 'start_time, end_time', liste)
     .eq('user_id', userId)
     .eq('day_of_week', dayOfWeek), { liste: true });
 
@@ -1047,7 +1077,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // 2.5 Get Time Offs (Beurlaubt) for this employee
   const { data: timeOffs } = await lese('ABWESENHEITEN', supabase
     .from('time_offs')
-    .select('start_date, end_date', liste)
+    .select(mitBasis ? 'id,employee_id,start_date,end_date' : 'start_date, end_date', liste)
     .eq('employee_id', userId)
     .lte('start_date', dayEnd)
     .gte('end_date', dayStart), { liste: true });
@@ -1066,6 +1096,9 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   // 3. Get Google Calendar Busy slots
+  // The prefix is actual service-specific blockers; raw generic blocks follow bookings.
+  const rohSperren = mitBasis ? bookedIntervals.slice((bookings || []).length - offeneGruppen.length) : [];
+  const externeBelegung = [];
   const integQuery = supabase
     .from('calendar_integrations')
     .select('*')
@@ -1073,6 +1106,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     .eq('provider', 'google');
   const { data: integ } = await lese('GOOGLE_VERBINDUNG', nachweis ? integQuery.maybeSingle() : integQuery.single(), { optional: true });
   if (integ && !integ.access_token) nachweis?.unbekannt('GOOGLE_VERBINDUNG_DEFEKT');
+  if (mitBasis && integ && !GOOGLE_KONFIGURIERT) nachweis.unbekannt('EXTERNE_BELEGUNG_UNBEKANNT');
 
   if (integ && integ.access_token) {
     const auth = newOAuthClient();
@@ -1091,10 +1125,12 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
       nachweis?.googleAntwort(freeBusyRes);
       const busy = freeBusyRes.data.calendars.primary.busy || [];
       busy.forEach(b => {
-        bookedIntervals.push({
+        const interval = {
           start: utcToBerlinMinutes(new Date(b.start)),
           end: utcToBerlinMinutes(new Date(b.end))
-        });
+        };
+        if (mitBasis && (Date.parse(b.start) < Date.parse(dayStart) || Date.parse(b.end) > Date.parse(dayEnd))) nachweis.unbekannt('INTERVALL_UNGUELTIG');
+        bookedIntervals.push(interval); externeBelegung.push(interval);
       });
     } catch (err) {
       nachweis?.unbekannt('GOOGLE_FEHLER');
@@ -1103,6 +1139,13 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   }
 
   // 4. Generate available slots
+  if (mitBasis) {
+    nachweis.rohbasis({ businessId: activeBiz?.id ?? null,
+      arbeitsintervalle: geschlossen ? [] : [{ start: startMinutes, end: endMinutes }],
+      rasterUrsprung: geschlossen ? null : startMinutes, sperren: rohSperren,
+      buchungen: rohBuchungen, externeBelegung });
+    if (nachweis.nurBasis || geschlossen) { nachweis.abschluss(); return { slots: [], ...(geschlossen ? { reason: geschlossen } : {}) }; }
+  }
   const totalBlock = parseInt(duration) + buffer;
   const slots = [];
   let currentMins = startMinutes;
@@ -1111,7 +1154,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
     // Skip slots in the past (today only) + enforce 30-min lead time
     const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
-    if (!hasOverlap && !tooSoon) slots.push(minsToTime(currentMins));
+    if (!hasOverlap && !tooSoon) { const start = minsToTime(currentMins); slots.push(start); nachweis?.slot?.(start, offeneGruppen.some(b => currentMins < b.end && slotEnd > b.start)); }
     currentMins += step;
   }
 
