@@ -768,3 +768,27 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Live-/Echtkalender-/Frontend-V6.F06-Abnahme behauptet.
 - Ergebnis mit Grenzen an Integrator per Queue übergeben. Frontend-V6.F06-
   Übergabe angefordert, damit gezielter Review auf fertigem Commit erfolgen kann.
+
+## Verbindliches Endziel aktualisiert (Melih, 27.10.2026)
+
+- Neues Design ersetzt nach vollständiger Fertigstellung das bisherige
+  Dashboard als Standard für sämtliche Nutzer, ausdrücklich auch bestehende
+  Kunden-Dashboards. Dauerhafte Vorschau oder ausschließlich lokales Opt-in
+  erfüllt das Ziel nicht. Die früher dokumentierte Begrenzung auf einen
+  endgültigen reinen `?design=neu`-Stand ist als Endziel damit überholt.
+- Reihenfolge: laufende Pakete abschließen, alle Bereiche vollständig
+  integrieren/testen, Standardumstellung reviewbar vorbereiten. Bestehende
+  Funktionen, IDs, Rollen, Mandantentrennung und Kundendaten erhalten.
+- Zusätzliche Abnahmekriterien: sämtliche 27 Bereiche und bestehende Kunden-
+  Einstiege ohne lokalen Vorschauparameter; Owner-/Mitarbeiterzugänge und
+  Fachbereiche; Auslieferungs-/Cachepfade für vorhandene Installationen;
+  keine Datenmigration aus reinem Designgrund; Umstellungsweg und Rückfall
+  vor Veröffentlichung nachvollziehbar prüfen und dokumentieren.
+- V10/Standardumschaltung ist jetzt das verbindliche Endziel und darf
+  vorbereitet werden. Diese Zielnachricht ist ausdrücklich KEIN sofortiger
+  Push-/Deploy-Auftrag. Tatsächliche Veröffentlichung weiterhin erst nach
+  erforderlicher ausdrücklicher Freigabe; kein main-Push und keine Live-DB
+  aus dieser Nachricht ableiten. Rückfallvorbereitung erlaubt keine Löschung.
+- Frontend-/Backend-Zuständigkeiten bleiben unverändert. Gemeinsame PLAN/
+  STATUS-/Abnahmematrix aktualisiert der Integrator, Codex nur diese eigene
+  Koordinationsnotiz. Keine zusätzlichen Agenten oder Scheduler hierfür.
