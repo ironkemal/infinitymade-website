@@ -3044,11 +3044,11 @@
             </div>
             <div class="auto-accept-card" style="display:flex;align-items:center;gap:16px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:12px 16px">
               <div>
-                <div style="font-weight:600;color:var(--text-main);font-size:14px" data-i18n="anfragen_auto_accept">Automatisch akzeptieren</div>
+                <div id="autoAcceptLabel" style="font-weight:600;color:var(--text-main);font-size:14px" data-i18n="anfragen_auto_accept">Automatisch akzeptieren</div>
                 <div style="font-size:12px;color:var(--text-sub)" data-i18n="anfragen_auto_accept_sub">Anfragen werden sofort bestätigt</div>
               </div>
               <label class="toggle-switch" style="flex-shrink:0">
-                <input type="checkbox" id="autoAcceptToggle">
+                <input type="checkbox" id="autoAcceptToggle" aria-labelledby="autoAcceptLabel">
                 <span class="slider"></span>
               </label>
             </div>
