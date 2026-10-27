@@ -602,3 +602,17 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   neue Abrechnungsdatei. Preis-/Snapshotquelle vor Bau belegen.
 - PRIMARY inzwischen `26ae4dbe`: Claude hat Zusammenfassung mit Rate-Limit
   eingehängt. Nur Commit-Titel gesehen, tatsächliche Integration nicht geprüft.
+
+## Bereit-Lader gestartet; B06-Gesamtsuite grün
+
+- B06-Gesamtsuite vollständig grün: 2.154 / 1.865 / 318 = 4.337 Tests,
+  null Fehler/Skip. Unabhängiger Review läuft weiter; Produktdateien ungestagt.
+- Read-only Bereit-Vertrag fertig. Exakte Rezeptstatus zählen, GKV-Verordnung
+  einmal, Absetzungen getrennt. Betrag aus eindeutigem echtem Snapshot oder
+  vorhandener Preis-/Zuzahlungslogik, kein neuer Tarifrechner. Ohne belegte
+  Befreiung/Altersgrundlage oder Preisfenster Betrag Unknown statt Null.
+- Sol/high baut einmalig nur neue `abrechnung.js` und `.test.js` unter
+  `api-backend/lib/startseite/`, Task `praxura-bereit-sol-bau-20261027-r1`.
+  Reader für ownerlose prescription_sessions muss Parent-Owner-Join auf jeder
+  Seite und 200-ID-Chunks prüfen; keine Geburtsdaten-/Personenabfrage.
+  Mahnungen-Dateien, bestehende Factory und Claude-Dateien bleiben unberührt.
