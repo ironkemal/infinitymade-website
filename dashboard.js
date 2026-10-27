@@ -15,7 +15,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261027s240'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261027s241'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261026n205';
@@ -1746,13 +1746,13 @@ async function loadPhysioRezKpis() {
   if (!block) return;
   if (!isPraxisSector(getSector())) { block.style.display = 'none'; return; }
 
-  const ownerId = getOwnerId();
+  const ownerId = getOwnerId(); block.dataset.pxStatus = 'loading';
   const { data, error } = await bizScope(supabase
     .from('prescriptions')
     .select('id, status, gueltig_bis, patient_id, heilmittel')
     .eq('owner_id', ownerId)
     .not('status', 'in', '(completed,billed,cancelled)'), 'patients');
-  if (error) { console.warn('[rez-kpi]', error); block.style.display = 'none'; return; }
+  if (error || !Array.isArray(data)) { console.warn('[rez-kpi]', error); block.dataset.pxStatus = 'error'; block.style.display = 'none'; return; }
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const soonCutoff = new Date(today); soonCutoff.setDate(today.getDate() + 7);
@@ -1769,7 +1769,7 @@ async function loadPhysioRezKpis() {
   document.getElementById('rezKpiOverdue').textContent = overdue.length;
   document.getElementById('rezKpiSoon').textContent = soon.length;
   document.getElementById('rezKpiActive').textContent = active.length;
-  block.style.display = '';
+  block.style.display = ''; block.dataset.pxStatus = 'ok';
 }
 
 (function bindRezKpiClicks() {
@@ -18032,10 +18032,10 @@ let anfragenCurrentStatus = 'pending';
 let anfragenCurrentRequests = [];
 
 async function loadAnfragen(status) {
-  anfragenCurrentStatus = status || anfragenCurrentStatus;
+  anfragenCurrentStatus = status || anfragenCurrentStatus; const requestStatus = anfragenCurrentStatus;
   const list = document.getElementById('anfragenList');
   if (!list) return;
-  list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>';
+  list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>'; const badge = document.getElementById('anfragenNavBadge'); const lauf = String(loadAnfragen.lauf = (loadAnfragen.lauf || 0) + 1); if (requestStatus === 'pending' && badge) { badge.dataset.pxLauf = lauf; badge.dataset.pxStatus = 'loading'; }
 
   const ownerId = currentProfile?.id;
   if (!ownerId) return;
@@ -18043,19 +18043,15 @@ async function loadAnfragen(status) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
-    const r = await fetch(`${API}/booking-request/list?owner_id=${ownerId}&status=${anfragenCurrentStatus}`, {
+    const r = await fetch(`${API}/booking-request/list?owner_id=${ownerId}&status=${requestStatus}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const json = await r.json();
-    anfragenCurrentRequests = json.requests || [];
-    renderAnfragenList(anfragenCurrentRequests);
-    // Der Zähler zählt offene Anfragen. Er darf nur aus dem Tab "Offen" kommen —
-    // sonst stünde er auf den Tabs "Bestätigt"/"Abgelehnt" fälschlich auf 0.
-    if (anfragenCurrentStatus === 'pending') {
-      updateAnfragenBadge(anfragenCurrentRequests.filter(r => r.status === 'pending').length);
-    }
+    const json = await r.json(); if (!r.ok || !Array.isArray(json.requests)) throw new Error('ANFRAGEN_NICHT_VERFUEGBAR'); if (currentProfile?.id !== ownerId) return;
+    if (requestStatus === 'pending' && badge?.dataset.pxLauf === lauf) updateAnfragenBadge(json.requests.filter(r => r.status === 'pending').length);
+    if (String(loadAnfragen.lauf) === lauf) { anfragenCurrentRequests = json.requests; renderAnfragenList(anfragenCurrentRequests); }
+    // Nur der jüngste Pending-Aufruf setzt das Badge; andere Tabs ändern die Quelle nicht.
   } catch (e) {
-    list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
+    if (currentProfile?.id !== ownerId) return; if (requestStatus === 'pending' && badge?.dataset.pxLauf === lauf) badge.dataset.pxStatus = 'error'; if (String(loadAnfragen.lauf) === lauf) list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
     console.error('[anfragen]', e);
   }
 }
@@ -18117,7 +18113,7 @@ function renderAnfragenList(requests) {
 function updateAnfragenBadge(count) {
   const badge = document.getElementById('anfragenNavBadge');
   if (!badge) return;
-  badge.textContent = count > 0 ? count : '';
+  badge.textContent = count > 0 ? count : ''; badge.dataset.pxCount = String(count); badge.dataset.pxStatus = 'ok';
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 

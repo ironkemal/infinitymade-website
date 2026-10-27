@@ -83,7 +83,7 @@ const zahlAus = (id) => {
   return Number.isFinite(n) ? n : null;
 };
 /** Verordnungszahlen gelten nur, wenn loadPhysioRezKpis den Block sichtbar geschaltet hat. */
-const voKpiDa = () => { const k = document.getElementById('physioRezKpi'); return !!k && k.style.display !== 'none' && !k.hidden; };
+const voKpiDa = () => { const k = document.getElementById('physioRezKpi'); return !!k && k.dataset.pxStatus === 'ok' && k.style.display !== 'none' && !k.hidden; };
 const istOwner = () => kontext()?.rolle?.() === 'owner';
 // formatToParts: de-DE formatiert die Stunde allein als „10 Uhr“.
 const berlinStunde = (d) => Number(new Intl.DateTimeFormat('de-DE', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).formatToParts(d).find((x) => x.type === 'hour')?.value);
@@ -192,14 +192,18 @@ function naechstesHtml() {
 }
 
 function todoHtml() {
+  const badge = document.getElementById('anfragenNavBadge');
+  const anfrageZahl = badge?.dataset.pxStatus === 'ok' && /^\d+$/.test(badge.dataset.pxCount || '') ? Number(badge.dataset.pxCount) : null;
   const quellen = {
-    anfragen: inLeiste('anfragen') ? zahlAus('anfragenNavBadge') : null,
-    voUeberfaellig: voKpiDa() ? zahlAus('rezKpiOverdue') : null,
-    voBald: voKpiDa() ? zahlAus('rezKpiSoon') : null,
+    anfragen: inLeiste('anfragen') && Number.isSafeInteger(anfrageZahl) ? anfrageZahl : null,
+    voUeberfaellig: inLeiste('verordnungen') && voKpiDa() ? zahlAus('rezKpiOverdue') : null,
+    voBald: inLeiste('verordnungen') && voKpiDa() ? zahlAus('rezKpiSoon') : null,
   };
   const zeilen = zuErledigen(quellen);
-  // „Nichts offen“ nur, wenn wirklich Zahlen da sind — sonst keine falsche Entwarnung.
-  const bekannt = quellen.voUeberfaellig !== null || quellen.voBald !== null;
+  // Nur berechtigte Quellen verlangen; jede muss erfolgreich bekannt sein.
+  const relevant = [...(inLeiste('anfragen') ? [quellen.anfragen] : []), ...(inLeiste('verordnungen') ? [quellen.voUeberfaellig, quellen.voBald] : [])];
+  const bekannt = relevant.length > 0 && relevant.every(n => n !== null);
+  const unvollstaendig = relevant.some(n => n === null);
   const rumpf = zeilen.length
     ? `<div class="px-todo">${zeilen.map((z) => {
       const ziel = inLeiste(z.ziel) ? z.ziel : '';
@@ -207,7 +211,7 @@ function todoHtml() {
         <span class="kachel">${TODO_ICON[z.id] || ''}</span>
         <span class="text"><b>${esc(z.titel)}</b><small>${esc(z.text)}</small></span>
         <span class="zahl">${z.zahl}</span><span class="pfeil">${ziel ? ICON.pfeil : ''}</span></button>`;
-    }).join('')}</div>`
+    }).join('')}</div>${unvollstaendig ? '<div class="px-karte-zustand"><p>Hinweise sind noch nicht vollständig verfügbar.</p></div>' : ''}`
     : bekannt
       ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
       : '<div class="px-karte-zustand"><p>Hinweise sind gerade nicht verfügbar.</p></div>';
@@ -329,11 +333,11 @@ export function verdrahteStartseite(k) {
   const nachziehen = () => { cancelAnimationFrame(warte); warte = requestAnimationFrame(zeichne); };
   for (const id of ['physioRezKpi', 'anfragenNavBadge']) {
     const el = document.getElementById(id);
-    if (el) new MutationObserver(nachziehen).observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'hidden'] });
+    if (el) new MutationObserver(nachziehen).observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'hidden', 'data-px-status', 'data-px-count'] });
   }
   on('nav:gerendert', () => {
     const b = document.getElementById('anfragenNavBadge');
-    if (b && !b.dataset.pxBeobachtet) { b.dataset.pxBeobachtet = '1'; new MutationObserver(nachziehen).observe(b, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] }); }
+    if (b && !b.dataset.pxBeobachtet) { b.dataset.pxBeobachtet = '1'; new MutationObserver(nachziehen).observe(b, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-px-status', 'data-px-count'] }); }
     nachziehen();
   });
   on('bookings:changed', () => { ladeVerfuegbarkeitKarten({ erzwingen: true }); aktualisieren(); });
