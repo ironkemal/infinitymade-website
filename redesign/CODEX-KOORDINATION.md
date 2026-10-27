@@ -505,3 +505,26 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   unverändert; „Drucken“ erhält genau ein SVG. Frühere konkrete Repros damit
   geschlossen. Keine allgemeine Nutzdatenpräfix-/Performance-/Livefreigabe.
   Nachprüfung per Queue übergeben; Browser geschlossen, Port 18081 unbenutzt.
+
+## B05a lokal abgenommen; B07 in unabhängiger Prüfung (27.10.)
+
+- B05a: vier zugeteilte Dateien fertig. `ladeGeld({supabase,tenantId,jetzt})`
+  liefert Patienteneingänge und Kasse getrennt sowie B03-Aggregate ohne IDs.
+  `quelle` und `umfang` kennzeichnen Erfassungsmonat und unvollständige
+  Privat-/Ausfallreste. `createFinanzlader` liefert lazy B04-Lader; standardmäßig
+  nur Geld, noch keine Mahnungs-/Bereitschafts-/Wochenberechnung.
+- Unabhängiger Sol-Review mit getrennten guvenlik/onprem/gkv/db/fonksiyon-
+  Urteilen: kein belegter Produktblocker. Bestätigte Testlücke beim Kassen-
+  Monatsfilter geschlossen: Randdaten vor/am Beginn und am exklusiven Ende,
+  Servercap 1, Filterpflicht auf jeder Seite einschließlich leerer Schlussseite.
+  Beide In-memory-Mutationen (Filter ganz entfernt / erst ab Folgeseite entfernt)
+  werden jetzt erkannt. Produktcode gegenüber Review unverändert, 14 Tests grün.
+- Gesamtsuite einschließlich B07: 2.154 / 1.842 / 318 bestanden, null Fehler,
+  null übersprungen. Log:
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-b05a-b07-npm-pmktzpkq.log`.
+- B07: zwei neue Dateien gebaut, 89 Original-Paritätstests zusätzlich unter
+  UTC/Berlin/New York grün. Unabhängiger Sol-Review
+  `praxura-b07-sol-review-20261027-r1` läuft; B07 bleibt separat ungestagt.
+  Fensterparität ist kein Nachweis vollständiger Onlinebuchbarkeit (B08 offen).
+- PRIMARY enthält fremde gestagte Frontend-/Index-/STATUS-Dateien; unangetastet.
+  Selektive Übergabe enthält ausschließlich die vier B05a-Produktdateien.
