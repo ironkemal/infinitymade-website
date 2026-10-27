@@ -43,6 +43,19 @@
   [data-design="neu"] .px-k-list { grid-area: list; }
   [data-design="neu"] .px-k-vo { grid-area: vo; }
   [data-design="neu"] .px-k-frei { grid-area: frei; }
+  [data-design="neu"] .px-k-woche { grid-column: 1 / -1; }
+  [data-design="neu"] .px-verf-personen, [data-design="neu"] .px-verf-woche { padding: 16px 24px; }
+  [data-design="neu"] .px-verf-person + .px-verf-person { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  [data-design="neu"] .px-verf-zeile { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; font-size: 14px; line-height: 21px; }
+  [data-design="neu"] .px-verf-zeile strong { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+  [data-design="neu"] .px-verf-person p, [data-design="neu"] .px-verf-woche p, [data-design="neu"] .px-verf-hinweis { font-size: 12px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-verf-hinweis { margin: 0; padding: 8px 24px 16px; }
+  [data-design="neu"] .px-startzeiten { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; }
+  [data-design="neu"] .px-startzeiten:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"] .px-verf-details ul { margin: 0; padding: 0; list-style: none; }
+  [data-design="neu"] .px-verf-details li { padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; overflow-wrap: anywhere; }
+  [data-design="neu"] .px-verf-balken { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; margin: 12px 0; }
+  [data-design="neu"] .px-verf-balken span { display: block; height: 100%; background: var(--accent); }
 
   /* ── Karte (Grundform) ── */
   [data-design="neu"] .px-karte {
@@ -200,6 +213,7 @@
   [data-design="neu"] .px-minis { padding-left: 16px; padding-right: 16px; }
   [data-design="neu"] .px-summe { margin-left: 16px; margin-right: 16px; }
   [data-design="neu"] .px-frei-ziel { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-verf-personen, [data-design="neu"] .px-verf-woche, [data-design="neu"] .px-verf-hinweis { padding-left: 16px; padding-right: 16px; }
 }
 
 /* ── V6.F03 Karte „Abrechnung“ (module/startseite-geld.js, nur Inhaber) ─────────

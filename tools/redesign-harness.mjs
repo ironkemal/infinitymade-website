@@ -34,6 +34,13 @@ const berlinTag = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Be
  * Szenario 'fehler' → 503 für alle, 'langsam' → 2,5 s Verzögerung.
  */
 export const API_ANTWORTEN = {
+  '/api/startseite/tag': o => ({ status: 'ok', grund: null, minimumMin: 30, luecken: [{
+    userId: o.rolle === 'employee' ? '10000000-0000-4000-8000-000000000002' : '10000000-0000-4000-8000-000000000001',
+    freiMin: 60, intervalle: [{ von: '11:00', bis: '12:00' }],
+    starts: ['11:00', '11:15', '11:30'].map(start => ({ start, serviceId: '10000000-0000-4000-8000-000000000020',
+      businessId: null, dauerMin: 30, pufferMin: 0, rasterMin: 15, art: 'frei' }))
+  }] }),
+  '/api/startseite/woche': { status: 'ok', grund: null, gebuchtMin: 150, arbeitsMin: 1260, quote: 150 / 1260 },
   '/api/attendance/report': { records: [] },
   // V6.F03: Startseite-Geld (nur Inhaber; Angestellte bekämen 403 — das Frontend fragt sie gar nicht an).
   '/api/startseite/zusammenfassung': (o) => (o.rolle === 'employee' ? { bloecke: {} } : { bloecke: { geld: { status: 'ok', daten: {
@@ -139,7 +146,7 @@ export async function oeffneDashboard(browser, o) {
           body: JSON.stringify({ error: 'Redesign-Fixture: Szenario fehler', code: 'RS_FEHLER' }) });
       }
       const antwort = API_ANTWORTEN[url.pathname];
-      const body = typeof antwort === 'function' ? antwort(o) : (antwort ?? {});
+      const body = typeof antwort === 'function' ? await antwort(o) : (antwort ?? {});
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     }
     return route.continue();

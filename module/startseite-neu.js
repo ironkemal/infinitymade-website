@@ -13,13 +13,14 @@
  *    Kopie-Kandidat zu loadScheduleBookings, im Neu-Design ersetzt sie die ausgeblendete alte Liste.
  *  - Verordnungen: die Zahlen, die loadPhysioRezKpis ohnehin in #rezKpi* schreibt (beobachtet).
  *  - Online-Anfragen: die Zahl der Leisten-Plakette #anfragenNavBadge (beobachtet).
- *  - Freie Zeit: die vorhandene .gaps-section wird in die Karte umgehängt (IDs bleiben,
- *    renderGaps füllt sie weiter). Bekannte Grenze: ignoriert Pausen/Abwesenheiten (V6.B).
+ *  - Freie Behandlungszeit/Woche: B08-Endpunkte, serverseitig geprüfte Startzeugen/Rohbasis.
+ *    Alte .gaps-section bleibt im ursprünglichen DOM für Alt-Design und bestehende Renderer.
  */
 import { on } from './signal.js?v=20260813';
 import { tagesgrenzen, uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { API_BASE } from '../supabase-config.js';
 import { geldKarteHtml, holeGeld } from './startseite-geld.js?v=20261027s236';
+import { freieZeitHtml, wocheHtml, holeVerfuegbarkeit } from './startseite-verfuegbarkeit.js?v=20261027s237';
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, terminAbfrage, fokusSelektor } from './startseite-rechnen.js?v=20261027s231';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -45,6 +46,32 @@ let laufNr = 0;
 let geld = { laden: false, fehler: false, daten: null, stand: 0 };
 let mahnungen = { laden: false, fehler: false, daten: null };
 let abrechnung = { laden: false, fehler: false, daten: null };
+let verf = { tag: { laden: false, daten: null }, woche: { laden: false, daten: null } };
+let verfStand = 0, verfLaedt = false, verfErneut = false, verfScope = '';
+
+/** B08 read-only Karten, role-scoped; niemals eine Client-Slotengine. */
+async function ladeVerfuegbarkeitKarten({ erzwingen = false } = {}) {
+  const k = kontext(), rolle = k?.rolle?.(), uid = k?.uid?.();
+  if (!k?.supabase || !['owner', 'employee'].includes(rolle) || !uid) return;
+  if (verfLaedt) { if (erzwingen) verfErneut = true; return; }
+  const scope = `${rolle}:${uid}`;
+  if (scope !== verfScope) { verfScope = scope; verfStand = 0; verf = { tag: { daten: null }, woche: { daten: null } }; }
+  if (!erzwingen && Date.now() - verfStand < 60000) return;
+  const modi = rolle === 'owner' ? ['tag', 'woche'] : ['tag'];
+  verfLaedt = true;
+  for (const modus of modi) verf[modus] = { ...verf[modus], laden: true, fehler: false };
+  zeichne();
+  await Promise.allSettled(modi.map(async modus => {
+    let next;
+    try { next = { laden: false, fehler: false, daten: await holeVerfuegbarkeit({ supabase: k.supabase, apiBase: API_BASE, modus, rolle }) }; }
+    catch { next = { laden: false, fehler: true, daten: verf[modus].daten }; }
+    if (`${k.rolle?.()}:${k.uid?.()}` === scope) { verf[modus] = next; zeichne(); }
+  }));
+  verfLaedt = false;
+  if (`${k.rolle?.()}:${k.uid?.()}` !== scope) { verfScope = ''; verfStand = 0; zeichne(); return; }
+  verfStand = Date.now(); zeichne();
+  if (verfErneut) { verfErneut = false; ladeVerfuegbarkeitKarten({ erzwingen: true }); }
+}
 
 const inLeiste = (panel) => document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const geheZu = (panel) => inLeiste(panel)?.click();
@@ -105,6 +132,7 @@ export async function aktualisieren() {
   zustand = { ...zustand, laden: !zustand.stand, fehler: false };
   zeichne();
   ladeGeldKarte();
+  ladeVerfuegbarkeitKarten();
   try {
     const liste = await ladeTermine();
     if (nr !== laufNr) return;
@@ -260,16 +288,13 @@ function zeichne() {
 }
 
 function zeichneInnen() {
-  const frei = document.querySelector('.gaps-section');
-  // Freie-Zeit-Sektion vor dem Neuzeichnen sichern (sie wird nur umgehängt, nie neu gebaut).
-  if (frei && wurzel.contains(frei)) frei.remove();
+  const offen = new Set([...wurzel.querySelectorAll('details[open][data-person]')].map(el => el.dataset.person));
+  const k = kontext(), scopePasst = verfScope === `${k?.rolle?.()}:${k?.uid?.()}`;
   wurzel.innerHTML = `${kopfHtml()}<div class="px-start-raster${istOwner() ? '' : ' ist-team'}">
     ${naechstesHtml()}${todoHtml()}${istOwner() ? geldKarteHtml(geld, mahnungen, abrechnung) : ''}${listeHtml()}${voHtml()}
-    <section class="px-karte px-k-frei" aria-labelledby="pxFreiTitel">
-      <div class="px-karte-kopf"><div><h2 id="pxFreiTitel">Freie Zeit heute</h2><p>Lücken im Terminplan</p></div></div>
-      <div class="px-frei-ziel"></div>
-    </section></div>`;
-  if (frei) wurzel.querySelector('.px-frei-ziel').appendChild(frei);
+    ${freieZeitHtml(scopePasst ? verf.tag : {}, { eigeneUid: istOwner() ? null : k?.uid?.(), behandlerName: k?.behandlerName, serviceName: k?.serviceName })}
+    ${istOwner() ? wocheHtml(scopePasst ? verf.woche : {}) : ''}</div>`;
+  for (const el of wurzel.querySelectorAll('details[data-person]')) el.open = offen.has(el.dataset.person);
 }
 
 function klick(e) {
@@ -280,6 +305,7 @@ function klick(e) {
   else if (aktion === 'akte' && typeof window.openPatientDetail === 'function') window.openPatientDetail(el.dataset.lead);
   else if (aktion === 'neu-laden') aktualisieren();
   else if (aktion === 'geld-neu') ladeGeldKarte({ erzwingen: true });
+  else if (aktion === 'verf-neu') ladeVerfuegbarkeitKarten({ erzwingen: true });
   else if (el.dataset.ziel) geheZu(el.dataset.ziel);
 }
 
@@ -308,11 +334,13 @@ export function verdrahteStartseite(k) {
     if (b && !b.dataset.pxBeobachtet) { b.dataset.pxBeobachtet = '1'; new MutationObserver(nachziehen).observe(b, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] }); }
     nachziehen();
   });
-  on('bookings:changed', () => aktualisieren());
+  on('bookings:changed', () => { ladeVerfuegbarkeitKarten({ erzwingen: true }); aktualisieren(); });
   on('panel:changed', (d) => { if (d?.id === 'overview') aktualisieren(); });
   // Uhr: „in 15 Min“ und Zustände minütlich nachführen (ohne neue Abfrage).
   setInterval(() => {
-    if (!document.getElementById('panel-overview')?.classList.contains('active') || zustand.laden || zustand.fehler) return;
+    if (!document.getElementById('panel-overview')?.classList.contains('active')) return;
+    ladeVerfuegbarkeitKarten();
+    if (zustand.laden || zustand.fehler) return;
     zustand = { ...zustand, liste: heutigeTermine(zustand.liste, { jetzt: new Date() }) };
     zeichne();
   }, 60000);

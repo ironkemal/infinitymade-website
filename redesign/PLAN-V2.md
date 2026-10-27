@@ -1,6 +1,6 @@
-# PLAN v2: Praxura-Dashboard modern neu (Stand 25.10.2026)
+# PLAN v2: Praxura-Dashboard modern neu (Stand 27.10.2026)
 
-> **Status: wartet auf Melihs OK.** Erst nach dem OK wird gebaut. Danach läuft die Schleife
+> **Status: Umsetzung freigegeben (Melih, 25.10.2026).** Die Schleife läuft
 > ununterbrochen, bis Phase V9 abgeschlossen ist (V10 Umschalten nur nach erneutem OK).
 >
 > Dieser Plan **ersetzt** die Phasen 2–8 aus `AUFTRAG.md` Abschnitt 5. Alles andere aus
@@ -17,11 +17,24 @@ nicht kopiert): ruhige Leiste, klare weiße Karten, **eine Startseite „Heute�
 Podologin zwischen zwei Patienten in 3 Sekunden sagt, wer kommt, was offen ist und was zu
 kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schwarz/Weiß, ein sparsames Blau, Signalfarben nur bei echten Problemen. Kein Beige, kein Braun.
 
+**Verbindliches Endziel / aktives GOAL (Melih, 27.10.2026):** Nach vollständiger Fertigstellung ersetzt das neue Design das bisherige Dashboard als Standard für sämtliche Nutzer, einschließlich bestehender Kunden-Dashboards. Keine dauerhaft separate Vorschau oder nur per Opt-in erreichbare Endlösung. Laufende Pakete fertigstellen, vollständig integrieren und testen, dann die Umstellung reviewbar vorbereiten. Die tatsächliche Veröffentlichung benötigt weiterhin eine gesonderte Freigabe.
+
+### V10: verbindliche Abnahme der Standardumstellung
+
+| Fall | Erforderlicher Nachweis vor Freigabe |
+|---|---|
+| Bestehende und neue Zugänge | Nackte `/dashboard.html`-URLs und frische Browserprofile starten Neu ohne Opt-in; vorhandener `localStorage` (fehlendes, `neu`, altes/abweichendes `px-design`, Theme und Panelwahl) verhindert den neuen Standard nicht. Gesperrter Storage wird mitgeprüft. |
+| Rollen und Bereiche | Besitzer und Mitarbeiter, direkte Panel-Einstiege sowie sämtliche Dashboard-Bereiche und bestehende Kunden-Zugänge funktionieren; Rechte, Mandantentrennung, Funktionen und Kundendaten bleiben erhalten. |
+| Box-Auslieferung | Dashboard, Module und Design im gebauten Auslieferungsartefakt prüfen. `onprem/frontend.Dockerfile:75/115–117` kopiert sie bereits; das beweist keine Installation bei Kunden. Installations-/Updateweg und tatsächlicher Kundenstand sind getrennt nachzuweisen; unbekannte Installation bleibt unbekannt. |
+| Umstellung und Rückfall | Reviewbarer Standardwechsel mit Cache-/Versionsverhalten, geprüftem Rückfall und befristetem `?design=alt`-Notausgang (eine Woche gemäß V10); keine dauerhafte Opt-in-Endlösung. Veröffentlichung erst nach Melihs Freigabe. |
+
+Aktuelle Ausgangslage: `dashboard.html:8–11` aktiviert Neu nur über `?design=neu` oder gespeichertes `px-design=neu`. Bestehende Kunden ohne diese Wahl bleiben derzeit Alt. Dieser Entwicklungszustand erfüllt das Endziel noch nicht.
+
 ## 2. Melihs Entscheidungen (25.10.2026, verbindlich)
 
 | # | Entscheidung |
 |---|---|
-| E1 | v2 nur mit `?design=neu`. Ohne Schalter bleibt alles wie heute (Ausnahmen: E7, E10). **Nach jeder fertigen Phase Merge nach `main`** (F-01 damit beantwortet). |
+| E1 | Bis zur freigegebenen Umstellung Entwicklung hinter `?design=neu`; ohne Schalter bisheriges Verhalten (Ausnahmen: E7, E10). Endziel ab 27.10.: Neu als Standard auch für alle bestehenden Kunden, siehe §1/V10. Spätere Grenze vom 26.10. ersetzt den früheren automatischen Phasen-Merge: kein main-Push und keine Standardumschaltung ohne ausdrückliche Freigabe. |
 | E2 | Navigation: Team entscheidet → siehe 3.2. |
 | E3 | Backend darf erweitert werden (Express-Router, ggf. RPC/View). **Migration live nur nach Melihs OK** (Stopp-Punkt). |
 | E4 | Geld-Kennzahlen nur Inhaber, serverseitig. R-06 wird geschlossen. |
@@ -97,7 +110,7 @@ Zuordnung als Map `PANEL_ARCHETYP` in einem Modul mit Vollständigkeitstest gege
 
 ## 5. Phasen und Pakete
 
-Jedes Paket = ein Durchlauf der Schleife (`AUFTRAG.md` 3.3) = ein Produkt-Commit, 30–90 Min, Wirkbereich vorher festgelegt. CSS, Backend und Werkzeug nie im selben Paket. **Nach jeder Phase:** `main` einmergen (Kemal), T1–T5 auf dem Merge-Ergebnis, Push `main` im Vordergrund, T6 `canli-test` mit `?design=neu`.
+Jedes Paket = ein Durchlauf der Schleife (`AUFTRAG.md` 3.3) = ein Produkt-Commit, 30–90 Min, Wirkbereich vorher festgelegt. CSS, Backend und Werkzeug nie im selben Paket. **Nach jeder Phase:** T1–T5 auf dem Integrationsstand. Melihs spätere Grenze gilt: kein main-Push, keine Standardumschaltung und keine Live-DB ohne ausdrückliche Freigabe; Push nur `redesign/praxura-design` im Hauptkontext/Vordergrund. T6 erst auf einem gesondert freigegebenen veröffentlichten Stand.
 
 | Phase | Inhalt | Pakete (ca.) | Fertig, wenn … |
 |---|---|---|---|

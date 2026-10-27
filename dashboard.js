@@ -15,7 +15,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261027s236'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261027s237'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261026n205';
@@ -13529,7 +13529,7 @@ initAnfrageBearbeiten({
 
 const { loadDoctors } = initLeadSuche({
   istKutu: IST_KUTU, supabase, showToast, t, getOwnerId, loadB2B, renderB2B,
-}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id }); // Redesign v2: Suche (module/kopf-suche.js) + Startseite (module/startseite-neu.js)
+}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
 
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
