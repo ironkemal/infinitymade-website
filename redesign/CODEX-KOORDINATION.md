@@ -792,3 +792,42 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Frontend-/Backend-Zuständigkeiten bleiben unverändert. Gemeinsame PLAN/
   STATUS-/Abnahmematrix aktualisiert der Integrator, Codex nur diese eigene
   Koordinationsnotiz. Keine zusätzlichen Agenten oder Scheduler hierfür.
+
+## Standardumstellung: belegte Vorbereitung, noch keine Umschaltung
+
+- Integrator arbeitet noch an V6.F06; dessen uncommittete Frontenddateien
+  unangetastet gelassen. Statt verfrühtem Review des beweglichen Diffs den
+  bestehenden Start-/Auslieferungsweg für das neue Endziel geprüft.
+- `dashboard.html:11` (fixierter Integrationsstand `d86fe7c5`) bleibt Opt-in:
+  neue Browser und Bestandsbrowser ohne px-design bekommen alt. Originalen
+  Head-Schalter isoliert in VM mit neun synthetischen Browserzuständen
+  ausgeführt: frisch, vorhandener Dunkelmodus, px-design neu/alt, gesperrter
+  Storage, explizit neu/alt, OAuth-Rückkehr und direkter Kalenderlink.
+  Kein Browser-/Netz-/Produkt-/Kundendatenzugriff.
+- Belegte gemeinsame Einstiege: Login `login.js:148`, bestehende Sitzung
+  `onboarding.js:104`, Bestätigung `confirm.html:177/205`, PWA-Start/ID
+  `manifest.json:5/41` führen alle auf dieselbe dashboard.html ohne Vorschau-
+  parameter. Kein eigener Dashboard-Neubau und keine DB-Migration nötig.
+- Vorbereitung für Integrator: Defaultentscheidung vor erstem Paint zentral
+  umstellen, dark-mode erhalten. Ohne Query muss neu gelten, auch bei
+  gesperrtem Storage und alten px-design-Werten. `?design=alt` als ausdrücklichen
+  diagnostischen Rückfall vorab prüfen; dessen Vorrang darf alte gespeicherte
+  Vorschau neu nicht aushebeln. Kundenseitige Speicherbereinigung darf keine
+  Voraussetzung sein. Kein Eingriff in Rollen-/Mandanten-/Authauflösung.
+- Verifizierte Auslieferungsquellen: Vercel revalidiert HTML/JS/CSS
+  (`vercel.json:57–81`), Onprem-Image kopiert dieselbe dashboard.html und
+  `module/`, `design/` (`onprem/frontend.Dockerfile:75/115/117`). PWA öffnet
+  dieselbe Route; in dashboard.js/module keine Serviceworker-Registrierung
+  gefunden. Tatsächliche HTTP-Header/Box-Updates bleiben Laufzeitnachweise,
+  aus Konfiguration allein keine Auslieferung für bestehende Kunden behaupten.
+- Abnahme vor Freigabe: neuen Default und expliziten Alt-Rückfall in den neun
+  Browserzuständen prüfen; Login/Bestands-PWA/Bestätigungs-/Deep-Link-Wege,
+  Owner/Employee/Fachbereiche und alle 27 Bereiche. Neu-Baseline erst nach
+  vollständiger Integration einfrieren; Alt-Baseline über ausdrücklichen
+  Rückfall weiterhin reproduzierbar halten. Keine Testschwächung beim Umschalten.
+- Rückfallpaket muss zugehörige HTML-/Modul-/CSS-Versionen zusammen und ohne
+  Datenänderung umstellen. Kein ungeprüfter Backend-Downgrade: R-06-Owner-Gate
+  und andere Sicherheitskorrekturen beim reinen Design-Rückfall erhalten.
+  Globaler Rollback darf alte persistierte Vorschauwerte nicht versehentlich
+  weiter auf neu halten. Integrator bereitet exakten Release-/Rückfall-Diff
+  reviewbar vor; tatsächliche Umschaltung/Veröffentlichung weiterhin separat GO.
