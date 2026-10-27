@@ -550,3 +550,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Nächster unabhängiger Schritt: read-only Vertragsprüfung Mahnungen mit
   Pflichtberaterperspektiven gestartet, `praxura-b06-sol-vertrag-20261027-r1`.
   Noch keine Mahnungsdatei erzeugt; keine doppelte Arbeit am selben Paket.
+
+## B07 abgenommen; V6.F01c gezielt bestätigt
+
+- B07-R2 bestätigt beide geschlossenen Testlücken unabhängig: 2/2 gezielte
+  Tests und vier passend scheiternde Mutationen. Gemeinsame Oracle-Basis
+  `dc134770` liefert denselben Funktions- und Helferinhalt wie die vorige Basis.
+  Finale Gesamtsuite: 2.154 / 1.844 / 318 bestanden, null Fehler/Skip (4.316).
+  B07 selbst 91/91 unter UTC/Berlin/New York. Keine Runtime-/Schema-/Env-
+  Abhängigkeit; Serverintegration und B08 weiterhin offen.
+- V6.F01c `533d12a6` aus PRIMARY gezielt mit Originalmodul und vollständigem
+  ESM-Graph im isolierten T3-Browser bestätigt. 10:15 nach 11:20 Berlin über
+  registrierten Original-Minutenhandler: Fokus bleibt Termin 04 trotz Wechsel
+  `ist-naechster` nach `ist-vorbei`; natives Tab führt zu Termin 08. Beide
+  synthetischen Termine haben denselben Patienten, Buchungs-ID trennt sie.
+  Entfernte Akte-Aktion fällt auf Kalenderknopf derselben Karte zurück.
+  Null Seitenfehler, keine Server-/Port-/Live-/RLS-Prüfung; Browser geschlossen.
+  Befund geschlossen und Claude per Queue übergeben, keine Frontendänderung.
+- B05a in PRIMARY als `29da1de9` gesehen. Eigener Patch damit integriert;
+  Mount und Frontendkarte nicht ungeprüft als fertig bezeichnet.
