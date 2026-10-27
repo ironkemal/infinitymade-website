@@ -944,3 +944,20 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Folgetermin nur bei belegtem Restbedarf und vollständiger Terminquelle.
 - Nach ACK zuerst Funktionsmeister-Abgleich und Fachgrenzen bestätigen, dann
   kleiner Bau + synthetische Grenztests. Loader/UI/STATUS/Index bleiben Integrator.
+
+## V8.02 gezielter Quellreview, Commit 499dbf5d
+
+- 58 neue Listen-CSS-Zeilen gelesen: Neu-Selektoren und @media screen
+  begrenzen Alt/Druck, Farben verwenden vorhandene Token. Keine neue
+  Runtime-Abhängigkeit/Animation im Diff. Impeccable detect seiten.css: [].
+- Impeccable-Kontext im eigenen Worktree hatte Ziel noch nicht vorhanden;
+  tatsächlicher Prüfgegenstand deshalb explizit gepinnter PRIMARY-Diff.
+  Keine PRODUCT/DESIGN-Dateien erzeugt, kein Kontext-Drift repariert.
+- Vorbestehender A11y-Restpunkt: #autoAcceptToggle in dashboard.html:3050
+  hat leeres umgebendes Label und keine aria-label/aria-labelledby/title.
+  Original-HTML aus Commit mit HTMLParser geprüft: Labeltexte [''];
+  Nachbartext ist nicht verknüpft. An Integrator zur kleinen Benennungs-
+  korrektur vor V9 gemeldet; native Checkbox und Space-Verhalten erhalten.
+- Detektor/Quellprüfung belegen keine gerenderte Kontrast-/Responsive-/
+  Tastatur-/Touch-Abnahme. Keine Produktänderung, kein Browser/Server/Netz.
+  Neues Handlungsbedarfspaket weiter ohne Datei-ACK, daher nicht begonnen.
