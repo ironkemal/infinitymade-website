@@ -616,3 +616,19 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Reader für ownerlose prescription_sessions muss Parent-Owner-Join auf jeder
   Seite und 200-ID-Chunks prüfen; keine Geburtsdaten-/Personenabfrage.
   Mahnungen-Dateien, bestehende Factory und Claude-Dateien bleiben unberührt.
+
+## B06 Mahnungen lokal abgenommen
+
+- Unabhängiger Sol-Review abgeschlossen: kein belegter Blocker, getrennte
+  fonksiyon/db/gkv/podoloji/guvenlik/onprem-Perspektiven selbst angewandt.
+  21/21 Tests sowie 242 zusätzliche Aggregat-/Überlaufproben grün; 1.997
+  synthetische Seiten geprüft. Vier Mutationen erkannt (Typ-Schlüssel,
+  Höchststufe, Terminalhistorie, Ownerfilter). Prüfdateien im Review hashgleich.
+- Vollständige Gesamtsuite 4.337 grün wie oben. Produktumfang ausschließlich
+  neue `mahnungen.js` und `.test.js`; Factory-Injektion und Mount bei Claude.
+  Antwort: drei Stufen, bekannte Anzahl/Teilsumme getrennt von unbekannter
+  Anzahl/Gesamtsumme; nur feste Gründe und Aggregate, keine Forderungs-IDs.
+- Funktionsabsicht: vorhandene Mahngruppen für die Startseite sicher zählen,
+  Rest aus eindeutigem B03-Patientenposten oder belegtem Ausfallstatus;
+  erste Verwendung synthetische Tests. Kein Transaktionssnapshot, keine
+  vollständige Privat-/BG-/Selbstzahlerforderung und keine Livefreigabe.
