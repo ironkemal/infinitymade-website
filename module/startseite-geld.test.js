@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summeText, monatText, geldKarteHtml, holeGeld, zuzahlungHtml, unbekanntHinweis } from './startseite-geld.js';
+import { summeText, monatText, geldKarteHtml, holeGeld, zuzahlungHtml, unbekanntHinweis, mahnungenHtml } from './startseite-geld.js';
 
 const NBSP = / /g;
 const t = (s) => s.replace(NBSP, ' ');
@@ -53,8 +53,50 @@ test('geldKarteHtml: Zustände laden / fehler / Daten; Text aus umfang, Privat/A
   assert.match(html, /Teilsumme 20,00/);
   assert.doesNotMatch(html, /mind\./);
   assert.match(html, /nicht enthalten/);
-  assert.doesNotMatch(html, /geld-neu/, 'letzte gute Zahlen bleiben bei Fehler stehen');
+  assert.match(html, /Mahnstufen gerade nicht verfügbar/, 'Mahnblockfehler bleibt getrennt sichtbar');
   assert.doesNotMatch(geldKarteHtml({ daten: { umfang: { patient: '<b>x</b>' } } }), /<b>x/);
+});
+
+const mahndaten = () => ({ stufen: [
+  { stufe: 1, anzahl: 2, bekanntAnzahl: 2, rest: { bekanntCent: 7500, gesamtCent: 7500, unbekanntAnzahl: 0 } },
+  { stufe: 2, anzahl: null, bekanntAnzahl: 1, rest: { bekanntCent: 2500, gesamtCent: null, unbekanntAnzahl: 1 } },
+  { stufe: 3, anzahl: 1, bekanntAnzahl: 1, rest: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: 1 } }
+] });
+
+test('Mahnstufen: Umfang, Anzahl und aktueller Rest getrennt; Unknown niemals Mindestbetrag', () => {
+  const html = t(mahnungenHtml({ daten: mahndaten() }));
+  assert.match(html, /Bereits gemahnte Forderungen, aktuell belegter Rest/);
+  assert.match(html, /Stufe 1[\s\S]*75,00 €[\s\S]*2 Forderungen/);
+  assert.match(html, /Stufe 2[\s\S]*Teilsumme 25,00 €[\s\S]*Gesamtbetrag unbekannt/);
+  assert.match(html, /Teilerfassung: 1 bekannte Forderung · Gesamtanzahl unbekannt/);
+  assert.match(html, /Unabhängig vom Abrechnungsmonat/);
+  assert.match(html, /Stufe 3[\s\S]*Teilsumme 0,00 €[\s\S]*1 Forderung/);
+  assert.match(html, /Höchste Stufe je Forderung; kein gemeinsamer Transaktionsstand/);
+  assert.doesNotMatch(html, /mind\.|100,00|keine Forderungen/i);
+});
+test('Mahnstufen: laden, Fehler, leere belegte Stufen und veralteter Stand', () => {
+  assert.match(mahnungenHtml({ laden: true }), /werden geladen/);
+  assert.match(mahnungenHtml({ fehler: true }), /gerade nicht verfügbar/);
+  assert.match(mahnungenHtml({ daten: { stufen: [] } }), /gerade nicht verfügbar/);
+  const falsch = mahndaten(); falsch.stufen[0].stufe = 2;
+  assert.match(mahnungenHtml({ daten: falsch }), /gerade nicht verfügbar/);
+  const leer = { stufen: [1, 2, 3].map(stufe => ({ stufe, anzahl: 0, bekanntAnzahl: 0,
+    rest: { bekanntCent: 0, gesamtCent: 0, unbekanntAnzahl: 0 } })) };
+  const html = t(mahnungenHtml({ daten: leer }));
+  assert.equal((html.match(/0 Forderungen/g) || []).length, 3);
+  assert.doesNotMatch(html, /Teilsumme|Gesamtbetrag unbekannt/);
+  assert.match(mahnungenHtml({ daten: mahndaten(), fehler: true }), /Zuletzt geladener Stand/);
+});
+test('Mahnblock-Fetch bleibt unabhängig vom Geldblock', async () => {
+  const supabase = { auth: { getSession: async () => ({ data: { session: { access_token: 'synthetic' } } }) } };
+  let pfad;
+  const daten = mahndaten();
+  const result = await holeGeld({ supabase, apiBase: '/api', blockName: 'mahnungen', fetchFn: async u => {
+    pfad = u; return { ok: true, json: async () => ({ bloecke: { mahnungen: { status: 'ok', daten } } }) };
+  } });
+  assert.equal(pfad, '/api/startseite/zusammenfassung?bloecke=mahnungen');
+  assert.deepEqual(result, daten);
+  await assert.rejects(holeGeld({ supabase, apiBase: '/api', blockName: 'fremd' }), /UNGUELTIGER_BLOCK/);
 });
 
 test('holeGeld: Token, Pfad, Blockfehler', async () => {

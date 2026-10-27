@@ -45,7 +45,13 @@ export const API_ANTWORTEN = {
       patientBekanntCent: 4620, kasseBekanntCent: 4020, klaerungBekanntCent: 0 },
       privat: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: null, gruende: ['PRIVAT_NICHT_GELADEN'] },
       ausfall: { bekanntCent: 0, gesamtCent: null, unbekanntAnzahl: null, gruende: ['AUSFALL_NICHT_GELADEN'] } },
-    anomalien: [] } } } }),
+    anomalien: [] } }, mahnungen: { status: 'ok', daten: { scope: 'mandant',
+      umfang: 'Bereits gemahnte Forderungen; höchste Stufe; aktueller belegter Rest',
+      stufen: [
+        { stufe: 1, anzahl: 2, bekanntAnzahl: 2, rest: { bekanntCent: 7500, gesamtCent: 7500, unbekanntAnzahl: 0 } },
+        { stufe: 2, anzahl: null, bekanntAnzahl: 1, rest: { bekanntCent: 2500, gesamtCent: null, unbekanntAnzahl: 1 } },
+        { stufe: 3, anzahl: 0, bekanntAnzahl: 0, rest: { bekanntCent: 0, gesamtCent: 0, unbekanntAnzahl: 0 } }
+      ], anomalien: [] } } } }),
 };
 
 /** Panels in der Reihenfolge von redesign/STATUS.md. */

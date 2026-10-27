@@ -220,6 +220,8 @@
 }
 @media screen {
   [data-design="neu"] .px-k-geld { grid-area: geld; }
+  /* Neuer Mahnwesen-Einstieg: Touchziel mindestens 44 px, bestehende Fußleisten unverändert. */
+  [data-design="neu"] .px-k-geld [data-ziel="mahnwesen"] { min-height: 44px; }
   [data-design="neu"] .px-geld { display: flex; flex-direction: column; padding: 4px 24px 8px; }
   [data-design="neu"] .px-geld-haupt { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 14px; border-bottom: 1px solid var(--border); }
   [data-design="neu"] .px-geld-haupt .lbl { font-size: 13px; line-height: 18px; color: var(--text-muted); }

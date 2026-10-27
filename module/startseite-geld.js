@@ -63,11 +63,30 @@ function zeile(titel, s, klasse = '') {
     ${t.hinweis ? `<span class="px-geld-hinweis">${WARN}${esc(t.hinweis)}</span>` : ''}</div>`;
 }
 
+/** B06: höchste Mahnstufe je Forderung, belegter Rest; keine vollständige Forderungsübersicht. */
+export function mahnungenHtml(z = {}) {
+  const kopf = '<h3 class="px-geld-gruppe-titel">Mahnungen</h3><p class="px-geld-fuss">Bereits gemahnte Forderungen, aktuell belegter Rest. Unabhängig vom Abrechnungsmonat.</p>';
+  let inhalt;
+  if (z.laden && !z.daten) inhalt = '<p class="px-geld-fuss">Mahnstufen werden geladen …</p>';
+  else if (!z.daten || !Array.isArray(z.daten.stufen) || z.daten.stufen.length !== 3
+    || z.daten.stufen.some((s, i) => s?.stufe !== i + 1)) {
+    inhalt = '<p class="px-geld-fuss">Mahnstufen gerade nicht verfügbar.</p><button type="button" class="px-knopf px-knopf--zweit" data-aktion="geld-neu">Erneut versuchen</button>';
+  } else {
+    inhalt = z.daten.stufen.map((s, i) => {
+      const anzahl = Number.isSafeInteger(s.anzahl) ? `${s.anzahl} ${s.anzahl === 1 ? 'Forderung' : 'Forderungen'}`
+        : `Teilerfassung: ${Number.isSafeInteger(s.bekanntAnzahl) ? s.bekanntAnzahl : '–'} ${s.bekanntAnzahl === 1 ? 'bekannte Forderung' : 'bekannte Forderungen'} · Gesamtanzahl unbekannt`;
+      return `${zeile(`Stufe ${i + 1}`, s.rest)}<p class="px-geld-fuss">${esc(anzahl)}</p>`;
+    }).join('');
+    if (z.fehler) inhalt += '<p class="px-geld-hinweis">Aktualisierung fehlgeschlagen. Zuletzt geladener Stand.</p>';
+  }
+  return `<div class="px-geld"><div class="px-geld-gruppe">${kopf}${inhalt}<p class="px-geld-fuss">Höchste Stufe je Forderung; kein gemeinsamer Transaktionsstand.</p><button type="button" class="px-fuss-knopf" data-ziel="mahnwesen">Zum Mahnwesen</button></div></div>`;
+}
+
 /**
  * Reine Hilfe (testbar): HTML der Karte.
  * @param {{laden?: boolean, fehler?: boolean, daten?: object|null}} z
  */
-export function geldKarteHtml(z = {}) {
+export function geldKarteHtml(z = {}, mahnungen = {}) {
   const kopf = (unter) => `<div class="px-karte-kopf"><div><h2 id="pxGeldTitel">Abrechnung</h2><p>${esc(unter)}</p></div></div>`;
   let rumpf;
   if (z.laden && !z.daten) rumpf = '<div class="px-karte-zustand"><p>Zahlen werden geladen …</p></div>';
@@ -82,27 +101,29 @@ export function geldKarteHtml(z = {}) {
         ${patient.hinweis ? `<span class="px-geld-hinweis">${WARN}${esc(patient.hinweis)}</span>` : ''}</div>
       ${zeile('Von Krankenkassen eingegangen', d.kassiert?.kasse)}
       ${zuzahlungHtml(d.offen?.zuzahlung)}
-      <p class="px-geld-fuss">Offene Privat- und Ausfallrechnungen sind hier noch nicht enthalten.</p>
+      <p class="px-geld-fuss">Vollständige offene Privat-, BG-, Selbstzahler- und Ausfallforderungen sind hier noch nicht enthalten.</p>
     </div>`;
   }
   const unter = z.daten ? [monatText(z.daten.monat), 'alle Standorte'].filter(Boolean).join(' · ') : 'Dieser Monat';
-  return `<section class="px-karte px-k-geld" aria-labelledby="pxGeldTitel">${kopf(unter)}${rumpf}
+  return `<section class="px-karte px-k-geld" aria-labelledby="pxGeldTitel">${kopf(unter)}${rumpf}${mahnungenHtml(mahnungen)}
     <div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="belegliste">Zum Kassenbuch <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></section>`;
 }
 
 /**
- * Holt den Geld-Block (nur Inhaber aufrufen). Wirft bei Netz-, HTTP- oder Blockfehler.
- * @param {{supabase: object, apiBase: string, fetchFn?: Function}} o
+ * Holt Geld- oder Mahnblock (nur Inhaber aufrufen). Gemeinsame Auth-/Fehlerbehandlung.
+ * Historischer Funktionsname bleibt für bestehende Aufrufer erhalten.
+ * @param {{supabase: object, apiBase: string, fetchFn?: Function, blockName?: string}} o
  */
-export async function holeGeld({ supabase, apiBase, fetchFn = (...a) => fetch(...a) }) {
+export async function holeGeld({ supabase, apiBase, fetchFn = (...a) => fetch(...a), blockName = 'geld' }) {
+  if (!['geld', 'mahnungen'].includes(blockName)) throw new Error('UNGUELTIGER_BLOCK');
   const { data } = await supabase.auth.getSession();
   const token = data?.session?.access_token;
   if (!token || !apiBase) throw new Error('KEINE_SITZUNG');
-  const res = await fetchFn(`${String(apiBase).replace(/\/+$/, '')}/startseite/zusammenfassung?bloecke=geld`, {
+  const res = await fetchFn(`${String(apiBase).replace(/\/+$/, '')}/startseite/zusammenfassung?bloecke=${blockName}`, {
     headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
   });
   if (!res.ok) throw new Error(`HTTP_${res.status}`);
-  const block = (await res.json())?.bloecke?.geld;
+  const block = (await res.json())?.bloecke?.[blockName];
   if (block?.status !== 'ok' || !block.daten || typeof block.daten !== 'object') throw new Error('BLOCK_NICHT_VERFUEGBAR');
   return block.daten;
 }
