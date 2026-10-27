@@ -676,3 +676,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Gesamtsuite läuft, Log
   `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-bereit-npm-hnjaqdma.log`.
   Bereit-Dateien bleiben vor Review ungestagt.
+
+## Bereit-Review: zwei P1 korrigiert; B08-Bau gestartet
+
+- Unabhängiger Review reproduzierte zwei P1: Physio-Zusatzheilmittel wurde
+  als Hauptposition bepreist; ungültige Podo-HPNR mit vorhandenem Preisfenster
+  wurde akzeptiert. Zwei neue Regressionstests zunächst rot.
+- Kleinste Korrektur nur in zugeteiltem Modul/Test: `heilmittel_index` mitladen,
+  Index ungleich 0/Alt-NULL ohne weitere Positionszuordnung Unknown lassen;
+  Katalog-`ungueltig_ab` zusätzlich gegen Leistungsdatum prüfen. Historische
+  Deprecated-Position bleibt zulässig. 50/50 fokussierte Tests grün.
+  Neue Testannahme präzisiert: Oktober 2025 ohne Katalogtreffer ergibt
+  PREIS_UNBEKANNT, Juli 2026 mit ungültigem Treffer POSITION_UNGUELTIG;
+  beide bleiben Unknown. Keine Bestandsassertion abgeschwächt.
+- Gesamtsuite läuft erneut, Log
+  `/var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-bereit-fix-npm-6ovhqlll.log`.
+- B08-Bau einmalig als `praxura-b08-sol-bau-20261027-r1` gestartet: nur neue
+  `verfuegbarkeit.js` und `.test.js`, injizierter Kontext-/Slotadapter statt
+  zweiter Slotengine. Bei fehlendem Vollständigkeitsnachweis Unknown. Server-
+  instrumentierung/Router bleiben beim Integrator; keine Buchungsänderung.
