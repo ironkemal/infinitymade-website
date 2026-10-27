@@ -1136,3 +1136,44 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Rollen-/Tenantwechsel während Reads; leere echte Daten vs Fehler; DST/Berlin.
 - Nur lokale Quellprüfung; kein Loaderbau, kein Netz/DB-/Browser-/Live-/RLS-Test.
   agy-context ausschließlich local-only, kein externer Provideraufruf.
+
+## F10b: Loader geliefert, 28.10.2026
+
+- Frühere ACK-Wartebedingung überholt: Originalnachricht Position4337 und
+  PRIMARY-STATUS:27 auf5e16d976 frisch gelesen. Exklusiv nur neue
+  module/startseite-handlungsbedarf-laden.js + .test.js. Eigene Basis c87d20f1;
+  keine parallelen nativen Bautasks, Integrator completed. Pflichtberatung
+  db-ustasi/Funktionsmeister jetzt abgeschlossen, keine alten Limit-Teilurteile.
+- Korrekturen zur lesenden Vorbereitung: Sessions besitzen im aktuellen Dump
+  KEIN planned_date; nicht projiziert. Aktive VO benötigen beide Statusachsen,
+  Abschlussprüfung über vorhandenes rxGeschlossen. Rohbereiche podo/physio/
+  ergo/stimme explizit übersetzt. Sonderformen Blanko/LHB/BVB Unknown; keine
+  stillen Standard-/Physio-Ersatzwerte. Nicht-GKV/Ernährung explizit außerhalb.
+- API: ladeHandlungsbedarfInput({supabase,heute,scope,signal,istAktuell}) liefert
+  direkt v1-Eingang für berechneHandlungsbedarf; kein DOM/Cache/Schreibweg.
+  Scope: {rolle:'owner',uid,ownerId,umfang:'mandant',vollstaendig:true} oder
+  umfang:'patienten' mit vollständigen autoritativ erlaubten patientIds.
+  Standort-/NULL-Altbestandsauflösung bleibt Kontextgeber; kein erfundener
+  VO.business_id-Filter. Employee bleibt unabhängig von ID-Liste Unknown/0Reads.
+- Wiederverwendung: alsBerlinDatum, istBehandlungseinheit, rxGeschlossen.
+  Alle Quellen pro200er-ID-Gruppe vollständig nach ID bis leere Schlussseite;
+  Owner-/Parent-/IDprüfung jeder Seite, geprüfte Teilmengen bei Fehlern behalten.
+  Podo Rest nur positive sichere Ganzzahl minus dokumentierte Einheiten;
+  andere Bereiche restbedarf:null, Mengen-/Kombivertrag bewusst unbelegt.
+  Kontrolle bleibt Pausenhistorie. Pending-Termin ist kein bestätigter Termin.
+  AbortSignal am Transport; istAktuell vor/nach awaits, verspätete Antwort leer
+  und unvollständig. Integrator muss Rollen-/Tenant-/Standortwechsel anbinden.
+- Rot fehlendes Modul; erster Bau55/55. Unabhängiger Sol-Review bestätigt55Tests,
+  findet fehlendes separates is_lhb_bvb-Flag. Eine kleine Parent-Reparatur:
+  Projektion + false-Gate + Regression; zusätzlich defensiver Rawstatus-Enum vor
+  vorhandenem Abschlusshelper. Keine weitere unabhängige Nachprüfung des Fixes
+  behauptet. Funktionsabsicht/erste Nutzung an Funktionsmeister gemeldet.
+- Final59Loader+47Rechner=106/106 grün, auch Kiritimati. Enthält echten
+  Supabase-SDK-Querybuilder mit geschlossenem synthetischem Fetch: Filter,
+  Parentjoin, Cursor und leere Schlussseite; keine echten Netzaufrufe.
+  Gesamtsuite2260+1993+318=4571pass,0fail,0skip. Log:
+  /var/folders/63/7kx2wp_j22g5p98c7kmnqz_40000gn/T/praxura-f10b-final-lba9zi6m.log.
+  Syntax/Whitespace sauber. Kein UI-/Auth-/RLS-/Live-/Transaktionssnapshot-
+  Nachweis; Runtimeanschluss/Cache/INDEX/STATUS ausschließlich Integrator.
+- Provider: native Sol-Beratung/Review; keine Astra-/externen CLI-Provideraufrufe.
+  Kein Push/Deploy/Standardwechsel. V7/V8/V9/V10 unverändert offen.
