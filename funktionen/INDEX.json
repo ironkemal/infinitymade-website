@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-27",
- "dateien": 498,
- "funktionen": 3983,
+ "dateien": 500,
+ "funktionen": 3990,
  "module": [
   "abrechnung",
   "anamnese",
@@ -2002,6 +2002,7 @@
    "calledBy": [
     "createAiConfig",
     "createAiRouter",
+    "createFinanzlader",
     "createStartseiteRouter",
     "einmalig",
     "exportAenderungsprotokollCsv",
@@ -2686,6 +2687,7 @@
     "besteJeIk",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "createAiRouter",
     "createDatevRouter",
     "createFakeOwnerDecisionStore",
@@ -2730,6 +2732,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
+    "ladeGeld",
     "ladeKassen",
     "ladePodVerordnung",
     "ladePodoPositionen",
@@ -6862,6 +6865,7 @@
     "boardNotice",
     "buildDtaFile",
     "buildTeamButton",
+    "cashSumme",
     "copyWithFeedback",
     "createConfirmationService",
     "createZuzahlungsforderungRouter",
@@ -7354,6 +7358,7 @@
     "buildNameVariants",
     "buildPositionOptionsHtml",
     "cardHTML",
+    "cashSumme",
     "chat",
     "checkIcdDg",
     "checkPrescriptionCompliance",
@@ -7651,6 +7656,7 @@
     "buchungenAus",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "checkPrescriptionCompliance",
     "createAiRouter",
     "createDatevRouter",
@@ -7715,6 +7721,7 @@
     "lade",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeGeld",
     "ladeKassen",
     "ladeKonfiguration",
     "ladePodoPositionen",
@@ -8044,6 +8051,7 @@
     "buildNameVariants",
     "buildPositionOptionsHtml",
     "cardHTML",
+    "cashSumme",
     "chat",
     "checkIcdDg",
     "checkPrescriptionCompliance",
@@ -30062,7 +30070,9 @@
     "berlinHeute",
     "berlinTagesgrenzen"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "ladeGeld"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -30499,6 +30509,7 @@
     "ladeChunks",
     "ladeFahrtenAenderungen",
     "ladeItsgTrustAnchors",
+    "ladeMandantenZeilen",
     "ladeOffeneForderungen",
     "ladeSeiten",
     "ladeStatusJePatient",
@@ -31653,6 +31664,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "cashSumme",
     "doppelteIds",
     "eindeutig",
     "euro",
@@ -32646,7 +32658,9 @@
     "ladeSeiten",
     "push"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "ladeGeld"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -33922,6 +33936,229 @@
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js"
    ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "createFinanzlader",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/finanzadapter.js",
+   "start": 18,
+   "end": 33,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "hasOwn",
+    "laden"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "mandant",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 7,
+   "end": 12,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "ladeGeld",
+    "ladeMandantenZeilen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ladeMandantenZeilen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 23,
+   "end": 52,
+   "lines": 30,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "mandant",
+    "push"
+   ],
+   "calledBy": [
+    "ladeGeld"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "cent",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 56,
+   "end": 66,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "cashSumme",
+    "doppelteIds",
+    "eindeutig",
+    "euro",
+    "offenerBetrag",
+    "planeZahlung",
+    "restbetrag",
+    "summe",
+    "unbekannt"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "sichereCent",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 68,
+   "end": 71,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "cashSumme",
+    "ladeGeld"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "cashSumme",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 73,
+   "end": 105,
+   "lines": 33,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "add",
+    "cent",
+    "get",
+    "has",
+    "set",
+    "sichereCent"
+   ],
+   "calledBy": [
+    "ladeGeld"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ladeGeld",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/startseite/geld.js",
+   "start": 120,
+   "end": 163,
+   "lines": 44,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "berlinMonatsgrenzen",
+    "cashSumme",
+    "get",
+    "ladeMandantenZeilen",
+    "ladeOffeneForderungen",
+    "mandant",
+    "set",
+    "sichereCent"
+   ],
+   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -35210,6 +35447,7 @@
     "boardNotice",
     "buildDtaFile",
     "buildTeamButton",
+    "cashSumme",
     "copyWithFeedback",
     "createConfirmationService",
     "createZuzahlungsforderungRouter",
@@ -49880,6 +50118,7 @@
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
     "(datei) api-backend/db/schema-zaehler.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) module/anamnese.js",
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
@@ -67885,6 +68124,7 @@
     "besteJeIk",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "createAiRouter",
     "createDatevRouter",
     "createFakeOwnerDecisionStore",
@@ -67929,6 +68169,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
+    "ladeGeld",
     "ladeKassen",
     "ladePodVerordnung",
     "ladePodoPositionen",
@@ -85442,6 +85683,7 @@
     "buchungenAus",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "checkPrescriptionCompliance",
     "createAiRouter",
     "createDatevRouter",
@@ -85506,6 +85748,7 @@
     "lade",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeGeld",
     "ladeKassen",
     "ladeKonfiguration",
     "ladePodoPositionen",
@@ -88584,6 +88827,7 @@
    "calls": [],
    "calledBy": [
     "(datei) api-backend/billing/pdf/ausfallrechnung.template.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) katalog-suche.js",
     "dateiversionenHtml",
     "datumBerlin",
@@ -108194,6 +108438,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/pdf/ausfallrechnung.template.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) katalog-suche.js",
     "dateiversionenHtml",
     "datumBerlin",
@@ -114077,6 +114322,7 @@
     "buchungenAus",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "checkPrescriptionCompliance",
     "createAiRouter",
     "createDatevRouter",
@@ -114141,6 +114387,7 @@
     "lade",
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
+    "ladeGeld",
     "ladeKassen",
     "ladeKonfiguration",
     "ladePodoPositionen",
@@ -117191,6 +117438,7 @@
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
     "(datei) api-backend/db/schema-zaehler.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) module/anamnese.js",
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
@@ -147578,6 +147826,7 @@
     "(datei) module/kiosk.js",
     "(datei) module/verordnung-podo.js",
     "bindInvEvents",
+    "createFinanzlader",
     "ladePapierannahmestelle",
     "openVehicleEditModal",
     "orteZu"
@@ -153911,6 +154160,7 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/pdf/ausfallrechnung.template.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) katalog-suche.js",
     "dateiversionenHtml",
     "datumBerlin",
@@ -154242,6 +154492,7 @@
     "boardNotice",
     "buildDtaFile",
     "buildTeamButton",
+    "cashSumme",
     "copyWithFeedback",
     "createConfirmationService",
     "createZuzahlungsforderungRouter",
@@ -163345,6 +163596,7 @@
     "round"
    ],
    "calledBy": [
+    "cashSumme",
     "doppelteIds",
     "eindeutig",
     "euro",
@@ -167213,6 +167465,7 @@
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
     "(datei) api-backend/db/schema-zaehler.js",
+    "(datei) api-backend/lib/startseite/geld.js",
     "(datei) module/anamnese.js",
     "(datei) module/termin-leistungen.js",
     "_speichereBetriebsart",
@@ -168747,6 +169000,7 @@
     "besteJeIk",
     "buildDtaFile",
     "buildPositionOptionsHtml",
+    "cashSumme",
     "createAiRouter",
     "createDatevRouter",
     "createFakeOwnerDecisionStore",
@@ -168791,6 +169045,7 @@
     "ladeAbrechnungAuswahl",
     "ladeAktiveVerordnungen",
     "ladeDateieinheiten",
+    "ladeGeld",
     "ladeKassen",
     "ladePodVerordnung",
     "ladePodoPositionen",
@@ -230404,6 +230659,15 @@
    "aynalar": []
   },
   {
+   "name": "cent",
+   "orte": [
+    "api-backend/lib/offene-forderungen.js:29",
+    "api-backend/lib/startseite/geld.js:56",
+    "module/rechnung-zahlungseingang.js:113"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "datum",
    "orte": [
     "module/abrechnung-artefakte.js:24",
@@ -230792,14 +231056,6 @@
    "orte": [
     "api-backend/ai/tasks/b2b-draft.js:23",
     "api-backend/ai/tasks/b2c-draft.js:23"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "cent",
-   "orte": [
-    "api-backend/lib/offene-forderungen.js:29",
-    "module/rechnung-zahlungseingang.js:113"
    ],
    "aynalar": []
   },

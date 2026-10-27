@@ -200,7 +200,8 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 27.10.2026 | V5.03: Blöcke, Kontextmenü, Kopfzeile neben Terminpanel (`design/kalender.css?v=20261027s228`) | `7ffcc594` | V5.04 |
 | 27.10.2026 | V5.04: Monat, Mitarbeiter-Chips (`design/kalender.css?v=20261027s229`) | `8a3e9d1d` | V5.05 |
 | 27.10.2026 | V5.05 Abnahme Kalender + mobil-ui-Befunde (`design/kalender.css?v=20261027s230`). Phase V5 fertig | `6810068b` | V8.xx |
-| 27.10.2026 | V6.F01c: Startseite-Fokus bei Statuswechsel (Codex-Befund V6.F01b P2, `?v=20261027s231`) | dieser Commit | V8.xx |
+| 27.10.2026 | V6.F01c: Startseite-Fokus bei Statuswechsel (Codex-Befund V6.F01b P2, `?v=20261027s231`) | `533d12a6` | V8.xx |
+| 27.10.2026 | Integration B05a von Codex (`bb64ac46`, selektiver Patch, 4 neue Dateien): `api-backend/lib/startseite/geld.js` (`ladeGeld`, `ladeMandantenZeilen` Owner-Keyset-Reader) + `finanzadapter.js` (`createFinanzlader` → lazy `geld({tenantId})`, mahnungen/abrechnung nur bei Injektion). Ausgabe `kassiert.patient/kasse` {bekanntCent, gesamtCent, unbekanntAnzahl, gruende}, `quelle.patient`='belegliste.created_at', `quelle.kasse`='abrechnung_zahlung.datum', `umfang.patient`='Kassiert diesen Monat (erfasst im Kassenbuch)', offen.zuzahlung aus B03, privat/ausfall NICHT_GELADEN. Sol-Review guvenlik/onprem ohne Blocker. 14/14; npm test grün. Noch nicht eingehängt (server.js-Mount + Karte folgen) | dieser Commit | V8.xx |
 | 26.10.2026 | Smoke-Gesamtlauf (beide Designs × Rollen) hing 2× beim Start ohne Ausgabe, Chrome-Verbindungen CLOSE_WAIT; je Design/Rolle einzeln mit `timeout 420` läuft er durch. Bis geklärt: in Teilen laufen lassen | – | – |
 
 ## 9 Abschluss
