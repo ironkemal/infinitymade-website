@@ -889,3 +889,35 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Finanzprojektion rollenfest sperren und Employee-Start/Refresh mit null
   Alt-Invoice-Reads prüfen. Direkter RLS-Zugriff bleibt getrennte Sicherheitsgrenze;
   keine Migration oder fremde Produktänderung innerhalb dieses Prüfschritts.
+
+## V6-Zustände: falsche Entwarnung bei unbekannten Anfragen
+
+- PRIMARY unverändert `c7fcf75e`. Original `todoHtml`, `zahlAus`, `voKpiDa`
+  und `zuErledigen` isoliert in VM geprüft, ohne Netz oder Produktänderungen.
+- Anfragen-Einstieg vorhanden, Badge initial leer/display:none; bekannte
+  VO-Zahlen beide 0. Ergebnis dennoch „Nichts offen. Gute Arbeit.“.
+  `todoHtml` bewertet bekannt ausschließlich über VO-Zahlen (OR), nicht
+  die relevante unbekannte Anfragenquelle. P2 an Integrator übergeben.
+- `dashboard.js:710` erzeugt initial leeres Badge; `updateAnfragenBadge`
+  (:18117) stellt erfolgreich geladene Null ebenso leer/unsichtbar dar.
+  Loaded/Fehler/Known-Signal nötig; bloßer DOM-Text liefert keinen Beleg
+  einer vollständigen Entwarnung. Nicht berechtigte Quellen ausschließen.
+- Abnahme: VO0 plus Anfragen pending/Fehler ohne Entwarnung; alle relevanten
+  Quellen nachweislich0 mit Leerzustand; positive bekannte Teile neben Unknown
+  weiter sichtbar. Kein pauschales Ersetzen unbekannter Zahlen durch0.
+
+## V6-Restumfang vor Vollabnahme, keine neuen Fertigbehauptungen
+
+- PLAN-V2 §3.3/:78/:88 verlangt Termine-Liste/Raster mit Filterchips,
+  Behandlerspalten sowie bestehende Funktionen in neuer Startseite. Aktuelles
+  `listeHtml` (:220–249) baut flache Liste und Kalenderlink, keinen Raster-
+  Umschalter. Kalender bleibt vorhanden, ersetzt zugesagte Startseitenfunktion
+  aber nicht automatisch. V6.Fxx bleibt deshalb wie im STATUS offen.
+- §3.3/:75–87 verlangt Termin-/Fahrtstart, fachliche Handlungsbedarfe und
+  gemeinsame Fristenregel. Aktuelle nächste Karte (:159–190) bietet Kalender
+  und Akte; VO-Karte (:250–263) übernimmt alte Gültigkeits-KPIs. Noch keine
+  vollständige Umsetzung der sieben fachlichen Karten nachgewiesen.
+- Diese Quellzuordnung ist Restumfang, kein neuer Sicherheitsbefund und
+  keine Erlaubnis für Codex, Frontenddateien des Integrators zu bearbeiten.
+  V9 muss diese Vertragszeilen einzeln prüfen; grüne Backend-/Komponententests
+  allein schließen V6 und damit das Standarddesign-Ziel nicht ab.
