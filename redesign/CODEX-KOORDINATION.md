@@ -853,3 +853,21 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Offen bleiben fertiger Integrationscommit, echte Fokus-/Tastatur-/Layout-
   und Alt-/Neu-Browsernachweise; diese Pure-Tests beweisen keine vollständige
   V6-/27-Bereiche-/Bestandskunden-/Standardumschaltungsabnahme.
+
+## Neuer P2: Finanzkarten blockieren bei hängendem Einzelrequest
+
+- PRIMARY jetzt `c7fcf75e` (V6.F06 committet). Dessen Verfügbarkeitskomponente
+  entspricht exakt dem bereits mit 7/7 geprüften SHA256-Snapshot; keine
+  unnötige Wiederholung. Visuelle/Fokus-/Gesamtabnahme bleibt separat offen.
+- Originaldeklaration `ladeGeldKarte` aus diesem Commit in VM ausgeführt:
+  Geld und Mahnungen liefern sofort erfolgreiche synthetische Antworten,
+  Abrechnung bleibt absichtlich pending. Nach zehn Microtasks sind beide
+  Antworten erfüllt, alle drei Kartenzustände aber weiter laden=true/daten=null.
+  Erst kontrollierter Reject der letzten Promise gibt die anderen Ergebnisse frei.
+- Befund `module/startseite-neu.js:115–119`: gemeinsame allSettled-Barriere;
+  `module/startseite-geld.js:161–172`: kein Transport-Timeout. Ein einzelner
+  hängender Request hält dadurch auch verfügbare Zahlen unsichtbar.
+- P2 mit Originalrepro an Integrator übergeben. Empfehlung blockweise
+  Ergebnisse übernehmen und zeichnen, begrenzter Abort pro Finanzrequest,
+  Altstand/Fehler nur betroffener Karte. Keine fremden Dateien verändert,
+  keine echten Requests; Vergleich mit B08-Lader nur als vorhandenes Muster.
