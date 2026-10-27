@@ -132,3 +132,30 @@
     [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn { padding: 0 10px; }
   }
 }
+
+/* ── V5.04 Monat, Woche, Mitarbeiter-Chips ────────────────────────────────────
+   Pillenfarben im Monat sind Leistungsfarben (module/kalender-monat.js farbeFuer, inline) —
+   unangetastet. Ruhiger werden nur Tageszahl, Heute-Markierung und „+n“. */
+@media screen {
+  [data-design="neu"] #panel-calendar .month-grid-header { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] #panel-calendar .month-cell-day {
+    font-size: 13px;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+  }
+  [data-design="neu"] #panel-calendar .month-cell--other-month .month-cell-day { color: var(--text-faint); }
+  /* Heute: dunkler Kreis statt Signalrot (Rot bleibt der Jetzt-Linie vorbehalten). */
+  [data-design="neu"] #panel-calendar .month-cell--today .month-cell-day {
+    background: var(--primary);
+    color: var(--bg-card-solid);
+  }
+  [data-design="neu"] #panel-calendar .month-cell--today { border-color: var(--border-strong) !important; } /* gegen dashboard.css --primary !important */
+  [data-design="neu"] #panel-calendar .month-cell-more { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] #panel-calendar .month-event-pill { border-radius: var(--radius-xxs); }
+
+  /* Mitarbeiter-Chips: gleiche Höhe wie die Kopfzeile darüber, ruhige Pille. */
+  [data-design="neu"] #panel-calendar .cal-emp-leiste { border-bottom: 0; margin-bottom: 12px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 32px; padding: 0 12px; font-size: 13px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip:hover { border-color: var(--border-strong); background: var(--bg-hover); }
+  [data-design="neu"] #panel-calendar .cal-emp-chip.active { border-color: var(--text-main); background: var(--nav-active); }
+}
