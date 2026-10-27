@@ -632,3 +632,21 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Rest aus eindeutigem B03-Patientenposten oder belegtem Ausfallstatus;
   erste Verwendung synthetische Tests. Kein Transaktionssnapshot, keine
   vollständige Privat-/BG-/Selbstzahlerforderung und keine Livefreigabe.
+
+## V6.F03: gezielte Semantikprüfung, zwei P2 an Claude
+
+- Originalfunktionen aus `163112c1` ohne Dateien/DB/Netz ausgeführt.
+  `summeText` macht bei unbekannter Gesamtsumme aus bekanntCent immer „mind.“.
+  B05a-Cash kann jedoch unbekannte negative Stornos/Korrekturen enthalten:
+  bekannte 100 Euro sind bei möglichem Rückfluss 20 Euro keine Untergrenze.
+  Empfehlung bekannte Teilsumme/Gesamt unbekannt, ungeklärte Einträge neutral
+  benennen (nicht jede Unklarheit ist ein ungültiger Betrag).
+- `geldKarteHtml` zeigt B03-Aggregat Patient+Kasse+Klärung als eine offene
+  Zuzahlungssumme. Repro 20/70/10 Euro ergibt nur „Offene Zuzahlungen 100 Euro“;
+  E16-Zeile „Bei Kasse gefordert“ fehlt. Getrennte Bestände angefordert,
+  Unknown-Hinweis für lediglich bekannte Unterteilsummen erhalten.
+- Beide belegten Befunde mit Datei/Zeile/Repro an Claude per Queue übergeben.
+  Patienten-/Kasseneingänge, Erfassungsmonat und Privat-/Ausfallabgrenzung
+  grundsätzlich passend. Keine Frontendänderung, keine pauschale Liveabnahme.
+- Mahnungen `eaee3e72` selektiv übergeben (zwei Produktdateien, Anwendbarkeit
+  PRIMARY grün), Bereit-Lader weiterhin separat im Bau.
