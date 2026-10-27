@@ -18,6 +18,8 @@
  * @returns {Promise<{ podo: boolean, sitzungen: Array<{ id: string, done_at: string|null, code: string }> }>}
  *   chronologisch sortiert; `id` ist je Zeile eindeutig (Podologie: `<behandlung>:<hpnr>`)
  */
+import { physioLeistungszeilen } from '../codes/physio-leistungszeilen.js';
+
 export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
   if (rx?.therapie_bereich === 'podo') {
     const { data, error } = await supabase
@@ -30,11 +32,18 @@ export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
     if (error) throw error;
     return { podo: true, sitzungen: flacheBehandlungen(data) };
   }
-  const code = rx?.heilmittel_position || '';
-  const sitzungen = (rx?.prescription_sessions || [])
+  // Physio/Ergo/Logo: dieselben Zeilen wie der §302-Mapper (ergänzend, Hausbesuch,
+  // Doppelbehandlung) — billing/codes/physio-leistungszeilen.js. Anzahl 2 wird hier
+  // zu zwei Zeilen, weil die Druckwege je Zeile einen Einzelpreis rechnen.
+  const erbrachtSortiert = (rx?.prescription_sessions || [])
     .filter(s => s.status === 'done')
-    .map(s => ({ id: s.id, done_at: s.done_at || null, code }))
     .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+  const sitzungen = [];
+  for (const z of physioLeistungszeilen(rx, erbrachtSortiert)) {
+    for (let i = 0; i < z.anzahl; i++) {
+      sitzungen.push({ id: i ? `${z.id}:${i + 1}` : z.id, done_at: z.done_at, code: z.code, art: z.art });
+    }
+  }
   return { podo: false, sitzungen };
 }
 

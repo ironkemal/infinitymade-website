@@ -44,6 +44,7 @@ import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { baueZuBelegZeile, zuDruckDaten, zuBelegVeraltet, baueGegenbeleg, ladeAktivenZuBeleg } from '../zuzahlung/zu-beleg.js';
 import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
+import { physioLeistungszeilen } from '../codes/physio-leistungszeilen.js';
 import { ladeErbrachteSitzungen } from '../zuzahlung/erbrachte-sitzungen.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import {
@@ -564,10 +565,15 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     e.status = 422; e.code = 'WEITERES_HEILMITTEL_NICHT_UNTERSTUETZT'; throw e;
   }
 
-  const sessions = doneSessions.map(s => {
+  // Je Sitzung: vorrangig (+ Doppelbehandlung als Anzahl 2), ggf. ergänzendes
+  // Heilmittel und Hausbesuch-Pauschale — billing/codes/physio-leistungszeilen.js,
+  // dieselbe Quelle wie der ZU-Beleg (27.10.2026, gkv-302).
+  const sessions = physioLeistungszeilen(rx, doneSessions).map(z => {
+    const s = z.session;
     const booking = s.bookings || s.booking_id || {};
     const service = booking.services || booking.service_id || booking.service || {};
-    const requiredCert = service.required_certificate || null;
+    // Zertifikat hängt an der Leistung des Termins = dem vorrangigen Heilmittel.
+    const requiredCert = z.art === 'vorrangig' ? (service.required_certificate || null) : null;
     const therapistId = booking.user_id || null;
     
     const certSet = therapistCerts ? therapistCerts.get(therapistId) : null;
@@ -579,15 +585,15 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     // den auch die Druckrouten benutzen. Vorher liefen beide Wege auseinander.
     const { preis_eur: einzelbetrag, zuzahlung_eur: zuzahlungProPos } = resolvePreis({
       bereich: sector === 'podologie' ? 'podologie' : 'physiotherapie',
-      code: stored,
+      code: z.code,
       datum: dateStr,
       abrechnungscode,
     });
 
     return {
-      positionsnummer: resolvedPos,
+      positionsnummer: z.code === stored ? resolvedPos : resolvePositionsnummer(z.code, abrechnungscode),
       datumLeistung: dateStr,
-      anzahl: 1,
+      anzahl: z.anzahl,
       einzelbetrag,
       zuzahlungProPos: rx.zuzahlung_befreit ? 0 : zuzahlungProPos,
       therapistId,
@@ -890,6 +896,7 @@ router.post('/abrechnung/create', async (req, res) => {
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
+        hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
         status, abrechnung_status, therapie_bereich, rezeptart,
@@ -898,9 +905,9 @@ router.post('/abrechnung/create', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at, heilmittel_index,
+          id, session_number, status, done_at, heilmittel_index, ergaenzend_erbracht,
           bookings:booking_id (
-            id, user_id, service_id,
+            id, user_id, service_id, hausbesuch,
             services:service_id (id, required_certificate)
           )
         )
@@ -2715,7 +2722,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at)
+        prescription_sessions (id, session_number, status, done_at, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
       `)
       .eq('id', req.params.id)
       .single();
@@ -3082,7 +3089,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city, patientennummer),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at)
+        prescription_sessions (id, session_number, status, done_at, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
       `)
       .eq('id', req.params.id)
       .single();
@@ -3314,7 +3321,7 @@ function loeseSitzungenAuf(rx, erbracht, preisBereich) {
       abrechnungscode: abrechnungscodeFuer(preisBereich),
     });
     // Podologie: Bezeichnung je HPNR aus dem Katalog, nicht das Heilmittel der Verordnung (canli-test 10.10.2026).
-    return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : '' };
+    return { session: s, preis_eur, zuzahlung_eur, position_frei, label: erbracht.podo ? (katalogPosition?.label || '') : (s.art && s.art !== 'vorrangig' ? (katalogPosition?.label || '') : '') };
   });
 }
 
@@ -3619,6 +3626,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
+        hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
         abrechnung_status, therapie_bereich,
@@ -3627,9 +3635,9 @@ router.post('/abrechnung/preflight', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at, heilmittel_index,
+          id, session_number, status, done_at, heilmittel_index, ergaenzend_erbracht,
           bookings:booking_id (
-            id, user_id, service_id,
+            id, user_id, service_id, hausbesuch,
             services:service_id (id, required_certificate)
           )
         )
@@ -4835,8 +4843,8 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer, street, plz, city),
         aerzte:arzt_id   (id, arzt_name, lanr, bsnr),
         prescription_sessions (
-          id, session_number, status, done_at, heilmittel_index,
-          bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
+          id, session_number, status, done_at, heilmittel_index, ergaenzend_erbracht,
+          bookings:booking_id ( id, user_id, service_id, hausbesuch, services:service_id (id, required_certificate) )
         )
       `)
       .eq('owner_id', tenantId)
