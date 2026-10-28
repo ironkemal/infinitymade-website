@@ -1290,3 +1290,18 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - V8.03-Stopp/Reservierungen erhalten, kein fremder Dateibesitz übernommen.
   Main/V10/Live-DB weiter gesperrt. Deduplizierte Übergabe:
   praxura-v704g-0e386edd-vm-review-20261028-01.
+
+## 2026-10-28 — Parallelteam dedupliziert, V8.04a Auslieferung
+- PRIMARY a808a110: Gruppe1 Team/Ärzte/Fahrtenbuch integriert. A-Diagnose,
+  B-Restansichten, C-Abnahmematrix und Thread5-V2.09b-Review anderweitig
+  reserviert/aktiv; keine zweite Bau-/Reviewdelegation gestartet.
+- 7/7 gezielte Integrationschecks grün: CSS bytegleich abb3c38a; Neu-Scope
+  und Important-Kommentare; tatsächlicher frontend.Dockerfile/Workflow;
+  exakt ein versionierter CSS-Link; nur drei erlaubte Panel-IDs;
+  Integrationscommit ohne Backend-/Modul-/DashboardJS-/Basistokenänderung.
+- Frühere eigene Backendlieferdateien im PRIMARY bytegleich; zusätzliche
+  B08-Integratoradapter vorhanden, keine neue Abweichung an eigenen Modulen.
+- Reiner Quell-/Auslieferungsnachweis, kein Imagebau/Browser/Netz/Live.
+  Bestehende18Browserfälle/9Tests nicht erneut ausgeführt.
+- V8.03 bleibt gestoppt; restliche9V8.04Panels offen. Keine fremden Edits.
+  Übergabe dedupliziert: praxura-v804a-a808a110-delivery-check-20261028-01.
