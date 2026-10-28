@@ -10,6 +10,7 @@ const frag = source.slice(source.indexOf('async function fragFolgetermin('), sou
 const fahrt = source.slice(source.indexOf('async function fahrtBeendenKlick('), source.indexOf('// ── Öffentliche Schnittstelle'));
 const start = source.indexOf('    const bookingIdVorLaden =');
 const nachSpeichern = source.slice(start, source.indexOf('\n  });', start));
+const abschlussStart = source.slice(source.indexOf('    const abschluss ='), source.indexOf('\n', source.indexOf('    const abschluss =')));
 const flush = async () => { for (let i = 0; i < 30; i++) await Promise.resolve(); };
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 
@@ -35,7 +36,7 @@ function fixture({ antwort = false, booking, error = null, read, neu = true } = 
   const args = { vord, datum: '2026-10-28', bookingId: 'B', neu, scope, auswahl: 'R', kontext: ctx, folgeMoeglich: true };
   return { c, ctx, state, args, reads, fragen, geld, folge, meldungen, fahrtDialoge,
     scope: v => { scope = v; }, recht: v => { erlaubt = v; }, design: v => { neu = v; },
-    run: overrides => c.fragFolgetermin({ ...args, ...overrides }), save: () => vm.runInContext(`(async()=>{${nachSpeichern}\n})()`, c) };
+    run: overrides => c.fragFolgetermin({ ...args, ...overrides }), save: (vorEnde=()=>{}) => { c.vorEnde=vorEnde;return vm.runInContext(`(async()=>{${abschlussStart}\nawait vorEnde();\n${nachSpeichern}\n})()`, c); } };
 }
 
 test('Original-Controller: Zuzahlungsprüfung liest erst nach Wahl, filtert und bindet exakt VO/Patient', async () => {
@@ -46,6 +47,25 @@ test('Original-Controller: Zuzahlungsprüfung liest erst nach Wahl, filtert und 
 for (const feld of ['owner_id', 'lead_id', 'verordnung_id']) test(`Original-Controller: falsche Antwort-${feld} öffnet keine Zahlung`, async () => {
   const f = fixture({ antwort: 'zusatz', booking: { id: 'B', owner_id: 'O', lead_id: 'P', verordnung_id: 'R', [feld]: 'FREMD' } });
   await f.run(); assert.equal(f.geld.length, 0); assert.match(f.meldungen[0][0], /Kein passender Termin/);
+});
+for (const antwort of [true, 'zusatz']) test(`Original-Controller: aktuelle Auswahl widerspricht gespeicherter VO, ${antwort} gesperrt`, async () => {
+  const f=fixture({antwort});f.state.selectedVordId='OTHER_RX';
+  await f.run({auswahl:'OTHER_RX'});
+  assert.equal(f.fragen.length,0);assert.equal(f.reads.length,0);
+  assert.equal(f.folge.length,0);assert.equal(f.geld.length,0);
+  const normal=fixture({antwort});await normal.run();
+  assert.equal(normal.fragen.length,1);assert.equal(normal.reads.length,1);
+  assert.equal(normal.folge.length,antwort===true?1:0);assert.equal(normal.geld.length,antwort==='zusatz'?1:0);
+});
+test('Abschlusskontext liegt vor erstem await des Original-Speicherhandlers',()=>{
+  const handler=source.slice(source.indexOf("document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {"));
+  assert.ok(handler.indexOf('const abschluss =')>=0);
+  assert.ok(handler.indexOf('const abschluss =')<handler.indexOf('await '));
+});
+for(const wechsel of ['auswahl','scope']) test(`Original-Speicheranschluss: ${wechsel} während Speichern verwirft alten Abschluss`,async()=>{
+  const f=fixture({antwort:'zusatz'});
+  await f.save(()=>{if(wechsel==='auswahl')f.state.selectedVordId='OTHER_RX';else f.scope('ANDERER_SCOPE');});
+  assert.equal(f.fragen.length,0);assert.equal(f.reads.length,0);assert.equal(f.geld.length,0);assert.equal(f.folge.length,0);
 });
 test('Original-Controller: fehlender/abgesagter Termin ist kein Zahlungsanker', async () => {
   for (const booking of [null, { id: 'B', owner_id: 'O', lead_id: 'P', verordnung_id: 'R', status: 'cancelled' }]) {

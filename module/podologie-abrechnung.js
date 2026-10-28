@@ -1028,6 +1028,7 @@ async function loadPodologieBilling() {
     montiereVorgeschichte({ sb: ctx.supabase, ownerId: ctx.getOwnerId(), leadId: vgVord?.lead_id, nagel: vgVord?.nagel, immer: istAltsystemVerordnung(vgVord), wrap: document.getElementById('podVgWrap') }).catch(() => {}); }
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
+    const abschluss = { neu: ctx.abschlussNeu?.() === true, scope: ctx.abschlussKontext?.(), auswahl: _podState.selectedVordId, kontext: ctx };
     const datum   = document.getElementById('podBehDatum').value;
     const checks  = [...document.querySelectorAll('.pod-hpnr-cb:checked')].map(cb => cb.value);
     // Der Nagel der Verordnung hat Vorrang vor dem Freitextfeld; das Feld
@@ -1281,7 +1282,6 @@ async function loadPodologieBilling() {
     }
 
     const bookingIdVorLaden = _podState.fahrtBookingId;
-    const abschluss = { neu: ctx.abschlussNeu?.() === true, scope: ctx.abschlussKontext?.(), auswahl: _podState.selectedVordId, kontext: ctx };
     await loadPodologieBilling();
     if (altsystem) return;   // Nachtrag: keine Fahrt, kein Folgetermin
     const fahrtOffen = await zeigeFahrtHinweis();
@@ -1305,7 +1305,7 @@ async function fragFolgetermin({ vord, datum, bookingId, neu = false, scope, aus
   if (!ctx.folge || !vord?.lead_id) return;
   if (neu) {
     const passt = () => ctx === kontext && !!scope && ctx.abschlussNeu?.() === true
-      && scope === ctx.abschlussKontext?.() && auswahl === _podState.selectedVordId;
+      && scope === ctx.abschlussKontext?.() && auswahl === vord.id && auswahl === _podState.selectedVordId;
     const ownerId = ctx.getOwnerId(), rxId = vord.id, leadId = vord.lead_id;
     const echt = b => b?.id && b.owner_id === ownerId && b.lead_id === leadId
       && b.verordnung_id === rxId && b.status !== 'cancelled';
