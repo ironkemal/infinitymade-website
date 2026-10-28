@@ -1,0 +1,88 @@
+/* V8.04 — Ergänzungen zu bestehenden Neu-Bausteinen.
+   Ausschließlich Bildschirm und zugeteilte Panels. Keine Dokument-/Modalstile.
+   Tokens, Fokus und Statusetiketten bleiben in praxura-design.css/seiten.css.
+   Einbindung und Cache-Version übernimmt der Integrator. */
+
+/* Gruppe 1: Team, Ärzte, Fahrtenbuch. */
+@media screen {
+  [data-design="neu"] :is(#panel-team, #panel-doctors, #panel-fahrtenbuch) :is(button, .btn-outline, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select) {
+    min-height: 44px;
+  }
+  [data-design="neu"] :is(#panel-team, #panel-doctors, #panel-fahrtenbuch) button {
+    min-width: 44px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) .tabs,
+  [data-design="neu"] #panel-team .tab-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) :is(.table, .data-table) th {
+    height: 44px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) :is(.table, .data-table) td {
+    height: 60px;
+  }
+  [data-design="neu"] #panel-team .employee-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 24px;
+  }
+  [data-design="neu"] #panel-team .emp-card {
+    min-width: 0;
+    background: var(--bg-card-solid);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  [data-design="neu"] #panel-team .emp-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+  }
+  [data-design="neu"] #panel-team :is(.emp-name, .emp-role, .emp-link-row, .emp-info) {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-team .emp-urlaub-toggle {
+    min-height: 44px;
+    width: 100%;
+  }
+  [data-design="neu"] #panel-team .emp-link-text {
+    min-height: 44px;
+    padding-block: 12px;
+    line-height: 20px;
+    box-sizing: border-box;
+  }
+  [data-design="neu"] #panel-team #anwStandortBox label {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  [data-design="neu"] #panel-team #anwStandortBox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  [data-design="neu"] #panel-team .emp-detail-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  [data-design="neu"] #panel-fahrtenbuch #fbTabVehicles > div:first-child {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-doctors .apify-bar { flex-wrap: wrap; }
+  [data-design="neu"] #panel-doctors :is(#docQuery, #docCity) { flex: 1 1 100% !important; } /* gegen Inline-flex:2/1, das Suchfelder auf rund 30px zusammendrückt */
+  [data-design="neu"] #panel-team .emp-card { padding: 16px; }
+  [data-design="neu"] #panel-team .emp-urlaub-body :is(input, select) { flex-basis: 100% !important; } /* gegen Inline-flex:1 der drei nebeneinanderliegenden Felder */
+  [data-design="neu"] #panel-fahrtenbuch .fb-tab > div:first-child > button {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+  }
+}
