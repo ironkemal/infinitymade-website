@@ -46,12 +46,12 @@ import { renderPatientenliste, patientPasstZurSuche } from './module/patientenli
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261028s243';
-import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
+import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261028s244';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261028s243';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261028s244';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -7203,7 +7203,7 @@ async function openPatientDetailModal(lead) {
   const leadId = lead.id;
   const isPhysio = isPraxisSector(getSector());
   const isPodo = getSector() === 'podologie';
-  setzeAkteReiter({ isPhysio, isPodo });   // Reiter je Fachbereich: Podologie 6, sonst wie bisher (module/akte-podo.js)
+  setzeAkteReiter({ isPhysio, isPodo }); montiereAkteAktionen({ kontext: () => ({ role: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), leadId: pdCurrentLeadId, businessId: currentBusiness?.id || null, sharing: dataSharing.patients, sector: getSector() }), darf: hasModuleAccess, oeffnen: (art, id) => { closeModal('patientDetailModal'); if (art === 'anamnese') return oeffneAnamneseFuer(id); if (art === 'fussbefund') return oeffneFussbefundEintrag(fussbefundCtx(), { leadId: id }); prefillNotesPatientId = id; return switchPanel('notizen'); }, fehler: () => showToast('Dokumentation konnte nicht geöffnet werden.', 'error') });
 
   const messPanel = document.getElementById('pdPanelMessreihen');
   if (messPanel) {

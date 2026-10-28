@@ -120,7 +120,9 @@ export async function renderFussbefundArchiv(deps, leadId, containerId = 'pdFuss
   if (!data || !data.length) {
     wurzel.innerHTML = leer(
       'Für diesen Patienten ist noch kein Fußbefund gespeichert.',
-      'Neuen Befund im Modul <strong>Fußbefund</strong> anlegen (linke Navigation).'
+      typeof document !== 'undefined' && document.documentElement?.dataset.design === 'neu'
+        ? 'Befunde werden im Modul <strong>Fußbefund</strong> erfasst.'
+        : 'Neuen Befund im Modul <strong>Fußbefund</strong> anlegen (linke Navigation).'
     );
     return;
   }

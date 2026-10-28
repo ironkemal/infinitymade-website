@@ -3,7 +3,7 @@
 > Üretim: 2026-10-28 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4107 fonksiyon** (3985 JS · 95 bash · 27 ps1) · 513 dosya · 42 sidebar modülü
+**4110 fonksiyon** (3988 JS · 95 bash · 27 ps1) · 514 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -489,7 +489,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:368
 - `cleanup` — dashboard.js:6216 · dashboard.js:6303 · dashboard.js:18010 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:81 · module/bestaetigungs-dialog.js:20
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:236 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:703
-- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/startseite-handlungsbedarf-karte.js:7 · module/verordnung-pruefung.js:100
+- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:201 · module/sitzungsplan.js:114 · module/startseite-handlungsbedarf-karte.js:7 · module/verordnung-pruefung.js:100
 - `lesen` — api-backend/lib/startseite/abrechnung.js:195 · cookie-consent.js:100 · module/einstellungen-nav.js:26 · module/rezept-barcode-scan.js:90 · module/startseite-handlungsbedarf-karte.js:38 · module/startseite-handlungsbedarf-laden.js:123
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/deinstallieren.sh:37 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59

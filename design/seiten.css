@@ -10,6 +10,12 @@
    Inhalt kommen unverändert aus den bestehenden Modulen (verordnung-liste/-detail.js).
    ========================================================================== */
 
+/* V7.02: Akte-Aktionen neben den bestehenden Leseinhalten, auch in Podo-Verlauf. */
+@media screen {
+  [data-design="neu"] .px-akte-aktionen { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-akte-aktionen button { min-height: 44px; max-width: 100%; white-space: normal; text-align: left; }
+}
+
 /* ── V8.02 Listen: eine Hülle, einheitliche Zeilen und erreichbare Aktionen.
    Nur Verwaltungslisten; Rechnungsdokument, Editor und Druck bleiben außerhalb. */
 @media screen {

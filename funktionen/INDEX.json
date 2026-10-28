@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-28",
- "dateien": 513,
- "funktionen": 4107,
+ "dateien": 514,
+ "funktionen": 4110,
  "module": [
   "abrechnung",
   "anamnese",
@@ -306,6 +306,7 @@
     "openFahrtEndModal",
     "openInvEditor",
     "openInvView",
+    "openPatientDetailModal",
     "openVehicleEditModal",
     "openVorlagenAnsicht",
     "patientGewaehlt",
@@ -12902,6 +12903,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -13126,6 +13128,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -14657,6 +14660,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "erlaubt",
     "error",
     "has"
    ],
@@ -22069,6 +22073,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "erlaubt",
     "parseSegment",
     "parseUNAHeader",
     "push",
@@ -22286,6 +22291,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "erlaubt",
     "naechsteStufe"
    ],
    "calledBy": [
@@ -56545,6 +56551,7 @@
     "oeffnePodoBehandlungen",
     "oeffneRechnungZurVerordnung",
     "openBookingActionModal",
+    "openPatientDetailModal",
     "pdSpringeZu",
     "proceedToRechnungForPhysio",
     "renderSidebar",
@@ -57152,6 +57159,7 @@
     "openFahrtEndModal",
     "openInvEditor",
     "openInvView",
+    "openPatientDetailModal",
     "openVehicleEditModal",
     "openVorlagenAnsicht",
     "patientGewaehlt",
@@ -65993,6 +66001,7 @@
     "brandingAus",
     "closeModal",
     "displayName",
+    "fussbefundCtx",
     "getOwnerId",
     "getSector",
     "invalidate",
@@ -66005,10 +66014,15 @@
     "loadPatientDetailRezepte",
     "loadPatientDetailTermine",
     "loadPatientDetailUeberweisung",
+    "montiereAkteAktionen",
     "montiereVorgeschichte",
+    "oeffneAnamneseFuer",
+    "oeffneFussbefundEintrag",
     "openModal",
     "renderPatientenkarte",
     "setzeAkteReiter",
+    "showToast",
+    "switchPanel",
     "terminzettelPraxis",
     "zeigeFussbefundArchiv"
    ],
@@ -66610,8 +66624,10 @@
     "oeffneBefreiungsFormular"
    ],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "(datei) module/kalender-kontextmenue.js",
     "(datei) module/termin-verordnung.js",
+    "montiereAkteAktionen",
     "renderBefundListe",
     "wireBefreiungCard"
    ],
@@ -84124,6 +84140,7 @@
     "(datei) dashboard.js",
     "init",
     "openBookingActionModal",
+    "openPatientDetailModal",
     "pdSpringeZu",
     "switchPanel",
     "zeigeFussbefundArchiv"
@@ -104787,6 +104804,209 @@
    ]
   },
   {
+   "name": "kontextSchluessel",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/akte-aktionen.js",
+   "start": 12,
+   "end": 15,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "montiereAkteAktionen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "montiereAkteAktionen",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/akte-aktionen.js",
+   "start": 23,
+   "end": 50,
+   "lines": 28,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "darf",
+    "erlaubt",
+    "kontext",
+    "kontextSchluessel",
+    "oeffnen"
+   ],
+   "calledBy": [
+    "openPatientDetailModal"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "erlaubt",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/akte-aktionen.js",
+   "start": 30,
+   "end": 30,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "darf"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/dta/preflight.js",
+    "(datei) api-backend/db/migrate.js",
+    "(datei) module/podo-arztangaben.js",
+    "montiereAkteAktionen",
+    "parseKostentraegerDatei",
+    "pruefeStufe",
+    "uebermittlungProtokollieren"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "akteReiterPlan",
    "kind": "function",
    "lang": "js",
@@ -107466,7 +107686,8 @@
    "calls": [],
    "calledBy": [
     "handleTerminStarten",
-    "ladePatientenAnamnese"
+    "ladePatientenAnamnese",
+    "openPatientDetailModal"
    ],
    "modules": [
     "abrechnung",
@@ -117003,11 +117224,14 @@
     "zeichneLuecken"
    ],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "(datei) module/anfrage-anliegen.js",
     "(datei) module/termin-verordnung.js",
     "(datei) module/verordnung-liste.js",
     "(datei) module/verordnung-podo.js",
+    "erlaubt",
     "eur",
+    "montiereAkteAktionen",
     "mountBrandingExtras",
     "renderPatientenkarte",
     "zeichneStempel"
@@ -126043,8 +126267,8 @@
    "lang": "js",
    "file": "module/fussbefund-archiv.js",
    "start": 89,
-   "end": 197,
-   "lines": 109,
+   "end": 199,
+   "lines": 111,
    "spiegelHinweis": null,
    "tables": [
     "pat_fussbefund"
@@ -126117,8 +126341,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/fussbefund-archiv.js",
-   "start": 185,
-   "end": 187,
+   "start": 187,
+   "end": 189,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -126181,8 +126405,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/fussbefund-archiv.js",
-   "start": 199,
-   "end": 204,
+   "start": 201,
+   "end": 206,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -129561,8 +129785,10 @@
     "oeffneBefund"
    ],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "(datei) module/kalender-kontextmenue.js",
     "(datei) module/termin-verordnung.js",
+    "montiereAkteAktionen",
     "renderBefundListe",
     "wireBefreiungCard"
    ],
@@ -130297,6 +130523,7 @@
     "switchPanel"
    ],
    "calledBy": [
+    "openPatientDetailModal",
     "zeigeFussbefundArchiv"
    ],
    "modules": [
@@ -136101,6 +136328,7 @@
     "openFahrtEndModal",
     "openInvEditor",
     "openInvView",
+    "openPatientDetailModal",
     "openVehicleEditModal",
     "openVorlagenAnsicht",
     "patientGewaehlt",
@@ -182738,6 +182966,7 @@
     "zeichne"
    ],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "berlinStunde",
     "createHandlungsbedarfKarte",
     "datumLang",
@@ -182749,6 +182978,7 @@
     "laden",
     "leistung",
     "lesen",
+    "montiereAkteAktionen",
     "verdrahteSuche",
     "zeichneInnen"
    ],
@@ -195972,6 +196202,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "(datei) module/akte-aktionen.js",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -239284,7 +239515,7 @@
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:53",
     "module/fahrtenbuch-regeln.js:315",
-    "module/fussbefund-archiv.js:199",
+    "module/fussbefund-archiv.js:201",
     "module/sitzungsplan.js:114",
     "module/startseite-handlungsbedarf-karte.js:7",
     "module/verordnung-pruefung.js:100"
