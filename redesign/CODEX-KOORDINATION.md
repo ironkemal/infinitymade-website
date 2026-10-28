@@ -1269,3 +1269,24 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Deduplizierte Übergabe: praxura-v7-podologie-rechte-c8b7dda1-20261028-01.
   Nächster Integratorbeitrag: vorhandene Workflows im geschlossenen Harness
   prüfen; keine echten DB-/Zahlungs-/Sendeaktionen. Main/V10 bleiben gesperrt.
+
+## 2026-10-28 — V7.04g gezielte unabhängige Werkzeugprüfung
+- Eigener Startstand90b301bf sauber; PRIMARY0e386edd sauber, Integrator idle.
+- Diff0e386edd und tatsächliche Fixture-Transformation gelesen. Keine Produktänderung.
+- 15/15 isolierte Node-VM-Prüfungen grün: alle drei Dokumentationstabellen
+  verzögern Reads und Inserts um konfigurierte1200ms; echte Payload erneut
+  gelesen; Fremdowner und Upsert verworfen; bookings und nicht freigegebene
+  Doku-Tabelle bleiben RS_READONLY; exakt drei akzeptierte synthetische Writes.
+- Virtuelle Timer, kein Browser/Netz/DB/echter Zeitablauf. Erster VM-Aufbau
+  scheiterte an fehlendem structuredClone im Sandboxkontext; nach expliziter
+  Bereitstellung unveränderter Produkt-/Werkzeugcode geprüft.
+- Neue Waits prüfen Speicherfreigabe, erneuten Quellenread und gespeicherten
+  Marker nach ungespeicherter Änderung. Kein belegter neuer Blocker im Diff.
+- Integratornachweise separat:27/27 verzögerte Roundtrips,3/3 Normalprobe,
+  64/64 Regressionen; nicht selbst als Browserlauf wiederholt.
+- Frühere Lücke Erfassen→synthetisch Speichern→Wiederöffnen durch14d18c07
+  eng abgedeckt; ältere Notiz oben überholt. Keine vollständige Writer-,
+  RLS-, Persistenz-/Live- oder Flakefreiheitsabnahme. R23/gesamteV7 offen.
+- V8.03-Stopp/Reservierungen erhalten, kein fremder Dateibesitz übernommen.
+  Main/V10/Live-DB weiter gesperrt. Deduplizierte Übergabe:
+  praxura-v704g-0e386edd-vm-review-20261028-01.
