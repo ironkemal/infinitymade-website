@@ -401,14 +401,15 @@ function physioSpalten() {
 
 // ── Kontext der aktiven Verordnung (unverändert aus dashboard.js) ───────────
 
-async function ladeRxKontext(patientId, nr) {
+async function ladeRxKontext(patientId, nr, scope) {
   const box = $('anamRxContext'); if (!box) return;
+  if (d.darfAnamnese?.() !== true || typeof d.getScopeKey !== 'function' || scope !== d.getScopeKey()) { box.style.display = 'none'; return; }
   if (!patientId || !d.isPraxisSector(d.getSector())) { box.style.display = 'none'; return; }
   const { data: rx } = await d.supabase.from('prescriptions')
     .select('id, rezept_typ, status, heilmittel, icd10, diagnosegruppe, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis, hausbesuch, is_dringend, prescription_sessions(status)')
     .eq('patient_id', patientId).in('status', ['parsed', 'confirmed', 'in_therapy'])
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (nr !== ladeNr) return;
+  if (nr !== ladeNr || scope !== d.getScopeKey() || d.darfAnamnese?.() !== true) return;
   if (!rx) { box.style.display = 'none'; return; }
 
   const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' }[rx.rezept_typ] || rx.rezept_typ;
@@ -446,16 +447,18 @@ async function verordnenderArzt(patientId) {
 
 async function fuelleFormular(patientId) {
   resetForm();
-  const nr = ladeNr;
   if ($('anamRxContext')) $('anamRxContext').style.display = 'none';
-  ladeRxKontext(patientId, nr).catch(() => { });
+  if (d.darfAnamnese?.() !== true || typeof d.getScopeKey !== 'function') return;
+  const scope = d.getScopeKey();
+  const nr = ladeNr;
+  ladeRxKontext(patientId, nr, scope).catch(() => { });
   if (!patientId) return;
   const fb = fachbereich();
   try {
     if (!(d.getAerzte?.() || []).length) await d.loadAerzte?.();
-    if (nr !== ladeNr) return;
+    if (nr !== ladeNr || scope !== d.getScopeKey() || d.darfAnamnese?.() !== true) return;
     const { row, fehler } = await ladeAktuelle(d.supabase, patientId, fb, d.getOwnerId());
-    if (nr !== ladeNr) return;
+    if (nr !== ladeNr || scope !== d.getScopeKey() || d.darfAnamnese?.() !== true) return;
     if (fehler) { d.showToast('Anamnese konnte nicht geladen werden.', 'error'); return; }
     aktuelleRow = row;
     $('anamAufnahme').value = row?.aufnahmedatum || alsISODatum(new Date());
@@ -475,7 +478,7 @@ async function fuelleFormular(patientId) {
     } else if (fb === 'podo') {
       // Übergang: noch keine Podo-Anamnese → alte Fußbefund-Risiken nur VORSCHLAGEN (nie still übernehmen).
       const [alt, arzt] = await Promise.all([ladeAltrisiken(d.supabase, patientId), verordnenderArzt(patientId)]);
-      if (nr !== ladeNr) return;
+      if (nr !== ladeNr || scope !== d.getScopeKey() || d.darfAnamnese?.() !== true) return;
       if (alt) vorschlaege = vorschlaegeAusRisiken(alt.risiken);
       if (arzt) schreibeForm(wurzel, def, { ...liesForm(wurzel, def), hausarzt: arzt });
     }
@@ -484,7 +487,7 @@ async function fuelleFormular(patientId) {
     aktuellerPatient = patientId; geladeneNr = nr; $('anamSaveBtn').disabled = false;
     aktualisiereKopf();
   } catch {
-    if (nr === ladeNr) {
+    if (nr === ladeNr && scope === d.getScopeKey() && d.darfAnamnese?.() === true) {
       resetForm();
       d.showToast('Anamnese konnte nicht geladen werden.', 'error');
     }

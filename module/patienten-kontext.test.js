@@ -39,6 +39,7 @@ function anamneseFixture({ read, insert, aerzte = [{}], loadAerzte } = {}) {
     return q;
   } };
   initAnamnese({ supabase: sb, getOwnerId: () => 'QA-owner', getUserId: () => 'QA-user',
+    getScopeKey: () => 'QA-user:QA-owner:QA-business:false:owner', darfAnamnese: () => true,
     getSector: () => 'physiotherapie', getAerzte: () => aerzte, loadAerzte,
     showToast: m => toasts.push(m), nachSpeichern: () => { completed++; } });
   bindAnamneseEvents();

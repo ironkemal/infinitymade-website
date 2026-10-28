@@ -1,5 +1,31 @@
 # V7.04 lokale Phasengates, 28.10.2026
 
+## Nachtrag V7.04d: Anamnese-Folgeantworten
+
+Basis1cdf3b31: Originalfunktionsregressionen zunächst10/20rot. Bestehende
+Scope-/Rechte-/Ladenummer-Prüfung auf Ärzte-, Formular-, Podo-Vorschlagsantwort
+und Verordnungskontext erweitert; keine neue Query, Funktion oder Schreibregel.
+Danach20/20grün. Reale Modul-Kontexttests benötigten tatsächliche injizierte
+Scope-/Rechtecallbacks: erste Fullsuite deshalb5Fixturefehler; nach Ergänzung
+ohne geänderte Assertions30/30gezielt und Fullsuite2427+2152+371=4950pass,
+1bestehenderSkip,0fail. Log `/tmp/praxura-v704d-npm-final.log`.
+
+Synthetischer Browser mit HTTP-/WebSocket-Fence:12/12Fälle Alt/Neu,
+hell1440/dunkel390, jeweils Scopewechsel/Rechteentzug/Normalpfad grün;
+0Writes/Seitenfehler,4Bilder gesichtet. `/tmp/praxura-v704d-ui/bericht.json`,
+Skript `/tmp/praxura-v704d-browser.mjs`. AltOverview1440hell gegenv801alt:
+1Bild pixelgleich,107nicht geprüft; kein wiederholter kompletter Matrixnachweis.
+CacheDashboard/Anamnese247; Funktionskarte erzeugt. Eigener Diffcheck nach
+engineering:code-review ohne weiteren belegten Blocker im Reparaturumfang.
+
+Kollegenmeldung unabhängig20vorhandeneTests+12Originalfunktionsproben über
+Physio/Podo/Ergo/Logo grün;8Vorgänger-Gegenfälle akzeptierten veraltete Antworten.
+Diese Meldung gilt nur für Folgeantworten. Kein Ersatz für ausgefallenen
+Pflichtreview, Gesamt-V7-/Writer-/RLS-/Liveurteil. Bestehende Schreib-Races und
+Doku-Rechtepolitik offen; keine neue Rechtefreigabe. V8.03/V8.04 unberührt.
+
+## Vorheriger Phasennachweis V7.04c
+
 Produktbasis: `f704d318`, Dokumentations-HEAD bei Beginn `03d4aa15`.
 Keine Veröffentlichung, Live-DB, echten Profile oder Kundendaten verwendet.
 V7.04 bleibt bis zur vollständigen Auswertung und Pflicht-Fachabnahme offen.
