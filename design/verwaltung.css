@@ -78,6 +78,35 @@
   }
 }
 
+/* Gruppe 2: Notizen, Feedback und Beispielmodus. */
+@media screen {
+  [data-design="neu"] :is(#panel-notizen, #panel-feedback, #panel-beispielmodus) :is(button, a.btn-primary, input:not([type="hidden"]), select, textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] #panel-notizen .patient-search-list li[data-id] {
+    min-height: 44px;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-notizen #notesForm > div:last-child {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-header, .feedback-badges) {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-title, .feedback-desc, .feedback-meta, .feedback-admin-note) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-item, .feedback-admin-note) {
+    background: var(--bg-card-solid);
+  }
+  [data-design="neu"] #panel-feedback .feedback-admin-note {
+    border: 1px solid var(--border);
+  }
+}
+
 @media screen and (max-width: 600px) {
   [data-design="neu"] #panel-doctors .apify-bar { flex-wrap: wrap; }
   [data-design="neu"] #panel-doctors :is(#docQuery, #docCity) { flex: 1 1 100% !important; } /* gegen Inline-flex:2/1, das Suchfelder auf rund 30px zusammendrückt */
