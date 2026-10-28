@@ -15,8 +15,9 @@ function fixture({ read = async () => ({ data: [], error: null }), risk = async 
   for (const id of ['fbpPatient','fbpTermin','fbpDatum','fbpNotiz','fbpWagner','fbpSaveBtn']) {
     nodes.set(id, { value: '', disabled: false, textContent: '', dataset: {}, innerHTML: '', style: {}, isConnected: true });
   }
-  const writes = [], messages = [];
+  const writes = [], messages = [], reads = [];
   const sb = { from(table) {
+    reads.push(table);
     let id; const q = { select: () => q, eq(k,v) { if(k === 'lead_id') id=v; return q; }, neq: () => q, order: () => q,
       limit: () => read(table,id), insert(payload) { writes.push(payload[0]); return q; },
       single: () => insert ? insert() : Promise.resolve({ data: { id:'saved',eintrag_id:'saved',serie_id:'saved',serie_farbe:'blue',version:1 },error:null }) };
@@ -27,13 +28,28 @@ function fixture({ read = async () => ({ data: [], error: null }), risk = async 
     risikoZeilen: () => [], befundRisikoHinweis: () => '', wagnerWert: v => v === '' || v == null ? null : Number(v),
     emit() {}, WAGNER_OPTIONEN:[], WAGNER_TEXT:{}, resolveSector: x => x, alsBerlinDatum });
   vm.runInContext(source, context);
-  context.testCtx = { supabase:sb, ownerId:()=>'owner',userId:()=>'user',showToast:m=>messages.push(m) };
-  vm.runInContext(`ctx=testCtx; globalThis.api={patientGewaehlt,speichern,neuerBefund,
+  context.testCtx = { supabase:sb, ownerId:()=>'owner',userId:()=>'user',showToast:m=>messages.push(m), darfDokumentieren:()=>true };
+  vm.runInContext(`ctx=testCtx; globalThis.api={patientGewaehlt,speichern,neuerBefund,mountFussbefund,oeffneFussbefundEintrag,oeffneFussbefundFuerTermin,
     state:()=>({termine,befundeDesPatienten,risikoRow}),
     setEntry:id=>{currentEintragId=id;serieId=id;}};`,context);
-  return { nodes,writes,messages,api:context.api, async select(id) {nodes.get('fbpPatient').value=id;return context.api.patientGewaehlt(id);},
+  return { nodes,writes,messages,reads,deps:context.testCtx,api:context.api, async select(id) {nodes.get('fbpPatient').value=id;return context.api.patientGewaehlt(id);},
     prepare(id='A') {nodes.get('fbpPatient').value=id;nodes.get('fbpTermin').value='__ohne__';nodes.get('fbpDatum').value='2026-10-17';nodes.get('fbpNotiz').value=id+' ONLY';} };
 }
+
+for (const entry of ['mountFussbefund','oeffneFussbefundEintrag','oeffneFussbefundFuerTermin']) {
+  test(`Fußbefund: ${entry} verweigert vor Panel/DOM/Quellen`, async () => {
+    const f=fixture(); const actions=[]; f.nodes.set('fussstatusContent',{innerHTML:'UNVERAENDERT',isConnected:true});
+    f.deps.darfDokumentieren=()=>false; f.deps.bizScope=q=>q;
+    f.deps.switchPanel=async()=>actions.push('switch'); f.deps.closePanel=()=>actions.push('close');
+    await f.api[entry](f.deps,{leadId:'A',lead_id:'A',id:'B'}).catch(()=>{});
+    assert.deepEqual(f.reads,[]); assert.deepEqual(actions,[]); assert.equal(f.nodes.get('fussstatusContent').innerHTML,'UNVERAENDERT');
+  });
+}
+test('Fußbefund: Recht nach Laden entzogen sperrt Patientenread und Schreiben',async()=>{
+  const f=fixture(); await f.select('A'); f.prepare('A'); f.deps.darfDokumentieren=()=>false;
+  const n=f.reads.length; await f.api.patientGewaehlt('B'); await f.api.speichern();
+  assert.equal(f.reads.length,n); assert.equal(f.writes.length,0);
+});
 
 test('Fußbefund: spätes A-Laden überschreibt B weder in Terminen noch Befunden',{timeout:1500},async()=>{
   const a=deferred();const f=fixture({read:async(table,id)=>{if(id==='A')await a.promise;return {data:[{id:table+'-'+id,lead_id:id,erstellt_am:'2026-01-01',start_time:'2026-10-17T10:00:00Z'}],error:null};}});

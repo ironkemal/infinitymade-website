@@ -182,8 +182,12 @@ let patientenKontext = null;
 let geladenerKontext = null;
 let speicherLauf = null;
 
+function darfDokumentieren(deps) {
+  try { return deps?.darfDokumentieren?.() === true; } catch { return false; }
+}
+
 function kontextAktuell(lauf) {
-  return !!lauf && lauf.version === kontextVersion && lauf.ownerId === ctx?.ownerId()
+  return darfDokumentieren(ctx) && !!lauf && lauf.version === kontextVersion && lauf.ownerId === ctx?.ownerId()
     && lauf.feld === el('fbpPatient') && lauf.feld?.isConnected !== false && lauf.feld?.value === lauf.leadId;
 }
 
@@ -696,6 +700,7 @@ function terminGewaehlt() {
 }
 
 async function patientGewaehlt(leadId) {
+  if (!darfDokumentieren(ctx)) return false;
   const lauf = { version: ++kontextVersion, leadId, ownerId: ctx.ownerId(), feld: el('fbpPatient') };
   patientenKontext = lauf; geladenerKontext = null; syncSpeichern();
   termine = []; befundeDesPatienten = [];
@@ -1532,7 +1537,7 @@ function verdrahte(wurzel) {
 /**
  * Panel aufbauen. Wird von dashboard.js beim Öffnen des Moduls gerufen.
  *
- * @param {object} deps    supabase, ownerId(), userId(), bizScope(), showToast(),
+ * @param {object} deps    supabase, ownerId(), userId(), bizScope(), darfDokumentieren(), showToast(),
  *                         showConfirmModal(), displayName(), displayNameWithBirth(),
  *                         leadBirthDate(), patientMatchesQuery(), sector(),
  *                         switchPanel(), closePanel()
@@ -1546,6 +1551,7 @@ function verdrahte(wurzel) {
  *                         dann fest, die Patientensuche ist ausgeblendet.
  */
 export async function mountFussbefund(deps, preset, optionen) {
+  if (!darfDokumentieren(deps)) return false;
   const montage = ++kontextVersion; patientenKontext = null; geladenerKontext = null;
   ctx = deps;
   // Sofort einlösen, nicht erst am Ende: `oeffneFussbefundFuerTermin` erkennt am
@@ -1575,7 +1581,7 @@ export async function mountFussbefund(deps, preset, optionen) {
       .order('last_name', { ascending: true }), 'patients'),
     ladeLegende(ctx.supabase, ownerId),
   ]);
-  if (montage !== kontextVersion || aktuelleWurzel !== wurzel || ctx !== deps) return;
+  if (!darfDokumentieren(deps) || montage !== kontextVersion || aktuelleWurzel !== wurzel || ctx !== deps) return;
 
   if (patRes.error) console.error('[fussbefund] Patienten laden:', patRes.error.message);
 
@@ -1682,6 +1688,7 @@ async function wendePresetAn(preset) {
  * hierher. Erfasst und geaendert wird ausschliesslich an dieser Stelle.
  */
 export async function oeffneFussbefundEintrag(deps, { leadId, befundId }) {
+  if (!darfDokumentieren(deps)) return false;
   if (!leadId) return;
 
   ausstehenderPreset = { leadId, befundId: befundId || null };
@@ -1699,6 +1706,7 @@ export async function oeffneFussbefundEintrag(deps, { leadId, befundId }) {
  * Der Panelwechsel baut das Modul selbst auf; der Preset liegt so lange bereit.
  */
 export async function oeffneFussbefundFuerTermin(deps, booking) {
+  if (!darfDokumentieren(deps)) return false;
   if (!booking?.lead_id) return;
 
   ausstehenderPreset = { leadId: booking.lead_id, bookingId: booking.id };
@@ -1722,7 +1730,7 @@ export async function verdrahteFussbefundKnopf(deps, booking) {
   if (!btn) return;
 
   const podologie = resolveSector(deps.sector?.() || '') === 'podologie';
-  if (!podologie || !booking?.lead_id || !document.getElementById('panel-fussstatus')) {
+  if (!darfDokumentieren(deps) || !podologie || !booking?.lead_id || !document.getElementById('panel-fussstatus')) {
     btn.hidden = true;
     return;
   }
@@ -1742,6 +1750,7 @@ export async function verdrahteFussbefundKnopf(deps, booking) {
     .eq('booking_id', booking.id)
     .eq('ist_aktuell', true)
     .maybeSingle();
+  if (!darfDokumentieren(deps)) { btn.hidden = true; return; }
 
   // Inzwischen ein anderer Termin geöffnet → diese Antwort ist veraltet.
   if (btn.dataset.bookingId !== booking.id) return;

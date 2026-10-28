@@ -45,12 +45,12 @@ import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, ope
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261026n205';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261028s243';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261026n205';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261028s243';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -94,7 +94,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
-import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261028s243'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021s';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
@@ -613,7 +613,7 @@ const SIDEBAR_TO_MODULE = {
   services: 'services',
   hours: 'hours',
   team: 'team',
-  notes: 'notes',
+  notes: 'notes', notizen: 'notes',
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
   verordnungen: 'prescriptions',
@@ -14651,7 +14651,7 @@ async function init() {
     console.log('[init] gmail ok');
     console.log('[init] invoices ok');
     initAnamnese({
-      supabase, getOwnerId, getUserId: () => currentSession?.user?.id || null, getSector, getProfile: () => currentProfile,
+      supabase, bizScope, getOwnerId, getScopeKey: () => `${currentSession?.user?.id}:${getOwnerId()}:${currentBusiness?.id}:${dataSharing.patients}:${currentProfile?.role}`, darfAnamnese: () => ['owner','employee'].includes(currentProfile?.role) && hasModuleAccess('anamnese'), getUserId: () => currentSession?.user?.id || null, getSector, getProfile: () => currentProfile,
       showToast, displayNameWithBirth, loadAerzte, getAerzte: () => aerzteCache, wireArztFeld, isPraxisSector, printArea, closeModal, switchPanel,
       // Hausbesuch: Termin gestartet (fahrt_return_pending) → Fahrt-beenden-Bildschirm zeigen
       nachSpeichern: () => { if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') setTimeout(() => openBookingActionModal(bkActionBookingCache), 300); },
@@ -17783,7 +17783,7 @@ function fussbefundCtx() {
     displayNameWithBirth,
     leadBirthDate,
     patientMatchesQuery,
-    sector: getSector, switchPanel, closePanel: closeBkActionPanel,
+    sector: getSector, switchPanel, closePanel: closeBkActionPanel, darfDokumentieren: () => ['owner','employee'].includes(currentProfile?.role) && hasModuleAccess('abrechnung'),
     oeffneAnamnese: oeffneAnamneseFuer,   // Risikoblock: „Anamnese ändern"
   };
 }

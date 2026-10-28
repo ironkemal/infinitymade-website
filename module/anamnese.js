@@ -46,7 +46,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 /**
  * @param {object} injected  supabase, getOwnerId, getUserId, getSector, getProfile, showToast,
  *   displayNameWithBirth, loadAerzte, getAerzte, wireArztFeld, isPraxisSector, printArea, closeModal,
- *   switchPanel, nachSpeichern
+ *   switchPanel, nachSpeichern, bizScope, getScopeKey, darfAnamnese
  */
 export function initAnamnese(injected = {}) {
   d = { showToast: (m) => console.log(m), ...injected };
@@ -61,7 +61,7 @@ export function initAnamnese(injected = {}) {
 
 /** Andere Bildschirme (Termin, Akte, Tagesbehandlung, Fußbefund) öffnen das Panel mit diesem Patienten. */
 export function setzeAnamneseVorwahl(id) { vorwahl = id || null; }
-export function oeffneAnamneseFuer(id) { vorwahl = id || null; d.switchPanel?.('anamnese'); }
+export function oeffneAnamneseFuer(id) { if (d.darfAnamnese?.() !== true) return false; vorwahl = id || null; d.switchPanel?.('anamnese'); }
 
 const istKiosk = () => { const o = $('kioskOverlay'); return !!o && !o.hidden; };
 const fachbereich = () => fachbereichAusSektor(d.getSector?.());
@@ -277,21 +277,25 @@ async function bestaetigeUnveraendert(row, danach, istAktuell = () => true) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function loadAnamnese() {
-  const { data } = await d.supabase.from('leads')
+  const sel = $('anamPatientSelect');
+  if (!sel || d.darfAnamnese?.() !== true || typeof d.bizScope !== 'function' || typeof d.getScopeKey !== 'function') return;
+  const scope = d.getScopeKey();
+  sel.innerHTML = '<option value="">-- Patient auswählen --</option>'; resetForm(); const nr = ladeNr;
+  const { data, error } = await Promise.resolve(d.bizScope(d.supabase.from('leads')
     .select('id,first_name,last_name,title,phone,email,metadata,geschlecht')
     .eq('owner_id', d.getOwnerId())
-    .order('first_name', { ascending: true });
-  const sel = $('anamPatientSelect');
-  if (!sel) return;
+    .order('first_name', { ascending: true }), 'patients')).catch(error => ({ data: null, error }));
+  if (ladeNr !== nr || scope !== d.getScopeKey() || d.darfAnamnese?.() !== true) return;
+  if (error || !Array.isArray(data)) { vorwahl = null; d.showToast('Patienten konnten nicht geladen werden.', 'error'); return; }
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     (data || []).map((l) => `<option value="${esc(l.id)}">${esc(d.displayNameWithBirth(l))}</option>`).join('');
   zeichneFormular();
-  if (vorwahl) {
+  if (vorwahl && data.some(l => l.id === vorwahl)) {
     sel.value = vorwahl;
     const id = vorwahl; vorwahl = null;
     await fuelleFormular(id);
   } else {
-    resetForm();
+    vorwahl = null; resetForm();
   }
 }
 
