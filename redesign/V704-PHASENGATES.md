@@ -1,5 +1,47 @@
 # V7.04 lokale Phasengates, 28.10.2026
 
+## V7.04h: Kalenderstart über tatsächliche DOM-Klicks
+
+Produktbasis c8b7dda1 unverändert, Werkzeugstand vor Paket0e386edd.
+Neues tools/redesign-kalender-doku.mjs verwendet originales Dashboard und
+synthetische Fixture, ohne Terminöffner oder Kalenderdaten im Appzustand zu injizieren.
+Nur bestehende Modulrechte einschließlich abrechnung ausdrücklich variiert.
+Kalendernavigation → explizit Tag → gerenderter abgeschlossener Termin → Mehr
+→ Fußbefund. Termin-ID, Patient-ID und abgeschlossener Status vor Klick aus
+tatsächlichem DOMobjekt geprüft; Ziel erhält passenden Patienten und Termin.
+Danach Terminpanel verborgen, Speicherknopf bereit und Notizfeld per Trial-Klick
+erreichbar. Trial speichert nicht. Synthetischer abgeschlossener Termin prüft
+keinen automatischen Statuswechsel bestätigter Vergangenheitstermine.
+
+Final12/12Fälle grün: Alt/Neu ×drei Profile (Owner, Employee mit abrechnung,
+Employee ohne abrechnung) ×hell1440/dunkel390. Acht erlaubte Einstiege,
+vier erwartete Verweigerungen.
+Erlaubt jeweils fünf Klicks Desktop/sechs mobil, einschließlich Navigation,
+explizitem Tag-Knopf und mobil Hamburger. Ab gerendertem Tagestermin drei Klicks.
+Verweigert bis Mehr vier/fünf; Fußbefundknopf unsichtbar. Alle zwölf Fälle
+0Schreibversuche/Seitenfehler/Fremdhosts. HTTP-Fence des Harness sowie WS-Fence
+vor Page; keine Zahlung/Senden/KI/Löschen oder Produktänderung.
+
+Erster Kurzlauf und erste12Matrixfälle grün; danach Bedienbarkeitschecks ergänzt
+und gesamte12Matrix erneut grün. Nur finale Matrix zählt zum verstärkten Nachweis.
+Log `/tmp/praxura-v704h-final.log`, Bericht/Bilder
+`/tmp/praxura-v704h-final-ui/bericht.json`. Zwei finale Bilder AltOwnerhell1440
+und NeuOwnerdunkel390 nach Trial-Scroll gesichtet; keine volle Layout-/Kontrastabnahme.
+30/30gezielte Dokuzugriff-/Fußbefundkontexttests,0Skip
+(`/tmp/praxura-v704h-tests.log`); INDEX unverändert frisch4117/515.
+Keine erneute Fullsuite/Pixelmatrix ohne Produktänderung. Eigener Quell-/Diffreview,
+keine neue allgemeine oder unabhängige Review-Schleife. Keine V7-Gesamt-/RLS-/
+Writer-/Livefreigabe; R-23 und reservierte gestoppte V8-Dateien unberührt.
+T1 nach explizitem Staging grün: Syntax, Dashboardgröße, Baseline-IDs, STATUS,
+Redesign-Wachen und Whitespace; keine Gate-Ausnahme.
+
+Gemeldete gezielte unabhängige V7.04g-Nachprüfung auf0e386edd:15VM-Proben
+der Originaltransformation grün, virtuelle Timer, kein eigener Browser-/Realzeit-
+oder DB-/Netzbeweis. Kein belegter Werkzeugblocker. Integratornachweise bleiben
+separat; früheres Workflowdefizit nur im V7.04f-Umfang geschlossen.
+Lokale Kontextbrücke lieferte keine passende Wiederverwendung; gezielt bestehende
+Quellen und V7.04b-Harness gelesen. Kein Provideraufruf, keine gemessene Ersparnis.
+
 ## V7.04g: Konkrete Zustände statt lokaler Ruhepausen
 
 Produktbasis c8b7dda1 weiterhin unverändert; Werkzeugbasis14d18c07.
