@@ -41,6 +41,7 @@ export const API_ANTWORTEN = {
       businessId: null, dauerMin: 30, pufferMin: 0, rasterMin: 15, art: 'frei' }))
   }] }),
   '/api/startseite/woche': { status: 'ok', grund: null, gebuchtMin: 150, arbeitsMin: 1260, quote: 150 / 1260 },
+  '/api/booking-request/list': { requests: [] },
   '/api/attendance/report': { records: [] },
   // V6.F03: Startseite-Geld (nur Inhaber; Angestellte bekämen 403 — das Frontend fragt sie gar nicht an).
   '/api/startseite/zusammenfassung': (o) => (o.rolle === 'employee' ? { bloecke: {} } : { bloecke: { geld: { status: 'ok', daten: {
