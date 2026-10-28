@@ -1246,3 +1246,26 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   abgenommen. Integrator erhält eigene WIP-Fortsetzung per deduplizierter Queue
   praxura-anamnese-folgeantwort-wip-review-1cdf3b31-20261028-01.
 - Kein Provider-, Netzwerk-, DB- oder Schreibaufruf in Proben; keine Produktedits.
+
+### 2026-10-28 – V7 getrennte Fach-/Rechteprüfung nachgeholt
+- PRIMARY c8b7dda1 sauber. Anamnese-WIP als e3d885e4 abgeschlossen; neues
+  Demo-SVG c8b7dda1. Frühere enge Nachprüfung bleibt gültig.
+- Frische globale Registry vor Delegation; native Sol6.1 verfügbar. Zwei
+  begrenzte native Beratungen, keine Astra-/externen Provideraufrufe.
+- podoloji: neue Einstiegs-/Abschlussführung fachlich passend, kein neuer
+  Quellblocker. Vorhandene Formulare statt Doppelbau, tatsächliche Termine/VO
+  gebunden, Zahlungsstatus ungeklärt. Gelesene Klickbelege2 ab Akte, PodoNotiz3;
+  vollständiger Kalenderstart und echtes Speichern nicht gemessen.
+- guvenlik/qa-security: kein belegter neuer Rechte-/Tenant-/Scopeblocker im
+  engen Umfang. 64/64 eigene synthetische Tests grün; e3d885e4 eng bestätigt.
+  Definition gelesen, guvenlik/REGISTER fehlt; keine Registerfreigabe.
+- Ganze V7-Phase weiterhin offen: Erfassen→synthetisch abgefangenes Speichern
+  →Wiederöffnen fehlt für Anamnese/Notizen/Fußbefund. Bestehende Writer,
+  Speicher-Races, vollständige Flüsse/RLS/Live ungeprüft. Fachvertretung durch
+  Agenten ist keine Validierung durch praktizierende Podologin.
+- Mobilrest: Anamneseoptionen390px abgeschnitten, R23/V8.03. Formulararbeit
+  ausdrücklich gestoppt, keine laufende Lieferung; V8.04 ebenfalls ohne
+  Liefernachweis. Reservierungen nicht eigenmächtig übernehmen.
+- Deduplizierte Übergabe: praxura-v7-podologie-rechte-c8b7dda1-20261028-01.
+  Nächster Integratorbeitrag: vorhandene Workflows im geschlossenen Harness
+  prüfen; keine echten DB-/Zahlungs-/Sendeaktionen. Main/V10 bleiben gesperrt.
