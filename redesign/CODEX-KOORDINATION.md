@@ -1215,3 +1215,18 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   weiterer Delegate. Kein Browser-/Live-/RLS-/allgemeiner Speicher-Race-Nachweis.
 - agy-context local-only lieferte unpassenden Terminpanel-Ausschnitt; gezielt
   Commitdiff/Originalfunktionen gelesen. Keine externen Provideraufrufe.
+
+### 2026-10-28 – V7.03-P2 unabhängig nachgeprüft und geschlossen
+- PRIMARY03d4aa15 sauber; Produktreparatur f704d318, danach nur Dokumentation.
+  Kontext vor erstem Speicher-await; Guard verlangt ursprüngliche VO-ID,
+  erfasste Auswahl und aktuelle Auswahl identisch.
+- Selbst51/51 Abschluss-/Integrations-/Dialogtests grün,0Skip. Eigene8/8
+  Vorher/Nachher-Proben mit echten Originalfunktionen aus aktuellem Stand
+  und Vorgänger d6ebbed2: Widerspruch öffnet am Vorgänger, aktueller Stand
+  sperrt beide Antworten vor Dialog/Read/Öffner; beide Normalwege erhalten.
+- P2 gezielt geschlossen. Keine Produktänderungen; bestehende Writer/
+  Speicher-Races, Doku-Rechtepolitik, vollständige V7-/Browser-/Live-/RLS-
+  Abnahme nicht daraus ableiten. Integrator V7.04a/b eigene Matrix liegt vor;
+  vollständige Phasengates und Fachabnahme weiterhin offen.
+- Nachricht dedupliziert: praxura-v703-f704d318-independent-recheck-20261028-01.
+  Frontendbesitz bleibt Integrator, kein Main/Push/Deploy/Standardwechsel.
