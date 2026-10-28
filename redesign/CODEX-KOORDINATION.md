@@ -1177,3 +1177,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Nachweis; Runtimeanschluss/Cache/INDEX/STATUS ausschließlich Integrator.
 - Provider: native Sol-Beratung/Review; keine Astra-/externen CLI-Provideraufrufe.
   Kein Push/Deploy/Standardwechsel. V7/V8/V9/V10 unverändert offen.
+
+### 2026-10-28 – F10c gezielte unabhängige Integrationsnachprüfung
+- PRIMARY d09ff12e sauber, Integrator-Thread completed; keine laufenden
+  nativen Childtasks. F10b unverändert als da77f4fc integriert bestätigt.
+- Read-only Diffprüfung F10c: Scopebereitschaft aus tatsächlicher Standort-
+  und Sharingantwort, Ownerbindung, Leads-Keyset bis leer, NULL-Altbestand,
+  Employee ohne Fachreads, gemeinsamer Abort und Forced-Refresh-Generation.
+- Selbst ausgeführt: 140/140 bestehende gezielte Tests (Karte/Lader/Rechner),
+  0 Skip. Dazu 6/6 eigene direkte Proben am echten Controller: Bereitschaft-,
+  Owner-, Sharing- und Standortwechsel während Read; fünf überlappende
+  Forced Refreshes mit umgekehrter Antwortreihenfolge; Employee mehrfach
+  explizit neu laden ohne Quellenaufruf. Kein belegter Blocker gefunden.
+- Frühere kleine Forced-Refresh-Korrektur jetzt unabhängig im fokussierten
+  Umfang nachgeprüft. Keine Browser-/Layout-/RLS-/Live-/Gesamtfreigabe.
+  PRIMARY bleibt byte-/gitseitig sauber; keine Produktdateien verändert.
+- agy-context ausschließlich local-only; Ausgabe unpassend, deshalb gezielter
+  Commitdiff gelesen. Keine externen Provideraufrufe, keine Sparmessung.
+- Nächster unabhängiger Umfang: V7 gemäß Integratorplan; Frontenddateien und
+  Integrationsbesitz bleiben dort. V8.03/V8.04/V9 offen, V10 unverändert gesperrt.
