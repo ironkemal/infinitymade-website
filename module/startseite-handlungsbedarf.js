@@ -1,6 +1,6 @@
 import { alsBerlinDatum } from './berlin-datum.js';
-import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js';
-import { pauseLage, PODO_PAUSE_MAX_TAGE } from './podo-unterbrechung.js';
+import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
+import { pauseLage, PODO_PAUSE_MAX_TAGE } from './podo-unterbrechung.js?v=20261021y';
 
 const KATEGORIEN = ['beginnVerpasst', 'beginnBald', 'pauseDroht', 'pauseVerpasst', 'ohneFolgetermin'];
 const BEREICHE = ['podologie', 'physiotherapie', 'ergotherapie', 'logopaedie'];

@@ -38,7 +38,11 @@ const ICON = {
 };
 const TODO_ICON = { 'vo-ueberfaellig': ICON.warn, 'vo-bald': ICON.uhr, anfragen: ICON.post };
 
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261028s242';
+import { alsBerlinDatum } from './berlin-datum.js';
+
 let kontext = () => null;
+const bedarf = createHandlungsbedarfKarte({ kontext: () => kontext()?.handlungsbedarfKontext?.(), heute: () => alsBerlinDatum(new Date()), zeichne: () => zeichne() });
 let wurzel = null;
 let zustand = { laden: true, fehler: false, liste: [], stand: null };
 let laufNr = 0;
@@ -135,6 +139,7 @@ export async function aktualisieren() {
   zeichne();
   ladeGeldKarte();
   ladeVerfuegbarkeitKarten();
+  bedarf.laden();
   try {
     const liste = await ladeTermine();
     if (nr !== laufNr) return;
@@ -254,18 +259,8 @@ function listeHtml() {
 }
 
 function voHtml() {
-  if (!voKpiDa()) return '';
-  const werte = [
-    ['Überfällig', zahlAus('rezKpiOverdue'), 'bad'],
-    ['Läuft ab ≤ 7 Tage', zahlAus('rezKpiSoon'), 'warn'],
-    ['In Behandlung', zahlAus('rezKpiActive'), ''],
-  ];
-  const ziel = inLeiste('verordnungen');
-  return `<section class="px-karte px-k-vo" aria-labelledby="pxVoTitel">
-    <div class="px-karte-kopf"><div><h2 id="pxVoTitel">Verordnungen</h2><p>Gültigkeit im Blick</p></div></div>
-    <div class="px-minis">${werte.map(([t, v, ton]) => `<div class="px-mini${ton && v ? ` px-ton-${ton}` : ''}"><span class="zahl">${v ?? '–'}</span><span class="lbl">${esc(t)}</span></div>`).join('')}</div>
-    ${ziel ? `<div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-aktion="gehe" data-ziel="verordnungen">Alle Verordnungen ${ICON.rechts}</button></div>` : ''}
-  </section>`;
+  if (!inLeiste('verordnungen')) return '';
+  return handlungsbedarfHtml(bedarf.lesen(), { erreichbar: true, eigene: !istOwner() });
 }
 
 /** Schlüssel für das fokussierte Element, damit es nach dem Neuzeichnen wiedergefunden wird
@@ -312,6 +307,7 @@ function klick(e) {
   else if (aktion === 'neu-laden') aktualisieren();
   else if (aktion === 'geld-neu') ladeGeldKarte({ erzwingen: true });
   else if (aktion === 'verf-neu') ladeVerfuegbarkeitKarten({ erzwingen: true });
+  else if (aktion === 'bedarf-neu') bedarf.laden({ erzwingen: true });
   else if (el.dataset.ziel) geheZu(el.dataset.ziel);
 }
 
@@ -336,16 +332,20 @@ export function verdrahteStartseite(k) {
     if (el) new MutationObserver(nachziehen).observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'hidden', 'data-px-status', 'data-px-count'] });
   }
   on('nav:gerendert', () => {
+    bedarf.laden();
     const b = document.getElementById('anfragenNavBadge');
     if (b && !b.dataset.pxBeobachtet) { b.dataset.pxBeobachtet = '1'; new MutationObserver(nachziehen).observe(b, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-px-status', 'data-px-count'] }); }
     nachziehen();
   });
-  on('bookings:changed', () => { ladeVerfuegbarkeitKarten({ erzwingen: true }); aktualisieren(); });
+  on('bookings:changed', () => { bedarf.laden({ erzwingen: true }); ladeVerfuegbarkeitKarten({ erzwingen: true }); aktualisieren(); });
+  on('verordnungen:changed', () => bedarf.laden({ erzwingen: true }));
+  on('startseite:kontextwechsel', () => { bedarf.lesen(); zeichne(); bedarf.laden(); });
   on('panel:changed', (d) => { if (d?.id === 'overview') aktualisieren(); });
   // Uhr: „in 15 Min“ und Zustände minütlich nachführen (ohne neue Abfrage).
   setInterval(() => {
     if (!document.getElementById('panel-overview')?.classList.contains('active')) return;
     ladeVerfuegbarkeitKarten();
+    bedarf.laden();
     if (zustand.laden || zustand.fehler) return;
     zustand = { ...zustand, liste: heutigeTermine(zustand.liste, { jetzt: new Date() }) };
     zeichne();

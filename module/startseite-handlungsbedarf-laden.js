@@ -1,6 +1,6 @@
 import { alsBerlinDatum } from './berlin-datum.js';
-import { istBehandlungseinheit } from './verordnung-termine.js';
-import { rxGeschlossen } from './termin-verordnung.js';
+import { istBehandlungseinheit } from './verordnung-termine.js?v=20261010zc';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261021s';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BEREICHE = Object.freeze({ podo: 'podologie', physio: 'physiotherapie', ergo: 'ergotherapie', stimme: 'logopaedie' });

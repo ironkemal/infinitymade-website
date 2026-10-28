@@ -15,7 +15,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261027s241'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261028s242'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261026n205';
@@ -13529,7 +13529,7 @@ initAnfrageBearbeiten({
 
 const { loadDoctors } = initLeadSuche({
   istKutu: IST_KUTU, supabase, showToast, t, getOwnerId, loadB2B, renderB2B,
-}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
+}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, handlungsbedarfKontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: bootBusinessSwitcher.scopeBusinessId, patientsGemeinsam: dataSharing.patients, bereit: loadDataSharing.scopeBekannt === true && bootBusinessSwitcher.scopeBekannt === true && loadDataSharing.scopeOwnerId === getOwnerId() && bootBusinessSwitcher.scopeOwnerId === getOwnerId() }), behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
 
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
@@ -14095,7 +14095,7 @@ function isEnterprise() {
 }
 
 async function bootBusinessSwitcher() {
-  const wrap = document.getElementById('bizSwitcher');
+  bootBusinessSwitcher.scopeBekannt = false; let scopeVollstaendig = false; const wrap = document.getElementById('bizSwitcher');
   if (!wrap) return;
 
   try {
@@ -14103,13 +14103,13 @@ async function bootBusinessSwitcher() {
     const scopeOwnerId = currentProfile.role === 'owner'
       ? currentSession.user.id
       : currentProfile.owner_id;
-    const { data: list } = await supabase
+    const { data: list, error: listError, count: listCount } = await supabase
       .from('businesses')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('owner_id', scopeOwnerId)
       .order('is_default', { ascending: false })
       .order('business_name', { ascending: true });
-    let allBiz = list || [];
+    if (listError || !Array.isArray(list)) throw new Error('BUSINESS_SCOPE_UNBEKANNT'); bootBusinessSwitcher.scopeOwnerId = scopeOwnerId; scopeVollstaendig = listCount === list.length && list.every(b => b.owner_id === scopeOwnerId); let allBiz = list || [];
 
     // Employees only see businesses they're explicitly assigned to.
     // On error or no assignments → fall back to the default business only (never show all).
@@ -14135,7 +14135,7 @@ async function bootBusinessSwitcher() {
     myBusinesses = [];
   }
 
-  if (myBusinesses.length === 0) { wrap.hidden = true; return; }
+  if (myBusinesses.length === 0) { bootBusinessSwitcher.scopeBekannt = scopeVollstaendig; bootBusinessSwitcher.scopeBusinessId = null; wrap.hidden = true; return; }
 
   // Aktif business'ı çöz
   let activeId = null;
@@ -14158,7 +14158,7 @@ async function bootBusinessSwitcher() {
     const { data: defaultId } = await supabase.rpc('get_default_business', { p_user: currentSession.user.id });
     activeId = defaultId || myBusinesses[0]?.id || null;
   }
-  currentBusiness = myBusinesses.find(b => b.id === activeId) || myBusinesses[0] || null;
+  currentBusiness = myBusinesses.find(b => b.id === activeId) || myBusinesses[0] || null; bootBusinessSwitcher.scopeBusinessId = currentBusiness?.id; bootBusinessSwitcher.scopeBekannt = scopeVollstaendig;
 
   // Switcher'ı yalnızca: (a) birden fazla business varsa, veya (b) Enterprise plan + ekleme yetkisi varsa göster
   const showSwitcher = myBusinesses.length > 1 || (isEnterprise() && currentProfile?.role === 'owner');
@@ -14233,7 +14233,7 @@ async function saveDataSharing() {
       .from('data_sharing_settings')
       .upsert({ owner_id: getOwnerId(), ...next, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' });
     if (error) throw error;
-    dataSharing = next;
+    dataSharing = next; emit('startseite:kontextwechsel');
     showToast('Datenfreigabe gespeichert ✓');
     // Re-fetch the scoped views so the change is visible immediately.
     loadActivityFeed?.().catch(() => {});
@@ -14523,7 +14523,7 @@ function wireBizSwitcherEvents() {
 async function switchBusiness(businessId) {
   const biz = myBusinesses.find(b => b.id === businessId);
   if (!biz) return;
-  currentBusiness = biz;
+  currentBusiness = biz; bootBusinessSwitcher.scopeBusinessId = biz.id; emit('startseite:kontextwechsel');
   try { localStorage.setItem(BIZ_STORAGE_KEY, businessId); } catch {}
   try {
     await supabase.from('user_preferences').upsert({
@@ -14563,13 +14563,13 @@ function bizScope(query, cat) {
 
 // Load the owner's cross-business sharing policy. Absent row keeps the defaults (all separate).
 async function loadDataSharing() {
-  try {
-    const { data } = await supabase
+  loadDataSharing.scopeBekannt = false; const scopeOwnerId = getOwnerId(); try {
+    const { data, error } = await supabase
       .from('data_sharing_settings')
       .select('patients,services,activities,finance,network')
-      .eq('owner_id', getOwnerId())
+      .eq('owner_id', scopeOwnerId)
       .maybeSingle();
-    if (data) {
+    if (error) throw new Error('SHARING_SCOPE_UNBEKANNT'); loadDataSharing.scopeOwnerId = scopeOwnerId; loadDataSharing.scopeBekannt = data === null || typeof data?.patients === 'boolean'; if (data) {
       dataSharing = {
         patients: !!data.patients,
         services: !!data.services,
@@ -14577,7 +14577,7 @@ async function loadDataSharing() {
         finance: !!data.finance,
         network: !!data.network
       };
-    }
+    } else dataSharing = { patients: false, services: false, activities: false, finance: false, network: false };
   } catch (e) {
     console.warn('[loadDataSharing] falling back to defaults (all separate)', e);
   }
