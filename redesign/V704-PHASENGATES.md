@@ -1,5 +1,34 @@
 # V7.04 lokale Phasengates, 28.10.2026
 
+## V7.04g: Konkrete Zustände statt lokaler Ruhepausen
+
+Produktbasis c8b7dda1 weiterhin unverändert; Werkzeugbasis14d18c07.
+Nur tools/redesign-doku-roundtrip.mjs geändert. Eigene ruhe()-Aufrufe entfernt:
+Formulare müssen Speichern freigeben, tatsächlicher Payload muss angenommen und
+Speicherknopf wieder freigegeben sein. Wiederöffnen erwartet neuen Tabellenread
+und gespeicherten Marker statt ungespeichertem Text; Fußbefund weiterhin über
+Original-Listeneintrag. Fehlende Zustände führen zum begrenzten Timeout.
+
+Optional REDESIGN_DOKU_DELAY_MS verzögert ausschließlich drei synthetische
+Dokuquellen einschließlich Writes; ganzzahlig0–2000ms, Default0. Ein eindeutiger
+Quellanker sichert Injection, alle bestehenden Schreib-/HTTP-/WS-Fences bleiben.
+Keine Produkt-, Rechte-, Cache-, Runtime-Funktions- oder reservierte V8-Dateiänderung.
+
+27/27 eindeutige Roundtrips mit jeweils1200ms Verzögerung grün, Exit0;
+Log `/tmp/praxura-v704g-delayed.log`, Bericht/Bilder
+`/tmp/praxura-v704g-delayed-ui/bericht.json`. Zusätzlich kurzer Normalmodus
+ohne Verzögerung3/3 grün (`/tmp/praxura-v704g-normal-ui/bericht.json`).
+64/64gezielte Regressionstests,0Skip (`/tmp/praxura-v704g-gezielt.log`).
+Syntax/Whitespace und Funktionskarte frisch4117/515; keine neue Fullsuite oder
+Alt-Pixelmatrix ohne Produktänderung. Eigener Diffreview nach
+engineering:code-review; kein neuer unabhängiger Review dieses Folgediffs.
+T1 nach explizitem Staging grün: Syntax, Dashboardgröße, Baseline-IDs, STATUS,
+Redesign-Wachen und Whitespace. Keine Gate-Ausnahme verwendet.
+V7.04f-Gegenprüfung gilt weiterhin ausschließlich für damaligen Snapshot.
+Gemeinsames oeffneDashboard/wechsle nutzt weiterhin ruhe()/waitForTimeout:
+keine pauschale Flakefreiheit. Keine vollständige Feld-/Update-/Writer-Race-/RLS-/
+Live- oder Gesamt-V7-Abnahme, R-23 bleibt offen.
+
 ## V7.04f: Geschlossener Doku-Roundtrip
 
 Produktbasis c8b7dda1, keine Produktänderung. Neues reproduzierbares Werkzeug
