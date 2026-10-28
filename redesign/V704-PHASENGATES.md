@@ -1,5 +1,65 @@
 # V7.04 lokale Phasengates, 28.10.2026
 
+## V7.04f: Geschlossener Doku-Roundtrip
+
+Produktbasis c8b7dda1, keine Produktänderung. Neues reproduzierbares Werkzeug
+`tools/redesign-doku-roundtrip.mjs` verwendet ursprüngliche HTML-Eingaben,
+Original-Writer und Original-Lader. Nur anamnese/patient_notes/pat_fussbefund
+erhalten ausdrücklich freigegebene In-Memory-Speicherung des tatsächlich
+abgefangenen Payloads. Unpassende Owner-/Patientenbindung wirft; andere Writes
+bleiben RS_READONLY. HTTP-Fence des Harness und WebSocket-Fence vor Page.
+Keine Zahlungs-, Sende-, KI-, Druck- oder Löschaktion ausgeführt.
+
+27/27Roundtrips grün: Podologie drei Formulare ×Alt/Neu ×Owner/Employee
+×hell1440/dunkel390 =24, zusätzlich Anamnese Physio/Ergo/Logo je Neu/Owner/hell1440.
+Neu-Einstieg über Akteaktion; Alt über bestehenden Panel-/Patientenweg.
+Anamnese elf, Notizen acht, Fußbefund acht. Owner/Patient und bei Anamnese/Fußbefund
+Autor im tatsächlichen Payload geprüft. Danach ungespeicherten Text eingetragen,
+Panel verlassen, Patient neu gewählt, erneuten Tabellenread und Wiederherstellung
+des gespeicherten Markers geprüft; Fußbefund über gespeicherten Listeneintrag
+explizit geöffnet. Je Fall genau erwartete Doku-Schreibanzahl, keine zusätzlichen
+Writes/Seitenfehler/Fremdhosts. Vier Bilder Alt/Neu hell/dunkel in Originalgröße
+gesichtet; keine neue vollständige Layoutabnahme. R-23 bleibt real/offen.
+
+Zwei anfängliche Harnessfehler korrigiert: Notizsuche wählte falschen synthetischen
+Patienten, Fußbefund-Patientenfeld ist Suchfeld mit versteckter ID statt select.
+Korrigiert auf eindeutige Erika/ID-Bindung und tatsächlichen Dropdown-Klick.
+Kein Produktbefund daraus. Frühe 27Fälle ohne Überschreib-Gegenprobe nicht als
+endgültiger Nachweis gezählt; finale Matrix mit zusätzlicher Gegenprobe erneut
+27/27grün. Log `/tmp/praxura-v704f-final.log`, Bericht/Bilder
+`/tmp/praxura-v704f-final-ui/bericht.json`.
+
+64/64gezielte Dokuzugriff-/Akte-/Fußbefundkontext-/Abschlusstests selbst grün,
+0Skip (`/tmp/praxura-v704f-gezielt.log`). Keine erneute Fullsuite ohne Produktänderung;
+letzter vollständiger Produktnachweis bleibt c8b7dda1:4950pass/1bestehenderSkip.
+Funktionskarte weiterhin frisch; keine neue Runtime-Funktion/Abfrage/Cacheänderung.
+
+Beweisgrenzen: nur getestete Marker/Felder, keine vollständige Formularfeldmatrix.
+IDs/Version/ist_aktuell im Speicher synthetisch, keine echten DB-Trigger oder
+Persistenz über Browserneustart. Alle Employee-Fälle explizit mit bestehenden
+Modulrechten einschließlich abrechnung injiziert; keine neue Rechtepolitik.
+Keine Writer-Race-, RLS-, Live-, Register-, Mobil- oder Gesamt-V7-Freigabe.
+
+Usermeldung auf c8b7dda1: separate native Sol-Podologie-/Guvenlik-Quellprüfungen
+ohne neuen belegten Blocker,64Tests; e3d885e4 eng bestätigt. Podologie nennt zwei
+Klicks ab Akte, PodoNotizen drei; kompletter Kalenderstart ungemessen. Guvenlik-
+Definition gelesen, Register fehlt. Frühere technisch gescheiterte Kombiprüfung
+liefert weiterhin kein Urteil; die neuen begrenzten Urteile schließen ausschließlich
+ihren genannten Umfang.
+
+Separate native Sol-Gegenprüfung dieses Harness-Nachweises abgeschlossen:
+27 eindeutige Artefaktfälle und Matrix unabhängig bestätigt, eigener kurzer
+Browserlauf 3/3 grün (`/tmp/praxura-v704f-review-ui/bericht.json`). Sechs eigene
+VM-Proben prüfen Fremdtabelle/Delete/falschen Owner/falschen Patienten sowie
+erlaubten Insert und Readback. Erste Delete-Fehlererwartung im Review-Harness
+korrigiert; kein Produktbefund. Kein gefundener False Positive beim Speichern/
+Wiederöffnen; HTTP-/WS-Fences und tatsächliche Überschreib-Gegenprobe bestätigt.
+Notiz-Writer besitzt kein Autorenfeld; hierfür keine Autorenprüfung behauptet.
+Restgrenze: Werkzeug nutzt bestehendes ruhe()/waitForTimeout mehrfach; grüne
+Läufe beweisen keine Flakefreiheit. Nur erstmalige Inserts und ausgewählte
+Markerfelder geprüft, kein vollständiger Update-/Feld-/Race-Nachweis. Wiederöffnen
+auch bei Neu über bestehende Module. Kein Gesamt-V7-/Fach-/Releaseurteil daraus.
+
 ## Nachtrag V7.04e: Bildsichtung und Demo-Symbol
 
 108vorhandene Neu-Aufnahmen von V7.04c in12Kontaktbögen grob gesichtet.
