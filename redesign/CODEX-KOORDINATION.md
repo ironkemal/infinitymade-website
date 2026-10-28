@@ -1230,3 +1230,19 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   vollständige Phasengates und Fachabnahme weiterhin offen.
 - Nachricht dedupliziert: praxura-v703-f704d318-independent-recheck-20261028-01.
   Frontendbesitz bleibt Integrator, kein Main/Push/Deploy/Standardwechsel.
+
+### 2026-10-28 – unterbrochener Anamnese-Ladefix gezielt geprüft
+- PRIMARY1cdf3b31, Thread210 failed; fünf fremde WIP-Dateien unverändert:
+  dashboard.html/js, module/anamnese.js, STATUS, Dokuzugriffstest. Kein Staging,
+  Restore oder Edit dort. Unterbrochener Auftrag betrifft späte Folgeantworten.
+- Aktueller uncommittierter Fix:20/20 Dokuzugriffstests grün. Eigene12/12
+  direkte Originalfunktions-VM-Proben für Physio/Podo/Ergo/Logo jeweils normal,
+  Scopewechsel und Rechteentzug während Formularread. Normalwege bedienbar;
+  veraltete Antwort setzt keine aktive Patienten-/Savefreigabe.
+- Echte Vorgängerquelle aus1cdf3b31 akzeptiert8/8 veraltete Gegenfälle.
+  Kein belegter Restblocker im engen Folgeantwortumfang, aber Paketgates/
+  Commit fehlen noch. Keine Ersatz-Fachfreigabe für gescheiterten Pflichtreview.
+- Bestehende Writer/Speicher-Races, V7-Rechtepolitik, Browser/RLS/Live nicht
+  abgenommen. Integrator erhält eigene WIP-Fortsetzung per deduplizierter Queue
+  praxura-anamnese-folgeantwort-wip-review-1cdf3b31-20261028-01.
+- Kein Provider-, Netzwerk-, DB- oder Schreibaufruf in Proben; keine Produktedits.
