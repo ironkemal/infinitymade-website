@@ -137696,8 +137696,8 @@
    "lang": "js",
    "file": "module/kopf-dokumente.js",
    "start": 13,
-   "end": 37,
-   "lines": 25,
+   "end": 43,
+   "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -137718,8 +137718,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 40,
-   "end": 47,
+   "start": 46,
+   "end": 53,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -137789,8 +137789,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 42,
-   "end": 47,
+   "start": 48,
+   "end": 53,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -137858,9 +137858,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 50,
-   "end": 131,
-   "lines": 82,
+   "start": 56,
+   "end": 138,
+   "lines": 83,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -137937,8 +137937,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 53,
-   "end": 57,
+   "start": 59,
+   "end": 63,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -138008,8 +138008,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 58,
-   "end": 73,
+   "start": 64,
+   "end": 79,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -138086,8 +138086,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 63,
-   "end": 69,
+   "start": 69,
+   "end": 75,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -138165,9 +138165,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 74,
-   "end": 129,
-   "lines": 56,
+   "start": 80,
+   "end": 136,
+   "lines": 57,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -138252,9 +138252,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 103,
-   "end": 129,
-   "lines": 27,
+   "start": 109,
+   "end": 136,
+   "lines": 28,
    "spiegelHinweis": null,
    "tables": [
     "invoices"
@@ -138331,9 +138331,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kopf-dokumente.js",
-   "start": 122,
-   "end": 127,
-   "lines": 6,
+   "start": 128,
+   "end": 134,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -241638,7 +241638,7 @@
   {
    "name": "istAktuell",
    "orte": [
-    "module/kopf-dokumente.js:122",
+    "module/kopf-dokumente.js:128",
     "module/patienten-einwilligung.js:315",
     "module/patienten-einwilligung.js:509",
     "module/startseite-handlungsbedarf-karte.js:50"
@@ -241649,7 +241649,7 @@
    "name": "lauf",
    "orte": [
     "api-backend/lib/status.js:84",
-    "module/kopf-dokumente.js:58",
+    "module/kopf-dokumente.js:64",
     "module/verordnung-detail.js:926",
     "module/verordnung-podo.js:1150"
    ],
@@ -241758,7 +241758,7 @@
    "name": "aktuell",
    "orte": [
     "module/behandlung-abschluss.js:8",
-    "module/kopf-dokumente.js:63",
+    "module/kopf-dokumente.js:69",
     "module/startseite-handlungsbedarf-laden.js:29"
    ],
    "aynalar": []
@@ -241901,7 +241901,7 @@
   {
    "name": "laden",
    "orte": [
-    "module/kopf-dokumente.js:74",
+    "module/kopf-dokumente.js:80",
     "module/plz.js:38",
     "module/startseite-handlungsbedarf-karte.js:42"
    ],
@@ -241930,7 +241930,7 @@
    "orte": [
     "dashboard.js:7573",
     "module/fussbefund.js:1083",
-    "module/kopf-dokumente.js:103"
+    "module/kopf-dokumente.js:109"
    ],
    "aynalar": []
   },

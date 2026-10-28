@@ -14,7 +14,7 @@
  * außer beim Tippen in einem Eingabefeld oder bei offenem Dialog.
  */
 import { attachPatientSearch } from '../patient-suche.js?v=20261028s249';
-import { createDokumentSuche, dokumentScopeKey, dokumenteErlaubt } from './kopf-dokumente.js?v=20261028s249';
+import { createDokumentSuche, dokumentScopeKey, dokumenteErlaubt } from './kopf-dokumente.js?v=20261029s252';
 import { on } from './signal.js?v=20260813';
 
 /** Reine Hilfe (testbar): soll „/“ die Suche fokussieren? */

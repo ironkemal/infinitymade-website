@@ -118,3 +118,25 @@ test('Rechnungsauswahl liest Dokument erneut im Finance-Scope; Kontextwechsel ve
     assert.ok(calls.some(c => c[0] === 'or' && c[1] === `business_id.eq.${business},business_id.is.null`));
   }
 });
+
+test('Dialoginhalt wird erst nach erfolgreichem aktuellem Renderer freigegeben', async () => {
+  for (const modus of ['erfolg', 'fehler', 'scope']) {
+    let k = basis(), bereit = 0, gestartet = false;
+    const warten = deferred(), inhalt = { textContent: 'Laden' };
+    const q = new Proxy({}, { get(_, m) {
+      if (m === 'then') return (ok, fail) => Promise.resolve({ data: inv() }).then(ok, fail);
+      return () => q;
+    } });
+    k = { ...k, supabase: { from: () => q }, ladeRechnungen: async () => [inv()] };
+    const s = createDokumentSuche({ kontext: () => k, ansicht: () => ({ inhalt, element() {}, bereit() { bereit++; }, schliessen() {} }),
+      rechnungOeffner: async () => { gestartet = true; await warten.promise; if (modus === 'fehler') throw new Error('SYNTHETISCH'); } });
+    const p = s.oeffnen((await s.laden('rechnung')).zeilen[0]);
+    for (let n = 0; n < 10 && !gestartet; n++) await Promise.resolve();
+    assert.equal(gestartet, true); assert.equal(bereit, 0);
+    if (modus === 'scope') k = { ...k, businessId: patient };
+    warten.resolve();
+    assert.equal((await p).status, modus === 'erfolg' ? 'ok' : modus === 'fehler' ? 'fehler' : 'veraltet');
+    assert.equal(bereit, modus === 'erfolg' ? 1 : 0);
+    if (modus === 'fehler') assert.match(inhalt.textContent, /nicht geladen/);
+  }
+});

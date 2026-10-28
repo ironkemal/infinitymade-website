@@ -29,7 +29,7 @@ import { verdrahteStartseite } from './startseite-neu.js?v=20261028s242';
 import { einstellungenNavAufbauen } from './einstellungen-nav.js?v=20261027s222';
 import { verdrahteSchublade } from './schublade-neu.js?v=20261027s223';
 import { emojisAus } from './ohne-emoji.js?v=20261026s217';
-import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261028s249';
+import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261029s252';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
 export function panelId(wert) {

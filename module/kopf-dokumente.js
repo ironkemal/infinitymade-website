@@ -21,17 +21,23 @@ function dokumentDialog(art, schliessen) {
   const zu = document.createElement('button'); zu.type = 'button'; zu.className = 'btn-ghost'; zu.textContent = 'Schließen';
   zu.addEventListener('click', schliessen); kopf.append(heading, zu);
   const inhalt = document.createElement('div'); inhalt.className = 'px-dokument-inhalt';
+  let kopie, laden;
   if (art === 'rechnung') {
     const vorlage = document.getElementById('invoicePrintArea');
     if (!vorlage) throw new Error('SUCHE_ANSICHT_FEHLT');
-    const kopie = vorlage.cloneNode(true);
+    kopie = vorlage.cloneNode(true);
+    kopie.hidden = true;
+    laden = document.createElement('p'); laden.setAttribute('role', 'status');
+    laden.textContent = 'Rechnung wird geladen …';
     for (const el of [kopie, ...kopie.querySelectorAll('[id]')]) { el.dataset.pxId = el.id; el.removeAttribute('id'); }
-    inhalt.append(kopie);
+    inhalt.append(laden, kopie);
   }
   dialog.append(kopf, inhalt); document.body.append(dialog);
   dialog.addEventListener('cancel', e => { e.preventDefault(); schliessen(); });
   dialog.showModal(); zu.focus();
-  return { titel, inhalt, element: id => inhalt.querySelector(`[data-px-id="${id}"]`), schliessen: () => {
+  return { titel, inhalt, element: id => inhalt.querySelector(`[data-px-id="${id}"]`), bereit: () => {
+    if (kopie) { kopie.hidden = false; laden.remove(); }
+  }, schliessen: () => {
     dialog.close(); dialog.remove(); document.querySelector('.px-suche-art:not([hidden])')?.focus({ preventScroll: true });
   } };
 }
@@ -124,6 +130,7 @@ export function createDokumentSuche({ kontext, scopeLader = ladeHandlungsbedarfS
       else await voOeffner({ supabase: k.supabase, quelle: row.quelle, verordnungId: row.id, leadId: row.leadId,
         suchOwnerId: k.ownerId, signal, istAktuell, bearbeitbar: false, escapeHtml: k.escapeHtml,
         titel: view.titel, inhalt: view.inhalt });
+      if (istAktuell()) view.bereit?.();
       return { status: istAktuell() ? 'ok' : 'veraltet', zeilen: [] };
     });
   };
