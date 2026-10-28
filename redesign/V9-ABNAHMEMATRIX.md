@@ -53,7 +53,7 @@ Fachbereiche: P=Physio, E=Ergo, L=Logo, D=Podologie, I=interdisziplinär. Angabe
 | doctors | O/E · PELI | E9 | Gruppe1 integriert; kein Podologiepanel erzwingen. Vollständige A11y nicht belegt. |
 | fahrtenbuch | O/E · PELD | E9 | Gruppe1 integriert; gefüllte/Langdatenansicht und vollständige Tastatur offen. Export/GPS/Save nicht ausgeführt. |
 | statistik | O* · PELDI | E4 | V804-Rest; Backend-Finanzgate erhalten. |
-| notizen | O/E · PELDI | E3 | V804-Rest; Aktenzugang/Ersteinträge belegt, keine Updates/Writerraces. |
+| notizen | O/E · PELDI | E3 | Nächste begrenzte B-Gruppe schriftlich zugewiesen, noch kein Liefernachweis; Aktenzugang/Ersteinträge belegt, keine Updates/Writerraces. |
 | services | O/E · PELDI | E10 | V803/R23: mainArea300px Überlauf bei390; konkrete Ursache noch nicht isoliert. |
 | hours | O/E · PELDI | E10 | V803: Endzeitfeld bei390px Neu/Owner/hell sichtbar rechts gekappt; genaue Rects, weitere Rollen/Themes und Fokus/44px offen. Verfügbarkeit ist eigener Verhaltensnachweis. |
 | team | O/E · PELDI | E9 | Gruppe1 integriert; vorhandene18 Fälle nicht wiederholen, vollständige A11y bleibt begrenzt. |
@@ -61,8 +61,8 @@ Fachbereiche: P=Physio, E=Ergo, L=Logo, D=Podologie, I=interdisziplinär. Angabe
 | settings | O/E · PELDI | E6 | Vorhandene Einstellungenabnahme behalten; gemeinsame CSS-Folgen gezielt. |
 | b2b | O/E · PELDI | — | V804-Rest; keine Versand-/Kundenkontaktprobe. |
 | b2c | O/E · PELDI | — | V804-Rest; keine Versand-/Kundenkontaktprobe. |
-| feedback | O/E · PELD | — | V804-Rest; keine echte Versandprobe. |
-| beispielmodus | O/E · PELDI | E2 | V804-Rest;8 Demo-SVG-Fälle begrenzter Teilnachweis. |
+| feedback | O/E · PELD | — | Nächste begrenzte B-Gruppe schriftlich zugewiesen, noch kein Liefernachweis; keine echte Versandprobe. |
+| beispielmodus | O/E · PELDI | E2 | Nächste begrenzte B-Gruppe schriftlich zugewiesen, noch kein Liefernachweis;8 Demo-SVG-Fälle begrenzter Teilnachweis. |
 
 ## Querachsen: echte Nachweislücken
 
@@ -95,7 +95,7 @@ Bestehende Dateien `V10-UMSTELLUNG.md`, `V10-PRUEFUNG.mjs`, `V10-KANDIDAT.json`,
 
 ## Priorität und kürzester sinnvoller Integrationslauf
 
-1. **P0 – Zuständigkeiten erhalten:** V803/R23 bleibt bis ausdrücklicher Wiederaufnahme durch Melih gestoppt. Dann vorhandener Besitzer, kleinste vermessene Korrektur. V804 übrige neun Panels beim vorhandenen Besitzer, nächste Gruppe erst zentral schriftlich zuweisen. Gruppe1 nicht neu bauen. Exklusiven Thread5-Review für V209b abwarten und konkrete Findings übernehmen; keine zweite Parallelprüfung desselben Commits.
+1. **P0 – Zuständigkeiten erhalten:** V803/R23 bleibt bis ausdrücklicher Wiederaufnahme durch Melih gestoppt. Dann vorhandener Besitzer, kleinste vermessene Korrektur. B bearbeitet als nächste schriftlich zugewiesene begrenzte Gruppe Notizen/Feedback/Beispielmodus; Lieferung/Integration noch offen. Weitere sechs V804-Panels (Statistik, Überblick, Podologie-Billing, Abrechnung, B2B, B2C) bleiben offen. Gruppe1 nicht neu bauen. Exklusiven Thread5-Review für V209b abwarten und konkrete Findings übernehmen; keine zweite Parallelprüfung desselben Commits.
 2. **P0 – fehlende Teilabnahmen schließen:** Formular-Rects/Clipping, tatsächliche V804-Restansichten, gefülltes Fahrtenbuch/Langdaten und geänderte Tastatur-/Zustandspfade. Keine echten Writes/Versand/GPS erforderlich, vorhandene synthetische Fences verwenden. V6/V7-Aggregate nur aus konkreten Nachweisen reconciliieren, nicht automatisch grün setzen.
 3. **P1 – finaler Integrationspin:** Produktdiff, Status, Dateibesitz, Cache-/Importgraph und Referenzursprung einfrieren. Kleinster Bau → gezielte relevante Tests → höchstens drei Reparaturrunden → enger unabhängiger Review. Bestehende abgeschlossene Teilmatrizen behalten.
 4. **P1 – ein zentraler T1–T3-Lauf:** Pflichtgates am selektiven Stage, passende Fullsuite einmal je fertigem Integrationspaket. Keine Assertions abschwächen/neuen Skips. Fullsuite E8 nicht als Ergebnis auf a808a110 ausgeben.
