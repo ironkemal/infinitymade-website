@@ -73,6 +73,9 @@
     flex-wrap: wrap;
     gap: 16px;
   }
+  [data-design="neu"] #panel-fahrtenbuch #fbVehiclesTbody .fb-veh-edit:hover {
+    color: var(--text-main);
+  }
 }
 
 @media screen and (max-width: 600px) {
