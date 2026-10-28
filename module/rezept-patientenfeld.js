@@ -15,7 +15,7 @@
  * Dokumentationsfehler, kein Komfort.
  */
 
-import { attachPatientSearch } from '../patient-suche.js?v=20260906';
+import { attachPatientSearch } from '../patient-suche.js?v=20261028s249';
 import { heuteRang, heuteHinweis } from './termin-heute.js?v=20261004m113';
 
 /**

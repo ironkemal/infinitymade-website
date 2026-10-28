@@ -30,8 +30,8 @@ import { summenAnzeige } from './rechnung-summen.js?v=20261010b';
 /** Sichtbarkeit über style.display, nicht über das hidden-Attribut:
  *  `.invoice-print-total-row` setzt `display:flex` und würde `hidden`
  *  überstimmen — die Zeile bliebe trotz `hidden` sichtbar. */
-function zeile(id, sichtbar) {
-  const el = document.getElementById(id);
+function zeile(id, sichtbar, element = id => document.getElementById(id)) {
+  const el = element(id);
   if (el) el.style.display = sichtbar ? '' : 'none';
 }
 
@@ -46,9 +46,9 @@ function zeile(id, sichtbar) {
  * der Rechnung — nie neu gerechnet und nie aus dem Profil nachgeladen
  * (§ 146 Abs. 4 AO). Alte Rechnungen ohne diese Angabe zeigen den Block nicht.
  */
-function fuelleSteuerbloecke(inv, { formatEur }) {
-  const wrap = document.getElementById('invvSteuerBlock');
-  const body = document.getElementById('invvSteuerBody');
+function fuelleSteuerbloecke(inv, { formatEur, element = id => document.getElementById(id) }) {
+  const wrap = element('invvSteuerBlock');
+  const body = element('invvSteuerBody');
   const gruppen = Array.isArray(inv.tax_summary) ? inv.tax_summary : [];
 
   // Nur zeigen, wenn tatsächlich Steuer im Spiel ist. Eine reine
@@ -74,7 +74,7 @@ function fuelleSteuerbloecke(inv, { formatEur }) {
  * @param {Function} deps.aggregateInvLines
  * @returns {boolean} ob Preise gezeigt werden (für Tests/Aufrufer)
  */
-export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInvLines }) {
+export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInvLines, element = id => document.getElementById(id) }) {
   const zeigePreise = !(Number(inv.kassenzuzahlung || 0) > 0);
 
   const lines = aggregateInvLines(inv.line_items || []);
@@ -87,7 +87,7 @@ export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInv
   const zeigeDatum = daten.length > 1;
   const datumDE = iso => { try { return new Date(iso).toLocaleDateString('de-DE'); } catch { return iso; } };
 
-  const body = document.getElementById('invvLineBody');
+  const body = element('invvLineBody');
   if (body) {
     body.innerHTML = lines.map((l, i) => `
     <tr>
@@ -101,22 +101,22 @@ export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInv
       <td class="num">${formatEur((l.quantity || 1) * (l.unit_price || 0))}</td>` : ''}
     </tr>`).join('');
   }
-  zeile('invvThDatum', zeigeDatum);
+  zeile('invvThDatum', zeigeDatum, element);
 
-  zeile('invvThEinzel', zeigePreise);
-  zeile('invvThGesamt', zeigePreise);
-  zeile('invvSubtotalRow', zeigePreise);
+  zeile('invvThEinzel', zeigePreise, element);
+  zeile('invvThGesamt', zeigePreise, element);
+  zeile('invvSubtotalRow', zeigePreise, element);
   // Privat/Selbstzahler/BG haben keinen Kassenanteil: keine Eigenanteil-/Zuzahlungszeilen, Endsumme anders beschriftet
   // (BG: zahlt der Unfallversicherungsträger, nicht der Patient — Live-Test 06.10.2026, F4/F6).
   const anzeige = summenAnzeige(inv);
-  zeile('invvEigenRow', zeigePreise && anzeige.eigenZeigen);
-  zeile('invvKasseRow', zeigePreise && anzeige.kasseZeigen);
+  zeile('invvEigenRow', zeigePreise && anzeige.eigenZeigen, element);
+  zeile('invvKasseRow', zeigePreise && anzeige.kasseZeigen, element);
 
   const setzen = (id, wert) => {
-    const el = document.getElementById(id);
+    const el = element(id);
     if (el) el.textContent = wert;
   };
-  fuelleSteuerbloecke(inv, { formatEur });
+  fuelleSteuerbloecke(inv, { formatEur, element });
   setzen('invvSubtotal', formatEur(inv.subtotal || 0));
   setzen('invvEigenPct', inv.eigenanteil_pct || 0);
   setzen('invvEigenEur', formatEur(inv.eigenanteil_eur || 0));

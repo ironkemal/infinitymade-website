@@ -76,7 +76,7 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261021f';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261021f';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261028s249';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -980,6 +980,8 @@ function _verdrahteTermine(wurzel, { supabase, vord }) {
  */
 export async function zeigeVerordnungDetail(ctx) {
   const { supabase, panel, titel, inhalt, escapeHtml } = ctx;
+  const aktuell = ctx.istAktuell || (() => true);
+  if (!aktuell()) return null;
   const quelle = ctx.quelle === 'podologie' ? 'podologie' : 'physio';
   const id = ctx.verordnungId || ctx.rxId;
   if (!inhalt || !id) return null;
@@ -1019,7 +1021,10 @@ export async function zeigeVerordnungDetail(ctx) {
       .select(quelle === 'podologie' ? SELECT_PODO : SELECT_PHYSIO)
       .eq('id', id);
     if (quelle === 'podologie') q = q.eq('therapie_bereich', 'podo');
+    if (ctx.suchOwnerId) q = q.eq('owner_id', ctx.suchOwnerId).eq('patient_id', ctx.leadId).abortSignal(ctx.signal);
     const { data: rxRoh, error } = await q.maybeSingle();
+    if (!aktuell()) return null;
+    if (ctx.suchOwnerId && rxRoh && (rxRoh.id !== id || rxRoh.owner_id !== ctx.suchOwnerId || rxRoh.patient_id !== ctx.leadId)) throw new Error('SUCHE_SCOPE');
     // Stornierte Behandlungen hier EINMAL herausfiltern — danach sehen alle
     // Leseorte weiter unten (Positionsliste, Summen, Einheitenzähler,
     // Nachweis) schon den bereinigten Stand.
@@ -1043,6 +1048,7 @@ export async function zeigeVerordnungDetail(ctx) {
     let pruefung = null;
     if (istAktiv) {
       const regelsatz = await regelsatzLaden(supabase, quelle === 'podologie' ? 'podologie' : rx.therapie_bereich);
+      if (!aktuell()) return null;
       if (regelsatz) {
         const ergebnis = pruefeVerordnung(voAusGespeicherterVerordnung(rx), regelsatz);
         pruefung = { bittePruefen: !ergebnis.sauber, anzahl: zaehleBefunde(ergebnis) };
@@ -1072,11 +1078,14 @@ export async function zeigeVerordnungDetail(ctx) {
         termine = await ladePodoTermine(supabase, {
           ownerId: rx.owner_id, vordId: rx.id, leadId: rx.lead_id,
         });
+        if (!aktuell()) return null;
       } catch (e) {
         console.warn('[zeigeVerordnungDetail] Termine:', e.message);
       }
       try {
+        if (!aktuell()) return null;
         const finde = await podoPositionsFinder(supabase, behs);
+        if (!aktuell()) return null;
         summe = zuzahlungFuerPodoVerordnung(rx, behs, finde);
         for (const b of behs) {
           const codes = Array.isArray(b.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
@@ -1091,15 +1100,26 @@ export async function zeigeVerordnungDetail(ctx) {
     }
 
     const bearbeitbar = ctx.bearbeitbar === true;
+    if (!aktuell()) return null;
     inhalt.innerHTML = verordnungDetailHtml(rx, {
       escapeHtml, quelle, summe, termine, pruefung, bearbeitbar,
       leadId: p.id || ctx.leadId || '',
     });
+    // Suchdialog ist eine Leseansicht. Vorhandene Statusmarke erhalten,
+    // sämtliche Änderungs-/Sprungknöpfe samt Inline-Handler entfernen.
+    if (ctx.suchOwnerId) {
+      for (const b of inhalt.querySelectorAll('button')) {
+        if (b.hasAttribute('data-status-btn')) b.replaceWith(...b.childNodes);
+        else b.remove();
+      }
+      for (const el of inhalt.querySelectorAll('input,select,textarea')) el.disabled = true;
+      inhalt.querySelector('[data-therapiebericht]')?.remove();
+    }
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';
 
     // Nicht abwarten: die Berichtsliste ist ein Zusatz, die Verordnung steht schon.
-    mountTherapiebericht(inhalt.querySelector('[data-therapiebericht]'), {
+    if (!ctx.suchOwnerId) mountTherapiebericht(inhalt.querySelector('[data-therapiebericht]'), {
       supabase, rxId: rx.id, arztId: rx.arzt_id || rxRoh?.arzt_id || null,
     }).catch(e => console.warn('[zeigeVerordnungDetail] Therapiebericht:', e?.message));
 
@@ -1122,7 +1142,7 @@ export async function zeigeVerordnungDetail(ctx) {
       }
     }
 
-    if (quelle === 'podologie') {
+    if (quelle === 'podologie' && !ctx.suchOwnerId) {
       _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
       _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
       _verdrahteStatus(inhalt, { supabase, vord: rx, ctx });
@@ -1132,10 +1152,11 @@ export async function zeigeVerordnungDetail(ctx) {
     }
     return rx;
   } catch (e) {
+    if (!aktuell()) return null;
     console.error('[zeigeVerordnungDetail]', e);
     const esc = escapeHtml || (s => String(s));
     inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden — '
-      + esc(e?.message || 'unbekannter Fehler') + '</span>';
+      + esc(ctx.suchOwnerId ? 'Quelle nicht verfügbar' : (e?.message || 'unbekannter Fehler')) + '</span>';
     inhalt.style.opacity = '';
     delete inhalt.dataset.geladen;
     if (titel) titel.textContent = '—';

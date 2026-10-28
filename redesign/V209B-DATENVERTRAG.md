@@ -1,8 +1,9 @@
-# V2.09b: Vorbauvertrag, noch keine Produktfreigabe
+# V2.09b: freigegebener Inhaberumfang
 
-Stand 28.10.2026, Produkt/HEAD99def44e unverändert. V2.09b ist ein offenes
-Hauptrollenpaket außerhalb der reservierten V8.03/V8.04-Dateien. Diese Notiz
-bereitet die Rollenentscheidung vor; keine implementierte Dokumentensuche.
+Stand 28.10.2026. Melih hat ausdrücklich „Zunächst nur Inhaber“ gewählt.
+V2.09b setzt diesen vorläufigen Umfang um; Mitarbeiter behalten bestehende
+Patientensuche. Mitarbeiter-Dokumentensuche bleibt bis belegter eigener
+Patienten-/Dokumentenregel offen. V8.03/V8.04-Reservierungen bleiben unberührt.
 
 ## Belegt
 
@@ -39,7 +40,7 @@ getrennt. Keine Register-, Browser-, RLS- oder Livefreigabe.
 2. Dokumentensuche zurückstellen, bis Rechnungs-Modulrecht und zulässige
    Employee-VO-/Rechnungsdatensätze verbindlich bestimmt sind.
 
-Frage in dieser Sitzung gestellt, Antwort offen. Keine Freigabe aus Wartezeit ableiten.
+Entscheidung: Option1 ausdrücklich gewählt. Keine Veröffentlichungs-/Standardumschaltungsfreigabe.
 
 ## Umsetzung nach Rollenentscheidung
 
@@ -57,7 +58,45 @@ Frage in dieser Sitzung gestellt, Antwort offen. Keine Freigabe aus Wartezeit ab
   stiller Mitarbeiter-Finanzread. Browser hell/dunkel, Alt/Neu, Desktop und
   bestehende mobile Unsichtbarkeit; Tastatur/Fehler/Leerzustand, danach Paketgates.
 
-Keine Produktdatei, Runtimefunktion, Cacheversion, Datenbank oder Reservierung
-geändert. Impeccable context für bestehende Oberfläche geladen; kein UI-Edit,
-deshalb kein Craft-/Render-/Detector-Nachweis behauptet. Kein Providerwechsel,
-Push/Deploy/main/V10 oder Livezugriff.
+## Implementierter lokaler Vertrag
+
+- `module/kopf-dokumente.js`: Owner+UID-Bindung, erfolgreich geladener Standort-/Sharingkontext,
+  vorhandener Navigationseintrag, Generation und gemeinsamer30s-Abbruch pro Operation.
+  VO-Suche verwendet vorhandenen F10-Scope-Lader und bestehenden VO-Lader; erlaubte
+  Patientenpakete vor beiden Quellen filtern. Rechnungen verwenden vorhandenes
+  `loadRechnungen` mit unverändertem Finance-Standort-/NULL-Vertrag. Keine
+  ownerweite Ersatzliste bei unbekanntem Scope.
+- Dokumentnummer/Patientenname im gemeinsamen Picker, typisierte IDs. Neueste200
+  Rechnungen beziehungsweise200 je VO-Zweig/Patientenpaket: ausdrücklich Teilbestand,
+  keine vollständige Null-/Entwarnungsaussage. Kein Betrag in Suchtreffern.
+- Auswahl bestätigt Scope erneut; Rechnung frisch per ID+Owner+Finance-Scope.
+  Suchdialog verwendet vorhandene Detailrenderer als Leseansicht. Rechnungskopie
+  besitzt lokale DOM-Ziele; bestehender Cache, Auswahl, Editor und Druckziel bleiben
+  unangetastet. VO erhält zusätzlich Owner-/Patientenfilter und Folgeantwortguards;
+  keine Änderungs-/Sprungaktionen im Suchdialog. Escape/Schließen und Fokusrückkehr.
+- Employee: keine neue Dokumentquelle. Bestehender `ensureLeadsCache` bleibt erhalten;
+  dieser liest schon vorher VO-Abrechnungsstatus als Patientenlisten-Beiwerk. Deshalb
+  ausdrücklich NICHT „Employee erzeugt generell null prescriptions-Reads“ behaupten.
+- Cache249 für Dashboard/Shell/Suche und geänderte Renderer; Modulgraph ohne doppelte
+  Versionen. Neue Datei liegt unter bereits ausgeliefertem `module/`, keine neue Cloud.
+
+## Nachweis und Grenzen
+
+19 gezielte Rechner-/Originalquellenproben, acht geschlossene synthetische Browserfälle
+Alt/Neu ×Rollen/Themes plus900/390px; NULL-Patientenbezug einer Altrechnung und normaler
+Patientenbezug, isolierte Betrags-/Positionendarstellung, Fehlerzustand, Tastatur und0Writes.
+HTTP-/WS-Fences vor Page. Querydouble-/Fixture-Nachweis ersetzt keine Live-RLS-/Auth-/DB-
+oder vollständige Fachabnahme. Globale nachsichtige Fixture bleibt unverändert; nur dieser
+Test korrigiert UUIDs, notwendige Rechnungsfelder und den exklusiven Therapiezweigfilter.
+Impeccable-Dateidetektor `[]` ist Regex-/Quellprüfung, kein vollständiger A11y-Nachweis.
+Kein neuer allgemeiner Reviewlauf; Pflichtberatung/Absichtsmeldung getrennt von eigenen
+Tests halten. Aktuelle Paketgates und Messwerte stehen in STATUS.md. Kein Push/Deploy,
+main/V10, Livezugriff oder Kundeninstallationsnachweis.
+
+Pflichtberatung DB/onprem/mobil nach Bau vor Paketabschluss nachgeholt: vorhandene
+Spalten/FKs und Box-Auslieferungsweg quellengeprüft, kein belegter Quellenblocker.
+Mobilhinweis auf44px-Auswahlziel korrigiert; finale acht Browserfälle protokollieren
+106×44px und Seitenbreite explizit. Drei aktuelle Dialogbilder gesichtet. Diese
+Beratung ist keine unabhängige Dreifachabnahme und kein eigener Browser-/Livebeweis.
+Fullsuite4967pass/1bestehenderSkip/0fail; AltOverviewhell1440 pixelgleich,107nicht
+erneut geprüft. Reguläre Paketgates/Commit in STATUS.

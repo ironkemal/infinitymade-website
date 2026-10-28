@@ -191,11 +191,16 @@ export { istBehandlungseinheit };
  *      nachname, vorname, patientennummer, leadId,
  *      erbracht, verordnet, status, dringend, hausbesuch, ziel }]
  */
-export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = true, limit = 200 } = {}) {
+export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = true, limit = 200, suchPatientIds, signal, istAktuell = () => true, nurSuchdaten = false } = {}) {
   if (!sb || !ownerId) return [];
+  if (!istAktuell() || signal?.aborted || (suchPatientIds && !suchPatientIds.length)) return [];
 
   const frag = async (q) => {
+    if (!istAktuell() || signal?.aborted) throw new Error('SUCHE_VERALTET');
+    if (signal) q = q.abortSignal(signal);
     const { data, error } = await q;
+    if (nurSuchdaten && (error || !Array.isArray(data))) throw new Error('SUCHE_QUELLE_UNBEKANNT');
+    if (!istAktuell() || signal?.aborted) throw new Error('SUCHE_VERALTET');
     if (error) { console.error('[verordnung-uebersicht]', error.message); return []; }
     return data || [];
   };
@@ -223,7 +228,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // zu melden hatte: zwei Urteile über dieselbe Verordnung. Gefunden von
   // `canli-test`, 05.09.2026.
   let rxQ = sb.from('prescriptions')
-    .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
+    .select(nurSuchdaten ? 'id,owner_id,patient_id,ausstellungsdatum,heilmittel,diagnosegruppe,belegnummer,verordnungsnummer,leads!patient_id(first_name,last_name,patientennummer)' : 'id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
             'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
             'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
             'therapie_bereich, icd10_2, leitsymptomatik, pat_leitsymptomatik, ' +
@@ -237,7 +242,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     // Zeilen in SQL aus dem Ergebnis fallen.
     .or('therapie_bereich.is.null,therapie_bereich.neq.podo');
   let voQ = sb.from('prescriptions')
-    .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
+    .select(nurSuchdaten ? 'id,owner_id,patient_id,ausstellungsdatum,heilmittel,diagnosegruppe,belegnummer,verordnungsnummer,leads!patient_id(first_name,last_name,patientennummer)' : 'id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
             'anzahl_einheiten, frequenz, status, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
             'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
             'leitsymptomatik, pat_leitsymptomatik, heilmittel, heilmittel_position, behandlungsbeginn, ' +
@@ -253,6 +258,22 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   } else {
     rxQ = rxQ.limit(limit);
     voQ = voQ.limit(limit);
+  }
+  // Bereits vollständig bestimmte Patientenmenge vor beiden Dokumentreads.
+  if (suchPatientIds) {
+    rxQ = rxQ.in('patient_id', suchPatientIds);
+    voQ = voQ.in('patient_id', suchPatientIds);
+  }
+
+  if (nurSuchdaten) {
+    const teile = await Promise.all([frag(rxQ.order('ausstellungsdatum', { ascending: false })), frag(voQ.order('ausstellungsdatum', { ascending: false }))]);
+    if (teile.flat().some(rx => rx.owner_id !== ownerId || (suchPatientIds && !suchPatientIds.includes(rx.patient_id)))) throw new Error('SUCHE_SCOPE');
+    return teile.flatMap((rows, i) => rows.map(rx => ({
+      id: rx.id, quelle: i ? 'podologie' : 'physio', leadId: rx.patient_id,
+      nummerText: belegnummerText(rx, { patientennummer: rx.leads?.patientennummer }),
+      vorname: rx.leads?.first_name || '', nachname: rx.leads?.last_name || '',
+      datum: rx.ausstellungsdatum, titel: rx.heilmittel || rx.diagnosegruppe || 'Verordnung',
+    })));
   }
 
   // Der Filter „läuft noch" gilt nur in der Akte. Die Seite „Verordnungen"

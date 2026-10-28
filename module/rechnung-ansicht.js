@@ -137,11 +137,15 @@ export function renderInvList() {
   });
 }
 
-export async function openInvView(invoiceId) {
+export async function openInvView(invoiceId, suche) {
+  const aktuell = suche?.istAktuell || (() => true);
+  if (!aktuell()) return;
   if (!invoiceId) return;
   const invListCache = d.liste();
-  const inv = invListCache.find(i => i.id === invoiceId);
+  const inv = suche?.rechnung || invListCache.find(i => i.id === invoiceId);
+  if (suche && (inv?.id !== invoiceId || inv?.owner_id !== suche.ownerId)) return;
   if (!inv) { d.showToast('Rechnung nicht gefunden.', 'error'); return; }
+  const element = suche?.element || (id => document.getElementById(id));
   const currentProfile = d.profile();
   const escapeHtml = d.escapeHtml;
 
@@ -150,31 +154,35 @@ export async function openInvView(invoiceId) {
   // zeigen auf dieselbe prescriptions-Zeile. Ohne den Fallback blieb der
   // Rezept-Block bei Podologie-Rechnungen leer.
   const rezeptId = inv.prescription_id || inv.verordnung_id;
+  const gebunden = q => suche ? q.eq('owner_id', suche.ownerId).abortSignal(suche.signal) : q;
   // Resolve patient, prescription (with arzt), and booking range
-  const [{ data: patient }, prescriptionRes, bookingsRes] = await Promise.all([
-    d.supabase.from('leads')
+  const [patientRes, prescriptionRes, bookingsRes] = await Promise.all([
+    (suche && !inv.patient_id) ? Promise.resolve({ data: null }) : gebunden(d.supabase.from('leads')
       .select('first_name,last_name,title,geburtsdatum,street,plz,city,versichertennummer,krankenkasse,phone,email')
-      .eq('id', inv.patient_id).maybeSingle(),
+      .eq('id', inv.patient_id)).maybeSingle(),
     rezeptId
-      ? d.supabase.from('prescriptions')
+      ? gebunden(d.supabase.from('prescriptions')
         .select('rezept_typ,status,rezeptart,bg_traeger_name,bg_traeger_anschrift,bg_unfalltag,bg_aktenzeichen,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
-        .eq('id', rezeptId).maybeSingle()
+        .eq('id', rezeptId)).maybeSingle()
       : Promise.resolve({ data: null }),
     // Buchungstermine für den Leistungszeitraum-Fallback gibt es nur für den
     // Physio-Weg (prescription_sessions) — Podologie führt Termine über
     // bookings.verordnung_id / podologie_behandlungen, eine andere Abfrage,
     // hier bewusst nicht mitgezogen.
     inv.prescription_id
-      ? d.supabase.from('prescription_sessions')
-        .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)
+      ? (suche ? d.supabase.from('prescription_sessions').select('bookings ( start_time ), prescriptions!inner(owner_id)').eq('prescriptions.owner_id', suche.ownerId).eq('prescription_id', inv.prescription_id).abortSignal(suche.signal) : d.supabase.from('prescription_sessions')
+        .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id))
       : Promise.resolve({ data: null })
   ]);
+  if (!aktuell()) return;
+  if (suche && (patientRes.error || prescriptionRes.error || bookingsRes.error)) throw new Error('SUCHE_QUELLE_UNBEKANNT');
+  const patient = patientRes.data;
   const rx = prescriptionRes.data;
   const arzt = rx?.aerzte;
 
   // Issuer (top-left)
   // Praxis logo (Madde 8)
-  const invvLogo = document.getElementById('invvLogoImg');
+  const invvLogo = element('invvLogoImg');
   if (invvLogo) {
     const logoUrl = brandingAus(currentProfile).logoUrl;   // nur https (S-49)
     if (logoUrl) { invvLogo.src = logoUrl; invvLogo.hidden = false; }
@@ -183,7 +191,7 @@ export async function openInvView(invoiceId) {
   // Aussteller wie beim Speichern eingefroren (0075, § 147 Abs. 2 Nr. 1 AO); Altbelege ohne Snapshot live —
   // über dieselbe Normalisierung (PLZ aus plz|zip, Hausnummer, E-Mail der PRAXIS statt fünf eigener Blöcke).
   const aus = inv.aussteller_snapshot || ausstellerSnapshot(currentProfile);
-  document.getElementById('invvBizName').textContent = aus.name || '—';
+  element('invvBizName').textContent = aus.name || '—';
   const bizMeta = [];
   if (aus.inhaber && aus.inhaber !== aus.name) bizMeta.push('Inhaber/in: ' + aus.inhaber);
   if (aus.strasse) bizMeta.push(aus.strasse);
@@ -191,25 +199,26 @@ export async function openInvView(invoiceId) {
   if (aus.telefon) bizMeta.push('Tel: ' + aus.telefon);
   if (aus.email) bizMeta.push(aus.email);
   if (aus.ik) bizMeta.push('IK: ' + aus.ik);
-  document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
+  element('invvBizMeta').textContent = bizMeta.join('\n');
   // Praxisstempel (M2.4): aus dem PRIVATEN Bucket, als Data-URL eingebettet — nie als URL im Beleg.
-  const stempelEl = document.getElementById('invvStempel');
+  const stempelEl = element('invvStempel');
   if (stempelEl) {
     stempelEl.hidden = true; stempelEl.removeAttribute('src');
     const pfad = brandingAus(currentProfile).stempelPfad;
     if (pfad) {
       const url = await ladeStempelDataUrl(d.supabase, pfad);
+      if (!aktuell()) return;
       if (url) { stempelEl.src = url; stempelEl.hidden = false; }
     }
   }
-  const footerEl = document.getElementById('invvFooterText');
+  const footerEl = element('invvFooterText');
   if (footerEl) footerEl.textContent = currentProfile.invoice_footer_text || '';
 
   // Meta (top-right)
-  document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
-  document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
+  element('invvNumber').textContent = inv.invoice_number || '—';
+  element('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
-  document.getElementById('invvStatus').textContent = (statusMap[inv.status] || inv.status || '—')
+  element('invvStatus').textContent = (statusMap[inv.status] || inv.status || '—')
     + (inv.aussteller_snapshot ? '' : ' · Altbeleg ohne Snapshot');
 
   // Leistungszeitraum (§ 14 Abs. 4 Nr. 6 UStG). Zuerst das eingefrorene Feld
@@ -223,9 +232,9 @@ export async function openInvView(invoiceId) {
     const bd = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).sort();
     if (bd.length) { von = bd[0]; bis = bd[bd.length - 1]; }
   }
-  document.getElementById('invvLeistungszeitraumRow').hidden = !von;
+  element('invvLeistungszeitraumRow').hidden = !von;
   if (von) {
-    document.getElementById('invvLeistungszeitraum').textContent =
+    element('invvLeistungszeitraum').textContent =
       (!bis || fmt(von) === fmt(bis)) ? fmt(von) : `${fmt(von)} – ${fmt(bis)}`;
   }
 
@@ -279,11 +288,11 @@ export async function openInvView(invoiceId) {
     if (emp.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(emp.krankenkasse));
     if (emp.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(emp.versichertennummer));
   }
-  document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
+  element('invvPatient').innerHTML = patientLines.join('<br>');
 
   if (rx) {
-    document.getElementById('invvRxBlock').hidden = false;
-    document.getElementById('invvRx').innerHTML = [
+    element('invvRxBlock').hidden = false;
+    element('invvRx').innerHTML = [
       `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
       rx.icd10 && !istBg && emp?.art !== 'bg' ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
       rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
@@ -293,25 +302,25 @@ export async function openInvView(invoiceId) {
         : ''
     ].filter(Boolean).join('');
   } else {
-    document.getElementById('invvRxBlock').hidden = true;
+    element('invvRxBlock').hidden = true;
   }
 
   // Positionen + Summen: Kassenanteil bleibt vom Patientenbeleg fern.
   // Regel und Begründung in module/rechnung-druck.js.
-  d.fuelleBelegPositionen(inv, { formatEur: d.formatEur, escapeHtml, aggregateInvLines: d.aggregateInvLines });
+  d.fuelleBelegPositionen(inv, { formatEur: d.formatEur, escapeHtml, aggregateInvLines: d.aggregateInvLines, element });
 
   if (inv.notes) {
-    document.getElementById('invvNotesWrap').hidden = false;
-    document.getElementById('invvNotes').textContent = inv.notes;
+    element('invvNotesWrap').hidden = false;
+    element('invvNotes').textContent = inv.notes;
   } else {
-    document.getElementById('invvNotesWrap').hidden = true;
+    element('invvNotesWrap').hidden = true;
   }
 
   // Steuerhinweis (§ 14 Abs. 4 Nr. 8 UStG). Der mit der Rechnung eingefrorene
   // Wortlaut hat Vorrang vor dem Profil: wer den Text in den Einstellungen
   // ändert, darf damit keine Rechnung aus dem Vorjahr rückwirkend anders
   // drucken (§ 146 Abs. 4 AO). Für Altrechnungen bleibt das Profil der Fallback.
-  const taxNoteEl = document.getElementById('invvTaxExemptNote');
+  const taxNoteEl = element('invvTaxExemptNote');
   const hinweis = inv.steuerhinweis_text ?? currentProfile.tax_exempt_note;
   taxNoteEl.textContent = hinweis || '';
   taxNoteEl.style.display = hinweis ? '' : 'none';
@@ -323,14 +332,14 @@ export async function openInvView(invoiceId) {
     aus.telefon ? 'Tel: ' + aus.telefon : '',
     aus.email
   ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterContact').textContent = contact || '—';
+  element('invvFooterContact').textContent = contact || '—';
 
   const bank = [
     aus.bank?.name,
     aus.bank?.iban ? 'IBAN: ' + aus.bank.iban : '',
     aus.bank?.bic ? 'BIC: ' + aus.bank.bic : ''
   ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterBank').textContent = bank || '—';
+  element('invvFooterBank').textContent = bank || '—';
 
   // Ebenfalls Snapshot mit Profil-Fallback: die Steuernummer der Praxis kann
   // sich ändern, die einmal gedruckte Rechnung nicht (§ 14 Abs. 4 Nr. 2 UStG).
@@ -341,8 +350,9 @@ export async function openInvView(invoiceId) {
     ustId ? 'USt-IdNr.: ' + ustId : '',
     aus.ik ? 'IK: ' + aus.ik : ''
   ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterTax').textContent = tax || '—';
+  element('invvFooterTax').textContent = tax || '—';
 
+  if (suche) return inv;
   d.merkeRechnung(inv.id);
   zeigeRechnungsModus('ansicht');
 }

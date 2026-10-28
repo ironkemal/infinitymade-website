@@ -15,11 +15,11 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261028s242'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261028s249'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261026n205';
-import { attachPatientSearch } from './patient-suche.js?v=20260906';
+import { attachPatientSearch } from './patient-suche.js?v=20261028s249';
 import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20261004m113';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20261004m113';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
@@ -70,15 +70,15 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261028s245';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022tb';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261028s249';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261028s249';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261028s249'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
-import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
+import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261028s249';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
@@ -13043,12 +13043,12 @@ function formatEur(n) {
   return ((isFinite(num) ? num : 0)).toFixed(2).replace('.', ',') + ' €';
 }
 
-async function loadRechnungen() {
-  const ownerId = getOwnerId();
-  const { data, error } = await bizScope(supabase.from('invoices')
-    .select('*, rx1:prescriptions!invoices_prescription_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel ), rx2:prescriptions!invoices_verordnung_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel )')
-    .eq('owner_id', ownerId).order('created_at', { ascending: false }), 'finance');
-  if (error) { console.error('[invoices]', error); return; }
+async function loadRechnungen(suche) {
+  const ownerId = suche?.ownerId || getOwnerId(); if (suche && !suche.istAktuell()) return [];
+  const { data, error } = await (suche?.scope || (q => bizScope(q, 'finance')))(supabase.from('invoices')
+    .select(suche ? 'id,owner_id,business_id,patient_id,invoice_number,patient_name,issued_at,created_at' : '*, rx1:prescriptions!invoices_prescription_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel ), rx2:prescriptions!invoices_verordnung_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel )')
+    .eq('owner_id', ownerId).order('created_at', { ascending: false }));
+  if (suche) { if (!suche.istAktuell()) return []; if (error || !Array.isArray(data)) throw new Error('SUCHE_QUELLE_UNBEKANNT'); return data; } if (error) { console.error('[invoices]', error); return; }
   invListCache = (data || []).map(inv => ({ ...inv, prescriptions: inv.rx1 || inv.rx2 || null }));
   renderInvList();
 }
@@ -13529,7 +13529,7 @@ initAnfrageBearbeiten({
 
 const { loadDoctors } = initLeadSuche({
   istKutu: IST_KUTU, supabase, showToast, t, getOwnerId, loadB2B, renderB2B,
-}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, handlungsbedarfKontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: bootBusinessSwitcher.scopeBusinessId, patientsGemeinsam: dataSharing.patients, bereit: loadDataSharing.scopeBekannt === true && bootBusinessSwitcher.scopeBekannt === true && loadDataSharing.scopeOwnerId === getOwnerId() && bootBusinessSwitcher.scopeOwnerId === getOwnerId() }), behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
+}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, handlungsbedarfKontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: bootBusinessSwitcher.scopeBusinessId, patientsGemeinsam: dataSharing.patients, financeGemeinsam: dataSharing.finance, financeBereit: loadDataSharing.financeBekannt === true, ladeRechnungen: loadRechnungen, escapeHtml, bereit: loadDataSharing.scopeBekannt === true && bootBusinessSwitcher.scopeBekannt === true && loadDataSharing.scopeOwnerId === getOwnerId() && bootBusinessSwitcher.scopeOwnerId === getOwnerId() }), behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
 
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
@@ -14563,13 +14563,13 @@ function bizScope(query, cat) {
 
 // Load the owner's cross-business sharing policy. Absent row keeps the defaults (all separate).
 async function loadDataSharing() {
-  loadDataSharing.scopeBekannt = false; const scopeOwnerId = getOwnerId(); try {
+  loadDataSharing.scopeBekannt = false; loadDataSharing.financeBekannt = false; const scopeOwnerId = getOwnerId(); try {
     const { data, error } = await supabase
       .from('data_sharing_settings')
       .select('patients,services,activities,finance,network')
       .eq('owner_id', scopeOwnerId)
       .maybeSingle();
-    if (error) throw new Error('SHARING_SCOPE_UNBEKANNT'); loadDataSharing.scopeOwnerId = scopeOwnerId; loadDataSharing.scopeBekannt = data === null || typeof data?.patients === 'boolean'; if (data) {
+    if (error) throw new Error('SHARING_SCOPE_UNBEKANNT'); loadDataSharing.scopeOwnerId = scopeOwnerId; loadDataSharing.scopeBekannt = data === null || typeof data?.patients === 'boolean'; loadDataSharing.financeBekannt = data === null || typeof data?.finance === 'boolean'; if (data) {
       dataSharing = {
         patients: !!data.patients,
         services: !!data.services,

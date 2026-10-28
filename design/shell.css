@@ -405,6 +405,14 @@
    Feld mit Lupe und Tastenhinweis „/“; Trefferliste ist die gemeinsame
    .patient-search-list (patient-suche.js), hier nur an die Form v3 angepasst.
    Ab 900 px sichtbar (V2.12: Tablet quer hat Platz); darunter aus (Hochformat/Telefon: Patienten-Liste). */
+@media screen {
+  [data-design="neu"] .px-dokument-dialog { width: min(900px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card-solid); color: var(--text-main); }
+  [data-design="neu"] .px-dokument-dialog::backdrop { background: color-mix(in srgb, var(--text-main) 30%, transparent); }
+  [data-design="neu"] .px-dokument-kopf { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  [data-design="neu"] .px-dokument-kopf h2 { margin: 0; font-size: 18px; }
+  [data-design="neu"] .px-dokument-kopf button { min-height: 44px; }
+  [data-design="neu"] .px-dokument-inhalt { overflow: auto; }
+}
 @media screen and (min-width: 900px) {
   [data-design="neu"] .px-suche {
     position: relative;
@@ -412,7 +420,7 @@
     align-items: center;
     gap: 8px;
     width: clamp(240px, 26vw, 360px);
-    height: 36px;
+    height: 44px;
     margin-left: 8px;
     padding: 0 8px 0 12px;
     border: 1px solid var(--border);
@@ -423,6 +431,13 @@
   [data-design="neu"] .px-suche[hidden] { display: none; }
   [data-design="neu"] .px-suche:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-halo); background: var(--bg-card-solid); }
   [data-design="neu"] .px-suche svg { flex-shrink: 0; }
+  [data-design="neu"] .px-suche-art { width: 106px; min-height: 44px; padding: 0 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: var(--bg-main); color: var(--text-main); font: inherit; font-size: 12px; }
+  [data-design="neu"] .px-suche-art[hidden] { display: none; }
+  [data-design="neu"] .px-suche-art:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"] .px-suche-hinweis { position: absolute; left: 0; top: calc(100% + 4px); width: 100%; padding: 6px 8px; background: var(--bg-card-solid); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; z-index: 31; }
+  [data-design="neu"] .px-suche-hinweis:empty { display: none; }
+  [data-design="neu"] .px-suche:not(:focus-within) .px-suche-hinweis { display: none; }
+  [data-design="neu"] .px-suche:has(.px-suche-hinweis:not(:empty)) .patient-search-list { top: calc(100% + 66px); }
   [data-design="neu"] .px-suche-feld {
     flex: 1;
     min-width: 0;

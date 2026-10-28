@@ -93,14 +93,23 @@ export function attachPatientSearch(inputEl, cfg = {}) {
   let leads = [];
   let activeIndex = -1;
   let loaded = false;
+  let ladeNr = 0, cacheKey;
   let markierungOffen  = false;   // focus hat gerade den ganzen Namen markiert
   let geradeFokussiert = false;   // trennt den Fokus-Klick vom zweiten Klick
 
   async function ensureLoaded(force = false) {
+    const key = cfg.cacheKey?.();
+    if (key !== cacheKey) { invalidate(); cacheKey = key; }
     if (loaded && !force) return;
-    try { leads = (await loadLeads()) || []; } catch (e) { console.warn('[patient-suche] load:', e); leads = []; }
+    const nr = ++ladeNr;
+    let daten;
+    try { daten = (await loadLeads()) || []; } catch (e) { console.warn('[patient-suche] load:', e); daten = []; }
+    if (nr !== ladeNr || key !== cfg.cacheKey?.()) return;
+    leads = daten;
     loaded = true;
   }
+
+  function invalidate() { ladeNr++; leads = []; loaded = false; close(); }
 
   function close() { list.hidden = true; activeIndex = -1; }
 
@@ -115,7 +124,8 @@ export function attachPatientSearch(inputEl, cfg = {}) {
 
   function render(query) {
     const q = String(query || '').trim().toLowerCase();
-    let filtered = q ? leads.filter(l => matches(l, q)) : leads;
+    const sichtbar = cfg.canShow ? leads.filter(cfg.canShow) : leads;
+    let filtered = q ? sichtbar.filter(l => matches(l, q)) : sichtbar;
 
     // Vorschlag VOR dem Zuschnitt. Andersherum faellt genau der Patient, den
     // wir nach oben holen wollten, bei emptyLimit=20 wieder hinten heraus.
@@ -163,6 +173,7 @@ export function attachPatientSearch(inputEl, cfg = {}) {
     }
     const lead = leads.find(l => String(l.id) === String(el.dataset.id));
     if (!lead) return;
+    if (cfg.canShow && !cfg.canShow(lead)) { invalidate(); return; }
     inputEl.value = labelOf(lead);
     close();
     onSelect(lead);
@@ -259,6 +270,7 @@ export function attachPatientSearch(inputEl, cfg = {}) {
     /** Re-read the leads (after creating a patient, or switching Standort). */
     async refresh() { await ensureLoaded(true); if (!list.hidden) render(inputEl.value); },
     close,
+    invalidate,
   };
   inputEl._patientSearchApi = api;
   return api;
