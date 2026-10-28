@@ -12315,7 +12315,7 @@ function loadBeispielmodus() {
   if (!wrap) return;
   wrap.innerHTML = `
       <div class="zygote-fallback">
-        <div class="zygote-fallback-icon">🫁</div>
+        <div class="zygote-fallback-icon">${document.documentElement.dataset.design === 'neu' ? ICON.services.replace('<svg ', '<svg width="1em" height="1em" aria-hidden="true" ') : '🫁'}</div>
         <div class="zygote-fallback-title">3D-Anatomie — Zygote Body</div>
         <div class="zygote-fallback-text">Externe Anatomie-Anwendung. Zygote Body wird in einem neuen Tab geöffnet. Für die Nutzung gelten die Bedingungen des Anbieters.</div>
         <a class="btn btn-primary zygote-fallback-btn" href="https://www.zygotebody.com/" target="_blank" rel="noopener noreferrer">↗ Zygote Body öffnen</a>

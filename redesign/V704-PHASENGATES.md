@@ -1,5 +1,32 @@
 # V7.04 lokale Phasengates, 28.10.2026
 
+## Nachtrag V7.04e: Bildsichtung und Demo-Symbol
+
+108vorhandene Neu-Aufnahmen von V7.04c in12Kontaktbögen grob gesichtet.
+Quellen unverändert; kein neuer kompletter Bildlauf. Hohe Vollseiten-Aufnahmen
+(insbesondere Startseite/Formulare/Einstellungen) im Kontaktbogen stark verkleinert:
+keine vollständige Detail-, Kontrast-, Fokus- oder mobile Gestenabnahme daraus.
+Anfragenbilder zeigen bekannte frühere Fixture-Fehlermeldung; gültige Antwort im
+Harness bereits V7.04c ergänzt. R-23-Mobilreste weiter offen, Team-Karten sehr eng;
+reservierte V8.03/V8.04 unverändert und weiterhin vor Abschluss gezielt abnehmen.
+
+Konkreter Fund: Demo-Fallback zeigt dekoratives Lungen-Emoji auch Neu.
+Bestehender Filter lässt unbekannte reine Emoji-Elemente absichtlich stehen,
+um leere Bedienelemente zu vermeiden. Deshalb nur bestehendes
+loadBeispielmodus-Template korrigiert: Neu nutzt vorhandenes ICON.services
+als 3D-Würfel, Alt unverändert. Keine neue Funktion, Query, CSS oder Abhängigkeit;
+Dashboard zeilenneutral, Cache248, Funktionskarte unverändert frisch.
+
+Tatsächlicher Browserpfad zuerst rot: SVG fehlt. Danach8/8Fälle
+Alt/Neu ×hell/dunkel ×1440/390 grün. Neu48px/currentColor/aria-hidden,
+Alt weiterhin Emoji; Linkziel/target/rel erhalten,0Writes/Seitenfehler/Fremdhosts/
+Überlauf. Neu hell390 und dunkel1440 in Originalgröße gesichtet.
+Skript `/tmp/praxura-v704e-browser.mjs`, Logs `praxura-v704e-{rot,gruen}.log`
+unter `/tmp`, Bericht/Bilder `/tmp/praxura-v704e-ui`.
+Fullsuite erneut4950pass/1bestehenderSkip/0fail
+(`/tmp/praxura-v704e-npm.log`); AltOverview1440hell1Bild pixelgleich,
+107nicht geprüft. Eigener Diffcheck; keine unabhängige Fach-/Gesamtfreigabe.
+
 ## Nachtrag V7.04d: Anamnese-Folgeantworten
 
 Basis1cdf3b31: Originalfunktionsregressionen zunächst10/20rot. Bestehende
