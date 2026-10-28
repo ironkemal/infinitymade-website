@@ -1196,3 +1196,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Commitdiff gelesen. Keine externen Provideraufrufe, keine Sparmessung.
 - Nächster unabhängiger Umfang: V7 gemäß Integratorplan; Frontenddateien und
   Integrationsbesitz bleiben dort. V8.03/V8.04/V9 offen, V10 unverändert gesperrt.
+
+### 2026-10-28 – V7.03 unabhängige fokussierte Prüfung, P2 offen
+- PRIMARY d6ebbed2 sauber; V7.01–03 integriert, V7.04 laut STATUS nächster
+  Integrationsumfang. Frontend-/Serverbesitz weiterhin beim Integrator.
+- 46/46 bestehende Tests Abschluss/Integration/Bestätigungsdialog lokal grün.
+- P2: podologie-abrechnung.js:1284 erfasst Auswahl/Scope erst nach Speicher-
+  awaits; vord bleibt ursprüngliche VO. Guard1307–1308 vergleicht aktuelle
+  mit erfasster Auswahl, jedoch nicht mit vord.id. Direkte Originalfunktion
+  im VM, vorhandenes synthetisches Fixture: vord R bei auswahl=selected=OTHER
+  öffnet Dialog und liest Booking für R. Beide Antworten true/zusatz öffnen
+  anschließend Folge bzw. Zahlungsprüfung für alte VO. Kein echter Transport.
+- Gegenprobe ausschließlich im Speicher: zusätzlicher Vergleich auswahl===vord.id
+  sperrt beide widersprüchlichen Fälle vor Dialog/Read; beide Normalfälle
+  bleiben erhalten (4/4). Kein Produktfix mangels Frontend-Dateibesitz.
+- Befund mit Minimalfix/Regressionen dedupliziert an Integrator-Queue:
+  praxura-v703-stale-rx-p2-d6ebbed2-20261028-01. Kleine Reparatur dort, kein
+  weiterer Delegate. Kein Browser-/Live-/RLS-/allgemeiner Speicher-Race-Nachweis.
+- agy-context local-only lieferte unpassenden Terminpanel-Ausschnitt; gezielt
+  Commitdiff/Originalfunktionen gelesen. Keine externen Provideraufrufe.
