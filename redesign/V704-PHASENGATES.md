@@ -4,6 +4,16 @@ Produktbasis: `f704d318`, Dokumentations-HEAD bei Beginn `03d4aa15`.
 Keine Veröffentlichung, Live-DB, echten Profile oder Kundendaten verwendet.
 V7.04 bleibt bis zur vollständigen Auswertung und Pflicht-Fachabnahme offen.
 
+## Fehlgeschlagene Pflichtprüfung
+
+Nach `cb3349e8` gestarteter kombinierter Sol6.1-Review endete am28.10.2026 um
+07:17UTC mit `Selected model is at capacity. Please try a different model.`
+Threadstatus `failed`, kein aktiver Lauf und kein abschließendes Urteil.
+Zwischenmeldung nennt37gezielteTests grün und noch laufende Prüfung späterer
+Anamnese-Abfragen; weder diese Meldung noch gelesene Quellen sind Fachfreigabe.
+Kein Ersatzlauf oder Modell-/Providerwechsel gestartet. Bestehende lokale
+Testergebnisse bleiben erhalten, Pflichtabnahme und V7.04 weiterhin offen.
+
 ## T2 und T3
 
 - Letzte vollständige Produktsuite: 4937 bestanden, ein bestehender Skip, kein Fehler,
