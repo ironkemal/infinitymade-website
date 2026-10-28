@@ -1,6 +1,6 @@
 # V8.04 — Verwaltungsansichten
 
-Stand: Gruppe 1 lokal geprüft und selektiv zur Integration übergeben. V8.04 insgesamt offen.
+Stand: Gruppe 1 zentral integriert; Gruppe 2 lokal geprüft. V8.04 insgesamt offen.
 
 - Basis: `3c010868075ad9144f3835eacc0a4966dc69f07b`.
 - Worktree: `/private/tmp/praxura-v804-verwaltung`.
@@ -84,16 +84,91 @@ gefüllte Tabellen/Langdaten nicht abgenommen. Team-Abwesenheiten ebenfalls nur
 vorhandene synthetische Zustände. Hover-Aufhebung quellengeprüft, kein separater
 Hover-Bildvergleich. Kein Nachweis der späteren Produktverlinkung/Cacheauslieferung.
 
+## Gruppe 2: Notizen, Feedback, Beispielmodus
+
+Schriftlich konkretisierter Folgeauftrag: ausschließlich Nachfahren von
+`#panel-notizen`, `#panel-feedback`, `#panel-beispielmodus`, weiterhin nur
+`@media screen` und `[data-design="neu"]`. Vorbereitete B2B/B2C-Deltas vollständig
+entfernt; übrige sechs Panels bleiben ausgenommen.
+
+Tatsächliche Basis dieses Folgecommits:
+`a808a1104e86427bffa4ee6dade5a508e75b4ebd`. Bereits vor der jüngsten Koordination
+war der zuvor saubere eigene Branch darauf aktualisiert worden; Git erkannte
+`abb3c38a` als bereits upstream integriert. Kein Reset, keine Übernahme fremder
+uncommitteter Dateien. Gruppe-1-CSS bleibt bytegleich.
+
+Problem und Delta: 44-px-Bedienelemente und Patientenauswahlzeilen, umbrechende
+Notizaktionen/Feedback-Köpfe, neutrale Feedback-/Adminantwortflächen statt altem
+Akzentbalken. Vorhandene Tokens, Status-Badges, Fokusregeln und monochromes
+Demo-SVG wiederverwendet. Keine neue Produktfunktion oder fachliche Semantik;
+bestehende Funktionsberatung gilt weiter.
+
+Temporäre Probe `/private/tmp/v804-gruppe2.mjs`: bestehender hashgleich geprüfter
+Harness und synthetische Fixture. HTTP-/WS-Fences vor Page, Serviceworker gesperrt,
+Nicht-GET-Sperre auch vor Seitenhandlern, Fixture-Writes weiter RS_READONLY.
+Kein Feedbackversand, Notizspeichern, AI-Aufruf oder externer Demo-Link ausgelöst.
+Port 18084 nun ausdrücklich für diese Gruppe bestätigt; vor Start erneut frei.
+
+Ausgeführt: Syntaxprüfung des temporären Werkzeugs, bestehende Scope-/Important-/
+Auslieferungswachen 9/9 ohne Skips, Impeccable-Regexprüfung `[]`, `git diff --check`.
+Zusatzprüfung bestätigt Gruppe-1-CSS nach Entfernung des neuen Blocks bytegleich
+zu HEAD; neuer Block ausschließlich drei zugeteilte Panels, keine neuen Important-Regeln.
+
+Finale Browserprobe: 28/28 Zustände, vier identische Alt-Pixelproben.
+Sechs Kombinationen: Owner hell1440/dunkel390/hell1024 sowie Employee
+dunkel1440/hell390/dunkel1024. Je drei Panels plus per Tastatur ausgewähltes
+Notizformular = 24 Zustände. Zusatz: offener Patientenauswahlliste und langes
+synthetisches Feedback-Markup jeweils Owner hell1440/dunkel390 = vier Zustände.
+Feedback-Markup verwendet vorhandene Rendererklassen ausschließlich zur
+Geometrieprüfung; es stammt nicht aus DB-Antworten. Bekannte `feedbacks`- und
+`patient_notes`-Fixture-Lücken bleiben bestehen, kein Datenvertrag daraus abgeleitet.
+
+Gemessen: Notiz-Suche zuvor 41 px, Feedback-Senden 36 px, Demo-Link rund 36 px,
+Patientenauswahl mit zu kleinen Zeilen. Nachher alle geprüften sichtbaren
+Bedienelemente und Auswahlzeilen mindestens 44×44 px; kein Dokumentüberlauf oder
+horizontal außerhalb liegende geprüfte Kontrolle. Paneltext vor/nach CSS gleich.
+Vorhandene Statuslabels bleiben unverändert. Feedback-/Adminantwortfläche gemessen
+weiß in Hell, Tokenfläche rgb(20,23,29) in Dunkel.
+
+Tastatur: vorhandene Patientenauswahl über ArrowDown/Enter öffnet lesend Formular;
+danach Tab-Schritte durch sichtbare aktivierte Formularkontrollen, Fokus jeweils im
+Panel mit vorhandenem Outline. Keine aktivierende Taste auf Speicher-/Versandknöpfen.
+Keine vollständige Screenreader-/Fokusfallen-/A11y-/Kontrastabnahme. Rollen synthetisch,
+keine RLS-/Liveaussage. Alt-Kontrolle ausschließlich Notizen/Feedback je Hell1440 und
+Dunkel390; keine vollständige Alt-Regression. Demo-Link nicht geöffnet.
+
+Alle geprüften Kontexte: keine Fixture-Writes, Seitenfehler oder Fremdhosts.
+Bericht `/private/tmp/praxura-v804-gruppe2/bericht.json`, sechs PNGs im selben Ordner.
+Gezielt gesichtet: `fixture-beispielmodus.png`, `selected-notizen.png`,
+`picker-notizen.png`, `synthetic-long-markup-feedback.png` (Dunkel390).
+Keine Referenzbilder verändert. 0 Reparaturrunden wegen Produktfehlern erforderlich;
+kleine unbelegte Demo-Umbruchregel vor Finalprobe entfernt.
+
+Jeder Server im finally beendet; abschließendes
+`lsof -nP -iTCP:18084 -sTCP:LISTEN` leer. Port18084 hiermit freigegeben,
+18081 unberührt. Erneute Reproduktion nur nach neuer Portkoordination:
+`rtk proxy env REDESIGN_PORT=18084 node /private/tmp/v804-gruppe2.mjs`.
+
+Unabhängiger nativer Sol-Review durch vorhandenen Mobil-/Diffreviewer:
+kein belegter Produktblocker, Scope und Tokenwiederverwendung bestätigt.
+Bericht und Picker-/Feedback-PNG bei 390 px gegengeprüft. Nachweisgrenzen:
+keine paarweisen Kollisionsmessungen; keine gesonderte Trefferzahl oder vollständige
+Rechteckliste der Pickerzeilen im JSON. Sichtbare Treffer im PNG; Messprüfung
+berücksichtigt vorhandene sichtbare li[data-id], erzwingt deren Anzahl jedoch nicht.
+Kein zweiter Review oder Gruppe-1-Neutest ausgeführt. Selektiver Gruppe-2-Commit
+auf eigenem Branch; Hash in Liefermeldung/git log.
+
 ## Weitere Gruppen
 
-Noch nicht gebaut: Statistik, Notizen, Überblick, B2B/B2C, Feedback, Beispielmodus,
+Noch nicht gebaut: Statistik, Überblick, B2B/B2C,
 Podologie-Behandlungen und Abrechnung. Bereits gelöste Neu-Bausteine nur durch
 belegte Deltas ergänzen. Fachflächen nach gezielter gkv-302-/podoloji-Beratung;
 DATEI_STATUS und vorhandene Statusetiketten nicht pauschal übersteuern.
 
 ## Integration
 
-Nur Gruppe-1-Commit selektiv übernehmen; bestehende Integratoränderungen nicht kopieren.
+Gruppe 1 bereits zentral integriert. Nur neuen Gruppe-2-Commit selektiv übernehmen;
+bestehende Integratoränderungen nicht kopieren.
 CSS-Link/Cache, Dashboard, Auslieferung/Docker, STATUS/PLAN/INDEX und Referenzbilder
 bleiben ausschließlich beim Integrator. Diese Datei meldet keinen V8-/V9-/Live-/RLS-
 oder Releaseabschluss.
