@@ -119,6 +119,7 @@ import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261028s243';
 import { on } from './signal.js?v=20260813';
 import { oeffneFolgetermin } from './termin-folge.js?v=20261021w';
+import { zeigeBehandlungsabschluss } from './behandlung-abschluss.js?v=20261028s245';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -1280,6 +1281,7 @@ async function loadPodologieBilling() {
     }
 
     const bookingIdVorLaden = _podState.fahrtBookingId;
+    const abschluss = { neu: ctx.abschlussNeu?.() === true, scope: ctx.abschlussKontext?.(), auswahl: _podState.selectedVordId, kontext: ctx };
     await loadPodologieBilling();
     if (altsystem) return;   // Nachtrag: keine Fahrt, kein Folgetermin
     const fahrtOffen = await zeigeFahrtHinweis();
@@ -1287,9 +1289,11 @@ async function loadPodologieBilling() {
     // die Frage wartet dann auf `onFertig` in fahrtBeendenKlick.
     // Frisch gelesener Status von oben; ohne ihn der Stand der Anzeige (podologischer Wortschatz).
     const abrStatus = frischRx ? frischRx.abrechnung_status : (vord?.status && vord.status !== 'aktiv' ? vord.status : null);
-    if (!frageFolgetermin({ alleVerbraucht, abrechnungStatus: abrStatus })) return;
-    if (fahrtOffen) _podState.folgeOffen = { vord, datum, bookingId: bookingIdVorLaden };
-    else await fragFolgetermin({ vord, datum, bookingId: bookingIdVorLaden });
+    const folgeMoeglich = frageFolgetermin({ alleVerbraucht, abrechnungStatus: abrStatus });
+    if (!folgeMoeglich && !abschluss.neu) return;
+    const offen = { vord: vord ? { ...vord } : vord, datum, bookingId: bookingIdVorLaden, folgeMoeglich, ...abschluss };
+    if (fahrtOffen) _podState.folgeOffen = offen;
+    else await fragFolgetermin(offen);
   });
 }
 
@@ -1297,8 +1301,46 @@ async function loadPodologieBilling() {
  * „Behandlung gespeichert. Folgetermin jetzt anlegen?" — öffnet bei „Ja" die vorhandene
  * Terminmaske vorbelegt (module/termin-folge.js). Ausgangstermin: siehe `folgeAusgangstermin`.
  */
-async function fragFolgetermin({ vord, datum, bookingId }) {
+async function fragFolgetermin({ vord, datum, bookingId, neu = false, scope, auswahl, kontext, folgeMoeglich = true }) {
   if (!ctx.folge || !vord?.lead_id) return;
+  if (neu) {
+    const passt = () => ctx === kontext && !!scope && ctx.abschlussNeu?.() === true
+      && scope === ctx.abschlussKontext?.() && auswahl === _podState.selectedVordId;
+    const ownerId = ctx.getOwnerId(), rxId = vord.id, leadId = vord.lead_id;
+    const echt = b => b?.id && b.owner_id === ownerId && b.lead_id === leadId
+      && b.verordnung_id === rxId && b.status !== 'cancelled';
+    const ladeBuchung = async () => {
+      if (!passt()) return null;
+      if (bookingId) {
+        const { data, error } = await kontext.supabase.from('bookings').select('*').eq('owner_id', ownerId)
+          .eq('id', bookingId).eq('lead_id', leadId).eq('verordnung_id', rxId).maybeSingle();
+        if (!passt()) return null;
+        if (error) throw new Error('ABSCHLUSS_TERMIN_UNBEKANNT');
+        return echt(data) ? data : null;
+      }
+      const data = await ladeTagesTermin(kontext.supabase, ownerId, rxId, datum);
+      return passt() && echt(data) ? data : null;
+    };
+    try {
+      await zeigeBehandlungsabschluss({ frage: kontext.showConfirmModal, istAktuell: passt, folgeMoeglich,
+        darfZahlungPruefen: () => passt() && kontext.darfZahlungPruefen?.() === true,
+        oeffneZahlungspruefung: async () => {
+          if (!passt() || kontext.darfZahlungPruefen?.() !== true) return;
+          const booking = await ladeBuchung();
+          if (!passt() || kontext.darfZahlungPruefen?.() !== true) return;
+          if (!booking) { kontext.showToast('Kein passender Termin für die Zahlungsprüfung gefunden.', 'info'); return; }
+          await kontext.oeffneZahlungspruefung?.({ booking, rxId, leadId });
+        },
+        oeffneFolgetermin: async () => {
+          const buchung = await ladeBuchung();
+          if (!passt()) return;
+          const { booking } = folgeAusgangstermin({ buchung, vord, datum, name: patientAnzeigename(vord) || '' });
+          await oeffneFolgetermin(booking, { ...kontext.folge, toast: kontext.showToast });
+        },
+      });
+    } catch { if (passt()) kontext.showToast('Abschlussaktion konnte nicht geöffnet werden.', 'error'); }
+    return;
+  }
   const ja = await ctx.showConfirmModal({ ...FOLGE_FRAGE });
   if (!ja) return;
   try {

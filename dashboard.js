@@ -3,7 +3,7 @@ import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=202
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261008m4b';
 import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261008m4b';
-import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261008m4b';
+import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261028s245';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -50,7 +50,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261028
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261028s243';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261028s245';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { montiereAkteAktionen } from './module/akte-aktionen.js?v=20261028s244';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -67,7 +67,7 @@ import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeV
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
-import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
+import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261028s245';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
@@ -2730,7 +2730,7 @@ async function openBookingActionModal(booking, opts = {}) {
   let bkGeldNeuZeichnen = null;
   verdrahteFussbefundKnopf(fussbefundCtx(), booking);
   setzeTerminAuswahlLabel(booking);
-  if (booking && booking.status === 'confirmed') {
+  if (booking && booking.status === 'confirmed' && opts.nurLesen !== true) {
     const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
     if (endTime < new Date()) {
       supabase.from('bookings').update({ status: 'completed' }).eq('id', booking.id).then(({ error }) => {
@@ -2810,7 +2810,7 @@ async function openBookingActionModal(booking, opts = {}) {
       rx, booking, erbracht: current,
       deps: {
         sb: supabase, ownerId, sector: getSector(), patientName,
-        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], services: () => ensureLeistungskatalog(),
+        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], services: () => ensureLeistungskatalog({ nurLesen: opts.nurLesen === true }),
         ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),
         kassieren: kassiereZuzahlung,
         belegOeffnen: openZuzahlungsrechnung,
@@ -7086,10 +7086,10 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
 // ownerServices == [] — der Leistungs-Picker zeigte „Kein Leistungskatalog
 // hinterlegt.", obwohl einer existiert (Ops-Meldung, 09.09.2026). Regel in
 // module/leistungskatalog.js — dieselbe, die zuvor nur in populateSrvSelect() stand.
-async function ensureLeistungskatalog() {
+async function ensureLeistungskatalog({ nurLesen = false } = {}) {
   if (katalogNachladen({ katalog: servicesCache,
         sektorHatGkvKatalog: (GKV_LEISTUNGSKATALOG[getSector()] || []).length > 0 })) {
-    await loadServices({ throwOnError: true });
+    await loadServices({ throwOnError: true, nurLesen });
   }
   ownerServices = servicesCache;
   return ownerServices;
@@ -8301,7 +8301,7 @@ document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePa
 
 let servicesCache = [];
 
-async function loadServices({ throwOnError = false } = {}) {
+async function loadServices({ throwOnError = false, nurLesen = false } = {}) {
   let q = supabase.from('services')
     .select('*,employee_services(employee_id),price_config,code')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
@@ -8313,11 +8313,11 @@ async function loadServices({ throwOnError = false } = {}) {
 
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
-  await migratePodologieLegacyServices();
-  if (getSector() === 'physiotherapy' || getSector() === 'praxis') await migrierePhysioAltlast({ supabase, services: servicesCache, katalog: GKV_LEISTUNGSKATALOG.physiotherapy });
+  if (!nurLesen) await migratePodologieLegacyServices();
+  if (!nurLesen && (getSector() === 'physiotherapy' || getSector() === 'praxis')) await migrierePhysioAltlast({ supabase, services: servicesCache, katalog: GKV_LEISTUNGSKATALOG.physiotherapy });
 
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
-  await autoSeedGkvServices();
+  if (!nurLesen) await autoSeedGkvServices();
 
   renderGkvCatalog(); renderServices(); renderSrvEmpCheckboxes();
 }
@@ -17821,7 +17821,7 @@ function podoCtx() {
     GKV_LEISTUNGSKATALOG,
     frequenzOptionsHtml,
     loadKkList,
-    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: oeffneAnamneseFuer,   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
+    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: oeffneAnamneseFuer, abschlussNeu: () => document.documentElement.dataset.design === 'neu', abschlussKontext: () => ['owner','employee'].includes(currentProfile?.role) && currentSession?.user?.id && getOwnerId() ? JSON.stringify([currentProfile.role,currentSession.user.id,getOwnerId(),currentBusiness?.id,dataSharing.patients,getSector()]) : null, darfZahlungPruefen: () => currentProfile?.role === 'owner' && currentSession?.user?.id === getOwnerId() && hasModuleAccess('abrechnung'), oeffneZahlungspruefung: ({booking,rxId,leadId}) => { if (currentProfile?.role !== 'owner' || currentSession?.user?.id !== getOwnerId() || !hasModuleAccess('abrechnung') || booking?.owner_id !== getOwnerId() || booking?.lead_id !== leadId || booking?.verordnung_id !== rxId) return false; return openBookingActionModal(booking, {rxId,nurLesen:true}); },
     toastArztErgebnis,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben

@@ -10,6 +10,11 @@
    Inhalt kommen unverändert aus den bestehenden Modulen (verordnung-liste/-detail.js).
    ========================================================================== */
 
+/* V7.03: Abschlussaktionen bleiben auch mit drittem Knopf mobil erreichbar. */
+@media screen {
+  [data-design="neu"] #confirmModal[data-abschluss] .modal-footer button { min-height: 44px; max-width: 100%; white-space: normal; }
+}
+
 /* V7.02: Akte-Aktionen neben den bestehenden Leseinhalten, auch in Podo-Verlauf. */
 @media screen {
   [data-design="neu"] .px-akte-aktionen { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }

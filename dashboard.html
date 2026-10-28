@@ -25,7 +25,7 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20261021ze" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
-  <link rel="stylesheet" href="praxura-design.css?v=20261026s215" /><link rel="stylesheet" href="design/shell.css?v=20261027s224" /><link rel="stylesheet" href="design/startseite.css?v=20261028s242" /><link rel="stylesheet" href="design/seiten.css?v=20261028s244" /><link rel="stylesheet" href="design/kalender.css?v=20261027s230" />
+  <link rel="stylesheet" href="praxura-design.css?v=20261026s215" /><link rel="stylesheet" href="design/shell.css?v=20261027s224" /><link rel="stylesheet" href="design/startseite.css?v=20261028s242" /><link rel="stylesheet" href="design/seiten.css?v=20261028s245" /><link rel="stylesheet" href="design/kalender.css?v=20261027s230" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -5410,10 +5410,10 @@
 
   <!-- ===== GENERIC CONFIRM MODAL ===== -->
   <div class="modal-overlay" id="confirmModal" hidden>
-    <div class="modal" style="max-width:440px;">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalText" style="max-width:440px;">
       <div class="modal-header">
         <span class="modal-title" id="confirmModalTitle">Bestätigen</span>
-        <button class="modal-close" data-modal="confirmModal">✕</button>
+        <button class="modal-close" data-modal="confirmModal" aria-label="Schließen">✕</button>
       </div>
       <div class="modal-body">
         <p id="confirmModalText" style="margin:0;color:var(--text-main);line-height:1.5;white-space:pre-wrap;"></p>
@@ -5875,7 +5875,7 @@
     </div>
   </div>
 
-<script type="module" src="dashboard.js?v=20261028s244"></script>
+<script type="module" src="dashboard.js?v=20261028s245"></script>
 </body>
 
 </html>
