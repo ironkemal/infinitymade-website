@@ -78,6 +78,32 @@
   }
 }
 
+/* Folgegruppe: Zuweiser und Patientenpost. Status und Inhalte unverändert. */
+@media screen {
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) :is(button, input:not([type="hidden"]), textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) :is(.b2b-layout > *, .ai-input-row textarea) {
+    min-width: 0;
+  }
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) .ai-input-row textarea {
+    min-height: 64px; /* zwei Platzhalterzeilen bei vorhandenen mobilen 16px */
+  }
+  [data-design="neu"] #panel-b2b .apify-bar {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-b2b :is(#apifyQuery, #apifyCity) { flex: 1 1 100% !important; } /* gegen Inline-flex:2/1 der auf 26px geschrumpften Suchfelder */
+}
+
 /* Gruppe 2: Notizen, Feedback und Beispielmodus. */
 @media screen {
   [data-design="neu"] :is(#panel-notizen, #panel-feedback, #panel-beispielmodus) :is(button, a.btn-primary, input:not([type="hidden"]), select, textarea) {
