@@ -37,10 +37,18 @@ test('Physio: nur done-Sitzungen mit heilmittel_position, sortiert, ohne DB', as
   const r = await ladeErbrachteSitzungen({ supabase, tenantId: 't1', rx: {
     therapie_bereich: 'physio', heilmittel_position: 'X0501',
     prescription_sessions: [
-      { id: 's2', status: 'done', done_at: '2026-10-05T10:00:00Z' },
+      { id: 's2', status: 'done', heilmittel_index: 0, done_at: '2026-10-05T10:00:00Z' },
       { id: 's3', status: 'planned', done_at: null },
-      { id: 's1', status: 'done', done_at: '2026-10-01T10:00:00Z' },
+      { id: 's1', status: 'done', heilmittel_index: null, done_at: '2026-10-01T10:00:00Z' },
     ] } });
   assert.equal(r.podo, false);
   assert.deepEqual(r.sitzungen.map(s => [s.id, s.code]), [['s1', 'X0501'], ['s2', 'X0501']]);
 });
+
+for (const index of [1, undefined, -1, '0', false]) {
+  test(`Physio-Druckquelle sperrt ungeklärten erbrachten Index ${String(index)}`, async () => {
+    await assert.rejects(ladeErbrachteSitzungen({ rx: { heilmittel_position: 'X0501', prescription_sessions: [
+      { status: 'done', heilmittel_index: 0 }, { status: 'done', heilmittel_index: index },
+    ] } }), e => e.status === 422 && e.code === 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT');
+  });
+}

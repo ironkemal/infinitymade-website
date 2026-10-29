@@ -93,11 +93,10 @@ try{
   if(!(await page.locator('#rzUnterschrift').isChecked()))throw new Error('Unterschrift nicht gesetzt');
   const rxBefore=(await tables()).prescriptions.length;
   await page.locator('#rzSaveBtn').click();
-  const draft=page.getByRole('button',{name:'Als Entwurf speichern',exact:true});
-  if(await draft.isVisible().catch(()=>false))await draft.click();
   await page.waitForFunction(n=>window.__lokaleTestpraxis.tabellen.prescriptions.length>n,rxBefore);
   t=await tables();const rx=t.prescriptions.find(r=>r.patient_id===patient.id);
   check('Verordnung über Originalhandler gespeichert',!!rx&&rx.therapie_bereich==='physio');
+  check('Neu angelegte Verordnung tatsächlich bestätigt',rx.status==='confirmed');
   // /rezept/confirm legt keine Sitzungen an (server.js); sie entstehen beim Verknüpfen von Terminen.
   // Clinical source gaps must stay a draft, never fabricate an insurance clearance.
   report.verordnungStatus=rx.status;
@@ -157,25 +156,33 @@ try{
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   check('Verordnung und Serie nach Reload erhalten',(await tables()).prescriptions.some(r=>r.id===rx.id)&&(await tables()).bookings.filter(b=>series.some(s=>s.id===b.id)).length===3);
   check('Räume und Einzel-/Serienzuordnungen nach Reload erhalten',(await tables()).demo_rooms.some(r=>r.id===room.id&&r.name==='Behandlung Blau')&&(await tables()).demo_room_assignments.filter(a=>a.room_id===room.id).length===4);
-  // Behandlungsdoku: heutigen Vorführtermin (Seed: geplante Sitzung am Demotag) im Kalender starten und dokumentieren.
+  // Durchgehend denselben neuen Patienten, dieselbe bestätigte VO und deren Serientermin verwenden.
   t=await tables();
-  const heuteBk=t.bookings.filter(b=>String(b.start_time).startsWith('2026-10-30')&&t.prescription_sessions.some(x=>x.booking_id===b.id&&x.status==='planned')).sort((a,b)=>a.start_time.localeCompare(b.start_time))[0];
+  const heuteBk=t.bookings.find(b=>b.id===series[0].id&&b.lead_id===patient.id);
+  const dokuSitzung=t.prescription_sessions.find(s=>s.booking_id===heuteBk.id&&s.prescription_id===rx.id);
+  report.dokuBindungen={serie:series.map(b=>b.id),sitzungen:t.prescription_sessions.filter(s=>s.prescription_id===rx.id).map(s=>({id:s.id,nummer:s.session_number,booking_id:s.booking_id,status:s.status}))};
+  check('Dokumentation verwendet neue Patient/VO/Serie',!!dokuSitzung);
   report.dokuTermin=heuteBk&&{name:heuteBk.customer_name,start:heuteBk.start_time};
   await panel('calendar');
-  const tagLabel=async()=>page.locator('#dayViewDateLabel').innerText();
-  for(let i=0;i<5&&!(await tagLabel()).includes('30.');i++){await page.locator('#dayViewNext').click();await page.waitForTimeout(500);}
-  await page.waitForTimeout(800);await page.locator('#dayViewGrid .dv-booking-block',{hasText:heuteBk.customer_name.split(' ').pop()}).first().click({force:true});
+  const index=()=>page.locator('#dayViewGrid .dv-booking-block').evaluateAll((els,id)=>els.findIndex(e=>e._termin?.id===id),heuteBk.id);
+  for(let i=0;i<8&&(await index())<0;i++){await page.locator('#dayViewNext').click();await page.waitForTimeout(500);}
+  assert.ok((await index())>=0,'Neu angelegter Serientermin im Kalender gefunden');
+  await page.locator('#dayViewGrid .dv-booking-block').nth(await index()).click({force:true});
   await page.locator('#demoRoomDetailSelect').selectOption(room.id);
   await page.locator('#demoRoomDetail button').click();
   check('Bestehendem Kalendertermin Raum zugewiesen',(await tables()).demo_room_assignments.some(a=>a.booking_id===heuteBk.id&&a.room_id===room.id));
   await page.locator('#bkActionStartBtn').click();
-  await page.locator('#inputModalField').fill('Synthetische Vorführung: Mobilisation Knie, Übungen angeleitet.');
+  const notiz='Synthetische Vorführung: Mobilisation Knie, Übungen angeleitet.';
+  await page.locator('#inputModalField').fill(notiz);
   await page.locator('#inputModalOk').click();
   await page.waitForFunction(id=>window.__lokaleTestpraxis.tabellen.prescription_sessions.some(x=>x.booking_id===id&&x.status==='done'),heuteBk.id,{timeout:8000});
   t=await tables();const erledigt=t.prescription_sessions.find(x=>x.booking_id===heuteBk.id);
-  check('Behandlung dokumentiert (Sitzung erledigt + Notiz)',erledigt?.status==='done'&&String(erledigt.notes||'').includes('Mobilisation'));
+  check('Behandlung dokumentiert (gleiche Sitzung/VO + exakte Notiz)',erledigt?.id===dokuSitzung.id&&erledigt.prescription_id===rx.id&&erledigt.status==='done'&&erledigt.notes===notiz);
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
-  check('Dokumentation nach Reload erhalten',(await tables()).prescription_sessions.some(x=>x.booking_id===heuteBk.id&&x.status==='done'));
+  const nachReload=await tables();
+  check('Exakte Dokumentation und Patient/VO/Sitzung nach Reload erhalten',nachReload.prescription_sessions.some(x=>x.id===dokuSitzung.id&&x.prescription_id===rx.id&&x.booking_id===heuteBk.id&&x.status==='done'&&x.notes===notiz)&&nachReload.bookings.some(b=>b.id===heuteBk.id&&b.lead_id===patient.id)&&nachReload.prescriptions.some(r=>r.id===rx.id&&r.patient_id===patient.id));
+  await panel('overview');await page.waitForFunction(()=>document.querySelector('.px-k-geld')?.textContent.includes('Zahlen gerade nicht verfügbar'));
+  check('Dynamische Finanzsummen ausdrücklich nicht verfügbar statt feste Seedbeträge',await page.locator('#physioDemoHinweis').innerText().then(t=>t.includes('Dynamische Finanzübersicht nicht verfügbar')));
   await panel('abrechnung');check('Abrechnungsübersicht erreichbar',await page.locator('#panel-abrechnung').isVisible());
   await panel('hours');await page.locator('#demoRoomManager').scrollIntoViewIfNeeded();
   await page.screenshot({path:out+'/raeume-1440.png'});

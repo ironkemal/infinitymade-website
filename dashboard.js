@@ -32,13 +32,13 @@ import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAb
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261021f';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914'; import { dokumentiereSitzung, liesSitzungsnotizEntwurf } from './module/sitzung-dokumentation.js?v=20261030p1';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
-import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261005b';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261030p2';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
@@ -95,7 +95,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261028s247'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021s';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261030p2';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
@@ -139,7 +139,7 @@ import {
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
-import { bindeSitzungenAnTermin, bindeSerieAnVerordnung } from './module/sitzung-bindung.js?v=20261029p1';
+import { bindeSitzungenAnTermin, bindeSerieAnVerordnung } from './module/sitzung-bindung.js?v=20261030p2';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
@@ -3718,7 +3718,7 @@ async function handleTerminStarten() {
   const b = bkActionBookingCache;
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
-  const ownerId = getOwnerId();
+  const ownerId = getOwnerId(), userId = currentSession?.user?.id;
   const istPodoTermin = terminIstPodo(b, getSector()); // s. module/podo-behandlungen-oeffnen.js
 
   // Hausbesuch: fahrt_status'u fahrt_return_pending yap (CHECK-konform), modal'da kal — Fahrt Beenden göster
@@ -3733,7 +3733,7 @@ async function handleTerminStarten() {
       else b.fahrt_status = 'fahrt_return_pending';
     }
     if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
-    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
+    const gespeichert = await markPrescriptionSession(b.id, 'done', undefined, b.start_time, {ownerId,userId}); if (gespeichert.meldung) showToast(gespeichert.meldung, gespeichert.gespeichert ? 'warning' : 'error', 8000); if (!gespeichert.gespeichert) return;
     await renderBkActionFahrtState(b, true);
     return;
   }
@@ -3753,16 +3753,14 @@ async function handleTerminStarten() {
   const sessionNote = await showInputModal({
     title: 'Sitzungsnotiz (optional)',
     message: 'Kurze Notiz zur heutigen Sitzung:',
-    inputLabel: 'Notiz',
+    inputLabel: 'Notiz', defaultValue: liesSitzungsnotizEntwurf({ownerId,userId,bookingId:b.id}),
     inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
     confirmText: 'Sitzung abschließen',
     cancelText: 'Ohne Notiz',
   });
-  if (sessionNote === null) {
-    markPrescriptionSession(b.id, 'done', undefined, b.start_time);
-  } else {
-    markPrescriptionSession(b.id, 'done', sessionNote || undefined, b.start_time);
-  }
+  const gespeichert = await markPrescriptionSession(b.id, 'done', sessionNote === null ? undefined : sessionNote, b.start_time, {ownerId,userId});
+  if (gespeichert.meldung) showToast(gespeichert.meldung, gespeichert.gespeichert ? 'warning' : 'error', 8000);
+  if (!gespeichert.gespeichert) return;
 
   // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
   // Text eines Anzeigefeldes im Panel; das Feld gibt es nicht mehr, gerechnet
@@ -5095,7 +5093,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
   let notes = document.getElementById('bkNotes').value.trim();
-
+  const serienKontext = Object.freeze({ prescriptionId: document.getElementById('bkSelectedRxId')?.value || '', flowPrescriptionId: window._physioFlow?.prescription_id || '', ownerId: getOwnerId(), patientId: custId });
   // Validation: Required fields
   if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }
   if (!srvId) { terminFehler('Bitte eine Leistung auswählen.'); return; }
@@ -5153,7 +5151,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
     // Datensatz: beim Ziehen einer Sitzung auf den Kalender und beim Bearbeiten
     // eines bestehenden Termins ist `_bkGewaehlteRx` leer, das Feld aber gesetzt.
-    const rxId = document.getElementById('bkSelectedRxId')?.value || '';
+    const rxId = serienKontext.prescriptionId;
     let gewaehlteRx = window._bkGewaehlteRx?.id === rxId ? window._bkGewaehlteRx : null;
     if (rxId && !gewaehlteRx) {
       const { data } = await supabase.from('prescriptions')
@@ -5232,7 +5230,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const durMin = dur;
     const payload = {
       userId: empId,
-      ownerId: getOwnerId(),
+      ownerId: serienKontext.ownerId,
       serviceId: srvId,
       startDate: dateStr,
       time: timeStr,
@@ -5262,7 +5260,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     closeModal('bookingModal');
     await refreshBookingViews();
 
-    if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast }); else if (created.length && document.getElementById('bkSelectedRxId')?.value) { const serRx = document.getElementById('bkSelectedRxId').value; const sb = await bindeSerieAnVerordnung(supabase, { prescriptionId: serRx, created, gleicheSitzungenAb }); if (sb.meldung) showToast(sb.meldung, sb.ok ? 'info' : 'error', 8000); if (sb.gebunden) emit('verordnungen:changed', { id: serRx }); } // Physio-Serie mit gewählter Verordnung (29.10.2026, physio+gkv-302): freie Sitzungen belegen, Überhang nur melden
+    if (created.length && serienKontext.flowPrescriptionId) await meldePodoSerienBindung(supabase, { ownerId: serienKontext.ownerId, prescriptionId: serienKontext.flowPrescriptionId, created, emit, toast: showToast }); else if (created.length && serienKontext.prescriptionId) { const serRx = serienKontext.prescriptionId; const sb = await bindeSerieAnVerordnung(supabase, { prescriptionId: serRx, ownerId: serienKontext.ownerId, patientId: serienKontext.patientId, created, gleicheSitzungenAb }); if (sb.meldung) showToast(sb.meldung, sb.ok ? 'info' : 'error', 8000); if (sb.gebunden) emit('verordnungen:changed', { id: serRx }); } // Bindung aus ursprünglichem Speicherkontext; neuer Dialog darf keine andere VO liefern.
     // Terminbestätigung drucken dialog — pass patient email if available
     let _serPatEmail = '';
     if (custId && Array.isArray(window.bkAllLeads)) {
@@ -6474,24 +6472,8 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   return true;
 }
 
-async function markPrescriptionSession(bookingId, status, notes, terminStart) {
-  if (!bookingId) return;
-  try {
-    const patch = { status };
-    if (status === 'done') patch.done_at = terminStart || new Date().toISOString(); // Leistungsdatum = Termintag, nicht Klickzeit
-    if (notes !== undefined && notes !== null) patch.notes = notes;
-    // Kombi-Termin = mehrere Sitzungen je booking_id → kein maybeSingle() (PGRST116, Rezept nie 'bereit').
-    const { data: rows, error } = await supabase
-      .from('prescription_sessions')
-      .update(patch).eq('booking_id', bookingId)
-      .select('prescription_id');
-    if (error) { console.warn('[session update]', error); return; }
-    // Fortschritt + §302-Weiche: module/sitzungsfortschritt.js (Warum dort: leere
-    // Platzhalter-Sitzungen hielten das Rezept sonst ewig von 'bereit' fern).
-    for (const rxId of new Set((rows || []).map(r => r.prescription_id).filter(Boolean))) await pruefeVerordnungsfortschritt(supabase, rxId);
-  } catch (e) {
-    console.warn('[markPrescriptionSession]', e);
-  }
+async function markPrescriptionSession(bookingId, status, notes, terminStart, {ownerId,userId} = {}) {
+  return dokumentiereSitzung({supabase,bookingId,status,notes,terminStart,ownerId,userId,fortschritt:pruefeVerordnungsfortschritt});
 }
 
 async function decorateBookingTitleWithSession(bookingId) {

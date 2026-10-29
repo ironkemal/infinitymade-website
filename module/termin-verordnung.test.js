@@ -178,6 +178,23 @@ test('waehleVerordnung: Physio setzt Sitzungspunkte und naechste Session', async
   assert.equal(el.bkSelectedSessionId.value, 'sess-1');
 });
 
+test('waehleVerordnung: automatische Vorauswahl erhält gebundene Seriensitzungen', async () => {
+  const el = setupWaehleDom();
+  const rx = { id: 'rx-serie', therapie_bereich: 'physio', anzahl_einheiten: 6 };
+  await waehleVerordnung(rx, [
+    { id: 'gebunden', session_number: 1, status: 'planned', booking_id: 'serie-1' },
+    { id: 'erledigt', session_number: 2, status: 'done', booking_id: null },
+    { id: 'frei', session_number: 4, status: 'planned', booking_id: null },
+  ]);
+  assert.deepEqual(window._pendingRxSession, { sessionId: 'frei', prescriptionId: 'rx-serie' });
+  assert.equal(el.bkSelectedSessionId.value, 'frei');
+  await waehleVerordnung(rx, [
+    { id: 'gebunden', session_number: 1, status: 'planned', booking_id: 'serie-1' },
+  ]);
+  assert.equal(window._pendingRxSession, null);
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Alle Sitzungen bereits vergeben.');
+});
+
 test('waehleVerordnung: Physio meldet Alle vergeben wenn sessions leer sind', async () => {
   const el = setupWaehleDom();
   const rx = {

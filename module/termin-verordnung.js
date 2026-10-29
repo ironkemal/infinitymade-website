@@ -234,7 +234,7 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
     }
   } else {
     const offeneSessions = (sessions || [])
-      .filter(s => !s.booking_id || s.status === 'planned')
+      .filter(s => !s.booking_id && s.status === 'planned')
       .sort((a, b) => a.session_number - b.session_number);
     const naechste = offeneSessions[0] || null;
 

@@ -31,6 +31,12 @@ export async function ladeErbrachteSitzungen({ supabase, rx, tenantId }) {
     return { podo: true, sitzungen: flacheBehandlungen(data) };
   }
   const code = rx?.heilmittel_position || '';
+  if ((rx?.prescription_sessions || []).some(s => s.status === 'done' && s.heilmittel_index !== 0 && s.heilmittel_index !== null)) {
+    const e = new Error('Leistungsposition nicht eindeutig zugeordnet. Abrechnung gesperrt.');
+    e.status = 422;
+    e.code = 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT';
+    throw e;
+  }
   const sitzungen = (rx?.prescription_sessions || [])
     .filter(s => s.status === 'done')
     .map(s => ({ id: s.id, done_at: s.done_at || null, code }))

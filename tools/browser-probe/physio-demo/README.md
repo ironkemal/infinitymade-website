@@ -2,7 +2,7 @@
 
 ## Für Partner: in drei Schritten starten
 
-Voraussetzung: Node.js (Version 20 oder neuer) und das Praxura-Repository. `npm install` ist **nicht** nötig.
+Voraussetzung: Node.js (Version 20 oder neuer) und das Praxura-Repository. `npm install` ist **nicht** nötig. Remote-Anleitung setzt voraus, dass der gewünschte Commit bereits auf dem Branch veröffentlicht wurde; ungepushte lokale Änderungen werden damit nicht übertragen.
 
 1. Branch holen: `git fetch origin && git checkout redesign/praxura-design && git pull`
 2. Starten (macOS/Linux): `TAG=2026-10-30 node tools/browser-probe/physio-demo/server.mjs`
@@ -12,7 +12,11 @@ Voraussetzung: Node.js (Version 20 oder neuer) und das Praxura-Repository. `npm 
 Angestelltenansicht: zusätzlich `ROLLE=employee` (PowerShell: `$env:ROLLE="employee"`). Beenden mit Strg+C.
 Vorführweg: Leistungen → Patient anlegen → Anamnese → Verordnung (Heilmittel aus der Liste wählen) →
 Termin mit Verordnung, „Mehr Optionen“ → „Serientermin“ → Kalender: Termin anklicken → „Termin starten“ → Notiz.
-Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Abrechnungszahlen sind feste Beispiele.
+Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Dynamische Finanzübersicht ist ausdrücklich nicht verfügbar; der lokale Server liefert dafür keine festen Beispielbeträge mehr. Abrechnungsseite ist bedienbar, eine vollständige dynamische Abrechnungskette ist damit noch nicht abgenommen.
+
+Aktueller lokaler Arbeitsordner: `/Users/melihdonmez/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch `redesign/praxura-design`. Vor Start `git rev-parse --short HEAD` und `git status --short` prüfen; Nachweise am Arbeitsstand sind kein veröffentlichter Releasepin.
+
+Behandlungsdokumentation wartet bestätigte Sitzungszeile einschließlich exaktem Notiztext ab. Speicherfehler oder fehlende Bindung halten den Ablauf an; Notiz bleibt für denselben Benutzer/Owner/Termin im Arbeitsspeicher erneut verfügbar. Browserneustart verwirft diesen ungespeicherten Entwurf. Seriensitzungen werden nur innerhalb verordneter Nummern, passender Owner-/Patientenbindung und atomar freiem `planned`-Stand beansprucht. Automatische Einzelterminauswahl übernimmt keine bereits gebundene Seriensitzung.
 
 ## Räume für Termine
 
@@ -53,8 +57,9 @@ Die mitgelieferten Physio-Daten werden vor einem vorhandenen Browserstand gelade
 - Leistungszuordnung `employee_services` ist lokal schreibbar. Neue `anamnese`-Einträge emulieren ausschließlich für die Demo die Versionierung pro Owner/Patient/Fachbereich: bisherige Versionen werden inaktiv, neue Version wird aktuell. Das ist keine Abnahme des echten DB-Triggers oder seiner Transaktionssicherheit.
 - Ausschließlich `POST /api/rezept/confirm`, `PATCH /api/rezept/<UUID>` und `POST /api/booking/batch-create` werden über einen lokalen Browseradapter an Originalhandler mit synthetischem Speicher gereicht. Ohne verfügbare Engine Fehler 503. Keine echte DB oder Produktionsauthentifizierung. Sonstige Backendaktionen einschließlich Slotabfrage bleiben gesperrt/501.
 - Die interne Engine-Schnittstelle akzeptiert nur lokalen Host und Origin, JSON bis 2 MiB und die drei erlaubten Pfade. Nur erfolgreiche Antworten werden gespeichert. Fehler verwerfen auch mögliche interne Teiländerungen: diese lokale Transaktionshülle ist kein Beleg für Produktions-Transaktionsverhalten. Parallele Aktionen oder zwischenzeitlich geänderter Browserstand ergeben 409 statt Überschreiben.
-- Versand, KI, OAuth, Zahlungen und Storage-Uploads sind gesperrt. Finanzkarten verwenden feste, ausdrücklich gekennzeichnete Beispiele und rechnen neue Eingaben nicht nach.
+- Versand, KI, OAuth, Zahlungen und Storage-Uploads sind gesperrt. Dynamische Finanzkarten liefern ausdrücklich nicht verfügbar (501), keine erfundenen Summen oder aus einem Seed abgeleitete Vollständigkeit.
 - Original-Lesefixture ist teilweise nachsichtig: unbekannte Tabellen können leere Ergebnisse liefern und komplexe Lesefilter werden nicht vollständig ausgewertet. Keine Vollständigkeits-/Scope-Aussage daraus ableiten.
+- Ein gezielt unterstützter Standortfilter `business_id.eq.<UUID>,business_id.is.null` schneidet zusammen mit dem gesendeten Ownerfilter A/NULL gegen B/Fremdowner zu. Das belegt nur diesen lokalen Filter, keine allgemeine Mehrstandort-/RLS-Abnahme. OR-Schreibwege bleiben gesperrt.
 - Nicht unterstützte Schreibfilter/RPCs scheitern ausdrücklich. Ungefilterte Updates und Löschungen sind gesperrt. LocalStorage-Fehler setzen die lokale Tabellenänderung zurück.
 - Nur Runtime-Dateien werden lokal ausgeliefert. HTTP+WS dürfen aufgrund CSP ausschließlich lokal bleiben; der Server leitet nichts an externe Dienste weiter.
 

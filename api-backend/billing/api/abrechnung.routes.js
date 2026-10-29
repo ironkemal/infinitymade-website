@@ -513,6 +513,12 @@ function buildBelegnummer(row, patientennummer) {
 // entfernt. `tariffs` (heilmittel_tarif-Override) ebenso entfernt (13.09.2026,
 // O-96) — resolvePreis() liest nur noch den Katalog, siehe dessen Kopfkommentar.
 function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sector = 'physiotherapy') {
+  if ((rx.prescription_sessions || []).some(s => s.status === 'done' && s.heilmittel_index !== 0 && s.heilmittel_index !== null)) {
+    const e = new Error('Leistungsposition nicht eindeutig zugeordnet. Abrechnung gesperrt.');
+    e.status = 422;
+    e.code = 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT';
+    throw e;
+  }
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
     err.status = 422;
@@ -886,7 +892,7 @@ router.post('/abrechnung/create', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id (
             id, user_id, service_id,
             services:service_id (id, required_certificate)
@@ -2703,7 +2709,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at)
+        prescription_sessions (id, session_number, status, done_at, heilmittel_index)
       `)
       .eq('id', req.params.id)
       .single();
@@ -2726,7 +2732,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     // Podologie: podologie_behandlungen × HPNR (canli-test T31, 10.10.2026) — siehe erbrachte-sitzungen.js.
     let erbracht;
     try { erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId }); }
-    catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
+    catch (e) { return e.code === 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT' ? res.status(422).json({ error: e.message, code: e.code }) : res.status(500).send('Behandlungen konnten nicht geladen werden'); }
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
 
@@ -3070,7 +3076,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city, patientennummer),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at)
+        prescription_sessions (id, session_number, status, done_at, heilmittel_index)
       `)
       .eq('id', req.params.id)
       .single();
@@ -3086,7 +3092,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     // Podologie: podologie_behandlungen × HPNR (canli-test T31, 10.10.2026) — siehe erbrachte-sitzungen.js.
     let erbracht;
     try { erbracht = await ladeErbrachteSitzungen({ supabase, rx, tenantId }); }
-    catch (e) { return res.status(500).send('Behandlungen konnten nicht geladen werden'); }
+    catch (e) { return e.code === 'HEILMITTEL_ZUORDNUNG_UNGEKLAERT' ? res.status(422).json({ error: e.message, code: e.code }) : res.status(500).send('Behandlungen konnten nicht geladen werden'); }
     const doneSessions = erbracht.sitzungen;
     const preisBereich = erbracht.podo ? 'podologie' : tenantSector;
     const resolvedSessions = loeseSitzungenAuf(rx, erbracht, preisBereich);
@@ -3615,7 +3621,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id (
             id, user_id, service_id,
             services:service_id (id, required_certificate)
@@ -4823,7 +4829,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer, street, plz, city),
         aerzte:arzt_id   (id, arzt_name, lanr, bsnr),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
         )
       `)

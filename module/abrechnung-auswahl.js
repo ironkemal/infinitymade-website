@@ -514,7 +514,7 @@ export async function ladeAbrechnungAuswahl() {
         diagnosegruppe, frequenz, leitsymptomatik, arzt_id, doctor_lanr, doctor_bsnr,
         leads:patient_id(first_name,last_name,geburtsdatum,versichertenstatus,krankenkasse,versichertennummer,patientennummer),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
         )
       `)
@@ -563,7 +563,11 @@ export async function ladeAbrechnungAuswahl() {
     if (!imZeitraum(rx.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis)) { ausgefiltert++; continue; }
     _st.rxRoh.set(rx.id, rx);
     const pos = _findePhysioPosition(rx.heilmittel_position, positionen);
-    const zz = zuzahlungFuerRezept(rx, pos);
+    const zuordnungUngeklaert = (rx.prescription_sessions || []).some(s => s.status === 'done' && s.heilmittel_index !== 0 && s.heilmittel_index !== null);
+    const erbracht = (rx.prescription_sessions || []).filter(s => s.status === 'done').length;
+    const zz = zuordnungUngeklaert
+      ? { einheiten: erbracht, erbracht, verordnet: Number(rx.anzahl_einheiten) || 0, brutto: null, gesamt: null }
+      : zuzahlungFuerRezept(rx, pos);
     const issues = checkPrescriptionCompliance(rx, certsMap);
     const lead = rx.leads || {};
     const zeile = {
@@ -575,11 +579,11 @@ export async function ladeAbrechnungAuswahl() {
       patient: [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—',
       mittel: rx.heilmittel || '—',
       positionCode: rx.heilmittel_position || '',
-      positionBekannt: !!pos,
+      positionBekannt: !!pos && !zuordnungUngeklaert,
       einheiten: zz.einheiten,
       verordnet: zz.verordnet,
-      brutto: pos ? zz.brutto : 0,
-      zuzahlung: pos ? zz.gesamt : 0,
+      brutto: zuordnungUngeklaert ? null : (pos ? zz.brutto : 0),
+      zuzahlung: zuordnungUngeklaert ? null : (pos ? zz.gesamt : 0),
       befreit: !!rx.zuzahlung_befreit,
       // `!rx.heilmittel_position`, fehlender Patientenbezug und keine
       // erbrachte Sitzung sind wie die podologischen Strukturblocker NICHT
@@ -589,11 +593,12 @@ export async function ladeAbrechnungAuswahl() {
       // der VERORDNETEN Menge (gkv-302 Audit) — die Prüfung hier ist also
       // KEIN Spiegel eines länger bestehenden Server-Verhaltens, sondern
       // zieht mit dessen Korrektur gleich.
-      blockiert: istHarterRiegel(issues) || !rx.heilmittel_position || !rx.patient_id || !lead.last_name || zz.erbracht === 0,
+      blockiert: zuordnungUngeklaert || istHarterRiegel(issues) || !rx.heilmittel_position || !rx.patient_id || !lead.last_name || zz.erbracht === 0,
       hinweise: _physioHinweise(issues, rx, lead, zz),
     };
-    zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
-    zeilen.push(zeile);
+    zeile.soll = zuordnungUngeklaert ? null : kassenanteil(zeile.brutto, zeile.zuzahlung);
+    if (zuordnungUngeklaert) fehlerhaft.push({ bereich: 'physio', zeile, gruende: ['Leistungsposition nicht eindeutig zugeordnet. Betrag unbekannt; Abrechnung gesperrt.'], uebersteuerbar: false });
+    else zeilen.push(zeile);
   }
 
   // ── Podologie ────────────────────────────────────────────────────────────
@@ -1031,7 +1036,7 @@ function fehlerhaftHtml() {
           style="padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
           <div style="font-size:13px;font-weight:600;color:var(--text-main);">
             ${esc(zeile.patient)}
-            <span style="font-weight:400;color:var(--text-muted);">· Beleg ${esc(zeile.nummer)} · ${esc(fmtEur(zeile.soll))}</span>
+            <span style="font-weight:400;color:var(--text-muted);">· Beleg ${esc(zeile.nummer)} · ${zeile.soll === null ? 'Betrag unbekannt' : esc(fmtEur(zeile.soll))}</span>
           </div>
           <ul style="margin:6px 0 8px;padding-left:18px;font-size:12px;color:var(--text-muted);">
             ${gruende.map(gr => `<li>${esc(gr)}</li>`).join('')}

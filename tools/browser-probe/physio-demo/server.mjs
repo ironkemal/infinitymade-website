@@ -43,7 +43,7 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
   fixture = ersetzeGenau(fixture, 'upsert(d) { this.schreib = [\'upsert\', d]; return this; }', 'upsert(d,opts={}) { this.conflict=opts.onConflict; this.schreib = [\'upsert\', d]; return this; }');
   fixture = ersetzeGenau(fixture,
     'or() { return this; } filter() { return this; } match() { return this; } contains() { return this; }',
-    'or() { this.unsupported=true; return this; } filter() { this.unsupported=true; return this; } match(obj) { for(const [k,v] of Object.entries(obj)) this.eq(k,v); return this; } contains() { this.unsupported=true; return this; }');
+    String.raw`or(value) { this.unsupported=true; const m=/^business_id\.eq\.([0-9a-f-]{36}),business_id\.is\.null$/i.exec(value); if(m)this.filter.push(r=>r.business_id===m[1]||r.business_id==null); return this; } filter() { this.unsupported=true; return this; } match(obj) { for(const [k,v] of Object.entries(obj)) this.eq(k,v); return this; } contains() { this.unsupported=true; return this; }`);
   fixture = ersetzeGenau(fixture,
     'containedBy() { return this; } overlaps() { return this; } textSearch() { return this; }',
     'containedBy() { this.unsupported=true; return this; } overlaps() { this.unsupported=true; return this; } textSearch() { this.unsupported=true; return this; }');
@@ -144,7 +144,7 @@ window.fetch=async(input,init={})=>{
   } catch(error) {if(error?.name==='AbortError')throw error;return antwort(503,{error:'Lokale Demoaktion konnte nicht gespeichert werden.'});}
   finally {demoEngineBusy=false;}
 };
-window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Finanzkarten: feste Beispiele · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
+window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Finanzübersicht nicht verfügbar · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
 }
 
 export function erstelleHandler({root, port, rolle, fixture, boot, antworten = API_ANTWORTEN, engine = async(args)=>(await import('./engine.mjs')).fuehreDemoAktionAus(args)}) {
@@ -172,6 +172,7 @@ export function erstelleHandler({root, port, rolle, fixture, boot, antworten = A
       }
       if(!['GET','HEAD'].includes(req.method)) return json(501,{error:'Lokale Testversion: Backendaktionen, Versand, KI und Zahlungen sind gesperrt.'});
       if(u.pathname==='/api/config') return json(200,{supabaseUrl:'https://synthetic.invalid',supabaseAnonKey:'synthetisch-anon',apiBase:'/api',istKutu:false,telemetryEnabled:false});
+      if(u.pathname==='/api/startseite/zusammenfassung') return json(501,{error:'Dynamische Finanzübersicht in der lokalen Testpraxis nicht verfügbar. Keine berechneten Finanzsummen.'});
       if(u.pathname.startsWith('/api/')) { const x=Object.hasOwn(antworten,u.pathname)?antworten[u.pathname]:null; return x?json(200,typeof x==='function'?await x({rolle}):x):json(501,{error:'Lokale Testversion: dieser Backend-Leseweg ist nicht verfügbar.'}); }
       if(u.pathname==='/vendor/supabase-js.js'||u.pathname==='/demo-boot.js') {res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:u.pathname==='/demo-boot.js'?boot:fixture);}
       if(u.pathname==='/demo-raeume.mjs'){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:await readFile(new URL('./raeume.mjs',import.meta.url)));}

@@ -52,6 +52,15 @@ test('targeted delete preserves unrelated patient',async()=>{
   await api.client.from('leads').delete().match({id:'p1'});
   assert.equal(api.tabellen.leads.length,1);assert.equal(api.tabellen.leads[0].id,'p2');
 });
+test('existing bizScope OR reads own active location plus NULL, never B or foreign owner; writes remain unsupported',async()=>{
+  const {api}=fixture(),a='70000000-0000-4000-8000-000000000001',b='70000000-0000-4000-8000-000000000002';
+  await api.client.from('leads').insert([{id:'A',owner_id:owner,business_id:a},{id:'B',owner_id:owner,business_id:b},{id:'ALT',owner_id:owner,business_id:null},{id:'FREMD',owner_id:'foreign',business_id:a}]);
+  const scope=`business_id.eq.${a},business_id.is.null`;
+  const read=await api.client.from('leads').select().eq('owner_id',owner).or(scope);
+  assert.deepEqual(read.data.map(r=>r.id),['A','ALT']);
+  const change=await api.client.from('leads').update({notes:'verboten'}).eq('owner_id',owner).or(scope);
+  assert.equal(change.error.code,'LOCAL_UNSUPPORTED');assert.ok(api.tabellen.leads.every(r=>r.notes===undefined));
+});
 test('service assignment reads rebuild relations after delete and insert',async()=>{
   const {api}=fixture();const c=api.client;
   await c.from('employee_services').insert({employee_id:owner,service_id:'s1'});
@@ -105,7 +114,7 @@ test('fixture connection drift fails before serving',()=>{
 test('CLI options reject public/invalid settings and boot states limits',()=>{
   for(const options of [{port:80},{port:'18086x'},{rolle:'admin'},{tag:'2026-02-30'}]) assert.throws(()=>pruefeOptionen(options));
   assert.deepEqual(pruefeOptionen({port:'18086',rolle:'employee',tag:'2026-10-30'}),{port:18086,rolle:'employee',tag:'2026-10-30'});
-  assert.match(baueBoot({rolle:'owner',tag:'2026-10-30'}),/Finanzkarten: feste Beispiele/);
+  assert.match(baueBoot({rolle:'owner',tag:'2026-10-30'}),/Dynamische Finanzübersicht nicht verfügbar/);
   assert.match(CSP,/connect-src 'self'/);
 });
 async function request(handler,url,{method='GET',host='127.0.0.1:18086'}={}) {
@@ -117,6 +126,10 @@ test('handler serves local app and denies backend mutation, unknown API, foreign
   const html=await request(handler,'/dashboard.html');assert.equal(html.status,200);assert.match(String(html.body),/src="\/demo-boot.js"/);
   assert.equal(html.headers['Content-Security-Policy'],CSP);
   assert.equal((await request(handler,'/api/safe')).status,200);
+  const finanzen=await request(handler,'/api/startseite/zusammenfassung?bloecke=abrechnung');
+  assert.equal(finanzen.status,501);
+  assert.match(finanzen.body,/Keine berechneten Finanzsummen/);
+  assert.equal(JSON.parse(finanzen.body).bloecke,undefined);
   assert.equal((await request(handler,'/api/safe',{method:'POST'})).status,501);
   assert.equal((await request(handler,'/api/booking/create')).status,501);
   assert.equal((await request(handler,'/dashboard.html',{host:'attacker.invalid'})).status,403);

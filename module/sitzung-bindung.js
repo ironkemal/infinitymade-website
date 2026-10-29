@@ -103,19 +103,20 @@ export function bindungsFehlerText({ erwartet, gebunden, dbMeldung }) {
  * Anzahl, abgelaufen ohne Behandlungsbeginn. Frequenz-/Fristprüfung bleiben wo sie sind.
  *
  * @param {object} supabase
- * @param {{prescriptionId:string, created:Array<{id:string,start_time?:string,date?:string}>, gleicheSitzungenAb:Function, heute?:string}} o
+ * @param {{prescriptionId:string, ownerId:string, patientId:string, created:Array<{id:string,start_time?:string,date?:string}>, gleicheSitzungenAb:Function, heute?:string}} o
  * @returns {Promise<{ok:boolean, gebunden:number, ueberhang:number, meldung:string}>}
  */
-export async function bindeSerieAnVerordnung(supabase, { prescriptionId, created, gleicheSitzungenAb, heute } = {}) {
+export async function bindeSerieAnVerordnung(supabase, { prescriptionId, ownerId, patientId, created, gleicheSitzungenAb, heute } = {}) {
   const termine = (created || []).filter((c) => c?.id)
     .sort((a, b) => String(a.start_time || a.date || '').localeCompare(String(b.start_time || b.date || '')));
   const nichts = (meldung = '') => ({ ok: true, gebunden: 0, ueberhang: 0, meldung });
   if (!supabase || !prescriptionId || !termine.length) return nichts();
+  if (!ownerId || !patientId) return {ok:false,gebunden:0,ueberhang:termine.length,meldung:'Termine gespeichert, aber Praxis oder Patient der Verordnung ist ungeklärt — Einheiten bitte im Verordnungs-Panel zuordnen.'};
 
   const { data: rx, error: rxFehler } = await supabase.from('prescriptions')
-    .select('id, status, anzahl_einheiten, gueltig_bis, behandlungsbeginn, therapie_bereich')
-    .eq('id', prescriptionId).maybeSingle();
-  if (rxFehler || !rx) return { ok: false, gebunden: 0, ueberhang: termine.length, meldung: 'Termine gespeichert, aber die Verordnung war nicht lesbar — Einheiten bitte im Verordnungs-Panel zuordnen.' };
+    .select('id, owner_id, patient_id, status, anzahl_einheiten, gueltig_bis, behandlungsbeginn, therapie_bereich')
+    .eq('id', prescriptionId).eq('owner_id',ownerId).eq('patient_id',patientId).maybeSingle();
+  if (rxFehler || !rx || rx.id!==prescriptionId || rx.owner_id!==ownerId || rx.patient_id!==patientId) return { ok: false, gebunden: 0, ueberhang: termine.length, meldung: 'Termine gespeichert, aber die Verordnung war nicht für diese Praxis und diesen Patienten lesbar — Einheiten bitte im Verordnungs-Panel zuordnen.' };
   if (rx.therapie_bereich === 'podo') return nichts();
   if (['completed', 'billed', 'cancelled'].includes(rx.status)) return nichts('Termine gespeichert. Die gewählte Verordnung ist abgeschlossen — es wurden keine Einheiten zugeordnet.');
   if (!Number.isInteger(rx.anzahl_einheiten) || rx.anzahl_einheiten <= 0) return nichts('Termine gespeichert. Die Verordnung nennt keine Anzahl Einheiten — bitte Einheiten von Hand zuordnen.');
@@ -132,11 +133,18 @@ export async function bindeSerieAnVerordnung(supabase, { prescriptionId, created
 
   let gebunden = 0;
   const fehler = [];
-  const paare = Math.min(termine.length, (freie || []).length);
+  const kandidaten=(freie||[]).filter(s=>Number.isInteger(s.session_number)&&s.session_number>=1&&s.session_number<=rx.anzahl_einheiten);
+  const paare = Math.min(termine.length, kandidaten.length);
   for (let i = 0; i < paare; i++) {
-    const r = await bindeSitzungenAnTermin(supabase, termine[i].id, [freie[i].id]);
-    gebunden += r.gebunden;
-    if (!r.ok) fehler.push(r.meldung);
+    const id=kandidaten[i].id;
+    // Claim nur im Serienweg: ein anderer Vorgang darf die Zeile inzwischen
+    // gebunden/erbracht haben. Der allgemeine Umbindungshelfer bleibt unverändert.
+    const {data,error}=await supabase.from('prescription_sessions')
+      .update({booking_id:termine[i].id,status:'planned'}).eq('id',id)
+      .eq('prescription_id',prescriptionId).is('booking_id',null).eq('status','planned').select('id');
+    const anzahl=!error&&Array.isArray(data)&&data.some(s=>s.id===id)?1:0;
+    gebunden+=anzahl;
+    if(!anzahl)fehler.push(bindungsFehlerText({erwartet:1,gebunden:0,dbMeldung:error?.message||''}));
   }
   const ueberhang = termine.length - gebunden;
   if (fehler.length) return { ok: false, gebunden, ueberhang, meldung: fehler[0] };
