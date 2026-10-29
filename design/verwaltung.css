@@ -144,3 +144,34 @@
     text-align: left;
   }
 }
+
+/* Abschlussgruppe: ausschließlich Tippflächen; Fachstatus bleibt im Bestand. */
+@media screen {
+  [data-design="neu"] :is(#panel-statistik, #panel-ueberblick, #panel-podologie-billing, #panel-abrechnung) :is(button, a, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] :is(#panel-podologie-billing, #panel-abrechnung) label:has(input:is([type="checkbox"], [type="radio"])) {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Einzelne native Auswahl ohne Label: eigene, unverdeckte Tippfläche. */
+  [data-design="neu"] #panel-abrechnung .ab-gruppe-check {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-abrechnung #abDetailPanel > div:first-child {
+    flex-wrap: wrap;
+  }
+}
+
+@media screen {
+  /* Native Datumssegmente behalten den Ring auch bei interner Tab-Navigation. */
+  [data-design="neu"] #panel-abrechnung :is(#abZeitraumVon, #abZeitraumBis):focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
