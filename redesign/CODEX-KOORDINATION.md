@@ -1305,3 +1305,22 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
   Bestehende18Browserfälle/9Tests nicht erneut ausgeführt.
 - V8.03 bleibt gestoppt; restliche9V8.04Panels offen. Keine fremden Edits.
   Übergabe dedupliziert: praxura-v804a-a808a110-delivery-check-20261028-01.
+
+## 2026-10-29 — V2.09c Rechnungsdialog gezielt nachgeprüft
+- Eigener Startstand7fc08e50 sauber; PRIMARY09a69de7. Aktuelle Übergaben
+  gelesen; B2B/B2C bei BesitzerB, V8.03 weiter gestoppt. Keine Doppelarbeit.
+- Fix62d49626 gegen direkten Vorgänger:8/8 vergleichende Node-VM-Fälle
+  mit tatsächlichem dokumentDialog/createDokumentSuche und minimalem DOM-Double
+  grün. Je Stand Erfolg, Fehler, Scopewechsel und Timeout ausgeführt.
+- Fix hält geklonten Rechnungsbereich während Laden verborgen; Vorgänger
+  zeigt ihn in allen vier Fällen. Erfolg zeigt NEW-B; Fehler/Timeout nur
+  festen Fehlertext. Scopewechsel entfernt Dialog; verspätete Antwort nach
+  Timeout gibt Inhalt nicht frei. Gemeinsames Originaltemplate bleibt OLD-A.
+- Enger unabhängiger Nachweis für Verbergen/Freigabe/Stale-Antworten. Kein
+  vollständiger Rechnungsrenderer, Browser-, Layout-, CSS-, RLS- oder
+  Live-Nachweis. Keine Produktdateien, Server, Netz- oder DB-Aufrufe.
+- Bestehende Integratornachweise31Tests/4OriginalDOM-Fälle separat; nicht
+  wiederholt. Keine Fullsuite und keine neue Reviewdelegation.
+- Nachprüfbedarf des konkreten Altinhalt-P2 im geprüften Umfang geschlossen;
+  keine pauschale Such-/V9-Freigabe. Main/V10/Live-DB bleiben gesperrt.
+- Übergabe: praxura-v209c-62d49626-independent-domdouble-20261029-01.
