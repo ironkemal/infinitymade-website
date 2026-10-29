@@ -1,5 +1,19 @@
 # Lokale Physiotherapie-Testpraxis
 
+## Für Partner: in drei Schritten starten
+
+Voraussetzung: Node.js (Version 20 oder neuer) und das Praxura-Repository. `npm install` ist **nicht** nötig.
+
+1. Branch holen: `git fetch origin && git checkout redesign/praxura-design && git pull`
+2. Starten (macOS/Linux): `TAG=2026-10-30 node tools/browser-probe/physio-demo/server.mjs`
+   Windows (PowerShell): `$env:TAG="2026-10-30"; node tools/browser-probe/physio-demo/server.mjs`
+3. Im Browser öffnen: http://127.0.0.1:18086/dashboard.html?design=neu
+
+Angestelltenansicht: zusätzlich `ROLLE=employee` (PowerShell: `$env:ROLLE="employee"`). Beenden mit Strg+C.
+Vorführweg: Leistungen → Patient anlegen → Anamnese → Verordnung (Heilmittel aus der Liste wählen) →
+Termin mit Verordnung, „Mehr Optionen“ → „Serientermin“ → Kalender: Termin anklicken → „Termin starten“ → Notiz.
+Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Abrechnungszahlen sind feste Beispiele.
+
 Start aus dem Repository:
 
 ```sh

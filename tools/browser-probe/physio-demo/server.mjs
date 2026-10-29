@@ -3,7 +3,7 @@ import {createServer} from 'node:http';
 import {readFile, realpath} from 'node:fs/promises';
 import {dirname, resolve, extname, sep} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
-import {API_ANTWORTEN} from '../../redesign-harness.mjs';
+import {API_ANTWORTEN} from '../../redesign-api-antworten.mjs';
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 export const SPEICHER_KEY = 'praxura-physio-demo-v1';

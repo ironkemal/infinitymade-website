@@ -6,13 +6,14 @@ import {erstelleDemoServer} from './server.mjs';
 
 const out=process.env.PHYSIO_BERICHT||'/tmp/praxura-physio-probe';
 await mkdir(out,{recursive:true});
-const demo=await erstelleDemoServer({port:18086,tag:'2026-10-30'});
+const PORT=Number(process.env.PORT||18086);
+const demo=await erstelleDemoServer({port:PORT,tag:'2026-10-30'});
 const report={checks:[],errors:[],blocked:[],api:[]};
 const browser=await chromium.launch();
 const context=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});
 await context.route('**/*',r=>{
   const u=new URL(r.request().url());
-  if(u.origin!=='http://127.0.0.1:18086'){report.blocked.push(u.origin);return r.abort();}
+  if(u.origin!==`http://127.0.0.1:${PORT}`){report.blocked.push(u.origin);return r.abort();}
   return r.continue();
 });
 await context.routeWebSocket('**/*',s=>s.close());
