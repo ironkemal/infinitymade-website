@@ -1324,3 +1324,17 @@ Dieser Abschnitt ersetzt die oben beschriebenen damaligen Wartezustände.
 - Nachprüfbedarf des konkreten Altinhalt-P2 im geprüften Umfang geschlossen;
   keine pauschale Such-/V9-Freigabe. Main/V10/Live-DB bleiben gesperrt.
 - Übergabe: praxura-v209c-62d49626-independent-domdouble-20261029-01.
+
+## 2026-10-29 — B2B/B2C-Integration unabhängig quellengeprüft
+- PRIMARY2843f157: Lieferung98771c70 integriert. Frühere Wartebedingung
+  B2B/B2C damit erledigt; keine weitere wartende Lieferung behaupten.
+- 6/6 eigene Quellchecks grün: Liefer-CSS-Delta exakt; alle vorherigen
+  CSS-Regeln einschließlich Hoverfix erhalten; screen/neu/nur zwei Panels;
+  exakt ein Link mit Cache254; ausschließlich sechs Integrationspfade ohne
+  Runtime-JS/Backend; Übergabe bytegleich zum Liefercommit.
+- Keine Produktänderung, Browser-/Bildmatrix, Fullsuite, Netz oder DB.
+  Integrator16Zustände/2Altproben/24Tests bleiben separate Nachweise. Kein
+  eigenes visuelles, Tastatur-, Status-, Rollen-/RLS-/Liveurteil.
+- Vier Restpanels bleiben offen und ohne Scopeerweiterung; V8.03/R23
+  weiterhin gestoppt, V7/V9 offen. Main/V10/Live-DB bleiben gesperrt.
+- Übergabe: praxura-v804d-2843f157-source-integration-20261029-01.
