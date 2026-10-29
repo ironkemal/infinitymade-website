@@ -1,6 +1,6 @@
 # V8.04 — Verwaltungsansichten
 
-Stand: Gruppe 1 zentral integriert; Gruppe 2 lokal geprüft. V8.04 insgesamt offen.
+Stand: Gruppe 1 zentral integriert; Notizen/Feedback/Demo und B2B/B2C lokal geliefert. V8.04 insgesamt offen.
 
 - Basis: `3c010868075ad9144f3835eacc0a4966dc69f07b`.
 - Worktree: `/private/tmp/praxura-v804-verwaltung`.
@@ -158,16 +158,95 @@ berücksichtigt vorhandene sichtbare li[data-id], erzwingt deren Anzahl jedoch n
 Kein zweiter Review oder Gruppe-1-Neutest ausgeführt. Selektiver Gruppe-2-Commit
 auf eigenem Branch; Hash in Liefermeldung/git log.
 
+## Folgegruppe: B2B/B2C — begrenzter Folgediff
+
+Neuer Auftrag nennt B2B/B2C/Feedback/Beispielmodus. Feedback und Beispielmodus
+bereits in `908d83c2e84c075fba52d1247415aa8505083bdc` geliefert, daher keine
+Wiederholungsabnahme. Dieser Folgediff ausschließlich `#panel-b2b`/`#panel-b2c`.
+Eigener bestehender Worktree/Branch bleiben erhalten; tatsächliche Commitbasis
+`908d83c2`, dessen Vorgänger `a808a110`. Kein Reset oder weiterer Merge.
+Ein Gesamtdiff gegen `abb3c38a` enthält auch die schon gelieferte Notizgruppe;
+für neue Integration ausschließlich den neuen Commitpatch verwenden.
+
+Problem: mobil gemessene Suchfelder nur 26 px breit, AI-Eingabe bis x=509 und
+Senden bis x=561 bei 390 px; B2C-Mailziele nur 27×27 px. Bestehende Renderer,
+Grid-/Tabellen-/Fokusbausteine aus vorhandener Funktionsberatung wiederverwendet.
+Delta: 44-px-Ziele, schrumpfbare Gridkinder/AI-Eingabe, begrenzte Tabellenwrapper
+mit eigenem horizontalem Scrollen, mobile Suchfelder in eigenen Zeilen. Bildsichtung
+belegte abgeschnittenen zweizeiligen AI-Platzhalter; eine Reparaturrunde erhöht
+mobile Eingabe auf 64 px. Keine Status-/Inhalts-/Modal-/Logikregel verändert.
+
+Zweck-/Ersteinsatz an vorhandenen Funktionsberater gemeldet: gemessene
+Bedien-/Umbruchfehler beheben; erste Nutzung ausschließlich synthetischer Harness
+`/private/tmp/v804-mail.mjs`. Keine neue Produktfunktion. Im Testprofil werden
+bekannte Mail-Setupfelder ausschließlich in der bestehenden synthetischen Fixture
+im Speicher gesetzt, kein OAuth oder Profilupdate. B2B-Kontakte bleiben mangels
+Fixture leer; B2C zeigt vorhandene acht synthetische Patienten. Keine Aussagen
+über echte Konten/Sendefähigkeit/Rollen/RLS.
+
+Hauptprobe vor kleiner Höhenkorrektur: 16 Neu-Zustände grün. Owner hell1440/
+dunkel390, Employee hell390/dunkel1440 × beide Panels × Setup/konfiguriertes
+synthetisches Profil. Keine kleinen gemessenen Ziele, kein Dokumentüberlauf;
+Kontrollen außerhalb von Tabellen bleiben horizontal im Viewport. Tabellen dürfen
+innerhalb ihres Wrappers scrollen (mobil 356 px Wrapper/560 px Inhalt).
+Tab-Reihenfolge durch aktivierte Panelkontrollen und bestehende Outlines geprüft;
+keine Aktionsauslösung, keine vollständige A11y-/Kontrast-/Kollisionsabnahme.
+
+Erster Vollfenster-Altvergleich scheiterte. Diagnose: berechnete Panelstile/Text/
+Geometrie identisch, 25 abweichende Pixel ausschließlich am bestehenden
+Einrichtungsring der Kopfzeile; auch Entfernen des Styles konnte Abweichung
+auslösen. Ring zeichnet laut `module/einrichtung-ring.js` zeitgesteuert neu.
+Gezielte Wiederholung mit installierter/angehaltener Testuhr nach Seitenaufbau,
+unverändertem ganzen Screenshot, ohne Masken oder Schwellenänderung:
+vier Vorher/Nachher/Entfernen-Vergleiche pixelgleich (beide Panels, hell1440/
+dunkel390). `/private/tmp/v804-mail-alt-final.mjs`, `alt-final.json`.
+Initialer Fehllauf und Diagnose bleiben als solche dokumentiert.
+
+Final nach Höhenkorrektur: 16/16 Neu-Zustände erneut grün, keine Writes/
+Seitenfehler/Fremdhosts. Mobile AI-Eingaben 220×64 px, scrollHeight und
+clientHeight jeweils 62 px; zweizeiliger Platzhalter vollständig sichtbar.
+Vier strikte Alt-Vergleiche nach letzter CSS-Änderung erneut grün, jeweils
+Styles/Text/Geometrie sowie Vollfenster-Pixel vor/nach Injektion und Entfernen
+identisch. Keine Masken, neuen Skips oder geänderten Schwellen. Getrennte
+Neu-Endprobe und Alt-Werkzeug führen dieselben erforderlichen Aussagen aus.
+
+Nachweise: `/private/tmp/praxura-v804-mail/bericht.json` (16 Neu-Zustände),
+`alt-final.json` (vier Alt- und zwei zusätzliche Geometriezustände), vier
+Setup-/Hauptansicht-PNGs plus `configured-b2b-ai.png`/`configured-b2c-ai.png`;
+finale Alt-Aufnahmen `stable-alt-*-before/after/removed.png`.
+AI-Bilder bei Dunkel390 gezielt gesichtet. Initiale Baseline separat unter
+`/private/tmp/praxura-v804-mail-baseline`; Diagnose `alt-debug.json`.
+Temporäre Werkzeuge syntaxgeprüft. Scope-/Auslieferungswachen 9/9 ohne Skips,
+Impeccable-Regexprüfung `[]`, diffcheck grün. Zusatzassertion bestätigt
+alle früheren CSS-Gruppen nach Entfernen des neuen Blocks bytegleich zu HEAD.
+
+Jeder eigene Server im finally beendet; abschließendes lsof auf18084 ohne Listener.
+18084 freigegeben;18081/18082 unberührt. Neue Reproduktion nur nach Portkoordination:
+`rtk proxy env REDESIGN_PORT=18084 V804_NEU_ONLY=1 node /private/tmp/v804-mail.mjs`
+und gesondert `rtk proxy env REDESIGN_PORT=18084 node /private/tmp/v804-mail-alt-final.mjs`.
+Selektiver Folgecommit nur CSS und diese Übergabe; Hash in Liefermeldung/git log.
+Integrator bearbeitete inzwischen Gruppe-1-Hoverfarbe: diese Änderung wurde nicht
+übernommen oder überschrieben. Beim Integrieren nur Commitpatch anwenden, keine
+vollständige Dateikopie vom älteren eigenen Stand.
+
+Grenzen zusätzlich: keine gefüllten B2B-Kontakte, kein Versand/OAuth/KI/Speichern/
+Export, keine Auswertung von Statussemantik oder echten Rollenrechten.
+Tabellenkontrollen dürfen innerhalb eigener horizontaler Scrollwrapper außerhalb
+des Viewports liegen; nicht als vollständige Kollision-/Tastaturabnahme dargestellt.
+Keine neue Agenten-/Provider-Runde; eigener enger Review gemäß
+`engineering:code-review` prüft neuen Diff und Scope. Frühere unabhängige Reviews
+gelten ausschließlich den früheren Gruppen; kein neues unabhängiges Urteil behauptet.
+
 ## Weitere Gruppen
 
-Noch nicht gebaut: Statistik, Überblick, B2B/B2C,
+Noch nicht gebaut: Statistik, Überblick,
 Podologie-Behandlungen und Abrechnung. Bereits gelöste Neu-Bausteine nur durch
 belegte Deltas ergänzen. Fachflächen nach gezielter gkv-302-/podoloji-Beratung;
 DATEI_STATUS und vorhandene Statusetiketten nicht pauschal übersteuern.
 
 ## Integration
 
-Gruppe 1 bereits zentral integriert. Nur neuen Gruppe-2-Commit selektiv übernehmen;
+Gruppe 1 bereits zentral integriert. Gruppe-2-Lieferung und B2B/B2C-Folgecommit getrennt selektiv übernehmen;
 bestehende Integratoränderungen nicht kopieren.
 CSS-Link/Cache, Dashboard, Auslieferung/Docker, STATUS/PLAN/INDEX und Referenzbilder
 bleiben ausschließlich beim Integrator. Diese Datei meldet keinen V8-/V9-/Live-/RLS-
