@@ -22,6 +22,24 @@ const confirm = (tabellen, body = prescription()) => fuehreDemoAktionAus({ pfad:
 const batchBody = () => ({ userId: 'THERAPIST', serviceId: 'KG', startDate: '2026-10-30', time: '10:00', recurrence: 'weekly', count: 3, leadId: 'PATIENT', customerName: 'Mara Test' });
 const batch = (tabellen, body = batchBody()) => fuehreDemoAktionAus({ pfad: '/api/booking/batch-create', methode: 'POST', body, tabellen });
 
+test('series room assignments use actual created booking IDs and survive reload',async()=>{
+  const input=tables();input.demo_rooms=[{id:'ROOM',owner_id:'OWNER',business_id:null,name:'KG-Raum'}];
+  const out=await batch(input,{...batchBody(),demo_room_id:'ROOM'});
+  assert.equal(out.status,200,JSON.stringify(out.body));assert.equal(out.body.created.length,3);
+  const stored=JSON.parse(JSON.stringify(out.tabellen));
+  assert.deepEqual(stored.demo_room_assignments.map(a=>a.booking_id).sort(),out.body.created.map(b=>b.id).sort());
+  assert.ok(stored.demo_room_assignments.every(a=>a.room_id==='ROOM'&&a.owner_id==='OWNER'));
+  assert.equal(input.bookings.length,0);
+});
+test('room occupied by another therapist rolls back entire local series, including later conflict',async()=>{
+  const input=tables();input.demo_rooms=[{id:'ROOM',owner_id:'OWNER',business_id:null,name:'KG-Raum'}];
+  input.bookings=[{id:'BUSY',owner_id:'OWNER',user_id:'OWNER',start_time:'2026-11-06T09:00:00Z',end_time:'2026-11-06T09:20:00Z',status:'confirmed'}];
+  input.demo_room_assignments=[{booking_id:'BUSY',room_id:'ROOM',owner_id:'OWNER'}];
+  const before=structuredClone(input);const out=await batch(input,{...batchBody(),demo_room_id:'ROOM'});
+  assert.equal(out.status,409);assert.match(out.body.error,/Raum.*belegt/);
+  assert.deepEqual(out.tabellen,before);assert.deepEqual(input,before);
+});
+
 test('source fingerprint is recorded without server bootstrap', () => assert.match(QUELLEN_SHA256, /^[a-f0-9]{64}$/));
 
 test('original confirm uses real validator, physician resolver, payer and position helpers', async () => {

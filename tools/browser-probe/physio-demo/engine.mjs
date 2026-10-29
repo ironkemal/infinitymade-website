@@ -13,6 +13,7 @@ import { validateRezept } from '../../../api-backend/ai/validators/validate.js';
 import { validateTherapist } from '../../../api-backend/booking/public-guards.js';
 import { validateAuthenticatedService } from '../../../api-backend/booking/auth-guards.js';
 import { serienDaten, isValidCalendarDate, isStrictInteger } from '../../../api-backend/booking/series.js';
+import {weiseRaumZu} from './raeume.mjs';
 
 const source = readFileSync(new URL('../../../api-backend/server.js', import.meta.url), 'utf8');
 export const QUELLEN_SHA256 = createHash('sha256').update(source).digest('hex');
@@ -170,6 +171,10 @@ export async function fuehreDemoAktionAus({ pfad, methode, body, tabellen, rolle
     const response = { statusCode: 200, body: null, status(code) { this.statusCode = code; return this; }, json(value) { this.body = value; return this; } };
     await handlers[`${method} ${route}`]({ auth: { tenantId: ownerId, userId: ownerId }, params: { id: match?.[1] }, body: copy(body) }, response);
     if (!response.body || response.statusCode >= 500) return result(500, { error: 'Lokale Demo konnte Produktionshandler nicht vollständig ausführen' });
+    if(route==='/api/booking/batch-create'&&response.statusCode<300&&body.demo_room_id){
+      try{weiseRaumZu(tables,{bookingIds:(response.body.created||[]).map(b=>b.id),roomId:body.demo_room_id,ownerId});}
+      catch(e){return result(409,{error:e.message});}
+    }
     return result(response.statusCode, copy(response.body), response.statusCode >= 200 && response.statusCode < 300 ? tables : original);
   } catch {
     return result(500, { error: 'Lokale Demo: ungültige oder nicht unterstützte Datenquelle' });

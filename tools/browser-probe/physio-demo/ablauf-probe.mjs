@@ -30,6 +30,15 @@ try{
   await new Promise((resolve,reject)=>{demo.server.once('error',reject);demo.server.listen(demo.port,'127.0.0.1',resolve);});
   await page.goto(demo.url);await page.waitForFunction(()=>typeof window.switchPanel==='function'&&document.getElementById('panel-overview')?.classList.contains('active'));
   check('Physio-Profil aktiv',(await tables()).profiles[0].sector==='physiotherapy');
+  await page.locator('#demoRoomManager').waitFor({state:'attached'});
+  await panel('hours');
+  await page.locator('#demoRoomName').fill('Behandlung 1');
+  await page.locator('#demoRoomForm button').click();
+  let room=(await tables()).demo_rooms.find(r=>r.name==='Behandlung 1');
+  check('Raum über Oberfläche angelegt',!!room);
+  await page.locator('#demoRoomList input').first().fill('Behandlung Blau');
+  await page.locator('#demoRoomList button').first().click();
+  check('Raum mit stabiler ID umbenannt',(await tables()).demo_rooms.find(r=>r.id===room.id)?.name==='Behandlung Blau');
   await panel('services');await page.locator('#gkvCatalogSection').waitFor({state:'visible'});
   check('KG und MT sichtbar',await page.locator('#panel-services').innerText().then(t=>t.includes('Krankengymnastik')&&t.includes('Manuelle Therapie')));
   await page.screenshot({path:out+'/leistungen-1440.png'});
@@ -43,7 +52,7 @@ try{
   let t=await tables();const service=t.services.find(s=>s.title==='Physio Demo Selbstzahler');
   check('Leistung über UI gespeichert',t.services.length===before+1&&service?.duration_minutes===30&&Number(service?.price)===45);
   check('Therapeuten zugeordnet',t.employee_services.some(e=>e.service_id===service.id));
-  await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   check('Leistung nach Reload erhalten',(await tables()).services.some(s=>s.id===service.id));
   await panel('kunden');
   const newPatient=page.locator('#panel-kunden').getByRole('button',{name:/Patient.*(anlegen|hinzufügen)|Neuer Patient|Hinzufügen/}).first();
@@ -59,7 +68,7 @@ try{
   await page.locator('#anamSaveBtn').click();
   await page.waitForFunction(id=>window.__lokaleTestpraxis.tabellen.anamnese?.some(a=>a.patient_id===id&&a.ist_aktuell),patient.id);
   check('Physio-Anamnese gespeichert',(await tables()).anamnese.some(a=>a.patient_id===patient.id&&a.fachbereich==='physio'));
-  await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   await panel('anamnese');await page.locator('#anamPatientSelect').selectOption(patient.id);
   await page.waitForFunction(()=>!document.getElementById('anamSaveBtn').disabled);
   check('Anamnese erneut geöffnet',(await page.locator('#anamHauptbeschwerde').inputValue()).includes('Belastungsschmerz'));
@@ -107,6 +116,7 @@ try{
   report.leistungAusVo=await page.locator('#bkServiceAusVerordnung').isVisible();
   report.bkServiceWert=await page.locator('#bkService').inputValue();
   await page.locator('#bkStart').fill('2026-11-02T16:00');
+  await page.locator('#demoBookingRoom').selectOption(room.id);
   await page.locator('summary.bk-mehr-titel').click();
   await page.locator('#bkSeriesToggle').check();await page.locator('#bkSeriesCount').fill('3');
   await page.locator('#bkSaveBtn').click();
@@ -118,8 +128,35 @@ try{
   check('Serie belegt freie Sitzungen der Verordnung',t.prescription_sessions.filter(x=>x.prescription_id===rx.id&&series.some(b=>b.id===x.booking_id)).length===3);
   report.sitzungen={zurVerordnung:t.prescription_sessions.filter(x=>x.prescription_id===rx.id).length,mitSerie:t.prescription_sessions.filter(x=>x.prescription_id===rx.id&&series.some(b=>b.id===x.booking_id)).length,rxStatus:rx.status};
   check('Terminserie über Originalhandler gespeichert',series.length===3&&series.every(b=>(Date.parse(b.end_time)-Date.parse(b.start_time))/60000===voService.duration_minutes));
-  await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
+  check('Alle Serientermine tragen gewählten Raum',series.every(b=>t.demo_room_assignments.some(a=>a.booking_id===b.id&&a.room_id===room.id)));
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis&&document.getElementById('demoBookingRoom'));
+  await page.evaluate(()=>window.openBookingModal(null));
+  await page.locator('#bkCustomerSearch').fill('Physiotest');
+  await page.locator('#bkCustomerList li',{hasText:'Physiotest'}).first().click();
+  await page.locator('#bkVeroCards > *').first().waitFor({state:'visible'});
+  await page.locator('#bkVeroCards > *').first().click();
+  await page.locator('#bkStart').fill('2026-11-03T16:00');
+  await page.locator('#demoBookingRoom').selectOption(room.id);
+  await page.locator('#bkSaveBtn').click();
+  await page.getByRole('button',{name:'Weiter',exact:true}).click();
+  await page.locator('#bookingModal').waitFor({state:'hidden'});
+  t=await tables();const einzel=t.bookings.find(b=>b.lead_id===patient.id&&b.start_time.startsWith('2026-11-03T15:00'));
+  check('Einzeltermin trägt gewählten Raum',!!einzel&&t.demo_room_assignments.some(a=>a.booking_id===einzel.id&&a.room_id===room.id));
+  // A visible unrelated booking form must never change another booking's room.
+  await page.evaluate(()=>window.openBookingModal(null));
+  await page.locator('#demoBookingRoom').selectOption('');
+  const statusResult=await page.evaluate(async id=>await window.__lokaleTestpraxis.client.from('bookings').update({status:'confirmed'}).eq('id',id),einzel.id);
+  check('Fremde offene Maske überschreibt Raum nicht',!statusResult.error&&(await tables()).demo_room_assignments.some(a=>a.booking_id===einzel.id&&a.room_id===room.id));
+  const collision=await page.evaluate(async ({booking,roomId})=>{
+    const {id,...copy}=booking;
+    const before=JSON.stringify(window.__lokaleTestpraxis.tabellen);
+    const result=await window.__lokaleTestpraxis.client.from('bookings').insert({...copy,user_id:copy.owner_id,employee_id:copy.owner_id,__demo_room_id:roomId});
+    return {error:result.error,unchanged:before===JSON.stringify(window.__lokaleTestpraxis.tabellen)};
+  },{booking:einzel,roomId:room.id});
+  check('Doppelbelegung bei anderem Behandler ohne Teiländerung gesperrt',collision.error?.code==='DEMO_ROOM_CONFLICT'&&collision.unchanged);
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   check('Verordnung und Serie nach Reload erhalten',(await tables()).prescriptions.some(r=>r.id===rx.id)&&(await tables()).bookings.filter(b=>series.some(s=>s.id===b.id)).length===3);
+  check('Räume und Einzel-/Serienzuordnungen nach Reload erhalten',(await tables()).demo_rooms.some(r=>r.id===room.id&&r.name==='Behandlung Blau')&&(await tables()).demo_room_assignments.filter(a=>a.room_id===room.id).length===4);
   // Behandlungsdoku: heutigen Vorführtermin (Seed: geplante Sitzung am Demotag) im Kalender starten und dokumentieren.
   t=await tables();
   const heuteBk=t.bookings.filter(b=>String(b.start_time).startsWith('2026-10-30')&&t.prescription_sessions.some(x=>x.booking_id===b.id&&x.status==='planned')).sort((a,b)=>a.start_time.localeCompare(b.start_time))[0];
@@ -128,19 +165,27 @@ try{
   const tagLabel=async()=>page.locator('#dayViewDateLabel').innerText();
   for(let i=0;i<5&&!(await tagLabel()).includes('30.');i++){await page.locator('#dayViewNext').click();await page.waitForTimeout(500);}
   await page.waitForTimeout(800);await page.locator('#dayViewGrid .dv-booking-block',{hasText:heuteBk.customer_name.split(' ').pop()}).first().click({force:true});
+  await page.locator('#demoRoomDetailSelect').selectOption(room.id);
+  await page.locator('#demoRoomDetail button').click();
+  check('Bestehendem Kalendertermin Raum zugewiesen',(await tables()).demo_room_assignments.some(a=>a.booking_id===heuteBk.id&&a.room_id===room.id));
   await page.locator('#bkActionStartBtn').click();
   await page.locator('#inputModalField').fill('Synthetische Vorführung: Mobilisation Knie, Übungen angeleitet.');
   await page.locator('#inputModalOk').click();
   await page.waitForFunction(id=>window.__lokaleTestpraxis.tabellen.prescription_sessions.some(x=>x.booking_id===id&&x.status==='done'),heuteBk.id,{timeout:8000});
   t=await tables();const erledigt=t.prescription_sessions.find(x=>x.booking_id===heuteBk.id);
   check('Behandlung dokumentiert (Sitzung erledigt + Notiz)',erledigt?.status==='done'&&String(erledigt.notes||'').includes('Mobilisation'));
-  await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   check('Dokumentation nach Reload erhalten',(await tables()).prescription_sessions.some(x=>x.booking_id===heuteBk.id&&x.status==='done'));
   await panel('abrechnung');check('Abrechnungsübersicht erreichbar',await page.locator('#panel-abrechnung').isVisible());
+  await panel('hours');await page.locator('#demoRoomManager').scrollIntoViewIfNeeded();
+  await page.screenshot({path:out+'/raeume-1440.png'});
   await page.setViewportSize({width:390,height:844});await panel('services');
   if(await page.locator('#sidebar').evaluate(e=>e.classList.contains('open')))await page.locator('#hamburger').click();
   check('Leistungen mobil ohne Dokumentüberlauf',await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
   await page.screenshot({path:out+'/leistungen-390.png'});
+  await panel('hours');await page.locator('#demoRoomManager').scrollIntoViewIfNeeded();
+  check('Raumverwaltung mobil ohne Dokumentüberlauf',await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
+  await page.screenshot({path:out+'/raeume-390.png'});
   check('Keine Seitenfehler',report.errors.length===0);check('Keine Fremdrequests',report.blocked.length===0);
 }catch(error){report.failure=error.message;process.exitCode=1;await page.screenshot({path:out+'/fehler.png'}).catch(()=>{});}
 finally{await context.close();await browser.close();await new Promise(r=>demo.server.close(r));await writeFile(out+'/bericht.json',JSON.stringify(report,null,2));}

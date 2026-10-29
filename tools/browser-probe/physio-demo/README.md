@@ -14,6 +14,24 @@ Vorführweg: Leistungen → Patient anlegen → Anamnese → Verordnung (Heilmit
 Termin mit Verordnung, „Mehr Optionen“ → „Serientermin“ → Kalender: Termin anklicken → „Termin starten“ → Notiz.
 Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Abrechnungszahlen sind feste Beispiele.
 
+## Räume für Termine
+
+1. **Verfügbarkeit** öffnen, unten unter **Räume** Namen eingeben und **Raum anlegen** wählen. Vorhandene Namen lassen sich mit **Umbenennen** ändern; Terminzuordnungen bleiben erhalten.
+2. Beim neuen Einzeltermin oder unter **Mehr Optionen → Serientermin** im Feld **Raum** einen Raum wählen. Die Serie übernimmt diesen Raum für sämtliche tatsächlich erstellten Termine.
+3. Bestehenden Termin im Kalender anklicken: unten **Raum** wählen und **Raum zuweisen** drücken. Im Bearbeitungsformular erscheint die bestehende Auswahl ebenfalls.
+
+Überlappende Belegungen desselben Raums werden auch bei verschiedenen Behandlern abgewiesen. Direkt angrenzende Termine sind erlaubt; abgesagte Termine geben den Raum frei. **Kein Raum zugewiesen** entfernt die Zuordnung. Namen und Zuordnungen überstehen Neuladen im selben Browser/Origin.
+
+**Nur lokale Testpraxis:** Räume stehen in `demo_rooms`, Zuordnungen in `demo_room_assignments` im gleichen Browserspeicher. Aktueller Umfang ist der synthetische Standardstandort ohne `business_id`; fremde Standortzuordnungen werden abgewiesen. Keine produktive Raumspalte, echte Datenbank oder geräteübergreifende Synchronisierung. Produktiver Mehrnutzerbetrieb braucht ein separates geprüftes Datenmodell mit serverseitiger Kollisionssicherung. Die Raumfunktionen werden nur vom lokalen Demo-Server injiziert; normales Hosting erhält sie nicht.
+
+Raumprüfung und fünf Vorführabläufe gemeinsam:
+
+```sh
+PORT=18089 node tools/browser-probe/physio-demo/ablauf-probe.mjs
+```
+
+Benötigt vorhandenes Playwright; Starten/Benutzen der Testpraxis selbst weiterhin ohne `npm install`.
+
 Start aus dem Repository:
 
 ```sh

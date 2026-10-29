@@ -1,7 +1,7 @@
 # PHY-ADR-01: Physiotherapie-Dashboard und Kundendemo
 
 Datum: 29.10.2026. Präsentation: 30.10.2026 laut Auftrag „morgen“.
-Status: Architektur festgelegt; Baupakete geplant, nicht gebaut oder abgenommen.
+Status: Lokale Physio-Testpraxis gebaut und gezielt geprüft; keine Produktions-/Releaseabnahme. Aktuelle Nachweise stehen in STATUS und Demo-README.
 Entscheidung: Integrator im Auftrag Melihs. Grundlage: HEAD `7fcc1b37` plus vorhandener, uncommitteter Integrationsstand; dieser ist ausdrücklich kein freigegebener Release-Pin.
 
 ## Ziel und Grenze
@@ -11,6 +11,8 @@ Eine bedienbare Physiotherapie-Testpraxis im bestehenden neuen Praxura-Design. M
 Nur erfundene Daten und lokale Speicherung. Vorführbarkeit ist keine Produktions-, RLS-, fachliche Abrechnungs- oder Kundeninstallationsfreigabe. Keine neue Tarif-/Fristenlogik, keine Migration, kein Livezugriff, Versand, Zahlung, OAuth oder echter KI-Aufruf. Nicht verfügbare Wege zeigen eine klare Grenze statt Erfolg. Allgemeiner Redesign-Dauerlauf und Scheduler bleiben pausiert; dieser Folgeauftrag startet sie nicht.
 
 ## Architekturentscheidung
+
+**Neue Priorität 30.10.: Räume vor restlicher Arbeit.** Lokale Räume erstellen/benennen, bestehenden Terminen zuweisen und bei Einzel-/Serienterminen auswählen. Wiederverwendung bestehender Terminformulare und Original-Serienhandler; Demo-Nebenlisten statt erfundener produktiver Buchungsspalte. Kollisionsprüfung pro tatsächlichem Zeitintervall, Behandler-unabhängig, lokale vollständige Rücknahme bei Fehler. Benutzeroberfläche friert Raumwahl vor Speicher-await ein; Status-/Fremdänderungen behalten bisherige Zuordnung. Erster Einsatz ausschließlich lokale Testpraxis, Standardstandort ohne business_id. Produktive Raumverwaltung bleibt separates Datenmodell-/Rechte-/Transaktionspaket; kein Liveumbau aus Demoerfolg ableiten. PHY-R01 lokal:51 Node-Tests und27 Browserchecks grün, Bilder1440/390 gesichtet. Dokumentation: `tools/browser-probe/physio-demo/README.md`.
 
 **Nutzerpriorität Leistungen:** Melih betont ausdrücklich „Wichtig sind die leistungen“. Physio-Leistungskatalog und Leistungsauswahl werden vor den fünf Abläufen geprüft: vorhandene Leistungen korrekt anzeigen, auswählen und mit Verordnung, Terminserie und Behandlungsdokumentation verknüpfen. Dauer, Positionen und Preise ausschließlich aus bestehenden belegten Daten übernehmen; fehlende Angaben offen zeigen. Keine neue Tariflogik oder ungeprüfte Katalogänderung. Diese Priorität ergänzt die fünf bestätigten Abläufe.
 

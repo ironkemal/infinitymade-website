@@ -82,9 +82,14 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
           if(art==='update') changed.forEach(r=>Object.assign(r,clone(payload),{updated_at:new Date().toISOString()}));
           else tabellen[this.tabelle]=rows.filter(r=>!changed.includes(r));
         }
+        if(this.tabelle==='bookings'){
+          if(art==='delete')tabellen.demo_room_assignments=(tabellen.demo_room_assignments||[]).filter(a=>!changed.some(b=>b.id===a.booking_id));
+          else try{window.__physioRaumZuordnung?.(changed.map(r=>r.id),payload);}catch(e){throw Object.assign(new Error(e.message),{demoRaum:true});}
+          changed.forEach(r=>delete r.__demo_room_id);
+        }
         demoSave();
         return {data:clone(this.art==='liste'?changed:changed[0]||null),error:null,count:changed.length};
-      } catch { for(const k of Object.keys(tabellen)) delete tabellen[k]; Object.assign(tabellen,backup); return {data:null,error:{code:'LOCAL_STORAGE_FAILED',message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}}; }
+      } catch(e) { for(const k of Object.keys(tabellen)) delete tabellen[k]; Object.assign(tabellen,backup); return {data:null,error:{code:e.demoRaum?'DEMO_ROOM_CONFLICT':'LOCAL_STORAGE_FAILED',message:e.demoRaum?e.message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}}; }
     }
 ` + fixture.slice(end);
   // Rebuild only the relations used by the app from current demo tables. Seed
@@ -169,13 +174,22 @@ export function erstelleHandler({root, port, rolle, fixture, boot, antworten = A
       if(u.pathname==='/api/config') return json(200,{supabaseUrl:'https://synthetic.invalid',supabaseAnonKey:'synthetisch-anon',apiBase:'/api',istKutu:false,telemetryEnabled:false});
       if(u.pathname.startsWith('/api/')) { const x=Object.hasOwn(antworten,u.pathname)?antworten[u.pathname]:null; return x?json(200,typeof x==='function'?await x({rolle}):x):json(501,{error:'Lokale Testversion: dieser Backend-Leseweg ist nicht verfügbar.'}); }
       if(u.pathname==='/vendor/supabase-js.js'||u.pathname==='/demo-boot.js') {res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:u.pathname==='/demo-boot.js'?boot:fixture);}
+      if(u.pathname==='/demo-raeume.mjs'){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:await readFile(new URL('./raeume.mjs',import.meta.url)));}
       const name=u.pathname==='/'?'dashboard.html':decodeURIComponent(u.pathname).slice(1);
       const parts=name.split('/');
       if(parts.some(p=>!p||p.startsWith('.')) || (parts.length>1&&!ASSET_DIRS.has(parts[0])) || !MIME[extname(name)] || (extname(name)==='.json'&&name!=='manifest.json')) return json(403,{error:'Nicht verfügbar'});
       const path=await realpath(resolve(root,name));
       if(!path.startsWith(root+sep)) return json(403,{error:'Nicht verfügbar'});
       let data=await readFile(path);
-      if(name==='dashboard.html') data=data.toString().replace('<head>','<head><script src="/demo-boot.js"></script>');
+      if(name==='dashboard.html') data=data.toString().replace('<head>','<head><script src="/demo-boot.js"></script><script type="module" src="/demo-raeume.mjs"></script>');
+      if(name==='dashboard.js'){
+        data=ersetzeGenau(data.toString(),'  bkActionBookingCache = booking || null;',"  bkActionBookingCache = booking || null; window.dispatchEvent(new CustomEvent('physio-demo:booking',{detail:{id:booking?.id||null}}));");
+        data=ersetzeGenau(data,"document.getElementById('bkSaveBtn').addEventListener('click', async () => {", "document.getElementById('bkSaveBtn').addEventListener('click', async () => {\n  const __demoRoom = document.getElementById('demoBookingRoom')?.value || ''; ");
+        data=ersetzeGenau(data,'    rezeptart: rezeptart || null,\n    payment_method:', '    __demo_room_id: __demoRoom,\n    rezeptart: rezeptart || null,\n    payment_method:');
+        data=ersetzeGenau(data,'    const payload = {\n      userId: empId,','    const payload = {\n      demo_room_id: __demoRoom,\n      userId: empId,');
+        data=data.replaceAll('const parentPayload = {','const parentPayload = {\n        __demo_room_id: __demoRoom,');
+        data=ersetzeGenau(data,"if (!res.ok) { terminFehler('Fehler beim Erstellen der Serientermine.'); return; }", "if (!res.ok) { const failure=await res.json().catch(()=>({})); terminFehler(failure.error || 'Fehler beim Erstellen der Serientermine.'); return; }");
+      }
       res.writeHead(200,{'Content-Type':MIME[extname(path)]+'; charset=utf-8'});res.end(req.method==='HEAD'?undefined:data);
     } catch { json(404,{error:'Nicht verfügbar'}); }
   };
