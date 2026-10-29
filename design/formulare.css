@@ -1,0 +1,95 @@
+/* V8.03 — begrenzte Formular-Korrekturen nach design/seiten.css laden.
+   Nur Neu/Screen und Nachfahren der fünf reservierten Panels.
+   Dokumente, Modals, klinische Farben und Anzeigezustände bleiben beim Bestand. */
+@media screen {
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services) :is(.form-group, .form-row) {
+    min-width: 0;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services) :is(.form-input, .form-select, .form-textarea) {
+    min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label {
+    min-width: 44px;
+    max-width: 100%;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-anamnese .anam-other {
+    min-width: 0;
+    min-height: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] #panel-anamnese .anam-slider-wrap input[type="range"] {
+    min-width: 0;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  [data-design="neu"] #panel-hours .hours-times input[type="time"] { min-height: 44px; }
+  [data-design="neu"] #panel-hours .toggle-switch { width: 44px; height: 44px; }
+  [data-design="neu"] #panel-hours .toggle-slider { inset: 11px 3px; }
+  [data-design="neu"] #panel-hours .toggle-switch input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  /* Die Bestands-Opacity inaktiver Tage darf den Tastaturfokus nicht abdunkeln. */
+  [data-design="neu"] #panel-hours .hours-row.inactive:focus-within { opacity: 1; }
+  [data-design="neu"] #panel-hours :is(.break-add-btn, .break-confirm, .break-del) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* .srv-sr ist absolut positioniert: im lokalen Tabellen-Scroller verankern,
+     statt den unsichtbaren Header an mainArea überstehen zu lassen (R-23). */
+  [data-design="neu"] #panel-services .srv-gruppe { position: relative; }
+  [data-design="neu"] #panel-services :is(.btn-gkv-edit, .btn-gkv-setup, .srv-del-btn) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  [data-design="neu"] #panel-fussstatus .input-control { min-height: 44px; }
+  /* Nur die nackten Links-/Rechts-Checkboxen; Zellhöhe allein ist keine Hitbox. */
+  [data-design="neu"] #panel-fussstatus .fbp-grid-table td > input[type="checkbox"] {
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    vertical-align: middle;
+  }
+  [data-design="neu"] #panel-fussstatus :is(#fbpNewBtn, #fbpSaveBtn) { min-height: 44px; }
+  [data-design="neu"] #panel-vorlagen :is(#vorlagenSettingsBtn, #vorlagenPanelNewBtn) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-fussstatus, #panel-hours, #panel-services, #panel-vorlagen) :is(button.btn-primary, button.btn-ghost, button.btn-sm, button.btn-icon) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-fussstatus, #panel-hours, #panel-services, #panel-vorlagen) :is(button, .form-input, .form-select, .form-textarea, .input-control, .anam-other, input[type="checkbox"]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-anamnese .anam-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design="neu"] #panel-anamnese .form-row {
+    grid-template-columns: minmax(0, 1fr) !important; /* gegen Inline-Arztgrid (zwei 1fr-Spalten) */
+  }
+  [data-design="neu"] #panel-hours .hours-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  [data-design="neu"] #panel-hours .hours-row > div:nth-child(2):empty { display: none; }
+  [data-design="neu"] #panel-hours .hours-times {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-design="neu"] #panel-hours .hours-times input[type="time"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
