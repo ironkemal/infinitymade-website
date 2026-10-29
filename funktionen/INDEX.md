@@ -3,7 +3,7 @@
 > Üretim: 2026-10-29 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4141 fonksiyon** (4019 JS · 95 bash · 27 ps1) · 516 dosya · 42 sidebar modülü
+**4145 fonksiyon** (4023 JS · 95 bash · 27 ps1) · 516 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -499,7 +499,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zahl` — api-backend/lib/datev.js:280 · api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223 · module/startseite-rechnen.js:89
 - `invalidate` — api-backend/ai/ki-jeton.js:146 · module/patient-notizen.js:9 · module/patient-ueberweisung-upload.js:4 · module/rezept-patientenkopf.js:19 · patient-suche.js:112
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
-- `markiere` — module/einstellungen-nav.js:40 · module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
+- `markiere` — module/einstellungen-nav.js:38 · module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
 - `setze` — merkez/cloudflare.js:30 · module/serien-termine.js:200 · module/shell-neu.js:46 · module/termin-folge.js:194 · module/termin-heute.js:86
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fussbefund.js:797 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:833
