@@ -139,7 +139,7 @@ import {
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
-import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
+import { bindeSitzungenAnTermin, bindeSerieAnVerordnung } from './module/sitzung-bindung.js?v=20261029p1';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
@@ -5262,7 +5262,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     closeModal('bookingModal');
     await refreshBookingViews();
 
-    if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast });
+    if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast }); else if (created.length && document.getElementById('bkSelectedRxId')?.value) { const serRx = document.getElementById('bkSelectedRxId').value; const sb = await bindeSerieAnVerordnung(supabase, { prescriptionId: serRx, created, gleicheSitzungenAb }); if (sb.meldung) showToast(sb.meldung, sb.ok ? 'info' : 'error', 8000); if (sb.gebunden) emit('verordnungen:changed', { id: serRx }); } // Physio-Serie mit gewählter Verordnung (29.10.2026, physio+gkv-302): freie Sitzungen belegen, Überhang nur melden
     // Terminbestätigung drucken dialog — pass patient email if available
     let _serPatEmail = '';
     if (custId && Array.isArray(window.bkAllLeads)) {

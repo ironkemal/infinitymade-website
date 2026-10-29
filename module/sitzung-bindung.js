@@ -89,3 +89,59 @@ export function bindungsFehlerText({ erwartet, gebunden, dbMeldung }) {
   const schwanz = ' — bitte im Verordnungs-Panel prüfen und von Hand zuordnen.';
   return kopf + schwanz + (dbMeldung ? ` (${dbMeldung})` : '');
 }
+
+/**
+ * Serie an eine Physio-Verordnung binden (29.10.2026, Physio-Demo PHY-03).
+ *
+ * Warum: Wählt der Empfang im Terminformular eine Verordnung und bucht eine Serie,
+ * entstanden die Termine bisher OHNE Bezug zu den Sitzungszeilen — ein Einzeltermin
+ * band dagegen seine Einheit. Verknüpft wurde nur über „Einheiten als Serie
+ * verteilen“ (KI-Weg). Fachlich (physio + gkv-302, 29.10.2026): freie Sitzungen in
+ * Datumsreihenfolge belegen, Überhang warnen statt blockieren, NIE Zeilen über die
+ * verordnete Zahl hinaus anlegen (anders als linkBookingsToPrescriptionSessions).
+ * Ausgeschlossen: Podologie (eigener Weg), abgeschlossene Verordnungen, Blanko ohne
+ * Anzahl, abgelaufen ohne Behandlungsbeginn. Frequenz-/Fristprüfung bleiben wo sie sind.
+ *
+ * @param {object} supabase
+ * @param {{prescriptionId:string, created:Array<{id:string,start_time?:string,date?:string}>, gleicheSitzungenAb:Function, heute?:string}} o
+ * @returns {Promise<{ok:boolean, gebunden:number, ueberhang:number, meldung:string}>}
+ */
+export async function bindeSerieAnVerordnung(supabase, { prescriptionId, created, gleicheSitzungenAb, heute } = {}) {
+  const termine = (created || []).filter((c) => c?.id)
+    .sort((a, b) => String(a.start_time || a.date || '').localeCompare(String(b.start_time || b.date || '')));
+  const nichts = (meldung = '') => ({ ok: true, gebunden: 0, ueberhang: 0, meldung });
+  if (!supabase || !prescriptionId || !termine.length) return nichts();
+
+  const { data: rx, error: rxFehler } = await supabase.from('prescriptions')
+    .select('id, status, anzahl_einheiten, gueltig_bis, behandlungsbeginn, therapie_bereich')
+    .eq('id', prescriptionId).maybeSingle();
+  if (rxFehler || !rx) return { ok: false, gebunden: 0, ueberhang: termine.length, meldung: 'Termine gespeichert, aber die Verordnung war nicht lesbar — Einheiten bitte im Verordnungs-Panel zuordnen.' };
+  if (rx.therapie_bereich === 'podo') return nichts();
+  if (['completed', 'billed', 'cancelled'].includes(rx.status)) return nichts('Termine gespeichert. Die gewählte Verordnung ist abgeschlossen — es wurden keine Einheiten zugeordnet.');
+  if (!Number.isInteger(rx.anzahl_einheiten) || rx.anzahl_einheiten <= 0) return nichts('Termine gespeichert. Die Verordnung nennt keine Anzahl Einheiten — bitte Einheiten von Hand zuordnen.');
+  const tag = heute || new Date().toISOString().slice(0, 10);
+  if (rx.gueltig_bis && rx.gueltig_bis < tag && !rx.behandlungsbeginn) return nichts('Termine gespeichert. Die Verordnung ist ohne Behandlungsbeginn abgelaufen — es wurden keine Einheiten zugeordnet.');
+
+  if (typeof gleicheSitzungenAb === 'function') {
+    await gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status });
+  }
+  const { data: freie, error: freiFehler } = await supabase.from('prescription_sessions')
+    .select('id, session_number').eq('prescription_id', prescriptionId)
+    .is('booking_id', null).eq('status', 'planned').order('session_number', { ascending: true });
+  if (freiFehler) return { ok: false, gebunden: 0, ueberhang: termine.length, meldung: 'Termine gespeichert, aber die freien Einheiten waren nicht lesbar — bitte im Verordnungs-Panel zuordnen.' };
+
+  let gebunden = 0;
+  const fehler = [];
+  const paare = Math.min(termine.length, (freie || []).length);
+  for (let i = 0; i < paare; i++) {
+    const r = await bindeSitzungenAnTermin(supabase, termine[i].id, [freie[i].id]);
+    gebunden += r.gebunden;
+    if (!r.ok) fehler.push(r.meldung);
+  }
+  const ueberhang = termine.length - gebunden;
+  if (fehler.length) return { ok: false, gebunden, ueberhang, meldung: fehler[0] };
+  const meldung = ueberhang > 0
+    ? `${gebunden} von ${termine.length} Terminen mit der Verordnung verknüpft. ${ueberhang} ${ueberhang === 1 ? 'Termin bleibt' : 'Termine bleiben'} ohne Verordnung — Folgeverordnung nötig.`
+    : '';
+  return { ok: true, gebunden, ueberhang, meldung };
+}

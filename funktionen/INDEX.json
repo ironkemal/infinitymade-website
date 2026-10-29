@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-29",
  "dateien": 516,
- "funktionen": 4145,
+ "funktionen": 4147,
  "module": [
   "abrechnung",
   "anamnese",
@@ -30935,6 +30935,7 @@
     "bindHours",
     "bindInvEvents",
     "bindePodoSerie",
+    "bindeSerieAnVerordnung",
     "boardNotice",
     "brandingFelderPruefen",
     "brandingLuecken",
@@ -58218,6 +58219,7 @@
     "berechneZuzahlungAusPosten",
     "berlin",
     "betraegeFuerVerordnung",
+    "bindeSerieAnVerordnung",
     "calcAbrechnungsfallTotals",
     "calcAbrechnungsfallZuzahlung",
     "createJetonClient",
@@ -121161,6 +121163,7 @@
     "(datei) module/verordnung-speichern-hinweise.js",
     "(datei) module/verordnung-termine.js",
     "befundungFuerLeistung",
+    "bindeSerieAnVerordnung",
     "mountTerminLeistungen",
     "pruefeTrustAnchorFrische"
    ],
@@ -122801,8 +122804,8 @@
    "lang": "js",
    "file": "module/einstellungen-nav.js",
    "start": 55,
-   "end": 94,
-   "lines": 40,
+   "end": 102,
+   "lines": 48,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -122871,8 +122874,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/einstellungen-nav.js",
-   "start": 97,
-   "end": 139,
+   "start": 105,
+   "end": 147,
    "lines": 43,
    "spiegelHinweis": null,
    "tables": [],
@@ -122940,8 +122943,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/einstellungen-nav.js",
-   "start": 110,
-   "end": 126,
+   "start": 118,
+   "end": 134,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -123005,8 +123008,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/einstellungen-nav.js",
-   "start": 127,
-   "end": 138,
+   "start": 135,
+   "end": 146,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -180835,6 +180838,7 @@
    "calledBy": [
     "(datei) dashboard.js",
     "(datei) module/verordnung-topf.js",
+    "bindeSerieAnVerordnung",
     "linkBookingsToPrescriptionSessions",
     "loadRxSessionsPanel",
     "saveRezept",
@@ -180975,7 +180979,8 @@
    ],
    "calledBy": [
     "(datei) dashboard.js",
-    "(datei) module/podo-einheiten.js"
+    "(datei) module/podo-einheiten.js",
+    "bindeSerieAnVerordnung"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -181002,6 +181007,109 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "bindeSerieAnVerordnung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/sitzung-bindung.js",
+   "start": 109,
+   "end": 147,
+   "lines": 39,
+   "spiegelHinweis": null,
+   "tables": [
+    "prescriptions",
+    "prescription_sessions"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "bindeSitzungenAnTermin",
+    "gleicheSitzungenAb",
+    "min",
+    "nichts",
+    "push"
+   ],
+   "calledBy": [
+    "(datei) dashboard.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "nichts",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/sitzung-bindung.js",
+   "start": 112,
+   "end": 115,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [
+    "prescriptions"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/billing/api/abrechnung.routes.js",
+    "(datei) api-backend/billing/dta/itsg-trust-anchor.js",
+    "(datei) module/verordnung-speichern-hinweise.js",
+    "(datei) module/verordnung-termine.js",
+    "befundungFuerLeistung",
+    "bindeSerieAnVerordnung",
+    "mountTerminLeistungen",
+    "pruefeTrustAnchorFrische"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
   },
   {
    "name": "waehleSeite",
@@ -243242,6 +243350,14 @@
    "orte": [
     "module/startseite-neu.js:329",
     "module/verordnung-uebersicht.js:622"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "nichts",
+   "orte": [
+    "module/eingangsbefundung-regel.js:202",
+    "module/sitzung-bindung.js:112"
    ],
    "aynalar": []
   },

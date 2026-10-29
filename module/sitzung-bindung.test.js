@@ -93,3 +93,62 @@ test('der Text sagt, dass der Termin trotzdem steht', () => {
   assert.match(t, /von Hand zuordnen/);
   assert.doesNotMatch(t, /undefined/);
 });
+
+// ── bindeSerieAnVerordnung (Physio-Serie, 29.10.2026) ─────────────────────────
+import { bindeSerieAnVerordnung } from './sitzung-bindung.js';
+
+function serienDouble({ rx, sitzungen }) {
+  const geschrieben = [];
+  const tabelle = (name) => {
+    const q = { _f: {}, _upd: null };
+    q.select = () => q; q.order = () => q; q.maybeSingle = async () => ({ data: name === 'prescriptions' ? rx : null, error: null });
+    q.eq = (k, v) => { q._f[k] = v; return q; }; q.is = (k, v) => { q._f[k] = v; return q; };
+    q.in = (k, ids) => { q._ids = ids; return q; };
+    q.update = (u) => { q._upd = u; return q; };
+    q.then = (res) => {
+      if (name === 'prescription_sessions' && q._upd) {
+        const treffer = sitzungen.filter((s) => q._ids.includes(s.id) && s.booking_id === null);
+        treffer.forEach((s) => { s.booking_id = q._upd.booking_id; geschrieben.push([s.id, q._upd.booking_id]); });
+        return res({ data: treffer.map((s) => ({ id: s.id })), error: null });
+      }
+      if (name === 'prescription_sessions') {
+        return res({ data: sitzungen.filter((s) => s.booking_id === null && s.status === 'planned').sort((a, b) => a.session_number - b.session_number), error: null });
+      }
+      return res({ data: [], error: null });
+    };
+    return q;
+  };
+  return { sb: { from: tabelle }, geschrieben };
+}
+const sitz = (n, gebucht = null) => Array.from({ length: n }, (_, i) => ({ id: `s${i + 1}`, session_number: i + 1, status: 'planned', booking_id: i < gebucht ? `alt${i}` : null }));
+const rxOk = { id: 'rx1', status: 'confirmed', anzahl_einheiten: 6, gueltig_bis: '2026-12-01', behandlungsbeginn: null, therapie_bereich: 'physio' };
+
+test('bindeSerieAnVerordnung: belegt freie Sitzungen in Datumsreihenfolge', async () => {
+  const d = serienDouble({ rx: rxOk, sitzungen: sitz(6, 1) });
+  const r = await bindeSerieAnVerordnung(d.sb, { prescriptionId: 'rx1', heute: '2026-10-29',
+    created: [{ id: 'b3', start_time: '2026-11-16T15:00:00Z' }, { id: 'b1', start_time: '2026-11-02T15:00:00Z' }, { id: 'b2', start_time: '2026-11-09T15:00:00Z' }] });
+  assert.deepEqual(r, { ok: true, gebunden: 3, ueberhang: 0, meldung: '' });
+  assert.deepEqual(d.geschrieben, [['s2', 'b1'], ['s3', 'b2'], ['s4', 'b3']]);
+});
+
+test('bindeSerieAnVerordnung: Überhang wird gemeldet, keine neuen Zeilen', async () => {
+  const d = serienDouble({ rx: { ...rxOk, anzahl_einheiten: 2 }, sitzungen: sitz(2) });
+  const r = await bindeSerieAnVerordnung(d.sb, { prescriptionId: 'rx1', heute: '2026-10-29',
+    created: [{ id: 'a', start_time: '1' }, { id: 'b', start_time: '2' }, { id: 'c', start_time: '3' }] });
+  assert.equal(r.gebunden, 2); assert.equal(r.ueberhang, 1);
+  assert.match(r.meldung, /2 von 3 Terminen .* 1 Termin bleibt ohne Verordnung/);
+  assert.equal(d.geschrieben.length, 2);
+});
+
+test('bindeSerieAnVerordnung: Podologie, abgeschlossen, Blanko, abgelaufen ohne Beginn → nichts binden', async () => {
+  for (const [rx, muster] of [
+    [{ ...rxOk, therapie_bereich: 'podo' }, /^$/],
+    [{ ...rxOk, status: 'completed' }, /abgeschlossen/],
+    [{ ...rxOk, anzahl_einheiten: null }, /keine Anzahl/],
+    [{ ...rxOk, gueltig_bis: '2026-10-01' }, /abgelaufen/],
+  ]) {
+    const d = serienDouble({ rx, sitzungen: sitz(6) });
+    const r = await bindeSerieAnVerordnung(d.sb, { prescriptionId: 'rx1', heute: '2026-10-29', created: [{ id: 'x', start_time: '1' }] });
+    assert.equal(r.gebunden, 0); assert.match(r.meldung, muster); assert.equal(d.geschrieben.length, 0);
+  }
+});
