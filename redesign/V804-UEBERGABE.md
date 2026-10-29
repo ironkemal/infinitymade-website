@@ -237,12 +237,76 @@ Keine neue Agenten-/Provider-Runde; eigener enger Review gemäß
 `engineering:code-review` prüft neuen Diff und Scope. Frühere unabhängige Reviews
 gelten ausschließlich den früheren Gruppen; kein neues unabhängiges Urteil behauptet.
 
-## Weitere Gruppen
+## Abschlussgruppe: Statistik, Überblick, Podologie-Behandlungen, Abrechnung
 
-Noch nicht gebaut: Statistik, Überblick,
-Podologie-Behandlungen und Abrechnung. Bereits gelöste Neu-Bausteine nur durch
-belegte Deltas ergänzen. Fachflächen nach gezielter gkv-302-/podoloji-Beratung;
-DATEI_STATUS und vorhandene Statusetiketten nicht pauschal übersteuern.
+Basis: `98771c70dcf6e51674119f0235f1423d18acd2b0`, vorhandener sauberer
+Worktree `/private/tmp/praxura-v804-verwaltung`, Branch `redesign/praxura-verwaltung`.
+Aktueller zentral gemeldeter Pin `2843f157` wurde nicht übernommen.
+Nur neuer Commitpatch integrieren; zentralen Gruppe-1-Hoverfix `4a232477` erhalten.
+Alle früheren CSS-Bytes bleiben unverändert (Prefixassertion gegen HEAD).
+
+Freigabe: ausschließlich Nachfahren von `#panel-statistik`, `#panel-ueberblick`,
+`#panel-podologie-billing`, `#panel-abrechnung`, jeweils screen + Neu.
+Problem: Monatsauswahl 40px, Überblick-Aktualisierung 36px, Podo-Datum 41px,
+Podo-Anamneseknopf 36px und Checkboxlabel rund19px; Abrechnungsfilter 35px,
+Zurück/Erstellen/Schließen 36px, Gruppencheckbox 16px. Bestehende Tabellenwrapper
+und Statistik-KPI-Raster genügen bereits. Keine neuen Geschäftsregeln/Funktionen.
+
+Delta: native Tippflächen mindestens44px, Checkboxlabels als gemeinsame
+Tippfläche; einzelne Gruppencheckbox ohne Label erhält selbst44px. Detailkopf
+kann umbrechen. Native Abrechnungs-Datumssegmente behalten Fokusring bei Fokus,
+auch wenn Chromium intern keinen `:focus-visible`-Ring liefert. Bestehende Tokens,
+Karten und Etiketten wiederverwendet; keine Status-/Farb-/Text-/Datenänderung.
+Kein Modal-, Druck-, Dokument-, Startseiten- oder Shared-Selektor.
+
+Beratung wiederverwendet: `redesign/STATUS.md` V6.F05/V8.01/V8.02 und vorhandene
+fonksiyon-Auskunft zu Statistik/Überblick/Podo/Abrechnungsmodulen. Insbesondere
+Bereit ist keine Versandfreigabe; DATEI_STATUS/Statusetiketten unverändert.
+Bestehende gkv-Vetos aus `archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md` Abschnitt2/3
+berücksichtigt, keine Tarif-/Korrekturregel gebaut. Keine neue Bedeutungsfrage.
+Keine neue Agenten-/Providerdelegation; enger eigener Mobil-/Diffreview gemäß
+Impeccable, Accessibility-Review und engineering:code-review.
+
+Gezielte lokale Probe: `/private/tmp/v804-final.mjs`, Bericht und PNGs unter
+`/private/tmp/praxura-v804-final/`. 18 Neu-Zustände: Owner hell1440/dunkel390,
+Employee hell390/dunkel1440; vier Panels, zusätzlich Podo-Auswahl und Abrechnung
+Einstieg/Neu/Bisherige. Vier erwartete Mitarbeiter-Sperren für Podo/Abrechnung
+separat dokumentiert. Kein Umgehen dieser Sperren. Baseline sieben Owner-Zustände
+bei hell390. Final: gemessene sichtbare Tippflächen mindestens44px, keine gemessenen
+Kontrollüberläufe, Tabellen horizontal scrollbar; Text vor/nach CSS identisch.
+Native aktive Kontrollen einzeln nach Tastaturmodalität fokussiert, Tab verwendet,
+Fokusring geprüft. Das ist keine vollständige Tastatur-/Screenreader-Abnahme.
+Mobile Podo-Detail- und Abrechnung-Neu-Aufnahmen gezielt visuell geprüft.
+Screenshots zeigen den durch Fokus erreichten Scrollausschnitt.
+
+Ein Produkt-Reparaturschritt: erster Tastaturlauf fand `outline:none` am nativen
+Abrechnungs-Datumssegment. Enger Datums-Fokusring ergänzt; finaler Lauf grün.
+Diagnosewiederholung änderte keine Schwellen/Skips. Werkzeug fokussiert jede native
+Kontrolle ausdrücklich, weil Datumsfelder mehrere interne Tabstopps besitzen.
+
+Alt: `/private/tmp/v804-final-alt.mjs`, `alt-final.json`. Acht strikte
+Vollfenster-Vergleiche, vier Panels × hell1440/dunkel390, jeweils CSS-Injektion und
+Entfernen: Pixel, berechnete Styles, Text und Panelgeometrie identisch. Testuhr
+angehalten gegen bekannten Einrichtungsring-Timer; keine Masken/Schwellentoleranz.
+Keine Wiederholungsabnahme früherer acht Panels.
+
+HTTP- und WebSocket-Fences vor Page, ServiceWorker blockiert, NichtGET gesperrt;
+Fixture schreibt RS_READONLY. Alle Proben ohne Writes/Seitenfehler/Fremdhosts.
+Nur vorhandene synthetische Quellen, keine ergänzten DB-Annahmen. Grenzen:
+`kostentraeger`, `abrechnung`, `abrechnung_zeile`, `abrechnung_zahlung`,
+`podologie_behandlungen`, `anamnese`, `pat_fussbefund` u.a. im vorhandenen Fixture
+unbekannt/leer; keine gefüllte Abrechnungsdatei-/Zahlungsdetail-/HPNR-Abnahme.
+Synthetisch berechnete Beträge belegen keine finanziellen Werte. Keine fachliche
+Nullwertfreigabe. Klickbare Podo-Zeilen/Toggle und sortierbare Tabellenköpfe besitzen
+bestehende Tastaturgrenzen; keine JS-Reparatur innerhalb CSS-Auftrag behauptet.
+Keine Speicher-/KI-/Status-/Erstellen-/Zahlungs-/Versand-/Exportaktion ausgelöst.
+Kein Kontrastvolltest, RLS-, Live-, Auslieferungs- oder Release-Nachweis.
+
+Gates: `node --test tools/redesign-wachen.test.js` 9/9, keine Skips;
+Impeccable detect `[]`, `git diff --check` grün. Enger eigener Review:
+Scope nur vier Panels, kein fremder Diff, frühere Gruppen bytegleich.
+Keine Fullsuite/große Matrix. Beide Server im finally beendet; lsof18084 leer,
+Port18084 freigegeben.18081/18082 unberührt.
 
 ## Integration
 
