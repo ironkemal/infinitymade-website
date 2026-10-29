@@ -81,7 +81,8 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
         end_time: new Date(Date.parse(start) + service.duration_minutes * 60000).toISOString(),
         status: vergangen ? 'completed' : 'confirmed', customer_name: patient.name, customer_phone: patient.phone,
         customer_email: patient.email, services: { ...service }, leads: { ...patient }, verordnung_id: null,
-        hausbesuch: false, is_group: service.is_group, group_capacity: service.group_capacity, group_parent_id: null,
+        // Patiententermin ist immer eine Einzelbuchung: is_group:true wäre ein Gruppen-Elternslot ohne Patient (Kalender zeigt dann „Freier Gruppenslot 0/3“).
+        hausbesuch: false, is_group: false, group_capacity: 1, group_parent_id: null,
         source: 'manual', notes: vergangen ? 'Synthetische Behandlungsdokumentation: Verlauf besprochen, Übungen angeleitet.' : null,
       } : null;
       if (booking) bookings.push(booking);

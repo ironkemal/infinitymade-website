@@ -119,6 +119,22 @@ try{
   check('Terminserie über Originalhandler gespeichert',series.length===3&&series.every(b=>(Date.parse(b.end_time)-Date.parse(b.start_time))/60000===voService.duration_minutes));
   await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   check('Verordnung und Serie nach Reload erhalten',(await tables()).prescriptions.some(r=>r.id===rx.id)&&(await tables()).bookings.filter(b=>series.some(s=>s.id===b.id)).length===3);
+  // Behandlungsdoku: heutigen Vorführtermin (Seed: geplante Sitzung am Demotag) im Kalender starten und dokumentieren.
+  t=await tables();
+  const heuteBk=t.bookings.filter(b=>String(b.start_time).startsWith('2026-10-30')&&t.prescription_sessions.some(x=>x.booking_id===b.id&&x.status==='planned')).sort((a,b)=>a.start_time.localeCompare(b.start_time))[0];
+  report.dokuTermin=heuteBk&&{name:heuteBk.customer_name,start:heuteBk.start_time};
+  await panel('calendar');
+  const tagLabel=async()=>page.locator('#dayViewDateLabel').innerText();
+  for(let i=0;i<5&&!(await tagLabel()).includes('30.');i++){await page.locator('#dayViewNext').click();await page.waitForTimeout(500);}
+  await page.waitForTimeout(800);await page.locator('#dayViewGrid .dv-booking-block',{hasText:heuteBk.customer_name.split(' ').pop()}).first().click({force:true});
+  await page.locator('#bkActionStartBtn').click();
+  await page.locator('#inputModalField').fill('Synthetische Vorführung: Mobilisation Knie, Übungen angeleitet.');
+  await page.locator('#inputModalOk').click();
+  await page.waitForFunction(id=>window.__lokaleTestpraxis.tabellen.prescription_sessions.some(x=>x.booking_id===id&&x.status==='done'),heuteBk.id,{timeout:8000});
+  t=await tables();const erledigt=t.prescription_sessions.find(x=>x.booking_id===heuteBk.id);
+  check('Behandlung dokumentiert (Sitzung erledigt + Notiz)',erledigt?.status==='done'&&String(erledigt.notes||'').includes('Mobilisation'));
+  await page.reload();await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
+  check('Dokumentation nach Reload erhalten',(await tables()).prescription_sessions.some(x=>x.booking_id===heuteBk.id&&x.status==='done'));
   await panel('abrechnung');check('Abrechnungsübersicht erreichbar',await page.locator('#panel-abrechnung').isVisible());
   await page.setViewportSize({width:390,height:844});await panel('services');
   if(await page.locator('#sidebar').evaluate(e=>e.classList.contains('open')))await page.locator('#hamburger').click();
