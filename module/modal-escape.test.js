@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installiereModalEscape } from './modal-escape.js';
+import { installiereModalEscape, installiereModalFokus } from './modal-escape.js';
 
 function fixture({modals=[],panelOpen=false}={}) {
   const listeners=new Map(),closed=[];
@@ -57,4 +57,51 @@ test('Teardown removes own listener and preserves unrelated key handler',()=>{
   assert.equal(f.listeners.get('keydown').size,2);
   f.teardown();f.teardown();f.key('Escape');
   assert.equal(f.listeners.get('keydown').size,1);assert.equal(otherCalls,1);assert.deepEqual(f.closed,[]);
+});
+
+function fokusFixture() {
+  let notify, listener, disconnected=false;
+  const attrs={};
+  const root={body:{},activeElement:null};
+  const el=(id,{hidden=false,disabled=false}={})=>({id,isConnected:true,hidden,disabled,tabIndex:0,
+    closest(){return this.hidden?{}:null;},getClientRects(){return this.hidden?[]:[{}];},
+    matches(){return this.disabled;},focus(){root.activeElement=this;}});
+  const launch=el('launch'),fallback=el('fallback'),name=el('name'),last=el('last'),hidden=el('hidden',{hidden:true}),disabled=el('disabled',{disabled:true});
+  const targets=[name,hidden,disabled,last];
+  const modal={id:'modal',hidden:true,contains:target=>targets.includes(target),
+    querySelectorAll:()=>targets,querySelector:()=>({setAttribute:(k,v)=>{attrs[k]=v;}}),
+    addEventListener:(k,f)=>{listener=f;},removeEventListener:()=>{listener=null;}};
+  const nested={id:'nested',hidden:true};
+  root.getElementById=id=>({modal,name,fallback,modalTitle:{}}[id]);
+  root.querySelectorAll=()=>[modal,nested];root.activeElement=launch;
+  class Observer {constructor(fn){notify=fn;}observe(){}disconnect(){disconnected=true;}}
+  const teardown=installiereModalFokus({root,id:'modal',startId:'name',rueckfallId:'fallback',Observer});
+  const key=shiftKey=>{let prevented=false;listener({key:'Tab',shiftKey,preventDefault(){prevented=true;}});return prevented;};
+  return {root,modal,nested,launch,name,last,fallback,attrs,key,teardown,get disconnected(){return disconnected;},
+    open(){modal.hidden=false;notify();},close(){modal.hidden=true;notify();}};
+}
+
+test('Modal focus opens on field, wraps only visible enabled controls and returns to launcher',()=>{
+  const f=fokusFixture();f.open();assert.equal(f.root.activeElement,f.name);
+  assert.deepEqual(f.attrs,{role:'dialog','aria-modal':'true','aria-labelledby':'modalTitle'});
+  assert.equal(f.key(true),true);assert.equal(f.root.activeElement,f.last);
+  assert.equal(f.key(false),true);assert.equal(f.root.activeElement,f.name);
+  assert.equal(f.key(false),false);f.close();assert.equal(f.root.activeElement,f.launch);
+  f.teardown();assert.equal(f.disconnected,true);
+});
+
+test('Modal focus falls back when launcher is removed and does not steal focus from another destination',()=>{
+  const f=fokusFixture();f.open();f.launch.isConnected=false;f.close();assert.equal(f.root.activeElement,f.fallback);
+  f.launch.isConnected=true;f.root.activeElement=f.launch;f.open();f.root.activeElement=f.fallback;f.close();
+  assert.equal(f.root.activeElement,f.fallback);
+});
+
+test('Underlying modal never wraps Tab while nested modal is visible',()=>{
+  const f=fokusFixture();f.open();f.nested.hidden=false;f.root.activeElement=f.last;
+  assert.equal(f.key(false),false);assert.equal(f.root.activeElement,f.last);
+});
+
+test('Missing modal installs no observer',()=>{
+  const teardown=installiereModalFokus({root:{getElementById:()=>null},id:'absent',Observer:class {constructor(){throw Error('observer');}}});
+  assert.equal(typeof teardown,'function');teardown();
 });

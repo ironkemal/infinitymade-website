@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-28",
+ "erzeugt": "2026-10-29",
  "dateien": 516,
- "funktionen": 4136,
+ "funktionen": 4141,
  "module": [
   "abrechnung",
   "anamnese",
@@ -122503,10 +122503,13 @@
     "fuellen",
     "g",
     "initBarcodeDialog",
+    "installiereModalFokus",
     "lesen",
     "nameQuelle",
     "updateVehEditKindHint",
-    "validateStep4"
+    "validateStep4",
+    "wechsel",
+    "ziele"
    ],
    "modules": [
     "abrechnung",
@@ -139528,10 +139531,13 @@
     "fuellen",
     "g",
     "initBarcodeDialog",
+    "installiereModalFokus",
     "lesen",
     "nameQuelle",
     "updateVehEditKindHint",
-    "validateStep4"
+    "validateStep4",
+    "wechsel",
+    "ziele"
    ],
    "modules": [
     "abrechnung",
@@ -147312,12 +147318,232 @@
    "uiPfad": []
   },
   {
+   "name": "installiereModalFokus",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/modal-escape.js",
+   "start": 18,
+   "end": 60,
+   "lines": 43,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "sichtbar",
+    "wechsel",
+    "ziele"
+   ],
+   "calledBy": [
+    "(datei) module/neu-start.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "sichtbar",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/modal-escape.js",
+   "start": 22,
+   "end": 35,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ziele"
+   ],
+   "calledBy": [
+    "(datei) api-backend/setup/pruefungen.js",
+    "(datei) module/krankenkasse-suche.js",
+    "(datei) module/shell-neu.js",
+    "(datei) module/verordnung-podo.js",
+    "behandlungStornieren",
+    "fuellen",
+    "g",
+    "initBarcodeDialog",
+    "installiereModalFokus",
+    "lesen",
+    "nameQuelle",
+    "updateVehEditKindHint",
+    "validateStep4",
+    "wechsel",
+    "ziele"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "ziele",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/modal-escape.js",
+   "start": 23,
+   "end": 35,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "sichtbar"
+   ],
+   "calledBy": [
+    "installiereModalFokus",
+    "sichtbar",
+    "taste",
+    "wechsel"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "taste",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/modal-escape.js",
+   "start": 25,
+   "end": 35,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ziele"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "wechsel",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/modal-escape.js",
+   "start": 36,
+   "end": 54,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "sichtbar",
+    "ziele"
+   ],
+   "calledBy": [
+    "installiereModalFokus"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "istNeu",
    "kind": "arrow",
    "lang": "js",
    "file": "module/neu-start.js",
-   "start": 12,
-   "end": 21,
+   "start": 13,
+   "end": 22,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -147340,8 +147566,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/neu-start.js",
-   "start": 21,
-   "end": 21,
+   "start": 22,
+   "end": 22,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -242025,6 +242251,15 @@
    "aynalar": []
   },
   {
+   "name": "sichtbar",
+   "orte": [
+    "module/einstellungen-nav.js:24",
+    "module/kopf-profil.js:34",
+    "module/modal-escape.js:22"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "snapshot",
    "orte": [
     "api-backend/lib/startseite/abrechnung.js:77",
@@ -243043,14 +243278,6 @@
    "aynalar": []
   },
   {
-   "name": "sichtbar",
-   "orte": [
-    "module/einstellungen-nav.js:24",
-    "module/kopf-profil.js:34"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "soleIcdForDg",
    "orte": [
     "api-backend/ai/validators/icdDgRules.js:205",
@@ -243119,6 +243346,14 @@
    "orte": [
     "api-backend/billing/utils/behandlungstage.js:26",
     "module/podo-behandlungstag-regel.js:30"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "taste",
+   "orte": [
+    "module/arzt-register.js:320",
+    "module/modal-escape.js:25"
    ],
    "aynalar": []
   },

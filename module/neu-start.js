@@ -9,6 +9,7 @@
  * kehrt sie sofort zurück und lädt nichts. Im neuen lädt sie die Neu-Teile per
  * dynamischem import(), damit das alte Design keinen zusätzlichen Code ausführt.
  */
+import { installiereModalFokus } from './modal-escape.js?v=20261029s255';
 export const istNeu = () => typeof document !== 'undefined' && document.documentElement.dataset.design === 'neu';
 
 /**
@@ -21,6 +22,7 @@ let kontext = null;
 export function neuKontext(k) { kontext = k && typeof k === 'object' ? k : null; }
 
 if (istNeu()) {
+  installiereModalFokus({ id: 'vorlagenModal', startId: 'vorlagenName', rueckfallId: 'vorlagenPanelNewBtn' });
 import('./shell-neu.js?v=20261029s252')
     .then((m) => m.start({ kontext: () => kontext }))
     .catch((e) => console.warn('[neu-start] Shell nicht geladen:', e));
