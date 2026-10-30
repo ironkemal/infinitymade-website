@@ -60,7 +60,8 @@ function memoryClient(tables, ownerId) {
         if (!writable.has(table)) throw failure('Read-only demo table');
         if (operation === 'update' && !filters.length) throw failure('Unfiltered update rejected');
         if (operation === 'insert') {
-          const additions = (Array.isArray(value) ? value : [value]).map(row => ({ ...row, id: row.id || randomUUID(), created_at: row.created_at || new Date().toISOString() }));
+          // Only known SQL NULL defaults for new local rows; existing/explicit values stay untouched.
+          const additions = (Array.isArray(value) ? value : [value]).map(row => ({ ...(table==='prescriptions'?{abrechnung_status:null}:table==='bookings'?{business_id:null}:{}), ...row, id: row.id || randomUUID(), created_at: row.created_at || new Date().toISOString() }));
           if (additions.some(row => !owned(row))) return { data: null, error: { code: '42501', message: 'Foreign owner write rejected' } };
           if (table === 'bookings') {
             const before = [...tables.bookings];

@@ -31,7 +31,7 @@ test('Standort folgt Patienten A/NULL; B und Fremdowner ausgeschlossen',()=>{
   rx.owner_id='foreign';assert.equal(f.run().zaehler.verordnungen.anzahl,5);
   f.kontext.patientsGemeinsam=true;assert.equal(f.run().zaehler.verordnungen.anzahl,5);
 });
-for(const mutate of [f=>delete f.tabellen.bookings,f=>delete f.tabellen.prescription_sessions,f=>f.source.speicherFehler=true])test('Fehlende Quelle/Storagefehler erzeugt Unknown',async()=>{
+for(const mutate of [f=>delete f.tabellen.bookings,f=>delete f.tabellen.prescription_sessions,f=>f.source.speicherFehler=true,f=>{f.source.wiederherstellungsFehler=true;f.source.speicherFehler=false;}])test('Fehlende Quelle/Storagefehler erzeugt Unknown',async()=>{
   const f=fixture();mutate(f);const r=await ladeDemoControlling({kontext:()=>f.kontext,demo:()=>f.source});
   assert.equal(r.zaehler.sitzungen.anzahl,null);assert.doesNotMatch(demoControllingHtml(r),/>0<|€|0,00/);
 });

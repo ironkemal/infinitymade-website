@@ -70,7 +70,7 @@ export async function ladeDemoControlling({kontext,demo,timeoutMs=5000}) {
   try{
     const source=demo();
     const auth=await Promise.race([source.client.auth.getUser(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('DEMO_AUTH_TIMEOUT')),timeoutMs);})]);
-    if(key!==scopeKey(kontext())||auth.error||auth.data?.user?.id!==k.uid||source.speicherFehler)return leer();
+    if(key!==scopeKey(kontext())||auth.error||auth.data?.user?.id!==k.uid||source.speicherFehler||source.wiederherstellungsFehler)return leer();
     const profile=source.tabellen.profiles?.find(p=>p.id===k.uid);
     if(profile?.role!=='owner'||profile.owner_id||profile.is_active===false)return leer();
     const tabellen=structuredClone(Object.fromEntries(['leads','prescriptions','prescription_sessions','bookings'].map(t=>[t,source.tabellen[t]])));

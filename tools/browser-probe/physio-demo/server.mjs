@@ -36,9 +36,10 @@ export function baueFixture({original, tabellenOverrides}) {
     `const tabellen = SZENARIO === 'leer' ? leer : SZENARIO === 'gross' ? grossePraxis() : voll;
 Object.assign(tabellen, ${JSON.stringify(tabellenOverrides)});
 const DEMO_KEY=${JSON.stringify(SPEICHER_KEY)};
-try { const saved=JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); if(saved?.version===1 && saved.tables && typeof saved.tables==='object' && !Array.isArray(saved.tables) && Object.values(saved.tables).every(Array.isArray)) Object.assign(tabellen,saved.tables); } catch {}
-const demoSave=()=>{localStorage.setItem(DEMO_KEY,JSON.stringify({version:1,tables:tabellen}));if(window.__lokaleTestpraxis)window.__lokaleTestpraxis.speicherFehler=false;window.dispatchEvent?.(new Event('physio-demo:changed'));};
-window.__lokaleTestpraxis={tabellen,speichern:demoSave};
+let demoRestoreFehler=false;
+try { const raw=localStorage.getItem(DEMO_KEY); if(raw!==null){const saved=JSON.parse(raw);if(saved?.version!==1||!saved.tables||typeof saved.tables!=='object'||Array.isArray(saved.tables)||Object.keys(saved.tables).some(k=>['__proto__','constructor','prototype'].includes(k))||!Object.values(saved.tables).every(Array.isArray))throw new Error('DEMO_RESTORE_INVALID');Object.assign(tabellen,saved.tables);} } catch {demoRestoreFehler=true;}
+const demoSave=()=>{if(demoRestoreFehler)throw new Error('DEMO_RESTORE_FAILED');localStorage.setItem(DEMO_KEY,JSON.stringify({version:1,tables:tabellen}));if(window.__lokaleTestpraxis)window.__lokaleTestpraxis.speicherFehler=false;window.dispatchEvent?.(new Event('physio-demo:changed'));};
+window.__lokaleTestpraxis={tabellen,speichern:demoSave,get wiederherstellungsFehler(){return demoRestoreFehler;}};
 try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
   fixture = ersetzeGenau(fixture, 'upsert(d) { this.schreib = [\'upsert\', d]; return this; }', 'upsert(d,opts={}) { this.conflict=opts.onConflict; this.schreib = [\'upsert\', d]; return this; }');
   fixture = ersetzeGenau(fixture,
@@ -66,7 +67,8 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
             if(keys.some(k=>!k)) throw new Error('Invalid conflict key');
             const prior=art==='upsert'?rows.find(r=>keys.every(k=>input[k]!=null&&r[k]===input[k])):null;
             const row=prior?Object.assign(prior,clone(input),{updated_at:new Date().toISOString()}):{id:crypto.randomUUID(),created_at:new Date().toISOString(),...clone(input)};
-            if(this.tabelle==='leads'){row.name=[row.first_name,row.last_name].filter(Boolean).join(' ')||row.title||row.name;row.owner_id||=OWNER;row.user_id||=OWNER;row.is_active??=true;row.status||='aktiv';}
+            if(this.tabelle==='leads'){if(!prior&&!Object.hasOwn(row,'business_id'))row.business_id=null;row.name=[row.first_name,row.last_name].filter(Boolean).join(' ')||row.title||row.name;row.owner_id||=OWNER;row.user_id||=OWNER;row.is_active??=true;row.status||='aktiv';}
+            if(this.tabelle==='prescription_sessions'&&!prior&&!Object.hasOwn(row,'booking_id'))row.booking_id=null;
             if(this.tabelle==='anamnese'&&!prior){
               if(!row.owner_id||!row.patient_id||!row.fachbereich)throw new Error('Anamnese scope missing');
               const history=rows.filter(r=>r.owner_id===row.owner_id&&r.patient_id===row.patient_id&&(r.fachbereich||'physio')===row.fachbereich);
@@ -74,7 +76,7 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
               for(const old of history)old.ist_aktuell=false;
               row.ist_aktuell=true;
             }
-            if(this.tabelle==='bookings'){row.owner_id||=OWNER;row.user_id||=OWNER;row.employee_id||=row.user_id;row.status||='confirmed';row.services=clone(tabellen.services.find(s=>s.id===row.service_id)||null);row.leads=clone(tabellen.leads.find(p=>p.id===row.lead_id)||null);}
+            if(this.tabelle==='bookings'){if(!prior&&!Object.hasOwn(row,'business_id'))row.business_id=null;row.owner_id||=OWNER;row.user_id||=OWNER;row.employee_id||=row.user_id;row.status||='confirmed';row.services=clone(tabellen.services.find(s=>s.id===row.service_id)||null);row.leads=clone(tabellen.leads.find(p=>p.id===row.lead_id)||null);}
             if(!prior) rows.push(row); changed.push(row);
           }
         } else {
@@ -127,6 +129,7 @@ window.fetch=async(input,init={})=>{
   if(url.origin!==location.origin||!erlaubt)return demoOriginalFetch(input,init);
   const antwort=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
   const demo=window.__lokaleTestpraxis;
+  if(demo?.wiederherstellungsFehler)return antwort(503,{error:'Gespeicherter Demostand nicht lesbar. Speichern gesperrt; Zähler unbekannt.'});
   if(!demo||demoEngineBusy)return antwort(409,{error:'Lokale Demo: eine Aktion läuft bereits oder Speicher fehlt.'});
   demoEngineBusy=true;
   try {
@@ -145,7 +148,7 @@ window.fetch=async(input,init={})=>{
   } catch(error) {if(error?.name==='AbortError')throw error;return antwort(503,{error:'Lokale Demoaktion konnte nicht gespeichert werden.'});}
   finally {demoEngineBusy=false;}
 };
-window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Rezept-/Sitzungszähler · Beträge unbekannt · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
+window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent=(window.__lokaleTestpraxis?.wiederherstellungsFehler?'ACHTUNG: Gespeicherter Stand nicht lesbar · Startdaten nur Beispiele · Speichern gesperrt · Zähler unbekannt. ':'')+'PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Rezept-/Sitzungszähler · Beträge unbekannt · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
 }
 
 export function erstelleHandler({root, port, rolle, fixture, boot, antworten = API_ANTWORTEN, engine = async(args)=>(await import('./engine.mjs')).fuehreDemoAktionAus(args)}) {

@@ -22,6 +22,13 @@ const confirm = (tabellen, body = prescription()) => fuehreDemoAktionAus({ pfad:
 const batchBody = () => ({ userId: 'THERAPIST', serviceId: 'KG', startDate: '2026-10-30', time: '10:00', recurrence: 'weekly', count: 3, leadId: 'PATIENT', customerName: 'Mara Test' });
 const batch = (tabellen, body = batchBody()) => fuehreDemoAktionAus({ pfad: '/api/booking/batch-create', methode: 'POST', body, tabellen });
 
+test('new synthetic prescription and booking preserve SQL NULL axes instead of missing fields',async()=>{
+  const rx=await confirm(tables());assert.equal(rx.status,200,JSON.stringify(rx.body));
+  assert.equal(rx.tabellen.prescriptions[0].abrechnung_status,null);
+  const bookings=await batch(tables());assert.equal(bookings.status,200);
+  assert.ok(bookings.tabellen.bookings.every(b=>b.business_id===null));
+});
+
 test('series room assignments use actual created booking IDs and survive reload',async()=>{
   const input=tables();input.demo_rooms=[{id:'ROOM',owner_id:'OWNER',business_id:null,name:'KG-Raum'}];
   const out=await batch(input,{...batchBody(),demo_room_id:'ROOM'});

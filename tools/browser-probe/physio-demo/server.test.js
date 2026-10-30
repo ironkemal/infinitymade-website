@@ -1,3 +1,4 @@
+import '../../test-browser-config.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, mkdtemp, writeFile, symlink, rm} from 'node:fs/promises';
@@ -6,18 +7,49 @@ import {resolve} from 'node:path';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import {baueFixture, baueBoot, erstelleHandler, pruefeOptionen, REPO_ROOT, SPEICHER_KEY, CSP, MAX_BODY_BYTES} from './server.mjs';
+import {erstellePhysioDaten} from './daten.mjs';
+import {ladeDemoControlling} from './controlling.mjs';
 
 const original=await readFile(resolve(REPO_ROOT,'tools/browser-probe/redesign-fixture.js'),'utf8');
 const owner='10000000-0000-4000-8000-000000000001';
-function fixture({saved, failStorage=false}={}) {
-  const store=new Map(saved?[[SPEICHER_KEY,JSON.stringify(saved)]]:[]);
+function fixture({saved, rawSaved, failRead=false, failStorage=false,tabellenOverrides}={}) {
+  const store=new Map(rawSaved!==undefined?[[SPEICHER_KEY,rawSaved]]:saved?[[SPEICHER_KEY,JSON.stringify(saved)]]:[]);
   let fail=failStorage;
   const context=vm.createContext({window:{__rsDay:'2026-10-30'},structuredClone,crypto:webcrypto,Intl,Date,setTimeout,
-    localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{if(fail)throw new Error('quota');store.set(k,v);}}});
-  const source=baueFixture({original,tabellenOverrides:{profiles:[{id:owner,sector:'physiotherapy'}],leads:[],services:[{id:'s1',title:'KG'}],bookings:[]}});
+    localStorage:{getItem:k=>{if(failRead)throw new Error('getItem failed');return store.get(k)??null;},setItem:(k,v)=>{if(fail)throw new Error('quota');store.set(k,v);}}});
+  const source=baueFixture({original,tabellenOverrides:tabellenOverrides||{profiles:[{id:owner,sector:'physiotherapy'}],leads:[],services:[{id:'s1',title:'KG'}],bookings:[]}});
   vm.runInContext(source.replace('export function createClient()','function createClient()'),context);
   return {api:context.window.__lokaleTestpraxis,store,setFail:v=>{fail=v;}};
 }
+for(const mode of ['malformed','read-throws','valid','fresh','write-throws'])test(`Real generated fixture plus counter loader: ${mode}`,async()=>{
+  const tabellenOverrides=erstellePhysioDaten({tag:'2026-10-30'});
+  const f=fixture({tabellenOverrides,...(mode==='malformed'?{rawSaved:'{'}:mode==='read-throws'?{failRead:true}:mode==='valid'?{saved:{version:1,tables:tabellenOverrides}}:mode==='write-throws'?{failStorage:true}:{})});
+  const k={rolle:'owner',uid:owner,ownerId:owner,businessId:null,patientsGemeinsam:false,bereit:true};
+  const state=await ladeDemoControlling({kontext:()=>k,demo:()=>f.api});
+  if(['valid','fresh'].includes(mode)){assert.equal(state.status,'ok');assert.equal(state.zaehler.verordnungen.anzahl,6);}
+  else {assert.equal(state.status,'unbekannt');assert.equal(state.zaehler.verordnungen.anzahl,null);}
+});
+for(const options of [{rawSaved:'{'},{rawSaved:'',failRead:false},{failRead:true},{rawSaved:'{"version":2,"tables":{}}'}])test('Restore error persists despite writable storage; original bytes not replaced and writes rejected',async()=>{
+  const f=fixture(options),before=f.store.get(SPEICHER_KEY);
+  assert.equal(f.api.wiederherstellungsFehler,true);assert.throws(()=>f.api.speichern(),/DEMO_RESTORE_FAILED/);
+  const result=await f.api.client.from('leads').insert({first_name:'Darf nicht gespeichert werden'});
+  assert.equal(result.error.code,'LOCAL_STORAGE_FAILED');assert.equal(f.store.get(SPEICHER_KEY),before);
+  assert.equal(f.api.tabellen.leads.length,0);assert.equal(f.api.wiederherstellungsFehler,true);
+});
+test('Missing key and valid saved store have no restore error; write failure is distinct',()=>{
+  assert.equal(fixture().api.wiederherstellungsFehler,false);
+  const f=fixture({saved:{version:1,tables:{leads:[{id:'known'}]}}});assert.equal(f.api.wiederherstellungsFehler,false);assert.equal(f.api.tabellen.leads[0].id,'known');
+  const failed=fixture({failStorage:true});assert.equal(failed.api.wiederherstellungsFehler,false);assert.equal(failed.api.speicherFehler,true);
+});
+test('New local patient gets SQL NULL only when site omitted; explicit site and old unknown survive updates',async()=>{
+  const f=fixture(),c=f.api.client,b='70000000-0000-4000-8000-000000000002';
+  const r=await c.from('leads').insert({first_name:'Ort',business_id:b}).select().single();
+  await c.from('leads').upsert({id:r.data.id,notes:'bleibt B'},{onConflict:'id'});
+  assert.equal(f.api.tabellen.leads[0].business_id,b);
+  delete f.api.tabellen.leads[0].business_id;
+  await c.from('leads').update({notes:'Altbestand ungeklärt'}).eq('id',r.data.id);
+  assert.equal(Object.hasOwn(f.api.tabellen.leads[0],'business_id'),false);
+});
 test('Physio injection precedes persistence; prior browser values win only in isolated store',()=>{
   const fresh=fixture(); assert.equal(fresh.api.tabellen.profiles[0].sector,'physiotherapy');
   assert.equal(fresh.store.has('praxura-lokale-testpraxis-v1'),false);
@@ -25,11 +57,27 @@ test('Physio injection precedes persistence; prior browser values win only in is
   assert.equal(restored.api.tabellen.leads[0].id,'persisted');
   assert.equal(restored.api.tabellen.profiles[0].sector,'physiotherapy');
 });
+test('new local session without booking receives SQL NULL; unknown existing row stays unknown',async()=>{
+  const f=fixture();f.api.tabellen.prescription_sessions=[];
+  await f.api.client.from('prescription_sessions').upsert({prescription_id:'rx',session_number:1,heilmittel_index:0,status:'planned'},{onConflict:'prescription_id,session_number'});
+  assert.equal(f.api.tabellen.prescription_sessions[0].booking_id,null);
+  delete f.api.tabellen.prescription_sessions[0].booking_id;
+  await f.api.client.from('prescription_sessions').upsert({prescription_id:'rx',session_number:1,status:'planned'},{onConflict:'prescription_id,session_number'});
+  assert.equal(Object.hasOwn(f.api.tabellen.prescription_sessions[0],'booking_id'),false);
+});
+test('direct local booking SQL site NULL, explicit other site preserved on later update',async()=>{
+  const f=fixture();const a=await f.api.client.from('bookings').insert({lead_id:'p'}).select().single();
+  assert.equal(a.data.business_id,null);
+  const b=await f.api.client.from('bookings').insert({business_id:'siteB'}).select().single();
+  await f.api.client.from('bookings').update({notes:'bleibt B'}).eq('id',b.data.id);
+  assert.equal(f.api.tabellen.bookings.find(r=>r.id===b.data.id).business_id,'siteB');
+});
 test('create patient, targeted update and upsert preserve one record across reload',async()=>{
   const f=fixture(); const c=f.api.client;
   const inserted=await c.from('leads').insert({first_name:'Clara',last_name:'Probe'}).select().single();
   assert.equal(inserted.error,null); assert.equal(inserted.data.name,'Clara Probe');
   assert.equal(inserted.data.owner_id,owner);
+  assert.equal(inserted.data.business_id,null); // SQL nullable field, not a guessed active site.
   const id=inserted.data.id;
   assert.equal((await c.from('leads').update({notes:'synthetisch'}).eq('id',id)).error,null);
   await c.from('leads').upsert({id,notes:'neu'},{onConflict:'id'});
@@ -183,4 +231,6 @@ test('browser adapter persists successful engine response, rejects intervening e
   assert.equal((await call()).status,201);assert.equal(tables.leads[0].id,'p2');assert.equal(JSON.parse(store.get(SPEICHER_KEY)).tables.leads[0].id,'p2');
   mode='wait';const pending=call();await new Promise(r=>setImmediate(r));tables.leads.push({id:'intervening'});deferred();assert.equal((await pending).status,409);assert.equal(tables.leads.length,2);
   mode='error';assert.equal((await call()).status,422);assert.equal(tables.leads.length,2);
+  const before=JSON.stringify([...store]);window.__lokaleTestpraxis.wiederherstellungsFehler=true;
+  mode='success';assert.equal((await call()).status,503);assert.equal(JSON.stringify([...store]),before);assert.equal(tables.leads.length,2);
 });

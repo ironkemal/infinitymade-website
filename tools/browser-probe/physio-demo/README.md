@@ -76,3 +76,5 @@ Gezielte Zählerprüfung (vorhandenes Playwright, nur lokale synthetische Fixtur
 rtk proxy node --test tools/browser-probe/physio-demo/controlling.test.js
 rtk proxy node tools/browser-probe/physio-demo/controlling-probe.mjs
 ```
+
+Wiederherstellungsfehler beim Lesen/JSON bleiben getrennt vom Schreibstatus. Übersicht zeigt dann Unknown, Hinweisleiste kennzeichnet Startdaten als Beispiele, lokale Schreibwege sind gesperrt. Beschädigter Speicher wird nicht automatisch durch Seed ersetzt; kein automatischer Reset. Nullable Felder neuer synthetischer Patienten/Termine/Sitzungen sowie Abrechnungsachse erhalten nur belegte SQL-NULL-Werte, bestehende unbekannte Felder werden nicht nachträglich normalisiert.

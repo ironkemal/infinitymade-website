@@ -3,12 +3,21 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {erstelleDemoServer} from './server.mjs';
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
 
 const out=process.env.PHYSIO_BERICHT||'/tmp/praxura-physio-probe';
 await mkdir(out,{recursive:true});
 const PORT=Number(process.env.PORT||18086);
 const demo=await erstelleDemoServer({port:PORT,tag:'2026-10-30'});
 const report={checks:[],errors:[],blocked:[],api:[]};
+const sourcePaths=execFileSync('git',['ls-files','--cached','--others','--exclude-standard'],{encoding:'utf8'}).trim().split('\n').filter(p=>/^(dashboard\.(html|js|css)|module\/|design\/|tools\/browser-probe\/physio-demo\/|tools\/browser-probe\/redesign-fixture\.js)/.test(p)&&/\.(js|mjs|css|html)$/.test(p));
+const hashes=async()=>Object.fromEntries(await Promise.all(sourcePaths.map(async p=>[p,createHash('sha256').update(await readFile(p)).digest('hex')])));
+report.head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+report.wip=execFileSync('git',['status','--short'],{encoding:'utf8'});
+report.sourceBefore=await hashes();
+report.clickBoundary={patient:'Original button im panel-kunden; leadSaveBtn',verordnung:'vordNeueBtn → openRezeptModal(null,null), danach sichtbare Patientensuche',termin:'calAddBookingBtn → openBookingModal(null)',panelNavigation:'window.switchPanel nur für Panelnavigation; kein Sidebar-Klicknachweis',calendar:'Sichtbarer Kalenderblock, Zuordnung per _termin.id; force-Klick, kein Sichtbarkeits-/Hitboxnachweis'};
 const browser=await chromium.launch();
 const context=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});
 await context.route('**/*',r=>{
@@ -72,7 +81,10 @@ try{
   await panel('anamnese');await page.locator('#anamPatientSelect').selectOption(patient.id);
   await page.waitForFunction(()=>!document.getElementById('anamSaveBtn').disabled);
   check('Anamnese erneut geöffnet',(await page.locator('#anamHauptbeschwerde').inputValue()).includes('Belastungsschmerz'));
-  await page.evaluate(id=>window.openRezeptModal(null,id),patient.id);
+  await panel('verordnungen');await page.locator('#vordNeueBtn').click();
+  await page.locator('#rzPatientSearch').fill('Physiotest');
+  await page.locator(`#rezeptModal .patient-search-list li[data-id="${patient.id}"]`).click();
+  check('Neue Verordnung über echten Button und Patientenwahl geöffnet',await page.locator('#rzPatientId').inputValue()===patient.id);
   await page.locator('#rzPatientId').waitFor({state:'attached'});
   await page.locator('#rzAusstDate').fill('2026-10-29');
   await page.locator('#rzArztName').fill('Dr. Demo Beispiel');
@@ -101,7 +113,7 @@ try{
   // Clinical source gaps must stay a draft, never fabricate an insurance clearance.
   report.verordnungStatus=rx.status;
   if(await page.locator('#rezeptModal').isVisible())await page.locator('#rezeptModal .modal-close').click();
-  await page.evaluate(()=>window.openBookingModal(null));
+  await panel('calendar');await page.locator('#calAddBookingBtn').click();
   await page.locator('#bkCustomerSearch').fill('Physiotest');
   // Erster Listeneintrag kann „Neuer Patient (Schnellerfassung)“ sein — gezielt die angelegte Patientin wählen.
   await page.locator('#bkCustomerList li',{hasText:'Physiotest'}).first().click();
@@ -129,7 +141,7 @@ try{
   check('Terminserie über Originalhandler gespeichert',series.length===3&&series.every(b=>(Date.parse(b.end_time)-Date.parse(b.start_time))/60000===voService.duration_minutes));
   check('Alle Serientermine tragen gewählten Raum',series.every(b=>t.demo_room_assignments.some(a=>a.booking_id===b.id&&a.room_id===room.id)));
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis&&document.getElementById('demoBookingRoom'));
-  await page.evaluate(()=>window.openBookingModal(null));
+  await panel('calendar');await page.locator('#calAddBookingBtn').click();
   await page.locator('#bkCustomerSearch').fill('Physiotest');
   await page.locator('#bkCustomerList li',{hasText:'Physiotest'}).first().click();
   await page.locator('#bkVeroCards > *').first().waitFor({state:'visible'});
@@ -142,7 +154,7 @@ try{
   t=await tables();const einzel=t.bookings.find(b=>b.lead_id===patient.id&&b.start_time.startsWith('2026-11-03T15:00'));
   check('Einzeltermin trägt gewählten Raum',!!einzel&&t.demo_room_assignments.some(a=>a.booking_id===einzel.id&&a.room_id===room.id));
   // A visible unrelated booking form must never change another booking's room.
-  await page.evaluate(()=>window.openBookingModal(null));
+  await panel('calendar');await page.locator('#calAddBookingBtn').click();
   await page.locator('#demoBookingRoom').selectOption('');
   const statusResult=await page.evaluate(async id=>await window.__lokaleTestpraxis.client.from('bookings').update({status:'confirmed'}).eq('id',id),einzel.id);
   check('Fremde offene Maske überschreibt Raum nicht',!statusResult.error&&(await tables()).demo_room_assignments.some(a=>a.booking_id===einzel.id&&a.room_id===room.id));
@@ -181,8 +193,21 @@ try{
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   const nachReload=await tables();
   check('Exakte Dokumentation und Patient/VO/Sitzung nach Reload erhalten',nachReload.prescription_sessions.some(x=>x.id===dokuSitzung.id&&x.prescription_id===rx.id&&x.booking_id===heuteBk.id&&x.status==='done'&&x.notes===notiz)&&nachReload.bookings.some(b=>b.id===heuteBk.id&&b.lead_id===patient.id)&&nachReload.prescriptions.some(r=>r.id===rx.id&&r.patient_id===patient.id));
-  await panel('overview');await page.waitForFunction(()=>document.querySelector('#panel-overview .px-k-geld dd')?.textContent==='7');
-  check('Dynamische Übersicht enthält neu angelegte VO; Betrag bleibt unbekannt',await page.locator('#panel-overview .px-k-geld').innerText().then(t=>t.includes('Betrag unbekannt')&&!t.includes('€')));
+  await panel('overview');
+  // Original Startseite redraws on each backend answer. Capture one coherent final demo render.
+  const snapshot=await page.waitForFunction(()=>{
+    const e=document.querySelector('#panel-overview .px-k-geld');
+    const values=[...(e?.querySelectorAll('dd')||[])].map(x=>x.textContent);
+    return values[0]==='7'&&values[3]==='13'&&e.innerText.includes('Betrag unbekannt')?{text:e.innerText,values}:false;
+  });
+  const overview=await snapshot.jsonValue();await snapshot.dispose();
+  check('Dynamische Übersicht enthält neu angelegte VO; Betrag bleibt unbekannt',overview.values[0]==='7'&&overview.text.includes('Betrag unbekannt')&&!overview.text.includes('€'));
+  report.identity={patientId:patient.id,rxId:rx.id,confirmedAtCreate:rx.status,seriesIds:series.map(b=>b.id),bookingId:heuteBk.id,sessionId:dokuSitzung.id,notes:notiz};
+  report.overview=overview.text;report.zaehler=overview.values;
+  await writeFile(out+'/synthetischer-store.json',JSON.stringify({version:1,tables:await tables()},null,2));
+  check('Aktuelle Übersicht zählt exakt dokumentierte neue Sitzung',overview.values[3]==='13');
+  await page.locator('#panel-overview .px-k-geld').evaluate(e=>e.scrollIntoView({block:'center'}));
+  await page.screenshot({path:out+'/uebersicht-1440.png',animations:'disabled'});
   await panel('abrechnung');check('Abrechnungsübersicht erreichbar',await page.locator('#panel-abrechnung').isVisible());
   await panel('hours');await page.locator('#demoRoomManager').scrollIntoViewIfNeeded();
   await page.screenshot({path:out+'/raeume-1440.png'});
@@ -195,5 +220,5 @@ try{
   await page.screenshot({path:out+'/raeume-390.png'});
   check('Keine Seitenfehler',report.errors.length===0);check('Keine Fremdrequests',report.blocked.length===0);
 }catch(error){report.failure=error.message;process.exitCode=1;await page.screenshot({path:out+'/fehler.png'}).catch(()=>{});}
-finally{await context.close();await browser.close();await new Promise(r=>demo.server.close(r));await writeFile(out+'/bericht.json',JSON.stringify(report,null,2));}
-console.log(JSON.stringify(report));
+finally{report.sourceAfter=await hashes();report.quellenStabil=JSON.stringify(report.sourceBefore)===JSON.stringify(report.sourceAfter);if(!report.quellenStabil){report.failure='Produktquellen während Probe geändert';process.exitCode=1;}await context.close();await browser.close();await new Promise(r=>demo.server.close(r));await writeFile(out+'/bericht.json',JSON.stringify(report,null,2));}
+console.log(JSON.stringify({head:report.head,checks:report.checks,quellenStabil:report.quellenStabil,failure:report.failure}));
