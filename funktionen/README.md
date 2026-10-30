@@ -117,6 +117,15 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.10.2026 · Physio-Zertifikatspflicht an Leistungen (`module/physio-katalog-migration.js`, be6c9ad6)
+- Neu: Konstante `ZERTIFIKAT_PFLICHT` (Position → Zertifikat, MT/MLD/KGG) + `zertifikatPatches(services)`; `migrierePhysioAltlast()`
+  wendet sie mit an, `autoSeedGkvServices()` (`dashboard.js`) schreibt `required_certificate` schon beim Seed.
+  Niye: die vorhandene Zertifikatsprüfung (`dashboard.js` Buchungswarnung + `module/abrechnung-auswahl.js` Stop) griff nie,
+  weil `services.required_certificate` bei den vorgefertigten Physio-Leistungen leer war → MT/MLD/KGG ohne Zertifikat still
+  gebucht, Absetzungsrisiko. Kein neuer Prüfweg — nur die Daten, die der bestehende Prüfweg erwartet.
+  Nerede: Physio-Sektor beim Laden, `loadServices` → `migrierePhysioAltlast`.
+  Offen: KG-ZNS-Werte fehlen im CHECK `services_required_certificate_check` — eigene Aufgabe (`Physio/PILOT-PLAN.md` K2).
+
 ### 27.10.2026 · Ergänzend mitbuchen + Doppelbehandlung-Terminziel (967758a5, 9669380b)
 - Neu: `module/ergaenzend-mitbuchen.js` → `ergaenzendMitbuchen({rx, bereitsErbracht})` + `bucheErgaenzendMit(supabase, rxId, bookingId)`.
   Niye: nach 0089 wird das ergänzende Heilmittel je Sitzung über `ergaenzend_erbracht` abgerechnet; ohne Extra-Klick
