@@ -3,7 +3,7 @@
 > Üretim: 2026-10-30 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3867 fonksiyon** (3745 JS · 95 bash · 27 ps1) · 486 dosya · 42 sidebar modülü
+**3868 fonksiyon** (3746 JS · 95 bash · 27 ps1) · 486 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -228,7 +228,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `wireBusinessModal()` — [dashboard.js:14361](dashboard.js#L14361-L14442) · 82 satır · services:insert
 
 **Yol 6 — `migrierePhysioAltlast()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `migrierePhysioAltlast()` — [module/physio-katalog-migration.js:68](module/physio-katalog-migration.js#L68-L75) · 8 satır · services:update
+- `migrierePhysioAltlast()` — [module/physio-katalog-migration.js:85](module/physio-katalog-migration.js#L85-L92) · 8 satır · services:update
 
 ### `prescription_sessions` — 5 bağımsız yazma yolu
 

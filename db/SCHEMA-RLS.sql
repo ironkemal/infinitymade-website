@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261027222343 0089_physio_zusatzpositionen
--- EXPORTED AT:        2026-10-27T22:30:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089)
--- ERZEUGT AM:         2026-10-27
+-- LAST MIGRATION:     20261030124333 0090_kg_zns_zertifikate
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090)
+-- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):

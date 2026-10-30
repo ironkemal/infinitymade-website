@@ -793,10 +793,11 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Quelle:** Kemal 22.10.2026 (Dokumentenversand, Interessenten-Anfrage Physio + Podologie); podoloji (Inhalt), db-ustasi (Tabellenzuschnitt), legal-de, onprem O-216.
 
 ### `therapist_certificates`
-- **Warum:** Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.
+- **Warum:** Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG, seit 0090 KG-ZNS je Methode). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.
 - **Seit:** spätestens 08.06.2026 · `cleanup_test_users_keep_fizyo6`
 - **Status:** aktiv
 - **Wer:** `loadEmpCertificates()` in der Teamverwaltung, Prüfung in der Abrechnung.
+- **Achtung:** Prüfung ist reine Gleichheit mit `services.required_certificate`. Die Werteliste steht außer im CHECK fest in `dashboard.html` (`data-cert`), `kalender.html` (`srv-req-cert`), `module/physio-katalog-migration.js` + Test. Kinder-Zertifikat deckt Erwachsene derselben Methode: als **zweite Zeile** gespeichert (`zertifikateMitDeckung`), nicht im Constraint.
 
 ### `document_vorlagen`
 - **Warum:** Druckvorlagen je Inhaber (Rechnung, Mahnung, Bericht) als JSON. Sonst müsste jede Layoutänderung deployt werden.

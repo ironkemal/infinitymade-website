@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { physioAltlastPatches, migrierePhysioAltlast, zertifikatPatches, ZERTIFIKAT_PFLICHT } from './physio-katalog-migration.js';
+import { physioAltlastPatches, migrierePhysioAltlast, zertifikatPatches, zertifikateMitDeckung, ZERTIFIKAT_PFLICHT } from './physio-katalog-migration.js';
 
 const kmt = { code: 'X0106', kuerzel: 'KMT', title: 'Klassische Massagetherapie (KMT)', duration: 20, price: 21.63 };
 
@@ -53,7 +53,7 @@ test('gesetztes Zertifikat bleibt unberührt', () => {
 });
 
 test('nur Werte, die der DB-Constraint kennt', () => {
-  const erlaubt = new Set(['MT', 'MLD', 'KGG']);
+  const erlaubt = new Set(['MT', 'MLD', 'KGG', 'ZNS-BOBATH', 'ZNS-VOJTA', 'ZNS-PNF', 'ZNS-K-BOBATH', 'ZNS-K-VOJTA']);
   for (const v of Object.values(ZERTIFIKAT_PFLICHT)) assert.ok(erlaubt.has(v), v);
 });
 
@@ -64,4 +64,19 @@ test('migrierePhysioAltlast trägt das Zertifikat ein und hält den Cache synchr
   await migrierePhysioAltlast({ supabase, services, katalog: [kmt] });
   assert.deepEqual(calls, [['m', { required_certificate: 'MLD' }]]);
   assert.equal(services[0].required_certificate, 'MLD');
+});
+
+test('KG-ZNS hängt an der Methode', () => {
+  assert.equal(ZERTIFIKAT_PFLICHT.X0710, 'ZNS-BOBATH');
+  assert.equal(ZERTIFIKAT_PFLICHT.X0711, 'ZNS-VOJTA');
+  assert.equal(ZERTIFIKAT_PFLICHT.X0712, 'ZNS-PNF');
+  assert.equal(ZERTIFIKAT_PFLICHT.X0709, 'ZNS-K-VOJTA');
+  assert.equal(ZERTIFIKAT_PFLICHT.X0702, undefined);
+});
+
+test('Kinder-Zertifikat deckt Erwachsene derselben Methode, nie umgekehrt', () => {
+  assert.deepEqual(zertifikateMitDeckung(['ZNS-K-BOBATH']), ['ZNS-K-BOBATH', 'ZNS-BOBATH']);
+  assert.deepEqual(zertifikateMitDeckung(['ZNS-BOBATH']), ['ZNS-BOBATH']);
+  assert.deepEqual(zertifikateMitDeckung(['ZNS-K-VOJTA', 'MT']), ['ZNS-K-VOJTA', 'MT', 'ZNS-VOJTA']);
+  assert.ok(!zertifikateMitDeckung(['ZNS-K-BOBATH']).includes('ZNS-VOJTA'));
 });

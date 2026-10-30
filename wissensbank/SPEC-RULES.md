@@ -2340,3 +2340,10 @@
 - **Nicht verifiziert:** ob eine Kasse absetzt, wenn HB verordnet, aber nie durchgeführt wurde (stünde im
   Physio-Rahmenvertrag § 125 — nicht im Archiv).
 - **Kapsam:** Physiotherapie (Ergo/Logo analog prüfen; Podologie siehe 79933/79934-Regel)
+
+### Physio KG-ZNS Zertifikat yönteme ve yaş grubuna bağlıdır
+- **Kural:** Abrechnungserlaubnis Maßnahme başınadır: X0710/X0720 yalnız Bobath, X0711 yalnız Vojta, X0712 yalnız PNF; X0708/X0728 Kinder-Bobath, X0709 Kinder-Vojta. Kinder Weiterbildung aynı yöntemde Erwachsene'yi karşılar, tersi karşılamaz. KG-Muko (X0702/X0722) Zertifikatsleistung değildir.
+- **Kaynak:** Physio Vertrag § 125 Anlage 7 i. d. F. 21.07.2021 Nr. 3-7 + Anmerkungen (KG-ZNS için Anlage 7 i. d. F. 13.04.2026 Präambel gereği geçerli) · Anlage 1 Lesefassung 01.12.2024 · HeilM-RL § 17 Abs. 2, § 19
+- **Geçerlilik:** 01.06.2026 Präambel teyidi; yeni KG-ZNS içerikleri Anlage 7'ye geçince yeniden kontrol
+- **Kodda:** uygulanmamış — `module/physio-katalog-migration.js` ZERTIFIKAT_PFLICHT yalnız MT/MLD/KGG
+- **Kapsam:** Physio, tüm Verordnungsart

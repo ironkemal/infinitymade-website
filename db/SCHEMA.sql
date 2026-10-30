@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261027222343 0089_physio_zusatzpositionen
--- EXPORTED AT:        2026-10-27T22:30:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089)
--- ERZEUGT AM:         2026-10-27
+-- LAST MIGRATION:     20261030124333 0090_kg_zns_zertifikate
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090)
+-- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -3324,7 +3324,7 @@ ALTER TABLE ONLY public.services
   ADD CONSTRAINT services_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.services
-  ADD CONSTRAINT services_required_certificate_check CHECK (required_certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text]));
+  ADD CONSTRAINT services_required_certificate_check CHECK (required_certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text, 'ZNS-BOBATH'::text, 'ZNS-VOJTA'::text, 'ZNS-PNF'::text, 'ZNS-K-BOBATH'::text, 'ZNS-K-VOJTA'::text]));
 
 ALTER TABLE ONLY public.services
   ADD CONSTRAINT services_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
@@ -3466,7 +3466,7 @@ CREATE TABLE public.therapist_certificates (
 ALTER TABLE ONLY public.therapist_certificates OWNER TO postgres;
 
 ALTER TABLE ONLY public.therapist_certificates
-  ADD CONSTRAINT therapist_certificates_certificate_check CHECK (certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text]));
+  ADD CONSTRAINT therapist_certificates_certificate_check CHECK (certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text, 'ZNS-BOBATH'::text, 'ZNS-VOJTA'::text, 'ZNS-PNF'::text, 'ZNS-K-BOBATH'::text, 'ZNS-K-VOJTA'::text]));
 
 ALTER TABLE ONLY public.therapist_certificates
   ADD CONSTRAINT therapist_certificates_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;

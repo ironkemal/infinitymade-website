@@ -419,7 +419,7 @@ export const TABELLEN = [
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },
     mitarbeiterFilter: 'profile_id',
-    anmerkung: 'Zertifikate (MT, MLD, KGG) von Therapeuten',
+    anmerkung: 'Zertifikate (MT, MLD, KGG, KG-ZNS je Methode) von Therapeuten',
   },
   {
     table: 'terapeut_zertifikat',

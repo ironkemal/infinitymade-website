@@ -98,25 +98,25 @@
 - **Varsayımımız:** Karışık: çoğu terapistin sabit odası var, KG-Gerät/Fango gibi oda-bağlı leistungen ortak oda kullanır. Kodda oda kavramı hiç yok (`db/SCHEMA.sql`'de `raum`/`room` 0 eşleşme).
 - **Cevap "hayır" ise değişen:** Yalnız "sabit oda" ise Mitarbeiter-ayarına tek alan + takvimde etiket yeter; "Leistung'a bağlı" ise oda bir kaynak olur (çakışma kontrolü, `no_overlapping_bookings` benzeri ikinci kısıt).
 - **Öncelik:** 🟠 her gün sürtünme
-- **Eklendi:** 2026-10-30 (Lead-Trier görüşmesi) · **Cevap:** —
+- **Eklendi:** 2026-10-30 (P1 görüşmesi) · **Cevap:** —
 
 ### #12 — Testphase: wird parallel in Praxura abgerechnet?
 - **Soru (Almanca, partnere aynen):** „In den 3–4 Testwochen am neuen Standort: sollen die Verordnungen dort schon über Praxura abgerechnet werden, oder planen und dokumentieren Sie in Praxura und rechnen noch über THEORG ab?"
 - **Varsayımımız:** Test süresince Abrechnung THEORG'da kalır; Praxura'da Termin + Doku + Zuzahlung. Gerekçe: §302 Echtbetrieb kodda Zulassung olmadan kilitli (`api-backend/billing/api/betriebsart.js:126`) ve bir Verordnung tek sistemde tek kez abgerechnet olur.
 - **Cevap "hayır" ise değişen:** Test başında Echtbetrieb hazır olmalı (Zulassung/Testverfahren, gkv-302) — bu, testin başlangıç tarihini bizim değil kasaların takvimine bağlar.
 - **Öncelik:** 🔴 para/hata
-- **Eklendi:** 2026-10-30 (Lead-Trier) · **Cevap:** —
+- **Eklendi:** 2026-10-30 (P1) · **Cevap:** —
 
 ### #13 — THEORG-Export
 - **Soru (Almanca, partnere aynen):** „Können Sie aus THEORG Ihren Patientenstamm und die offenen Verordnungen als Datei (CSV/Excel) exportieren — und dürfen wir uns eine anonymisierte Beispieldatei ansehen?"
 - **Varsayımımız:** Patientenstamm CSV olarak çıkar; `module/patienten-import.js` genel CSV'yi alır. Offene Verordnungen için import bugün yalnız Podologie (`module/verordnung-import.js:2`).
 - **Cevap "hayır" ise değişen:** Export yoksa Datenübernahme elle olur (satış engeli iki Standort geçişinde); export varsa THEORG sütun eşlemesi + Physio-VO-import (yalnız hiç seans yapılmamış VO'lar, podolojideki "Fall D" kuralı) yazılır.
 - **Öncelik:** 🔴 para/hata (geçiş engeli)
-- **Eklendi:** 2026-10-30 (Lead-Trier) · **Cevap:** —
+- **Eklendi:** 2026-10-30 (P1) · **Cevap:** —
 
 ### #14 — Zweiter Standort: eigenes IK?
 - **Soru (Almanca, partnere aynen):** „Bekommt der neue Standort ein eigenes IK und eine eigene Zulassung, oder läuft er unter dem IK der bestehenden Praxis?"
 - **Varsayımımız:** Kendi IK'sı olur (ayrı Betriebsstätte). Mandant modelinde iki Standort + `data_sharing_settings`; §302 tarafında Absender-IK başına ayrı sayaç (`onprem/REGISTER.md` Dateinummer notu).
 - **Cevap "hayır" ise değişen:** Tek IK ise iki Standort'un Abrechnung'u tek gönderici, tek Dateinummer sayacı — iki ayrı hesapta tutulursa numaralar çakışır; tek Abrechnung ekranından iki Standort birlikte çıkmalı.
 - **Öncelik:** 🔴 para/hata
-- **Eklendi:** 2026-10-30 (Lead-Trier) · **Cevap:** —
+- **Eklendi:** 2026-10-30 (P1) · **Cevap:** —

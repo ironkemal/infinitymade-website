@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-30",
  "dateien": 486,
- "funktionen": 3867,
+ "funktionen": 3868,
  "module": [
   "abrechnung",
   "anamnese",
@@ -6960,6 +6960,7 @@
     "wire",
     "wireM13Toggles",
     "withTimeout",
+    "zertifikateMitDeckung",
     "zumFeld",
     "zuzahlungFuerPodoVerordnung"
    ],
@@ -34063,6 +34064,7 @@
     "wire",
     "wireM13Toggles",
     "withTimeout",
+    "zertifikateMitDeckung",
     "zumFeld",
     "zuzahlungFuerPodoVerordnung"
    ],
@@ -64045,7 +64047,8 @@
     "v",
     "wireAboButtons",
     "wireAbrechnungSettings",
-    "zeigeEinrichtungscode"
+    "zeigeEinrichtungscode",
+    "zertifikateMitDeckung"
    ],
    "calledBy": [
     "berlin",
@@ -65162,7 +65165,8 @@
     "getOwnerId",
     "has",
     "loadAbrechnung",
-    "showToast"
+    "showToast",
+    "zertifikateMitDeckung"
    ],
    "calledBy": [
     "fmt",
@@ -142936,12 +142940,78 @@
    ]
   },
   {
+   "name": "zertifikateMitDeckung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/physio-katalog-migration.js",
+   "start": 71,
+   "end": 75,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "add"
+   ],
+   "calledBy": [
+    "fmt",
+    "loadEmpCertificates"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "zertifikatPatches",
    "kind": "function",
    "lang": "js",
    "file": "module/physio-katalog-migration.js",
-   "start": 61,
-   "end": 65,
+   "start": 78,
+   "end": 82,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -143003,8 +143073,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/physio-katalog-migration.js",
-   "start": 68,
-   "end": 75,
+   "start": 85,
+   "end": 92,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -149848,6 +149918,7 @@
     "wire",
     "wireM13Toggles",
     "withTimeout",
+    "zertifikateMitDeckung",
     "zumFeld",
     "zuzahlungFuerPodoVerordnung"
    ],
@@ -218936,8 +219007,8 @@
       {
        "name": "migrierePhysioAltlast",
        "file": "module/physio-katalog-migration.js",
-       "start": 68,
-       "end": 75,
+       "start": 85,
+       "end": 92,
        "lines": 8,
        "writes": [
         "services:update"

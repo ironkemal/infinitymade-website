@@ -47,7 +47,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | # | İş | Bitti sayılır |
 |---|---|---|
 | K1 | ✅ **Zertifikatspositionen** — MT/MLD/KGG hizmetlerine `required_certificate` (seed + mevcutlara backfill) — 30.10.2026 | `module/physio-katalog-migration.js` testleri |
-| K2 | **KG-ZNS sertifikası** — CHECK constraint'e Bobath/Vojta/PNF değerleri (migration) + X07xx eşlemesi | Sertifikasız terapiste KG-ZNS Termin'inde uyarı |
+| K2 | ✅ **KG-ZNS sertifikası** — CHECK constraint'e Bobath/Vojta/PNF değerleri (migration) + X07xx eşlemesi | Sertifikasız terapiste KG-ZNS Termin'inde uyarı |
 | K3 | **Physio ICD ↔ Diagnosegruppe kontrolü** (`verordnung-regeln.js` `icd_accept` boş) — `physio` + `gkv-302` | "Verordnung prüfen" uyumsuz ICD/DG'de uyarı |
 | K4 | **KI kutuda açılır** (jeton modu, O-169) + risk kabulü kaydı | Kutuda Serienplanung + Mail-Assistent çalışır |
 | K5 | **Sesle yazdırma** — mikrofon → kutu → Azure transkripsiyon (EU) → metin kutuda maskelenir → mail taslağı. Tarayıcının Web Speech API'si **kullanılmaz** (sesi Google'a gönderir) | Mail-Assistent'te mikrofon düğmesi, Almanca dikte çalışır |
@@ -69,7 +69,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | I3 | İzleme: alarm maili (O-192) + dış uptime kontrolü |
 | I4 | Güncelleme kanalı: `:stable` terfisini uçtan uca koştur (O-189/O-187) ya da `:beta` + O-222 |
 | I5 | **Erişim devir protokolü** — hasta verisi öncesi anahtarımız silinir, praxis teyit eder |
-| I6 | Test hesabı (boş, uydurma veri) — app.praxura.de, Mehrstandort için Enterprise |
+| I6 | ✅ Test hesabı (boş, uydurma veri) — app.praxura.de, Mehrstandort için Enterprise — Kemal elle açıyor (30.10.2026) |
 | I7 | Physio QA tenant + `canli-test` uçtan uca tur |
 | I8 | §302: AZE/DAS süreci, Physio TA-Validator, Erprobung → Zulassung (§5) |
 

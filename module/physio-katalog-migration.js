@@ -47,15 +47,32 @@ export function physioAltlastPatches(services, kmt) {
  * gibt es seit langem (dashboard.js Buchungswarnung, module/abrechnung-auswahl.js
  * Abrechnungsstopp) — sie greift aber nur, wenn services.required_certificate
  * gesetzt ist. autoSeedGkvServices() hat das Feld nie befüllt, also lief jede
- * MT/MLD/KGG-Leistung ohne Prüfung durch (physio-Bericht Lead-Trier, Absetzung
- * S:01011). Werte = CHECK-Constraint services_required_certificate_check.
- * KG-ZNS (X07xx) fehlt bewusst: der Constraint kennt den Wert noch nicht.
+ * MT/MLD/KGG-Leistung ohne Prüfung durch (Physio-Pilot P1, Absetzung
+ * S:01011). Werte = CHECK-Constraint services_required_certificate_check (0090).
+ * KG-ZNS je Methode, weil die Position an der Methode hängt (Anlage 1 Physio,
+ * Anlage 7 Fassung 21.07.2021 Nr. 3-7; gkv-302 30.10.2026). X0720/X0728 (Tele)
+ * folgen Bobath wie X1221 der MT. KG-Muko X0702 ist keine Zertifikatsposition.
  */
 export const ZERTIFIKAT_PFLICHT = {
   X1201: 'MT', X1221: 'MT',
   X0201: 'MLD', X0202: 'MLD', X0204: 'MLD', X0205: 'MLD',
   X0507: 'KGG',
+  X0710: 'ZNS-BOBATH', X0720: 'ZNS-BOBATH',
+  X0711: 'ZNS-VOJTA',
+  X0712: 'ZNS-PNF',
+  X0708: 'ZNS-K-BOBATH', X0728: 'ZNS-K-BOBATH',
+  X0709: 'ZNS-K-VOJTA',
 };
+
+/** Kinder-Zertifikat deckt Erwachsene derselben Methode ab (Anlage 7 Nr. 3/4), nie umgekehrt. */
+const ZNS_KINDER_DECKT = { 'ZNS-K-BOBATH': 'ZNS-BOBATH', 'ZNS-K-VOJTA': 'ZNS-VOJTA' };
+
+/** Die Prüfung ist Gleichheit: die mitgedeckte Stufe wird als eigene Zeile gespeichert. */
+export function zertifikateMitDeckung(zertifikate) {
+  const alle = new Set(zertifikate || []);
+  for (const z of [...alle]) if (ZNS_KINDER_DECKT[z]) alle.add(ZNS_KINDER_DECKT[z]);
+  return [...alle];
+}
 
 /** Leistungen mit Zertifikatsposition, denen das Pflichtzertifikat fehlt. */
 export function zertifikatPatches(services) {

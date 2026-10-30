@@ -405,6 +405,11 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Z.387-435 Teil B: (1) nur verordnete Leistungen · (3) keine Zuzahlung X9701/X1906/21901/21904 · (4) HB-Pauschalen · (5) HB nicht kombinierbar, 1×/Tag, Praxissitz=Ort ausgeschlossen, Bestätigung auf VO
   - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 1 Leistungsbeschreibung + Anlage 3 (Verordnungsangaben)
 
+### (arşive henüz alınmadı) Physio Vertrag § 125 Anlage 7 Weiterbildung + Anlage 1 Leistungsbeschreibung
+- **Ne:** gkv-302 30.10.2026 okudu, dosya arşivde DEĞİL — `wissensbank` girişi bekliyor. Kaynak: gkv-spitzenverband.de/.../vertraege_125abs1/physiotherapie/ → `20260320_Physiotherapie_Vertrag_125_Anlage_7.pdf` · `20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.pdf` · `20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.pdf`
+- **Sürüm:** Anlage 7 i. d. F. 13.04.2026 (ab 01.06.2026: MLD/KPE, MT, KG-Gerät) · KG-ZNS için Präambel gereği Anlage 7 i. d. F. 21.07.2021 geçerli kalır · Anlage 1 Lesefassung 01.12.2024
+- **Anahtar bölümler:** A7-2021 Inhaltsverzeichnis 3-7 (beş ayrı KG-ZNS Maßnahme) · Anmerkung Nr. 3/4 (Kinder → Erwachsene, aynı yöntem) · A1 „Voraussetzung"/„Weiterbildungsnachweis" blokları: MLD 170 Std, KG-Gerät 40 Std, KG-ZNS-Kinder 300 Std, KG-ZNS 120 Std „in dem betreffenden Bereich", X0306 + X0805 „entsprechende Fortbildung"
+
 ### wissensbank/logopaedie/20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung.txt
 - **Ne:** Anlage 2: Vergütungsvereinbarung i. d. F. vom 12.02.2026 zum Vertrag nach § 125 Absatz 1 SGB V für Stimm-, Sprech-, Sprach- und Schlucktherapie über die Versorgung mit Leistungen der Stimm-, Sprech-, Sprach- und Schlucktherapie und deren Vergütung.
 - **Kapsam:** Inkrafttreten, Beendigung, Vergütung der Leistungen, Leistungserbringergruppen, Heilmittel-Positions-Nummern ve 01.07.2026 tarihinden itibaren geçerli Vergütungsliste (Erstdiagnostik, Einzel- und Gruppentherapie, Hausbesuch, Berichte).
