@@ -12,7 +12,7 @@ Voraussetzung: Node.js (Version 20 oder neuer) und das Praxura-Repository. `npm 
 Angestelltenansicht: zusätzlich `ROLLE=employee` (PowerShell: `$env:ROLLE="employee"`). Beenden mit Strg+C.
 Vorführweg: Leistungen → Patient anlegen → Anamnese → Verordnung (Heilmittel aus der Liste wählen) →
 Termin mit Verordnung, „Mehr Optionen“ → „Serientermin“ → Kalender: Termin anklicken → „Termin starten“ → Notiz.
-Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Dynamische Finanzübersicht ist ausdrücklich nicht verfügbar; der lokale Server liefert dafür keine festen Beispielbeträge mehr. Abrechnungsseite ist bedienbar, eine vollständige dynamische Abrechnungskette ist damit noch nicht abgenommen.
+Nicht verfügbar (gesperrt): KI („Einheiten als Serie verteilen“), Versand, Zahlungen. Startseite und Abrechnung zeigen aktuelle Rezept-/Sitzungszähler aus dem eigenen browserlokalen Store. Geldbeträge bleiben ausdrücklich unbekannt; eine vollständige Abrechnungskette ist damit nicht abgenommen.
 
 Aktueller lokaler Arbeitsordner: `/Users/melihdonmez/.t3/worktrees/infinitymade-website/redesign-praxura-design`, Branch `redesign/praxura-design`. Vor Start `git rev-parse --short HEAD` und `git status --short` prüfen; Nachweise am Arbeitsstand sind kein veröffentlichter Releasepin.
 
@@ -57,7 +57,8 @@ Die mitgelieferten Physio-Daten werden vor einem vorhandenen Browserstand gelade
 - Leistungszuordnung `employee_services` ist lokal schreibbar. Neue `anamnese`-Einträge emulieren ausschließlich für die Demo die Versionierung pro Owner/Patient/Fachbereich: bisherige Versionen werden inaktiv, neue Version wird aktuell. Das ist keine Abnahme des echten DB-Triggers oder seiner Transaktionssicherheit.
 - Ausschließlich `POST /api/rezept/confirm`, `PATCH /api/rezept/<UUID>` und `POST /api/booking/batch-create` werden über einen lokalen Browseradapter an Originalhandler mit synthetischem Speicher gereicht. Ohne verfügbare Engine Fehler 503. Keine echte DB oder Produktionsauthentifizierung. Sonstige Backendaktionen einschließlich Slotabfrage bleiben gesperrt/501.
 - Die interne Engine-Schnittstelle akzeptiert nur lokalen Host und Origin, JSON bis 2 MiB und die drei erlaubten Pfade. Nur erfolgreiche Antworten werden gespeichert. Fehler verwerfen auch mögliche interne Teiländerungen: diese lokale Transaktionshülle ist kein Beleg für Produktions-Transaktionsverhalten. Parallele Aktionen oder zwischenzeitlich geänderter Browserstand ergeben 409 statt Überschreiben.
-- Versand, KI, OAuth, Zahlungen und Storage-Uploads sind gesperrt. Dynamische Finanzkarten liefern ausdrücklich nicht verfügbar (501), keine erfundenen Summen oder aus einem Seed abgeleitete Vollständigkeit.
+- Versand, KI, OAuth, Zahlungen und Storage-Uploads sind gesperrt. Finanz-API weiterhin501; die getrennte lokale Rezept-/Sitzungsübersicht berechnet keine Geldbeträge. Sie zählt gespeicherte Physio-Verordnungen, exakten Status „bereit“ und gültig zugeordnete aktive Sitzungszeilen. „Bereit“ ist keine Versandfreigabe, Sitzungszeilen sind keine Behandlungstage.
+- Zähler aktualisieren sich nach erfolgreicher lokaler Speicherung und bei Neuladen. „Übersicht aktualisieren“ liest ebenfalls den aktuellen Store. Owner-/Patienten-/Standort- und Terminzuordnungen werden vor Anzeige geprüft; Mitarbeiter erhalten keine Zählerkarte. Fehlende Quellen, Speicherfehler oder unbelegte Leistungsindizes ergeben Unbekannt beziehungsweise bekannte Teilmenge. Keine Tarifberechnung und keine Produktionsauth-/RLS-Abnahme.
 - Original-Lesefixture ist teilweise nachsichtig: unbekannte Tabellen können leere Ergebnisse liefern und komplexe Lesefilter werden nicht vollständig ausgewertet. Keine Vollständigkeits-/Scope-Aussage daraus ableiten.
 - Ein gezielt unterstützter Standortfilter `business_id.eq.<UUID>,business_id.is.null` schneidet zusammen mit dem gesendeten Ownerfilter A/NULL gegen B/Fremdowner zu. Das belegt nur diesen lokalen Filter, keine allgemeine Mehrstandort-/RLS-Abnahme. OR-Schreibwege bleiben gesperrt.
 - Nicht unterstützte Schreibfilter/RPCs scheitern ausdrücklich. Ungefilterte Updates und Löschungen sind gesperrt. LocalStorage-Fehler setzen die lokale Tabellenänderung zurück.
@@ -67,4 +68,11 @@ Prüfung ohne Listener:
 
 ```sh
 rtk proxy node --test tools/browser-probe/physio-demo/server.test.js
+```
+
+Gezielte Zählerprüfung (vorhandenes Playwright, nur lokale synthetische Fixture-Schreibwege):
+
+```sh
+rtk proxy node --test tools/browser-probe/physio-demo/controlling.test.js
+rtk proxy node tools/browser-probe/physio-demo/controlling-probe.mjs
 ```

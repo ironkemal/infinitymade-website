@@ -5093,6 +5093,25 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
   let notes = document.getElementById('bkNotes').value.trim();
+  // Robust customer resolution: if hidden fields are empty but the search
+  // input shows a name, try to match a lead and use it.
+  if (!custId) {
+    const searchEl = document.getElementById('bkCustomerSearch');
+    const searchTxt = (searchEl?.value || '').trim();
+    if (searchTxt && Array.isArray(window.bkAllLeads)) {
+      const lower = searchTxt.toLowerCase();
+      const match = window.bkAllLeads.find(l =>
+        (displayNameWithBirth(l) || '').toLowerCase() === lower ||
+        (l.title || '').toLowerCase() === lower
+      ) || window.bkAllLeads.find(l => (l.title || '').toLowerCase().startsWith(lower));
+      if (match) {
+        custId = match.id;
+        cust = displayName(match);
+        document.getElementById('bkCustomer').value = cust;
+        document.getElementById('bkCustomerId').value = custId;
+      }
+    }
+  }
   const serienKontext = Object.freeze({ prescriptionId: document.getElementById('bkSelectedRxId')?.value || '', flowPrescriptionId: window._physioFlow?.prescription_id || '', ownerId: getOwnerId(), patientId: custId });
   // Validation: Required fields
   if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }
@@ -5120,25 +5139,6 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  // Robust customer resolution: if hidden fields are empty but the search
-  // input shows a name, try to match a lead and use it.
-  if (!custId) {
-    const searchEl = document.getElementById('bkCustomerSearch');
-    const searchTxt = (searchEl?.value || '').trim();
-    if (searchTxt && Array.isArray(window.bkAllLeads)) {
-      const lower = searchTxt.toLowerCase();
-      const match = window.bkAllLeads.find(l =>
-        (displayNameWithBirth(l) || '').toLowerCase() === lower ||
-        (l.title || '').toLowerCase() === lower
-      ) || window.bkAllLeads.find(l => (l.title || '').toLowerCase().startsWith(lower));
-      if (match) {
-        custId = match.id;
-        cust = displayName(match);
-        document.getElementById('bkCustomer').value = cust;
-        document.getElementById('bkCustomerId').value = custId;
-      }
-    }
-  }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
   if (!isGroup) {
     if (!cust || !custId) { terminFehler('Bitte einen Kunden aus der Liste auswählen.'); return; }

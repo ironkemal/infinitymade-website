@@ -10,6 +10,21 @@ const start=handler.indexOf('    await speichereLeistungenFuerErstellte(created,
 const end=handler.indexOf('    // Terminbestätigung drucken dialog',start);
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 
+test('Ursprünglicher Patientenfallback läuft vor erstem await und Snapshot, spätere Maske bleibt wirkungslos',async()=>{
+  const fallbackStart=handler.indexOf('  // Robust customer resolution:');
+  const snapshotStart=handler.indexOf(snapshot);
+  assert.ok(fallbackStart>=0&&fallbackStart<snapshotStart&&snapshotStart<firstAwait);
+  const fields={bkCustomerSearch:{value:'Patient A'},bkCustomer:{value:''},bkCustomerId:{value:''},bkSelectedRxId:{value:'rx-A'}};
+  const win={bkAllLeads:[{id:'patient-A',title:'Patient A'}],_physioFlow:null};
+  const code=handler.slice(fallbackStart,snapshotStart)+snapshot+'\nawait wait();return serienKontext;';
+  let release;const wait=new Promise(r=>release=r);
+  const run=new AsyncFunction('document','window','custId','cust','getOwnerId','displayNameWithBirth','displayName','wait',code);
+  const pending=run({getElementById:id=>fields[id]},win,'','',()=> 'owner-A',l=>l.title,l=>l.title,()=>wait);
+  fields.bkCustomerSearch.value='Patient B';fields.bkCustomerId.value='patient-B';fields.bkSelectedRxId.value='rx-B';win.bkAllLeads=[{id:'patient-B',title:'Patient B'}];
+  release();const result=await pending;
+  assert.equal(result.patientId,'patient-A');assert.equal(result.prescriptionId,'rx-A');assert.equal(result.ownerId,'owner-A');
+});
+
 for(const ursprungsFlow of [false,true])test(`Originalaufrufer bindet nach Dialog-/Ownerwechsel ursprünglichen Kontext (Flow=${ursprungsFlow})`,async()=>{
   assert.ok(snapshot&&handler.indexOf(snapshot)<firstAwait,'Snapshot muss vor erstem await entstehen');
   assert.ok(start>=0&&end>start);

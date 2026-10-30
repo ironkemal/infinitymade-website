@@ -37,7 +37,7 @@ export function baueFixture({original, tabellenOverrides}) {
 Object.assign(tabellen, ${JSON.stringify(tabellenOverrides)});
 const DEMO_KEY=${JSON.stringify(SPEICHER_KEY)};
 try { const saved=JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); if(saved?.version===1 && saved.tables && typeof saved.tables==='object' && !Array.isArray(saved.tables) && Object.values(saved.tables).every(Array.isArray)) Object.assign(tabellen,saved.tables); } catch {}
-const demoSave=()=>localStorage.setItem(DEMO_KEY,JSON.stringify({version:1,tables:tabellen}));
+const demoSave=()=>{localStorage.setItem(DEMO_KEY,JSON.stringify({version:1,tables:tabellen}));if(window.__lokaleTestpraxis)window.__lokaleTestpraxis.speicherFehler=false;window.dispatchEvent?.(new Event('physio-demo:changed'));};
 window.__lokaleTestpraxis={tabellen,speichern:demoSave};
 try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
   fixture = ersetzeGenau(fixture, 'upsert(d) { this.schreib = [\'upsert\', d]; return this; }', 'upsert(d,opts={}) { this.conflict=opts.onConflict; this.schreib = [\'upsert\', d]; return this; }');
@@ -89,7 +89,7 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
         }
         demoSave();
         return {data:clone(this.art==='liste'?changed:changed[0]||null),error:null,count:changed.length};
-      } catch(e) { for(const k of Object.keys(tabellen)) delete tabellen[k]; Object.assign(tabellen,backup); return {data:null,error:{code:e.demoRaum?'DEMO_ROOM_CONFLICT':'LOCAL_STORAGE_FAILED',message:e.demoRaum?e.message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}}; }
+      } catch(e) { for(const k of Object.keys(tabellen)) delete tabellen[k]; Object.assign(tabellen,backup); if(!e.demoRaum){window.__lokaleTestpraxis.speicherFehler=true;window.dispatchEvent?.(new Event('physio-demo:changed'));} return {data:null,error:{code:e.demoRaum?'DEMO_ROOM_CONFLICT':'LOCAL_STORAGE_FAILED',message:e.demoRaum?e.message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}}; }
     }
 ` + fixture.slice(end);
   // Rebuild only the relations used by the app from current demo tables. Seed
@@ -140,11 +140,12 @@ window.fetch=async(input,init={})=>{
     localStorage.setItem(${JSON.stringify(SPEICHER_KEY)},JSON.stringify({version:1,tables:result.tabellen}));
     for(const key of Object.keys(demo.tabellen))delete demo.tabellen[key];
     Object.assign(demo.tabellen,result.tabellen);
+    demo.speicherFehler=false;window.dispatchEvent(new Event('physio-demo:changed'));
     return antwort(response.status,result.body);
   } catch(error) {if(error?.name==='AbortError')throw error;return antwort(503,{error:'Lokale Demoaktion konnte nicht gespeichert werden.'});}
   finally {demoEngineBusy=false;}
 };
-window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Finanzübersicht nicht verfügbar · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
+window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Rezept-/Sitzungszähler · Beträge unbekannt · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
 }
 
 export function erstelleHandler({root, port, rolle, fixture, boot, antworten = API_ANTWORTEN, engine = async(args)=>(await import('./engine.mjs')).fuehreDemoAktionAus(args)}) {
@@ -175,14 +176,14 @@ export function erstelleHandler({root, port, rolle, fixture, boot, antworten = A
       if(u.pathname==='/api/startseite/zusammenfassung') return json(501,{error:'Dynamische Finanzübersicht in der lokalen Testpraxis nicht verfügbar. Keine berechneten Finanzsummen.'});
       if(u.pathname.startsWith('/api/')) { const x=Object.hasOwn(antworten,u.pathname)?antworten[u.pathname]:null; return x?json(200,typeof x==='function'?await x({rolle}):x):json(501,{error:'Lokale Testversion: dieser Backend-Leseweg ist nicht verfügbar.'}); }
       if(u.pathname==='/vendor/supabase-js.js'||u.pathname==='/demo-boot.js') {res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:u.pathname==='/demo-boot.js'?boot:fixture);}
-      if(u.pathname==='/demo-raeume.mjs'){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:await readFile(new URL('./raeume.mjs',import.meta.url)));}
+      if(['/demo-raeume.mjs','/demo-controlling.mjs'].includes(u.pathname)){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:await readFile(new URL(u.pathname==='/demo-raeume.mjs'?'./raeume.mjs':'./controlling.mjs',import.meta.url)));}
       const name=u.pathname==='/'?'dashboard.html':decodeURIComponent(u.pathname).slice(1);
       const parts=name.split('/');
       if(parts.some(p=>!p||p.startsWith('.')) || (parts.length>1&&!ASSET_DIRS.has(parts[0])) || !MIME[extname(name)] || (extname(name)==='.json'&&name!=='manifest.json')) return json(403,{error:'Nicht verfügbar'});
       const path=await realpath(resolve(root,name));
       if(!path.startsWith(root+sep)) return json(403,{error:'Nicht verfügbar'});
       let data=await readFile(path);
-      if(name==='dashboard.html') data=data.toString().replace('<head>','<head><script src="/demo-boot.js"></script><script type="module" src="/demo-raeume.mjs"></script>');
+      if(name==='dashboard.html') data=data.toString().replace('<head>','<head><script src="/demo-boot.js"></script><script type="module" src="/demo-raeume.mjs"></script><script type="module" src="/demo-controlling.mjs"></script><style>/* Local demo: unavailable billing actions must not suggest calculated money. */ #panel-abrechnung > :not([data-demo-controlling]){display:none!important}</style>');
       if(name==='dashboard.js'){
         data=ersetzeGenau(data.toString(),'  bkActionBookingCache = booking || null;',"  bkActionBookingCache = booking || null; window.dispatchEvent(new CustomEvent('physio-demo:booking',{detail:{id:booking?.id||null}}));");
         data=ersetzeGenau(data,"document.getElementById('bkSaveBtn').addEventListener('click', async () => {", "document.getElementById('bkSaveBtn').addEventListener('click', async () => {\n  const __demoRoom = document.getElementById('demoBookingRoom')?.value || ''; ");
@@ -190,6 +191,7 @@ export function erstelleHandler({root, port, rolle, fixture, boot, antworten = A
         data=ersetzeGenau(data,'    const payload = {\n      userId: empId,','    const payload = {\n      demo_room_id: __demoRoom,\n      userId: empId,');
         data=data.replaceAll('const parentPayload = {','const parentPayload = {\n        __demo_room_id: __demoRoom,');
         data=ersetzeGenau(data,"if (!res.ok) { terminFehler('Fehler beim Erstellen der Serientermine.'); return; }", "if (!res.ok) { const failure=await res.json().catch(()=>({})); terminFehler(failure.error || 'Fehler beim Erstellen der Serientermine.'); return; }");
+        data+=`\nwindow.__physioControllingKontext=()=>({rolle:currentProfile?.role,uid:currentSession?.user?.id,ownerId:getOwnerId(),businessId:bootBusinessSwitcher.scopeBusinessId,patientsGemeinsam:dataSharing.patients,bereit:loadDataSharing.scopeBekannt===true&&bootBusinessSwitcher.scopeBekannt===true&&loadDataSharing.scopeOwnerId===getOwnerId()&&bootBusinessSwitcher.scopeOwnerId===getOwnerId()});\n`;
       }
       res.writeHead(200,{'Content-Type':MIME[extname(path)]+'; charset=utf-8'});res.end(req.method==='HEAD'?undefined:data);
     } catch { json(404,{error:'Nicht verfügbar'}); }

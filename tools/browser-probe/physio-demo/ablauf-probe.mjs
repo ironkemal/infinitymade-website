@@ -181,8 +181,8 @@ try{
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof window.switchPanel==='function'&&window.__lokaleTestpraxis);
   const nachReload=await tables();
   check('Exakte Dokumentation und Patient/VO/Sitzung nach Reload erhalten',nachReload.prescription_sessions.some(x=>x.id===dokuSitzung.id&&x.prescription_id===rx.id&&x.booking_id===heuteBk.id&&x.status==='done'&&x.notes===notiz)&&nachReload.bookings.some(b=>b.id===heuteBk.id&&b.lead_id===patient.id)&&nachReload.prescriptions.some(r=>r.id===rx.id&&r.patient_id===patient.id));
-  await panel('overview');await page.waitForFunction(()=>document.querySelector('.px-k-geld')?.textContent.includes('Zahlen gerade nicht verfügbar'));
-  check('Dynamische Finanzsummen ausdrücklich nicht verfügbar statt feste Seedbeträge',await page.locator('#physioDemoHinweis').innerText().then(t=>t.includes('Dynamische Finanzübersicht nicht verfügbar')));
+  await panel('overview');await page.waitForFunction(()=>document.querySelector('#panel-overview .px-k-geld dd')?.textContent==='7');
+  check('Dynamische Übersicht enthält neu angelegte VO; Betrag bleibt unbekannt',await page.locator('#panel-overview .px-k-geld').innerText().then(t=>t.includes('Betrag unbekannt')&&!t.includes('€')));
   await panel('abrechnung');check('Abrechnungsübersicht erreichbar',await page.locator('#panel-abrechnung').isVisible());
   await panel('hours');await page.locator('#demoRoomManager').scrollIntoViewIfNeeded();
   await page.screenshot({path:out+'/raeume-1440.png'});

@@ -114,7 +114,7 @@ test('fixture connection drift fails before serving',()=>{
 test('CLI options reject public/invalid settings and boot states limits',()=>{
   for(const options of [{port:80},{port:'18086x'},{rolle:'admin'},{tag:'2026-02-30'}]) assert.throws(()=>pruefeOptionen(options));
   assert.deepEqual(pruefeOptionen({port:'18086',rolle:'employee',tag:'2026-10-30'}),{port:18086,rolle:'employee',tag:'2026-10-30'});
-  assert.match(baueBoot({rolle:'owner',tag:'2026-10-30'}),/Dynamische Finanzübersicht nicht verfügbar/);
+  assert.match(baueBoot({rolle:'owner',tag:'2026-10-30'}),/Dynamische Rezept-\/Sitzungszähler · Beträge unbekannt/);
   assert.match(CSP,/connect-src 'self'/);
 });
 async function request(handler,url,{method='GET',host='127.0.0.1:18086'}={}) {
@@ -173,11 +173,11 @@ test('engine success carries synthetic tables; error carries no tentative mutati
 test('browser adapter persists successful engine response, rejects intervening edits and failed response',async()=>{
   let deferred;let mode='success';const store=new Map();
   const tables={leads:[{id:'p1'}]};
-  const window={__lokaleTestpraxis:{tabellen:tables},addEventListener(){},fetch:async()=>{
+  const window={__lokaleTestpraxis:{tabellen:tables},addEventListener(){},dispatchEvent(){},fetch:async()=>{
     if(mode==='wait')await new Promise(r=>{deferred=r;});
     return new Response(JSON.stringify(mode==='error'?{error:'bad'}:{body:{id:'new'},tabellen:{leads:[{id:'p2'}]}}),{status:mode==='error'?422:201});
   }};
-  const context=vm.createContext({window,localStorage:{setItem:(k,v)=>store.set(k,v)},location:{href:'http://127.0.0.1:18086/dashboard.html',origin:'http://127.0.0.1:18086'},Request,Response,URL});
+  const context=vm.createContext({window,localStorage:{setItem:(k,v)=>store.set(k,v)},location:{href:'http://127.0.0.1:18086/dashboard.html',origin:'http://127.0.0.1:18086'},Request,Response,URL,Event});
   vm.runInContext(baueBoot({rolle:'owner',tag:'2026-10-30'}),context);
   const call=()=>window.fetch('/api/rezept/confirm',{method:'POST',body:'{}'});
   assert.equal((await call()).status,201);assert.equal(tables.leads[0].id,'p2');assert.equal(JSON.parse(store.get(SPEICHER_KEY)).tables.leads[0].id,'p2');
