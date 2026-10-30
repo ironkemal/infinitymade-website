@@ -5,8 +5,8 @@ import { EINWILLIGUNG_TEXTE, renderEinwilligungText, renderTerminDatenschutz } f
 const basis = { praxis_name: 'Praxis Nord', praxis_adresse: 'Weg 1, 53721 Siegburg', patient_name: 'A B', patient_geburtsdatum: '01.01.1970', datum: '06.10.2026', profile: {}, optionen: [] };
 const ds = (extra = {}) => renderEinwilligungText('datenschutz', { ...basis, ...extra }).text;
 
-test('Version erhöht: v4 (Herstellername 09.10.) (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
-  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v4-2026-10-09');
+test('Version erhöht: v5 (KI mit Mail-Entwürfen 30.10.) (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
+  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v5-2026-10-30');
   assert.equal(EINWILLIGUNG_TEXTE.foto.version, 'foto-v2-2026-10-06');
 });
 
@@ -53,13 +53,14 @@ test('Datenschutzbeauftragte: nur wenn benannt', () => {
   assert.match(ds({ dsb_kontakt: 'dsb@praxis.de' }), /Datenschutzbeauftragte[^\n]*dsb@praxis\.de/);
 });
 
-test('KI-Absatz nur bei aktivem Modul; nennt Microsoft als Empfänger, „pseudonymisiert“, kein Mail-Entwurf, kein C5', () => {
+test('KI-Absatz nur bei aktivem Modul; nennt Microsoft als Empfänger, „pseudonymisiert“, Mail-Entwurf mit Maskierungsgrenze, kein C5', () => {
   assert.doesNotMatch(ds({}), /Microsoft/);
   const t = ds({ kiAktiv: true });
   assert.match(t, /Microsoft Ireland Operations Ltd/);
   assert.match(t, /pseudonymisierte Strukturangaben/);
   assert.match(t, /Rechenzentrum in Schweden/);
-  assert.doesNotMatch(t, /E-Mail-Entwürfe|Mail-Entwürfe|Terminbestätigung|C5/);
+  assert.match(t, /Maskierung kann nicht garantieren/);
+  assert.doesNotMatch(t, /Terminbestätigung|C5/);
 });
 
 test('verbotene Formulierungen (legal-de 05.10.2026) kommen in keinem Text vor', () => {

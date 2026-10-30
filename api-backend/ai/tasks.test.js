@@ -48,7 +48,7 @@ test('Series rejects invented employee, unoffered times and duplicate dates',asy
   if(failure==='employee')selected[0].employeeId='invented';if(failure==='time')selected[0].time='22:00';if(failure==='duplicate')selected[1]={...selected[0]};return response({selected,report:'Termine gewählt.'});
  })),{code:'KI_ANTWORT_UNGUELTIG'});
 });
-test('Freitext mail drafts stay closed in Jeton and direct without explicit freeText',async()=>{
+test('Freitext mail drafts stay closed in both modes without explicit freeText',async()=>{
  for(const run of [b2c,b2b])for(const config of [cfg,{...cfg,mode:'direkt'}])await assert.rejects(run({intent:'Bitte Entwurf erstellen'},context(async()=>{assert.fail('Provider forbidden');},config)));
 });
 test('OCR remains closed with no transport regardless of valid synthetic payload',async()=>{

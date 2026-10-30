@@ -204,7 +204,7 @@ test('mailReady gate blocks mail draft tasks when false', async () => {
   );
 });
 
-test('jeton mode refuses B-freetext with 403 KI_FREITEXT_GESPERRT', async () => {
+test('jeton mode without AI_ALLOW_FREETEXT refuses B-freetext with 403 KI_FREITEXT_GESPERRT', async () => {
   const cfgJeton = createAiConfig({
     AI_MODE: 'jeton',
     AI_ACTIVATION_READY: '1',
@@ -233,8 +233,8 @@ test('jeton mode refuses B-freetext with 403 KI_FREITEXT_GESPERRT', async () => 
   );
 });
 
-test('direct mode triggers 409 KI_RUECKFRAGE challenge on unconfirmed residual PII in freetext', async () => {
-  const cfg = makeReadyConfig();
+for (const mode of ['direkt', 'jeton']) test(`${mode} mode triggers 409 KI_RUECKFRAGE challenge on unconfirmed residual PII in freetext`, async () => {
+  const cfg = makeReadyConfig(mode);
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
   await assert.rejects(

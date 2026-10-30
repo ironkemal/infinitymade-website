@@ -3,9 +3,9 @@
 <h1>M4 — synthetische lokale Probe</h1><p>Kein echter KI-Aufruf. Keine Datenbankschreibzugriffe.</p><input id="source" value="Synthetic"><div id="settings"></div><pre id="results"></pre>
 <div id="confirmModal" hidden><button class="modal-close">X</button><h2 id="confirmModalTitle"></h2><div id="confirmModalText"></div><button id="confirmModalCancel">Abbrechen</button><button id="confirmModalOk">Bestätigen</button></div>
 <script type="module">
-import {getKiConfig,requestKiTask,updateOwnerOptIn,createKiSourceGuard} from '../../module/ki-client.js?v=20261008m4b';
-import {zeigeKiRueckfrageDialog} from '../../module/ki-rueckfrage.js?v=20261008m4b';
-import {mountKiEinstellungen} from '../../module/ki-einstellungen.js?v=20261008m4b';
+import {getKiConfig,requestKiTask,updateOwnerOptIn,createKiSourceGuard} from '../../module/ki-client.js?v=20261030k4';
+import {zeigeKiRueckfrageDialog} from '../../module/ki-rueckfrage.js?v=20261030k4';
+import {mountKiEinstellungen} from '../../module/ki-einstellungen.js?v=20261030k4';
 window.m4Probe={complete:false,results:[]};
 const results=window.m4Probe.results;
 const assert=(v,msg='Assertion failed')=>{if(!v)throw Error(msg);};

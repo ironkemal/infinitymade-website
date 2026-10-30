@@ -523,14 +523,13 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-}
 
-      # KI — Vertrag mit M4 (KHS K2.7/M4.1, onprem O-151). Der Kunde bringt
-      # seinen eigenen Schluessel mit (K4 BYO-Key); kein zentraler Vermittler
-      # (K6). AI_MODE=aus ist der Box-Default: Anwendung startet vollstaendig,
-      # KI-Funktionen antworten 503 mit deutscher Meldung (K-3). Diese Namen
-      # und NUR diese — der Code liest sie ab M4.1 (bis dahin AZURE_*-Rueck-
-      # fall nur auf SaaS). Kein Schluessel im Image oder in der Vorlage (G2).
+      # KI — K4/K-20: AI_MODE=jeton holt einen Kurzzeit-Jeton vom Zentrum und geht
+      # direkt zu Azure; Inhalte laufen nicht ueber das Zentrum (K6). AI_MODE=aus
+      # ist der Box-Default: Anwendung startet vollstaendig, KI-Funktionen
+      # antworten 503 mit deutscher Meldung. Einschalten: install.sh --ki.
+      # Kein Schluessel im Image oder in der Vorlage (G2).
       AI_MODE: ${AI_MODE:-aus}
-      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_PROVIDER: ${AI_PROVIDER:-azure}
       AI_ENDPOINT: ${AI_ENDPOINT:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL_TEXT: ${AI_MODEL_TEXT:-}

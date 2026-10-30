@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-08-v1';
+export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-30-v1';
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getDefaultDirectory() {

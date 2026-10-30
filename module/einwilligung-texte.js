@@ -148,7 +148,7 @@ export const EINWILLIGUNG_TEXTE = {
   // einzeln waehlbar und standardmaessig AUS.
   // -------------------------------------------------------------------
   datenschutz: {
-    version: 'datenschutz-v4-2026-10-09',
+    version: 'datenschutz-v5-2026-10-30',
     consentType: 'datenschutz',
     titel: 'Datenschutz — Information und Einwilligung',
     kurzfassung: [
@@ -189,18 +189,23 @@ export const EINWILLIGUNG_TEXTE = {
           + 'Andere Empfänger gibt es nur, wenn Sie eingewilligt haben oder ein Gesetz es vorschreibt.',
       },
       {
-        // Nur bei aktivem KI-Modul (K-20, Opt-in). Wortlaut legal-de 05.10.2026; vorläufig bis zur
-        // Anwaltsantwort (LEGAL_DECISIONS Nachtrag 4): keine Mail-Entwürfe, kein C5-Satz.
+        // Nur bei aktivem KI-Modul (K-20, Opt-in). Wortlaut legal-de 30.10.2026 (Inhaber-Risikoübernahme,
+        // LEGAL_DECISIONS): Mail-Entwürfe mit Freitext sind enthalten; weiterhin kein C5-Satz.
         ueberschrift: 'Optionale KI-Unterstützung',
         nur: 'ki',
         text:
-          'Für einzelne Planungsaufgaben (z. B. Terminserien entsprechend Ihrer Verordnung) nutzt die '
-          + 'Praxis einen KI-Dienst von Microsoft (Microsoft Ireland Operations Ltd., Dublin). '
-          + 'Übermittelt werden nur pseudonymisierte Strukturangaben: keine Namen, kein Geburtsdatum, '
-          + 'keine Anschrift, keine Versicherten- oder IK-Nummer und kein Freitext. Die Verarbeitung '
-          + 'erfolgt in einem Rechenzentrum in Schweden (EU). Microsoft ist Unterauftragsverarbeiter '
-          + 'des Softwareanbieters und an einen Auftragsverarbeitungsvertrag gebunden. Zum Schutz vor '
-          + 'Missbrauch kann Microsoft auffällige Anfragen speichern und durch Mitarbeiter im '
+          'Die Praxis nutzt einen KI-Dienst von Microsoft (Microsoft Ireland Operations Ltd., Dublin) für '
+          + 'einzelne Planungsaufgaben (z. B. Terminserien entsprechend Ihrer Verordnung) und für Entwürfe '
+          + 'von E-Mails. Für Planungsaufgaben werden nur pseudonymisierte Strukturangaben übermittelt: '
+          + 'keine Namen, kein Geburtsdatum, keine Anschrift, keine Versicherten- oder IK-Nummer. Für '
+          + 'Mail-Entwürfe wird auch Text übermittelt, den das Praxisteam eingibt; er kann Angaben zu Ihrer '
+          + 'Person und Gesundheit enthalten. Dieser Text wird vor der Übermittlung automatisch maskiert: '
+          + 'Namen, Kontaktdaten und Kennnummern werden, soweit erkannt, durch Platzhalter ersetzt. Die '
+          + 'Maskierung kann nicht garantieren, dass alle personenbezogenen Angaben vollständig entfernt '
+          + 'werden; einzelne Angaben können daher an Microsoft gelangen. Die Verarbeitung erfolgt in einem '
+          + 'Rechenzentrum in Schweden (EU). Microsoft ist Unterauftragsverarbeiter des Softwareanbieters '
+          + 'und an einen Auftragsverarbeitungsvertrag gebunden. Zum Schutz vor Missbrauch kann Microsoft '
+          + 'auffällige Anfragen einschließlich der darin enthaltenen Angaben speichern und durch Mitarbeiter im '
           + 'Europäischen Wirtschaftsraum prüfen lassen. Eine Übermittlung in Länder außerhalb des Europäischen '
           + 'Wirtschaftsraums ist nicht vorgesehen. Weil Microsoft zu einem Konzern mit Sitz in den USA gehört, sind '
           + 'Zugriffe nach US-Recht nicht völlig auszuschließen. Microsoft ist nach dem EU-US Data '

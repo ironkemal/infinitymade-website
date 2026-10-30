@@ -42,9 +42,9 @@
  * (`trg_patient_consents_immutable`) und Löschen 10 Jahre lang (§ 630f Abs. 3 BGB).
  */
 
-import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261009k15c';
+import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261030k4';
 import { IST_KUTU } from '../supabase-config.js';
-import { getKiConfig } from './ki-client.js?v=20261008m4b';
+import { getKiConfig } from './ki-client.js?v=20261030k4';
 
 const BUCKET = 'patient-documents';   // existiert bereits, keine neue Infrastruktur
 

@@ -1,5 +1,5 @@
 /** Local authenticated KI client. Default off; server capabilities remain authoritative. */
-export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-08-v1';
+export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-30-v1';
 const TASKS = new Set(['b2c-draft', 'b2b-draft', 'appointment-confirm-draft', 'series-rank', 'series_meta']);
 const MAIL = new Set(['b2c-draft', 'b2b-draft']);
 const DEFAULT_AI_BASE = '/api/ai';
@@ -22,8 +22,8 @@ export async function getKiConfig(deps = {}) {
     const valid = (employee ? data.ok === true : data.success === true) && ['direkt','jeton'].includes(mode);
     const effective = valid && data.active === true && (employee || (data.operatorReady === true && data.ownerActive === true));
     const capabilities = {
-      freeText:effective && mode === 'direkt' && data.capabilities?.freeText === true,
-      mailDraft:effective && mode === 'direkt' && data.capabilities?.freeText === true && data.capabilities?.mailDraft === true,
+      freeText:effective && data.capabilities?.freeText === true,
+      mailDraft:effective && data.capabilities?.freeText === true && data.capabilities?.mailDraft === true,
       appointmentDraft:effective && data.capabilities?.appointmentDraft === true
     };
     return { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
@@ -87,7 +87,7 @@ export async function requestKiTask(task, payload, deps = {}) {
   const edited = () => deps.isSourceEdited?.() === true || JSON.stringify(payload) !== fingerprint;
   const cfg = await (deps.getKiConfig || getKiConfig)(deps);
   if (cfg.effective !== true || !['direkt','jeton'].includes(cfg.mode)) throw fail('AI_MODE_AUS','KI-Unterstützung ist deaktiviert. Manuelle Funktionen bleiben verfügbar.',503);
-  if (MAIL.has(task) && !(cfg.mode === 'direkt' && cfg.capabilities?.freeText === true && cfg.capabilities?.mailDraft === true))
+  if (MAIL.has(task) && !(cfg.capabilities?.freeText === true && cfg.capabilities?.mailDraft === true))
     throw fail('AI_MAIL_NOT_READY','E-Mail-Assistent ist derzeit deaktiviert.',503);
   if (task === 'appointment-confirm-draft' && !(cfg.capabilities?.appointmentDraft === true && cfg.mailReady === true))
     throw fail('AI_MAIL_NOT_READY','Termin-E-Mail-Assistent ist derzeit deaktiviert.',503);
@@ -104,7 +104,7 @@ export async function requestKiTask(task, payload, deps = {}) {
   try {res = await post(snapshot);} catch (err) {if (err.kiClientError === true) throw err;throw fail('KI_NETWORK_ERROR','KI-Dienst derzeit nicht erreichbar.',503);}
   const data = await decode(res);
   if (res.ok) return success(res,data);
-  if (res.status !== 409 || data.code !== 'KI_RUECKFRAGE' || cfg.mode !== 'direkt') return success(res,data);
+  if (res.status !== 409 || data.code !== 'KI_RUECKFRAGE') return success(res,data);
   const challenge = data.challenge || data;
   if (!validateKiChallenge(challenge)) throw fail('KI_CHALLENGE_INVALID','Rückfrage ist ungültig oder abgelaufen.');
   if (edited()) throw fail('KI_SOURCE_EDITED','Eingabe wurde geändert. Bitte Aktion neu starten.');

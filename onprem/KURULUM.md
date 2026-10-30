@@ -552,7 +552,7 @@ niedrig — die Annahmestelle würde eine schon benutzte Nummer ablehnen.
 | Protokolle | `install.log`, `update.log`, `backup.log`, `restore.log` im selben Ordner |
 | Neustart des PCs/Servers | die Box kommt von selbst wieder (1–2 Minuten) |
 | Mails an Patienten (Terminbestätigung) | **optional**: Mailserver der Praxis in `.env` (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` mit Ihrer eigenen Domain), dann `sudo docker compose up -d api` |
-| KI-Funktionen (Rezept-Scan u. a.) | in dieser Version **aus** (`AI_MODE=aus`) — die Funktionen zeigen eine Meldung statt zu arbeiten |
+| KI-Funktionen (Serienplanung, Mail-Assistent) | standardmäßig **aus** (`AI_MODE=aus`) — die Funktionen zeigen eine Meldung statt zu arbeiten. Eingeschaltet wird die KI bei der Einrichtung mit `install.sh --ki`, danach gibt Praxura die Box frei und der Praxisinhaber willigt in den Einstellungen ein. Der Rezept-Foto-Scan bleibt aus |
 
 Windows: jeden Befehl mit `wsl -d Praxura -- ` davor ausführen, z. B.
 `wsl -d Praxura -- bash -c "cd /opt/praxura/onprem && docker compose ps"`.
@@ -771,8 +771,9 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
   geschrieben wird; der Schlüssel zum Öffnen liegt nur bei der Praxis (§2.5). Geht
   dieser Schlüssel verloren, sind die Sicherungen unlesbar.
 - **KI-Modul:**
-  Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Vor einer
-  eventuellen Aktivierung gelten gesonderte Hinweise (die rechtliche Prüfung dazu läuft).
+  Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Ist es aktiv,
+  gehen maskierte Inhalte direkt von der Box zu Microsoft Azure (Schweden). Die Maskierung
+  kann nicht garantieren, dass alle personenbezogenen Angaben entfernt werden.
 
 > ### Stand der Prüfung (08.10.2026)
 > *Keine Rechtsberatung. Angaben nach öffentlichen Hetzner-Quellen; maßgeblich ist

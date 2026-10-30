@@ -890,3 +890,9 @@ Rolle wie oben. 0 €, kein Veto, kein Anwalt. (legal-de 10.10.2026, Frage aus K
 - Umgesetzt `c6afd9ae`: `mitKassenfeldern()` (`module/bg-angaben.js`) in `empfaengerSnapshot`, Server-Spiegel `api-backend/lib/rechnung-snapshot.js`, Druck ohne Snapshot (`module/rechnung-ansicht.js`). Bereits eingefrorene Snapshots bleiben unverändert (GoBD; keine Live-Kunden).
 - BG ohne UV-Träger: Rechnung lässt sich schon heute nicht speichern (`bgSperreBeimSpeichern`, `module/rechnung-zur-verordnung.js`) — kein Patienten-Fallback im Editorweg. Steuerberater-Durchsicht (≈0,5 h) um „Privat: VersNr nötig?" ergänzen.
 - Grenze: § 14 UStG-Wortlaut in dieser Runde nicht neu geprüft (stützt sich auf 06./09.10.).
+
+## 2026-10-30 · Inhaber-Risikoübernahme KI auf der Box (K4)
+Inhaber Yavuz Kemal Demir aktiviert die KI auf der Box (maskiertes Azure Sweden Central, Kurzzeit-Token) und übernimmt das Risiko bewusst, ausdrücklich für Freitext (Mail-Assistent) und die spätere Sprachübertragung (K5); Foto-OCR bleibt aus.
+Bekannt und akzeptiert: Restleak der regelbasierten Maske 36/156 = 23,08 % (Z. 826), abgelehnte Modified Abuse Monitoring (Prüfung markierter Prompts durch EWR-Mitarbeiter bleibt möglich), C5 ohne Microsoft-Bestätigung von Scope und Bridge Letter.
+Es wird kein Anwalt beauftragt. Hebt Auflage 5 aus Nachtrag (4) auf, samt Sperre der Mail-Entwürfe; der Halbsatz „Freitext ausgeschlossen" in Auflage 1, Z. 826 letzter Satz und Z. 829 gelten entsprechend nicht mehr. Dies ist eine Inhaberentscheidung, keine externe Rechtsfreigabe. Übrige Auflagen bleiben.
+Umsetzung: KI-Absatz der Patienteninformation `datenschutz-v5-2026-10-30` (Wortlaut legal-de), Inhaber-Einwilligung `2026-10-30-v1`. Für Bestandspatienten genügt ein Aushang (Z. 797).

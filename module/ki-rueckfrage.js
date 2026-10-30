@@ -1,4 +1,4 @@
-import { validateKiChallenge } from './ki-client.js?v=20261008m4b';
+import { validateKiChallenge } from './ki-client.js?v=20261030k4';
 import { zeigeBestaetigungsDialog } from './bestaetigungs-dialog.js?v=20261007m3';
 
 export async function zeigeKiRueckfrageDialog(challenge, deps = {}) {
@@ -63,7 +63,7 @@ export async function zeigeKiRueckfrageDialog(challenge, deps = {}) {
 
   const hintP = doc.createElement('p');
   hintP.style.cssText = 'margin:0;font-size:12px;color:var(--text-muted);line-height:1.4;';
-  hintP.textContent = 'Hinweis: Bei Abbruch werden keine Daten an den KI-Dienst übertragen. Im Jeton-Modus ist Freitext technisch gesperrt.';
+  hintP.textContent = 'Hinweis: Bei Abbruch werden keine Daten an den KI-Dienst übertragen.';
 
   const activeElement = doc.activeElement;
 

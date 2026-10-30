@@ -82,7 +82,7 @@ test('rejects invalid date and time formats in slots', () => {
   );
 });
 
-test('jeton mode rejects freetext intent with KI_FREITEXT_GESPERRT', () => {
+test('jeton mode without operator gate rejects freetext intent with KI_FREITEXT_GESPERRT', () => {
   const payload = { intent: 'Freitext Auftrag' };
   assert.throws(
     () => validateTaskPayload('b2c-draft', payload, { mode: 'jeton' }),
@@ -94,7 +94,7 @@ test('jeton mode rejects freetext intent with KI_FREITEXT_GESPERRT', () => {
   );
 });
 
-test('jeton mode rejects series userFeedback and notes with KI_FREITEXT_GESPERRT', () => {
+test('jeton mode without operator gate rejects series userFeedback and notes with KI_FREITEXT_GESPERRT', () => {
   const payloadFeedback = {
     count: 1, candidates: [],
     userFeedback: 'Bitte andere Zeit'
@@ -212,6 +212,10 @@ test('rejects arbitrary catalog label in heilmittel_positionen', () => {
 test('actual series shapes accept 60 sessions, shift metadata and nullable identities', () => {
   assert.equal(validateTaskPayload('series-scheduler', { count: 60, candidates: [{ date: '2026-10-15', time: '14:00', employeeId: 'emp', bucket: 59, shiftedFromDate: '2026-10-14', dateShiftDays: 1 }], previousSelected: [{ date: '2026-10-14', time: '14:00', employeeId: 'emp' }], preferences: { preferredEmployee: null }, customer: { id: null } }, { mode: 'jeton' }), true);
 });
+test('jeton mode with operator gate accepts mail freetext', () => {
+  assert.doesNotThrow(() => validateTaskPayload('b2c-draft', { intent: 'Bitte Entwurf', contacts: [{ id: 'c1', notes: 'Notiz' }], owner_info: { extra_context: 'Kontext' } }, { mode: 'jeton', allowFreeText: true }));
+});
+
 test('invalid calendar dates, numeric coercion, nested freeText and arbitrary diagnosis fail', () => {
   for (const payload of [{ count: '1' }, { count: 1, candidates: [{ date: '2026-02-31', time: '14:00' }] }, { count: 1, preferences: { notes: { date: 'private name' } } }, { count: 1, service: { duration: '30' } }, { count: 1, candidates: [{ date: '2026-10-15', time: '14:00', bucket: 60 }] }]) assert.throws(() => validateTaskPayload('series-scheduler', payload, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
   assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: 'WS2 Private Patient' } }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');

@@ -7,9 +7,10 @@ import {
   EU_DATA_BOUNDARY_REGIONS
 } from './ki-config.js';
 
-test('import-safe: VERIFIED_AZURE_HOSTS is frozen empty array, no production endpoints invented', () => {
+test('import-safe: VERIFIED_AZURE_HOSTS is frozen, exact hosts in Sweden Central, no wildcard', () => {
   assert.ok(Object.isFrozen(VERIFIED_AZURE_HOSTS));
-  assert.equal(VERIFIED_AZURE_HOSTS.length, 0);
+  assert.ok(VERIFIED_AZURE_HOSTS.length >= 1);
+  for (const host of VERIFIED_AZURE_HOSTS) assert.match(host, /^[a-z0-9-]+-swedencentral\.cognitiveservices\.azure\.com$/);
   assert.ok(Array.isArray(EU_DATA_BOUNDARY_REGIONS));
   assert.ok(EU_DATA_BOUNDARY_REGIONS.includes('germanywestcentral'));
 });
@@ -211,4 +212,9 @@ test('control characters: apiKey or endpoint with CRLF fails closed', () => {
   const cfg2 = createAiConfig(envKey, { allowedHosts: ['valid-host.openai.azure.com'] });
   assert.equal(cfg2.valid, false);
   assert.equal(cfg2.code, 'AI_API_KEY_INVALID');
+});
+
+test('empty AI_PROVIDER from compose means azure, unknown provider stays refused', () => {
+  assert.equal(createAiConfig({ AI_MODE: 'aus', AI_PROVIDER: '' }).valid, true);
+  assert.equal(createAiConfig({ AI_MODE: 'aus', AI_PROVIDER: 'other' }).code, 'AI_UNSUPPORTED_PROVIDER');
 });

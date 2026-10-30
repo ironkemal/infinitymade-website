@@ -103,11 +103,8 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
     throw createSchemaError('intent überschreitet Maximallänge von 5000 Zeichen');
   }
 
-  // Gating for B-Freetext
-  if (mode === 'jeton') {
-    throw createSchemaError('Freitext (intent) ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
-  }
-  if (mode === 'direkt' && !allowFreeText) {
+  // Gating for B-Freetext: one operator gate for direkt and jeton (Inhaber-Entscheidung 30.10.2026)
+  if (!allowFreeText) {
     throw createSchemaError('Freitext ist ohne Betreiber-Freigabe (AI_ALLOW_FREETEXT=1) gesperrt', 'KI_FREITEXT_GESPERRT', 403);
   }
 
@@ -134,10 +131,7 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
       }
 
       if (c.notes && typeof c.notes === 'string' && c.notes.trim()) {
-        if (mode === 'jeton') {
-          throw createSchemaError('Freitext in Kontakten (notes) ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
-        }
-        if (mode === 'direkt' && !allowFreeText) {
+        if (!allowFreeText) {
           throw createSchemaError('Freitext in Kontakten ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
         }
         if (c.notes.length > 500) {
@@ -168,10 +162,7 @@ function validateDraftPayload(payload, { mode, allowFreeText }) {
     }
 
     if (payload.owner_info.extra_context && typeof payload.owner_info.extra_context === 'string' && payload.owner_info.extra_context.trim()) {
-      if (mode === 'jeton') {
-        throw createSchemaError('Freitext in owner_info (extra_context) ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
-      }
-      if (mode === 'direkt' && !allowFreeText) {
+      if (!allowFreeText) {
         throw createSchemaError('Freitext in owner_info ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
       }
       if (payload.owner_info.extra_context.length > 500) {
@@ -372,10 +363,7 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
   if (payload.userFeedback !== undefined && payload.userFeedback !== null && !boundedString(payload.userFeedback, 500)) throw createSchemaError('userFeedback ungültig');
   // Freetext checks for series-scheduler
   if (payload.userFeedback && typeof payload.userFeedback === 'string' && payload.userFeedback.trim()) {
-    if (mode === 'jeton') {
-      throw createSchemaError('userFeedback ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
-    }
-    if (mode === 'direkt' && !allowFreeText) {
+    if (!allowFreeText) {
       throw createSchemaError('userFeedback ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
     }
     if (payload.userFeedback.length > 500) {
@@ -407,10 +395,7 @@ function validateSeriesSchedulerPayload(payload, { mode, allowFreeText }) {
 
     if (payload.preferences.notes !== undefined && payload.preferences.notes !== null && !boundedString(payload.preferences.notes, 500)) throw createSchemaError('preferences.notes ungültig');
     if (payload.preferences.notes && typeof payload.preferences.notes === 'string' && payload.preferences.notes.trim()) {
-      if (mode === 'jeton') {
-        throw createSchemaError('preferences.notes ist im Jeton-Modus gesperrt', 'KI_FREITEXT_GESPERRT', 403);
-      }
-      if (mode === 'direkt' && !allowFreeText) {
+      if (!allowFreeText) {
         throw createSchemaError('preferences.notes ist ohne Betreiber-Freigabe gesperrt', 'KI_FREITEXT_GESPERRT', 403);
       }
       if (payload.preferences.notes.length > 500) {

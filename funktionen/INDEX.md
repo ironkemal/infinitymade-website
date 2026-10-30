@@ -493,7 +493,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/deinstallieren.sh:37 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
 - `ok` — installieren/install.sh:20 · onprem/backup.sh:48 · onprem/deinstallieren.sh:38 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60
-- `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:97 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:422
+- `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:97 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:427
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:32 · module/mail-entwurf.js:41 · module/verordnung-pruefen-knopf.js:43 · setup.js:327
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
@@ -593,10 +593,10 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 97 · calledBy: frage, lokale_ca_vorbereiten, lokaler_name_pruefen, onprem/install.sh
 - `env_get()` — Zeile 117 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 127 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 735 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 736 · calledBy: onprem/install.sh
-- `lokaler_name_pruefen()` — Zeile 790 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
-- `lokale_ca_vorbereiten()` — Zeile 810 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 748 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 749 · calledBy: onprem/install.sh
+- `lokaler_name_pruefen()` — Zeile 803 · calledBy: lokale_ca_vorbereiten, onprem/install.sh
+- `lokale_ca_vorbereiten()` — Zeile 823 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`, `||`

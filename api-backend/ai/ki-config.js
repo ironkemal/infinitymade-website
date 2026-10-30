@@ -13,11 +13,13 @@
 // - Region assertion is a supplementary technical guard, not an unqualified legal compliance guarantee.
 
 /**
- * Verified Azure host allowlist.
- * Empty by default in compliance with K4: no invented production endpoint.
- * Production endpoints must be explicitly configured and approved.
+ * Verified Azure host allowlist (O-169 condition 3): exact host names, no wildcard, no env
+ * override — a compromised centre must not be able to redirect masked text elsewhere.
+ * The single Praxura resource in Sweden Central (K-20). A new host needs a new image.
  */
-export const VERIFIED_AZURE_HOSTS = Object.freeze([]);
+export const VERIFIED_AZURE_HOSTS = Object.freeze([
+  'kemal-mul58wcs-swedencentral.cognitiveservices.azure.com'
+]);
 
 /**
  * EU Data Boundary regions.
@@ -158,7 +160,8 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   // Provider
   let provider = 'azure';
   if (hasOwn(safeEnv, 'AI_PROVIDER')) {
-    provider = String(safeEnv.AI_PROVIDER || '').trim().toLowerCase();
+    // Compose passes an empty AI_PROVIDER when unset; empty means the default, not "unknown".
+    provider = String(safeEnv.AI_PROVIDER || '').trim().toLowerCase() || 'azure';
   }
 
   // Values with legacy fallback

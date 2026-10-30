@@ -101,8 +101,8 @@ export function createAiRouter({
         active: effectiveActive,
         mode: ['aus','direkt','jeton'].includes(cfg.mode) ? cfg.mode : 'aus',
         capabilities: {
-          freeText: effectiveActive && cfg.mode === 'direkt' && cfg.allowFreeText === true,
-          mailDraft: effectiveActive && cfg.mailReady === true && cfg.mode === 'direkt' && cfg.allowFreeText === true,
+          freeText: effectiveActive && cfg.allowFreeText === true,
+          mailDraft: effectiveActive && cfg.mailReady === true && cfg.allowFreeText === true,
           appointmentDraft: effectiveActive && cfg.mailReady === true
         }
       });
@@ -139,8 +139,8 @@ export function createAiRouter({
       }
 
       const capabilities = {
-        freeText: effectiveActive && cfg.mode === 'direkt' && cfg.allowFreeText === true,
-        mailDraft: effectiveActive && mailReady && cfg.mode === 'direkt' && cfg.allowFreeText === true,
+        freeText: effectiveActive && cfg.allowFreeText === true,
+        mailDraft: effectiveActive && mailReady && cfg.allowFreeText === true,
         appointmentDraft: effectiveActive && mailReady
       };
 

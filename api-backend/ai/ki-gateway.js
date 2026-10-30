@@ -12,8 +12,8 @@
 // 5. Pseudonymization & B-freetext residual scanning:
 //    - Random per-call nonce
 //    - Opaque candidate employee tokens
-//    - B-freetext gating: Jeton forbids B freetext with KI_FREITEXT_GESPERRT
-//    - Direct B residual scan triggers 409 KI_RUECKFRAGE challenge unless valid ki_confirmation provided
+//    - B-freetext gating: without AI_ALLOW_FREETEXT=1 every mode refuses with KI_FREITEXT_GESPERRT
+//    - B residual scan (direkt and jeton) triggers 409 KI_RUECKFRAGE challenge unless valid ki_confirmation provided
 // 6. Build prompt & mask messages
 // 7. Transport execution (calls chat from azureClient)
 // 8. Output processing:
@@ -264,8 +264,8 @@ export async function executeKiTask({
   });
 
   try {
-    // Scan freetext fields in direct mode with allowFreeText
-    if (cfg.mode === 'direkt' && allowFreeText) {
+    // Scan freetext fields whenever freetext is allowed: this scan is what makes jeton freetext safe
+    if (allowFreeText) {
       const textsToScan = [];
       if (payload.intent) textsToScan.push(payload.intent);
       if (payload.rezept?.heilmittel_feld_text) textsToScan.push(payload.rezept.heilmittel_feld_text);

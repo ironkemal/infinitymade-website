@@ -117,6 +117,14 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.10.2026 · K4: KI-Freitext im Jeton-Modus, Mail-Assistent in der Box (`api-backend/ai/`, `module/lead-suche.js`)
+- Keine neue Funktion, geändertes Verhalten. Test: `api-backend/ai/k4-jeton-freitext.test.js`.
+- `ki-schema`: Freitext-Tor ist nur noch `allowFreeText` (Jeton eingeschlossen). Niye: Gründerentscheidung, Mail-Assistent soll in der Box laufen.
+- `ki-gateway`: Rückfrage-Prüfung läuft jetzt in jedem Modus. Niye: die Sicherheit des Jeton-Freitexts hängt daran.
+- `getKiConfig`/`requestKiTask`: Modus-Bedingung entfernt.
+- `initLeadSuche`: Box-Zweig löscht die B2B-Karte nicht mehr, blendet nur die Gmail-Felder aus. Nerede: Box-Dashboard.
+- `checkB2bSetup`/`checkB2cSetup`: überspringen bei `IST_KUTU` das Einrichtungs-Tor.
+
 ### 30.10.2026 · KG-ZNS-Zertifikate + Deckung Kinder → Erwachsene (`module/physio-katalog-migration.js`, a5c181f6)
 - Neu: `zertifikateMitDeckung(zertifikate)`. Niye: die Zertifikatsprüfung ist ein reiner Gleichheitsvergleich; das Kinder-KG-ZNS-Zertifikat
   deckt dieselbe Methode bei Erwachsenen mit ab (Anlage 7 Nr. 3/4), umgekehrt nicht. Damit die Prüfung unverändert bleibt, wird das

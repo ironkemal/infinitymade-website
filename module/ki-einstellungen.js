@@ -1,4 +1,4 @@
-import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261008m4b';
+import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261030k4';
 
 export async function mountKiEinstellungen(container, deps = {}) {
   if (!container) return;
@@ -39,7 +39,7 @@ export async function mountKiEinstellungen(container, deps = {}) {
     const modeLabels = {
       aus: 'Deaktiviert (aus)',
       direkt: 'Direkt',
-      jeton: 'Jeton-Modus (Freitext gesperrt)'
+      jeton: 'Praxura-KI (Kurzzeit-Zugang)'
     };
     // Safe enum constant mapped from mode string
     const modeLabel = modeLabels[cfg.mode] || 'aus';

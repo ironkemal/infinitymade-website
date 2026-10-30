@@ -49,7 +49,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | K1 | ✅ **Zertifikatspositionen** — MT/MLD/KGG hizmetlerine `required_certificate` (seed + mevcutlara backfill) — 30.10.2026 | `module/physio-katalog-migration.js` testleri |
 | K2 | ✅ **KG-ZNS sertifikası** — CHECK constraint'e Bobath/Vojta/PNF değerleri (migration) + X07xx eşlemesi | Sertifikasız terapiste KG-ZNS Termin'inde uyarı |
 | K3 | **Physio ICD ↔ Diagnosegruppe kontrolü** (`verordnung-regeln.js` `icd_accept` boş) — `physio` + `gkv-302` | "Verordnung prüfen" uyumsuz ICD/DG'de uyarı |
-| K4 | **KI kutuda açılır** (jeton modu, O-169) + risk kabulü kaydı | Kutuda Serienplanung + Mail-Assistent çalışır |
+| K4 | 🟨 **KI kutuda açılır** (jeton modu, O-169) + risk kabulü kaydı — **kod bitti 30.10.2026**, gerçek Azure çağrısı bekliyor (Azure kimliği + merkez deploy, bkz. `fortschritte/2026-10-30.md`) | Kutuda Serienplanung + Mail-Assistent çalışır |
 | K5 | **Sesle yazdırma** — mikrofon → kutu → Azure transkripsiyon (EU) → metin kutuda maskelenir → mail taslağı. Tarayıcının Web Speech API'si **kullanılmaz** (sesi Google'a gönderir) | Mail-Assistent'te mikrofon düğmesi, Almanca dikte çalışır |
 | K6 | **Vorlagen-Studio: kendi belgeler** — praxis kendi metnini yazar ya da PDF yükler, imza alanını sürükleyip yerleştirir, tablette (Kiosk) imzalatır, akteye kaydolur. Sayfada "Inhalt verantwortet die Praxis" notu | Aufklärungsbogen + Ausfallregel kendi metniyle imzalanıp aktede görünür |
 | K7 | **E-Akte** — hastaya dosya yükleme; Physio'da Dokumente sekmesi | Yüklenen dosya aktede listelenir, açılır, silinir |

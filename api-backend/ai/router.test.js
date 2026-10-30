@@ -35,7 +35,7 @@ test('Employee state exposes only effective capabilities, mail gate and freeText
  for(const mode of ['direkt','jeton']) for(const mailReady of [false,true]) for(const allowFreeText of [false,true]) {
   const cfg={...active,mode,mailReady,allowFreeText};const res=await request(router({configProvider:()=>cfg}),{path:'/_healthstate',auth:employee});
   assert.equal(res.status,200);assert.equal(res.body.active,true);
-  assert.deepEqual(res.body.capabilities,{freeText:mode==='direkt'&&allowFreeText,mailDraft:mode==='direkt'&&mailReady&&allowFreeText,appointmentDraft:mailReady});
+  assert.deepEqual(res.body.capabilities,{freeText:allowFreeText,mailDraft:mailReady&&allowFreeText,appointmentDraft:mailReady});
   assert.equal(res.body.optIn,undefined);assert.equal(res.body.operatorReady,undefined);
  }
 });

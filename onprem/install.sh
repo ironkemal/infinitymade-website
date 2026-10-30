@@ -163,8 +163,10 @@ SICHERUNGSSCHLUESSEL=0
 # anderen = O-157).
 KANAL_VORGABE=""
 FENSTER=0
+KI_EIN=0
 for arg in "$@"; do
   [ "$arg" = "--fenster" ] && FENSTER=1
+  [ "$arg" = "--ki" ] && KI_EIN=1
   [ "$arg" = "--neu" ] && NEU=1
   [ "$arg" = "--neuer-jeton" ] && NEUER_JETON=1
   [ "$arg" = "--sicherungsschluessel" ] && SICHERUNGSSCHLUESSEL=1
@@ -661,6 +663,17 @@ cp "$ENV_TEMPLATE" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
 chown root:root "$ENV_FILE" 2>/dev/null || true
 ok ".env angelegt, chmod 600 (O-61)"
+
+# K4: KI nur auf ausdrücklichen Wunsch. Wirksam erst, wenn das Zentrum die Box freigibt
+# (merkez-admin ki-an) und der Praxisinhaber in den Einstellungen einwilligt.
+if [ "$KI_EIN" -eq 1 ]; then
+  set_env AI_MODE jeton
+  set_env AI_PROVIDER azure
+  set_env AI_ACTIVATION_READY 1
+  set_env AI_MAIL_READY 1
+  set_env AI_ALLOW_FREETEXT 1
+  ok "KI-Modul vorbereitet (--ki)"
+fi
 
 if [ "$KAYIT_MODUS" != "code" ]; then
   set_env SITE_URL "$SITE_URL"

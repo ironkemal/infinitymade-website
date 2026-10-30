@@ -1,9 +1,9 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261008m4b';
-import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261008m4b';
-import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261008m4b';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
+import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261030k4';
+import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261030k4';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -14,7 +14,7 @@ import { erstelleRezeptPatientenkopf } from './module/rezept-patientenkopf.js?v=
 import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload.js?v=20261017seven1';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
-import { initLeadSuche } from './module/lead-suche.js?v=20261002';
+import { initLeadSuche } from './module/lead-suche.js?v=20261030k4';
 import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
@@ -10661,11 +10661,11 @@ document.getElementById('b2cComposeBtn').addEventListener('click', () => {
 
 async function checkB2cSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
-  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email;
+  const setupDone = IST_KUTU || (currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email); // Box: kein Gmail, Versand per mailto (K4)
   document.getElementById('b2cSetupCard').hidden = !!setupDone;
   document.getElementById('b2cMainContent').hidden = !setupDone;
   if (setupDone) {
-    document.getElementById('b2cFromName').textContent = currentProfile.b2b_sender_name || '—';
+    document.getElementById('b2cFromName').textContent = currentProfile.b2b_sender_name || currentProfile.business_name || '—';
     document.getElementById('b2cFromEmail').textContent = gmailConnectedEmail || '—';
     document.getElementById('b2cAiFromBadge').textContent = gmailConnectedEmail || '';
   } else {
@@ -10735,11 +10735,11 @@ function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
 
 async function checkB2bSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
-  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email;
+  const setupDone = IST_KUTU || (currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email); // Box: kein Gmail, Versand per mailto (K4)
   document.getElementById('b2bSetupCard').hidden = !!setupDone;
   document.getElementById('b2bMainContent').hidden = !setupDone;
   if (setupDone) {
-    document.getElementById('b2bFromName').textContent = currentProfile.b2b_sender_name || '—';
+    document.getElementById('b2bFromName').textContent = currentProfile.b2b_sender_name || currentProfile.business_name || '—';
     document.getElementById('b2bFromEmail').textContent = gmailConnectedEmail || '—';
     document.getElementById('aiFromBadge').textContent = gmailConnectedEmail || '';
     document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail || currentProfile.b2b_sender_name || '—';
@@ -10928,7 +10928,7 @@ function getMailOwnerInfo() {
 async function runB2bMailDraft(msg) {
   const contacts = (b2bCache || []).slice(0, 30).map(c => ({
     id: c.id, company: c.company_name || '', contact_name: c.contact_name || '',
-    email: c.email || '', phone: c.phone || '', notes: c.notes || ''
+    email: c.email || '', phone: c.phone || '', notes: ''
   }));
   const deps = makeKiUiDependencies({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, isOwner: () => currentProfile?.role === 'owner', openModal, closeModal, zeigeKiRueckfrageDialog}, 'aiInput', () => [b2bCache, getMailOwnerInfo()]);
   return runMailDraftInUi({

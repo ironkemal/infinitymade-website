@@ -14,7 +14,7 @@ import {
   pruefeSchritt1, pruefeSchritt2, pruefeSchritt3, zusammenfassung, buildPayload,
   formatSlot, splitLocalIso, pollDelay,
 } from './booking-widget.logic.js?v=20261012';
-import { renderTerminDatenschutz } from '../module/einwilligung-texte.js?v=20261012';
+import { renderTerminDatenschutz } from '../module/einwilligung-texte.js?v=20261030k4';
 
 const NICHT_EINGERICHTET = 'Die Online-Terminvereinbarung dieser Praxis ist noch nicht eingerichtet. Bitte vereinbaren Sie Ihren Termin telefonisch oder direkt in der Praxis.';
 const SESSION_KEY = 'bw:req';
