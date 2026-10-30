@@ -107,7 +107,7 @@ import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mai
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
-import { migrierePhysioAltlast } from './module/physio-katalog-migration.js?v=20261026p';
+import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT } from './module/physio-katalog-migration.js?v=20261030z';
 import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -8341,7 +8341,7 @@ async function autoSeedGkvServices() {
     duration_minutes: entry.duration || null,
     price: entry.price.toString(),
     price_config: null,
-    is_internal: false,
+    is_internal: false, required_certificate: ZERTIFIKAT_PFLICHT[entry.code] ?? null, // Zertifikatsposition → Buchungs-/Abrechnungsprüfung greift
     ...(currentBusiness?.id ? { business_id: currentBusiness.id } : {}),
   }));
 

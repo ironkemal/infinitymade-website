@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { physioAltlastPatches, migrierePhysioAltlast } from './physio-katalog-migration.js';
+import { physioAltlastPatches, migrierePhysioAltlast, zertifikatPatches, ZERTIFIKAT_PFLICHT } from './physio-katalog-migration.js';
 
 const kmt = { code: 'X0106', kuerzel: 'KMT', title: 'Klassische Massagetherapie (KMT)', duration: 20, price: 21.63 };
 
@@ -32,4 +32,36 @@ test('migrierePhysioAltlast schreibt und hält den Cache synchron', async () => 
   await migrierePhysioAltlast({ supabase, services, katalog: [kmt] });
   assert.equal(calls.length, 1);
   assert.equal(services[0].gkv_position_nr, 'X0106');
+});
+
+test('Zertifikatsposition ohne Pflichtzertifikat bekommt es nachgetragen', () => {
+  const p = zertifikatPatches([
+    { id: 'mt', gkv_position_nr: 'X1201' },
+    { id: 'mld', gkv_position_nr: 'X0201', required_certificate: null },
+    { id: 'kgg', gkv_position_nr: 'X0507' },
+    { id: 'kg', gkv_position_nr: 'X0501' },
+  ]);
+  assert.deepEqual(p, [
+    { id: 'mt', patch: { required_certificate: 'MT' } },
+    { id: 'mld', patch: { required_certificate: 'MLD' } },
+    { id: 'kgg', patch: { required_certificate: 'KGG' } },
+  ]);
+});
+
+test('gesetztes Zertifikat bleibt unberührt', () => {
+  assert.deepEqual(zertifikatPatches([{ id: 'a', gkv_position_nr: 'X1201', required_certificate: 'MT' }]), []);
+});
+
+test('nur Werte, die der DB-Constraint kennt', () => {
+  const erlaubt = new Set(['MT', 'MLD', 'KGG']);
+  for (const v of Object.values(ZERTIFIKAT_PFLICHT)) assert.ok(erlaubt.has(v), v);
+});
+
+test('migrierePhysioAltlast trägt das Zertifikat ein und hält den Cache synchron', async () => {
+  const calls = [];
+  const supabase = { from: () => ({ update: (patch) => ({ eq: async (_c, id) => { calls.push([id, patch]); return { error: null }; } }) }) };
+  const services = [{ id: 'm', gkv_position_nr: 'X0202', title: 'MLD 60' }];
+  await migrierePhysioAltlast({ supabase, services, katalog: [kmt] });
+  assert.deepEqual(calls, [['m', { required_certificate: 'MLD' }]]);
+  assert.equal(services[0].required_certificate, 'MLD');
 });

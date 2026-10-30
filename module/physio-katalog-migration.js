@@ -42,10 +42,32 @@ export function physioAltlastPatches(services, kmt) {
   });
 }
 
+/**
+ * Zertifikatspositionen (30.10.2026). Die Prüfung „Therapeut hat das Zertifikat"
+ * gibt es seit langem (dashboard.js Buchungswarnung, module/abrechnung-auswahl.js
+ * Abrechnungsstopp) — sie greift aber nur, wenn services.required_certificate
+ * gesetzt ist. autoSeedGkvServices() hat das Feld nie befüllt, also lief jede
+ * MT/MLD/KGG-Leistung ohne Prüfung durch (physio-Bericht Lead-Trier, Absetzung
+ * S:01011). Werte = CHECK-Constraint services_required_certificate_check.
+ * KG-ZNS (X07xx) fehlt bewusst: der Constraint kennt den Wert noch nicht.
+ */
+export const ZERTIFIKAT_PFLICHT = {
+  X1201: 'MT', X1221: 'MT',
+  X0201: 'MLD', X0202: 'MLD', X0204: 'MLD', X0205: 'MLD',
+  X0507: 'KGG',
+};
+
+/** Leistungen mit Zertifikatsposition, denen das Pflichtzertifikat fehlt. */
+export function zertifikatPatches(services) {
+  return (services || [])
+    .filter(s => ZERTIFIKAT_PFLICHT[s.gkv_position_nr] && !s.required_certificate)
+    .map(s => ({ id: s.id, patch: { required_certificate: ZERTIFIKAT_PFLICHT[s.gkv_position_nr] } }));
+}
+
 /** Wendet die Patches an und hält servicesCache synchron. */
 export async function migrierePhysioAltlast({ supabase, services, katalog }) {
   const kmt = (katalog || []).find(e => e.code === 'X0106');
-  for (const { id, patch } of physioAltlastPatches(services, kmt)) {
+  for (const { id, patch } of [...physioAltlastPatches(services, kmt), ...zertifikatPatches(services)]) {
     const { error } = await supabase.from('services').update(patch).eq('id', id);
     if (error) { console.warn('Physio-Katalogkorrektur fehlgeschlagen für', id, error.message); continue; }
     Object.assign(services.find(s => s.id === id), patch);

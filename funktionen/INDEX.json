@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-27",
+ "erzeugt": "2026-10-30",
  "dateien": 486,
- "funktionen": 3866,
+ "funktionen": 3867,
  "module": [
   "abrechnung",
   "anamnese",
@@ -142936,12 +142936,75 @@
    ]
   },
   {
+   "name": "zertifikatPatches",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/physio-katalog-migration.js",
+   "start": 61,
+   "end": 65,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "migrierePhysioAltlast"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "migrierePhysioAltlast",
    "kind": "function",
    "lang": "js",
    "file": "module/physio-katalog-migration.js",
-   "start": 46,
-   "end": 53,
+   "start": 68,
+   "end": 75,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -142954,7 +143017,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "physioAltlastPatches"
+    "physioAltlastPatches",
+    "zertifikatPatches"
    ],
    "calledBy": [
     "loadServices"
@@ -218872,8 +218936,8 @@
       {
        "name": "migrierePhysioAltlast",
        "file": "module/physio-katalog-migration.js",
-       "start": 46,
-       "end": 53,
+       "start": 68,
+       "end": 75,
        "lines": 8,
        "writes": [
         "services:update"
