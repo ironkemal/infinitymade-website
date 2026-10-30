@@ -15,6 +15,34 @@
 import { KATEGORIEN, BUCKETS, LEAD_BEZUEGE } from './klassifikation.js';
 import { jahresendePlus } from '../lib/berlin-tag.js';
 
+// Fristkategorien fuer SaaS-Kontoloeschung (guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3)
+export const FRIST_KATEGORIEN = ['behandlung', 'einwilligung', 'beleg', 'grundaufzeichnung', 'geschaeftsbrief'];
+
+export const KATEGORIE_TABELLEN = {
+  behandlung: [
+    'podologie_behandlungen',
+    'anamnese',
+    'pat_fussbefund',
+    'messreihen',
+    'patient_notes',
+    'ueberweisungen',
+    'therapieberichte',
+    'podologie_empfangsnachweise',
+  ],
+  einwilligung: ['patient_consents'],
+  beleg: ['invoices', 'ausfallrechnungen', 'abrechnung', 'abrechnung_zeile', 'abrechnung_uebermittlung', 'zuzahlung_befreiung'],
+  grundaufzeichnung: ['rechnung_zahlungen', 'abrechnung_zahlung', 'belegliste', 'zuzahlung_korrekturen', 'zuzahlung_guthaben', 'booking_status_korrekturen', 'fahrten', 'fahrten_aenderungen', 'vehicles'],
+  geschaeftsbrief: ['mahnungen'],
+};
+
+// Bewusst NICHT in KATEGORIE_TABELLEN — mit Grund. Der Drift-Test in klassifikation.test.js
+// verlangt, dass jede Tabelle einer Fristkategorie entweder oben steht oder hier.
+export const KATEGORIE_AUSNAHMEN = {
+  prescriptions: 'über behandelteVoIds (Schritt 2) — unbehandelte VOs werden in 4a gelöscht',
+  aerzte: 'Stammdaten, kein Behandlungsnachweis — allein lösen sie keine Sperre aus',
+  zaa_fehler: 'kein owner_id, hängt an abrechnung (beleg)',
+};
+
 /**
  * Erzeugt den deutschen Antworttext fuer Fall B mit Frist-Bullets je Kategorie.
  *
@@ -298,6 +326,8 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       await pruefeRelation('zuzahlung_korrekturen', 'prescription_id');
       await pruefeRelation('zuzahlung_korrekturen', 'verordnung_id');
       await pruefeRelation('messreihen', 'prescription_id');
+      // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3: Therapiebericht = Behandlungsdokumentation (§ 630f BGB), FK RESTRICT — ohne diese Prüfung bricht 4a mit 23503 ab.
+      await pruefeRelation('therapieberichte', 'prescription_id');
       // Diese hängen per CASCADE/SET NULL an der VO (FKs live 02.10.2026) — ohne sie verlöre
       // ein Delete eine Mahnung (Geschäftsbrief, CASCADE!) bzw. den Belegbezug.
       await pruefeRelation('mahnungen', 'prescription_id');
@@ -320,14 +350,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
 
   // ── 3. Sperrbestand ermitteln & aufbewahrung_sperre schreiben ────────────────
   // Fristen je Kategorie berechnen und Sperre eintragen
-  const fristKategorien = ['behandlung', 'einwilligung', 'beleg', 'grundaufzeichnung', 'geschaeftsbrief'];
-  const KATEGORIE_TABELLEN = {
-    behandlung: ['podologie_behandlungen', 'anamnese', 'pat_fussbefund', 'messreihen', 'patient_notes', 'ueberweisungen'],
-    einwilligung: ['patient_consents'],
-    beleg: ['invoices', 'ausfallrechnungen', 'abrechnung', 'abrechnung_zeile', 'abrechnung_uebermittlung', 'zuzahlung_befreiung'],
-    grundaufzeichnung: ['rechnung_zahlungen', 'abrechnung_zahlung', 'belegliste', 'zuzahlung_korrekturen', 'zuzahlung_guthaben', 'booking_status_korrekturen', 'fahrten', 'fahrten_aenderungen', 'vehicles'],
-    geschaeftsbrief: ['mahnungen'],
-  };
+  const fristKategorien = FRIST_KATEGORIEN;
   // Fail-closed: ein Zählfehler zählt als „Zeilen vorhanden". Lieber eine Sperre zu viel
   // als ein gelöschtes businesses (CASCADE auf Rechnungen/Abrechnungen/Verordnungen).
   async function hatZeilenIn(tbl) {
@@ -451,10 +474,11 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
   }
 
   // 4c. Tabellen ohne owner_id ueber bekannte Beziehungen aufraeumen
+  let empIds = [];
   try {
     const { data: empRows, error: empErr } = await supabase.from('profiles').select('id').eq('owner_id', ownerId);
     if (empErr) throw new Error(`profiles: ${empErr.message}`);
-    const empIds = (empRows || []).map(e => e.id);
+    empIds = (empRows || []).map(e => e.id);
 
     const { data: bizRows, error: bizErr } = await supabase.from('businesses').select('id').eq('owner_id', ownerId);
     if (bizErr) throw new Error(`businesses: ${bizErr.message}`);
@@ -516,6 +540,8 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     { table: 'time_offs', filter: 'owner_id' },
     { table: 'breaks', filter: 'user_id' },
     { table: 'working_hours', filter: 'owner_id' },
+    // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.2: Mitarbeiterzeilen werden ohne owner_id angelegt (routes/mitarbeiter-zugang.js)
+    { table: 'working_hours', filter: 'user_id' },
     { table: 'custom_days', filter: 'owner_id' },
     { table: 'calendar_integrations', filter: 'user_id' },
     { table: 'document_vorlagen', filter: 'owner_id' },
@@ -531,16 +557,22 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
   ];
 
   for (const { table, filter } of einfacheLoeschTabellen) {
+    const stepName = table === 'working_hours' ? `delete:${table}:${filter}` : `delete:${table}`;
     try {
-      const { error: dErr } = await supabase.from(table).delete().eq(filter, ownerId);
+      // guvenlik S-61: Mitarbeiter werden gebannt statt geloescht, die auth-CASCADE greift fuer
+      // sie nie — ihre user_id-Zeilen (calendar_integrations mit Google-Token!) hier mitnehmen.
+      const q = supabase.from(table).delete();
+      const { error: dErr } = filter === 'user_id'
+        ? await q.in('user_id', [ownerId, ...empIds])
+        : await q.eq(filter, ownerId);
       if (dErr && dErr.code !== 'PGRST116') {
         throw dErr;
       }
-      log.push({ step: `delete:${table}`, ok: true });
+      log.push({ step: stepName, ok: true });
     } catch (err) {
-      console.error(`[dsgvo-loeschen] Loeschen von ${table} fehlgeschlagen:`, err.message);
+      console.error(`[dsgvo-loeschen] Loeschen von ${table} (${filter}) fehlgeschlagen:`, err.message);
       unerwartet.push(table);
-      log.push({ step: `delete:${table}`, ok: false, error: err.message });
+      log.push({ step: stepName, ok: false, error: err.message });
     }
   }
 
@@ -703,6 +735,10 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       bic: null,
       bank_name: null,
       steuernummer: null,
+      ust_id: null,
+      kim_adresse: null,
+      telematik_id: null,
+      datev_einstellungen: {},
       b2b_gmail_refresh_token: null,
       email: null,
       whatsapp_number: null,
@@ -718,21 +754,36 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     if (opErr) throw opErr;
 
     // Mitarbeiterprofile deaktivieren (Namen bleiben wegen Behandlungsnachweis § 630f Abs. 1 BGB erhalten)
+    // guvenlik S-57, S-61, CLAUDE_SYNC_AUDIT_REPORT §1.2: booking_slug ist über anon-Policy auffindbar (S-57)
     const { error: maErr } = await supabase.from('profiles').update({
       phone: null,
       email: null,
       avatar_url: null,
       is_active: false,
+      booking_slug: null,
+      anrede: null,
+      street: null,
+      house_number: null,
+      zip: null,
+      plz: null,
+      city: null,
     }).eq('owner_id', ownerId);
     if (maErr) throw maErr;
 
-    // Standorte, die wegen Sperrbestand stehen bleiben (Schritt 6): Kontakt + Slug weg, sonst
-    // blieben sie über die anon-Policy „Public booking lookup businesses" auffindbar (S-57,
-    // db-ustasi 09.10.2026). ik_number bleibt wie im Profil (GoBD-Zuordnung).
+    // Standorte, die wegen Sperrbestand stehen bleiben (Schritt 6): Kontakt + Slug + Anschrift/Geo weg,
+    // sonst blieben sie über die anon-Policy „Public booking lookup businesses" auffindbar (S-57,
+    // db-ustasi 09.10.2026). business_name offen (prüfen, ob aufbewahrte Belege es live lesen statt aus Snapshot; guvenlik S-61).
+    // ik_number bleibt wie im Profil (GoBD-Zuordnung).
     const { error: bzErr } = await supabase.from('businesses').update({
       booking_slug: null,
       email: null,
       phone: null,
+      street: null,
+      house_number: null,
+      zip: null,
+      city: null,
+      clinic_lat: null,
+      clinic_lng: null,
     }).eq('owner_id', ownerId);
     if (bzErr) throw bzErr;
 

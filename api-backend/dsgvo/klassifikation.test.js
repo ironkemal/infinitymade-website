@@ -7,6 +7,11 @@ import {
   AUSNAHMEN,
   LEAD_BEZUEGE,
 } from './klassifikation.js';
+import {
+  KATEGORIE_TABELLEN,
+  KATEGORIE_AUSNAHMEN,
+  FRIST_KATEGORIEN,
+} from './loeschen.js';
 
 test('DSGVO Drift-Test: Alle Tabellen mit Personenbezug in SCHEMA.sql sind klassifiziert', () => {
   const schemaUrl = new URL('../../db/SCHEMA.sql', import.meta.url);
@@ -104,4 +109,34 @@ test('Export blendet Zugangsgeheimnisse aus (guvenlik S-42)', async () => {
   assert.equal(r.token_expires_at, '2026');
   assert.equal(r.leer_token, null);
   for (const k of ['refresh_token', 'access_token', 'b2b_gmail_refresh_token']) assert.match(r[k], /nicht exportiert/);
+});
+
+test('Löschen-Drift: jede Fristkategorie-Tabelle steht in KATEGORIE_TABELLEN oder ist begründet ausgenommen', () => {
+  // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3
+  for (const t of TABELLEN) {
+    if (FRIST_KATEGORIEN.includes(t.kategorie)) {
+      const inKategorieTabellen = Array.isArray(KATEGORIE_TABELLEN[t.kategorie]) && KATEGORIE_TABELLEN[t.kategorie].includes(t.table);
+      const inAusnahmen = t.table in KATEGORIE_AUSNAHMEN;
+      assert.ok(
+        inKategorieTabellen || inAusnahmen,
+        `Tabelle "${t.table}" (Kategorie: ${t.kategorie}) fehlt: in loeschen.js KATEGORIE_TABELLEN eintragen oder in KATEGORIE_AUSNAHMEN begründen`
+      );
+    }
+  }
+
+  // Und umgekehrt: jede Tabelle in KATEGORIE_TABELLEN[kat] ist in TABELLEN mit derselben kategorie klassifiziert
+  const tabellenKategorieMap = new Map(TABELLEN.map(t => [t.table, t.kategorie]));
+  for (const [kat, tabellenListe] of Object.entries(KATEGORIE_TABELLEN)) {
+    for (const table of tabellenListe) {
+      assert.ok(
+        tabellenKategorieMap.has(table),
+        `Tabelle "${table}" aus KATEGORIE_TABELLEN[${kat}] existiert nicht in TABELLEN: in klassifikation.js eintragen`
+      );
+      assert.equal(
+        tabellenKategorieMap.get(table),
+        kat,
+        `Tabelle "${table}" ist in KATEGORIE_TABELLEN unter "${kat}", in TABELLEN jedoch unter "${tabellenKategorieMap.get(table)}"`
+      );
+    }
+  }
 });

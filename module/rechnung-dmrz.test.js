@@ -91,3 +91,8 @@ test('buildDmrzXml: Hausbesuch/Dringend werden als true/false ausgegeben, nicht 
   assert.match(xml, /<Dringend>false<\/Dringend>/);
   assert.ok(!xml.includes('undefined'));
 });
+
+test('buildDmrzXml: Geburtsdatum kommt aus leads.geburtsdatum', () => {
+  const xml = buildDmrzXml({ ...minimal, patient: { first_name: 'Anna', geburtsdatum: '1950-03-04' } });
+  assert.match(xml, /<Geburtsdatum>1950-03-04<\/Geburtsdatum>/);
+});

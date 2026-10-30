@@ -69,6 +69,10 @@ function buildSupabaseMock({
               calls.deletes.push({ table, col, val });
               return { data: null, error: null };
             },
+            in: async (col, val) => {
+              calls.deletes.push({ table, col, val });
+              return { data: null, error: null };
+            },
           };
         },
         maybeSingle: async function () {

@@ -29142,8 +29142,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 24,
-   "end": 46,
+   "start": 52,
+   "end": 74,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
@@ -29168,8 +29168,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 59,
-   "end": 73,
+   "start": 87,
+   "end": 101,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -29198,9 +29198,9 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 75,
-   "end": 760,
-   "lines": 686,
+   "start": 103,
+   "end": 811,
+   "lines": 709,
    "spiegelHinweis": null,
    "tables": [
     "abrechnung_artefakt_version",
@@ -29250,6 +29250,7 @@
     "has",
     "hatZeilenIn",
     "jahresendePlus",
+    "offen",
     "pruefe",
     "pruefeRelation",
     "push",
@@ -29267,8 +29268,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 269,
-   "end": 289,
+   "start": 297,
+   "end": 317,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -29292,8 +29293,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 333,
-   "end": 340,
+   "start": 356,
+   "end": 363,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -29316,8 +29317,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 412,
-   "end": 417,
+   "start": 435,
+   "end": 440,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -29340,8 +29341,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 463,
-   "end": 463,
+   "start": 487,
+   "end": 487,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -29408,8 +29409,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 765,
-   "end": 836,
+   "start": 816,
+   "end": 887,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -29436,8 +29437,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 801,
-   "end": 816,
+   "start": 852,
+   "end": 867,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -115179,8 +115180,8 @@
    "lang": "js",
    "file": "module/einrichtung-ring.js",
    "start": 23,
-   "end": 92,
-   "lines": 70,
+   "end": 93,
+   "lines": 71,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -115424,6 +115425,7 @@
     "(datei) dashboard.js",
     "(datei) module/bg-angaben.js",
     "euroZustand",
+    "kontoLoeschenIntern",
     "loadScheduleBookings",
     "loadStatistik",
     "rechnungAusVerordnung",
@@ -115503,8 +115505,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/einrichtung-ring.js",
-   "start": 95,
-   "end": 102,
+   "start": 96,
+   "end": 103,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -155547,8 +155549,8 @@
    "lang": "js",
    "file": "module/rechnung-dmrz.js",
    "start": 109,
-   "end": 183,
-   "lines": 75,
+   "end": 186,
+   "lines": 78,
    "spiegelHinweis": null,
    "tables": [
     "invoices",
@@ -216092,9 +216094,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "bookings:delete"
        ],
@@ -216688,9 +216690,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "prescriptions:delete"
        ],
@@ -216868,8 +216870,8 @@
        "name": "downloadDmrzForInvoice",
        "file": "module/rechnung-dmrz.js",
        "start": 109,
-       "end": 183,
-       "lines": 75,
+       "end": 186,
+       "lines": 78,
        "writes": [
         "prescriptions:update"
        ],
@@ -217175,9 +217177,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "leads:delete",
         "leads:update"
@@ -217483,9 +217485,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "profiles:update"
        ],
@@ -218526,9 +218528,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "businesses:update"
        ],
@@ -219463,9 +219465,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "employee_services:delete"
        ],
@@ -220184,9 +220186,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "employee_business_assignments:delete"
        ],
@@ -220426,9 +220428,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "employee_scope_overrides:delete"
        ],
@@ -221033,9 +221035,9 @@
       {
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 75,
-       "end": 760,
-       "lines": 686,
+       "start": 103,
+       "end": 811,
+       "lines": 709,
        "writes": [
         "prescription_documents:delete"
        ],
@@ -223251,7 +223253,7 @@
   {
    "name": "pruefe",
    "orte": [
-    "api-backend/dsgvo/loeschen.js:463",
+    "api-backend/dsgvo/loeschen.js:487",
     "api-backend/tools/lizenzen-erzeugen.mjs:158"
    ],
    "aynalar": []

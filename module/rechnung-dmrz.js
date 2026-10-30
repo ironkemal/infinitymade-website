@@ -55,7 +55,7 @@ export function buildDmrzXml({ invoice, patient, prescription, arzt, owner }) {
   </Leistungserbringer>
   <Versicherter>
 ${tag('Name', [patient?.first_name, patient?.last_name].filter(Boolean).join(' ') || patient?.title || '')}
-${tag('Geburtsdatum', patient?.dob || '')}
+${tag('Geburtsdatum', patient?.geburtsdatum || '')}
 ${tag('Versichertennummer', patient?.versichertennummer || '')}
 ${tag('Krankenkasse', patient?.krankenkasse || '')}
   </Versicherter>
@@ -131,9 +131,12 @@ export async function downloadDmrzForInvoice(deps) {
       return;
     }
 
-    const { data: patient } = await supabase.from('leads')
-      .select('id,first_name,last_name,title,dob,versichertennummer,krankenkasse,email,phone')
+    // leads hat geburtsdatum, nicht dob — ein falscher Spaltenname liefert 400 und
+    // ohne Fehlerprüfung leere <Versicherter>-Felder (CLAUDE_SYNC_AUDIT_REPORT §1.1).
+    const { data: patient, error: eP } = await supabase.from('leads')
+      .select('id,first_name,last_name,title,geburtsdatum,versichertennummer,krankenkasse,email,phone')
       .eq('id', invoice.patient_id).maybeSingle();
+    if (eP) throw new Error(eP.message);
 
     const { data: prescription, error: e2 } = await supabase.from('prescriptions')
       .select('id,arzt_id,rezept_typ,ausstellungsdatum,behandlungsbeginn,icd10,diagnosegruppe,heilmittel,anzahl_einheiten,frequenz,hausbesuch,is_dringend').eq('id', invoice.prescription_id).maybeSingle();

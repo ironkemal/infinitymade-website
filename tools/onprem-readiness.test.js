@@ -4,8 +4,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const healthFile = new URL('../onprem/lib-health.sh', import.meta.url).pathname;
+const healthFile = fileURLToPath(new URL('../onprem/lib-health.sh', import.meta.url));
 const source = fs.readFileSync(healthFile, 'utf8');
 test('Gesunde Container reichen nicht: gemeinsame Install-/Updateprüfung verlangt API-Readiness', () => {
   for (const ready of ['yes', 'no']) {
