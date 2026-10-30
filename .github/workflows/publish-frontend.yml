@@ -15,8 +15,6 @@ on:
       - 'dashboard-feinschliff.css'
       - 'praxura-design.css'
       - 'dashboard.js'
-      - 'kalender.html'
-      - 'kalender.js'
       - 'employee-signup.html'
       - 'confirm.html'
       - 'attendance.html'

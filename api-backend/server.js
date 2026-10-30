@@ -2401,8 +2401,8 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
       end_time: end_time,
       customer_email: 'manual@booking.com',
       status: 'confirmed',
-      // Der einzige Aufrufer (kalender.js) hat noch keine Patientenauswahl, er
-      // tippt den Namen. Der Endpunkt nimmt den Bezug trotzdem entgegen, damit
+      // Der einzige Aufrufer war kalender.js (seit 31.10.2026 archiviert) — heute ruft kein
+      // Frontend diesen Endpunkt. Er tippte den Namen ohne Patientenauswahl. Der Endpunkt nimmt den Bezug trotzdem entgegen, damit
       // dieser Weg nicht die nächste Quelle beziehungsloser Termine wird.
       lead_id: await pruefeLeadId(leadId, ownerId)
     };

@@ -627,34 +627,11 @@ def run():
             log("PASS", "Feedback paneli", content[:120], path)
         except Exception as e:
             log("FAIL", "Feedback paneli", str(e))
-
         # ──────────────────────────────────────
-        # 24. SERVICES (Leistungen) — kalender.html
+        # 24. SERVICES — entfallen: kalender.html seit 31.10.2026 archiviert
+        #     (Leistungen/Öffnungszeiten liegen im Dashboard)
         # ──────────────────────────────────────
-        print("\n═══ 24. SERVICES — kalender.html ═══")
-        try:
-            page.goto("https://app.praxura.de/kalender.html", timeout=20000)
-            page.wait_for_selector("#app", state="visible", timeout=15000)
-            time.sleep(3)
-            path = ss(page, "24a_kalender_services")
-            content = page.evaluate("() => document.body.innerText.substring(0,300)")
-            has_error = "fehler" in content.lower() or "failed" in content.lower()
-            log("WARN" if has_error else "PASS", "kalender.html (Leistungen/Öffnungszeiten)", content[:120], path)
-
-            # Leistungen tab
-            try:
-                leistungen_tab = page.query_selector("[data-tab='leistungen'], #leistungenTab, button:has-text('Leistungen')")
-                if leistungen_tab:
-                    leistungen_tab.click()
-                    time.sleep(2)
-                    path2 = ss(page, "24b_leistungen")
-                    svc_count = page.evaluate("() => document.querySelectorAll('.service-row, .leistung-row, tr[data-id]').length")
-                    log("PASS", "Leistungen tab", f"{svc_count} hizmet kayıtlı", path2)
-            except Exception as e:
-                log("WARN", "Leistungen tab", str(e))
-
-        except Exception as e:
-            log("FAIL", "kalender.html", str(e), ss(page, "24_kalender_FAIL"))
+        log("INFO", "Services (kalender.html)", "entfallen: Seite archiviert, Leistungen im Dashboard")
 
         # ──────────────────────────────────────
         # 25. Geri dashboard'a dön & final overview

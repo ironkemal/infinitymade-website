@@ -3234,13 +3234,6 @@
      ]
     },
     {
-     "name": "frageNachrueckerAb",
-     "file": "kalender.js",
-     "start": 469,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "fragFolgetermin",
      "file": "module/podologie-abrechnung.js",
      "start": 1300,
@@ -3450,13 +3443,6 @@
      "name": "initCalendar",
      "file": "dashboard.js",
      "start": 2037,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "initCalendar",
-     "file": "kalender.js",
-     "start": 269,
      "module": [],
      "uiPfad": []
     },
@@ -5481,7 +5467,6 @@
     "api-backend/server.js",
     "api/admin/data.js",
     "dashboard.js",
-    "kalender.js",
     "module/abrechnung-auswahl.js",
     "module/abrechnungsstatus.js",
     "module/behandlungsbestaetigung.js",
@@ -6285,16 +6270,6 @@
      ]
     },
     {
-     "name": "loadIntegrations",
-     "file": "kalender.js",
-     "start": 762,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "delete"
-     ]
-    },
-    {
      "name": "loadSettings",
      "file": "dashboard.js",
      "start": 10996,
@@ -6350,7 +6325,6 @@
     "api-backend/server.js",
     "api/admin/data.js",
     "dashboard.js",
-    "kalender.js",
     "module/ki-dashboard-contract.test.js"
    ],
    "module": [
@@ -9088,7 +9062,7 @@
     {
      "name": "normName",
      "file": "onboarding.js",
-     "start": 599,
+     "start": 606,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9098,7 +9072,7 @@
     {
      "name": "syncServices",
      "file": "onboarding.js",
-     "start": 618,
+     "start": 625,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9112,7 +9086,6 @@
     "api/stripe/webhook.js",
     "booking.js",
     "dashboard.js",
-    "kalender.js",
     "onboarding.js"
    ],
    "module": [
@@ -18930,13 +18903,6 @@
      "uiPfad": []
     },
     {
-     "name": "loadAusfallConfig",
-     "file": "kalender.js",
-     "start": 187,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
      "start": 9537,
@@ -20074,7 +20040,7 @@
     {
      "name": "bindHours",
      "file": "onboarding.js",
-     "start": 813,
+     "start": 820,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20094,7 +20060,7 @@
     {
      "name": "bindPlan",
      "file": "onboarding.js",
-     "start": 870,
+     "start": 877,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20268,16 +20234,6 @@
      "name": "handleSave",
      "file": "onboarding.js",
      "start": 457,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "update"
-     ]
-    },
-    {
-     "name": "init",
-     "file": "kalender.js",
-     "start": 130,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21013,7 +20969,6 @@
     "api/stripe/webhook.js",
     "attendance.js",
     "dashboard.js",
-    "kalender.js",
     "login.js",
     "module/abrechnung-einstellungen.js",
     "module/anamnese.js",
@@ -21299,13 +21254,6 @@
      "uiPfad": []
     },
     {
-     "name": "ausfallPriceEur",
-     "file": "kalender.js",
-     "start": 206,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "createBookingsFromRequestFactory",
      "file": "api-backend/booking/from-request.js",
      "start": 17,
@@ -21488,54 +21436,6 @@
      "name": "loadServices",
      "file": "dashboard.js",
      "start": 8304,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadServices",
-     "file": "kalender.js",
-     "start": 643,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21907,7 +21807,7 @@
     {
      "name": "normName",
      "file": "onboarding.js",
-     "start": 599,
+     "start": 606,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21970,7 +21870,7 @@
     {
      "name": "syncServices",
      "file": "onboarding.js",
-     "start": 618,
+     "start": 625,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21999,7 +21899,6 @@
     "api-backend/server.js",
     "api/stripe/webhook.js",
     "dashboard.js",
-    "kalender.js",
     "module/anfrage-bearbeiten.js",
     "module/kostentraeger-spalte.js",
     "module/kostentraeger-spalte.test.js",
@@ -22809,13 +22708,6 @@
      "uiPfad": []
     },
     {
-     "name": "initCalendar",
-     "file": "kalender.js",
-     "start": 269,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "ladeAbwesenheiten",
      "file": "module/abwesenheit.js",
      "start": 32,
@@ -23327,7 +23219,6 @@
    "dateien": [
     "api-backend/server.js",
     "dashboard.js",
-    "kalender.js",
     "module/abwesenheit.js"
    ],
    "module": [
@@ -24339,13 +24230,6 @@
      ]
     },
     {
-     "name": "loadHours",
-     "file": "kalender.js",
-     "start": 727,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "renderBookingCalendar",
      "file": "booking.js",
      "start": 307,
@@ -24549,7 +24433,7 @@
     {
      "name": "bindHours",
      "file": "onboarding.js",
-     "start": 813,
+     "start": 820,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -24666,7 +24550,6 @@
     "api/stripe/webhook.js",
     "booking.js",
     "dashboard.js",
-    "kalender.js",
     "module/termin-folge.js",
     "onboarding.js"
    ],

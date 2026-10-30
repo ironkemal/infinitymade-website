@@ -324,7 +324,7 @@
           "value": "infinitymade.de"
         }
       ],
-      "destination": "https://app.infinitymade.de/kalender.html",
+      "destination": "https://app.infinitymade.de/dashboard.html",
       "permanent": false
     },
     {
@@ -335,7 +335,7 @@
           "value": "www.infinitymade.de"
         }
       ],
-      "destination": "https://app.infinitymade.de/kalender.html",
+      "destination": "https://app.infinitymade.de/dashboard.html",
       "permanent": false
     },
     {
@@ -377,8 +377,9 @@
     { "source": "/dashboard.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/dashboard.html", "permanent": false },
     { "source": "/onboarding.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/onboarding.html", "permanent": false },
     { "source": "/onboarding.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/onboarding.html", "permanent": false },
-    { "source": "/kalender.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/kalender.html", "permanent": false },
-    { "source": "/kalender.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/kalender.html", "permanent": false },
+    { "source": "/kalender.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/dashboard.html", "permanent": false },
+    { "source": "/kalender.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/dashboard.html", "permanent": false },
+    { "source": "/kalender.html", "destination": "/dashboard.html", "permanent": false },
     { "source": "/employee-signup.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/employee-signup.html", "permanent": false },
     { "source": "/employee-signup.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/employee-signup.html", "permanent": false }
   ],
