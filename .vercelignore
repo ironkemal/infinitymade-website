@@ -147,3 +147,11 @@ sosyal/
 # Redesign 2026-10: Arbeitsunterlagen und Test-Screenshots, nicht ausliefern
 redesign/
 .redesign-shots/
+
+# Entwicklerwerkzeuge und interne Seiten (CLAUDE_SYNC_AUDIT_REPORT §5.1, 30.10.2026):
+# dev_server.cjs / stripe-live-setup.cjs waren unter praxura.de/<datei> abrufbar.
+# demo-dashboard.html bleibt — index.html verlinkt es. ops/ ist eigenes Vercel-Projekt
+# und hier per Redirect /ops/* → / gesperrt (vercel.json).
+*.cjs
+komponenten.html
+dashboard-vorschau.html

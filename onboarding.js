@@ -565,13 +565,20 @@ function renderServices() {
       id: s.id,
       code: s.code || null,
     })),
-    ...tpl.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => ({
-      checked: true,
-      name: t.name,
-      duration: t.duration,
-      price: t.price || '',
-      code: t.code || null,
-    })),
+    ...tpl.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => {
+      // Vorlagen tragen price_config.durations ({ '30': { price, active } }) — die Zeile
+      // zeigt die kürzeste aktive Dauer; die anderen ergänzt die Praxis im Dashboard.
+      const [dauer, cfg] = Object.entries(t.price_config?.durations || {})
+        .filter(([, c]) => c?.active !== false)
+        .sort(([a], [b]) => Number(a) - Number(b))[0] || [];
+      return {
+        checked: true,
+        name: t.name,
+        duration: Number(dauer) || 30,
+        price: cfg?.price ?? '',
+        code: t.code || null,
+      };
+    }),
   ];
 
   if (rows.length === 0) rows.push({ checked: true, name: '', duration: 30, price: '', code: null });

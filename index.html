@@ -1466,11 +1466,6 @@
   // FN_I18N için yapı: ileride { en:{slug:{name,tag,steps:[{t,d}]}}, tr:{...} } eklenebilir; yoksa de fallback.
   // hx/hy = Hotspot-Position in % auf dem Screenshot · hi = Info-Bubble · dur = Auto-Dauer(ms)
   var FN = {
-    'rezept-scan':{name:'KI-Rezept-Scan',tag:'Verordnung scannen — KI prüft auf Absetzung',steps:[
-      {img:'rezept-1',t:'Verordnung fotografieren',d:'Rezept per Smartphone abfotografieren oder als PDF hochladen.',hx:68,hy:81,hi:'KI prüft Rezept in 2 Sek.',dur:2800},
-      {img:'rezept-2',t:'KI-Texterkennung läuft',d:'Die OCR-KI liest Diagnose, ICD-10-Code und Heilmittelpositionen automatisch aus.',hx:50,hy:65,hi:'OCR liest Diagnose & ICD-10',dur:1400},
-      {img:'rezept-3',t:'Geprüft & übernommen',d:'Alle Felder erkannt und sofort auf formale Absetzungsgründe geprüft — kein teurer Rückläufer.',hx:68,hy:88,hi:'Weniger Absetzungen durch Prüfung vor dem Versand',dur:4400}
-    ]},
     'billing302':{name:'§302 DTA-Abrechnung',tag:'Abrechnung nach § 302 vorbereiten — 0 % Provision',steps:[
       {img:'billing302',t:'Abrechnungsbereite Rezepte',d:'Alle fälligen Heilmittelverordnungen auf einen Blick, Gesamtbetrag live berechnet.',hx:90,hy:49,hi:'Ohne Abrechnungszentrum — 0 % Provision'},
       {img:'billing302-w1',t:'Plausibilitätsprüfung',d:'Jedes Rezept wird auf Vollständigkeit und Abrechnungsfähigkeit geprüft.',hx:65,hy:66,hi:'Plausibilität automatisch geprüft'},
@@ -1848,7 +1843,7 @@
       <div class="px-plan-und-noch">und noch</div>
       <ul class="px-pricing-features px-pricing-features--sub">
         <li>✓ Bis zu 5 Therapeut:innen</li>
-        <li>✓ KI-Rezeptprüfung (OCR)</li>
+        <li>✓ Rezeptprüfung (Barcode + Regelprüfung)</li>
         <li>✓ Elektronisches Fahrtenbuch</li>
         <li>✓ Lead-Management</li>
         <li>✓ Vorrangiger Support (Mail &amp; Tel)</li>
