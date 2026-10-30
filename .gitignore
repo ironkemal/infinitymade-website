@@ -129,6 +129,11 @@ wissensbank/gemeinsam/datev-format/
 # Lokale Podologie-Vertragsquellen; keine Veröffentlichung der Suchableitungen.
 wissensbank/podologie/20231030_Podologie_Aenderungsvereinbarung.txt
 wissensbank/podologie/20250617_vertrag_125_podologie_vertrag_lesefassung.txt
+
+# W-14/15/16 (Physio Anlage 7 + Anlage 1): Weitergabe ungeklaert (W-A07), Quelle + Ableitung nur lokal.
+wissensbank/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7.txt
+wissensbank/physiotherapie/20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.txt
+wissensbank/physiotherapie/20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.txt
 sosyal/ausgabe/
 sosyal/musik/*.wav
 sosyal/musik/stimme/

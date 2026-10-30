@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 22.10.2026 (**W-13 DATEV-Format (EXTF Buchungsstapel V13, Header 700) girdi** — yayıncının API yanıtı + Musterdaten `curl` ile, yalnız yerel `gemeinsam/datev-format/`; açık madde W-A14.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 30.10.2026 (**W-14/W-15/W-16 Physio Anlage 7 (iki Fassung) + Anlage 1 girdi**, zincir **Z-20**, açık madde **W-A15**; yayıncıdan `curl`, SHA `gkv-302` kopyasıyla birebir, yalnız yerel. Anlage 1'in daha yeni sürümü yok.)
+> Önceki: 22.10.2026 (**W-13 DATEV-Format (EXTF Buchungsstapel V13, Header 700) girdi** — yayıncının API yanıtı + Musterdaten `curl` ile, yalnız yerel `gemeinsam/datev-format/`; açık madde W-A14.)
 > Önceki: 21.10.2026 (**W-11 Podologie-Vertrag § 125 Lesefassung girdi** — `gkv-302`’nin 21.10.2026 Zuzahlung kuralının (SPEC-RULES „Zuzahlung = nur auf ERBRACHTE Leistungen") kaynağı. Yayıncıdan `curl` ile indirildi, SHA-256 `gkv-302`’nin okuduğu kopyayla birebir; yayıncı sayfası aynı gün tarandı, daha yeni sürüm yok. Z-17’deki „elle indirme" maddesi kapandı.)
 > Önceki: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
 > Önceki: 10.10.2026 (**DGUV / Unfallversicherung girdi** — kartlar
@@ -61,13 +62,13 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 44 (39 mevcut arşiv kaydı — +W-11 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
-| Arşivdeki PDF | **58** (11.10.2026 `find` ile sayıldı: 57; +W-11 21.10.2026; W-07 PDF bu checkout'ta yok). 42'sinin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
+| Kayıtlı kaynak belge (INDEX'te) | 47 (+W-14/15/16 — yalnız yerel, 30.10.2026; 39 mevcut arşiv kaydı — +W-11 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel, bu checkout/commit içinde yok + **W-08/W-09/W-10 DGUV — yalnız yerel**, 10.10.2026) |
+| Arşivdeki PDF | **61** (11.10.2026 `find` ile sayıldı: 57; +W-11 21.10.2026; +W-14/15/16 30.10.2026; W-07 PDF bu checkout'ta yok). 45'inin `.txt`'si var, 16'sının yok — 5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri, ikisi de bilinçli |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 19 (Z-01…Z-19) |
-| Tam kimlik kartı yazılmış kaynak | 12 (**W-13** DATEV-Format — yalnız yerel + **W-11** Podologie-Vertrag § 125 Lesefassung + **W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
-| Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 5 (W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta; W-08/W-09/W-10 — `gemeinsam/unfallversicherung-dguv/`, PDF `*.pdf` ile, TXT `.gitignore:119` ile dışarıda) |
-| **Herkunft (indirme URL'i) kayıtlı** | **11 / 44 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
+| Kaynak→kod zinciri kayıtlı | 20 (Z-01…Z-20) |
+| Tam kimlik kartı yazılmış kaynak | 15 (**W-14/W-15/W-16** Physio Anlage 7 + Anlage 1 — yalnız yerel + **W-13** DATEV-Format — yalnız yerel + **W-11** Podologie-Vertrag § 125 Lesefassung + **W-08/W-09/W-10** DGUV — yalnız yerel + **W-07** KBV BFB — yalnız yerel + **W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Depo **dışında / yalnız yerel** duran kayıtlı kaynak | 8 (W-14/15/16 — PDF `*.pdf`, TXT `.gitignore` tam yol; W-06 — dağıtım kısıtlı, Drive'da; W-07 — ham PDF/TXT yalnız yerel kaynak checkout’ta; W-08/W-09/W-10 — `gemeinsam/unfallversicherung-dguv/`, PDF `*.pdf` ile, TXT `.gitignore:119` ile dışarıda) |
+| **Herkunft (indirme URL'i) kayıtlı** | **14 / 47 kayıtlı kaynak** ← asıl boşluk, W-A01 (W-06 dış kaynak ve W-07 yerel kaynak dahil) |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -82,7 +83,7 @@ wissensbank/
 ├── gemeinsam/          302-tp5/ · kostentraeger/ · heilmittel-richtlinie/
 │                       positionsnummern/ · icd-10-gm/ · unfallversicherung-dguv/
 ├── podologie/          Anlage 1a–3, FAK, filtrelenmiş HPNR
-├── physiotherapie/     Vertrag §125 Anlage 2, Blanko-Leitfaden
+├── physiotherapie/     Vertrag §125 Anlage 1, 2, 7, Blanko-Leitfaden
 ├── ergotherapie/       Anlage 2 Vergütungsvereinbarung
 ├── logopaedie/         sssst Anlage 2
 ├── _archiv/            düşmüş · kapsam dışı · mükerrer
@@ -125,6 +126,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
 | açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** · **Z-16** | ✅ geçerli |
+| **01.06.2027** | Physio Anlage 7 Fassung 13.04.2026 **verbindlich** (MLD/KPE, MT, KG-Gerät): yalnız yeni içerikli Weiterbildung tanınır; eski sertifika ve Abrechnungserlaubnis geçerli kalır (V Abs. 4-5). KG-ZNS 2021 Fassung'da kalır | **Z-20** → W-14 · W-15 | ⏳ koda iş yok; önce W-A15 + yayıncı sayfası bakılır (`wissensbank`) |
 | **~Temmuz 2027** | Microsoft C5 raporunun **sonraki dönemi** (01.04.2026–31.03.2027) Service Trust Portal'da beklenir. Gelene kadar Azure OpenAI için C5 Typ-2 kapsamı **31.12.2025'te biter** (dipnot 6) — 01.01.2026 sonrası boşluk büyüyor. Geldiğinde: W-06 `DÜŞMÜŞ`, yeni rapor kaydedilir, Azure OpenAI satırı + dipnotları yeniden okunur, KARARLAR 2026-09-12/09-28'e bildirilir | Z-15 → W-06 → on-prem AI kararı · `azureClient.js` | ⏳ **elle**, portal oturumlu — W-A12 |
 | **her fiyat turu** | Heilmittelpreisstammdatei yeni `Stand_TT-MM-JJ` | Z-06 → otomatik, Telegram bildirimi | ✅ **tek otomatik kontrol** |
 
@@ -694,6 +696,18 @@ Podologie aranır (`grep -i podolog`). **Bei neuem Gebührenverzeichnis:** bugü
 **Podologie için bir DGUV/UV-Träger sözleşmesi ortaya çıkarsa:** PE-006 B „Preis manuell" + `rechnung-bruecke.js`
 BG dalı + SPEC-RULES „BG / Arbeitsunfall" üçü birden yeniden açılır.
 
+### Z-20 · Physio Zertifikatspositionen — Abrechnungserlaubnis → Buchungs-/Abrechnungsprüfung (Physio-Pilot P1, 30.10.2026) → kartlar **W-14 · W-15 · W-16**
+```
+W-16 Anlage 1 (Voraussetzung/Weiterbildungsnachweis) + W-15 Anlage 7 Fassung 2021 Nr. 3-7 (KG-ZNS)
+  + W-14 Anlage 7 Fassung 13.04.2026 (MLD/KPE, MT, KG-Gerät; Präambel = KG-ZNS 2021'de kalır)
+  → wissensbank/SPEC-RULES.md „Physio KG-ZNS Zertifikat yönteme ve yaş grubuna bağlıdır"
+  → module/physio-katalog-migration.js ZERTIFIKAT_PFLICHT + zertifikatPatches (test: .test.js)
+  → dashboard.js autoSeedGkvServices · Buchungswarnung · module/abrechnung-auswahl.js Abrechnungsstopp
+  → api-backend/db/migrations/0090_kg_zns_zertifikate.sql
+  → DB services.required_certificate · therapist_certificates.certificate (CHECK listeleri)
+```
+Eşleme W-16'dan doğrulandı: X0201/02/04/05 Z.404-573 · X0507 Z.1166-1254 · X0708/09 Z.1262-1342 · X0710/11/12 Z.1351-1445 · X1201 Z.1451-1519. X0720/X0728/X1221 W-16'da **yok**; telemedizin kodları, `20251201_…Anlage_2` Z.136-199'da. Yeni kaynak gelince sıra: SPEC-RULES → `ZERTIFIKAT_PFLICHT` + test → gerekirse yeni migration. Saat değişikliği tek başına koda iş çıkarmaz.
+
 ---
 
 ## 3. Kaynak envanteri
@@ -764,6 +778,9 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
+| `wissensbank/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7` — ⚠️ yalnız yerel | Fassung 13.04.2026, in Kraft 01.06.2026, verbindlich 01.06.2027 | ✅ GEÇERLİ (MLD/KPE, MT, KG-Gerät) | **Z-20**, kart W-14 |
+| `wissensbank/physiotherapie/20210721_Physiotherapie_Anlage_7_Weiterbildung_bf` — ⚠️ yalnız yerel | Fassung 21.07.2021 | ✅ GEÇERLİ (KG-ZNS; geri kalanı geçiş) | **Z-20**, kart W-15 |
+| `wissensbank/physiotherapie/20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio` — ⚠️ yalnız yerel | Lesefassung gültig ab 01.12.2024 | ✅ GEÇERLİ | **Z-20**, kart W-16 |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
 | `wissensbank/_archiv/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
 
@@ -1526,6 +1543,48 @@ sayıyı düzeltir.
   3. #9 BU-Schlüssel Ausdruck `^(["]\d{4}["])$` — örnek veride `"9"`, `"501"` gibi kısa değerler var.
   4. Header #5 Ausdruck `^(2|4|5|13)$`, açıklamada „3 = Sachkontenbeschriftungen" (regex 3'ü içermiyor) — Buchungsstapel için önemsiz.
 
+### W-14 · Physio Vertrag § 125 Anlage 7 Weiterbildung — Fassung 13.04.2026
+- **Dosya:** `wissensbank/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7.pdf` + `.txt` (1421 satır; yalnız yerel).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7.pdf · **İndirme:** 30.10.2026 · **İndiren:** `gkv-302` okudu, `wissensbank` yayıncıdan `curl` ile yeniden çekip kaydetti (HTTP 200, SHA-256 `gkv-302` kopyasıyla birebir).
+- **Yayıncı:** GKV-Spitzenverband + IFK, Physio Deutschland, VDB, VPT (Änderungsvereinbarung kapağı).
+- **Sürüm / Stand:** kapak „in der Fassung vom 13.04.2026"; dosya adındaki 20260320 sürüm tarihi değildir. 28 sayfa.
+- **Anzuwenden ab:** in Kraft 01.06.2026 (Präambel Z.57; Abschnitt V Abs. 1, Z.1350 sonrası) · **verbindlich ab 01.06.2027** (V Abs. 1) · **Düşer:** açık uçlu.
+- **Durum:** GEÇERLİ — ama **yalnız KPE/MLD, MT, KG-Gerät** için ve 31.05.2027'ye kadar geçiş döneminde. KG-ZNS'i kapsamaz (Präambel → W-15).
+- **Neyi besler:** bkz. **Z-20**. Bugün koda sayı/kural vermiyor: `ZERTIFIKAT_PFLICHT` pozisyon→sertifika eşlemesi saat içermez, V Abs. 4-5 eski sertifika ve Abrechnungserlaubnis'leri aynen korur.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp (son „Zuletzt aktualisiert: 20.07.2026") + https://www.gkv-heilmittel.de/fuer_heilmittelerbringer/vertraege/vertraege.jsp → Physiotherapie, „Anlage 7" satırları. Elle, `wissensbank`: 01.01.2027 ve 01.06.2027 öncesi. 30.10.2026: bu en yeni Fassung.
+- **Yeniden dağıtım:** şüpheli — W-A07 (GKV belgesi, ayrı izin yok). Yalnız yerel: PDF `*.pdf`, TXT `.gitignore` tam yol; `.vercelignore` → `wissensbank/`.
+- **Yedek:** git hayır. SHA-256 `91cefe1a09eb9af1bfa50ee6c1409c7a652372d6565b537d2d550b8fc845c66e`; 444840 bayt.
+- **Format kararı:** `.txt` + INDEX bölüm haritası; düzyazı müfredat, md kazanç getirmez. Fiyat/kod tablosu yok.
+- **Kayda geçen, arşive alınmayan:** Änderungsvereinbarung 13.04.2026 (7 s., SHA `95971e73…94b2`, `https://www.gkv-heilmittel.de/media/dokumente/heilmittel_vertraege/vertraege_physiotherapie/20260320_Vertrag_125_Physiotherapie_Aenderungsvereinbarung_Anlage_7.pdf`) okundu: yalnız Anlage 7'yi değiştirir, Nr. 5 „tritt zum 01.06.2026 in Kraft". Tek seferlik, türev yok.
+
+### W-15 · Physio Vertrag § 125 Anlage 7 Weiterbildung — Fassung 21.07.2021
+- **Dosya:** `wissensbank/physiotherapie/20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.pdf` + `.txt` (2187 satır; yalnız yerel).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.pdf · **İndirme:** 30.10.2026 · **İndiren:** aynı yol, W-14 (SHA-256 birebir).
+- **Yayıncı:** GKV-Spitzenverband + Physio Berufsverbände.
+- **Sürüm / Stand:** belgenin kapağında tarih yok; „21.07.2021" W-14 Präambel'i ve yayıncı listesinden („i.d.F.v. 21.07.2021"). 46 sayfa.
+- **Anzuwenden ab:** belirtilmemiş · **Düşer:** KG-ZNS (Nr. 3-7) için açık uçlu — yeni içerikler Anlage 7'ye geçene kadar (W-14 Präambel). MLD/MT/KG-Gerät için en geç 01.06.2027 (W-14 V Abs. 1); yarım kalan eğitim 31.05.2031'e kadar (V Abs. 3).
+- **Durum:** GEÇERLİ — KG-ZNS için tek kaynak; MLD/MT/KG-Gerät için geçiş döneminde. **Düşmüş sayma**, yayıncı ikisini yan yana listeliyor.
+- **Neyi besler:** **Z-20** — Nr. 3-7 (Z.1377/1457/1527/1592/1649) + Anmerkung Z.1384, Z.1464 (Kinder → Erwachsene aynı yöntem).
+- **Tazelik kontrolü:** W-14 ile aynı sayfa. Tetik: yeni KG-ZNS içerikleri Anlage 7'ye girerse Z-20 yeniden yürünür.
+- **Yeniden dağıtım:** şüpheli — W-A07; W-14 gibi yalnız yerel.
+- **Yedek:** git hayır. SHA-256 `854fb9d59b89a3aa56db79cdfb70902c05edd995c788b0148eed7b423d529a7b`; 645799 bayt.
+- **Format kararı:** `.txt` + INDEX. **Anhang C** (41 KB, PNF-Fachlehrer Prüfungsordnung, SHA `52775ee7…db40`) okundu: Fachlehrer içindir, Praxis faturasına dokunmaz → KAPSAM DIŞI, arşive alınmadı; yer: yayıncı sayfası „Anhang C zur Anlage 7".
+
+### W-16 · Physio Vertrag § 125 Anlage 1 Leistungsbeschreibung — Lesefassung gültig ab 01.12.2024
+- **Dosya:** `wissensbank/physiotherapie/20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.pdf` + `.txt` (2518 satır; yalnız yerel).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.pdf · aynı PDF ikinci adres: `https://www.gkv-heilmittel.de/media/dokumente/heilmittel_vertraege/vertraege_physiotherapie/anlagen/20241202_Physiotherapie_Anlage_1_Lesefassung.pdf` (SHA birebir) · **İndirme:** 30.10.2026 · **İndiren:** aynı yol, W-14.
+- **Yayıncı:** GKV-Spitzenverband + Physio Berufsverbände; Schiedsspruch 2 HE 11-21 (21.07.2021), Änderungsvereinbarung 02.12.2024 (kapak dipnotu).
+- **Sürüm / Stand:** kapak „Lesefassung gültig ab 01.12.2024". 52 sayfa.
+- **Anzuwenden ab:** 01.12.2024 · **Düşer:** açık uçlu.
+- **Durum:** GEÇERLİ — 30.10.2026 iki yayıncı sayfasında en yeni Anlage 1. Sonraki `20251211` Änderungsvereinbarung Anlage 1'e dokunmuyor (yalnız Anlage 2 + § 125a Anhang 1).
+- **Neyi besler:** **Z-20** — pozisyon + Voraussetzung/Weiterbildungsnachweis blokları.
+- **Tazelik kontrolü:** W-14 ile aynı iki sayfa, „Anlage 1: Leistungsbeschreibung" satırı ≠ „gültig ab 01.12.2024" mı + Änderungsvereinbarungen listesinde Anlage 1 geçen yeni satır var mı. Elle, `wissensbank`: 01.01.2027. Son bakış **30.10.2026: daha yeni yok**.
+- **Yeniden dağıtım:** şüpheli — W-A07; W-14 gibi yalnız yerel.
+- **Yedek:** git hayır. SHA-256 `d69c86246cc1064a40dc7f57ed6f149f69914fcad21e320b80a47a3a441c84f0`; 490809 bayt.
+- **Format kararı:** `.txt` + INDEX; pozisyon kodu türevi üretilmedi, fiyat Anlage 2'de (Z-03).
+- **Bilinen sapma:** W-14 ile hizalı değil, bkz. **W-A15**.
+- **Kontrol (W-14/15/16 ortak, 30.10.2026):** `.txt` gövdeleri `gkv-302` kopyasıyla `diff` 0; gövde satır 6'dan başlar, ilk 5 satır kaynak başlığı. Sayfa sayıları „Seite N von M" ile tutarlı. Kapaklar, W-14 Präambel + V, W-15 İçindekiler + iki Anmerkung, W-16 saat satırları bizzat okundu.
+
 ---
 
 ## 4. Açık maddeler
@@ -1533,7 +1592,7 @@ sayıyı düzeltir.
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
 yoksa `offen` kalır ve her raporda tekrar görünür.
 
-### W-A01 · Herkunft (indirme URL'i) 44 kaydın 33'ünde yok — `offen`
+### W-A01 · Herkunft (indirme URL'i) 47 kaydın 33'ünde yok — `offen`
 Belgelerin nereden indirildiği hiçbir yerde yazılı değil. Bir sürüm düştüğünde yenisinin
 nereden alınacağı her seferinde yeniden araştırılıyor. Tek istisna Z-06 (fiyat XML'i,
 URL script başlığında).
@@ -1837,6 +1896,9 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
 4. **Formatversion 12 mi 13 mü:** belge 13'ü gösteriyor; „Schnittstellenvorgaben DATEV-Format" sayfası
    (`developer.datev.de/datev/platform/de/schnittstellenvorgaben/dtvf`) arama özetine göre „mindestens 700 / Formatversion 12"
    diyor — sayfa JS ile çizildiği için **okunamadı, doğrulanmadı**. 13 kullanmak bu iki ifadeyle de uyumlu.
+
+### W-A15 · Physio Anlage 1, yeni Anlage 7'nin gerisinde — `offen`, karar `gkv-302`
+W-16 hâlâ MLD için „mind. 170 Std." (Z.408) ve MT, KG-Gerät, KG-ZNS için „Anlage 3 der Rahmenempfehlungen" diyor (Z.1251/1339/1441/1518). W-14'te KPE asgari **140 UE** (Z.449), adı KPE; MT 260 ve KG-Gerät 40 aynı. Eski sertifikalar etkilenmez (V Abs. 4-5), kod saat tutmaz, yani bugün fatura riski görünmüyor. Sorular: (1) 140 UE'lik yeni KPE sertifikası Anlage 1'deki 170 Std. şartını karşılar mı, Anlage 1 değişene kadar hangisi esas? (2) Yeni belge „KPE" diyor, kod değeri `MLD`: UI etiketi güncellenmeli mi? (3) Präambel „mit Wirkung zum 01.06.2026 löst ab" ile V Abs. 1 „ab 01.06.2027 verbindlich / spätestens ersetzt" 12 aylık geçiş olarak okunabilir mi. **Tarih:** 01.06.2027'den önce. **Sahip:** `gkv-302` (yorum), `wissensbank` (Anlage 1 yeni sürüm takibi).
 
 ---
 

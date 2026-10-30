@@ -117,6 +117,12 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.10.2026 · KG-ZNS-Zertifikate + Deckung Kinder → Erwachsene (`module/physio-katalog-migration.js`, a5c181f6)
+- Neu: `zertifikateMitDeckung(zertifikate)`. Niye: die Zertifikatsprüfung ist ein reiner Gleichheitsvergleich; das Kinder-KG-ZNS-Zertifikat
+  deckt dieselbe Methode bei Erwachsenen mit ab (Anlage 7 Nr. 3/4), umgekehrt nicht. Damit die Prüfung unverändert bleibt, wird das
+  gedeckte Zertifikat als zweite Zeile mitgespeichert. Nerede: `dashboard.js` `loadEmpCertificates`, Speichern-Button.
+- Erweitert: `ZERTIFIKAT_PFLICHT` um die KG-ZNS-Werte je Methode (Migration 0090) — schließt den unten genannten offenen Punkt.
+
 ### 30.10.2026 · Physio-Zertifikatspflicht an Leistungen (`module/physio-katalog-migration.js`, be6c9ad6)
 - Neu: Konstante `ZERTIFIKAT_PFLICHT` (Position → Zertifikat, MT/MLD/KGG) + `zertifikatPatches(services)`; `migrierePhysioAltlast()`
   wendet sie mit an, `autoSeedGkvServices()` (`dashboard.js`) schreibt `required_certificate` schon beim Seed.

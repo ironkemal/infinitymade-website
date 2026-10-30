@@ -28,7 +28,7 @@ okunduğunda kayıt açılır.
 |---|---|---|
 | `gemeinsam/` | **Birden fazla alanı** ilgilendiren her şey | §302 anlagenleri, ICD-10-GM, HeilM-RL, Kostenträgerdatei |
 | `podologie/` | Yalnız podolojiye özel | Podologie Anlage 1a–3, FAK, filtrelenmiş HPNR |
-| `physiotherapie/` | Yalnız fizyoterapiye özel | Physio Vertrag §125 Anlage 2, Blanko-Leitfaden |
+| `physiotherapie/` | Yalnız fizyoterapiye özel | Physio Vertrag §125 Anlage 1, 2, 7, Blanko-Leitfaden |
 | `ergotherapie/` | Yalnız ergoterapiye özel | Ergo Anlage 2 Vergütungsvereinbarung |
 | `logopaedie/` | Yalnız logopediye özel (`sssst` = Stimm-, Sprech-, Sprach-, Schlucktherapie) | sssst Anlage 2 |
 | `_archiv/` | Düşmüş · kapsam dışı · mükerrer | Ernährungstherapie, Rettungsdienst-Anhang, duplikatlar |

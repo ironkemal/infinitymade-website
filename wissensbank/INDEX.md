@@ -403,12 +403,26 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Z.299-347 X2001 · X9701 Übermittlungsgebühr · X9950/X9951 Hausbesuch (X9933→X9950, X9934→X9951 umbenannt zum 01.01.2026; Begriff soziale Einrichtung)
   - Z.356-374 X9922 HB Kurzzeit-/Verhinderungs-/Tagespflege + betreutes Wohnen · X1906 Bericht auf schriftliche Anforderung („Kreuz nicht ausreichend")
   - Z.387-435 Teil B: (1) nur verordnete Leistungen · (3) keine Zuzahlung X9701/X1906/21901/21904 · (4) HB-Pauschalen · (5) HB nicht kombinierbar, 1×/Tag, Praxissitz=Ort ausgeschlossen, Bestätigung auf VO
-  - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 1 Leistungsbeschreibung + Anlage 3 (Verordnungsangaben)
+  - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 3 (Verordnungsangaben)
 
-### (arşive henüz alınmadı) Physio Vertrag § 125 Anlage 7 Weiterbildung + Anlage 1 Leistungsbeschreibung
-- **Ne:** gkv-302 30.10.2026 okudu, dosya arşivde DEĞİL — `wissensbank` girişi bekliyor. Kaynak: gkv-spitzenverband.de/.../vertraege_125abs1/physiotherapie/ → `20260320_Physiotherapie_Vertrag_125_Anlage_7.pdf` · `20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.pdf` · `20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.pdf`
-- **Sürüm:** Anlage 7 i. d. F. 13.04.2026 (ab 01.06.2026: MLD/KPE, MT, KG-Gerät) · KG-ZNS için Präambel gereği Anlage 7 i. d. F. 21.07.2021 geçerli kalır · Anlage 1 Lesefassung 01.12.2024
-- **Anahtar bölümler:** A7-2021 Inhaltsverzeichnis 3-7 (beş ayrı KG-ZNS Maßnahme) · Anmerkung Nr. 3/4 (Kinder → Erwachsene, aynı yöntem) · A1 „Voraussetzung"/„Weiterbildungsnachweis" blokları: MLD 170 Std, KG-Gerät 40 Std, KG-ZNS-Kinder 300 Std, KG-ZNS 120 Std „in dem betreffenden Bereich", X0306 + X0805 „entsprechende Fortbildung"
+### wissensbank/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7.txt
+- **Ne:** Physio Vertrag § 125 Anlage 7 Weiterbildung, Fassung 13.04.2026 (kart W-14). ⚠️ Yalnız yerel. Satır no başlıkla birlikte.
+- **Sürüm:** in Kraft 01.06.2026, verbindlich ab 01.06.2027 · yalnız KG-Gerät, KPE/MLD, MT. KG-ZNS 21.07.2021 Fassung'da kalır.
+- **Ne zaman lazım:** „bu Weiterbildung hâlâ tanınıyor mu", geçiş kuralları, müfredat saatleri.
+- **Anahtar bölümler:** Präambel Z.55-68 · Allgemeine Vorgaben Z.71 (AB tanıma, dijital format) · KG-Gerät Z.152 (40 UE Z.174) · KPE Z.401 (140 UE Z.449) · MT Z.730 (260 UE Z.747) · Prüfungsordnung Z.1094 · **Inkrafttreten + Übergang Z.1350** (Abs. 3 = 31.05.2031, Abs. 4-5 = eski sertifika korunur)
+
+### wissensbank/physiotherapie/20210721_Physiotherapie_Anlage_7_Weiterbildung_bf.txt
+- **Ne:** Physio Vertrag § 125 Anlage 7 Weiterbildung, Fassung 21.07.2021 (kart W-15). ⚠️ Yalnız yerel. Satır no başlıkla birlikte.
+- **Sürüm:** KG-ZNS için geçerli (W-14 Präambel); MLD/MT/KG-Gerät için en geç 01.06.2027'ye kadar.
+- **Ne zaman lazım:** KG-ZNS Zertifikat sorusu; eski sertifikanın dayanağı.
+- **Anahtar bölümler:** İçindekiler Z.100-115 · Nr. 3 Bobath Kinder Z.1377 + Anmerkung Z.1384 · Nr. 4 Vojta Kinder Z.1457 + Anmerkung Z.1464 · Nr. 5 Bobath Z.1527 · Nr. 6 Vojta Z.1592 · Nr. 7 PNF Z.1649 · MLD 170 UE Z.253 · MT 260 UE Z.690
+
+### wissensbank/physiotherapie/20241202_Lesefassung_Anlage_1_gueltig_ab_01.12.2024_Leistungsbeschreibung_Physio.txt
+- **Ne:** Physio Vertrag § 125 Anlage 1 Leistungsbeschreibung, Lesefassung gültig ab 01.12.2024 (kart W-16). ⚠️ Yalnız yerel. Satır no başlıkla birlikte.
+- **İçerdiği fiyat/pozisyon numarası var mı:** pozisyon evet (X-Präfix), fiyat yok (fiyat Anlage 2'de).
+- **Ne zaman lazım:** bir pozisyonun tanımı, süresi, Zertifikat şartı.
+- **Anahtar bölümler:** Grundsätze Z.35 · Regelbehandlungszeit Z.98 · Maßnahmen Z.126 · MLD Weiterbildungsnachweis Z.404 (170 Std. Z.408), X0205/01/02/04 Z.424-573 · X0306 Z.728 + Voraussetzung Z.777 · X0805 Z.963 + Voraussetzung Z.1033 · X0702 Z.1096 · X0507 KG-Gerät Z.1166 + 40 Std. Z.1250 · X0708/09 Z.1262 + 300 Std. Z.1338 · X0710/11/12 Z.1351 + 120 Std. Z.1440 · X1201 Z.1451 + 260 Std. Z.1518
+- **Dikkat:** MLD saatleri W-14 ile hizalı değil, bkz. REGISTER W-A15.
 
 ### wissensbank/logopaedie/20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung.txt
 - **Ne:** Anlage 2: Vergütungsvereinbarung i. d. F. vom 12.02.2026 zum Vertrag nach § 125 Absatz 1 SGB V für Stimm-, Sprech-, Sprach- und Schlucktherapie über die Versorgung mit Leistungen der Stimm-, Sprech-, Sprach- und Schlucktherapie und deren Vergütung.
