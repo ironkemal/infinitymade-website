@@ -117,6 +117,16 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.10.2026 · K11: Physio-Katalogergänzung (`module/physio-katalog-migration.js`)
+- Neu: Konstante `PHYSIO_KATALOG_ERGAENZUNG` (8 Positionen: X0205 X0204 X1501 X1517 X1530 X1531 X1534 X1302),
+  in `dashboard.js` per `.physiotherapy.push(...)` an `GKV_LEISTUNGSKATALOG` gehängt → `autoSeedGkvServices()` sät sie.
+  Niye: Physio-Seed hatte kein MLD30, keine Kompressionsbandagierung, kein Wärme/Kälte/Elektro — jede Praxis legte sie
+  von Hand an (`Physio/PILOT-PLAN.md` K11). Auswahl `physio`-Ajan; Gruppenpositionen bewusst draußen (kein Gruppentermin).
+  Kein neuer Mechanismus: vorhandener Katalog + vorhandener Seed. Test prüft Preis/Code gegen `physio_positions.js`.
+  Nerede: Physio/praxis-Sektor beim Laden, `loadServices` → `autoSeedGkvServices`.
+  Offen (fortschritte/2026-10-30.md): Seed sät gelöschte GKV-Leistungen neu; Preise in drei Kopien
+  (`GKV_PRICES`, `GKV_LEISTUNGSKATALOG`, `physio_positions.js`).
+
 ### 30.10.2026 · K4: KI-Freitext im Jeton-Modus, Mail-Assistent in der Box (`api-backend/ai/`, `module/lead-suche.js`)
 - Keine neue Funktion, geändertes Verhalten. Test: `api-backend/ai/k4-jeton-freitext.test.js`.
 - `ki-schema`: Freitext-Tor ist nur noch `allowFreeText` (Jeton eingeschlossen). Niye: Gründerentscheidung, Mail-Assistent soll in der Box laufen.
