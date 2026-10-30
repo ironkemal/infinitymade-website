@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261030124333 0090_kg_zns_zertifikate
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090)
+-- LAST MIGRATION:     20261030225357 0091_rls_team_schreibrechte
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091)
 -- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
@@ -13,9 +13,9 @@
 --   table_columns:       1432
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        167
---   functions:           112
---   triggers:            99
+--   rls_policies:        168
+--   functions:           113
+--   triggers:            100
 --   indexes:             342
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -662,11 +662,16 @@ CREATE POLICY "Employees can see owner breaks" ON public.breaks
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id = breaks.user_id))))));
 
-CREATE POLICY "Users can manage own breaks" ON public.breaks
+CREATE POLICY breaks_team_modify ON public.breaks
   AS PERMISSIVE
   FOR ALL
   TO PUBLIC
-  USING ((user_id = auth.uid()));
+  USING (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = breaks.user_id) AND (p.owner_id = auth.uid()))))))
+  WITH CHECK (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = breaks.user_id) AND (p.owner_id = auth.uid()))))));
 
 CREATE POLICY businesses_delete_owner_only ON public.businesses
   AS PERMISSIVE
@@ -1233,6 +1238,13 @@ CREATE POLICY profiles_update_own ON public.profiles
   USING ((auth.uid() = id))
   WITH CHECK ((auth.uid() = id));
 
+CREATE POLICY profiles_update_team ON public.profiles
+  AS PERMISSIVE
+  FOR UPDATE
+  TO PUBLIC
+  USING (((owner_id = auth.uid()) AND (role = 'employee'::text) AND (id <> auth.uid())))
+  WITH CHECK (((owner_id = auth.uid()) AND (role = 'employee'::text) AND (id <> auth.uid())));
+
 CREATE POLICY "Public booking lookup profiles" ON public.profiles
   AS PERMISSIVE
   FOR SELECT
@@ -1487,18 +1499,22 @@ CREATE POLICY "Public read working hours" ON public.working_hours
   TO PUBLIC
   USING (true);
 
-CREATE POLICY working_hours_owner_modify ON public.working_hours
-  AS PERMISSIVE
-  FOR ALL
-  TO PUBLIC
-  USING (((auth.uid() = user_id) OR (auth.uid() = owner_id)))
-  WITH CHECK (((auth.uid() = user_id) OR (auth.uid() = owner_id)));
-
 CREATE POLICY working_hours_owner_select ON public.working_hours
   AS PERMISSIVE
   FOR SELECT
   TO PUBLIC
   USING (((auth.uid() = user_id) OR (auth.uid() = owner_id)));
+
+CREATE POLICY working_hours_team_modify ON public.working_hours
+  AS PERMISSIVE
+  FOR ALL
+  TO PUBLIC
+  USING (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = working_hours.user_id) AND (p.owner_id = auth.uid()))))))
+  WITH CHECK (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = working_hours.user_id) AND (p.owner_id = auth.uid()))))));
 
 CREATE POLICY zaa_fehler_via_abrechnung ON public.zaa_fehler
   AS PERMISSIVE
@@ -3565,6 +3581,7 @@ begin
   or new.lokalisation      is distinct from old.lokalisation
   or new.notizen           is distinct from old.notizen
   or new.betrag_gkv        is distinct from old.betrag_gkv
+  or new.therapiezeit_min  is distinct from old.therapiezeit_min
   or new.owner_id          is distinct from old.owner_id
   or new.created_at        is distinct from old.created_at
   or new.herkunft          is distinct from old.herkunft
@@ -3997,6 +4014,17 @@ BEGIN
   IF TG_OP = 'INSERT' THEN
     RAISE EXCEPTION 'Profile werden nur serverseitig angelegt.'
       USING ERRCODE = '42501';
+  END IF;
+
+  -- Fremdes Profil (Inhaber -> Mitarbeiter, Policy profiles_update_team): Positivliste.
+  -- updated_at setzt der spaeter laufende Trigger profiles_updated_at, gehoert nicht zum Inhalt.
+  IF auth.uid() IS DISTINCT FROM NEW.id THEN
+    IF (to_jsonb(NEW) - 'anrede' - 'avatar_url' - 'updated_at')
+       IS DISTINCT FROM (to_jsonb(OLD) - 'anrede' - 'avatar_url' - 'updated_at') THEN
+      RAISE EXCEPTION 'Bei Mitarbeitern kann der Inhaber nur Anrede und Profilbild aendern.'
+        USING ERRCODE = '42501';
+    END IF;
+    RETURN NEW;
   END IF;
 
   IF NEW.owner_id                     IS DISTINCT FROM OLD.owner_id
@@ -5635,6 +5663,21 @@ AS $function$ SELECT jsonb_build_object('current_user', current_user, 'role', cu
 ;
 ALTER FUNCTION public.whoami() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.working_hours_owner_ableiten()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+BEGIN
+  -- Nie dem Client trauen: owner_id = Mandant der Zeile (Mitarbeiter -> sein Inhaber, Inhaber -> er
+  -- selbst, wie server.js beim Onboarding schreibt). Unbekannter user_id -> NULL.
+  SELECT COALESCE(p.owner_id, p.id) INTO NEW.owner_id FROM public.profiles p WHERE p.id = NEW.user_id;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.working_hours_owner_ableiten() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -5873,6 +5916,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON vehicles FOR EACH ROW EXECUT
 CREATE TRIGGER trg_warteliste_updated_at BEFORE UPDATE ON warteliste FOR EACH ROW EXECUTE FUNCTION set_warteliste_updated_at();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON working_hours FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER trg_working_hours_owner_ableiten BEFORE INSERT OR UPDATE OF user_id, owner_id ON working_hours FOR EACH ROW EXECUTE FUNCTION working_hours_owner_ableiten();
 
 CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
@@ -12736,6 +12781,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO

@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-10-27",
+ "erzeugt": "2026-10-30",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-10-27)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-26)",
+  "schema": "db/SCHEMA.sql (Stand 2026-10-30)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-30)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 97,
@@ -51,7 +51,7 @@
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2123,
+     "start": 2145,
      "module": [],
      "uiPfad": []
     },
@@ -113,7 +113,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2307,
+     "start": 2329,
      "module": [],
      "uiPfad": []
     },
@@ -168,7 +168,7 @@
     {
      "name": "verarbeiteVerschluesselungsSchritt",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1564,
+     "start": 1586,
      "module": [],
      "uiPfad": []
     }
@@ -366,7 +366,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": []
     },
@@ -600,7 +600,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 277,
+     "start": 278,
      "module": [],
      "uiPfad": []
     },
@@ -1510,7 +1510,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1812,7 +1812,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3895,
+     "start": 3903,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1939,7 +1939,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2314,7 +2314,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6407,
+     "start": 6408,
      "module": [],
      "uiPfad": []
     },
@@ -2864,7 +2864,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4070,
+     "start": 4078,
      "module": [],
      "uiPfad": []
     }
@@ -3078,7 +3078,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2684,
+     "start": 2685,
      "module": [],
      "uiPfad": []
     },
@@ -3449,7 +3449,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2036,
+     "start": 2037,
      "module": [],
      "uiPfad": []
     },
@@ -3895,7 +3895,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1557,
+     "start": 1558,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4039,7 +4039,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1314,
+     "start": 1315,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4444,7 +4444,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2190,
+     "start": 2191,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4492,14 +4492,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1158,
+     "start": 1159,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1238,
+     "start": 1239,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4746,7 +4746,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4070,
+     "start": 4078,
      "module": [],
      "uiPfad": []
     },
@@ -5025,7 +5025,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 4663,
+     "start": 4664,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5076,7 +5076,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3261,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5127,7 +5127,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3716,
+     "start": 3717,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5137,7 +5137,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4207,
+     "start": 4208,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5198,7 +5198,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5218,7 +5218,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4091,
+     "start": 4092,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5320,7 +5320,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3582,
+     "start": 3583,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5350,7 +5350,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5401,7 +5401,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3626,
+     "start": 3627,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5411,7 +5411,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3504,
+     "start": 3505,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5792,7 +5792,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 45,
+   "sqlTreffer": 46,
    "codeStumm": false
   },
   {
@@ -5926,7 +5926,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7965,14 +7965,14 @@
     {
      "name": "berechneVerschluesselung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1421,
+     "start": 1443,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ermittleEmpfaengerZertifikatStatus",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1919,
+     "start": 1941,
      "module": [],
      "uiPfad": []
     }
@@ -8180,7 +8180,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8607,7 +8607,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8787,7 +8787,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9026,7 +9026,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9188,7 +9188,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1557,
+     "start": 1558,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9286,7 +9286,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3626,
+     "start": 3627,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9296,7 +9296,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3504,
+     "start": 3505,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9685,7 +9685,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10046,7 +10046,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1557,
+     "start": 1558,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10571,7 +10571,7 @@
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 342,
+     "start": 343,
      "module": [],
      "uiPfad": []
     },
@@ -11244,7 +11244,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3261,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11292,7 +11292,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3716,
+     "start": 3717,
      "module": [],
      "uiPfad": []
     },
@@ -11306,7 +11306,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4421,
+     "start": 4422,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11354,7 +11354,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4207,
+     "start": 4208,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11402,7 +11402,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3128,
+     "start": 3129,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11807,7 +11807,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1557,
+     "start": 1558,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11951,7 +11951,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4431,
+     "start": 4432,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12335,7 +12335,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12383,7 +12383,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 4330,
+     "start": 4331,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12534,7 +12534,7 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3359,
+     "start": 3360,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12582,7 +12582,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3626,
+     "start": 3627,
      "module": [],
      "uiPfad": []
     },
@@ -12721,7 +12721,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3840,
+     "start": 3841,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -12751,7 +12751,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13216,7 +13216,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 587,
+     "start": 588,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14267,7 +14267,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1557,
+     "start": 1558,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14363,7 +14363,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14623,7 +14623,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": []
     }
@@ -14870,7 +14870,7 @@
     {
      "name": "ladeErbrachteSitzungen",
      "file": "api-backend/billing/zuzahlung/erbrachte-sitzungen.js",
-     "start": 21,
+     "start": 23,
      "module": [],
      "uiPfad": []
     },
@@ -15576,7 +15576,8 @@
     "api-backend/billing/api/podo-empfangsnachweis-gates.harness.mjs",
     "api-backend/billing/api/podo-empfangsnachweis.routes.test.js",
     "api-backend/billing/utils/podo-empfangsnachweis.test.js",
-    "api-backend/dsgvo/klassifikation.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -15723,7 +15724,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -15879,7 +15880,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3212,
+     "start": 3213,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15927,7 +15928,7 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 5486,
+     "start": 5487,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16037,7 +16038,7 @@
     {
      "name": "pruefeVerordnungsfortschritt",
      "file": "module/sitzungsfortschritt.js",
-     "start": 128,
+     "start": 130,
      "module": [],
      "uiPfad": []
     },
@@ -16099,7 +16100,7 @@
     {
      "name": "zaehler",
      "file": "module/sitzungsfortschritt.js",
-     "start": 131,
+     "start": 133,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16157,9 +16158,19 @@
      ]
     },
     {
+     "name": "bucheErgaenzendMit",
+     "file": "module/ergaenzend-mitbuchen.js",
+     "start": 23,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "gleicheSitzungenAb",
      "file": "module/sitzung-abgleich.js",
-     "start": 86,
+     "start": 97,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16210,7 +16221,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3261,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16292,7 +16303,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 6477,
+     "start": 6478,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16316,6 +16327,7 @@
     "api-backend/server.js",
     "dashboard.js",
     "module/booking-status-korrektur.js",
+    "module/ergaenzend-mitbuchen.js",
     "module/frequenz-pruefung.js",
     "module/rechnung-ansicht.js",
     "module/rechnung-editor.js",
@@ -16589,7 +16601,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 277,
+     "start": 278,
      "module": [],
      "uiPfad": []
     },
@@ -16604,6 +16616,13 @@
      "name": "bindePodoSerieVonRezept",
      "file": "module/podo-einheiten.js",
      "start": 320,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "bucheErgaenzendMit",
+     "file": "module/ergaenzend-mitbuchen.js",
+     "start": 23,
      "module": [],
      "uiPfad": []
     },
@@ -17358,14 +17377,14 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 1744,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 5486,
+     "start": 5487,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17564,7 +17583,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18169,7 +18188,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 6332,
+     "start": 6333,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18220,7 +18239,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18250,7 +18269,7 @@
     {
      "name": "pruefeVerordnungsfortschritt",
      "file": "module/sitzungsfortschritt.js",
-     "start": 128,
+     "start": 130,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18362,7 +18381,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6407,
+     "start": 6408,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18392,7 +18411,7 @@
     {
      "name": "zaehler",
      "file": "module/sitzungsfortschritt.js",
-     "start": 131,
+     "start": 133,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18459,6 +18478,7 @@
     "module/anamnese.js",
     "module/arzt-register.js",
     "module/booking-status-korrektur.js",
+    "module/ergaenzend-mitbuchen.js",
     "module/frequenz-pruefung.js",
     "module/frequenz-pruefung.test.js",
     "module/patientenkarte.js",
@@ -18618,7 +18638,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 277,
+     "start": 278,
      "module": [],
      "uiPfad": []
     },
@@ -18653,7 +18673,7 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4045,
+     "start": 4053,
      "module": [],
      "uiPfad": []
     },
@@ -18674,14 +18694,14 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3840,
+     "start": 3841,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2123,
+     "start": 2145,
      "module": [],
      "uiPfad": []
     },
@@ -18905,7 +18925,7 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 509,
+     "start": 510,
      "module": [],
      "uiPfad": []
     },
@@ -19317,21 +19337,21 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2307,
+     "start": 2329,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1266,
+     "start": 1288,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 3873,
+     "start": 3874,
      "module": [],
      "uiPfad": []
     },
@@ -19455,7 +19475,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 630,
+     "start": 631,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20135,7 +20155,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 4962,
+     "start": 4963,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20318,7 +20338,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 75,
+     "start": 103,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20542,7 +20562,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1807,
+     "start": 1808,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21052,7 +21072,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 341,
+   "sqlTreffer": 347,
    "codeStumm": false
   },
   {
@@ -21135,7 +21155,7 @@
     {
      "name": "loadDoctors",
      "file": "module/lead-suche.js",
-     "start": 146,
+     "start": 149,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21274,7 +21294,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4357,
+     "start": 4365,
      "module": [],
      "uiPfad": []
     },
@@ -21295,7 +21315,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3248,
+     "start": 3249,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21405,7 +21425,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2036,
+     "start": 2037,
      "module": [],
      "uiPfad": []
     },
@@ -21659,7 +21679,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4759,
+     "start": 4760,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21836,7 +21856,7 @@
     {
      "name": "migrierePhysioAltlast",
      "file": "module/physio-katalog-migration.js",
-     "start": 46,
+     "start": 85,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22182,7 +22202,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1004,
+     "start": 1005,
      "module": [],
      "uiPfad": []
     },
@@ -22363,7 +22383,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api-backend/dsgvo/klassifikation.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -22496,7 +22517,7 @@
    ],
    "register": true,
    "status": "aktiv",
-   "warum": "Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.",
+   "warum": "Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG, seit 0090 KG-ZNS je Methode). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.",
    "seit": "spätestens 08.06.2026 · `cleanup_test_users_keep_fizyo6`",
    "ungeklaert": false,
    "leser": [
@@ -23919,21 +23940,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3464,
+     "start": 3465,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3626,
+     "start": 3627,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3504,
+     "start": 3505,
      "module": [],
      "uiPfad": []
     }
@@ -24217,7 +24238,7 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 1956,
+     "start": 1957,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24375,14 +24396,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1158,
+     "start": 1159,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1238,
+     "start": 1239,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24689,7 +24710,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 50,
+   "sqlTreffer": 53,
    "codeStumm": false
   },
   {
@@ -24880,7 +24901,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2718,
      "module": [
       "abrechnung",
       "anamnese",
