@@ -684,6 +684,21 @@ Yani:
 
 ---
 
+## ☁️ Bulut oturumu (claude.ai/code, bilgisayar kapalıyken) — 30.10.2026
+
+Depo GitHub'dan açıldığında yerel makinedeki her şey **yoktur**. Bilinçli olarak:
+
+- **İlk komut:** `git config core.hooksPath .githooks` (kapılar yoksa sessizce atlanır).
+- **Gitignore'lu dosyalar yok:** `INFRASTRUCTURE.md` · `guvenlik/` · `mentor/` · `Meetings/` ·
+  `.env*` · `ops/.env.ops`. Yani VPS/SSH işi, Ops-Dashboard'a kart yazma ve canlı sırlar bu
+  oturumda **yapılamaz** — notu `fortschritte/` günlüğüne yaz, yerel oturum taşır.
+- **Supabase MCP yok:** migration **dosyası** yazılabilir, canlıya uygulama ve
+  `db/SCHEMA*.sql` tazeleme yerel oturuma kalır (sıra kuralı yukarıda).
+- **`agy` yok:** `builder` işi worker'a dağıtamaz, kendisi yazar.
+- **Kullanıcı hafızası yok:** güncel iş planı ve kararlar depodadır — aktif iş:
+  **`Physio/PILOT-PLAN.md`** (Kemal/Melih iş bölümü, çakışma kuralları).
+- Push `main`'e (dal açma kuralı aynen geçerli).
+
 ## 🧪 Yerel test ve tarayıcı probları
 
 **`node dev_server.cjs` → http://localhost:8081** — `/api/config`'i de yanıtlar
