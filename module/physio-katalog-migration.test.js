@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { physioAltlastPatches, migrierePhysioAltlast, zertifikatPatches, zertifikateMitDeckung, ZERTIFIKAT_PFLICHT } from './physio-katalog-migration.js';
+import { physioAltlastPatches, migrierePhysioAltlast, zertifikatPatches, zertifikateMitDeckung, ZERTIFIKAT_PFLICHT, PHYSIO_KATALOG_ERGAENZUNG } from './physio-katalog-migration.js';
+import { PHYSIO_POSITIONS } from '../api-backend/billing/codes/physio_positions.js';
 
 const kmt = { code: 'X0106', kuerzel: 'KMT', title: 'Klassische Massagetherapie (KMT)', duration: 20, price: 21.63 };
 
@@ -79,4 +80,23 @@ test('Kinder-Zertifikat deckt Erwachsene derselben Methode, nie umgekehrt', () =
   assert.deepEqual(zertifikateMitDeckung(['ZNS-BOBATH']), ['ZNS-BOBATH']);
   assert.deepEqual(zertifikateMitDeckung(['ZNS-K-VOJTA', 'MT']), ['ZNS-K-VOJTA', 'MT', 'ZNS-VOJTA']);
   assert.ok(!zertifikateMitDeckung(['ZNS-K-BOBATH']).includes('ZNS-VOJTA'));
+});
+
+test('K11: Ergänzung trägt die Preise der Abrechnungsdatei', () => {
+  const quelle = new Map(PHYSIO_POSITIONS.map(p => [p.x, p]));
+  for (const e of PHYSIO_KATALOG_ERGAENZUNG) {
+    assert.ok(quelle.has(e.code), `${e.code} fehlt in physio_positions.js`);
+    assert.equal(e.price, quelle.get(e.code).preis, e.code);
+    assert.equal(e.price_min, e.price); assert.equal(e.price_max, e.price);
+    assert.equal(e.locked, true);
+  }
+});
+
+test('K11: keine Dublette, Gruppen bleiben draußen', () => {
+  const codes = PHYSIO_KATALOG_ERGAENZUNG.map(e => e.code);
+  assert.equal(new Set(codes).size, codes.length);
+  for (const g of ['X0401', 'X0601']) assert.ok(!codes.includes(g));
+  // X0204/X0205 sind MLD-Zertifikatspositionen → die Saat setzt required_certificate
+  assert.equal(ZERTIFIKAT_PFLICHT.X0205, 'MLD');
+  assert.equal(ZERTIFIKAT_PFLICHT.X0204, 'MLD');
 });

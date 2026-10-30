@@ -107,7 +107,7 @@ import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mai
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
-import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung } from './module/physio-katalog-migration.js?v=20261030zns';
+import { migrierePhysioAltlast, ZERTIFIKAT_PFLICHT, zertifikateMitDeckung, PHYSIO_KATALOG_ERGAENZUNG } from './module/physio-katalog-migration.js?v=20261030k11';
 import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -8471,7 +8471,7 @@ const GKV_LEISTUNGSKATALOG = {
   ergotherapie: [],
   logopaedie: [],
 };
-GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
+GKV_LEISTUNGSKATALOG.physiotherapy.push(...PHYSIO_KATALOG_ERGAENZUNG); GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy; // K11 Ergänzung
 
 // Vergütungsvereinbarungen haben ein Gültigkeitsdatum — die Podologie-Preise
 // steigen z. B. zum 01.07.2026. Statt die Zahlen jedes Mal von Hand zu ändern

@@ -90,3 +90,27 @@ export async function migrierePhysioAltlast({ supabase, services, katalog }) {
     Object.assign(services.find(s => s.id === id), patch);
   }
 }
+
+/**
+ * Ergänzung der Physio-Saat (K11, Physio-Pilot P1, 30.10.2026). Bis heute säte
+ * autoSeedGkvServices() nur 11 Physio-Positionen; MLD 30 (die häufigste MLD),
+ * Kompressionsbandagierung und die üblichen ergänzenden Heilmittel (Wärme,
+ * Kälte, Elektro) musste jede Praxis von Hand anlegen. Auswahl: physio-Agent
+ * 30.10.2026 — nur was eine typische ambulante Praxis ohne Bad/Becken täglich
+ * nutzt, weil die Saat gelöschte Codes beim nächsten Laden wieder anlegt.
+ * Gruppen (X0401/X0601) bewusst NICHT: der Kalender kennt noch keinen
+ * Gruppentermin, die Leistung würde wie ein Einzeltermin gebucht.
+ * Preise = api-backend/billing/codes/physio_positions.js (Anlage 2 ab
+ * 01.01.2026); der Test prüft das gegen die Datei, nicht gegen diese Zahlen.
+ * Kürzel E/W/K wie HEILMITTEL_DEFAULTS dort.
+ */
+export const PHYSIO_KATALOG_ERGAENZUNG = [
+  { code: 'X0205', kuerzel: 'MLD30', title: 'Manuelle Lymphdrainage 30 min',  duration: 30, price: 35.97 },
+  { code: 'X0204', kuerzel: 'KOMP',  title: 'Kompressionsbandagierung',       duration: null, price: 22.92 },
+  { code: 'X1501', kuerzel: 'W',     title: 'Warmpackung (Fango)',            duration: 30, duration_label: '20–30', price: 16.16 },
+  { code: 'X1517', kuerzel: 'HL',    title: 'Wärmetherapie Heißluft',         duration: 20, duration_label: '10–20', price: 7.43 },
+  { code: 'X1530', kuerzel: 'HR',    title: 'Heiße Rolle',                    duration: 15, duration_label: '10–15', price: 13.47 },
+  { code: 'X1531', kuerzel: 'US',    title: 'Ultraschall-Wärmetherapie',      duration: 20, duration_label: '10–20', price: 14.66 },
+  { code: 'X1534', kuerzel: 'K',     title: 'Kältetherapie',                  duration: 10, duration_label: '5–10',  price: 11.95 },
+  { code: 'X1302', kuerzel: 'E',     title: 'Elektrotherapie',                duration: 20, duration_label: '10–20', price: 8.43 },
+].map(e => ({ ...e, price_min: e.price, price_max: e.price, locked: true }));

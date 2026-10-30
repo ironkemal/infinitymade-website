@@ -6765,7 +6765,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | A + G (kutunun kendi çıkışı) |
 | **Kutuda ne olur** | Windows kutusunda `api` merkeze ve Azure'a ulaşamazsa jeton gelmez, KI 503 kalır; kutunun geri kalanı çalışır. Aynı yolu kullananlar da etkilenebilir: merkez istemcisi, Caddy'nin sertifika yenilemesi. **Ölçülmedi.** Çelişki: bu kutu 08.10'da kaydoldu ve sertifika aldı (O-161 altındaki K2b.3 ölçümü), yani o gün çıkış vardı — sorun sonradan doğmuş, kalıcı olmayabilir. Hetzner/Linux kutusu etkilenmez |
 | **Çözüm** | Önce teşhis: `iptables -t nat -L POSTROUTING`, ikinci dockerd var mı (O-190), WSL restart sonrası tekrar. Kök neden kurulumdansa `install.ps1`, O-190 tipi durumsa panel uyarısı. Windows kutusunda KI açılmadan kapanmalı. **Ops kartı yok, sahibi atanmadı** |
-| **Durum** | `offen` — kart açılınca `geplant`. Lead-Trier Hetzner'de olduğu için K4'ü bloke etmez |
+| **Durum** | `offen` — kart açılınca `geplant`. P1 Hetzner'de olduğu için K4'ü bloke etmez |
 
 ### O-227 — `--ki` yalnız ilk Linux kurulumundan geçiyor; Windows'ta ve kurulu kutuda yol yok, kod da henüz hiçbir sürümde değil 🟡 **geplant (K4, builder)** (30.10.2026)
 
@@ -6774,9 +6774,9 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Ne** | KI'yı açan bayrak `onprem/install.sh:169`; `installieren/install.sh` seçenekleri geçiriyor, `installieren/install.ps1:495` sabit argümanla çağırıyor ve `--ki` geçirmiyor |
 | **Nerede** | `onprem/install.sh:667-675` (adım 5, `.env` üretimi) · `installieren/install.ps1:495` · `onprem/KURULUM.md:555` (tek yol olarak `--ki` yazıyor) · `onprem/manifest.json` `surum` hâlâ 0.7.1, hash'ler değişti, etiket `v0.7.1` zaten var |
 | **Tip** | F + G |
-| **Kutuda ne olur** | Yeni Linux kutusu: çalışır (Lead-Trier yolu). Windows kutusu: KI açılamaz. Kurulu kutu: tek yol elle `.env` + `docker compose up -d api`, belgede yok. Şu an hiçbir kutu bu kodu alamaz: K4 yayımlanmış image'da değil |
+| **Kutuda ne olur** | Yeni Linux kutusu: çalışır (P1 yolu). Windows kutusu: KI açılamaz. Kurulu kutu: tek yol elle `.env` + `docker compose up -d api`, belgede yok. Şu an hiçbir kutu bu kodu alamaz: K4 yayımlanmış image'da değil |
 | **Çözüm** | Yeni sürüm numarasıyla çıkış (bu hash'ler 0.7.1 adıyla yayımlanmaz) · kurulu kutu için tek komut ve KURULUM satırı · `install.ps1`'e geçiş, O-226 kapandıktan sonra |
-| **Durum** | `geplant` — K4 kapsamı (`Physio/PILOT-PLAN.md`). Trier ilk kurulumsa sürüm çıkışı yeter, diğer ikisi sonraya kalabilir |
+| **Durum** | `geplant` — K4 kapsamı (`Physio/PILOT-PLAN.md`). P1 ilk kurulumsa sürüm çıkışı yeter, diğer ikisi sonraya kalabilir |
 
 ### O-228 — SaaS ile kutu büyük ihtimalle aynı Azure kaynağı: tek deployment sınırı delinir, ve host image'a gömülü 🟡 **geplant (T23 (B))** (30.10.2026)
 

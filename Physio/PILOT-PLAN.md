@@ -56,7 +56,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | K8 | **Physio-Befund formu** (ROM, Kraft, Tests — alanları `physio` ajanı verir) | Befund kaydedilir, Therapiebericht'e taşınır |
 | K9 | **Versand** — Rechnung'u hastaya mail; **Fax = Fax-to-Mail** (praxis'in sağlayıcı adres deseni ayarlanır, ör. `{nummer}@…`; bizim gateway yok, G8 temiz) | Rechnung maille gider; Therapiebericht fax adresine PDF olarak gider |
 | K10 | **Startseite: elle görev** ekle/işaretle (otomatik uyarıların yanında) | Görev eklenir, abhaken, kalıcı |
-| K11 | **Physio katalogu** — Wärme, Kälte, Elektro, Gruppen pozisyonları hazır listeye | Seed'de görünür, fiyat `physio_positions.js` ile aynı |
+| K11 | ✅ **Physio katalogu** — MLD30, Kompression, Wärme (Fango/Heißluft/Heiße Rolle/Ultraschall), Kälte, Elektro hazır listeye (`PHYSIO_KATALOG_ERGAENZUNG`) — 30.10.2026. **Gruppen bilinçli dışarıda:** takvimde grup Termin'i yok (physio) | Seed'de görünür, fiyat `physio_positions.js` ile aynı (test) |
 | K12 | Seans imza listesi (Physio) | Seans başı imza tablette alınır |
 | K13 | **Datenübernahme (THEORG)** — hasta + açık VO importu. Ayrı kalem, en son | Örnek export'tan import |
 
