@@ -42,6 +42,8 @@ import { API_BASE } from '../supabase-config.js';
 
 const API = API_BASE;
 
+export const AUTH_DIENST_AUSFALL = 'Authentifizierungsdienst vorübergehend nicht verfügbar. Bitte später erneut versuchen.';
+
 /** date (YYYY-MM-DD) → Promise<Map<code, position>>. Lebt bis zum Neuladen der Seite. */
 const _katalog = new Map();
 
@@ -85,7 +87,12 @@ export function ladePodoPositionen(supabase, datum) {
         headers: { Authorization: `Bearer ${session?.access_token}` },
         signal: abbruch.signal,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw Object.assign(new Error(res.status === 503 && json.code === 'AUTH_UNAVAILABLE'
+          ? AUTH_DIENST_AUSFALL : `Preiskatalog konnte nicht geladen werden (HTTP ${res.status}). Bitte später erneut versuchen.`),
+          { status: res.status, code: res.status === 503 && json.code === 'AUTH_UNAVAILABLE' ? 'AUTH_UNAVAILABLE' : null });
+      }
       const json = await res.json();
       const map = new Map();
       for (const pos of (json.positions || [])) {
@@ -101,11 +108,12 @@ export function ladePodoPositionen(supabase, datum) {
       return map;
     } catch (e) {
       console.warn('[podologie-positionen]', e.name === 'AbortError' ? 'Zeitüberschreitung (8s)' : e.message);
-      // Leere Karte statt Ausnahme: die Verordnungsansicht soll auch ohne
-      // Preise stehen. Die Summe meldet dann „Position unbekannt" — das ist
-      // ehrlicher als eine Seite, die gar nicht erst erscheint.
-      _katalog.delete(tag);   // beim nächsten Aufruf erneut versuchen
-      return new Map();
+      // Rückgabetyp bleibt Map; Ladefehler ist keine fachliche Kataloglücke.
+      _katalog.delete(tag);   // nur ein späterer bewusster Aufruf versucht erneut
+      return Object.assign(new Map(), { ladefehler: {
+        status: e.status || 0, code: e.code || null,
+        message: e.status ? e.message : 'Preiskatalog konnte nicht geladen werden. Bitte später erneut versuchen.',
+      } });
     } finally {
       clearTimeout(uhr);
     }
@@ -130,5 +138,7 @@ export async function podoPositionsFinder(supabase, behandlungen) {
   const karten = new Map();
   await Promise.all(tage.map(async t => karten.set(t, await ladePodoPositionen(supabase, t))));
 
-  return (code, datum) => karten.get(_tag(datum))?.get(String(code)) || null;
+  return Object.assign((code, datum) => karten.get(_tag(datum))?.get(String(code)) || null, {
+    ladefehler: [...karten.values()].find(k => k.ladefehler)?.ladefehler,
+  });
 }

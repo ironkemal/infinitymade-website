@@ -414,9 +414,13 @@ bırakır" prensibi bizde zaten var: `praxura_migrations` defteri + `0000_baseli
 (`SCHEMA-VERTEILUNG.md` §4.5) — ayrı bir sürüm dosyası tutmamıza gerek yok.
 
 **Uymayan:** Sentry'nin donanım eşikleri bizim ölçeğimizin çok üstünde (onlarda ClickHouse,
-Kafka, Snuba var). Playbook §4.1'deki **2 vCPU / 4 GB / 40 GB** geçerli kalır — ama artık
-bir şey ekliyoruz: **disk eşiği yedeği de kapsamalı** (§4.3 yer kontrolü), yani 40 GB
-"veri + yedek" için değil, yalnız "veri" için asgari.
+Kafka, Snuba var). Playbook §4.1'deki **2 vCPU / 4 GB RAM** geçerli kalır. Disk için
+**22.10.2026 beta kararı (O-213):** `install.sh:449-450` boş alan **15 GB altındaysa
+durur**, **15-39 GB'ta uyarıp devam eder**. **40 GB boş alan planlama büyüklüğü ve
+öneridir**; garantili müşteri/veri kapasitesi değildir. Image'lar, DB/storage,
+loglar, güncelleme payı ve yerel yedek çalışma alanı birlikte ölçülmelidir; kapasite
+ölçümü O-213'te açık. `update.sh:217-221` ayrı olarak **%8 boş alan** kontrol eder;
+bu belge yeni bir GB veya güncelleme eşiği getirmez.
 
 ### 5.3 Kurulum ön-kontrolü (`install.sh`, Faz 2.1)
 
@@ -424,7 +428,7 @@ Sıra önemli: **hiçbir şey kurulmadan önce** çalışır, bir madde kırmız
 
 | # | Kontrol | Kırmızıysa ne denir |
 |---|---|---|
-| 1 | CPU çekirdek ≥ 2 · RAM ≥ 4 GB · boş disk ≥ 40 GB | Somut sayı ve önerilen Hetzner tipi |
+| 1 | CPU çekirdek ≥ 2 · RAM ≥ 4 GB · beta disk ön-kontrolü: boş alan < 15 GB → dur; 15-39 GB → uyarı + devam; 40 GB → planlama önerisi (O-213) | Somut sayı ve önerilen Hetzner tipi; disk uyarısı kapasite garantisi değildir |
 | 2 | Docker ≥ sürüm X + `docker compose` v2 var mı | Kurulum komutu gösterilir (ya da otomatik kurar) |
 | 3 | **80 ve 443 boş mu** | "Bu sunucuda başka bir web sunucusu çalışıyor" — Caddy sessizce başlamaz |
 | 4 | **DNS bu sunucuya çözümleniyor mu** | Let's Encrypt DNS'siz sertifika vermez; A-kaydı beklenir |

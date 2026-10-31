@@ -700,8 +700,8 @@ function todoForm(t = {}) {
   const groups = todos.filter(g => !g.parent_id && g.id !== t.id && !kidsOf(t.id || '').length);
   // Blocker: alles außer der Aufgabe selbst und ihren eigenen Unteraufgaben.
   const kidIds = new Set(kidsOf(t.id || '').map(k => k.id));
-  const blockCands = todos.filter(x => x.id !== t.id && !kidIds.has(x.id) && !x.done);
   const chosen = new Set(t.blocked_by || []);
+  const blockCands = todos.filter(x => x.id !== t.id && !kidIds.has(x.id) && (!x.done || chosen.has(x.id)));
 
   return `
     <label class="fld"><span>Aufgabe</span>

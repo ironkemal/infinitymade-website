@@ -476,7 +476,9 @@ while IFS=$'\t' read -r yol yeni_sha; do
   fi
   if [ "$ilk_kosu" -eq 0 ]; then
     taban_sha="$(onceki_sha "$yol" || echo '')"
-    if [ -n "$taban_sha" ] && [ -n "$mevcut_sha" ] && [ "$taban_sha" != "$mevcut_sha" ]; then
+    # Ein bytegleicher Hotfix entspricht bereits dem neuen Bundle und ist
+    # kein Konflikt mit der letzten erfolgreich angewandten Fassung.
+    if [ -n "$taban_sha" ] && [ -n "$mevcut_sha" ] && [ "$taban_sha" != "$mevcut_sha" ] && [ "$mevcut_sha" != "$yeni_sha" ]; then
       warn "Sapma: $yol kutuda elden geçirilmiş — üzerine yazılmıyor"
       sapma_bulundu="$sapma_bulundu $yol"
       continue
@@ -493,7 +495,23 @@ if [ -n "$sapma_bulundu" ]; then
     "Değişiklikleri gözden geçir, gerekiyorsa .neu dosyalarıyla elle birleştir (destek: install.log/update.log'u gönder, K10 gereği içeri giremiyoruz)."
   for yol in $sapma_bulundu; do
     hedef="$SCRIPT_DIR/$yol"
-    [ -f "$hedef" ] && cp "$hedef" "$hedef.neu.bekliyor" 2>/dev/null || true
+    # Neue Bundle-Fassung aufheben, bevor der EXIT-Trap das Bundle entfernt.
+    # Erst vollständig kopieren, dann atomar ersetzen: bei Schreibfehlern
+    # bleibt eine frühere brauchbare Vorlage unverändert. -T verhindert,
+    # dass mv ein vorhandenes Zielverzeichnis als erfolgreichen Ersatz zählt.
+    neu_tmp=""
+    if neu_tmp="$(mktemp "$hedef.neu.bekliyor.tmp.XXXXXX")" \
+       && cp "$BUNDLE_TMP/bundle/$yol" "$neu_tmp" \
+       && mv -fT "$neu_tmp" "$hedef.neu.bekliyor"; then
+      ok "Neue Bundle-Fassung gespeichert: $yol.neu.bekliyor"
+    else
+      if [ -n "$neu_tmp" ]; then
+        rm -f "$neu_tmp" || warn "Temporäre Konfliktkopie konnte nicht entfernt werden: $neu_tmp"
+      fi
+      fehler "Neue Bundle-Fassung NICHT gespeichert: $yol.neu.bekliyor" \
+        "Kopieren oder atomarer Ersatz fehlgeschlagen" "vollständige neue Zusammenführungsfassung" \
+        "Eine vorhandene .neu.bekliyor kann älter sein. Aktuelles Paket erneut bereitstellen und Schreibrechte/Speicher prüfen."
+    fi
   done
   durumu_yaz "konflikt" "\"catisma_dosyalari\": \"$sapma_bulundu\","
   exit 1
@@ -914,6 +932,15 @@ if [ "$sonuc" = "ok" ] || [ "$sonuc" = "schema_fehler" ]; then
   cp "$BIZIM_ENV" "$TABAN_ENV"
 fi
 if [ "$sonuc" = "ok" ]; then
+  # Erst nach erfolgreichem Compose-/Health-/Bereitschaftslauf aufräumen.
+  # Rollback und schema_fehler benötigen frühere Zusammenführungsfassungen.
+  # Nur exakte Restpfade aus dem geprüften Manifest, keine globale Suche.
+  while IFS= read -r yol; do
+    if [ -n "$yol" ]; then
+      rm -f "$SCRIPT_DIR/$yol.neu.bekliyor" \
+        || warn "Konfliktvorlage konnte nicht entfernt werden: $yol.neu.bekliyor"
+    fi
+  done < <(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"' "$MANIFEST" | sed -E 's/.*"([^"]+)"$/\1/')
   # O-82: owner e-postası önbelleği yalnız burada tazelenir — DB'nin
   # erişilebilir olduğu kanıtlanmış tek an. `|| true`: önbellek tazeleme
   # başarısız olsa bile "ok" sonucu bundan etkilenmemeli.

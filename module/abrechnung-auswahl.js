@@ -66,7 +66,7 @@ import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20261001e';
-import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
+import { podoPositionsFinder } from './podologie-positionen.js?v=20261022auth1';
 import { zuVieleBehandlungenJeTag } from './podo-behandlungstag-regel.js?v=20261003a';
 import { datumDe } from './datum.js?v=20261001a';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';

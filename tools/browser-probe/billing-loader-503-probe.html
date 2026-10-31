@@ -1,0 +1,227 @@
+<!doctype html>
+<!-- Synthetische lokale Probe. Echte Loader/Renderer; kein Login, keine DB,
+     keine fachlichen Schreibaktionen. Netzwerkzugriffe nur auf lokale Quellen. -->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Billing-503-Probe</title>
+</head>
+<body>
+  <div id="app"><div class="dashboard-layout">
+    <aside class="sidebar"><nav></nav></aside>
+    <main class="main-area" id="mainArea">
+      <section class="panel active">
+        <div class="card">
+          <h3>Billing — synthetische 503/401/200-Probe</h3>
+          <p id="probeResult" role="status">Probe läuft…</p>
+        </div>
+        <div id="probeCases"></div>
+      </section>
+    </main>
+  </div></div>
+  <script type="module">
+    const checks = [], requests = [], unexpected = [];
+    window.__billing503Probe = { checks, requests, unexpected, ready: false };
+    const check = (ok, name) => { checks.push({ name, ok: !!ok }); if (!ok) throw new Error(name); };
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ausfall = 'Authentifizierungsdienst vorübergehend nicht verfügbar. Bitte später erneut versuchen.';
+    const nativeFetch = window.fetch.bind(window);
+    let status = 503, statusForDate = null;
+    const session = { auth: {
+      getSession: async () => ({ data: { session: { access_token: 'synthetic-probe' } } }),
+      getUser: () => { throw new Error('getUser nicht erlaubt'); },
+      refreshSession: () => { throw new Error('Refresh nicht erlaubt'); },
+      signOut: () => { throw new Error('Logout nicht erlaubt'); },
+    } };
+    window.fetch = async (input, opts = {}) => {
+      const url = new URL(String(input), location.href);
+      if (url.origin === location.origin && url.pathname === '/api/config') {
+        return new Response(JSON.stringify({ supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic-public', apiBase: '/api' }));
+      }
+      if (url.origin === location.origin && /^\/api\/billing\/(positions(?:\/podologie)?|abrechnung\/synthetic\/zeilen)$/.test(url.pathname)) {
+        check((opts.method || 'GET') === 'GET', 'nur GET: ' + url.pathname);
+        check(opts.headers?.Authorization === 'Bearer synthetic-probe', 'Session-Bearer: ' + url.pathname);
+        const responseStatus = statusForDate ? statusForDate(url) : status;
+        requests.push({ path: url.pathname + url.search, status: responseStatus });
+        const body = responseStatus === 200
+          ? url.pathname.endsWith('/zeilen')
+            ? { abrechnung: { id: 'synthetic', status: 'erstellt', dateiname: 'TSOLTEST' }, gruppen: [], zeilen: [], geld: {} }
+            : { positions: [{ hpnr: '78010', x: 'X0501', kat: 'Therapie', name: 'Synthetische Position', preis: 36.1, zuzahlung: 3.61 }] }
+          : { error: responseStatus === 503 ? ausfall : 'Invalid token', ...(responseStatus === 503 ? { code: 'AUTH_UNAVAILABLE' } : {}) };
+        return new Response(JSON.stringify(body), { status: responseStatus, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.origin === location.origin && url.pathname === '/dashboard.js' && (opts.method || 'GET') === 'GET') return nativeFetch(url);
+      unexpected.push(url.origin + url.pathname);
+      throw new Error('Netzwerkziel gesperrt: ' + url.origin + url.pathname);
+    };
+    const card = (title, contentId) => {
+      const section = document.createElement('div'); section.className = 'card';
+      section.innerHTML = `<h3>${esc(title)}</h3><div id="${contentId}"></div>`;
+      document.getElementById('probeCases').append(section);
+      return section.querySelector('#' + contentId);
+    };
+    try {
+      if (new URLSearchParams(location.search).get('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      const podo = await import('../../module/podologie-positionen.js?v=20261022auth1');
+      const geld = await import('../../module/rezeptinfo-geld.js?v=20261022auth1');
+      const detail = await import('../../module/abrechnung-detail.js');
+      const verordnung = await import('../../module/verordnung-detail.js?v=20261022auth1');
+      // Dieselben Deklarationen wie im Dashboard, ohne dessen Login/Bootstrap.
+      const dashboard = await (await fetch('/dashboard.js')).text();
+      const declaration = name => {
+        const start = dashboard.indexOf(`function ${name}(`);
+        check(start >= 0, 'echte Dashboard-Deklaration: ' + name);
+        return dashboard.slice(start).match(/^[\s\S]*?\n\}/)[0];
+      };
+      const client = rx => ({ ...session, from(table) {
+          const q = { select: () => q, eq: () => q, neq: () => q, is: () => q, in: () => q,
+            order: () => q, limit: () => q,
+            maybeSingle: async () => ({ data: table === 'prescriptions' ? rx : null, error: null }),
+            then: (a, b) => Promise.resolve({ data: table === 'podologie_behandlungen' ? rx.podologie_behandlungen : [], error: null }).then(a, b),
+          };
+          // Schreibversuche werden gezählt und schlagen fehl, auch wenn ein
+          // Produkt-catch die Ausnahme anschließend behandeln sollte.
+          for (const method of ['insert', 'update', 'upsert', 'delete']) q[method] = () => {
+            unexpected.push(table + ':' + method); throw new Error('Write gesperrt');
+          };
+          return q;
+        } });
+      const moneyProbe = async (rx, id, title) => {
+        const money = card(title, id), sb = client(rx);
+        const wired = geld.verdrahteGeldzeile({ el: money, rx, erbracht: 0, deps: {
+          sb, ownerId: rx.owner_id, sector: 'podologie', katalog: [{ code: '78010', price: 36.1 }],
+          ladePodoPositionen: d => podo.ladePodoPositionen(sb, d), services: [],
+          kassieren: () => { unexpected.push('kassieren'); throw new Error('Kassieren gesperrt'); },
+        } });
+        wired.patientGesetzt({ insurance_type: 'gkv' });
+        for (let i = 0; i < 12; i++) await new Promise(resolve => setTimeout(resolve, 0));
+        return money;
+      };
+      for (status of [503, 401, 200]) {
+        const date = `2026-12-${status === 503 ? '11' : status === 401 ? '12' : '13'}`;
+        const rx = { id: 'synthetic-rx', owner_id: 'synthetic-owner', therapie_bereich: 'podo',
+          rezeptart: 'kassen', abrechnung_status: 'gesendet', heilmittel_position: '78010',
+          ausstellungsdatum: date, anzahl_einheiten: 3,
+          podologie_behandlungen: [{ behandlungsdatum: date, hpnr_codes: ['78010'], betrag_gkv: 36.1 }] };
+        const sb = client(rx);
+        const before = requests.length;
+        // Parallelaufrufe und spätere Verbraucher teilen erfolgreiche Cacheeinträge.
+        const [mapA, mapB] = await Promise.all([podo.ladePodoPositionen(sb, date), podo.ladePodoPositionen(sb, date)]);
+        check(mapA instanceof Map && mapA === mapB, `${status}: Map und Parallelcache`);
+        check(requests.length === before + 1, `${status}: paralleler Podoloader genau ein GET`);
+        check(status === 200 ? !mapA.ladefehler && mapA.has('78010') : mapA.ladefehler?.status === status, `${status}: Katalogzustand`);
+
+        const physio = card(`${status} — Physio-Katalog`, 'physio-' + status);
+        const state = { positions: [], positionsLoaded: false }, hints = [];
+        const load = new Function('deps', `const { _abState, supabase, API, AUTH_DIENST_AUSFALL, escapeHtml, showToast } = deps;
+          async ${declaration('loadPhysioPositions')}
+          ${declaration('buildPositionOptionsHtml')}
+          return { loadPhysioPositions, buildPositionOptionsHtml };`)({
+            _abState: state, supabase: sb, API: '/api', AUTH_DIENST_AUSFALL: ausfall, escapeHtml: esc,
+            showToast: message => hints.push(message),
+          });
+        const nPhysio = requests.length;
+        const [a, b] = await Promise.all([load.loadPhysioPositions(), load.loadPhysioPositions()]);
+        check(a === b && Array.isArray(a) && requests.length === nPhysio + 1, `${status}: Physio genau ein GET/Array`);
+        check(state.positionsLoaded === (status === 200), `${status}: Fehlercache kein Erfolg`);
+        // Breite des echten Pickers aus abrechnung-auswahl.js übernehmen.
+        physio.innerHTML = `<select class="ab-pos-select" aria-label="Synthetische Position" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${load.buildPositionOptionsHtml('X0501')}</select>`
+          + hints.map(hint => `<p role="status">${esc(hint)}</p>`).join('');
+        check(status === 200 ? hints.length === 0 : hints.length === 1 && physio.textContent.includes(status === 503 ? ausfall : '401'), `${status}: sichtbarer Physiozustand`);
+
+        const detailEl = card(`${status} — Abrechnungsdetail`, 'abDetailContent');
+        const nDetail = requests.length;
+        detail.initAbrechnungDetail({ supabase: sb, apiBase: '/api', escapeHtml: esc, aktionen: {} });
+        await detail.zeigeAbrechnungDetail('synthetic');
+        check(requests.length === nDetail + 1 && detailEl.style.opacity === '' && !detailEl.textContent.includes('Lädt…'), `${status}: Detail ein GET, Laden beendet`);
+        check(detailEl.textContent.includes(status === 503 ? ausfall : status === 401 ? 'Invalid token' : 'Erstellt'), `${status}: Detailantwort sichtbar`);
+        // IDs des Produktmoduls nur während dieses Falls im Dokument behalten.
+        detailEl.id = 'abDetail-' + status;
+
+        const money = card(`${status} — Rezeptinfo`, 'money-' + status);
+        const nMoney = requests.length;
+        const wired = geld.verdrahteGeldzeile({ el: money, rx, erbracht: 1, deps: {
+          sb, ownerId: rx.owner_id, sector: 'podologie', ladePodoPositionen: d => podo.ladePodoPositionen(sb, d),
+          kassieren: () => { unexpected.push('kassieren'); throw new Error('Kassieren gesperrt'); },
+        } });
+        wired.patientGesetzt({ insurance_type: 'gkv' });
+        // Nur Fixture-Microtasks abwarten; kein Produkt-Refresh/Retry.
+        for (let i = 0; i < 12; i++) await new Promise(resolve => setTimeout(resolve, 0));
+        check(requests.length === nMoney + (status === 200 ? 0 : 1), `${status}: Geldzeile kein stiller Retry`);
+        check(money.querySelector('#bkRxEuroBtn')?.disabled === (status !== 200), `${status}: Kassiersperre`);
+        check(status === 200 ? money.textContent.includes('13,61') : money.textContent.includes(status === 503 ? ausfall : '401'), `${status}: Geldzustand sichtbar`);
+        check(!/Position steht nicht im Katalog|Für diese Position steht kein Preis/.test(money.innerHTML), `${status}: Ausfall keine Kataloglücke`);
+
+        const vord = card(`${status} — Verordnungsdetail`, 'vord-' + status);
+        const nVord = requests.length;
+        const result = await verordnung.zeigeVerordnungDetail({ supabase: sb, verordnungId: rx.id,
+          quelle: 'podologie', inhalt: vord, escapeHtml: esc });
+        check(result?.id === rx.id && vord.style.opacity === '' && !vord.textContent.includes('Lade…'), `${status}: Verordnungsdetail Laden beendet`);
+        check(requests.length === nVord + (status === 200 ? 0 : 1), `${status}: Verordnungsdetail ein bewusster Aufruf`);
+        check(status === 200 ? vord.textContent.includes('13,61') : vord.textContent.includes(status === 503 ? ausfall : '401'), `${status}: Verordnungszustand sichtbar`);
+        check(!vord.textContent.includes('Ohne Preis im Katalog'), `${status}: keine falsche Kataloglücke`);
+        check(status === 200
+          ? (vord.textContent.match(/36,10/g) || []).length === 2
+          : !/0,00\s*€|36,10|13,61|10,00\s*€/.test(vord.textContent) && vord.textContent.includes('nicht berechenbar'),
+          `${status}: gespeicherter Preis kein Nullpreis, Gesamt und Zuzahlung belastbar oder unbekannt`);
+        check(rx.podologie_behandlungen[0].betrag_gkv === 36.1, `${status}: gespeicherter Preis unverändert`);
+
+        const noBehDate = `2027-03-${status === 503 ? '01' : status === 401 ? '02' : '03'}`;
+        const noBeh = await moneyProbe({ ...rx, ausstellungsdatum: noBehDate, podologie_behandlungen: [] },
+          'fallback-' + status, `${status} — Rezeptinfo ohne Behandlung, Frontendpreis 36,10`);
+        check(noBeh.querySelector('#bkRxEuroBtn').disabled === (status !== 200), `${status}: Fallback-Kassiersperre`);
+        check(status === 200 ? noBeh.textContent.includes('20,83')
+          : !/20,83|108,30|0,00\s*€/.test(noBeh.textContent) && noBeh.textContent.includes(status === 503 ? ausfall : '401'),
+          `${status}: Fallback zeigt bei Ladefehler keinen Betrag`);
+      }
+      // Review-r1: gemischte Tage, mit und ohne gespeicherte Preise.
+      for (const gespeichert of [false, true]) {
+        const good = gespeichert ? '2027-03-06' : '2027-03-04';
+        const bad = gespeichert ? '2027-03-07' : '2027-03-05';
+        statusForDate = url => url.searchParams.get('date') === bad ? 503 : 200;
+        const rx = { id: 'synthetic-mixed', owner_id: 'synthetic-owner', therapie_bereich: 'podo',
+          rezeptart: 'kassen', abrechnung_status: 'gesendet', heilmittel_position: '78010',
+          ausstellungsdatum: good, anzahl_einheiten: 3,
+          podologie_behandlungen: [good, bad].map(behandlungsdatum => ({ behandlungsdatum,
+            hpnr_codes: ['78010'], ...(gespeichert ? { betrag_gkv: 36.1 } : {}) })) };
+        const before = requests.length;
+        const money = await moneyProbe(rx, 'mixed-money-' + gespeichert, `200/503 — Rezeptinfo, gespeicherte Preise: ${gespeichert}`);
+        check(requests.length === before + 2, 'gemischte Geldzeile genau zwei Tages-GETs: ' + gespeichert);
+        check(money.querySelector('#bkRxEuroBtn').disabled, 'gemischte Geldzeile gesperrt: ' + gespeichert);
+        check(money.textContent.includes(ausfall) && !/13,61|36,10|0,00\s*€/.test(money.textContent),
+          'gemischte Geldzeile ohne Teilsummen: ' + gespeichert);
+        const vord = card(`200/503 — Detail, gespeicherte Preise: ${gespeichert}`, 'mixed-vord-' + gespeichert);
+        const nVord = requests.length;
+        await verordnung.zeigeVerordnungDetail({ supabase: client(rx), verordnungId: rx.id,
+          quelle: 'podologie', inhalt: vord, escapeHtml: esc });
+        check(requests.length === nVord + 1, 'gemischtes Detail nutzt 200-Cache, ein Fehler-GET: ' + gespeichert);
+        check(vord.textContent.includes(ausfall) && vord.textContent.includes('nicht berechenbar'), 'gemischtes Detail erklärt unvollständige Preise: ' + gespeichert);
+        check(!/0,00\s*€|13,61|10,00\s*€/.test(vord.textContent), 'gemischtes Detail ohne falsche Null-/Teilsummen: ' + gespeichert);
+        check((vord.textContent.match(/36,10/g) || []).length === 1, 'verifizierte 200-Zeile bleibt erhalten: ' + gespeichert);
+        check(rx.podologie_behandlungen.every(b => gespeichert ? b.betrag_gkv === 36.1 : !('betrag_gkv' in b)), 'gemischte gespeicherte Preise unverändert: ' + gespeichert);
+      }
+      statusForDate = null;
+      const recoveryRx = { id: 'synthetic-recovery', owner_id: 'synthetic-owner', therapie_bereich: 'podo',
+        rezeptart: 'kassen', heilmittel_position: '78010', ausstellungsdatum: '2027-03-08', anzahl_einheiten: 3, podologie_behandlungen: [] };
+      status = 503;
+      const failed = await moneyProbe(recoveryRx, 'recovery-failed', 'Bewusste Wiederöffnung — vor Erholung');
+      check(failed.querySelector('#bkRxEuroBtn').disabled && failed.textContent.includes(ausfall), 'Erholung beginnt gesperrt');
+      status = 200;
+      const recovered = await moneyProbe(recoveryRx, 'recovery-good', 'Bewusste Wiederöffnung — 200-Erholung');
+      check(!recovered.querySelector('#bkRxEuroBtn').disabled && recovered.textContent.includes('20,83') && !recovered.textContent.includes(ausfall), '200-Erholung unverändert');
+      check(unexpected.length === 0, 'keine externen Requests oder Writes');
+      document.getElementById('probeResult').textContent = `${checks.length} Prüfungen bestanden; ${requests.length} synthetische GETs; 0 Writes.`;
+      document.title = 'fertig';
+    } catch (error) {
+      window.__billing503Probe.error = String(error.stack || error);
+      document.getElementById('probeResult').textContent = 'Probe fehlgeschlagen: ' + error.message;
+      document.title = 'fehlgeschlagen';
+    } finally {
+      window.__billing503Probe.ready = true;
+    }
+  </script>
+</body>
+</html>

@@ -268,7 +268,7 @@ async function showApp() {
   // üst çubuğu görür, panoyu göremez ve sekmeler ölü olur — teşhis edilemeyen
   // bir "boş uygulama" hâli. Önce yükle, sonra göster.
   const modules = [
-    ['todo',      './board.js?v=20260811a',     'mountTodo'],
+    ['todo',      './board.js?v=20261023blocker1', 'mountTodo'],
     ['wissen',    './wissen.js?v=20260811a',    'mountWissen'],
     ['decisions', './decisions.js?v=20260811a', 'mountDecisions'],
     ['meetings',  './meetings.js?v=20260811a',  'mountMeetings'],

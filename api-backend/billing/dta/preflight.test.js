@@ -621,9 +621,6 @@ test('S:01010 Podologie: genau 84 Tage gültig, 85 Tage ungültig', () => {
   assert.match(r.errors.find(e => e.code === 'S:01010').message || JSON.stringify(r.errors), /Podologie-Vertrag § 7 Abs\. 7/);
 });
 
-console.log(`\n${pass} passed, ${fail} failed`);
-process.exit(fail > 0 ? 1 : 0);
-
 test('ICD-10 Kennzeichen/Strich hinter den Zusätzen gültig (cold review 01.10.2026)', () => {
   for (const k of ['E11.40G†', 'M54.5G*', 'M17.1R†', 'E11.7-G', 'E11.7- G', 'E11.-G'])
     assert.equal(isValidIcd10(k), true, k);
@@ -631,3 +628,34 @@ test('ICD-10 Kennzeichen/Strich hinter den Zusätzen gültig (cold review 01.10.
     assert.equal(isValidIcd10(k), false, k);
 });
 
+// Ops #340: Die 12-Wochen-Mengenbemessung ist keine pauschale Ablaufregel.
+// HeilM-RL iK 05.08.2025, § 7 Abs. 6/7 und § 13a Abs. 2; gkv-302 22.10.2026.
+// Diese strukturellen Preflight-Fixtures sind keine fachliche Gesamtfreigabe.
+for (const code of ['21', '22', '23', '24', '25', '26']) {
+  test(`Ops #340: Abrechnungscode ${code} nicht pauschal nach 84 Tagen gesperrt`, () => {
+    const i = clone(validInput);
+    i.prescriptions[0].tarif.abrechnungscode = code;
+    i.prescriptions[0].verordnung.ausstellungsdatum = '2026-01-02';
+    i.prescriptions[0].sessions = Array.from({ length: 15 }, (_, k) => ({
+      ...validInput.prescriptions[0].sessions[0],
+      datumLeistung: new Date(Date.UTC(2026, 0, 5 + k * 7)).toISOString().slice(0, 10),
+    }));
+    const r = preflight(i);
+    assert.equal(r.ok, true, JSON.stringify(r.errors));
+    assert.ok(!hasErr(r, 'S:01012'));
+  });
+}
+
+test('Ops #340: Nicht-Podo-Unterbrechung bleibt auch nach Tag 84 gesperrt', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.ausstellungsdatum = '2026-01-02';
+  i.prescriptions[0].sessions = ['2026-03-30', '2026-04-14'].map(datumLeistung => ({
+    ...validInput.prescriptions[0].sessions[0], datumLeistung,
+  }));
+  const r = preflight(i);
+  assert.ok(hasErr(r, 'S:01010'), JSON.stringify(r.errors));
+  assert.ok(!hasErr(r, 'S:01012'), JSON.stringify(r.errors));
+});
+
+console.log(`\n${pass} passed, ${fail} failed`);
+process.exit(fail > 0 ? 1 : 0);

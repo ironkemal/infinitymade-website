@@ -124,6 +124,27 @@ entschieden:
 
 ## 6. Beschlossene Änderungen und Belege (20.09.2026)
 
+### Entfernte unbelegte Ablaufregel — Ops #340 (22.10.2026)
+
+`S:01012` (pauschal 84 Tage ab Ausstellung) ist aus Preflight und Klassifikation
+entfernt. Zustimmung gkv-302/wissensbank 22.10.2026: HeilM-RL, Fassung 15.05.2025,
+in Kraft 05.08.2025, § 7 Abs. 6/7 unterscheidet die Zwölf-Wochen-Mengenbemessung
+von der weiteren Gültigkeit unter § 16 Abs. 4. § 13a Abs. 2 nennt bei Blankoverordnungen
+für Physio/Ergo/SSSST maximal 16 Wochen. Die pauschale 84-Tage-Sperre war daher
+kein belegbarer allgemeiner Ablaufgrund. G-BA-Veröffentlichungsindex am 22.10.2026
+weiterhin mit dieser Fassung: <https://www.g-ba.de/richtlinien/12/>.
+
+Original: `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt`,
+§ 7 Abs. 6/7 ab Zeile 427, § 13a Abs. 2 ab Zeile 652. Kein neuer Ersatzzeitraum;
+Code nicht wiederverwenden. Vor-Ausstellung-, Zukunfts-, Rechnungsdatum- und
+Unterbrechungsprüfungen bleiben unverändert. Diese Korrektur belegt keine vollständige
+Durchsetzung aller Beginn-, Blanko-, Entlassmanagement- und Vertragsfristen im
+Abrechnungspfad und keine allgemeine Abrechenbarkeit späterer Leistungen.
+
+Regression: sechs vorhandene Nicht-Podo-Abrechnungscodes mit kontinuierlicher
+Behandlung über Tag 84 hinaus; Nicht-Podo-Pause von 15 Tagen bleibt gesperrt,
+Podologiegrenze 84/85 Tage bleibt separat geprüft. Lokale Tests sind keine Kassenannahme.
+
 ### Beantwortete Fragen
 - **`F:03002` (Sammelrechnungsnummer max. 14 Zeichen):** Belegt durch Anlage 1 TP5 V21,
   Kap. 5.5.2 (SLGA REC, S. 34) und Kap. 5.5.3.1 (SLLA REC, S. 44): Sammel-Rechnungsnummer

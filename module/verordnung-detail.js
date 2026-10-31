@@ -77,7 +77,7 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261021f';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261021f';
-import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
+import { podoPositionsFinder } from './podologie-positionen.js?v=20261022auth1';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
 import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20261010zc';
@@ -279,11 +279,14 @@ function _summeHtml(summe, esc, ohneZuzahlung = false) {
      </div>`;
 
   return `<div style="border-top:2px solid var(--border);margin-top:6px;padding-top:6px;display:flex;flex-direction:column;gap:3px;">
-    ${zeile('Gesamt', _euro(summe.brutto), true)}
+    ${zeile('Gesamt', summe.ladefehler ? '—' : _euro(summe.brutto), true)}
     ${ohneZuzahlung ? '' : summe.befreit
       ? zeile('Zuzahlung', 'befreit')
+      : summe.ladefehler ? zeile('Zuzahlung', '—')
       : zeile(`Zuzahlung (${_euro(summe.prozent)} + ${_euro(summe.pauschale)} Pauschale)`, _euro(summe.gesamt))}
-    ${summe.unbekannt?.length
+    ${summe.ladefehler
+      ? `<div role="status" style="font-size:14px;color:var(--text-muted);margin-top:4px;">${esc(summe.ladefehler.message)} ${ohneZuzahlung ? 'Gesamtbetrag derzeit nicht berechenbar.' : 'Gesamt und Zuzahlung derzeit nicht berechenbar.'}</div>`
+      : summe.unbekannt?.length
       ? `<div style="font-size:11px;color:var(--warning,#f59e0b);margin-top:4px;">Ohne Preis im Katalog: ${esc(summe.unbekannt.join(', '))} — die Summe ist unvollständig.</div>`
       : ''}
   </div>`;
@@ -320,7 +323,7 @@ function _verschreibung(rx, esc, quelle, summe) {
           ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);">${esc(b.lokalisation)}</div>` : ''}
         </div>
         <div style="text-align:right;white-space:nowrap;">
-          <div style="font-size:12px;color:var(--text-main);">${esc(_euro(b._betrag ?? b.betrag_gkv))}</div>
+          <div style="font-size:12px;color:var(--text-main);">${esc(b._betrag === null ? '—' : _euro(b._betrag ?? b.betrag_gkv))}</div>
           ${berechnet}
         </div>
       </div>`;
@@ -1073,10 +1076,17 @@ export async function zeigeVerordnungDetail(ctx) {
       try {
         const finde = await podoPositionsFinder(supabase, behs);
         summe = zuzahlungFuerPodoVerordnung(rx, behs, finde);
+        summe.ladefehler = finde.ladefehler;
         for (const b of behs) {
           const codes = Array.isArray(b.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
-          if (!codes.length) continue;
-          b._betrag = codes.reduce((s, c) => s + (Number(finde(c, b.behandlungsdatum)?.preis) || 0), 0);
+          if (!codes.length) {
+            if (finde.ladefehler) b._betrag = null;
+            continue;
+          }
+          const positionen = codes.map(c => finde(c, b.behandlungsdatum));
+          // Ein Ladefehler ist kein Nullpreis; gespeicherte Preise bleiben unberührt.
+          b._betrag = finde.ladefehler && positionen.some(p => !p) ? null
+            : positionen.reduce((s, p) => s + (Number(p?.preis) || 0), 0);
         }
       } catch (e) {
         // Ohne Preise bleibt die Ansicht stehen — sie ist in erster Linie die

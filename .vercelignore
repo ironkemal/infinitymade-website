@@ -141,3 +141,7 @@ widget/*.test.js
 widget/docs/
 # Social-Media-Vorlagen und Entwürfe (Stand 2026-10-20)
 sosyal/
+
+# Redesign 2026-10: Arbeitsunterlagen und Test-Screenshots, nicht ausliefern
+redesign/
+.redesign-shots/

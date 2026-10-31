@@ -38,7 +38,7 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20261009rs';
-import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261005b';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261022auth1';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
@@ -70,8 +70,8 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261021v';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261021v';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022auth1';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022auth1';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261021zd'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
@@ -90,8 +90,8 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261021zc';
-import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261022auth1';
+import { ladePodoPositionen, AUTH_DIENST_AUSFALL } from './module/podologie-positionen.js?v=20261022auth1';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
@@ -7221,7 +7221,7 @@ async function openPatientDetailModal(lead) {
     zeigeFussbefundArchiv(leadId); montiereVorgeschichte({ sb: supabase, ownerId: getOwnerId(), leadId, nagel: null, immer: true, wrap: document.getElementById('pdVorgeschichteHost') }).catch(() => {});   // alle Nägel, einmal je Patient (PE-009)
   }
   loadPatientDetailRechnungen(leadId);
-  loadPatientDetailTermine(leadId);
+  loadPatientDetailTermine(lead);
   loadPatientDetailMails(leadId);
 }
 
@@ -7950,8 +7950,7 @@ async function loadPatientDetailRechnungen(leadId) {
   });
 }
 
-async function loadPatientDetailTermine(leadId) {
-  const lead = leadsCache.find(l => l.id === leadId);
+async function loadPatientDetailTermine(lead) {
   await zeigePatientTermine({ sb: supabase, ownerId: getOwnerId(), lead,
     patientName: displayName(lead), content: document.getElementById('pdTermContent'),
     loading: document.getElementById('pdTermLoading'), fmtDate, fmtTime });
@@ -15045,29 +15044,29 @@ function populateKkDatalist() {
 
 // --- Rezept-Bestätigung: Heilmittel → eigene Leistung ------------------
 
-// Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
 async function loadPhysioPositions() {
-  if (_abState.positionsLoaded) return _abState.positions;
-  try {
+  if (_abState.positionsLoaded) return _abState.positions; if (_abState.positionsPromise) return _abState.positionsPromise;
+  _abState.positionsPromise = (async () => { try {
     const { data: { session: s } } = await supabase.auth.getSession();
     if (!s?.access_token) throw new Error('Nicht angemeldet');
     const res = await fetch(`${API}/billing/positions`, {
       headers: { 'Authorization': 'Bearer ' + s.access_token },
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+    if (!res.ok) throw Object.assign(new Error(res.status === 503 && json.code === 'AUTH_UNAVAILABLE' ? AUTH_DIENST_AUSFALL : `Preiskatalog konnte nicht geladen werden (HTTP ${res.status}). Bitte später erneut versuchen.`), { status: res.status, code: res.status === 503 && json.code === 'AUTH_UNAVAILABLE' ? 'AUTH_UNAVAILABLE' : null });
     _abState.positions = json.positions || [];
     _abState.positionsLoaded = true;
   } catch (e) {
     console.warn('[positions/load]', e);
-    _abState.positions = [];
+    _abState.positions = Object.assign([], { ladefehler: { status: e.status || 0, code: e.code || null, message: e.status ? e.message : 'Preiskatalog konnte nicht geladen werden. Bitte später erneut versuchen.' } }); showToast(_abState.positions.ladefehler.message, 'error');
   }
   return _abState.positions;
+  })(); try { return await _abState.positionsPromise; } finally { _abState.positionsPromise = null; }
 }
 
 function buildPositionOptionsHtml(currentValue) {
-  // Group by kat (category). Current value is either an X-template or a 5-digit resolved code.
   const positions = _abState.positions || [];
+  if (positions.ladefehler) return `<option value="" selected disabled>${escapeHtml(positions.ladefehler.message)}</option>`;
   const normalizedCurrent = (() => {
     if (!currentValue) return '';
     if (/^X\d{4}$/.test(currentValue)) return currentValue;
