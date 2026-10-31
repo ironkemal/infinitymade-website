@@ -31,6 +31,8 @@ export const ERLAUBT = new Set([
   'MIT', 'MIT-0', 'ISC', '0BSD', 'BSD-2-Clause', 'BSD-3-Clause', 'BSD',
   'Apache-2.0', 'PostgreSQL', 'MPL-2.0', 'CC0-1.0', 'Unlicense',
   'BlueOak-1.0.0', 'Python-2.0', 'Public-Domain',
+  // pako (über pdf-lib, K6, 31.10.2026): „(MIT AND Zlib)". Zlib ist permissiv, kein Copyleft.
+  'Zlib',
   // Schriften (fonts/, Inter + Outfit): Weitergabe erlaubt, Lizenztext muss mit (O-178 Bed. 2).
   'OFL-1.1',
 ]);
