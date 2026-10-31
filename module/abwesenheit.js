@@ -68,10 +68,18 @@ export function abwesendeMitarbeiterIds(abwesenheiten, tagISO) {
   return [...new Set((abwesenheiten || []).filter(t => trifftTag(t, tagISO)).map(t => t.employee_id))];
 }
 
+// Kollegen sehen nur „Abwesend": Krankheit ist ein Gesundheitsdatum (legal-de, 31.10.2026).
+// Nur Anzeige. Die Lesegrenze in der Datenbank ist ein eigener Schritt (Physio/PLANUNG-UMSETZUNG.md).
+let grundSichtbar = () => true;
+export function setzeGrundSichtbar(pruefe) {
+  grundSichtbar = pruefe;
+}
+
 /** Anzeigetext für einen Eintrag: reason vor note vor Typ-Label. */
 const TYP_LABEL = { urlaub: 'Urlaub', krank: 'Krank', frei: 'Frei', elternzeit: 'Elternzeit' };
 export function abwesenheitsGrund(abwesenheiten, empId, tagISO) {
   const eintrag = (abwesenheiten || []).find(t => t.employee_id === empId && trifftTag(t, tagISO));
   if (!eintrag) return null;
+  if (!grundSichtbar(empId)) return 'Abwesend';
   return eintrag.reason || eintrag.note || TYP_LABEL[eintrag.type] || 'Abwesend';
 }

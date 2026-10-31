@@ -9,6 +9,7 @@
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
 import { ladeAbwesenheiten } from './abwesenheit.js?v=20260918';
+import { ladeSondertage, warnungFuerTag } from './sondertag.js';
 
 const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';
@@ -61,6 +62,12 @@ export function tagesgrenzen(zeitpunkt) {
   return { vonISO: von.toISOString(), bisISO: bis.toISOString() };
 }
 
+function lokaleTage(zeitpunkt) {
+  const d = new Date(zeitpunkt);
+  const text = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { vonDatum: text, bisDatum: text };
+}
+
 /** Warntext für den Raum, oder null. Sperrt nichts (Ops #307). */
 export function raumWarnung(raum, termine, startIso, endIso, optionen = {}) {
   if (!raum || !raumKonflikt(raum, termine, startIso, endIso, optionen).voll) return null;
@@ -91,6 +98,10 @@ export async function terminWarnungen({ id = null, empId, startIso, endIso, raum
     title: 'Hinweis zum Termin', message: meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning',
   });
   try {
+    const { vonDatum, bisDatum } = lokaleTage(startIso);
+    const tage = await ladeSondertage({ supabase, ownerId: getOwnerId(), von: vonDatum, bis: bisDatum });
+    const geschlossen = warnungFuerTag(tage, vonDatum);
+    if (geschlossen && !await frage(geschlossen)) return false;
     const abwesend = await ladeAbwesenheiten(supabase, { empIds: [empId], vonISO: startIso, bisISO: endIso });
     if (abwesend.length && !await frage(NICHT_VERFUEGBAR)) return false;
   } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }

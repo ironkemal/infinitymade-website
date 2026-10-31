@@ -1,5 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin } from './module/planung-bruecke.js?v=20261031a';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261031d';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -9288,7 +9288,7 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
     .not('status', 'in', '("cancelled","completed","no_show")');
 
   if (conflicts && conflicts.length > 0) {
-    showSdConflictModal(conflicts, () => saveSpecialDays(von, bis, startTime, endTime, type, note));
+    showSdConflictModal(conflicts, () => saveSpecialDays(von, bis, startTime, endTime, type, note).then(() => zeigeAnrufliste({ von, bis: end, type, startTime, endTime })));
     return;
   }
 
@@ -9308,7 +9308,7 @@ function showSdConflictModal(conflicts, onConfirm) {
   const listHtml = conflicts.map(b => {
     const svc = b.services?.title || '';
     const name = b.customer_name || '';
-    return `<li><strong>${fmt(b.start_time)}</strong>${name ? ' — ' + name : ''}${svc ? ' (' + svc + ')' : ''}</li>`;
+    return `<li><strong>${fmt(b.start_time)}</strong>${name ? ' — ' + escapeHtml(name) : ''}${svc ? ' (' + escapeHtml(svc) + ')' : ''}</li>`; // Name kann aus der öffentlichen Buchung stammen
   }).join('');
 
   const modal = document.createElement('div');
@@ -9539,9 +9539,9 @@ async function loadEmpUrlaubSection(empId, container) {
   const listEl = container.querySelector('.emp-urlaub-list');
   if (!kpi || !listEl) return;
 
-  // Profile'dan yıllık tatil günlerini al (owner için profiles.urlaub_jahrestage)
-  const { data: empProfile } = await supabase.from('profiles').select('urlaub_jahrestage').eq('id', empId).maybeSingle();
-  const jahrestage = empProfile?.urlaub_jahrestage ?? 30;
+  // Anspruch aus mitarbeiter_anstellung, Arbeitstage aus working_hours: Teilzeit zählt nur ihre Tage (M5).
+  const urlaubBasis = await anstellungFuerUrlaub(empId, container, () => loadEmpUrlaubSection(empId, container));
+  const { anspruch: jahrestage, arbeitstage } = urlaubBasis;
 
   // Bu yılki time_offs
   const year = new Date().getFullYear();
@@ -9552,8 +9552,8 @@ async function loadEmpUrlaubSection(empId, container) {
     .lte('end_date', `${year}-12-31`)
     .order('start_date', { ascending: false });
 
-  const urlaubDays = (offs || []).filter(o => o.type === 'urlaub').reduce((sum, o) => sum + countWorkDays(o.start_date, o.end_date), 0);
-  const remaining = Math.max(0, jahrestage - urlaubDays);
+  // Die alte Rechnung las Zeitstempel als ungültiges Datum und zählte immer 0 Tage.
+  const { verbraucht: urlaubDays, rest: remaining } = urlaubsKennzahlen({ abwesenheiten: offs || [], anspruch: jahrestage, arbeitstage });
 
   kpi.innerHTML = `
     <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:6px 10px;text-align:center;">
@@ -9576,10 +9576,10 @@ async function loadEmpUrlaubSection(empId, container) {
   }
 
   const typeLabels = { urlaub: 'Urlaub', krank: 'Krank', frei: 'Frei', elternzeit: 'Elternzeit' };
-  const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+  const fmt = d => d ? new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
 
   listEl.innerHTML = offs.map(o => {
-    const days = countWorkDays(o.start_date, o.end_date);
+    const days = arbeitstageImZeitraum(o.start_date, o.end_date, arbeitstage);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);gap:8px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;color:var(--text-main);">${fmt(o.start_date)} – ${fmt(o.end_date)}</div>
@@ -12094,7 +12094,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
-planungVerdrahten({ supabase, getOwnerId, getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
+planungVerdrahten({ supabase, getOwnerId, getEigeneId: () => currentProfile?.id, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
 // DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
 dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 
@@ -14091,7 +14091,7 @@ async function saveRezept() {
 function isEnterprise() {
   const plan = (ownerProfile?.plan || currentProfile?.plan || '').toLowerCase();
   const status = ownerProfile?.plan_status || currentProfile?.plan_status;
-  return ENTERPRISE_PLANS.has(plan) && ['trial', 'active', 'past_due'].includes(status);
+  return IST_KUTU || (ENTERPRISE_PLANS.has(plan) && ['trial', 'active', 'past_due'].includes(status)); // Box: kein Abo, Standorte frei wie employeeLimit() (O-224)
 }
 
 async function bootBusinessSwitcher() {
@@ -14135,7 +14135,7 @@ async function bootBusinessSwitcher() {
     myBusinesses = [];
   }
 
-  if (myBusinesses.length === 0) { wrap.hidden = true; return; }
+  if (myBusinesses.length === 0) { wrap.hidden = true; if (IST_KUTU) renderBusinessesSection(); return; } // Box-Setup legt keine businesses-Zeile an, sonst käme der erste Standort nie zustande
 
   // Aktif business'ı çöz
   let activeId = null;
@@ -14394,11 +14394,11 @@ function wireBusinessModal() {
         return;
       }
     } else {
-      const isEnterprise = ENTERPRISE_PLANS.has((currentProfile?.plan||'starter').toLowerCase());
+      const mehrereErlaubt = IST_KUTU || ENTERPRISE_PLANS.has((currentProfile?.plan||'starter').toLowerCase());
       const existingCount = Array.isArray(myBusinesses) ? myBusinesses.length : 0;
-      if (!isEnterprise && existingCount >= 1) { showToast('Mehrere Standorte sind nur im Enterprise-Paket verfügbar.', 'error'); return; }
-
-      payload.owner_id = currentSession.user.id;
+      if (!mehrereErlaubt && existingCount >= 1) { showToast('Mehrere Standorte sind nur im Enterprise-Paket verfügbar.', 'error'); return; }
+      if (existingCount >= 1 && !await showConfirmModal({ title: 'Weiterer Standort', message: 'Alle Standorte gehören zur selben Rechtsperson. Bei getrennten Gesellschaften darf keine gemeinsame Datenbank genutzt werden.', confirmText: 'Bestätigen', cancelText: 'Abbrechen', variant: 'warning' })) return; // legal-de 31.10.2026, Sperre bei zwei Gesellschaften
+      payload.owner_id = currentSession.user.id; payload.is_default = existingCount === 0;
       payload.sector = currentProfile?.sector || null;
       const { data: created, error } = await supabase.from('businesses').insert(payload).select().single();
       if (error) {
@@ -18392,7 +18392,7 @@ function initAnfragenPanel() {
   if (ownerId) {
     const linkInput = document.getElementById('bookingRequestLinkInput');
     const link = `${window.location.origin}/booking-request.html?business=${ownerId}`;
-    if (linkInput) linkInput.value = link;
+    if (linkInput) linkInput.value = link; mountWidgetEinbettung(linkInput?.parentElement?.parentElement, { ownerId, istKutu: IST_KUTU, origin: window.location.origin, showToast });
     document.getElementById('copyBookingLinkBtn')?.addEventListener('click', () => {
       navigator.clipboard.writeText(link).then(() => showToast('Link kopiert!', 'success'));
     });

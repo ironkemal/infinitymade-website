@@ -14,6 +14,12 @@
       <div class="cal-view-toolbar" id="calViewToolbar">Ansicht</div>
     </section>
     <section class="panel" id="panel-hours"></section>
+    <span id="dayViewDateLabel">Datum</span>
+    <div id="dayViewGrid" style="display:flex"></div>
+    <div id="weekViewGrid"><div class="dv-col-header" data-datum="2026-12-24">Do 24.12.</div><div class="dv-col-header" data-datum="2026-12-25">Fr 25.12.</div></div>
+    <div id="monthViewWrap"><div class="month-cell" data-datum="2026-12-24"><div class="month-cell-day">24</div><div class="month-cell-events"></div></div></div>
+    <div id="anstellungHost"><div class="emp-urlaub-kpi"></div></div>
+    <div id="linkKarte">Buchungslink</div>
   </main>
   <div class="modal-overlay" id="bookingModal" hidden>
     <input id="bk-id" value="">
@@ -22,7 +28,7 @@
   </div>
   <div id="bkActionModal"><div class="modal-body"></div></div>
   <script type="module">
-    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen } from '../../module/planung-bruecke.js';
+    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
 
     const ergebnisse = [];
     const pruefe = (name, ok) => ergebnisse.push({ name, ok: !!ok });
@@ -48,6 +54,12 @@
         { id: 'k3', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: null, status: 'confirmed', customer_name: 'Online Buchung', start_time: iso(-5), end_time: iso(15), group_parent_id: null },
       ],
       time_offs: [],
+      working_hours: [{ user_id: 'm2', day_of_week: 1, is_active: true }, { user_id: 'm2', day_of_week: 2, is_active: true }],
+      mitarbeiter_anstellung: [{ employee_id: 'm2', owner_id: OWNER, beschaeftigung: 'teilzeit', wochenstunden: 20, urlaub_jahrestage: 24 }],
+      custom_days: [
+        { owner_id: OWNER, date: '2026-12-24', type: 'closed', start_time: null, end_time: null, note: 'Interne Notiz' },
+        { owner_id: OWNER, date: '2026-12-25', type: 'custom', start_time: '09:00:00', end_time: '13:00:00', note: 'Interne Notiz' },
+      ],
     };
     const fehlerBei = { bookings_room_id: false };
 
@@ -92,8 +104,10 @@
     planungVerdrahten({
       supabase: fakeSupabase(),
       getOwnerId: () => OWNER,
+      getEigeneId: () => OWNER,
       getBusinessId: () => 'b1',
       istInhaber: () => true,
+      getTagDatum: () => '2026-12-24',
       getTeam: () => [{ id: 'm1', business_name: 'Anna Beispiel' }, { id: 'm2', business_name: 'Ben Muster' }],
       oeffneTermin: id => { geoeffnet = id; },
       getDauerMin: () => 30,
@@ -192,6 +206,50 @@
     document.getElementById('panel-hours').classList.remove('active');
     document.getElementById('panel-calendar').classList.add('active');
     await warte(120);
+
+    // Sondertage: Etiketten in Woche, Monat und Tag, ohne interne Notiz
+    document.getElementById('weekViewGrid').append(document.createElement('span'));
+    await warte(250);
+    const wochenEtikett = document.querySelector('#weekViewGrid [data-datum="2026-12-24"] .sondertag-etikett');
+    pruefe('Woche zeigt Schließtag', wochenEtikett?.textContent === 'Praxis geschlossen');
+    pruefe('Woche zeigt Sonderöffnung', /Sonderöffnung 09:00–13:00/.test(document.querySelector('#weekViewGrid [data-datum="2026-12-25"]').textContent));
+    pruefe('Monat zeigt Schließtag', /Praxis geschlossen/.test(document.querySelector('.month-cell[data-datum="2026-12-24"]').textContent));
+    pruefe('Tag zeigt Schließtag neben dem Datum', document.getElementById('sondertagTagEtikett')?.textContent === 'Praxis geschlossen');
+    pruefe('Interne Notiz erscheint nirgends', !/Interne Notiz/.test(document.querySelector('main').textContent));
+    document.getElementById('weekViewGrid').append(document.createElement('span'));
+    await warte(250);
+    pruefe('Neuzeichnen doppelt nichts', document.querySelectorAll('#weekViewGrid .sondertag-etikett').length === 2);
+
+    // Warnung am Schließtag
+    fragen.length = 0;
+    await terminWarnungen({ empId: 'm1', startIso: '2026-12-24T09:00:00+01:00', endIso: '2026-12-24T09:30:00+01:00', raumId: null });
+    pruefe('Termin am Schließtag warnt', /geschlossen/.test(fragen[0]?.message || ''));
+
+    // Anrufliste: kein Grund, nur Zeit, Patient, Telefon
+    tabellen.bookings.push({ id: 's1', owner_id: OWNER, user_id: 'm1', status: 'confirmed', customer_name: 'Klara <b>Fett</b>', customer_phone: '0151 000', start_time: '2026-12-24T08:00:00+00:00', end_time: '2026-12-24T08:30:00+00:00', group_parent_id: null });
+    await zeigeAnrufliste({ von: '2026-12-24', bis: '2026-12-24', type: 'closed', startTime: '', endTime: '' });
+    const liste = document.getElementById('sondertagAnrufliste');
+    pruefe('Anrufliste nennt Uhrzeit in Ortszeit und Telefon', /09:00/.test(liste?.textContent || '') && /0151 000/.test(liste?.textContent || ''));
+    pruefe('Anrufliste maskiert den Namen', !liste?.querySelector('b'));
+    liste?.querySelector('button')?.click();
+    pruefe('Anrufliste schließt', !document.getElementById('sondertagAnrufliste'));
+    await zeigeAnrufliste({ von: '2026-12-24', bis: '2026-12-24', type: 'custom', startTime: '09:00', endTime: '13:00' });
+    pruefe('Sonderöffnung braucht keine Anrufliste', !document.getElementById('sondertagAnrufliste'));
+
+    // Anstellung: Teilzeit rechnet nur ihre Arbeitstage
+    const urlaubHost = document.getElementById('anstellungHost');
+    const basis = await anstellungFuerUrlaub('m2', urlaubHost, () => {});
+    await warte(80);
+    pruefe('Anspruch kommt aus der Anstellung', basis.anspruch === 24);
+    pruefe('Arbeitstage kommen aus der Verfügbarkeit', basis.arbeitstage.size === 2);
+    pruefe('Formular steht über den Kennzahlen', urlaubHost.querySelector('.emp-anstellung')?.nextElementSibling?.className === 'emp-urlaub-kpi');
+
+    // Einbettungscode
+    mountWidgetEinbettung(document.getElementById('linkKarte'), { ownerId: '11111111-2222-4333-8444-555555555555', istKutu: true, origin: 'https://hafer-turm-9.box.praxura.de', showToast: () => {} });
+    pruefe('Box bekommt Code mit eigenem Host', /https:\/\/hafer-turm-9\.box\.praxura\.de\/widget\/booking-widget\.html/.test(document.getElementById('widgetEinbettungCode')?.value || ''));
+    mountWidgetEinbettung(document.getElementById('linkKarte'), { ownerId: '11111111-2222-4333-8444-555555555555', istKutu: true, origin: 'https://praxis.home.arpa', showToast: () => {} });
+    pruefe('LAN-Box bekommt keinen Code', !document.getElementById('widgetEinbettungCode') && /nicht erreichbar/.test(document.getElementById('widgetEinbettung').textContent));
+
     modal.hidden = true;
     window.__probe = ergebnisse;
     document.title = 'fertig';

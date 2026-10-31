@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js';
+import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund, setzeGrundSichtbar } from './abwesenheit.js';
 
 const EIN_TAG = [{ employee_id: 'a', start_date: '2026-09-10T00:00:00+00:00', end_date: '2026-09-10T23:59:59+00:00' }];
 
@@ -71,4 +71,15 @@ test('ladeAbwesenheiten filtert ueber employee_id und Zeitraum', async () => {
   assert.deepEqual(result, EIN_TAG);
   assert.deepEqual(aufrufe[0], ['from', 'time_offs']);
   assert.deepEqual(aufrufe[2], ['in', 'employee_id', ['a']]);
+});
+
+test('Kollegen sehen nur „Abwesend", nie den Grund', () => {
+  const eintrag = [{ employee_id: 'a', start_date: '2026-09-10', end_date: '2026-09-10', reason: 'Krankheit', type: 'krank' }];
+  setzeGrundSichtbar(id => id === 'ich');
+  try {
+    assert.equal(abwesenheitsGrund(eintrag, 'a', '2026-09-10'), 'Abwesend');
+    assert.equal(abwesenheitsGrund([{ ...eintrag[0], employee_id: 'ich' }], 'ich', '2026-09-10'), 'Krankheit');
+  } finally {
+    setzeGrundSichtbar(() => true);
+  }
 });

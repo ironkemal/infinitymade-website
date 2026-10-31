@@ -213,6 +213,7 @@ export async function renderWoche({
     kopf.style.cssText = `font-size:12px;font-weight:${istHeute ? '700' : '500'};`
       + `color:${istHeute ? 'var(--primary)' : 'var(--text-muted)'};`;
     kopf.textContent = `${DAY_NAMES[tag.getDay()]} ${tag.getDate()}.${tag.getMonth() + 1}.`;
+    kopf.dataset.datum = tagISO; // Andockpunkt für das Sondertag-Etikett (module/sondertag.js)
     spalte.appendChild(kopf);
 
     // Abwesenheit (Urlaub/Krank/Frei/Elternzeit aus dem Mitarbeiter-Bereich,
