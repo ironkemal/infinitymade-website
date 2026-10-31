@@ -24,7 +24,7 @@
 
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { alsISODatum } from './datum.js?v=20261001a';
-import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=20260918';
+import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=20261031';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { anzeigeName } from './kalender-block.js?v=20261021p';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';

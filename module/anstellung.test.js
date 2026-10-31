@@ -104,6 +104,7 @@ test('F. ladeArbeitstage und ladeAnstellung werfen bei Datenbankfehler nicht und
     wochenstunden: null,
     urlaub_jahrestage: 30,
     vorhanden: false,
+    fehler: true,
   });
 
   // Supabase wirft Exception
@@ -122,6 +123,7 @@ test('F. ladeArbeitstage und ladeAnstellung werfen bei Datenbankfehler nicht und
     wochenstunden: null,
     urlaub_jahrestage: 30,
     vorhanden: false,
+    fehler: true,
   });
 
   // Ohne Supabase / empId
@@ -285,4 +287,16 @@ test('mountAnstellung laedt Daten und stoert bei Fehlern den Rest der Seite nich
   await assert.doesNotReject(async () => {
     await mountAnstellung(null, {});
   });
+});
+
+test('Lesefehler ist nicht „keine Zeile": das Formular darf echte Werte nicht überschreiben', async () => {
+  const kaputt = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: { code: '500' } }) }) }) }) };
+  const ergebnis = await ladeAnstellung({ supabase: kaputt, empId: 'e' });
+  assert.equal(ergebnis.fehler, true);
+  const leer = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) };
+  assert.equal((await ladeAnstellung({ supabase: leer, empId: 'e' })).fehler, undefined);
+  const behaelter = { innerHTML: '', querySelector: () => null };
+  await mountAnstellung(behaelter, { supabase: kaputt, ownerId: 'o', empId: 'e', istInhaber: true });
+  assert.match(behaelter.innerHTML, /nicht verfügbar/);
+  assert.doesNotMatch(behaelter.innerHTML, /Speichern/);
 });

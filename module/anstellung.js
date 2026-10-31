@@ -158,7 +158,11 @@ export async function ladeAnstellung({ supabase, empId }) {
       .eq('employee_id', empId)
       .maybeSingle();
 
-    if (error || !data) {
+    // Lesefehler ist nicht „keine Zeile": Speichern überschriebe sonst echte Vertragswerte mit der Vorgabe.
+    if (error) {
+      return { ...VORGABE, fehler: true };
+    }
+    if (!data) {
       return { ...VORGABE };
     }
 
@@ -167,7 +171,7 @@ export async function ladeAnstellung({ supabase, empId }) {
       vorhanden: true,
     };
   } catch {
-    return { ...VORGABE };
+    return { ...VORGABE, fehler: true };
   }
 }
 
@@ -363,6 +367,10 @@ export async function mountAnstellung(container, deps = {}) {
 
   try {
     const anstellung = await ladeAnstellung({ supabase, empId });
+    if (anstellung.fehler) {
+      container.innerHTML = '<p class="form-hint">Anstellung ist gerade nicht verfügbar.</p>';
+      return;
+    }
     container.innerHTML = anstellungHtml(anstellung, { istInhaber });
 
     if (!istInhaber) return;

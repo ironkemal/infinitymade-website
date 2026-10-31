@@ -3,7 +3,7 @@
 > Üretim: 2026-10-31 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3977 fonksiyon** (3855 JS · 95 bash · 27 ps1) · 497 dosya · 42 sidebar modülü
+**3978 fonksiyon** (3856 JS · 95 bash · 27 ps1) · 497 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -120,8 +120,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `korrigiereNoShow()` — [module/booking-status-korrektur.js:94](module/booking-status-korrektur.js#L94-L151) · 58 satır · bookings:update
 - `markiereNichtErschienen()` — [module/termin-nicht-erschienen.js:105](module/termin-nicht-erschienen.js#L105-L198) · 94 satır · bookings:update
 
-**Yol 13 — `mountAktionspanel()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `mountAktionspanel()` — [module/raum-auswahl.js:217](module/raum-auswahl.js#L217-L243) · 27 satır · bookings:update
+**Yol 13 — `mountAktionspanel()`** · Ekran: _UI yolu çözülemedi_
+- `mountAktionspanel()` — [module/raum-auswahl.js:223](module/raum-auswahl.js#L223-L249) · 27 satır · bookings:update
 
 **Yol 14 — `bindeTermin()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `bindeTermin()` — [module/verordnung-termine.js:194](module/verordnung-termine.js#L194-L202) · 9 satır · bookings:update
@@ -307,13 +307,13 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 ### `rooms` — 3 bağımsız yazma yolu
 
-**Yol 1 — `speichereRaum()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
+**Yol 1 — `speichereRaum()`** · Ekran: _UI yolu çözülemedi_
 - `speichereRaum()` — [module/raum-verwaltung.js:138](module/raum-verwaltung.js#L138-L204) · 67 satır · rooms:update, rooms:insert
 
-**Yol 2 — `setzeRaumAktiv()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
+**Yol 2 — `setzeRaumAktiv()`** · Ekran: _UI yolu çözülemedi_
 - `setzeRaumAktiv()` — [module/raum-verwaltung.js:211](module/raum-verwaltung.js#L211-L226) · 16 satır · rooms:update
 
-**Yol 3 — `loescheRaum()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
+**Yol 3 — `loescheRaum()`** · Ekran: _UI yolu çözülemedi_
 - `loescheRaum()` — [module/raum-verwaltung.js:233](module/raum-verwaltung.js#L233-L248) · 16 satır · rooms:delete
 
 ### `anamnese` — 2 bağımsız yazma yolu
@@ -503,7 +503,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
   - ayna: api-backend/lib/rechnung-snapshot.js:14 — Spiegel von `module/branding
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:24 · api-backend/billing/api/zuzahlung.routes.js:47
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · merkez/db.js:125
-- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:541 · module/patienten-import.js:350 · module/praxis-standort.js:115 · module/raum-auswahl.js:178 · module/rezeptinfo-geld.js:441
+- `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:541 · module/patienten-import.js:350 · module/praxis-standort.js:115 · module/raum-auswahl.js:180 · module/rezeptinfo-geld.js:441
 - `zeile` — api-backend/lib/therapiebericht.js:189 · module/branding-ui.js:39 · module/fax-deckblatt.js:61 · module/rechnung-druck.js:33 · module/verordnung-detail.js:279 · module/verordnung-detail.js:408 · module/verordnung-detail.js:465 · module/verordnung-pruefen-knopf.js:116
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `init` — attendance.js:299 · booking-request.js:1420 · booking.js:64 · cookie-consent.js:205 · dashboard.js:14586 · onboarding.js:77 · setup.js:221
@@ -518,6 +518,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fehler` — api-backend/billing/api/artefakt-historie.js:26 · api-backend/billing/api/artefakt-registry.js:15 · api-backend/billing/codes/physio-leistungszeilen.js:27 · api-backend/lib/gmail-senden.js:54 · module/therapiebericht.js:204
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:100
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
+- `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/planung-bruecke.js:133 · module/verordnung-liste.js:253 · widget/booking-widget.js:107
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fussbefund.js:792 · module/praxis-rechtslinks-einstellungen.js:100 · module/verordnung-detail.js:833
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
@@ -529,7 +530,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail` — onprem/deinstallieren.sh:40 · onprem/install.sh:97 · onprem/reset-owner-passwort.sh:22 · onprem/update.sh:79
 - `fehler` — installieren/install.sh:22 · onprem/backup.sh:50 · onprem/restore.sh:47 · onprem/update.sh:65
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:63 · module/fussbefund.js:307 · module/rezeptinfo-geld.js:373
-- `invalidate` — api-backend/ai/ki-jeton.js:145 · module/patient-notizen.js:9 · module/patient-ueberweisung-upload.js:4 · module/rezept-patientenkopf.js:19
 
 ## Shell (onprem/)
 

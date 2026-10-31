@@ -8,7 +8,7 @@
  * der Mitarbeiterzuordnung ab, meist den Standard-Standort; ein Raum an Standort B würde dann abgewiesen.
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
-import { ladeAbwesenheiten } from './abwesenheit.js?v=20260918';
+import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
 import { ladeSondertage, warnungFuerTag } from './sondertag.js';
 
 const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
@@ -84,6 +84,8 @@ function ladezustand() {
 export function raumFelder() {
   const modal = ladezustand();
   if (!modal?.bereit || modal.huelle.hidden) return {};
+  // Unverändert heißt: nicht anfassen. Sonst löschte jedes Speichern den Raum, sobald er nicht in der Liste steht.
+  if (modal.auswahl.value === modal.anfang) return {};
   return felderAusWahl(modal.auswahl.value, modal.raeume);
 }
 
@@ -164,7 +166,7 @@ function mountTerminmaske() {
   huelle.innerHTML = '<label class="form-label" for="bkRaum">Raum</label><select id="bkRaum" class="form-select"></select>';
   gruppe.after(huelle);
   const auswahl = huelle.querySelector('select');
-  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0 };
+  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0, anfang: '' };
 
   function zeitraum() {
     const startText = document.getElementById('bkStart')?.value;
@@ -187,12 +189,15 @@ function mountTerminmaske() {
     huelle.hidden = true;
     const ownerId = kontext.getOwnerId();
     const id = document.getElementById('bk-id')?.value || null;
-    const raeume = raeumeDesStandorts(await ladeRaumliste(kontext.supabase, ownerId), kontext.getBusinessId());
+    const alleRaeume = await ladeRaumliste(kontext.supabase, ownerId);
+    const raeume = raeumeDesStandorts(alleRaeume, kontext.getBusinessId());
     let wert = '';
     if (id) {
       const { data, error } = await kontext.supabase.from('bookings').select('room_id').eq('id', id).maybeSingle();
       if (error) return; // Ohne bekannten Raum nichts überschreiben: `bereit` bleibt false.
       wert = data?.room_id || '';
+      const bisherig = alleRaeume.find(r => r.id === wert);
+      if (bisherig && !raeume.includes(bisherig)) raeume.push(bisherig); // deaktiviert oder anderer Standort: sichtbar lassen
     }
     const { startIso } = zeitraum();
     const { vonISO, bisISO } = tagesgrenzen(startIso || Date.now());
@@ -202,6 +207,7 @@ function mountTerminmaske() {
     stand.termine = termine;
     if (!raeume.length) return;
     zeichne(wert);
+    stand.anfang = auswahl.value;
     huelle.hidden = false;
     stand.bereit = true;
   }
@@ -248,8 +254,8 @@ export async function raumAktionsTermin(termin) {
   if (!stand) return;
   stand.termin = null;
   stand.huelle.hidden = true;
-  if (!termin?.id) return;
   const lauf = (stand.lauf = (stand.lauf || 0) + 1);
+  if (!termin?.id) return;
   const { supabase, getOwnerId, getBusinessId } = kontext;
   const raeume = raeumeDesStandorts(await ladeRaumliste(supabase, getOwnerId()), termin.business_id || getBusinessId());
   if (!raeume.length) return;

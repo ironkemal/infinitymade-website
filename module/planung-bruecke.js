@@ -15,7 +15,7 @@ import { mountRaumVerwaltung } from './raum-verwaltung.js';
 import { mountRaumStreifen } from './raum-streifen.js';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js';
-import { setzeGrundSichtbar } from './abwesenheit.js?v=20260918';
+import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
@@ -113,25 +113,32 @@ function mountSondertagAnzeige(deps) {
   let warte = null;
 
   async function zeichnen() {
-    beobachter.disconnect();
     try {
+      const auftraege = [];
       for (const [ansicht, wurzel] of ansichten) {
         const daten = ansicht === 'tag'
           ? [deps.getTagDatum()]
           : [...wurzel.querySelectorAll('[data-datum]')].map(el => el.dataset.datum).sort();
         if (!daten.length || !daten[0]) continue;
         const tage = await ladeSondertage({ supabase: deps.supabase, ownerId: deps.getOwnerId(), von: daten[0], bis: daten[daten.length - 1] });
-        if (ansicht !== 'tag') { markiereSondertage({ wurzel, tage, ansicht }); continue; }
-        document.getElementById('sondertagTagEtikett')?.remove();
-        const heute = tage.find(t => t.date === daten[0]);
-        const label = document.getElementById('dayViewDateLabel');
-        if (!heute || !label || wurzel.style.display === 'none') continue;
-        const etikett = sondertagEtikett(document, heute);
-        etikett.id = 'sondertagTagEtikett';
-        label.after(etikett);
+        auftraege.push({ ansicht, wurzel, tage, tag: daten[0] });
       }
+      // Erst nach dem Laden trennen: Zeichnet der Kalender währenddessen neu, meldet der Beobachter das.
+      beobachter.disconnect();
+      auftraege.forEach(markiere);
     } catch { /* Anzeige darf den Kalender nicht stören */ }
     beobachte();
+  }
+
+  function markiere({ ansicht, wurzel, tage, tag }) {
+    if (ansicht !== 'tag') { markiereSondertage({ wurzel, tage, ansicht }); return; }
+    document.getElementById('sondertagTagEtikett')?.remove();
+    const treffer = tage.find(t => t.date === tag);
+    const label = document.getElementById('dayViewDateLabel');
+    if (!treffer || !label || wurzel.style.display === 'none') return;
+    const etikett = sondertagEtikett(document, treffer);
+    etikett.id = 'sondertagTagEtikett';
+    label.after(etikett);
   }
 
   const beobachter = new MutationObserver(() => { clearTimeout(warte); warte = setTimeout(zeichnen, 120); });
@@ -172,8 +179,12 @@ export async function zeigeAnrufliste({ von, bis, type, startTime, endTime }) {
 export function planungVerdrahten(deps) {
   verdrahtet = deps;
   setzeGrundSichtbar(empId => deps.istInhaber() || deps.getEigeneId() === empId);
-  raumAuswahlVerdrahten(deps);
-  mountVerwaltung(deps);
-  mountStreifen(deps);
-  mountSondertagAnzeige(deps);
+  // Eine fehlende Stelle im DOM darf den Rest von dashboard.js nicht abbrechen.
+  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige]) {
+    try {
+      schritt(deps);
+    } catch (fehler) {
+      console.warn('[planung]', fehler);
+    }
+  }
 }

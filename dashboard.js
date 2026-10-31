@@ -1,5 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261031d';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261031e';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -116,13 +116,13 @@ import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschl
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261021p';
-import { renderMonat } from './module/kalender-monat.js?v=20261021ze';
+import { renderWoche } from './module/kalender-woche.js?v=20261031';
+import { renderMonat } from './module/kalender-monat.js?v=20261031';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
-import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
+import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20261031';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
@@ -9248,17 +9248,17 @@ async function saveSpecialDays(von, bis, startTime, endTime, type, note) {
       start_time: startTime || null,
       end_time: endTime || null
     });
-    d.setDate(d.getDate() + 1);
+    d.setUTCDate(d.getUTCDate() + 1); // UTC: lokal käme zur Zeitumstellung ein Tag doppelt, und der Upsert scheiterte
   }
 
   const { error } = await supabase.from('custom_days').upsert(rows, { onConflict: 'owner_id,date' });
-  if (error) { showToast(t('err_generic'), 'error'); return; }
+  if (error) { showToast(t('err_generic'), 'error'); return false; }
   showToast(rows.length > 1 ? `${rows.length} Tage hinzugefügt` : '1 Tag hinzugefügt');
   document.getElementById('sdNote').value = '';
   document.getElementById('sdBis').value = '';
   document.getElementById('sdStartTime').value = '';
   document.getElementById('sdEndTime').value = '';
-  await renderHoursMiniCal();
+  await renderHoursMiniCal(); return true;
 }
 
 document.getElementById('sdAddBtn').addEventListener('click', async () => {
@@ -9288,7 +9288,7 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
     .not('status', 'in', '("cancelled","completed","no_show")');
 
   if (conflicts && conflicts.length > 0) {
-    showSdConflictModal(conflicts, () => saveSpecialDays(von, bis, startTime, endTime, type, note).then(() => zeigeAnrufliste({ von, bis: end, type, startTime, endTime })));
+    showSdConflictModal(conflicts, () => saveSpecialDays(von, bis, startTime, endTime, type, note).then(ok => ok && zeigeAnrufliste({ von, bis: end, type, startTime, endTime })));
     return;
   }
 

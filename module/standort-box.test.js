@@ -23,3 +23,15 @@ test('Der erste Standort wird Standard, weitere verlangen die Bestätigung der R
   assert.match(quelle, /payload\.is_default = existingCount === 0;/);
   assert.match(quelle, /existingCount >= 1 && !await showConfirmModal\(\{ title: 'Weiterer Standort'/);
 });
+
+test('Sondertage zählen in UTC weiter, sonst käme zur Zeitumstellung ein Tag doppelt', () => {
+  assert.match(quelle, /d\.setUTCDate\(d\.getUTCDate\(\) \+ 1\); \/\/ UTC: lokal/);
+  const tage = [];
+  const d = new Date('2027-03-27');
+  while (d <= new Date('2027-03-29')) { tage.push(d.toISOString().split('T')[0]); d.setUTCDate(d.getUTCDate() + 1); }
+  assert.deepEqual(tage, ['2027-03-27', '2027-03-28', '2027-03-29']);
+});
+
+test('Anrufliste nur, wenn der Schließtag wirklich gespeichert wurde', () => {
+  assert.match(quelle, /\.then\(ok => ok && zeigeAnrufliste\(/);
+});

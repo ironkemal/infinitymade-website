@@ -151,12 +151,23 @@
     auswahl.value = 'r3';
     pruefe('Gewählter Raum bringt seinen Standort mit', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: 'r3', business_id: 'b1' }));
     auswahl.value = '';
-    pruefe('Kein Raum leert das Feld', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: null }));
+    pruefe('Neuer Termin ohne Raum bleibt unberührt', JSON.stringify(raumFelder()) === '{}');
 
     // Bestehender Termin
     await oeffne('k2');
     pruefe('Bestehender Termin zeigt seinen Raum', document.getElementById('bkRaum').value === 'r2');
     pruefe('Eigener Termin zählt beim Bearbeiten nicht', [...auswahl.options].some(o => o.textContent === 'Wärme'));
+
+    pruefe('Unveränderter Raum wird beim Speichern nicht angefasst', JSON.stringify(raumFelder()) === '{}');
+    document.getElementById('bkRaum').value = '';
+    pruefe('Raum entfernen leert das Feld', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: null }));
+
+    // Deaktivierter Raum: sichtbar bleiben und nicht still verlieren
+    tabellen.rooms.find(r => r.id === 'r2').aktiv = false;
+    await oeffne('k2');
+    pruefe('Deaktivierter Raum bleibt am Termin sichtbar', document.getElementById('bkRaum').value === 'r2');
+    pruefe('Deaktivierter Raum geht beim Speichern nicht verloren', JSON.stringify(raumFelder()) === '{}');
+    tabellen.rooms.find(r => r.id === 'r2').aktiv = true;
 
     // Gefährlichster Fall: Raum nicht lesbar, also nichts überschreiben
     fehlerBei.bookings_room_id = true;

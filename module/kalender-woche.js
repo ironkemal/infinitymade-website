@@ -37,7 +37,7 @@ import { WV_SLOT_PX } from './kalender-raster.js?v=20261021p';
 import { alsISODatum } from './datum.js?v=20261001a';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
-import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20260918';
+import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20261031';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
