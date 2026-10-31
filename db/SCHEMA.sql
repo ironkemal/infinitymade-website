@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261030225357 0091_rls_team_schreibrechte
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091)
+-- LAST MIGRATION:     20261031192656 0092_rooms
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092)
 -- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
@@ -1109,7 +1109,8 @@ CREATE TABLE public.bookings (
   dauer_quelle text,
   cancelled_at timestamp with time zone,
   cancelled_session_links jsonb DEFAULT '[]'::jsonb NOT NULL,
-  no_show_session_links jsonb DEFAULT '[]'::jsonb NOT NULL
+  no_show_session_links jsonb DEFAULT '[]'::jsonb NOT NULL,
+  room_id uuid
 );
 --   FK business_id -> businesses(id)
 --   FK group_parent_id -> bookings(id)
@@ -3253,6 +3254,36 @@ ALTER TABLE ONLY public.referral_drafts
 
 ALTER TABLE ONLY public.referral_drafts
   ADD CONSTRAINT referral_drafts_status_check CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]));
+
+CREATE TABLE public.rooms (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  name text NOT NULL,
+  plaetze smallint DEFAULT 1 NOT NULL,
+  aktiv boolean DEFAULT true NOT NULL,
+  sort integer DEFAULT 0 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.rooms OWNER TO postgres;
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_name_check CHECK (length(btrim(name)) >= 1 AND length(btrim(name)) <= 80);
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_plaetze_check CHECK (plaetze >= 1 AND plaetze <= 99);
 
 CREATE TABLE public.scraper_data (
   id uuid DEFAULT gen_random_uuid() NOT NULL,

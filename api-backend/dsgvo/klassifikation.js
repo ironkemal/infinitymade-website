@@ -375,6 +375,12 @@ export const TABELLEN = [
     anmerkung: 'Sonderoeffnungszeiten/Urlaubstage Praxis',
   },
   {
+    table: 'rooms',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Raeume der Praxis, ohne Personenbezug',
+  },
+  {
     table: 'time_offs',
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },

@@ -292,6 +292,14 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Status:** aktiv
 - **Wer:** `saveSpecialDays()`, Buchungsseite, Backend-Slots.
 
+### `rooms`
+- **Warum:** Physio-Praxen planen Räume mit. Erste Frage des Pilotkunden: „Welcher Therapeut ist gerade in welchem Raum?" Ein Termin trägt optional einen Raum (`bookings.room_id`).
+- **Seit:** 31.10.2026 · `0092_rooms`
+- **Status:** aktiv
+- **Wer:** `module/raum-plan.js` (Logik), Raumverwaltung, Terminmaske, Raum-Streifen.
+- **Warum keine Sperre:** Wärme und Fango laufen parallel, deshalb `plaetze` und nur Warnung (Ops #307). Der Trigger `bookings_room_mandant` hält Mandant und Standort dicht, nicht die Belegung.
+- **`business_id` NULL** nur bei Inhabern ohne `businesses`-Zeile. Ein Raum steht an genau einem Ort, „NULL = praxisweit" gilt ausdrücklich nicht.
+
 ### `time_offs`
 - **Warum:** Urlaub, Krankheit, Fortbildung. Anders als `custom_days` personenbezogen und mehrtägig.
 - **Seit:** spätestens 13.05.2026 · `add_performance_indexes`

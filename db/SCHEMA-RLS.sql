@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261030225357 0091_rls_team_schreibrechte
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091)
+-- LAST MIGRATION:     20261031192656 0092_rooms
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092)
 -- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
@@ -26,6 +26,32 @@
 -- This document is a deterministic structural documentation snapshot.
 -- It is NOT guaranteed to be standalone restore-executable in one single pass
 -- due to circular dependencies, catalog constraints, and external state.
+CREATE OR REPLACE FUNCTION public.bookings_room_mandant()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  r_owner  uuid;
+  r_biz    uuid;
+  t_owner  uuid;
+BEGIN
+  IF NEW.room_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT r.owner_id, r.business_id INTO r_owner, r_biz FROM public.rooms r WHERE r.id = NEW.room_id;
+  SELECT COALESCE(p.owner_id, p.id) INTO t_owner FROM public.profiles p WHERE p.id = NEW.user_id;
+  IF r_owner IS NULL
+     OR r_owner IS DISTINCT FROM NEW.owner_id
+     OR r_owner IS DISTINCT FROM t_owner
+     OR r_biz <> NEW.business_id THEN
+    RAISE EXCEPTION 'room_id gehoert nicht zu Mandant oder Standort des Termins' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+
 -- ============================================================================
 -- ----------------------------------------------------------------------------
 -- OUTSIDE-PUBLIC INVENTORIES
@@ -100,6 +126,7 @@
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY (RLS) STATUS
 -- ----------------------------------------------------------------------------
+ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.abrechnung ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.abrechnung_artefakt_freeze ENABLE ROW LEVEL SECURITY;
@@ -1560,6 +1587,21 @@ CREATE POLICY "Korrekturen select scoping" ON public.zuzahlung_korrekturen
   USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
    FROM profiles
   WHERE (profiles.owner_id = zuzahlung_korrekturen.owner_id)))));
+
+CREATE POLICY rooms_select_mandant ON public.rooms
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)));
+
+CREATE POLICY rooms_write_owner ON public.rooms
+  AS PERMISSIVE
+  FOR ALL
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)))
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND ((business_id IS NULL) OR (EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = rooms.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))));
 
 -- ----------------------------------------------------------------------------
 -- FUNCTIONS & PROCEDURES
@@ -5733,6 +5775,12 @@ ALTER FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_exp
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
+CREATE TRIGGER rooms_updated_at BEFORE UPDATE ON rooms FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
+
+CREATE TRIGGER trg_set_business_id BEFORE INSERT ON rooms FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER trg_zz_booking_room BEFORE INSERT OR UPDATE OF room_id, owner_id, user_id, business_id ON bookings FOR EACH ROW EXECUTE FUNCTION bookings_room_mandant();
+
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
 
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
@@ -5937,7 +5985,13 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON zuzahlung_korrekturen FOR EA
 -- INDEXES
 -- ----------------------------------------------------------------------------
 -- Index abrechnung_pkey ON public.abrechnung is enforced by constraint
--- DDL: CREATE UNIQUE INDEX abrechnung_pkey ON abrechnung USING btree (id);
+-- DDL: CREATE INDEX bookings_room_time_idx ON public.bookings USING btree (room_id, start_time) WHERE (room_id IS NOT NULL);
+
+CREATE INDEX rooms_business_idx ON public.rooms USING btree (business_id);
+
+CREATE UNIQUE INDEX rooms_name_uniq ON public.rooms USING btree (owner_id, COALESCE(business_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name));
+
+CREATE UNIQUE INDEX abrechnung_pkey ON abrechnung USING btree (id);
 
 CREATE UNIQUE INDEX abrechnung_vkz03_ursprung_unique ON abrechnung USING btree (zuzahlungsforderung_ursprung_id) WHERE verarbeitungskennzeichen = '03'::text;
 

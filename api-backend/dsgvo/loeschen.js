@@ -543,6 +543,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.2: Mitarbeiterzeilen werden ohne owner_id angelegt (routes/mitarbeiter-zugang.js)
     { table: 'working_hours', filter: 'user_id' },
     { table: 'custom_days', filter: 'owner_id' },
+    { table: 'rooms', filter: 'owner_id' },
     { table: 'calendar_integrations', filter: 'user_id' },
     { table: 'document_vorlagen', filter: 'owner_id' },
     { table: 'data_sharing_settings', filter: 'owner_id' },
