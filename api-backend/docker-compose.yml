@@ -87,6 +87,10 @@ services:
     cpus: 1.5
     env_file:
       - ./.env.calendar
+    # 31.10.2026: Inhaber-KI-Freigabe (ai/ki-einwilligung.js) muss Deploys ueberleben,
+    # wie ki_freigaben in onprem/docker-compose.yml.
+    volumes:
+      - ki_freigaben:/var/lib/praxura/ki-freigaben
     labels:
       - traefik.enable=true
       # Alles unter /api gehört uns — AUSSER /api/v1, das ist n8n's Public REST API.
@@ -174,6 +178,9 @@ services:
       - web
 
 # Tag containers we want auto-updated; n8n stays manual.
+
+volumes:
+  ki_freigaben:
 
 networks:
   web:

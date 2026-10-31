@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { istKutu } from '../lib/dagitim.js';
 
 export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-30-v1';
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -23,7 +24,12 @@ function getDefaultDirectory() {
   return process.env.KI_EINWILLIGUNG_DIR || '/var/lib/praxura/ki-freigaben';
 }
 
+// SaaS-VPS hat keine Box-Kimlik: dort gilt eine feste Kennung, sonst liesse sich die
+// Inhaber-Freigabe im SaaS nie speichern (31.10.2026). Box = SUPABASE_PUBLIC_URL (lib/dagitim.js).
+export const SAAS_BOX_ID = 'saas';
+
 async function defaultBoxIdProvider() {
+  if (!istKutu()) return SAAS_BOX_ID;
   try {
     const { ladeKimlik } = await import('../merkez-istemci/kimlik.js');
     const k = ladeKimlik();
