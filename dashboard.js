@@ -52,7 +52,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031a'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031a';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -7986,7 +7986,7 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     }
   });
 });
-verdrahteAkteKopf({ ...folgeDeps, leadId: () => pdCurrentLeadId });   // „+ Termin" / „+ Verordnung" im Akte-Kopf (Podologie)
+verdrahteAkteKopf({ ...folgeDeps, leadId: () => pdCurrentLeadId }); verdrahteDokumente({ supabase, getOwnerId, showToast, getLeadId: () => pdCurrentLeadId, userId: () => currentSession?.user?.id || null });   // „+ Termin" / „+ Verordnung" im Akte-Kopf (Podologie)
 
 document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
   if (btn.closest('#panel-kunden')) {

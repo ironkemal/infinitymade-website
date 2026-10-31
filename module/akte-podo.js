@@ -23,7 +23,8 @@
  * unverändert. Es gibt keine zweite Lade-Logik.
  *
  * Physio · Ergo · Logo: Verhalten unverändert. Der Plan unten liefert für sie
- * exakt die frühere Sichtbarkeit (Rezepte + Messreihen sichtbar, Fußbefund weg).
+ * exakt die frühere Sichtbarkeit (Rezepte + Messreihen sichtbar, Fußbefund weg;
+ * Dokumente sichtbar für K7 Datei-Uploads).
  *
  * Dazu die zwei Kopf-Knöpfe „+ Termin" / „+ Verordnung" (nur Podologie), die
  * die vorhandenen Abläufe mit vorgewähltem Patienten öffnen.
@@ -53,10 +54,11 @@ export function akteReiterPlan({ isPhysio, isPodo }) {
     for (const t of ALLE_REITER) sichtbar[t] = PODO_AKTE_REITER.includes(t);
   } else {
     // Bisheriges Verhalten (dashboard.js vor S4 P3): Rezepte/Messreihen nur Physio, Fußbefund nur Podo.
+    // Dokumente-Reiter auch für Physio/Ergo/Logo sichtbar (K7 Uploads).
     sichtbar.rezepte = !!isPhysio;
     sichtbar.messreihen = !!isPhysio;
     sichtbar.fussbefund = false;
-    sichtbar.dokumente = false;
+    sichtbar.dokumente = true;
   }
   return { sichtbar, rezepteText: isPodo ? 'Verordnungen' : 'Rezepte' };
 }

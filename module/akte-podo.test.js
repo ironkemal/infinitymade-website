@@ -12,18 +12,19 @@ test('Podologie: genau die sechs Reiter, Rezepte heisst „Verordnungen"', () =>
   for (const weg of ['notes', 'einwilligung', 'ueberweisung', 'messreihen', 'termine', 'mail']) assert.equal(p.sichtbar[weg], false, weg);
 });
 
-test('Physio unverändert: Rezepte + Messreihen sichtbar, Fußbefund/Dokumente nicht', () => {
+test('Physio: Rezepte + Messreihen + Dokumente sichtbar, Fußbefund nicht', () => {
   const p = akteReiterPlan({ isPhysio: true, isPodo: false });
   assert.equal(p.rezepteText, 'Rezepte');
   assert.deepEqual(sichtbarListe(p).sort(),
-    ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'messreihen', 'rechnungen', 'termine', 'mail'].sort());
+    ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'messreihen', 'dokumente', 'rechnungen', 'termine', 'mail'].sort());
 });
 
-test('Nicht-Praxis-Sektor: kein Rezepte/Messreihen wie bisher', () => {
+test('Nicht-Praxis-Sektor: kein Rezepte/Messreihen wie bisher, Dokumente sichtbar', () => {
   const p = akteReiterPlan({ isPhysio: false, isPodo: false });
   assert.equal(p.sichtbar.rezepte, false);
   assert.equal(p.sichtbar.messreihen, false);
   assert.equal(p.sichtbar.fussbefund, false);
+  assert.equal(p.sichtbar.dokumente, true);
 });
 
 // Minimales DOM: Elemente mit classList, style, hidden, parentElement, appendChild.
@@ -72,7 +73,7 @@ test('setzeAkteReiter Physio: nichts wird verschoben, Kopf-Knöpfe bleiben zu', 
   assert.equal(d.tabEl.rezepte.style.display, '');
   assert.equal(d.tabEl.rezepte.textContent, 'Rezepte');
   assert.equal(d.tabEl.fussbefund.style.display, 'none');
-  assert.equal(d.tabEl.dokumente.style.display, 'none');
+  assert.equal(d.tabEl.dokumente.style.display, '');
   assert.equal(d.byId.pdPanelNotes.parentElement, null);
   assert.equal(d.byId.pdKopfAktionen.hidden, true);
   assert.equal(d.byId.pdVerlaufNotizenBox.hidden, true);
