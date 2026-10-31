@@ -75,7 +75,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261031a
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261031a';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261031a';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -1097,7 +1097,7 @@ async function renderOverview() {
   renderOvEmpChips();
   await loadTodayBookings();
   loadActivityFeed().catch(() => {});
-  loadPhysioRezKpis().catch(() => { });
+  loadPhysioRezKpis().catch(() => { }); document.dispatchEvent(new Event('praxura:uebersicht'));
 }
 
 let scheduleDate = new Date();
@@ -11252,7 +11252,7 @@ document.getElementById('setBrandingLogo')?.addEventListener('input', e => updat
   };
 })();
 
-mountBrandingExtras({ supabase, ownerId: () => getOwnerId(), istOwner: () => currentProfile?.role === 'owner', profil: () => ownerProfile || currentProfile || {}, profilAktualisieren: (p) => { Object.assign(ownerProfile || currentProfile || {}, p); document.dispatchEvent(new Event('praxis-profil:geaendert')); }, toast: showToast }); mountEinrichtungRing({ profil: () => currentProfile?.role === 'owner' ? currentProfile : null, istOwner: () => currentProfile?.role === 'owner', toast: (m) => showToast(m, 'success'), springe: (id) => { switchPanel('settings'); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); } }); document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
+mountBrandingExtras({ supabase, ownerId: () => getOwnerId(), istOwner: () => currentProfile?.role === 'owner', profil: () => ownerProfile || currentProfile || {}, profilAktualisieren: (p) => { Object.assign(ownerProfile || currentProfile || {}, p); document.dispatchEvent(new Event('praxis-profil:geaendert')); }, toast: showToast }); mountEinrichtungRing({ profil: () => currentProfile?.role === 'owner' ? currentProfile : null, istOwner: () => currentProfile?.role === 'owner', toast: (m) => showToast(m, 'success'), springe: (id) => { switchPanel('settings'); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); } }); mountStartAufgaben({ supabase, getOwnerId, userId: () => currentSession?.user?.id || null, istInhaber: () => currentProfile?.role === 'owner', showToast, showConfirmModal, attachPatientSearch }); document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
   const logoUrl = (document.getElementById('setBrandingLogo')?.value || '').trim();
   const footerText = (document.getElementById('setBrandingFooter')?.value || '').trim();
   const { error } = await supabase.from('profiles').update({
