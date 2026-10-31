@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-10-30 · 97/97 Tabellen erfasst (letzte Migration `0091_rls_team_schreibrechte`; 0079–0091 legten außer `therapieberichte` (0087) keine Tabelle an, `tools/check-tabellen-register.sh` grün) · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-10-31 · 102/102 Tabellen erfasst (letzte Migration `0095_praxis_aufgaben`; 0092 legte `rooms` an, 0093 legte `praxis_formulare`, `patient_dokumente`, `physio_befunde` an, 0095 legte `praxis_aufgaben` an) · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -356,6 +356,12 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Achtung:** Läuft **nicht** über `supabase.from()`, sondern über direkte PostgREST-Aufrufe (`adminFetch('/demo_bookings?…')`). Wer nur nach `.from('demo_bookings')` sucht, hält die Tabelle für tot.
 - **Client-Rechte und Policies entfernt (seit 09.10.2026 · `0074_businesses_anon_spaltenrechte_demo_bookings`, guvenlik S-58):** Die Policies `anon can insert demo_bookings` (WITH CHECK true) und `authenticated can select demo_bookings` (USING true — jeder eingeloggte Nutzer sah alle Demo-Anfragen samt Kontaktdaten) sind gedroppt, alle Rechte für `anon`/`authenticated` entzogen. Zugriff **nur noch `service_role` über `api/demo-booking.js`**. RLS bleibt an, 0 Policies = Client gesperrt — so gewollt, nicht „reparieren". In der Box existiert die Tabelle nicht (Marketing ist SaaS-only), deshalb steht der Teil in 0074 in einem `to_regclass`-DO-Block. Live geprüft 09.10.2026: 0 Policies, keine anon/authenticated-Rechte.
 
+### `praxis_aufgaben`
+- **Warum:** K10 Aufgaben auf der Startseite: Schnelle praxisteam-interne Aufgaben und Erinnerungen ohne Abrechnungsbindung. Freitext (1–500 Zeichen), optional mit Fälligkeitsdatum (`faellig_am`) und optional mit Patientenbezug (`lead_id`, Mandantenschutz über RLS WITH CHECK `l.owner_id = praxis_aufgaben.owner_id`).
+- **Seit:** 31.10.2026 · `0095_praxis_aufgaben`
+- **Status:** aktiv
+- **Wer:** Startseite / Dashboard Aufgabenliste (`module/praxis-aufgaben.js`); Inhaber und Team lesen, erstellen und bearbeiten (als erledigt markieren), Löschen darf der Inhaber oder der Ersteller der jeweiligen Aufgabe.
+
 ---
 
 ## 3. Patientenakte
@@ -394,6 +400,24 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Wer:** `module/patienten-einwilligung.js` (`speichereEinwilligung`, `widerrufen`).
 - **Achtung:** ⚠️ Diese Tabelle **blockiert Löschungen**. `patient_id → leads` und `owner_id → profiles` sind beide `ON DELETE RESTRICT`, ein Trigger verbietet `DELETE` für 10 Jahre ab `consented_at` und lässt beim `UPDATE` nur `revoked_at`/`revoke_reason` durch. Wer einen Offboarding- oder Testdaten-Aufräumfluss baut, läuft ohne Vorwarnung in einen FK-Fehler. Richtig ist Anonymisieren, nicht das RESTRICT lockern. Bewusst **ohne** `ip_address`. **Nicht** mit `consent_log` verwechseln — das ist die B2B-Seite.
 - **Quelle:** `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md` · `compliance/LEGAL_DECISIONS.md` · § 630f Abs. 3 BGB
+
+### `patient_dokumente`
+- **Warum:** K7 Akte-Dokumente: Externe Befunde, Arztbriefe, Bildgebung, Fotos und signierte Formulare direkt an der Patientenakte ablegen (§ 630f BGB Behandlungsdokumentation). Physisches DELETE verboten (`patient_dokumente_delete_gesperrt`), nur Soft-Delete mit Pflichtangabe eines Löschgrunds (`geloescht_at`, `geloescht_von`, `loeschgrund`). Inhaltsspalten sind nach Anlage unveränderlich (`patient_dokumente_unveraenderlich`).
+- **Seit:** 31.10.2026 · `0093_physio_akte_dokumente`
+- **Status:** aktiv
+- **Wer:** Akte / Dokumente-Tab (`module/patienten-dokumente.js`), Upload-Handler; RLS für Inhaber und Team.
+
+### `praxis_formulare`
+- **Warum:** K6 Eigene Formulare & Signatur: Praxiseigene PDF-Vorlagen mit Signaturfeldern (z. B. Behandlungsvertrag, DSGVO, Aufklärungsbogen). PDF-Datei und Identitätsmetadaten sind nach dem Upload fest (`praxis_formulare_pdf_fest`); eine geänderte Vorlage ist immer eine neue Zeile (`version`). Nach Verwendung in der Akte sind auch Signaturfelder und Einwilligungs-Flags gesperrt.
+- **Seit:** 31.10.2026 · `0093_physio_akte_dokumente`
+- **Status:** aktiv
+- **Wer:** Formularverwaltung (`module/praxis-formulare.js`), Signaturmaske / Kiosk, Patientenakte; RLS für Inhaber und Team.
+
+### `physio_befunde`
+- **Warum:** K8 Physio-Befund: Strukturierte Erst-, Zwischen- und Abschlussbefunde in der Physiotherapie (§ 630f BGB). Versioniert und append-only (`eintrag_id`, `version`, `ist_aktuell` über `physio_befunde_versionieren`), physisches DELETE verboten (`physio_befunde_delete_gesperrt`), inhaltlich unveränderlich (`physio_befunde_unveraenderlich`). Messwerte verbleiben bewusst in `messreihen` (Verbindung über `messreihen.befund_id`).
+- **Seit:** 31.10.2026 · `0093_physio_akte_dokumente`
+- **Status:** aktiv
+- **Wer:** Physio-Befundung (`module/physio-befund.js`), Patientenakte; RLS für Inhaber und Therapeuten-Team.
 
 ### `ueberweisungen`
 - **Warum:** Überweisung an einen anderen Behandler, dokumentiert an der Akte.
@@ -488,6 +512,7 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Seit:** 19.06.2026 · `v31_messreihen_blanko`
 - **Status:** aktiv
 - **Wer:** `saveMessung()`, `refreshMessreihen()` im Dashboard.
+- **Erweiterung 31.10.2026 (`0093_physio_akte_dokumente`):** `befund_id` (optionaler FK auf `physio_befunde`, Trigger `trg_zz_messreihen_befund` prüft Mandant/Patient) und `seite` (`links`, `rechts`, `beidseits` per CHECK `messreihen_seite_check`) für seitengetrennte physiotherapeutische Verlaufsmessungen.
 
 ---
 

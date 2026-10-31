@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261031192656 0092_rooms
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092)
+-- LAST MIGRATION:     20261031222456 0093_physio_akte_dokumente
+-- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092, 0093, 0094, 0095)
 -- ERZEUGT AM:         2026-10-30
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       97
---   table_columns:       1432
+--   public_tables:       102
+--   table_columns:       1491
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        168
---   functions:           113
---   triggers:            100
---   indexes:             342
+--   rls_policies:        183
+--   functions:           124
+--   triggers:            118
+--   indexes:             363
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -2316,13 +2316,19 @@ CREATE TABLE public.messreihen (
   gemessen_am timestamp with time zone DEFAULT now() NOT NULL,
   notiz text,
   erfasst_von uuid,
-  created_at timestamp with time zone DEFAULT now() NOT NULL
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  befund_id uuid,
+  seite text
 );
+--   FK befund_id -> physio_befunde(id)
 --   FK erfasst_von -> profiles(id)
 --   FK lead_id -> leads(id)
 --   FK owner_id -> profiles(id)
 --   FK prescription_id -> prescriptions(id)
 ALTER TABLE ONLY public.messreihen OWNER TO postgres;
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_befund_id_fkey FOREIGN KEY (befund_id) REFERENCES physio_befunde(id) ON DELETE SET NULL;
 
 ALTER TABLE ONLY public.messreihen
   ADD CONSTRAINT messreihen_erfasst_von_fkey FOREIGN KEY (erfasst_von) REFERENCES profiles(id);
@@ -2338,6 +2344,9 @@ ALTER TABLE ONLY public.messreihen
 
 ALTER TABLE ONLY public.messreihen
   ADD CONSTRAINT messreihen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_seite_check CHECK (seite IS NULL OR seite = ANY (ARRAY['links'::text, 'rechts'::text, 'beidseits'::text]));
 
 ALTER TABLE ONLY public.messreihen
   ADD CONSTRAINT messreihen_typ_check CHECK (typ = ANY (ARRAY['VAS'::text, 'ROM'::text, 'kraft'::text, 'custom'::text]));
@@ -2465,7 +2474,70 @@ ALTER TABLE ONLY public.patient_consents
   ADD CONSTRAINT patient_consents_sha_chk CHECK (text_sha256 ~ '^[0-9a-f]{64}$'::text);
 
 ALTER TABLE ONLY public.patient_consents
-  ADD CONSTRAINT patient_consents_type_chk CHECK (consent_type = ANY (ARRAY['behandlungsvertrag'::text, 'datenschutz'::text, 'selbstzahler'::text, 'foto'::text]));
+  ADD CONSTRAINT patient_consents_type_chk CHECK (consent_type = ANY (ARRAY['behandlungsvertrag'::text, 'datenschutz'::text, 'selbstzahler'::text, 'foto'::text, 'praxis_formular'::text]));
+
+CREATE TABLE public.patient_dokumente (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  lead_id uuid NOT NULL,
+  kategorie text NOT NULL,
+  formular_id uuid,
+  storage_path text NOT NULL,
+  dateiname text NOT NULL,
+  mime_type text NOT NULL,
+  groesse_bytes bigint NOT NULL,
+  datei_sha256 text NOT NULL,
+  notiz text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  geloescht_at timestamp with time zone,
+  geloescht_von uuid,
+  loeschgrund text
+);
+--   FK business_id -> businesses(id)
+--   FK created_by -> profiles(id)
+--   FK formular_id -> praxis_formulare(id)
+--   FK geloescht_von -> profiles(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.patient_dokumente OWNER TO postgres;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_datei_sha256_check CHECK (datei_sha256 ~ '^[0-9a-f]{64}$'::text);
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_formular_id_fkey FOREIGN KEY (formular_id) REFERENCES praxis_formulare(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_geloescht_check CHECK ((geloescht_at IS NULL AND geloescht_von IS NULL AND loeschgrund IS NULL) OR (geloescht_at IS NOT NULL AND length(btrim(loeschgrund)) > 0));
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_geloescht_von_fkey FOREIGN KEY (geloescht_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_groesse_bytes_check CHECK (groesse_bytes >= 0);
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_kategorie_check CHECK (kategorie = ANY (ARRAY['befund_extern'::text, 'arztbrief'::text, 'bildgebung'::text, 'foto'::text, 'formular_signiert'::text, 'sonstiges'::text]));
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.patient_dokumente
+  ADD CONSTRAINT patient_dokumente_storage_path_check CHECK (storage_path LIKE (owner_id::text || '/%') AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
 
 CREATE TABLE public.patient_notes (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2536,6 +2608,61 @@ ALTER TABLE ONLY public.pending_signups
 
 ALTER TABLE ONLY public.pending_signups
   ADD CONSTRAINT pending_signups_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.physio_befunde (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  lead_id uuid NOT NULL,
+  prescription_id uuid,
+  eintrag_id uuid DEFAULT gen_random_uuid() NOT NULL,
+  version integer DEFAULT 1 NOT NULL,
+  ist_aktuell boolean DEFAULT true NOT NULL,
+  befundart text NOT NULL,
+  befund_datum date DEFAULT CURRENT_DATE NOT NULL,
+  therapeut_id uuid,
+  daten jsonb DEFAULT '{}'::jsonb NOT NULL,
+  form_version smallint DEFAULT 1 NOT NULL,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK created_by -> profiles(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> profiles(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK therapeut_id -> profiles(id)
+ALTER TABLE ONLY public.physio_befunde OWNER TO postgres;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_befundart_check CHECK (befundart = ANY (ARRAY['erst'::text, 'zwischen'::text, 'abschluss'::text]));
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_daten_check CHECK (jsonb_typeof(daten) = 'object'::text);
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_eintrag_version_uq UNIQUE (owner_id, eintrag_id, version);
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.physio_befunde
+  ADD CONSTRAINT physio_befunde_therapeut_id_fkey FOREIGN KEY (therapeut_id) REFERENCES profiles(id) ON DELETE SET NULL;
 
 CREATE TABLE public.podologie_behandlungen (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2633,6 +2760,91 @@ ALTER TABLE ONLY public.podologie_empfangsnachweise
 
 ALTER TABLE ONLY public.podologie_empfangsnachweise
   ADD CONSTRAINT podologie_empfangsnachweise_vorgaenger_id_fkey FOREIGN KEY (vorgaenger_id) REFERENCES podologie_empfangsnachweise(id) ON DELETE RESTRICT;
+
+CREATE TABLE public.praxis_aufgaben (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  lead_id uuid,
+  text text NOT NULL,
+  faellig_am date,
+  erledigt_at timestamp with time zone,
+  erledigt_von uuid,
+  erstellt_von uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK erledigt_von -> profiles(id)
+--   FK erstellt_von -> profiles(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.praxis_aufgaben OWNER TO postgres;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_erledigt_von_fkey FOREIGN KEY (erledigt_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_erstellt_von_fkey FOREIGN KEY (erstellt_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.praxis_aufgaben
+  ADD CONSTRAINT praxis_aufgaben_text_check CHECK (length(btrim(text)) >= 1 AND length(btrim(text)) <= 500);
+
+CREATE TABLE public.praxis_formulare (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  titel text NOT NULL,
+  storage_path text NOT NULL,
+  pdf_sha256 text NOT NULL,
+  signatur_felder jsonb DEFAULT '[]'::jsonb NOT NULL,
+  ist_einwilligung boolean DEFAULT false NOT NULL,
+  consent_type text,
+  version integer DEFAULT 1 NOT NULL,
+  aktiv boolean DEFAULT true NOT NULL,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK created_by -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.praxis_formulare OWNER TO postgres;
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_pdf_sha256_check CHECK (pdf_sha256 ~ '^[0-9a-f]{64}$'::text);
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_signatur_felder_check CHECK (jsonb_typeof(signatur_felder) = 'array'::text);
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_storage_path_check CHECK (storage_path LIKE (owner_id::text || '/%') AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
+
+ALTER TABLE ONLY public.praxis_formulare
+  ADD CONSTRAINT praxis_formulare_titel_check CHECK (length(btrim(titel)) > 0);
 
 CREATE TABLE public.praxura_migrations (
   version text NOT NULL,
@@ -3089,7 +3301,8 @@ CREATE TABLE public.profiles (
   praxis_inhaber text,
   praxis_impressum_url text,
   praxis_datenschutz_url text,
-  datev_einstellungen jsonb DEFAULT '{}'::jsonb NOT NULL
+  datev_einstellungen jsonb DEFAULT '{}'::jsonb NOT NULL,
+  fax_mail_muster text
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -3108,6 +3321,7 @@ COMMENT ON COLUMN public.profiles.praxis_inhaber IS 'Buergerlicher Name der Inha
 COMMENT ON COLUMN public.profiles.praxis_impressum_url IS 'Impressum der Praxis (§ 5 DDG), nur https, ≤500. Leer -> Patientenseite zeigt kein Impressum, nur Klartext Praxisname · Anschrift (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
 COMMENT ON COLUMN public.profiles.praxis_datenschutz_url IS 'Datenschutzerklärung der Praxis (Art. 13 DSGVO), nur https, ≤500. Leer -> erzeugte Seite „Datenschutzhinweise zur Terminanfrage" (legal-de 09.10.2026). anon nur über public_praxis_angaben().';
 COMMENT ON COLUMN public.profiles.datev_einstellungen IS 'DATEV-EXTF-Kopf + Erlöskonten: {beraternummer, mandantennummer, wj_beginn (MM-TT), sachkontenlaenge, kontenrahmen (SKR03|SKR04), erloeskonten:{gkv,privat,selbstzahler,bg,zuzahlung,ausfall}, gkv_geldkonto}. Leer = Export verweigert mit Hinweis. Form und Standardwerte in module/datev-einstellungen.js.';
+COMMENT ON COLUMN public.profiles.fax_mail_muster IS 'Fax-to-Mail Adressmuster mit genau einem {nummer}-Platzhalter vor dem @ (O-231).';
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
@@ -3126,6 +3340,9 @@ ALTER TABLE ONLY public.profiles
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_company_code_key UNIQUE (company_code);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_fax_mail_muster_check CHECK (fax_mail_muster IS NULL OR length(fax_mail_muster) <= 200 AND fax_mail_muster ~ '^[A-Za-z0-9._+-]*\{nummer\}[A-Za-z0-9._+-]*@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$'::text);
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;

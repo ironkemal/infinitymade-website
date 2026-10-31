@@ -28,6 +28,8 @@ export const KATEGORIE_TABELLEN = {
     'ueberweisungen',
     'therapieberichte',
     'podologie_empfangsnachweise',
+    'patient_dokumente',
+    'physio_befunde',
   ],
   einwilligung: ['patient_consents'],
   beleg: ['invoices', 'ausfallrechnungen', 'abrechnung', 'abrechnung_zeile', 'abrechnung_uebermittlung', 'zuzahlung_befreiung'],

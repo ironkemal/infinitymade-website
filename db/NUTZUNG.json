@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-31)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 99,
+ "anzahl": 102,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -366,7 +366,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": []
     },
@@ -1013,7 +1013,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -1812,7 +1812,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3862,
+     "start": 3865,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1939,7 +1939,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2864,7 +2864,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4037,
+     "start": 4040,
      "module": [],
      "uiPfad": []
     }
@@ -3334,7 +3334,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -3437,7 +3437,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1795,
+     "start": 1798,
      "module": [],
      "uiPfad": []
     },
@@ -4995,7 +4995,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4037,
+     "start": 4040,
      "module": [],
      "uiPfad": []
     },
@@ -5447,7 +5447,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5839,14 +5839,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1795,
+     "start": 1798,
      "module": [],
      "uiPfad": []
     }
@@ -6095,7 +6095,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -6187,7 +6187,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6440,7 +6440,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -6724,14 +6724,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1795,
+     "start": 1798,
      "module": [],
      "uiPfad": []
     },
@@ -8316,7 +8316,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -8480,7 +8480,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8907,7 +8907,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9087,7 +9087,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9191,7 +9191,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 47,
+   "sqlTreffer": 43,
    "codeStumm": false
   },
   {
@@ -9326,7 +9326,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9984,7 +9984,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10228,7 +10228,7 @@
     {
      "name": "createDokumentMailRouter",
      "file": "api-backend/routes/dokument-mail.js",
-     "start": 61,
+     "start": 79,
      "module": [],
      "uiPfad": []
     },
@@ -11364,6 +11364,8 @@
     "api-backend/billing/api/warteliste-security.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/lib/rezept-erfassung-routes.test.js",
+    "api-backend/lib/therapiebericht.test.js",
+    "api-backend/routes/formular-signieren.test.js",
     "module/fahrt-abschluss-referenz.test.js",
     "module/patienten-kontext.test.js",
     "module/rechnung-snapshot.test.js",
@@ -11434,7 +11436,14 @@
     {
      "name": "createDokumentMailRouter",
      "file": "api-backend/routes/dokument-mail.js",
-     "start": 61,
+     "start": 79,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createFormularSignierenRouter",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 125,
      "module": [],
      "uiPfad": []
     },
@@ -11913,6 +11922,54 @@
      ]
     },
     {
+     "name": "laden",
+     "file": "module/start-aufgaben.js",
+     "start": 300,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "ladePatienten",
      "file": "module/arzt-register.js",
      "start": 481,
@@ -12011,7 +12068,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -12599,6 +12656,61 @@
      ]
     },
     {
+     "name": "mountStartAufgaben",
+     "file": "module/start-aufgaben.js",
+     "start": 88,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "noopMiddleware",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 129,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "nurZiffern",
      "file": "module/termin-patient-bezug.js",
      "start": 52,
@@ -12889,7 +13001,7 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1446,
+     "start": 1449,
      "module": [],
      "uiPfad": []
     },
@@ -13113,7 +13225,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13274,6 +13386,7 @@
     "api-backend/dsgvo/loeschen.js",
     "api-backend/lib/therapiebericht.js",
     "api-backend/routes/dokument-mail.js",
+    "api-backend/routes/formular-signieren.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/anamnese.js",
@@ -13295,6 +13408,7 @@
     "module/rechnung-snapshot.js",
     "module/rezept-patientenfeld.js",
     "module/rezept-patientenkopf.js",
+    "module/start-aufgaben.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
     "module/verordnung-podo.js",
@@ -13340,7 +13454,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 67,
+   "sqlTreffer": 71,
    "codeStumm": false
   },
   {
@@ -13387,8 +13501,9 @@
   },
   {
    "name": "messreihen",
-   "spalten": 12,
+   "spalten": 14,
    "fkRaus": [
+    "physio_befunde",
     "profiles",
     "leads",
     "prescriptions"
@@ -13408,7 +13523,159 @@
    "warum": "Messwerte im Verlauf (Blankoverordnung: der Therapeut muss den Behandlungserfolg belegen).",
    "seit": "19.06.2026 · `v31_messreihen_blanko`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 135,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "starteFormular",
+     "file": "module/physio-befund.js",
+     "start": 604,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeigeLesemodus",
+     "file": "module/physio-befund.js",
+     "start": 379,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeigeUebersicht",
+     "file": "module/physio-befund.js",
+     "start": 194,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
    "schreiber": [
     {
      "name": "refreshMessreihen",
@@ -13462,6 +13729,57 @@
      ]
     },
     {
+     "name": "renderFormular",
+     "file": "module/physio-befund.js",
+     "start": 670,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
      "name": "saveMessung",
      "file": "dashboard.js",
      "start": 7765,
@@ -13511,128 +13829,11 @@
      "ops": [
       "insert"
      ]
-    }
-   ],
-   "dateien": [
-    "dashboard.js"
-   ],
-   "module": [
-    "abrechnung",
-    "anamnese",
-    "anfragen",
-    "b2b",
-    "b2c",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fahrtenbuch",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "patientDetailModal",
-    "podologie-billing",
-    "rechnungen",
-    "rezeptModal",
-    "services",
-    "settings",
-    "statistik",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen",
-    "vorlagen",
-    "warteliste"
-   ],
-   "sqlTreffer": 40,
-   "codeStumm": false
-  },
-  {
-   "name": "mitarbeiter_anstellung",
-   "spalten": 7,
-   "fkRaus": [
-    "profiles"
-   ],
-   "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
-   "dsgvoAnonymisiert": false,
-   "erwaehnt": [
-    "api-backend/dsgvo/klassifikation.js",
-    "api-backend/dsgvo/loeschen.js",
-    "module/anstellung.test.js"
-   ],
-   "register": true,
-   "status": "aktiv",
-   "warum": "Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch. Gehört nicht in `profiles`: teamweit lesbar, und die Positivliste aus 0091 lässt den Inhaber dort nur `anrede`/`avatar_url` ändern.",
-   "seit": "31.10.2026 · `0094_mitarbeiter_anstellung`",
-   "ungeklaert": false,
-   "leser": [
+    },
     {
-     "name": "ladeAnstellung",
-     "file": "module/anstellung.js",
-     "start": 143,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    }
-   ],
-   "schreiber": [
-    {
-     "name": "speichereAnstellung",
-     "file": "module/anstellung.js",
-     "start": 234,
+     "name": "speichern",
+     "file": "module/physio-befund.js",
+     "start": 907,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13677,12 +13878,65 @@
       "ortak yardımcı — 38 modülden çağrılıyor"
      ],
      "ops": [
-      "upsert"
+      "insert"
+     ]
+    },
+    {
+     "name": "zeigeWiederholenDialog",
+     "file": "module/physio-befund.js",
+     "start": 1011,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
      ]
     }
    ],
    "dateien": [
-    "module/anstellung.js"
+    "api-backend/lib/therapiebericht.js",
+    "dashboard.js",
+    "module/physio-befund.js"
    ],
    "module": [
     "abrechnung",
@@ -13724,7 +13978,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 6,
+   "sqlTreffer": 43,
    "codeStumm": false
   },
   {
@@ -14104,7 +14358,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -14471,6 +14725,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/routes/formular-signieren.test.js",
     "module/patienten-kontext.test.js"
    ],
    "register": true,
@@ -14578,6 +14833,26 @@
    ],
    "schreiber": [
     {
+     "name": "createFormularSignierenRouter",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 125,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "noopMiddleware",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 129,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
      "name": "speichereEinwilligung",
      "file": "module/patienten-einwilligung.js",
      "start": 353,
@@ -14681,6 +14956,7 @@
     }
    ],
    "dateien": [
+    "api-backend/routes/formular-signieren.js",
     "module/patienten-einwilligung.js"
    ],
    "module": [
@@ -14724,6 +15000,79 @@
     "warteliste"
    ],
    "sqlTreffer": 48,
+   "codeStumm": false
+  },
+  {
+   "name": "patient_dokumente",
+   "spalten": 17,
+   "fkRaus": [
+    "businesses",
+    "profiles",
+    "praxis_formulare",
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
+    "api-backend/routes/formular-signieren.test.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "K7 Akte-Dokumente: Externe Befunde, Arztbriefe, Bildgebung, Fotos und signierte Formulare direkt an der Patientenakte ablegen (§ 630f BGB Behandlungsdokumentation). Physisches DELETE verboten (`patient_dokumente_delete_gesperrt`), nur Soft-Delete mit Pflichtangabe eines Löschgrunds (`geloescht_at`, `geloescht_von`, `loeschgrund`). Inhaltsspalten sind nach Anlage unveränderlich (`patient_dokumente_unveraenderlich`).",
+   "seit": "31.10.2026 · `0093_physio_akte_dokumente`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "createFormularSignierenRouter",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 125,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "ladeDokumente",
+     "file": "module/patient-dokumente.js",
+     "start": 329,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "montiereHost",
+     "file": "module/patient-dokumente.js",
+     "start": 189,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "noopMiddleware",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 129,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/routes/formular-signieren.js",
+    "module/patient-dokumente.js"
+   ],
+   "module": [],
+   "sqlTreffer": 45,
    "codeStumm": false
   },
   {
@@ -15155,7 +15504,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": []
     }
@@ -15170,6 +15519,236 @@
    ],
    "module": [],
    "sqlTreffer": 43,
+   "codeStumm": false
+  },
+  {
+   "name": "physio_befunde",
+   "spalten": 15,
+   "fkRaus": [
+    "businesses",
+    "profiles",
+    "leads",
+    "prescriptions"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
+    "api-backend/lib/therapiebericht.test.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "K8 Physio-Befund: Strukturierte Erst-, Zwischen- und Abschlussbefunde in der Physiotherapie (§ 630f BGB). Versioniert und append-only (`eintrag_id`, `version`, `ist_aktuell` über `physio_befunde_versionieren`), physisches DELETE verboten (`physio_befunde_delete_gesperrt`), inhaltlich unveränderlich (`physio_befunde_unveraenderlich`). Messwerte verbleiben bewusst in `messreihen` (Verbindung über `messreihen.befund_id`).",
+   "seit": "31.10.2026 · `0093_physio_akte_dokumente`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeSnapshot",
+     "file": "api-backend/lib/therapiebericht.js",
+     "start": 135,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "zeigeUebersicht",
+     "file": "module/physio-befund.js",
+     "start": 194,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "renderFormular",
+     "file": "module/physio-befund.js",
+     "start": 670,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "speichern",
+     "file": "module/physio-befund.js",
+     "start": 907,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/lib/therapiebericht.js",
+    "module/physio-befund.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "sqlTreffer": 54,
    "codeStumm": false
   },
   {
@@ -15457,7 +16036,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -16142,6 +16721,463 @@
    "codeStumm": false
   },
   {
+   "name": "praxis_aufgaben",
+   "spalten": 11,
+   "fkRaus": [
+    "businesses",
+    "profiles",
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "K10 Aufgaben auf der Startseite: Schnelle praxisteam-interne Aufgaben und Erinnerungen ohne Abrechnungsbindung. Freitext (1–500 Zeichen), optional mit Fälligkeitsdatum (`faellig_am`) und optional mit Patientenbezug (`lead_id`, Mandantenschutz über RLS WITH CHECK `l.owner_id = praxis_aufgaben.owner_id`).",
+   "seit": "31.10.2026 · `0095_praxis_aufgaben`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "laden",
+     "file": "module/start-aufgaben.js",
+     "start": 300,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "fuegeAufgabeHinzu",
+     "file": "module/start-aufgaben.js",
+     "start": 344,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "loescheAufgabe",
+     "file": "module/start-aufgaben.js",
+     "start": 436,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "macheRueckgaengig",
+     "file": "module/start-aufgaben.js",
+     "start": 415,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "markiereErledigt",
+     "file": "module/start-aufgaben.js",
+     "start": 393,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "mountStartAufgaben",
+     "file": "module/start-aufgaben.js",
+     "start": 88,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "module/start-aufgaben.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "sqlTreffer": 39,
+   "codeStumm": false
+  },
+  {
+   "name": "praxis_formulare",
+   "spalten": 13,
+   "fkRaus": [
+    "businesses",
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/routes/formular-signieren.test.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "K6 Eigene Formulare & Signatur: Praxiseigene PDF-Vorlagen mit Signaturfeldern (z. B. Behandlungsvertrag, DSGVO, Aufklärungsbogen). PDF-Datei und Identitätsmetadaten sind nach dem Upload fest (`praxis_formulare_pdf_fest`); eine geänderte Vorlage ist immer eine neue Zeile (`version`). Nach Verwendung in der Akte sind auch Signaturfelder und Einwilligungs-Flags gesperrt.",
+   "seit": "31.10.2026 · `0093_physio_akte_dokumente`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "createFormularSignierenRouter",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 125,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "noopMiddleware",
+     "file": "api-backend/routes/formular-signieren.js",
+     "start": 129,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "oeffneFormularAuswahl",
+     "file": "module/formular-unterschreiben.js",
+     "start": 123,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "ladeFormulareListe",
+     "file": "module/formular-editor.js",
+     "start": 265,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "oeffneFormularEditor",
+     "file": "module/formular-editor.js",
+     "start": 513,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "zeigeUploadModal",
+     "file": "module/formular-editor.js",
+     "start": 385,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/routes/formular-signieren.js",
+    "module/formular-editor.js",
+    "module/formular-unterschreiben.js"
+   ],
+   "module": [],
+   "sqlTreffer": 35,
+   "codeStumm": false
+  },
+  {
    "name": "praxura_migrations",
    "spalten": 6,
    "fkRaus": [],
@@ -16191,7 +17227,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 549,
+     "start": 551,
      "module": [],
      "uiPfad": []
     },
@@ -16256,7 +17292,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16296,6 +17332,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/lib/therapiebericht.test.js",
     "module/booking-status-korrektur.test.js",
     "module/sitzung-bindung.test.js",
     "module/termin-nicht-erschienen.test.js"
@@ -16405,7 +17442,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -17060,6 +18097,7 @@
     "api-backend/billing/zaa/anwenden.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/lib/rezept-erfassung-routes.test.js",
+    "api-backend/lib/therapiebericht.test.js",
     "module/behandlungsbeginn.js",
     "module/behandlungsbeginn.test.js",
     "module/booking-status-korrektur.test.js",
@@ -17559,7 +18597,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -18374,6 +19412,54 @@
      ]
     },
     {
+     "name": "starteFormular",
+     "file": "module/physio-befund.js",
+     "start": 604,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "therapeutName",
      "file": "dashboard.js",
      "start": 6892,
@@ -18649,7 +19735,7 @@
     {
      "name": "createDokumentMailRouter",
      "file": "api-backend/routes/dokument-mail.js",
-     "start": 61,
+     "start": 79,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18771,7 +19857,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -19014,6 +20100,7 @@
     "module/frequenz-pruefung.js",
     "module/frequenz-pruefung.test.js",
     "module/patientenkarte.js",
+    "module/physio-befund.js",
     "module/podo-behandlungen-oeffnen.js",
     "module/podo-einheiten.js",
     "module/podo-wagner.js",
@@ -19078,12 +20165,12 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 86,
+   "sqlTreffer": 87,
    "codeStumm": false
   },
   {
    "name": "profiles",
-   "spalten": 90,
+   "spalten": 91,
    "fkRaus": [
     "auth.users",
     "profiles"
@@ -19107,6 +20194,7 @@
     "api-backend/booking/public-guards.test.js",
     "api-backend/dsgvo/artefakt-schutz.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "api-backend/lib/therapiebericht.test.js",
     "module/stempel.test.js",
     "tools/browser-probe/redesign-fixture.js",
     "tools/check-anon-grants.mjs",
@@ -19184,7 +20272,7 @@
     {
      "name": "createDokumentMailRouter",
      "file": "api-backend/routes/dokument-mail.js",
-     "start": 61,
+     "start": 79,
      "module": [],
      "uiPfad": []
     },
@@ -19212,14 +20300,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4012,
+     "start": 4015,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -19457,7 +20545,7 @@
     {
      "name": "ladeSnapshot",
      "file": "api-backend/lib/therapiebericht.js",
-     "start": 108,
+     "start": 135,
      "module": [],
      "uiPfad": []
     },
@@ -20819,7 +21907,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 103,
+     "start": 105,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -21255,8 +22343,59 @@
     },
     {
      "name": "speichern",
+     "file": "module/fax-einstellungen.js",
+     "start": 112,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "speichern",
      "file": "module/praxis-rechtslinks-einstellungen.js",
-     "start": 100,
+     "start": 102,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21506,6 +22645,7 @@
     "module/buchungskonten.js",
     "module/datev-einstellungen.js",
     "module/fahrtenbuch-export.js",
+    "module/fax-einstellungen.js",
     "module/fussbefund.js",
     "module/praxis-rechtslinks-einstellungen.js",
     "module/praxis-standort.js",
@@ -21554,7 +22694,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 350,
+   "sqlTreffer": 361,
    "codeStumm": false
   },
   {
@@ -21942,7 +23082,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4324,
+     "start": 4327,
      "module": [],
      "uiPfad": []
     },
@@ -22052,7 +23192,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -23037,7 +24177,7 @@
     {
      "name": "createDokumentMailRouter",
      "file": "api-backend/routes/dokument-mail.js",
-     "start": 61,
+     "start": 79,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23389,14 +24529,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1795,
+     "start": 1798,
      "module": [],
      "uiPfad": []
     },
@@ -24815,7 +25955,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 789,
+     "start": 792,
      "module": [],
      "uiPfad": []
     },
@@ -24870,7 +26010,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1795,
+     "start": 1798,
      "module": [],
      "uiPfad": []
     },
@@ -25912,14 +27052,17 @@
    "leads",
    "mahnungen",
    "messreihen",
-   "mitarbeiter_anstellung",
    "nummernkreise",
    "pat_fussbefund",
    "patient_consents",
+   "patient_dokumente",
    "patient_notes",
    "patients",
+   "physio_befunde",
    "podologie_behandlungen",
    "podologie_empfangsnachweise",
+   "praxis_aufgaben",
+   "praxis_formulare",
    "praxura_setup",
    "prescription_documents",
    "prescription_sessions",
@@ -25967,9 +27110,10 @@
    "feedbacks",
    "group_scopes",
    "kiosk_pins",
-   "mitarbeiter_anstellung",
    "patients",
    "pending_signups",
+   "praxis_aufgaben",
+   "praxis_formulare",
    "referral_drafts",
    "rooms",
    "scraper_data",

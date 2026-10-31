@@ -83,6 +83,19 @@ export const TABELLEN = [
     anmerkung: 'Verlaufsmessungen Blankoverordnung',
   },
   {
+    table: 'patient_dokumente',
+    kategorie: 'behandlung',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Hochgeladene Akte-Dokumente und signierte Formulare; kein DELETE, Soft-Delete mit Grund; Dateien im Bucket patient-documents',
+  },
+  {
+    table: 'physio_befunde',
+    kategorie: 'behandlung',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'therapeut_id',
+    anmerkung: 'Physio-Befund (Erst/Zwischen/Abschluss), versioniert und unveraenderlich; Messwerte liegen in messreihen',
+  },
+  {
     table: 'patient_notes',
     kategorie: 'behandlung',
     export: { filter: 'owner_id' },
@@ -349,6 +362,12 @@ export const TABELLEN = [
     anmerkung: 'Rezept-Entwuerfe aus OCR vor Bestaetigung',
   },
   {
+    table: 'praxis_formulare',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Eigene Formular-Vorlagen der Praxis (PDF + Signaturfelder), Geschaeftsdaten ohne Patientenbezug',
+  },
+  {
     table: 'services',
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },
@@ -379,6 +398,13 @@ export const TABELLEN = [
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },
     anmerkung: 'Raeume der Praxis, ohne Personenbezug',
+  },
+  {
+    table: 'praxis_aufgaben',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'erstellt_von',
+    anmerkung: 'Praxisinterne Aufgaben, Freitext kann Patientenbezug haben',
   },
   {
     table: 'time_offs',
@@ -615,6 +641,8 @@ export const BUCKETS = [
       ['patient_consents', 'signature_path'],
       ['zuzahlung_befreiung', 'beleg_url'],
       ['prescription_documents', 'storage_path'],
+      ['patient_dokumente', 'storage_path'],
+      ['praxis_formulare', 'storage_path'],
     ],
   },
   {
@@ -654,9 +682,12 @@ export const LEAD_BEZUEGE = [
   ['zuzahlung_korrekturen', 'patient_id'],
   ['patient_notes', 'lead_id'],
   ['messreihen', 'lead_id'],
+  ['patient_dokumente', 'lead_id'],
+  ['physio_befunde', 'lead_id'],
   ['mahnungen', 'patient_id'],
   ['fahrten', 'lead_id'],
   ['warteliste', 'lead_id'],
   ['referral_drafts', 'lead_id'],
   ['prescription_documents', 'patient_id'],
+  ['praxis_aufgaben', 'lead_id'],
 ];
