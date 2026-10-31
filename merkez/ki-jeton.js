@@ -2,13 +2,14 @@
 // Verwaltet Konfiguration, Entra-Token-Beschaffung mit RAM-Cache und Berliner Zeitfenster.
 import { createHash } from 'node:crypto';
 import { berlinHeute } from '../api-backend/lib/berlin-tag.js';
-import { EU_DATA_BOUNDARY_REGIONS } from '../api-backend/ai/ki-config.js';
+import { EU_DATA_BOUNDARY_REGIONS, RE_SAFE_SEGMENT } from '../api-backend/ai/ki-config.js';
 
 export const ENTRA_MIN_RESTLAUF_SEK = 2700; // 45 Minuten Mindestrestlaufzeit
 export const MAX_TTL_SEK = 3600;
 
 const RE_UUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-const RE_DEPLOYMENT = /^[a-zA-Z0-9_-]{1,64}$/;
+// Same rule as box/SaaS (O-230): dotted names like gpt-4.1-mini are valid.
+const RE_DEPLOYMENT = RE_SAFE_SEGMENT;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 

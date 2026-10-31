@@ -6801,3 +6801,25 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Durum** | `geplant` — K5 başlamadan `onprem` + `guvenlik` ön kontrolü. K4 ✅ olmadan başlamaz |
 
 ---
+
+### O-230 — KI deployment adı noktayı reddediyordu: SaaS'ta KI 08.10'dan beri sessizce kapalı; düzeltme beş kopyadan üçüne girdi 🟡 **offen (düzeltme yolda, 31.10.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `RE_SAFE_SEGMENT = /^[a-zA-Z0-9_-]{1,64}$/` Azure deployment adındaki noktayı (`gpt-4.1-mini`) reddediyor; canlı `/api/ai/_health` → `AI_DEPLOYMENT_INVALID` |
+| **Nerede** | Düzeltilen (çalışma kopyası, commit yok): `api-backend/ai/ki-config.js:45` · `azureClient.js:21` · `ki-jeton.js:35` → `/^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/`. **Kalan eski kopyalar:** `api-backend/ai/azureClient.js:687` (`safeDeployment`, sağlık/rapor çıktısı noktalı adı `(invalid)` gösterir) · `merkez/ki-jeton.js:11` `RE_DEPLOYMENT` (merkez noktalı deployment için jeton imzalamaz → jeton modu açıldığı gün aynı arıza kutuda tekrarlar) |
+| **Tip** | C-yakını (config doğrulaması) + A |
+| **Kutuda ne olur** | Bugün kutu `AI_MODE=aus`, etki yok. Jeton modu (O-169) açılınca merkez noktalı deployment adı için jeton vermez, kutuda KI hata vermeden kapalı kalır. SaaS'ta 23 gün sessiz kapalılık ölçüldü — arıza sınıfı „zutat geçersiz ama uygulama susuyor" |
+| **Çözüm** | (1) Beş kopyanın beşi aynı regex; tercihen tek paylaşılan sabit (`merkez/` zaten `api-backend/merkez-istemci/`'den import ediyor). (2) Test: `gpt-4.1-mini` geçer, `.x`, `a..b`, `a/b`, 65 karakter red — iki tarafta (kutu + merkez). (3) Geçersiz deployment açılışta bir uyarı satırı basar (O-50 deseni: zutat bozuksa susmaz). `encodeURIComponent` yolu korunur. Korkuluk: G1/G2/G3/G8 temiz |
+| **Durum** | `offen` — kalan iki kopya + test girince `gelöst` (commit ile) |
+
+### O-231 — K9 Fax-to-Mail: fax sağlayıcısının adres deseni `profiles`'ta, PDF praksisin SMTP'sinden (ön kontrol 31.10.2026) 🟡 **geplant (Physio-Pilot K9)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Einstellungen'de `{nummer}@sağlayıcı` deseni; Therapiebericht/belge PDF'i o adrese mail eki olarak gider. Gateway yok, yeni env yok, yeni dış servis yok |
+| **Nerede** | Henüz kod yok. Bağlanacağı yer `api-backend/routes/dokument-mail.js` (`aktion==='fax'`, `:37`, `:80`) + `versandMoeglich()` (`:30`, O-216) · yeni kolon `profiles` → `api-backend/db/migrations/` |
+| **Tip** | A (praksisin SMTP'si + praksisin seçtiği fax sağlayıcısı) + D + G |
+| **Kutuda ne olur** | SMTP'li kutu: mail praksisin sunucusundan praksisin sağlayıcısına gider, bizden geçmez. SMTP'siz kutu (varsayılan, O-142): gönderilemez, açık uyarı + PDF indirme. Fax PDF'i parola taşıyamaz → açık PHI üçüncü tarafa (sağlayıcı) gider; bu praksisin işleyicisidir, bizim değil |
+| **Çözüm** | Şartlar: (1) Gerçek gönderim yalnız `versandMoeglich()` (kutu + SMTP) — **SaaS'ta gönderim yok**, O-216 şart 5 aynen: `noreply@praxura.de`'den açık PHI eki çıkmaz (G1/K6); SaaS'ta PDF iner. (2) Desen doğrulaması: tam bir `{nummer}`, `@`'den sonra geçerli alan adı, numara yalnız rakama indirgenir (`+` → `00`), CRLF/virgül/ikinci alıcı reddi. (3) Gönderen `getMailFrom()`, `absender_fest` tabanı (2) artmaz. (4) Log'a alıcı/numara yazılmaz (O-216 şart 4). (5) Migration zincire dosya + aynı commit'te `db/` dökümü; kolon `NULL`'lanabilir, `:stable` bozulmaz. (6) Hukuk (sağlayıcı AVV'si, açık PDF) → legal-de |
+| **Durum** | `geplant` — Physio-Pilot K9. Korkuluk: G1 şart (1) ile temiz · G2/G3/G8 temiz |

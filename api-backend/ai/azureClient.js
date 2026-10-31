@@ -14,11 +14,9 @@
 // - Total timeout includes body consumption; explicit timeoutMs seam for fast tests.
 // - AbortSignal support races all stages, removes listeners in finally, masks signal reason secrets.
 
-import { createAiConfig, validateEndpointUrl, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
+import { createAiConfig, validateEndpointUrl, EU_DATA_BOUNDARY_REGIONS, RE_SAFE_SEGMENT } from './ki-config.js';
 import { createJetonClient } from './ki-jeton.js';
 
-// Azure deployment names may contain dots (gpt-4.1-mini); a leading dot and ".." stay out of the URL path.
-const RE_SAFE_SEGMENT = /^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 const ALLOWED_ROLES = Object.freeze(new Set(['system', 'user', 'assistant']));
@@ -684,7 +682,7 @@ export function configSummary(customConfig) {
     }
   }
 
-  const safeDeployment = (typeof cfg.deployment === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(cfg.deployment))
+  const safeDeployment = (typeof cfg.deployment === 'string' && RE_SAFE_SEGMENT.test(cfg.deployment))
     ? cfg.deployment
     : '(invalid)';
 

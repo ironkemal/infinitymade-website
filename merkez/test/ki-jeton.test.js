@@ -380,3 +380,10 @@ test('tokenFingerabdruck: sha256-hex', () => {
   const expected = createHash('sha256').update(token).digest('hex');
   assert.equal(tokenFingerabdruck(token), expected);
 });
+
+test('kiConfigAusEnv: Deployment mit Punkt gültig, ".." / führender Punkt / Slash / 65 Zeichen ungültig (O-230)', () => {
+  assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_DEPLOYMENT: 'gpt-4.1-mini' }).gueltig, true);
+  for (const schlecht of ['.x', 'a..b', 'a/b', 'a'.repeat(65)]) {
+    assert.equal(kiConfigAusEnv({ ...GUELTIGE_ENV, KI_DEPLOYMENT: schlecht }).grund, 'ungueltig:KI_DEPLOYMENT', schlecht);
+  }
+});

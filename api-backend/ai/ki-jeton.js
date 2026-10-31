@@ -18,7 +18,7 @@
 // - Independent per-process RAM: two PM2 workers have separate token lifecycles.
 
 import { merkezFetch } from '../merkez-istemci/merkez-fetch.js';
-import { createAiConfig, validateEndpointUrl, EU_DATA_BOUNDARY_REGIONS } from './ki-config.js';
+import { createAiConfig, validateEndpointUrl, EU_DATA_BOUNDARY_REGIONS, RE_SAFE_SEGMENT } from './ki-config.js';
 import { pruefeKiBericht } from '../merkez-istemci/ki-bericht-schema.js';
 
 const MAX_TTL_SECONDS = 3600;
@@ -31,8 +31,6 @@ const INTERNAL_CENTRE_TIMEOUT_MS = 15_000;
 const TAG_MS = 86_400_000;
 const utcTagStart = (ms) => Math.floor(ms / TAG_MS) * TAG_MS;
 
-// Azure deployment names may contain dots (gpt-4.1-mini); a leading dot and ".." stay out of the URL path.
-const RE_SAFE_SEGMENT = /^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 
