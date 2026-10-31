@@ -117,6 +117,24 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 31.10.2026 · Physio-Pilot P1: Zusagen aus dem Gespräch (9d04c428..fa10c72d)
+- Niye (alle): im Gespräch dem P1 zugesagt (`Physio/PILOT-PLAN.md`).
+- K9 `module/rechnung-mail.js` + `api-backend/lib/rechnung-pdf.js` + `lib/gmail-senden.js`. Nerede: Rechnung-Ansicht, passwortgeschütztes PDF.
+  `/api/gmail/send` läuft jetzt auch über `gmail-senden`.
+- K7 `module/patient-dokumente.js`. Nerede: Patientenkarte, Reiter „Dokumente".
+- `module/fax-einstellungen.js` + `lib/fax-adresse.js`. Nerede: Einstellungen, Fax-to-Mail, nur Box.
+- K6 `module/formular-editor.js` + `module/formular-unterschreiben.js` + `routes/formular-signieren.js`.
+  Nerede: Einstellungen „Eigene Formulare", Unterschrift am Patienten und im Kiosk.
+- K8 `module/physio-befund.js` + `module/physio-befund-katalog.js`. Nerede: Akte; ROM/MFT/NRS nur in `messreihen`, kein zweiter Messwert-Ort.
+  Therapiebericht bekam dafür einen Physio-Zweig.
+- K10 `module/start-aufgaben.js`. Nerede: Übersicht.
+
+### 31.10.2026 · K3: ICD↔DG-Prüfung (`module/verordnung-regeln.js`, 4077644b)
+- Neu: `icdInBereichen(code, ranges)` — liegt ein ICD in `diagnosegruppen.icd_ranges` ("M40-M54", "M95", "F45.4")?
+  Niye: ICD↔DG-Abgleich in Physio. Nur Warnung (gkv-302): `icd_ranges` ist keine amtliche Quelle.
+  Nerede: `module/verordnung-pruefung.js` Abschnitt 3b, Code `ICD_DG_UNTYPISCH`; Regelsatz trägt dafür `icd_ranges`
+  (`verordnung-regelsatz-cache.js`). Erster JS-Bereichsabgleich, vorher nur SQL-RPC — ein zweiter wird nicht geschrieben.
+
 ### 30.10.2026 · K11: Physio-Katalogergänzung (`module/physio-katalog-migration.js`)
 - Neu: Konstante `PHYSIO_KATALOG_ERGAENZUNG` (8 Positionen: X0205 X0204 X1501 X1517 X1530 X1531 X1534 X1302),
   in `dashboard.js` per `.physiotherapy.push(...)` an `GKV_LEISTUNGSKATALOG` gehängt → `autoSeedGkvServices()` sät sie.
