@@ -30,7 +30,7 @@
 
 'use strict';
 
-import { statusBadge } from './abrechnungsstatus.js?v=20261003c';
+import { statusBadge, listenStatusBadge } from './abrechnungsstatus.js?v=20261030a';
 
 /**
  * @param {object} ctx  Alles, was die Tabelle von aussen braucht:
@@ -89,7 +89,7 @@ export function renderPatientenliste(ctx) {
     const m = meta[r.phone_normalized] || {};
     const bkCount = m.bookings?.length || 0;
     const bd = geburtsdatum(r);
-    const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
+    const sessionLabel = bkCount > 0 ? `Sitzung ${bkCount + 1}` : '';
     const standort = bizNameById.get(r.business_id) || '—';
     const insBadge = r.insurance_type
       ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${r.insurance_type === 'gkv'
@@ -101,7 +101,8 @@ export function renderPatientenliste(ctx) {
     // Ein blosser Strich sah aber aus, als wäre die Schaltfläche kaputt. Also
     // sagt die Zelle, woran es liegt.
     const st = statusJePatient.get(r.id);
-    const statusZelle = st?.verordnungId
+    const statusZelle = st?.quelle === 'physio' ? listenStatusBadge(st)
+      : st?.verordnungId
       ? `<button class="lead-status-btn" data-vord-id="${st.verordnungId}" title="Abrechnungsstatus ändern"
            style="background:none;border:0;padding:0;cursor:pointer;">${statusBadge(st.status, { kurz: true })}</button>`
       : `<span title="Der Status gehört zur Verordnung. Sobald dieser Patient eine Verordnung hat, steht er hier."
@@ -155,12 +156,16 @@ export function renderPatientenliste(ctx) {
  *
  * @param {object} lead
  * @param {string} q
- * @param {{nameMitGeburt:Function, geburtsdatum:Function}} helfer
+ * `anzeigeName` ist die Form, die Auswahlfelder nach dem Wählen zeigen (TT.MM.JJJJ).
+ * Fokus und Klick suchen genau damit weiter: ohne sie meldete das Feld „Keine Patienten“.
+ *
+ * @param {{nameMitGeburt:Function, geburtsdatum:Function, anzeigeName?:Function}} helfer
  */
 export function patientPasstZurSuche(lead, q, helfer) {
   const query = (q || '').trim().toLowerCase();
   if (!query) return true;
   if (helfer.nameMitGeburt(lead).toLowerCase().includes(query)) return true;
+  if ((helfer.anzeigeName?.(lead) || '').toLowerCase().includes(query)) return true;
   if ((lead.title || '').toLowerCase().includes(query)) return true;
 
   const bd = helfer.geburtsdatum(lead);

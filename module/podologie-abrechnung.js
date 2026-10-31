@@ -63,7 +63,7 @@
 import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v'; import { pauseLage, pauseMeldung } from './podo-unterbrechung.js?v=20261021y'; import { montiereVorgeschichte } from './podo-vorgeschichte-form.js?v=20261021y';
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261030a';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261010zc';
 import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261010zc';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';

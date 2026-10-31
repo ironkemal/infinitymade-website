@@ -1,7 +1,7 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/warteliste-nachruecker.js?v=20260903b';
-import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
+import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261031a';
 import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
 import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
 import { slotSpanHinweis } from './module/kalender-raster.js?v=20260928';

@@ -18,8 +18,8 @@ test('Ursprünglicher Patientenfallback läuft vor erstem await und Snapshot, sp
   const win={bkAllLeads:[{id:'patient-A',title:'Patient A'}],_physioFlow:null};
   const code=handler.slice(fallbackStart,snapshotStart)+snapshot+'\nawait wait();return serienKontext;';
   let release;const wait=new Promise(r=>release=r);
-  const run=new AsyncFunction('document','window','custId','cust','getOwnerId','displayNameWithBirth','displayName','wait',code);
-  const pending=run({getElementById:id=>fields[id]},win,'','',()=> 'owner-A',l=>l.title,l=>l.title,()=>wait);
+  const run=new AsyncFunction('document','window','custId','cust','getOwnerId','displayNameWithBirth','isoNameWithBirth','displayName','wait',code);
+  const pending=run({getElementById:id=>fields[id]},win,'','',()=> 'owner-A',l=>l.title,l=>l.title,l=>l.title,()=>wait);
   fields.bkCustomerSearch.value='Patient B';fields.bkCustomerId.value='patient-B';fields.bkSelectedRxId.value='rx-B';win.bkAllLeads=[{id:'patient-B',title:'Patient B'}];
   release();const result=await pending;
   assert.equal(result.patientId,'patient-A');assert.equal(result.prescriptionId,'rx-A');assert.equal(result.ownerId,'owner-A');

@@ -3,7 +3,7 @@
  * Suchbestand bewusst begrenzt (200 je VO-Zweig/Patientenpaket, 200 Rechnungen).
  * Keine Vollständigkeits- oder Entwarnungsaussage aus leeren Suchtreffern.
  */
-import { ladeHandlungsbedarfScope } from './startseite-handlungsbedarf-karte.js?v=20261028s242';
+import { ladeHandlungsbedarfScope } from './startseite-handlungsbedarf-karte.js?v=20261031a';
 const voLaden = async (...args) => (await import('./verordnung-uebersicht.js?v=20261028s249')).ladeAktiveVerordnungen(...args);
 const voAnzeigen = async ctx => { const m = await import('./verordnung-detail.js?v=20261028s249'); if (ctx.istAktuell()) return m.zeigeVerordnungDetail(ctx); };
 const rechnungAnzeigen = async (id, ctx) => { const m = await import('./rechnung-ansicht.js?v=20261028s249'); if (ctx.istAktuell()) return m.openInvView(id, ctx); };

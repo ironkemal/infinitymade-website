@@ -25,11 +25,11 @@ import { on } from './signal.js?v=20260813';
 import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261026s218';
 import { verdrahteProfil } from './kopf-profil.js?v=20261026s212';
 import { verdrahteNeu } from './kopf-neu.js?v=20261026s212';
-import { verdrahteStartseite } from './startseite-neu.js?v=20261028s242';
-import { einstellungenNavAufbauen, formularNavAufbauen } from './einstellungen-nav.js?v=20261029s256';
+import { verdrahteStartseite } from './startseite-neu.js?v=20261031a';
+import { einstellungenNavAufbauen, formularNavAufbauen } from './einstellungen-nav.js?v=20261029s258';
 import { verdrahteSchublade } from './schublade-neu.js?v=20261027s223';
 import { emojisAus } from './ohne-emoji.js?v=20261026s217';
-import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261029s252';
+import { verdrahteSuche, sucheSichtbarkeit } from './kopf-suche.js?v=20261031a';
 
 /** Reine Hilfe (testbar): erlaubte Panel-ID oder null. */
 export function panelId(wert) {

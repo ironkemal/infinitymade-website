@@ -47,7 +47,7 @@ import { abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
-import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
+import { TOPF, ausTopf, patientAnzeigename, statusAusTopf } from './verordnung-topf.js?v=20260930c';
 // O-01, 11.09.2026: import statt eigenem Literal — top-level await in
 // supabase-config.js haelt diese Datei an, bis /api/config zurueck ist.
 import { API_BASE } from '../supabase-config.js';
@@ -357,9 +357,34 @@ export function statusBadge(key, { kurz = false } = {}) {
     return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
   }
   const s = statusInfo(key);
-  const text = kurz ? s.kurz : s.label;
+  return kleinesBadge(s, kurz ? s.kurz : s.label);
+}
+
+function kleinesBadge(s, text) {
   return `<span title="${escapeAttr(s.hilfe)}" style="display:inline-block;font-size:11px;font-weight:600;`
        + `padding:2px 8px;border-radius:10px;background:${s.bg};color:${s.farbe};">${escapeHtml(text)}</span>`;
+}
+
+/**
+ * Status der Patientenzeile als Badge. Physio zeigt, solange die Verordnung nicht
+ * im Abrechnungsweg ist, die eigene Bearbeitungsachse („Bestätigt", „Entwurf").
+ *
+ * @param {{status?:string, quelle?:string, bearbeitung?:string}} eintrag  aus ladeStatusJePatient
+ */
+export function listenStatusBadge(eintrag) {
+  if (eintrag?.quelle !== 'physio') return statusBadge(eintrag?.status, { kurz: true });
+  const s = (eintrag.status === 'aktiv' && verordnungStatusInfo('physio', eintrag.bearbeitung)) || statusInfo(eintrag.status);
+  return kleinesBadge(s, s.kurz);
+}
+
+/**
+ * Listenstatus einer Physio-Verordnung im gemeinsamen Wortschatz der Statusfilter.
+ * `abrechnung_status` (Weg zur Kasse) schlägt `status` (Behandlung).
+ */
+export function physioListenStatus(row) {
+  const abrechnung = statusAusTopf(row?.abrechnung_status);
+  if (abrechnung !== 'aktiv') return abrechnung;
+  return { completed: 'abrechenbar', billed: 'abgerechnet', cancelled: 'storniert', rejected: 'storniert' }[row?.status] || 'aktiv';
 }
 
 /**
@@ -396,9 +421,14 @@ export function massgebendeVerordnung(verordnungen) {
  * Eine Abfrage für die ganze Liste, nicht eine je Zeile: bei 400 Patienten
  * wären das 400 Runden und die Liste käme sichtbar zeilenweise an.
  *
+ * Physio/Ergo/Logo stehen im selben Topf: ohne sie stand bei jedem dieser
+ * Patienten „keine Verordnung". Ihr Status ist nur Anzeige und Filter
+ * (`quelle: 'physio'`): der Statusdialog und sein Endpunkt sind podologisch.
+ * Wer beides hat, behält die podologische Zeile.
+ *
  * @param supabase  aktiver Supabase-Client
  * @param ownerId   Mandant (getOwnerId())
- * @returns {Promise<Map<string, {status:string, anzahl:number, offen:number}>>} lead_id → Zusammenfassung
+ * @returns {Promise<Map<string, {status:string, anzahl:number, offen:number, quelle?:string}>>} lead_id → Zusammenfassung
  */
 export async function ladeStatusJePatient(supabase, ownerId) {
   const karte = new Map();
@@ -406,9 +436,8 @@ export async function ladeStatusJePatient(supabase, ownerId) {
 
   const { data, error } = await supabase
     .from(TOPF)
-    .select('id, patient_id, abrechnung_status')
+    .select('id, patient_id, status, therapie_bereich, abrechnung_status')
     .eq('owner_id', ownerId)
-    .eq('therapie_bereich', 'podo')
     .not('patient_id', 'is', null);
 
   if (error) {
@@ -417,7 +446,13 @@ export async function ladeStatusJePatient(supabase, ownerId) {
   }
 
   const gruppen = new Map();
+  const physio = new Map();
   for (const roh of (data || [])) {
+    if (roh.therapie_bereich !== 'podo') {
+      if (!physio.has(roh.patient_id)) physio.set(roh.patient_id, []);
+      physio.get(roh.patient_id).push({ id: roh.id, status: physioListenStatus(roh), bearbeitung: roh.status });
+      continue;
+    }
     const row = ausTopf(roh);
     if (!gruppen.has(row.lead_id)) gruppen.set(row.lead_id, []);
     gruppen.get(row.lead_id).push(row);
@@ -430,6 +465,18 @@ export async function ladeStatusJePatient(supabase, ownerId) {
       verordnungId: massgebend?.id ?? null,
       anzahl: rows.length,
       // „offen" = macht noch Arbeit. Archiviert und storniert zählen nicht mit.
+      offen:  rows.filter(r => !['archiviert', 'storniert'].includes(r.status)).length,
+    });
+  }
+  for (const [leadId, rows] of physio) {
+    if (karte.has(leadId)) continue;
+    const massgebend = massgebendeVerordnung(rows);
+    karte.set(leadId, {
+      status: massgebend?.status ?? null,
+      verordnungId: massgebend?.id ?? null,
+      bearbeitung: massgebend?.bearbeitung ?? null,
+      quelle: 'physio',
+      anzahl: rows.length,
       offen:  rows.filter(r => !['archiviert', 'storniert'].includes(r.status)).length,
     });
   }

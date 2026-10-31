@@ -117,6 +117,13 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.10.2026 · Physio-Dashboard-Fixes (noch nicht committet)
+- `module/api-fehler.js`: `fehlerTextAusAntwort(rohtext, ersatz)`, `apiFehlerText(res, ersatz)`. Niye: rohes `{"error":…}` lief als Fehlertext in die UI. Nerede: zuerst `resolveArzt`, `loadMahnwesen`, `loadAusfallrechnungen`, `loadStatistik` in `dashboard.js`.
+- `isoNameWithBirth(lead)` in `dashboard.js`. Niye: `displayNameWithBirth` zeigt jetzt TT.MM.JJJJ, Alt-`customer_name` und `parseNameMitGeburt` bleiben ISO. Nerede: `patientMatchesQuery`, Namensabgleich der Terminmaske. Dazu neuer Helfer `anzeigeName` an `patientPasstZurSuche`: Auswahlfelder suchen mit ihrem eigenen Label weiter.
+- `physioListenStatus(row)`, `listenStatusBadge(eintrag)` in `module/abrechnungsstatus.js`. Niye: Physio-Patienten standen in der Liste auf „keine Verordnung“. Nerede: `statusZelle` in `module/patientenliste.js`. Nur Anzeige und Filter; Statusdialog und `PATCH` bleiben Podo.
+- `oderPraedikat(ausdruck, vergleiche)` in `tools/browser-probe/physio-demo/filter.mjs`. Niye: `.or()`-Lesefilter der lokalen Testpraxis, Akte und Rechnung zeigten fremde Termine. Nur Demo, per `toString()` in die Fixture eingebettet. Die Karte scannt `tools/` nicht.
+- Option `ohnePodo` an `handlungsbedarfHtml`, dazu `neuKontext`-Feld `ohnePodo`. Niye: Physio, Ergo und Logo sehen keine Podo-Pause-Kacheln, außer bei echtem Treffer.
+
 ### 26.10.2026 · Unterbrechungsgrenze nach Fachbereich (`module/frequenz-pruefung.js`, 05188181)
 - Neu: `unterbrechungsGrenze(istPodo, soll)` + Konstante `UNTERBRECHUNG_TAGE_HEILM_RL = 14`. Niye: Physio/Ergo/Logo
   liefen mit unbelegten 84 Tagen; HeilM-RL §16 Abs. 4 S. 1 = 14 Kalendertage. Podologie bleibt bei 84 (Vertrag §7 Abs. 7).

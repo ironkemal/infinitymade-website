@@ -7,7 +7,10 @@ export const DEMO_IDS = Object.freeze({
   business: '10000000-0000-4000-8000-000000000003',
 });
 export const PREISQUELLE = `Lokaler Physio-Katalog, Preisstand ${PREISSTAND}; keine aktuelle Tarif-/Abrechnungsfreigabe`;
-const id = (gruppe, n) => `${gruppe}000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+const id = (gruppe, n) => `${gruppe}0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+// Erfunden, aber prüfziffernrichtig: sonst endet jede gespeicherte Vorführ-Verordnung als Entwurf.
+const VERSICHERTENNUMMERN = ['X100000001', 'X100000013', 'X100000025', 'X100000037', 'X100000049', 'X100000052', 'X100000064', 'X100000076', 'X100000088', 'X100000090'];
+const ARZT = { lanr: '999999901', bsnr: '999999900' };
 
 /** Tabellen-Overrides für redesign-fixture.js; Beziehungen bleiben JSON-serialisierbar. */
 export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
@@ -18,6 +21,12 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
   const datum = (offset) => {
     const d = new Date(`${tag}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + offset);
     return d.toISOString().slice(0, 10);
+  };
+  // 1–2× wöchentlich heißt: nicht an Folgetagen und nicht am Wochenende.
+  const werktag = (offset, richtung) => {
+    let o = offset;
+    while ([0, 6].includes(new Date(`${datum(o)}T12:00:00Z`).getUTCDay())) o += richtung;
+    return o;
   };
   const zeit = (d, stunde, minute = 0) => {
     const mittag = new Date(`${d}T12:00:00Z`);
@@ -32,7 +41,9 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
     ik_nummer: '999999999', language: 'de', betriebsart: 'test', created_at: `${datum(-90)}T09:00:00Z`,
   };
   const profiles = [profile, { ...profile, id: employee, owner_id: owner, role: 'employee', business_id: business,
-    full_name: 'Kim Test', first_name: 'Kim', last_name: 'Test', email: 'kim.test@example.invalid', business_name: null }];
+    full_name: 'Kim Test', first_name: 'Kim', last_name: 'Test', owner_first_name: 'Kim', owner_last_name: 'Test',
+    // Mitarbeiterkonten führen ihren Anzeigenamen in `business_name` (Team, Kalenderspalte, Terminform).
+    email: 'kim.test@example.invalid', business_name: 'Kim Test' }];
   const namen = [['Anna', 'Beispiel'], ['Ben', 'Muster'], ['Clara', 'Test'], ['David', 'Fiktiv'], ['Ella', 'Probe'],
     ['Felix', 'Demopatient'], ['Greta', 'Musterfall'], ['Hannes', 'Testperson'], ['Ida', 'Beispielperson'], ['Jonas', 'Vorführung']];
   const leads = namen.map(([first_name, last_name], i) => ({
@@ -40,8 +51,8 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
     name: `${first_name} ${last_name}`, title: `${first_name} ${last_name}`, email: `physio.patient${i + 1}@example.invalid`,
     phone: '+49 000 00000' + i, geburtsdatum: `${1975 + i}-04-12`, birth_date: `${1975 + i}-04-12`,
     patientennummer: `PHY-${1001 + i}`, insurance_type: i === 9 ? 'privat' : 'gkv', krankenkasse: i === 9 ? 'privat' : 'Kasse Synthetisch',
-    krankenkasse_ik: '999999999', kostentraeger_ik: '999999999', versichertennummer: `X00000000${i}`,
-    status: 'aktiv', source: 'manuell', is_active: true, street: `Beispielweg ${i + 2}`, postal_code: '00000', city: 'Demostadt',
+    krankenkasse_ik: '999999999', kostentraeger_ik: '999999999', versichertennummer: VERSICHERTENNUMMERN[i],
+    status: 'aktiv', source: 'manuell', is_active: true, street: `Beispielweg ${i + 2}`, postal_code: '00000', plz: '00000', city: 'Demostadt',
     notes: 'Erfundener Vorführdatensatz. Keine echte Patientenakte.', tags: [], created_at: `${datum(-30)}T09:00:00Z`,
   }));
   const auswahl = [['X0501', 20, null], ['X1201', 20, 'MT'], ['X0507', 60, 'KGG'], ['X0205', 30, 'MLD'], ['X0106', 20, null]];
@@ -60,27 +71,34 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
   const prescriptions = [0, 1, 2, 3, 4, 5].map((i) => {
     const patient = leads[i], service = services[i % services.length];
     const done = [2, 1, 0, 3, 6, 0][i], status = done === 6 ? 'completed' : done ? 'in_therapy' : 'confirmed';
+    const therapeut = i % 2 ? employee : owner;
+    const tage = Array.from({ length: 6 }, (_, n) => (n < done ? werktag(-3 - (done - 1 - n) * 4, -1) : werktag(n * 3, 1)));
+    // Bewusst ein offener Prüffall: Felix zeigt, dass fehlende Arztangaben auffallen.
+    const arzt = i === 5 ? { doctor_lanr: null, doctor_bsnr: null, unterschrift_vorhanden: false }
+      : { doctor_lanr: ARZT.lanr, doctor_bsnr: ARZT.bsnr, unterschrift_vorhanden: true };
     const rx = {
       id: id('5', i + 1), owner_id: owner, user_id: owner, patient_id: patient.id, lead_id: patient.id, business_id: null,
       patient_name: patient.name, therapie_bereich: 'physio', status, abrechnung_status: status === 'completed' ? 'bereit' : null,
-      rezeptart: 'kassen', rezept_typ: 'standard', is_blanko: false, is_lhb_bvb: false, ausstellungsdatum: datum(-14),
-      behandlungsbeginn: done ? datum(-10) : null, heilmittel: service.code === 'X0501' ? 'KG' : service.code === 'X1201' ? 'MT' : service.title,
+      rezeptart: 'kassen', rezept_typ: 'standard', is_blanko: false, is_lhb_bvb: false, ausstellungsdatum: datum(done ? -28 : -7),
+      behandlungsbeginn: done ? datum(tage[0]) : null, heilmittel: service.code === 'X0501' ? 'KG' : service.code === 'X1201' ? 'MT' : service.title,
       heilmittel_position: service.code, heilmittel_items: [], anzahl_einheiten: 6, frequenz: '1-2x wöchentlich',
       diagnosegruppe: 'EX', icd10: 'M25.56', leitsymptomatik: 'a', hausbesuch: false, is_dringend: false,
-      zuzahlung_befreit: false, krankenkasse: patient.krankenkasse, kostentraeger_ik: patient.kostentraeger_ik,
-      doctor_name: 'Dr. Demo Beispiel', verordnungsnummer: 100 + i, created_at: `${datum(-14)}T09:00:00Z`,
+      zuzahlung_befreit: false, krankenkasse: patient.krankenkasse, krankenkasse_ik: patient.krankenkasse_ik, kostentraeger_ik: patient.kostentraeger_ik,
+      versichertennummer: patient.versichertennummer, ...arzt,
+      doctor_name: 'Dr. Demo Beispiel', verordnungsnummer: 100 + i, created_at: `${datum(done ? -28 : -7)}T09:00:00Z`,
       leads: { ...patient }, podologie_behandlungen: [], prescription_sessions: [],
     };
     for (let n = 0; n < 6; n++) {
       const vergangen = n < done, geplant = n < Math.max(done, 3);
-      const day = datum(vergangen ? -10 + n : n * 3), start = zeit(day, 8 + i);
+      const day = datum(tage[n]), start = zeit(day, 8 + i);
       const booking = geplant ? {
-        id: id('4', i * 10 + n + 1), owner_id: owner, user_id: owner, business_id: null,
-        employee_id: i % 2 ? employee : owner, staff_id: i % 2 ? employee : owner,
+        // `user_id` ist die Kalenderspalte (Behandler), `owner_id` die Praxis.
+        id: id('4', i * 10 + n + 1), owner_id: owner, user_id: therapeut, business_id: null,
+        employee_id: therapeut, staff_id: therapeut,
         lead_id: patient.id, service_id: service.id, start_time: start,
         end_time: new Date(Date.parse(start) + service.duration_minutes * 60000).toISOString(),
         status: vergangen ? 'completed' : 'confirmed', customer_name: patient.name, customer_phone: patient.phone,
-        customer_email: patient.email, services: { ...service }, leads: { ...patient }, verordnung_id: null,
+        customer_email: patient.email, services: { ...service }, leads: { ...patient }, verordnung_id: null, no_show: false,
         // Patiententermin ist immer eine Einzelbuchung: is_group:true wäre ein Gruppen-Elternslot ohne Patient (Kalender zeigt dann „Freier Gruppenslot 0/3“).
         hausbesuch: false, is_group: false, group_capacity: 1, group_parent_id: null,
         source: 'manual', notes: vergangen ? 'Synthetische Behandlungsdokumentation: Verlauf besprochen, Übungen angeleitet.' : null,
@@ -89,7 +107,7 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
       const s = { id: id('8', i * 10 + n + 1), prescription_id: rx.id, booking_id: booking?.id || null,
         session_number: n + 1, status: vergangen ? 'done' : 'planned', heilmittel_index: 0,
         done_at: vergangen ? booking.end_time : null, notes: vergangen ? booking.notes : null,
-        created_at: `${datum(-14)}T09:00:00Z`, bookings: booking ? { ...booking } : null };
+        created_at: rx.created_at, bookings: booking ? { ...booking } : null };
       prescription_sessions.push(s); rx.prescription_sessions.push(structuredClone(s));
     }
     return rx;
@@ -111,7 +129,7 @@ export function erstellePhysioDaten({ tag = '2026-10-30' } = {}) {
       day_of_week, start_time: '08:00:00', end_time: '17:00:00', is_active: day_of_week >= 1 && day_of_week <= 5, is_open: day_of_week >= 1 && day_of_week <= 5,
     }))),
     employee_business_assignments: [{ id: id('9', 1), employee_id: employee, business_id: business, owner_id: owner, is_active: true }],
-    aerzte: [{ id: id('9', 2), owner_id: owner, name: 'Dr. Demo Beispiel', arzt_name: 'Dr. Demo Beispiel', lanr: '999999900', bsnr: '999999900' }],
+    aerzte: [{ id: id('9', 2), owner_id: owner, name: 'Dr. Demo Beispiel', arzt_name: 'Dr. Demo Beispiel', lanr: ARZT.lanr, bsnr: ARZT.bsnr }],
     warteliste: [],
   };
 }

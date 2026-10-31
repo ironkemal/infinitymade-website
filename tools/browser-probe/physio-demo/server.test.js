@@ -234,3 +234,29 @@ test('browser adapter persists successful engine response, rejects intervening e
   const before=JSON.stringify([...store]);window.__lokaleTestpraxis.wiederherstellungsFehler=true;
   mode='success';assert.equal((await call()).status,503);assert.equal(JSON.stringify([...store]),before);assert.equal(tables.leads.length,2);
 });
+
+test('or-Lesefilter trennt Patienten; Schreiben über or bleibt gesperrt',async()=>{
+  const bookings=[{id:'a',lead_id:'p1',customer_phone:'1'},{id:'b',lead_id:'p2',customer_phone:'1'},{id:'c',lead_id:null,customer_phone:'1'}];
+  const {api}=fixture({tabellenOverrides:{profiles:[{id:owner,sector:'physiotherapy'}],leads:[],services:[],bookings}});
+  const {data}=await api.client.from('bookings').select('id').or('lead_id.eq.p1,and(lead_id.is.null,customer_phone.eq."1")');
+  assert.deepEqual(data.map(b=>b.id).sort(),['a','c']);
+  const schreiben=await api.client.from('bookings').update({notes:'x'}).or('lead_id.eq.p1');
+  assert.equal(schreiben.error.code,'LOCAL_UNSUPPORTED');
+});
+
+test('Termine und Sitzungen tragen ihre Verordnung wie der echte Verbund',async()=>{
+  const tabellenOverrides=erstellePhysioDaten({tag:'2026-10-30'});
+  const {api}=fixture({tabellenOverrides});
+  const {data:[b]}=await api.client.from('bookings').select('*').eq('id',tabellenOverrides.prescription_sessions[0].booking_id);
+  assert.equal(b.prescription_sessions[0].prescriptions.anzahl_einheiten,6);
+  assert.equal(Object.hasOwn(b.prescription_sessions[0].prescriptions,'prescription_sessions'),false);
+  const {data:s}=await api.client.from('prescription_sessions').select('*').eq('id',tabellenOverrides.prescription_sessions[0].id).maybeSingle();
+  assert.equal(s.prescriptions.anzahl_einheiten,6);
+});
+
+test('Einwilligung und Rechnung sind lokal speicherbar, Rechnung bekommt eine Nummer',async()=>{
+  const {api}=fixture({tabellenOverrides:{profiles:[{id:owner,sector:'physiotherapy'}],leads:[],services:[],bookings:[],invoices:[]}});
+  assert.equal((await api.client.from('patient_consents').insert({owner_id:owner,patient_id:'p1',consent_type:'datenschutz'})).error,null);
+  const {data,error}=await api.client.from('invoices').insert({owner_id:owner}).select('id, invoice_number').maybeSingle();
+  assert.equal(error,null);assert.equal(data.invoice_number,'DEMO-0001');
+});

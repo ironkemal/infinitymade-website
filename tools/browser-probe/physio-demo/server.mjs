@@ -4,13 +4,16 @@ import {readFile, realpath} from 'node:fs/promises';
 import {dirname, resolve, extname, sep} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {API_ANTWORTEN} from '../../redesign-api-antworten.mjs';
+import {oderPraedikat} from './filter.mjs';
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-export const SPEICHER_KEY = 'praxura-physio-demo-v1';
+// v2 (30.10.2026): neue Stammdaten; ein v1-Stand bleibt unangetastet im Browser liegen.
+export const SPEICHER_KEY = 'praxura-physio-demo-v2';
 export const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; form-action 'none'; base-uri 'self'";
 const MIME = {'.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.ico':'image/x-icon', '.woff2':'font/woff2', '.woff':'font/woff', '.ttf':'font/ttf', '.wasm':'application/wasm'};
 const ASSET_DIRS = new Set(['module', 'vendor', 'design', 'assets', 'fonts', 'images', 'img']);
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
+const MAX_DATEI_BYTES = 1024 * 1024;
 export function istEnginePfad(pfad,methode) {
   return (methode==='POST' && ['/api/rezept/confirm','/api/booking/batch-create','/api/arzt/resolve'].includes(pfad)) ||
     (methode==='PATCH' && /^\/api\/rezept\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pfad));
@@ -36,15 +39,17 @@ export function baueFixture({original, tabellenOverrides}) {
     `const tabellen = SZENARIO === 'leer' ? leer : SZENARIO === 'gross' ? grossePraxis() : voll;
 Object.assign(tabellen, ${JSON.stringify(tabellenOverrides)});
 const DEMO_KEY=${JSON.stringify(SPEICHER_KEY)};
+const demoOder=${oderPraedikat.toString()};
 let demoRestoreFehler=false;
 try { const raw=localStorage.getItem(DEMO_KEY); if(raw!==null){const saved=JSON.parse(raw);if(saved?.version!==1||!saved.tables||typeof saved.tables!=='object'||Array.isArray(saved.tables)||Object.keys(saved.tables).some(k=>['__proto__','constructor','prototype'].includes(k))||!Object.values(saved.tables).every(Array.isArray))throw new Error('DEMO_RESTORE_INVALID');Object.assign(tabellen,saved.tables);} } catch {demoRestoreFehler=true;}
 const demoSave=()=>{if(demoRestoreFehler)throw new Error('DEMO_RESTORE_FAILED');localStorage.setItem(DEMO_KEY,JSON.stringify({version:1,tables:tabellen}));if(window.__lokaleTestpraxis)window.__lokaleTestpraxis.speicherFehler=false;window.dispatchEvent?.(new Event('physio-demo:changed'));};
+const demoDatei=(bucket,pfad)=>(tabellen.demo_storage||[]).find(d=>d.bucket===bucket&&d.path===pfad);
 window.__lokaleTestpraxis={tabellen,speichern:demoSave,get wiederherstellungsFehler(){return demoRestoreFehler;}};
 try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
   fixture = ersetzeGenau(fixture, 'upsert(d) { this.schreib = [\'upsert\', d]; return this; }', 'upsert(d,opts={}) { this.conflict=opts.onConflict; this.schreib = [\'upsert\', d]; return this; }');
   fixture = ersetzeGenau(fixture,
     'or() { return this; } filter() { return this; } match() { return this; } contains() { return this; }',
-    String.raw`or(value) { this.unsupported=true; const m=/^business_id\.eq\.([0-9a-f-]{36}),business_id\.is\.null$/i.exec(value); if(m)this.filter.push(r=>r.business_id===m[1]||r.business_id==null); return this; } filter() { this.unsupported=true; return this; } match(obj) { for(const [k,v] of Object.entries(obj)) this.eq(k,v); return this; } contains() { this.unsupported=true; return this; }`);
+    String.raw`or(value,opts={}) { this.unsupported=true; if(!opts.referencedTable&&!opts.foreignTable){const passt=demoOder(value,vergleiche); if(passt)this.filter.push(passt);} return this; } filter() { this.unsupported=true; return this; } match(obj) { for(const [k,v] of Object.entries(obj)) this.eq(k,v); return this; } contains() { this.unsupported=true; return this; }`);
   fixture = ersetzeGenau(fixture,
     'containedBy() { return this; } overlaps() { return this; } textSearch() { return this; }',
     'containedBy() { this.unsupported=true; return this; } overlaps() { this.unsupported=true; return this; } textSearch() { this.unsupported=true; return this; }');
@@ -55,7 +60,7 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
   fixture = fixture.slice(0,start) + `    if (this.schreib) {
       log.writes.push({tabelle:this.tabelle,art:this.schreib[0]});
       const [art,payload]=this.schreib;
-      const allowed=new Set(['leads','services','employee_services','bookings','prescriptions','prescription_sessions','patient_notes','anamnese','patient_anamnese_physio','working_hours','working_breaks','special_days','document_vorlagen','breaks','text_templates','aerzte','warteliste','booking_services','booking_leistungen','user_preferences','profiles','module_visibility']);
+      const allowed=new Set(['leads','services','employee_services','bookings','prescriptions','prescription_sessions','patient_notes','anamnese','patient_anamnese_physio','working_hours','working_breaks','special_days','document_vorlagen','breaks','text_templates','aerzte','warteliste','booking_services','booking_leistungen','user_preferences','profiles','module_visibility','patient_consents','invoices','time_offs','messreihen']);
       const fail={data:null,error:{code:'LOCAL_UNSUPPORTED',message:'Lokale Testversion: dieser Schreibweg ist nicht unterstützt.'}};
       if(!allowed.has(this.tabelle)||this.unsupported||(['update','delete'].includes(art)&&!this.filter.length)) return fail;
       if(art!=='delete' && (payload==null || (Array.isArray(payload)?payload:[payload]).some(r=>!r||typeof r!=='object'||Array.isArray(r)))) return fail;
@@ -69,6 +74,7 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
             const row=prior?Object.assign(prior,clone(input),{updated_at:new Date().toISOString()}):{id:crypto.randomUUID(),created_at:new Date().toISOString(),...clone(input)};
             if(this.tabelle==='leads'){if(!prior&&!Object.hasOwn(row,'business_id'))row.business_id=null;row.name=[row.first_name,row.last_name].filter(Boolean).join(' ')||row.title||row.name;row.owner_id||=OWNER;row.user_id||=OWNER;row.is_active??=true;row.status||='aktiv';}
             if(this.tabelle==='prescription_sessions'&&!prior&&!Object.hasOwn(row,'booking_id'))row.booking_id=null;
+            if(this.tabelle==='invoices'&&!prior&&!row.invoice_number)row.invoice_number='DEMO-'+String(rows.length+1).padStart(4,'0');
             if(this.tabelle==='anamnese'&&!prior){
               if(!row.owner_id||!row.patient_id||!row.fachbereich)throw new Error('Anamnese scope missing');
               const history=rows.filter(r=>r.owner_id===row.owner_id&&r.patient_id===row.patient_id&&(r.fachbereich||'physio')===row.fachbereich);
@@ -100,12 +106,33 @@ try { demoSave(); } catch { window.__lokaleTestpraxis.speicherFehler=true; }`);
     "let rows = clone(tabellen[this.tabelle] || []).filter((r) => this.filter.every((f) => f(r)));",
     `let rows = clone(tabellen[this.tabelle] || []).map(r=>{
       if(this.tabelle==='services') r.employee_services=clone((tabellen.employee_services||[]).filter(e=>e.service_id===r.id));
-      if(this.tabelle==='bookings'){r.services=clone((tabellen.services||[]).find(s=>s.id===r.service_id)||null);r.leads=clone((tabellen.leads||[]).find(p=>p.id===r.lead_id)||null);}
-      if(this.tabelle==='prescription_sessions')r.bookings=clone((tabellen.bookings||[]).find(b=>b.id===r.booking_id)||null);
+      const verordnungVon=(id)=>{const {leads,prescription_sessions,...rx}=(tabellen.prescriptions||[]).find(p=>p.id===id)||{};return rx.id?clone(rx):null;};
+      if(this.tabelle==='bookings'){r.services=clone((tabellen.services||[]).find(s=>s.id===r.service_id)||null);r.leads=clone((tabellen.leads||[]).find(p=>p.id===r.lead_id)||null);r.prescription_sessions=(tabellen.prescription_sessions||[]).filter(s=>s.booking_id===r.id).map(({bookings,...s})=>({...clone(s),prescriptions:verordnungVon(s.prescription_id)}));}
+      if(this.tabelle==='prescription_sessions'){r.bookings=clone((tabellen.bookings||[]).find(b=>b.id===r.booking_id)||null);r.prescriptions=verordnungVon(r.prescription_id);}
       if(this.tabelle==='prescriptions'){r.leads=clone((tabellen.leads||[]).find(p=>p.id===r.patient_id)||null);r.prescription_sessions=clone((tabellen.prescription_sessions||[]).filter(s=>s.prescription_id===r.id).map(s=>({...s,bookings:clone((tabellen.bookings||[]).find(b=>b.id===s.booking_id)||null)})));}
       return r;
     }).filter((r) => this.filter.every((f) => f(r)));`);
   fixture = ersetzeGenau(fixture, '      return { data: null, error: null };\n    },\n    channel:', "      return { data: null, error: {code:'LOCAL_UNSUPPORTED',message:'Lokale Testversion: dieser RPC ist nicht verfügbar.'} };\n    },\n    channel:");
+  // Unterschriften und Fotos bleiben als data:-URL im eigenen Browserspeicher.
+  fixture = ersetzeGenau(fixture, "createSignedUrl: async () => { log.storage.push(b); return { data: null, error: { message: 'Fixture' } }; },",
+    "createSignedUrl: async (pfad) => { const d=demoDatei(b,pfad); return d?{data:{signedUrl:d.data_url},error:null}:{data:null,error:{message:'Datei liegt nicht in dieser Testpraxis.'}}; },");
+  fixture = ersetzeGenau(fixture, "download: async () => { log.storage.push(b); return { data: null, error: { message: 'Fixture' } }; },",
+    "download: async (pfad) => { const d=demoDatei(b,pfad); if(!d)return {data:null,error:{message:'Datei liegt nicht in dieser Testpraxis.'}}; const [kopf,inhalt]=d.data_url.split(','); return {data:new Blob([Uint8Array.from(atob(inhalt),c=>c.charCodeAt(0))],{type:kopf.slice(5).split(';')[0]}),error:null}; },");
+  fixture = ersetzeGenau(fixture, "upload: async () => { log.storage.push(b); return { data: null, error: { message: 'Redesign-Fixture: nur lesend' } }; },",
+    `upload: async (pfad,datei,opts={}) => {
+        if((datei?.size||0)>${MAX_DATEI_BYTES})return {data:null,error:{message:'Datei zu groß für die lokale Testpraxis (höchstens 1 MB).'}};
+        if(demoDatei(b,pfad)&&!opts.upsert)return {data:null,error:{message:'Datei existiert bereits.'}};
+        const data_url=await new Promise((fertig,fehler)=>{const leser=new FileReader();leser.onload=()=>fertig(leser.result);leser.onerror=()=>fehler(leser.error);leser.readAsDataURL(datei);});
+        const vorher=tabellen.demo_storage;
+        tabellen.demo_storage=[...(vorher||[]).filter(d=>d.bucket!==b||d.path!==pfad),{bucket:b,path:pfad,data_url,created_at:new Date().toISOString()}];
+        try{demoSave();return {data:{path:pfad},error:null};}catch{tabellen.demo_storage=vorher;return {data:null,error:{message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}};}
+      },`);
+  fixture = ersetzeGenau(fixture, "remove: async () => { log.storage.push(b); return { data: null, error: { message: 'Redesign-Fixture: nur lesend' } }; },",
+    `remove: async (pfade) => {
+        const vorher=tabellen.demo_storage;
+        tabellen.demo_storage=(vorher||[]).filter(d=>d.bucket!==b||!pfade.includes(d.path));
+        try{demoSave();return {data:[],error:null};}catch{tabellen.demo_storage=vorher;return {data:null,error:{message:'Lokaler Browserspeicher konnte nicht gespeichert werden.'}};}
+      },`);
   fixture = ersetzeGenau(fixture, 'rpc: async (name) => {', `rpc: async (name,args={}) => {
       if(name==='search_heilmittel'){
         log.rpc.push(name);
@@ -148,7 +175,23 @@ window.fetch=async(input,init={})=>{
   } catch(error) {if(error?.name==='AbortError')throw error;return antwort(503,{error:'Lokale Demoaktion konnte nicht gespeichert werden.'});}
   finally {demoEngineBusy=false;}
 };
-window.addEventListener('DOMContentLoaded',()=>{const n=document.createElement('div');n.id='physioDemoHinweis';n.textContent=(window.__lokaleTestpraxis?.wiederherstellungsFehler?'ACHTUNG: Gespeicherter Stand nicht lesbar · Startdaten nur Beispiele · Speichern gesperrt · Zähler unbekannt. ':'')+'PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Rezept-/Sitzungszähler · Beträge unbekannt · Versand/KI/Zahlungen gesperrt';n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';document.body.append(n);document.getElementById('mainArea')?.style.setProperty('padding-bottom','60px');});`;
+// Eine fest unten liegende Leiste verdeckte Toasts, „Menü einklappen" und den Fuß der Terminleiste. Darum als Hinweis in der Kopfleiste.
+window.addEventListener('DOMContentLoaded',()=>{
+  const fehler=window.__lokaleTestpraxis?.wiederherstellungsFehler;
+  const details='PHYSIO-TESTPRAXIS · Erfundene Daten · Nur Browserlokal · Originalhandler mit synthetischem Speicher, keine echte DB · Dynamische Rezept-/Sitzungszähler · Beträge unbekannt · Versand/KI/Zahlungen gesperrt';
+  const n=document.createElement('div');n.id='physioDemoHinweis';n.title=details;n.setAttribute('role','note');
+  const kopf=document.querySelector('.topbar-left');
+  if(fehler||!kopf){
+    n.textContent=(fehler?'ACHTUNG: Gespeicherter Stand nicht lesbar · Startdaten nur Beispiele · Speichern gesperrt · Zähler unbekannt. ':'')+details;
+    n.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:#fff4cc;color:#241b00;padding:7px 12px;font:12px/1.4 system-ui;text-align:center;pointer-events:none';
+    document.body.append(n);return;
+  }
+  n.innerHTML='Test<span class="physio-demo-mittel">praxis</span><span class="physio-demo-lang"> · erfundene Daten</span>';
+  const stil=document.createElement('style');
+  stil.textContent='#physioDemoHinweis{flex:0 .01 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-left:12px;padding:3px 10px;border-radius:999px;background:#fff4cc;color:#5c4400;font-size:12px;font-weight:600;line-height:1.4;white-space:nowrap;cursor:help}@media (max-width:1599px){.physio-demo-lang{display:none}}@media (max-width:480px){#physioDemoHinweis{margin-left:0;padding-inline:8px}.physio-demo-mittel{display:none}}';
+  document.head.append(stil);
+  kopf.append(n);
+});`;
 }
 
 export function erstelleHandler({root, port, rolle, fixture, boot, antworten = API_ANTWORTEN, engine = async(args)=>(await import('./engine.mjs')).fuehreDemoAktionAus(args)}) {

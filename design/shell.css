@@ -300,6 +300,7 @@
    Suche (V2.09) und „+ Neu“ (V2.10) kommen zwischen Praxisname und Einrichtung. */
 @media screen {
   [data-design="neu"] .topbar .biz-name {
+    max-width: 260px;
     font-size: 15px;
     line-height: 20px;
     font-weight: 600;

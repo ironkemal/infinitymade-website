@@ -1814,7 +1814,7 @@ export async function renderLegendeSettings(deps) {
   const section = document.getElementById('settingsLegendeSection');
   if (!section) return;
 
-  const zeigen = deps.profile?.role === 'owner';
+  const zeigen = deps.profile?.role === 'owner' && resolveSector(deps.sector?.() || '') === 'podologie';
   section.hidden = !zeigen;
   if (!zeigen) return;
 

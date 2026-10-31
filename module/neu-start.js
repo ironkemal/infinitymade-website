@@ -23,7 +23,7 @@ export function neuKontext(k) { kontext = k && typeof k === 'object' ? k : null;
 
 if (istNeu()) {
   installiereModalFokus({ id: 'vorlagenModal', startId: 'vorlagenName', rueckfallId: 'vorlagenPanelNewBtn' });
-import('./shell-neu.js?v=20261029s256')
+import('./shell-neu.js?v=20261031a')
     .then((m) => m.start({ kontext: () => kontext }))
     .catch((e) => console.warn('[neu-start] Shell nicht geladen:', e));
 }

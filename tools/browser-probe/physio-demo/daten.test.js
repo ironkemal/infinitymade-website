@@ -87,3 +87,27 @@ test('Aufrufe liefern unabhängige, deterministische JSON-Overrides ohne alte Re
   assert.deepEqual(b.invoices, []); assert.deepEqual(b.rechnung_zahlungen, []);
   assert.deepEqual(b.kostentraeger, []); assert.deepEqual(b.prescription_validations, []);
 });
+
+test('Vorführdaten: Termine an Werktagen, zum Behandler passend, Stammdaten prüffähig', async () => {
+  const { pruefeKvnr } = await import('../../../module/kvnr.js');
+  const { lanrPruefzifferWarnung } = await import('../../../module/lanr-pruefung.js');
+  for (const tag of ['2026-10-30', '2026-11-01', '2027-01-04']) {
+    const d = erstellePhysioDaten({ tag });
+    for (const b of d.bookings) {
+      assert.ok(![0, 6].includes(new Date(b.start_time).getUTCDay()), `Wochenende: ${b.start_time}`);
+      assert.equal(b.user_id, b.employee_id);
+    }
+    const nachPatient = Object.groupBy(d.bookings, (b) => b.lead_id);
+    for (const termine of Object.values(nachPatient)) {
+      const tage = termine.map((b) => b.start_time.slice(0, 10)).sort();
+      for (let i = 1; i < tage.length; i++) assert.ok(Date.parse(tage[i]) - Date.parse(tage[i - 1]) >= 2 * 864e5, `Folgetage: ${tage}`);
+    }
+  }
+  const d = erstellePhysioDaten();
+  assert.ok(d.bookings.some((b) => b.user_id === DEMO_IDS.employee), 'Kim Test hat eigene Termine');
+  assert.equal(d.profiles[1].business_name, 'Kim Test');
+  for (const p of d.leads) assert.equal(pruefeKvnr(p.versichertennummer).ok, true, p.versichertennummer);
+  const geprueft = d.prescriptions.filter((r) => r.doctor_lanr);
+  assert.equal(geprueft.length, 5, 'ein Fall bleibt bewusst offen');
+  for (const r of geprueft) { assert.equal(lanrPruefzifferWarnung(r.doctor_lanr), ''); assert.equal(r.unterschrift_vorhanden, true); }
+});

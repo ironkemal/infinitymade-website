@@ -23,9 +23,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261021ze" />
+  <link rel="stylesheet" href="dashboard.css?v=20261031a" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
-  <link rel="stylesheet" href="praxura-design.css?v=20261026s215" /><link rel="stylesheet" href="design/shell.css?v=20261028s249" /><link rel="stylesheet" href="design/startseite.css?v=20261028s242" /><link rel="stylesheet" href="design/seiten.css?v=20261029s256" /><link rel="stylesheet" href="design/kalender.css?v=20261027s230" /><link rel="stylesheet" href="design/verwaltung.css?v=20261029s257" />
+  <link rel="stylesheet" href="praxura-design.css?v=20261026s215" /><link rel="stylesheet" href="design/shell.css?v=20261031a" /><link rel="stylesheet" href="design/startseite.css?v=20261028s242" /><link rel="stylesheet" href="design/seiten.css?v=20261031a" /><link rel="stylesheet" href="design/formulare.css?v=20261029s258" /><link rel="stylesheet" href="design/kalender.css?v=20261027s230" /><link rel="stylesheet" href="design/verwaltung.css?v=20261029s257" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -340,7 +340,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_kunden">Kunden Info</h2>
-              <p class="panel-sub" data-i18n="kunden_sub">Leads & Kundeninformationen</p>
+              <p class="panel-sub" data-i18n="kunden_sub">Patienten, Verordnungen und Abrechnungsstatus</p>
             </div>
             <div class="panel-actions">
               <button class="btn-ghost" id="patTableViewToggle" title="Tabellenansicht umschalten" style="padding:7px 10px;">
@@ -3895,7 +3895,7 @@
     .m13-lbl small{ font-weight:500; color:#4a5568; font-size:11px; display:block; }
 
     .m13-top{ display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start; }
-    .m13-insbox{ border:1.6px solid #3a4a63; position:relative; }
+    .m13-insbox{ border:1.6px solid #3a4a63; position:relative; container-type:inline-size; }
     .m13-side{ position:absolute; left:0; top:0; bottom:0; width:28px; border-right:1px solid #9aa8bd;
       display:flex; flex-direction:column; font-size:8px; font-weight:600; color:#4a5568; }
     .m13-side > div{ flex:1; border-bottom:1px solid #9aa8bd; display:flex; align-items:center; justify-content:center; text-align:center; padding:1px; line-height:1.05; }
@@ -3905,6 +3905,13 @@
     .m13-insrow + .m13-insrow{ border-top:1px solid #9aa8bd; }
     .m13-cell{ padding:3px 7px 4px; min-width:0; }
     .m13-cell + .m13-cell{ border-left:1px solid #9aa8bd; }
+    /* Liste daneben offen: drei Zellen passen nicht — Beschriftungen liefen ineinander, die
+       Versicherten-Nr. wurde abgeschnitten, das Kalendersymbol stand außerhalb. Der Bogen hängt am
+       Platz im Bereich, nicht am Fenster: deshalb Container-, nicht Media-Query. */
+    @container (max-width:530px){
+      .m13-insrow{ flex-wrap:wrap; }
+      .m13-insrow > .m13-cell:nth-child(3){ flex:1 0 100% !important; border-left:none; border-top:1px solid #9aa8bd; }
+    }
 
     .m13-titleline{ display:flex; justify-content:space-between; align-items:flex-start; }
     .m13-titleline b{ font-size:19px; font-weight:800; letter-spacing:.2px; color:#111; }
@@ -5875,7 +5882,7 @@
     </div>
   </div>
 
-<script type="module" src="dashboard.js?v=20261029s256"></script>
+<script type="module" src="dashboard.js?v=20261031a"></script>
 </body>
 
 </html>

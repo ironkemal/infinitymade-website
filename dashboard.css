@@ -3386,7 +3386,7 @@ textarea {
 
 .hours-times {
   display: grid;
-  grid-template-columns: 110px 110px;
+  grid-template-columns: 124px 124px;
   gap: 12px;
   align-items: center;
   justify-content: start;
@@ -3402,7 +3402,7 @@ textarea {
   border-radius: var(--radius-sm);
   font-size: 13px;
   outline: none;
-  width: 110px;
+  width: 124px;
   text-align: center;
   height: 36px;
 }
@@ -3422,6 +3422,27 @@ textarea {
   gap: 6px;
   align-items: center;
   grid-column: 1 / -1;
+  /* Links genau unter den Uhrzeiten: 20 Rand + 72 Tag + 16 + 44 + 16 */
+  padding: 0 20px 12px 168px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .hours-breaks-wrap { padding-left: 184px; }
+}
+
+@media (max-width: 600px) {
+  .hours-breaks-wrap { padding-left: 20px; }
+}
+
+/* Pausen gehören zu ihrem Tag: die Trennlinie steht erst darunter. */
+.hours-row:has(+ .hours-breaks-wrap) {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.hours-breaks-wrap:last-child {
+  border-bottom: none;
 }
 
 .break-chip {

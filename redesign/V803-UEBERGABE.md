@@ -1,4 +1,60 @@
-# V8.03 / R-23 — Reparaturvorlage unter Baustopp
+# V8.03 / R-23 — begrenzte CSS-Lieferung
+
+Stand: 29.10.2026. Melih hat V8.03 ausdrücklich zum Bau freigegeben („ich gebe die frei bitte baue es“). Die frühere Baustopp-Diagnose unten bleibt als Vorher-Evidenz erhalten; ihre Bauverbote sind durch diese konkrete Freigabe überholt. **Lokale CSS-Lieferung, keine Release-/V10-/Livefreigabe.**
+
+## Aktueller Lieferumfang und Basis
+
+- Worktree `/private/tmp/praxura-v803-diagnose`, Branch `redesign/praxura-v803-diagnose`, auf Integrationspin `2843f157` fortgeführt. Diagnose `3889088d` auf diesem Pin bereits bytegleich enthalten; nicht erneut implementiert.
+- Ausschließlich `design/formulare.css` (neu) und diese Übergabe geändert. Nur `@media screen`, `[data-design="neu"]`, Nachfahren von `anamnese`, `fussstatus`, `hours`, `services`, `vorlagen`. Kein Modal-, JS-, Shared-, Link-, Cache-, STATUS- oder INDEX-Edit.
+- Alter Formular-Worktree `/private/tmp/praxura-v803-formulare` bleibt unverändert: untracked Entwurf SHA256 `b937896777e684bee3647b8eadc3516a8a788422a63c50a5951045f8cd069fa4` erhalten. Dieser große Entwurf wurde nicht übernommen; neue Lieferung ist bewusst enger und enthält keine Karten-/Kalender-/Modalumgestaltung.
+- Root besitzt Vorlagen-Dialogfokus (`41efb3fc` laut Koordination) und ergänzt Abschnittsnavigation mit `.px-formular-inhalt` in Anamnese/Leistungen/Arbeitszeiten. Kein Root-WIP übernommen. Unsere Selektoren benötigen keine direkten Panelkinder; direkte Kindregel betrifft ausschließlich leere interne Tageszelle. Prüfung mit neuem Wrapper/Navigation und Gesamtintegration bleibt zentral.
+
+## Gebaute Korrekturen und gemessene Wirkung
+
+| Bereich | Kleiner CSS-Eingriff | Vorher → nachher, Neu Owner/hell390; Rollen-/Themeprüfung siehe unten |
+|---|---|---|
+| Anamnese | Mobil einspaltiges Optionsgrid; Labelbegrenzung/Umbruch,44px Mindestfläche; Inline-Arztgrid mobil gezielt überschrieben; Eingaben/Fokus im Panel | mainArea390/455 →390/390. Chemotherapie/Desinfektionsmittel/Metall-Nickel vollständig innerhalb Label rechts357px; Text-Range maximal180,72px bei genannten Optionen. Sichtbare Optionslabels mindestens44×44px. |
+| Leistungen | Genau `.srv-gruppe {position:relative}` als lokaler Containing Block; vorhandenes Tabellen-Scrolling/Spaltenminimum erhalten; Aktionsziele44px | mainArea390/690 →390/390; Wrapper bleiben358px, Tabellen lokal scrollbar. GKV-Aktion89,81×44px rechts363,97, privat44×44px rechts364,08. |
+| Arbeitszeiten | Nur mobil Tageszeile einspaltig, leere Zelle entfernt, Zeitraster zwei flexible Spalten. Schalter44×44px mit sichtbarem Sliderfokus; Pausen-/Formularaktionen44px | Zeile436px/rechts453 →356px/rechts373. Zeitfelder110×40px/Ende rechts433 →152×44px/Ende rechts353. Pause geöffnet297,03px breit/rechts358,03, wieder geschlossen. |
+| Fußbefund | Nur direkte nackte Checkboxen in Links-/Rechts-Tabellen44×44px, Eingaben44px hoch, Fokusrahmen | Checkbox13×13 →44×44px; Such-/Termin-/Datumfelder44px hoch, rechte Kanten≤361. mainArea bleibt390/390. Kein Farb-/Marker-/Links-Rechts-Umbau. |
+| Vorlagen | Identifizierte Panelknöpfe44px, gemeinsamer Fokusrahmen innerhalb Panel | Einstellungen157,16×36 →157,16×44px; Neu131×36 →131×44px. mainArea bleibt390/390. Kein Editordialog-CSS. |
+
+Formular-/Panelknöpfe mit vorhandenen Klassen `.btn-primary/.btn-ghost/.btn-sm/.btn-icon` erhalten innerhalb der fünf Panels ebenfalls44px Mindestfläche; gemessen u.a. Anamnese-Speichern95,59×44, Arbeitszeiten-Speichern95,59×44, Kalenderpfeile44×44. Anzeige-/Hidden-Zustände werden nicht aufgehoben.
+
+### Leistungsursache vor Bau erneut bewiesen
+
+Auf Pin `2843f157`, Neu Owner/hell390: `.srv-sr` absolut, Offsetparent `mainArea`; mainArea390/690, Wrapper358px. Ausschließlich lokalen `position:relative`-Kandidaten temporär gesetzt: Offsetparent wechselt zu `.srv-gruppe`, mainArea390/390, Wrapper/Tabellen-Scrollbreiten unverändert. Kandidat entfernt:390/690 erneut. Erst danach CSS-Datei angelegt. Damit lokaler Containing Block bestätigt; kein blindes Host-/Tabellenbreitenfix.
+
+### Fokusnachtrag
+
+Echte Shift-Tab/Tab- und Space-Proben bestätigen Anamnesecheckbox, Stundenschalter und Fußcheckbox, ohne Save. Bei Leistungen erreichen letzte Aktionen beider Gruppen per Tab sichtbaren Fokus und Trial-Klick; SR-Header „Aktion“ (GKV) / „Aktionen“ (privat) bleibt als Columnheader auffindbar. Vorlagen-Neuknopf per Tab fokussierbar. Dialogfokus ist ausdrücklich Root-Aufgabe.
+
+Zusätzlicher enger Review erkannte Bestands-Opacity0,4 an inaktiven Tageszeilen: sie dämpft auch neuen Fokusring. Deshalb ausschließlich `.hours-row.inactive:focus-within {opacity:1}` ergänzt; normale Off-Darstellung bleibt. Separate finale Owner/hell- und Employee/dunkel-Probe prüft Fokus auf inaktivem Tag und Leistungsaktionen. Kein allgemeiner Inaktiv-/Deaktiviert-Umbau.
+
+## Ausgeführte Prüfungen und Artefakte
+
+- Wiederverwendetes Harness `tools/redesign-harness.mjs`; Produkt aus eigenem Pin-Worktree. Import des vorhandenen Formular-Harness, einzige Pinabweichung `/api/booking-request/list` → synthetisch `{requests:[]}` in Testprozess ergänzt. Keine Fixture-/Harnessdatei im Repo verändert.
+- HTTP-/WS-Fences auf Context vor Page; zusätzlich Schutz vor Handler des Harness (Page-Routen haben Vorrang): ausschließlich lokaler GET, alle Nicht-GET/Fremdhosts blockiert, ServiceWorker blockiert. Keine realen Writes, DB oder Connectoren. CSS wurde nur im Testbrowser als eigene nachgeladene Datei aktiviert, HTML-Link unverändert; zentrale Auslieferungsintegration steht aus.
+- Hauptprobe `/tmp/praxura-v803-build-probe.mjs`, Ergebnis `/tmp/praxura-v803-build-final/bericht.json`:9Contexts,42Panelversuche/39aktiv,3 erwartete Employee-Standalone-Fußstatus-Verweigerungen. Neu: vier Rollen/Themes bei390, Owner/hell360, Owner/dunkel1440, Owner/hell768 gezielt Anamnese/Arbeitszeiten. **Alle30 aktiven Neu-Panelprüfungen ohne Geometrie-/Fokus-/Touchbefund.**0Dokument-/mainArea-Überlauf nach CSS,0Pageerrors/Fremdhosts/APIwrites.88 synthetische Seed-Writeversuche abgefangen; keine Null-Versuche-Behauptung.
+- Alt: Owner/hell390 und Employee/dunkel390,9aktive Panels. Alle Geometrien identisch;7Pixelpaare sofort identisch. Zwei erste Zeitfeld-Aufnahmen verschieden, weshalb Hauptskript korrekt Exit1 meldet, kein verdeckter Gesamtpass. Ursache durch separate Kontrollfolge isoliert: **bereits zwei Screenshots ohne CSS verschieden**; danach CSS an/aus stabil identisch und alle computed styles sämtlicher Arbeitszeiten-Nachfahren identisch. Script `/tmp/praxura-v803-alt-control.mjs`, Ergebnis `/tmp/praxura-v803-alt-control/bericht.json`,0Befunde. Keine Produktkorrektur für nativen initialen Repaint vorgenommen.
+- Print: fünf aktuelle Panel-Screenshotpaare Owner/dunkel1440 unter `media:print` mit/ohne neue CSS identisch. Nur Begrenzungsnachweis dieses Overlays, keine fachliche PDF-/Dokument-/Druckabnahme.
+- Kontrollskript prüft außerdem CSSOM-Scope, zusätzliche44px-Panelknöpfe und lange Optionstext-Ranges. Transportkontrolle: lokaler GET200, lokaler POST und fremder GET abgefangen, synthetischer Fremd-WebSocket geschlossen. Diese drei absichtlichen Negativproben getrennt von regulären0Fremdhost-/APIwrite-Zahlen. Finale CSS-SHA256 `267e6bd619a68ef96a58d1aa5baaf541a5f3210ccf04db5c34dd6d263002d2cf`.
+- Finaler enger Fokusnachtrag `/tmp/praxura-v803-focus-final.mjs`, Ergebnis `/tmp/praxura-v803-focus-final/bericht.json`: zwei Contexts nach letzter Opacity-Regel: inaktiver Fokus jeweils Opacity1, sichtbarer solider Ring, alle vier letzten Leistungsaktionen per echter Tabnavigation fokussiert und44px/innerhalb Viewport;0Pageerrors. Skript meldete Exit1 ausschließlich wegen falscher Testannahme „Aktionen“ auch für GKV; Quellmarkup nennt dort Singular „Aktion“. Separater enger Header-Nachweis `/tmp/praxura-v803-header-final.mjs` / `/tmp/praxura-v803-header-final/bericht.json` bestätigt4/4korrekte exakte Namenspaare vor/nach CSS, Exit0. Eine erste Messausführung hatte zuvor am nicht vorhandenen `.card`-Vorfahren abgebrochen; Messung auf tatsächlichen Parent korrigiert, Produkt unverändert. Keine Produktänderung dafür, keine Abschwächung des Namensvertrags. Hauptprobe stammt vor diesem ausschließlich fokusspezifischen Nachtrag, keine komplette grüne Matrix wiederholt.
+- Drei Neu390-Bilder Anamnese/Arbeitszeiten/Fußbefund aus `/tmp/praxura-v803-build-final/` gesichtet; Alt-Zeitfeldpaare zur Repaintdiagnose ebenfalls gesichtet. Keine große Bildmatrix.
+- Reparaturrunden: eine Label-Mindestbreite/Prüfziel-Korrektur (vorher versehentlich verborgenes Altformular fokussiert), anschließend eine fokusspezifische Opacity-Korrektur. Assertions nicht abgeschwächt; sichtbarer Zielknoten präzisiert. Kein neuer Skip.
+- Impeccable `context`, Adapt/Operate/Craft-floor, mobil-ui-Protokoll, Accessibility und engineering Debug/Code-review gelesen und angewendet. Eigenes enges Quellen-/Scope-/Mobil-/A11y-Review; **keine neue unabhängige Agentenabnahme**, wie vorgegeben keine neuen Agenten/Provider. Frühere mobil-ui-Berichtsabnahme betrifft nur Diagnose. Mechanischer Impeccable-Detektor liefert `[]` (Regex-Hinweis, keine A11y-Abnahme). `git diff --check` geprüft.
+
+## Integration und verbleibende Grenzen
+
+1. Nur neuen Liefercommit mit diesen zwei Dateien selektiv übernehmen. `design/formulare.css` nach `design/seiten.css` verlinken, Cache/Auslieferung ausschließlich Root. Alten untracked CSS-Entwurf nicht übernehmen oder verwerfen.
+2. Root-Abschnittsnavigation/Wrapper und Vorlagen-Fokusfix anschließend zusammen gezielt integrieren, besonders Desktop≥1280 mit200px Navigation und24px Gap; Lieferung wurde auf Pin2843f157 ohne Root-WIP geprüft. Mobil390 bleibt laut Wrappervertrag unverändert breit.
+3. Fußbefund-Namen einzelner nackter Checkboxen sind Markup-/Screenreader-Thema, CSS schafft keine Accessible Names. Kein klinischer Inhalt geändert; bestehende Podologie-Beratung unten wiederverwendet. Berechtigter Employee-Aktepfad aus zentraler V7-Evidenz bleibt separat, Standalone-Verweigerung nicht umgangen.
+4. Keine vollen Langtext-/Kiosk-/Akte-/Standort-/Sondertag-/Rollen-/Kontrast-/Screenreader-/Writer-/RLS-/Kundeninstallationsabnahme aus begrenzter Probe. Vorlagenkarten mangels erlaubtem Seeding nicht gefüllt geprüft, kein Save/Delete/Export/Printauftrag ausgelöst. Gesamtgates zentral; keine Fullsuite wiederholt.
+5. Eigene Probe-Server immer finally beendet. Port18485 nach Abschluss ohne TCP-LISTEN-Listener;18081 unberührt. Kein Push/Deploy/V10-Standardflip/LiveDB.
+
+---
+
+# Historische Diagnose vom 28.10.2026
 
 Stand: 28.10.2026. **Nur Untersuchung und Dokumentation. Keine CSS-Lieferung oder Integrationsfreigabe.**
 

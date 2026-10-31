@@ -151,7 +151,7 @@
     backdrop-filter: none;
   }
   [data-design="neu"] #patientDetailModal > .modal {
-    width: min(820px, 62vw);
+    width: min(900px, 66vw);
     max-width: none;
     height: 100vh;
     max-height: none;
@@ -163,6 +163,35 @@
 }
 @media screen and (prefers-reduced-motion: reduce) {
   [data-design="neu"] #patientDetailModal > .modal { animation: none; }
+}
+
+/* Alle Reiter der Akte bleiben sichtbar (Rechnungen, Termine und Mail lagen sonst rechts im Aus). */
+@media screen {
+  [data-design="neu"] #patientDetailModal .pd-tabs { padding-inline: 12px; }
+  [data-design="neu"] #patientDetailModal .pd-tab { padding-inline: 10px; }
+}
+
+/* `.btn .btn-secondary` hatte keine eigenen Regeln: Behandlungsbestätigung, Therapiebericht und
+   Fax-Deckblatt standen als loser Text da. `.btn-sm` setzt Radius und Größe mit !important. */
+@media screen {
+  [data-design="neu"] :is(.btn.btn-primary, .btn.btn-secondary, #srvNeuBtn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 14px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  [data-design="neu"] .btn.btn-secondary {
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+  }
+  [data-design="neu"] .btn.btn-secondary:hover { background: var(--bg-hover); }
 }
 
 /* Patientenliste: Nummer nicht umbrechen („P-1008“). */

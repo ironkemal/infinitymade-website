@@ -15,7 +15,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261029s256'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import { neuKontext } from './module/neu-start.js?v=20261031a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261026n205';
@@ -42,9 +42,9 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261005g';
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261031a'; import { apiFehlerText } from './module/api-fehler.js?v=20261030a';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer, verordnungStatusInfo } from './module/abrechnungsstatus.js?v=20261030a';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261028s243';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261028s244';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
@@ -114,7 +114,7 @@ import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschl
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261021p';
+import { renderWoche } from './module/kalender-woche.js?v=20261030a';
 import { renderMonat } from './module/kalender-monat.js?v=20261021ze';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
@@ -126,7 +126,7 @@ import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kos
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
 import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261021s';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
-import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
+import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261031a';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
 import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261021g';
@@ -180,7 +180,7 @@ const T = {
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
     btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink', btn_cal_today: 'Heute',
-    kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
+    kunden_sub: 'Patienten, Verordnungen und Abrechnungsstatus', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
     lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
@@ -2865,7 +2865,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         completed:     { label: 'Abgeschlossen', bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: 'rgba(100,116,139,0.3)' },
         billed:        { label: 'Abgerechnet',   bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
       };
-      const st = statusMap[rx.status] || { label: rx.status || '—', bg: 'rgba(177,137,27,0.15)', color: '#b1891b', border: 'rgba(177,137,27,0.3)' };
+      const st = statusMap[rx.status] || { label: verordnungStatusInfo(getSector() === 'podologie' ? 'podologie' : 'physio', rx.status)?.label || '—', bg: 'rgba(177,137,27,0.15)', color: '#b1891b', border: 'rgba(177,137,27,0.3)' };
       statusBadge.textContent = st.label;
       statusBadge.style.cssText = `font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${st.bg};color:${st.color};border:1px solid ${st.border};`;
     }
@@ -4571,7 +4571,7 @@ async function initBkCustomerAutocomplete(veroSteht = false) {
     applyLeadById(existingId, veroSteht);
   } else if (existingName) {
     const match = (window.bkAllLeads || []).find(l =>
-      (displayNameWithBirth(l) || '').toLowerCase() === existingName ||
+      [displayNameWithBirth(l), isoNameWithBirth(l)].some(n => (n || '').toLowerCase() === existingName) ||
       ((l.title || '').toLowerCase() === existingName)
     );
     if (match) applyLeadById(match.id);
@@ -5101,7 +5101,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (searchTxt && Array.isArray(window.bkAllLeads)) {
       const lower = searchTxt.toLowerCase();
       const match = window.bkAllLeads.find(l =>
-        (displayNameWithBirth(l) || '').toLowerCase() === lower ||
+        [displayNameWithBirth(l), isoNameWithBirth(l)].some(n => (n || '').toLowerCase() === lower) ||
         (l.title || '').toLowerCase() === lower
       ) || window.bkAllLeads.find(l => (l.title || '').toLowerCase().startsWith(lower));
       if (match) {
@@ -7051,15 +7051,15 @@ function displayName(lead) {
   return lead.title || '—';
 }
 function leadBirthDate(lead) { return leadGeburtsdatum(lead); }
-function displayNameWithBirth(lead) {
-  const name = displayName(lead);
+function isoNameWithBirth(lead) {   // Maschinenform: Suche und Abgleich mit Alt-`customer_name`
   const bd = leadBirthDate(lead);
-  return bd ? `${name} · ${bd}` : name;
+  return bd ? `${displayName(lead)} · ${bd}` : displayName(lead);
 }
+function displayNameWithBirth(lead) { return isoNameWithBirth(lead).replace(/ · (\d{4})-(\d{2})-(\d{2})$/, ' · $3.$2.$1'); }
 // Zentrale Patientensuche: Name, Geburtsdatum (ISO + dt. Format) und Telefonnummer
 // Patientensuche → module/patientenliste.js (Name · Geburtsdatum · beide Rufnummern)
 function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird weiter oben aufgerufen
-  return patientPasstZurSuche(lead, q, { nameMitGeburt: displayNameWithBirth, geburtsdatum: leadBirthDate });
+  return patientPasstZurSuche(lead, q, { nameMitGeburt: isoNameWithBirth, anzeigeName: displayNameWithBirth, geburtsdatum: leadBirthDate });
 }
 
 // `leadsCache` wurde bisher NUR gefüllt, wenn jemand das Patienten-Panel öffnete.
@@ -8383,7 +8383,7 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, price_min: 88.94, price_max: 88.94, locked: true },
     { code: 'X0106', kuerzel: 'KMT',   title: 'Klassische Massagetherapie (KMT)',         duration: 20, duration_label: '15–20', price: 21.63, price_min: 21.63, price_max: 21.63, locked: true }, // bis 26.10.2026 falsch X0102 (= Unterwasserdruckstrahlmassage), s. module/physio-katalog-migration.js
-    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
+    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, duration_label: '10–20', price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
   // Podologie: echte Heilmittelpositionsnummern (HPNR), keine Platzhalter.
   //
@@ -9028,7 +9028,7 @@ async function renderHoursGrid() {
   const dayLabels = DAYS.de;
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
-  for (let i = 0; i < 7; i++) {
+  for (const i of [1, 2, 3, 4, 5, 6, 0]) {   // Woche beginnt Montag; i bleibt day_of_week (0 = So)
     const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00:00', end_time: '17:00:00', is_active: (i > 0 && i < 6) };
     const dayBreaks = hoursBreaks.filter(b => b.day_of_week === i).sort((a, b) => a.start_time.localeCompare(b.start_time));
     const row = document.createElement('div');
@@ -9050,7 +9050,7 @@ async function renderHoursGrid() {
 
     const breakWrap = document.createElement('div');
     breakWrap.className = 'hours-breaks-wrap';
-    breakWrap.style.cssText = 'grid-column:1/-1;padding-left:44px;margin-bottom:8px;';
+    breakWrap.style.cssText = 'grid-column:1/-1;margin-bottom:8px;';
     breakWrap.innerHTML = dayBreaks.map(b => `
       <span class="break-chip">${b.start_time.substring(0, 5)}–${b.end_time.substring(0, 5)}
         <button class="break-del" data-id="${b.id}" title="Entfernen">×</button>
@@ -10272,7 +10272,7 @@ async function loadEmpHours(empId) {
   const grid = document.getElementById('empHoursGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  for (let i = 0; i < 7; i++) {
+  for (const i of [1, 2, 3, 4, 5, 6, 0]) {   // Woche beginnt Montag; i bleibt day_of_week (0 = So)
     const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00:00', end_time: '17:00:00', is_active: (i > 0 && i < 6) };
     const dayBreaks = empBreaks.filter(b => b.day_of_week === i).sort((a, b) => a.start_time.localeCompare(b.start_time));
     const row = document.createElement('div');
@@ -10294,7 +10294,7 @@ async function loadEmpHours(empId) {
 
     const breakWrap = document.createElement('div');
     breakWrap.className = 'hours-breaks-wrap';
-    breakWrap.style.cssText = 'grid-column:1/-1;padding-left:44px;margin-bottom:8px;';
+    breakWrap.style.cssText = 'grid-column:1/-1;margin-bottom:8px;';
     breakWrap.innerHTML = dayBreaks.map(b => `
       <span class="break-chip">${b.start_time.substring(0, 5)}–${b.end_time.substring(0, 5)}
         <button class="break-del" data-id="${b.id}" title="Entfernen">×</button>
@@ -13455,7 +13455,7 @@ async function resolveArzt(input, quelle = 'manuell') {
         business_id: currentBusiness?.id || null
       })
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlerText(res));
     const out = await res.json();
 
     // Cache aktuell halten, damit Datalists den neuen Arzt sofort anbieten.
@@ -13511,7 +13511,7 @@ initAnfrageBearbeiten({
 
 const { loadDoctors } = initLeadSuche({
   istKutu: IST_KUTU, supabase, showToast, t, getOwnerId, loadB2B, renderB2B,
-}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, handlungsbedarfKontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: bootBusinessSwitcher.scopeBusinessId, patientsGemeinsam: dataSharing.patients, financeGemeinsam: dataSharing.finance, financeBereit: loadDataSharing.financeBekannt === true, ladeRechnungen: loadRechnungen, escapeHtml, bereit: loadDataSharing.scopeBekannt === true && bootBusinessSwitcher.scopeBekannt === true && loadDataSharing.scopeOwnerId === getOwnerId() && bootBusinessSwitcher.scopeOwnerId === getOwnerId() }), behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
+}); neuKontext({ ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, supabase, getOwnerId, ohnePodo: () => !!currentProfile && ['physiotherapy', 'logopaedie', 'ergotherapie'].includes(getSector()), rolle: () => currentProfile?.role, uid: () => currentSession?.user?.id, handlungsbedarfKontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: bootBusinessSwitcher.scopeBusinessId, patientsGemeinsam: dataSharing.patients, financeGemeinsam: dataSharing.finance, financeBereit: loadDataSharing.financeBekannt === true, ladeRechnungen: loadRechnungen, escapeHtml, bereit: loadDataSharing.scopeBekannt === true && bootBusinessSwitcher.scopeBekannt === true && loadDataSharing.scopeOwnerId === getOwnerId() && bootBusinessSwitcher.scopeOwnerId === getOwnerId() }), behandlerName: id => { const m = teamMembers.find(m => m.id === id); return m?.full_name || [m?.first_name, m?.last_name].filter(Boolean).join(' ') || [m?.owner_first_name, m?.owner_last_name].filter(Boolean).join(' ') || m?.business_name || ''; }, serviceName: id => ownerServices.find(s => s.id === id)?.title || '' }); // Redesign: Suche + Startseite, Labels nur aus geladenen Caches
 
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
@@ -16065,7 +16065,7 @@ async function loadMahnwesen() {
     const res = await fetch(`${API}/billing/mahnwesen/offene`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlerText(res));
     const rows = await res.json();
 
     tbody.innerHTML = '';
@@ -16180,7 +16180,7 @@ async function loadMahnwesen() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status })
       });
-      if (!res3.ok) throw new Error(await res3.text());
+      if (!res3.ok) throw new Error(await apiFehlerText(res3, 'Der Status konnte nicht gespeichert werden.'));
       showToast(status === 'bezahlt' ? 'Als bezahlt markiert ✓' : 'Abgeschrieben ✓');
       loadMahnwesen();
     };
@@ -16193,7 +16193,7 @@ async function loadMahnwesen() {
     });
 
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#dc2626;padding:16px;">${escapeHtml(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#dc2626;padding:16px;">${escapeHtml(e.message)}</td></tr>`; if (summary) summary.textContent = 'Keine Angaben verfügbar.';
   }
 
   loadAusfallrechnungen();
@@ -16213,7 +16213,7 @@ async function loadAusfallrechnungen() {
     const res = await fetch(`${API}/billing/ausfall/list`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlerText(res));
     const rows = await res.json();
 
     tbody.innerHTML = '';
@@ -16248,7 +16248,7 @@ async function loadAusfallrechnungen() {
 
     const druckeAusfall = async (id) => {
       const res2 = await fetch(`${API}/billing/ausfall/${id}/print`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res2.ok) throw new Error(await res2.text());
+      if (!res2.ok) throw new Error(await apiFehlerText(res2, 'Die Druckansicht konnte nicht geladen werden.'));
       const html = await res2.text();
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); w.onload = () => w.print(); }
@@ -16314,7 +16314,7 @@ async function loadStatistik() {
     const res = await fetch(`${API}/billing/statistik?monate=${monate}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await apiFehlerText(res));
     const d = await res.json();
 
     // KPI
@@ -16492,7 +16492,7 @@ async function loadStatistik() {
 
   } catch (e) {
     const chartEl = document.getElementById('statBarChart');
-    if (chartEl) chartEl.innerHTML = `<span style="color:#dc2626;font-size:13px;">${escapeHtml(e.message)}</span>`;
+    if (chartEl) chartEl.innerHTML = `<span style="color:#dc2626;font-size:13px;">${escapeHtml(e.message)}</span>`; setEl('statTherapeutenList', 'Keine Angaben verfügbar.'); setEl('statAerzteSumme', ''); const aeLeer = document.getElementById('statAerzteBody'); if (aeLeer) aeLeer.innerHTML = '<tr><td colspan="6" style="padding:8px;color:var(--text-muted);">Keine Angaben verfügbar.</td></tr>';
   }
 }
 

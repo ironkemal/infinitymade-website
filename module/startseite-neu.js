@@ -38,7 +38,7 @@ const ICON = {
 };
 const TODO_ICON = { 'vo-ueberfaellig': ICON.warn, 'vo-bald': ICON.uhr, anfragen: ICON.post };
 
-import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261028s242';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261031a';
 import { alsBerlinDatum } from './berlin-datum.js';
 
 let kontext = () => null;
@@ -260,7 +260,7 @@ function listeHtml() {
 
 function voHtml() {
   if (!inLeiste('verordnungen')) return '';
-  return handlungsbedarfHtml(bedarf.lesen(), { erreichbar: true, eigene: !istOwner() });
+  return handlungsbedarfHtml(bedarf.lesen(), { erreichbar: true, eigene: !istOwner(), ohnePodo: kontext()?.ohnePodo?.() === true });
 }
 
 /** Schlüssel für das fokussierte Element, damit es nach dem Neuzeichnen wiedergefunden wird

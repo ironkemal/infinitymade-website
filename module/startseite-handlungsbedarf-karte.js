@@ -4,6 +4,7 @@ import { berechneHandlungsbedarf } from './startseite-handlungsbedarf.js?v=20261
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const KATEGORIEN = [['beginnVerpasst', 'Beginn verpasst'], ['beginnBald', 'Beginn ≤ 7 Tage ohne Termin'],
   ['pauseDroht', 'Podo-Pause droht'], ['pauseVerpasst', 'Podo-Pause überschritten'], ['ohneFolgetermin', 'Ohne Folgetermin']];
+const PODO_KATEGORIEN = new Set(['pauseDroht', 'pauseVerpasst']);
 const leer = () => ({ laden: false, fehler: false, daten: null });
 const schluessel = k => JSON.stringify([k?.rolle, k?.uid, k?.ownerId, k?.businessId, k?.patientsGemeinsam, k?.bereit]);
 
@@ -73,13 +74,15 @@ export function createHandlungsbedarfKarte({ kontext, heute, zeichne, lader = la
 }
 
 /** Kein Personeninhalt, keine Fallgesamtsumme: Kategorien können dieselbe VO enthalten. */
-export function handlungsbedarfHtml(state = {}, { erreichbar = false, eigene = false } = {}) {
+export function handlungsbedarfHtml(state = {}, { erreichbar = false, eigene = false, ohnePodo = false } = {}) {
   let rumpf;
   if (state.laden) rumpf = '<div class="px-karte-zustand"><p>Handlungsbedarf wird geladen …</p></div>';
   else if (!state.daten || state.fehler) rumpf = `<div class="px-karte-zustand"><p>${eigene ? 'Eigener Verordnungsumfang noch nicht bestätigt.' : 'Handlungsbedarf gerade nicht verfügbar.'}</p></div>`;
   else {
     const kat = state.daten.kategorien || {};
-    rumpf = `<div class="px-minis px-handlungsbedarf">${KATEGORIEN.map(([id, label]) => {
+    // Physio/Ergo/Logo: keine Podo-Kacheln — außer es liegt dort tatsächlich ein Treffer.
+    const sichtbar = KATEGORIEN.filter(([id]) => !ohnePodo || !PODO_KATEGORIEN.has(id) || kat[id]?.bekanntAnzahl > 0);
+    rumpf = `<div class="px-minis px-handlungsbedarf">${sichtbar.map(([id, label]) => {
       const k = kat[id], n = k?.anzahl, teil = Number.isSafeInteger(k?.bekanntAnzahl) ? k.bekanntAnzahl : 0;
       const zahl = Number.isSafeInteger(n) && n >= 0 ? String(n) : teil > 0 ? `Teilmenge ${teil}` : 'Unbekannt';
       return `<div class="px-mini"><span class="zahl">${zahl}</span><span class="lbl">${label}</span></div>`;

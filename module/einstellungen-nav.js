@@ -77,11 +77,19 @@ export function abschnittsNavAufbauen({ panel, inhalt, ariaLabel, lesen: leseEin
     });
   }
   zustand.lesen = leseEintraege;
+  const fokusZiel = zustand.nav.contains(document.activeElement) ? document.activeElement.dataset.ziel : null;
   const eintraege = leseEintraege();
   zustand.nav.hidden = !eintraege.some(e => e.art === 'abschnitt');
   zustand.nav.innerHTML = eintraege.map((e) => (e.art === 'gruppe'
     ? `<div class="px-abschnitt-gruppe">${e.titel.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}</div>`
     : `<a href="#${e.id}" class="px-abschnitt" data-ziel="${e.id}">${e.titel.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))}</a>`)).join('');
+
+  if (fokusZiel) {
+    const links = [...zustand.nav.querySelectorAll('.px-abschnitt')];
+    const fokus = links.find(a => a.dataset.ziel === fokusZiel) || links[0];
+    if (fokus) fokus.focus({ preventScroll: true });
+    else if (inhalt.getClientRects().length) { inhalt.setAttribute('tabindex', '-1'); inhalt.focus({ preventScroll: true }); }
+  }
 
   zustand.beobachter?.disconnect();
   zustand.beobachter = new IntersectionObserver((liste) => {

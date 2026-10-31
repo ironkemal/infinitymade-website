@@ -37,6 +37,8 @@ import { WV_SLOT_PX } from './kalender-raster.js?v=20261021p';
 import { alsISODatum } from './datum.js?v=20261001a';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
+import { anzeigeName } from './kalender-block.js?v=20261021p';
+import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20260918';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -320,8 +322,9 @@ export async function renderWoche({
       // Auch in der Wochenansicht: ohne Uhrzeit muss man den Block gegen die
       // Zeitleiste am Rand halten.
       const zeit = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const patient = anzeigeName(parseNameMitGeburt(b.customer_name).name);
       block.innerHTML = `<span style="font-variant-numeric:tabular-nums;opacity:0.85;">${escapeHtml(zeit)}</span> `
-        + escapeHtml(b.services?.title || 'Termin');
+        + (patient ? `<strong>${escapeHtml(patient)}</strong> · ` : '') + escapeHtml(b.services?.title || 'Termin');
 
       // Ohne stopPropagation zählt der Klick zusätzlich als Klick auf das
       // Rasterfeld darunter — im Verschieben-Modus würde der Termin dabei auf

@@ -121,6 +121,14 @@ test('Renderer: Unknown/Teilmenge statt Fake-Null, keine IDs/Fehler und keine Ge
   assert.match(handlungsbedarfHtml({}, { eigene: true }), /Eigener Verordnungsumfang noch nicht bestätigt/);
   assert.match(handlungsbedarfHtml({ laden: true }), /wird geladen/);
 });
+test('Renderer: Podo-Kacheln nur für Podologie oder bei echtem Treffer', () => {
+  const daten = { kategorien: { beginnBald: { anzahl: 0, bekanntAnzahl: 0 } } };
+  assert.match(handlungsbedarfHtml({ daten }), /Podo-Pause droht/);
+  assert.doesNotMatch(handlungsbedarfHtml({ daten }, { ohnePodo: true }), /Podo-Pause/);
+  daten.kategorien.pauseDroht = { anzahl: 1, bekanntAnzahl: 1 };
+  const h = handlungsbedarfHtml({ daten }, { ohnePodo: true });
+  assert.match(h, /Podo-Pause droht/); assert.doesNotMatch(h, /Podo-Pause überschritten/);
+});
 
 const dashboard = readFileSync(new URL('../dashboard.js', import.meta.url), 'utf8');
 const take = (start, end) => dashboard.slice(dashboard.indexOf(start), dashboard.indexOf(end, dashboard.indexOf(start)));
