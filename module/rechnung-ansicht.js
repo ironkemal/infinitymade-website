@@ -28,12 +28,14 @@ import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261022q';
 import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';
+import { mountRechnungMail, merkeRechnungFuerMail } from './rechnung-mail.js?v=20261031k9';
 
 let d = null;
 
 /** Muss vor jedem Aufruf einmal gesetzt sein — siehe dashboard.js. */
 export function mountRechnungsansicht(deps) {
   d = deps;
+  mountRechnungMail(deps);   // „Per E-Mail senden" in der Ansicht (K9)
 }
 
 /**
@@ -344,6 +346,7 @@ export async function openInvView(invoiceId) {
   document.getElementById('invvFooterTax').textContent = tax || '—';
 
   d.merkeRechnung(inv.id);
+  merkeRechnungFuerMail(inv);
   zeigeRechnungsModus('ansicht');
 }
 

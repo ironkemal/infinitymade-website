@@ -22,6 +22,8 @@ import {
   ladeSnapshot, erzeugeBerichtPdf, erzeugePasswort, berichtDateiname,
   EMPFEHLUNG_CODES, BERICHT_ARTEN,
 } from '../lib/therapiebericht.js';
+import { erzeugeRechnungPdf, rechnungDateiname } from '../lib/rechnung-pdf.js';
+import { sendeUeberGmail } from '../lib/gmail-senden.js';
 
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 const MAX_TEXT = 4000;
@@ -46,7 +48,17 @@ export function pruefeEingabe(body = {}) {
   return { werte: { aktion, prescription_id, art, empfehlung_code, verlauf, empfehlung, an_email } };
 }
 
-export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu } = {}) {
+/**
+ * Versandweg für Dokumente an Patienten (onprem O-233): Box → nur Praxis-SMTP,
+ * SaaS → nur das Gmail-Konto der Praxis. Nie ein Praxura-SMTP als Rückfall.
+ * @returns {'smtp'|'gmail'|null}
+ */
+export function versandWeg(env = process.env, kutu = istKutu()) {
+  if (kutu) return env.SMTP_HOST ? 'smtp' : null;
+  return 'gmail';
+}
+
+export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null } = {}) {
   const router = express.Router();
 
   const limiter = rateLimit({
@@ -154,6 +166,82 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
     } catch (e) {
       console.error('[dokument/passwort-telefonisch]', e?.code || 'Fehler');
       return res.status(500).json({ error: 'Vermerk konnte nicht gespeichert werden.' });
+    }
+  });
+
+  // Rechnung an den Patienten: Vorschau (offen) oder Mail (immer passwortgeschützt).
+  // LEGAL_DECISIONS 2026-10-31. Inhalt, Empfänger und PDF werden nicht gespeichert/geloggt.
+  router.post('/dokument/rechnung', requireAuth, limiter, async (req, res) => {
+    const aktion = String(req.body?.aktion || '');
+    const invoice_id = String(req.body?.invoice_id || '');
+    const an_email = String(req.body?.an_email || '').trim();
+    if (!['vorschau', 'mail'].includes(aktion)) return res.status(400).json({ error: 'Unbekannte Aktion.' });
+    if (!/^[0-9a-f-]{36}$/i.test(invoice_id)) return res.status(400).json({ error: 'Rechnung fehlt.' });
+    if (an_email && !EMAIL_RE.test(an_email)) return res.status(400).json({ error: 'Die E-Mail-Adresse ist ungültig.' });
+    const { tenantId } = req.auth;
+    try {
+      const { data: inv, error } = await supabase.from('invoices').select('*')
+        .eq('id', invoice_id).eq('owner_id', tenantId).maybeSingle();
+      if (error) throw error;
+      if (!inv) return res.status(404).json({ error: 'Rechnung nicht gefunden.' });
+      if (inv.status === 'draft') return res.status(409).json({ error: 'Entwürfe werden nicht versendet. Bitte die Rechnung zuerst abschließen.' });
+      const rezeptId = inv.prescription_id || inv.verordnung_id;
+      const [patR, rxR, profR] = await Promise.all([
+        inv.patient_id ? supabase.from('leads').select('first_name,last_name,title,geburtsdatum,street,plz,city,email')
+          .eq('id', inv.patient_id).eq('owner_id', tenantId).maybeSingle() : Promise.resolve({ data: null }),
+        rezeptId ? supabase.from('prescriptions').select('heilmittel,icd10,diagnosegruppe,ausstellungsdatum')
+          .eq('id', rezeptId).eq('owner_id', tenantId).maybeSingle() : Promise.resolve({ data: null }),
+        supabase.from('profiles').select('business_name,owner_first_name,owner_last_name,street,house_number,zip,plz,city,phone,email,ik_number,tax_exempt_note,steuernummer,ust_id,invoice_footer_text')
+          .eq('id', tenantId).maybeSingle(),
+      ]);
+      const daten = { inv, patient: patR.data, rx: rxR.data, profil: profR.data || {} };
+      const dateiname = rechnungDateiname(inv);
+      if (aktion === 'vorschau') {
+        const pdf = await erzeugeRechnungPdf(daten);
+        return res.json({ pdf_base64: pdf.toString('base64'), dateiname });
+      }
+
+      const an = an_email || patR.data?.email || '';
+      const passwort = erzeugePasswort();
+      const pdf = await erzeugeRechnungPdf(daten, { passwort });
+      const praxis = (inv.aussteller_snapshot?.name) || profR.data?.business_name || '';
+      const praxisMail = inv.aussteller_snapshot?.email || profR.data?.email || '';
+      const betreff = `Ihre Rechnung${inv.invoice_number ? ' ' + inv.invoice_number : ''}${praxis ? ' – ' + praxis : ''}`;
+      const text = 'Guten Tag,\n\nanbei erhalten Sie Ihre Rechnung als PDF. '
+        + 'Das PDF ist passwortgeschützt; das Passwort teilen wir Ihnen persönlich oder telefonisch mit.\n\n'
+        + `Mit freundlichen Grüßen\n${praxis}`;
+      const weg = versandWeg(env, kutu());
+      let gesendet = false;
+      if (weg && an) {
+        try {
+          if (weg === 'smtp') {
+            await transportFabrik({ requireTLS: true }).sendMail({
+              from: getMailFrom(praxis),
+              ...(praxisMail && EMAIL_RE.test(praxisMail) ? { replyTo: praxisMail } : {}),
+              to: an, subject: betreff, text,
+              attachments: [{ filename: dateiname, content: pdf, contentType: 'application/pdf' }],
+            });
+            gesendet = true;
+          } else if (gmail) {
+            await sendeUeberGmail({ supabase, ...gmail, userId: tenantId, to: an, subject: betreff, text, senderName: praxis,
+              attachments: [{ filename: dateiname, content: pdf, contentType: 'application/pdf' }] });
+            gesendet = true;
+          }
+        } catch (e) {
+          console.error('[dokument/rechnung] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
+          if (e?.code === 'GMAIL_NICHT_VERBUNDEN' || e?.code === 'gmail_reauth_required') {
+            return res.status(409).json({ error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail verbinden – oder das PDF herunterladen und selbst senden.', code: e.code, passwort, pdf_base64: pdf.toString('base64'), dateiname });
+          }
+          return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden. Bitte das PDF herunterladen und selbst senden.', code: 'VERSAND_FEHLER', passwort, pdf_base64: pdf.toString('base64'), dateiname });
+        }
+      }
+      return res.json({
+        gesendet, weg: gesendet ? weg : null, empfaenger: gesendet ? an : null, passwort,
+        ...(gesendet ? {} : { pdf_base64: pdf.toString('base64'), dateiname, code: !an ? 'KEINE_EMAIL' : 'VERSAND_NICHT_EINGERICHTET' }),
+      });
+    } catch (e) {
+      console.error('[dokument/rechnung]', e?.code || 'Fehler');
+      return res.status(500).json({ error: 'Die Rechnung konnte nicht erstellt werden.' });
     }
   });
 

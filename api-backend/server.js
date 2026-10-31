@@ -43,6 +43,7 @@ import { validiereBarcodeErfassung, computedMitErfassung } from './lib/rezept-er
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
+import { sendeUeberGmail } from './lib/gmail-senden.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
@@ -620,7 +621,7 @@ app.use('/api', dsgvoRouter);
 // „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
 app.use('/api', ueberRouter);
 // Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
-app.use('/api', createDokumentMailRouter({ supabase }));
+app.use('/api', createDokumentMailRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
@@ -712,60 +713,14 @@ app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
   const userId = req.auth.userId;  // pin to authenticated user, never trust body
   const { to_email, to_name, subject, body, sender_name } = req.body;
   if (!to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
-
   try {
-    const [{ data: profile, error: pErr }, { data: gmailToken }] = await Promise.all([
-      supabase.from('profiles').select('b2b_from_email').eq('id', userId).single(),
-      supabase.rpc('get_gmail_token', { p_user_id: userId })
-    ]);
-    if (pErr || !profile) throw new Error('Profile not found');
-    if (!gmailToken) throw new Error('No Gmail token — please reconnect Gmail in B2B setup');
-
-    const oauth = newOAuthClient();
-    oauth.setCredentials({ refresh_token: gmailToken });
-    let credentials;
-    try {
-      ({ credentials } = await oauth.refreshAccessToken());
-    } catch (refreshErr) {
-      // Refresh token dead (invalid_grant): revoked, expired, or minted by a
-      // now-rotated OAuth client. It can never recover — clear it so the
-      // dashboard stops showing "connected" and prompts a reconnect. The
-      // "Gmail token" wording is what the front-end matches to surface the
-      // reconnect toast.
-      console.error('[gmail/send] refresh failed, clearing dead token:', refreshErr.message);
-      await supabase.rpc('clear_gmail_token', { p_user_id: userId });
-      return res.status(401).json({
-        success: false,
-        code: 'gmail_reauth_required',
-        error: 'Gmail token expired — please reconnect Gmail in B2B setup'
-      });
-    }
-
-    const fromLabel = sender_name ? `${sender_name} <${profile.b2b_from_email}>` : profile.b2b_from_email;
-    const toLabel   = to_name ? `${to_name} <${to_email}>` : to_email;
-    const rawEmail  = [
-      `From: ${fromLabel}`,
-      `To: ${toLabel}`,
-      `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
-      'MIME-Version: 1.0',
-      'Content-Type: text/plain; charset=UTF-8',
-      'Content-Transfer-Encoding: base64',
-      '',
-      Buffer.from(body).toString('base64')
-    ].join('\r\n');
-    const encoded = Buffer.from(rawEmail).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-
-    const gmailRes = await fetchWithTimeout('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + credentials.access_token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ raw: encoded })
-    }, 15000);
-    const gmailJson = await gmailRes.json();
-    if (!gmailRes.ok) throw new Error(gmailJson.error?.message || 'Gmail API error');
-
-    res.json({ success: true, messageId: gmailJson.id });
+    const to = to_name ? `${to_name} <${to_email}>` : to_email;
+    const { messageId } = await sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, text: body, senderName: sender_name });
+    res.json({ success: true, messageId });
   } catch (e) {
-    console.error('[gmail/send]', e.message);
+    // "Gmail token" wording is what the front-end matches to surface the reconnect toast.
+    if (e.code === 'gmail_reauth_required') return res.status(401).json({ success: false, code: e.code, error: e.message });
+    console.error('[gmail/send]', e.code || '', e.message);
     res.status(500).json({ success: false, error: e.message });
   }
 });
