@@ -60,6 +60,7 @@ import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
+import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
 
@@ -1470,6 +1471,8 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   if (!therapistGuard.ok) {
     return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
   }
+  const raum = await raumFelderFuerTermin(supabase, req.body.roomId, ownerId);
+  if (!raum.ok) return res.status(400).json({ error: 'Raum nicht gefunden' });
 
   let svc = null;
   if (serviceId) {
@@ -1533,7 +1536,8 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
         notes: notes || null,
         hausbesuch: req.body.hausbesuch || false,
         status: 'confirmed',
-        lead_id: bezugLeadId
+        lead_id: bezugLeadId,
+        ...raum.felder
       }).select().single();
 
       if (dbErr) {

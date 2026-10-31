@@ -6,6 +6,7 @@ import * as guards from './public-guards.js';
 import * as authGuards from './auth-guards.js';
 import * as backendSeries from './series.js';
 import * as frontendSeries from '../../module/serien-termine.js';
+import { raumFelderFuerTermin } from '../lib/raum-zuordnung.js';
 
 const serverSrc = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const extract = (s, e) => {
@@ -105,6 +106,7 @@ const mockSupabase = {
 };
 
 const ctx = vm.createContext({
+  raumFelderFuerTermin,
   ...guards,
   ...authGuards,
   ...backendSeries,

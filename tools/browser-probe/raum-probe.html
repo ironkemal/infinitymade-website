@@ -1,0 +1,200 @@
+<!doctype html>
+<!-- Raumplanung ohne Login: echte Module, gefälschte Datenbank, nur erfundene Daten. -->
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Raum-Probe</title>
+</head>
+<body>
+  <main style="padding:16px;min-width:0">
+    <section class="panel active" id="panel-calendar">
+      <div class="panel-header"><h2>Kalender</h2></div>
+      <div class="cal-view-toolbar" id="calViewToolbar">Ansicht</div>
+    </section>
+    <section class="panel" id="panel-hours"></section>
+  </main>
+  <div class="modal-overlay" id="bookingModal" hidden>
+    <input id="bk-id" value="">
+    <input id="bkStart" type="datetime-local">
+    <div class="form-group" id="bkEmployeeGroup">Mitarbeiter</div>
+  </div>
+  <div id="bkActionModal"><div class="modal-body"></div></div>
+  <script type="module">
+    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen } from '../../module/planung-bruecke.js';
+
+    const ergebnisse = [];
+    const pruefe = (name, ok) => ergebnisse.push({ name, ok: !!ok });
+    const warte = ms => new Promise(r => setTimeout(r, ms));
+    const OWNER = 'o-1';
+    const jetzt = Date.now();
+    const iso = minuten => new Date(jetzt + minuten * 60000).toISOString();
+    const lokal = minuten => {
+      const d = new Date(jetzt + minuten * 60000);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    const tabellen = {
+      rooms: [
+        { id: 'r1', owner_id: OWNER, business_id: 'b1', name: 'Behandlungsraum 1', plaetze: 1, aktiv: true, sort: 0 },
+        { id: 'r2', owner_id: OWNER, business_id: 'b1', name: 'Wärme', plaetze: 2, aktiv: true, sort: 1 },
+        { id: 'r3', owner_id: OWNER, business_id: 'b1', name: 'Gerätefläche', plaetze: 3, aktiv: true, sort: 2 },
+        { id: 'r9', owner_id: OWNER, business_id: 'b2', name: 'Anderer Standort', plaetze: 1, aktiv: true, sort: 0 },
+      ],
+      bookings: [
+        { id: 'k1', owner_id: OWNER, user_id: 'm1', business_id: 'b1', room_id: 'r1', status: 'confirmed', customer_name: 'Maria Musterfrau', start_time: iso(-5), end_time: iso(20), group_parent_id: null },
+        { id: 'k2', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: 'r2', status: 'confirmed', customer_name: 'Erika Beispiel', start_time: iso(-5), end_time: iso(10), group_parent_id: null },
+        { id: 'k3', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: null, status: 'confirmed', customer_name: 'Online Buchung', start_time: iso(-5), end_time: iso(15), group_parent_id: null },
+      ],
+      time_offs: [],
+    };
+    const fehlerBei = { bookings_room_id: false };
+
+    function fakeSupabase() {
+      return {
+        from(tabelle) {
+          const filter = [];
+          const q = {
+            art: 'select', werte: null, eins: false, spalten: '',
+            select(s) { q.spalten = s || ''; return q; },
+            eq(k, v) { filter.push(r => r[k] === v); return q; },
+            neq(k, v) { filter.push(r => r[k] !== v); return q; },
+            not(k) { filter.push(r => r[k] != null); return q; },
+            gte(k, v) { filter.push(r => r[k] >= v); return q; },
+            lte(k, v) { filter.push(r => r[k] <= v); return q; },
+            in(k, v) { filter.push(r => v.includes(r[k])); return q; },
+            insert(w) { q.art = 'insert'; q.werte = w; return q; },
+            update(w) { q.art = 'update'; q.werte = w; return q; },
+            delete() { q.art = 'delete'; return q; },
+            maybeSingle() { q.eins = true; return q; },
+            then(fertig) {
+              if (fehlerBei.bookings_room_id && tabelle === 'bookings' && q.spalten === 'room_id') {
+                return fertig({ data: null, error: { code: 'PGRST204' } });
+              }
+              const zeilen = tabellen[tabelle] || [];
+              const treffer = zeilen.filter(r => filter.every(f => f(r)));
+              if (q.art === 'insert') { zeilen.push({ id: `neu-${zeilen.length}`, aktiv: true, ...q.werte }); return fertig({ data: null, error: null }); }
+              if (q.art === 'update') { treffer.forEach(r => Object.assign(r, q.werte)); return fertig({ data: null, error: null }); }
+              if (q.art === 'delete') { tabellen[tabelle] = zeilen.filter(r => !treffer.includes(r)); return fertig({ data: null, error: null }); }
+              return fertig({ data: q.eins ? treffer[0] ?? null : treffer, error: null });
+            },
+          };
+          return q;
+        },
+      };
+    }
+
+    const toasts = [];
+    const fragen = [];
+    let geoeffnet = null;
+    let antwort = true;
+    planungVerdrahten({
+      supabase: fakeSupabase(),
+      getOwnerId: () => OWNER,
+      getBusinessId: () => 'b1',
+      istInhaber: () => true,
+      getTeam: () => [{ id: 'm1', business_name: 'Anna Beispiel' }, { id: 'm2', business_name: 'Ben Muster' }],
+      oeffneTermin: id => { geoeffnet = id; },
+      getDauerMin: () => 30,
+      showToast: (text, art) => toasts.push({ text, art }),
+      showConfirmModal: async opts => { fragen.push(opts); return antwort; },
+    });
+
+    const modal = document.getElementById('bookingModal');
+    const oeffne = async (bookingId = '') => {
+      modal.hidden = true;
+      await warte(20);
+      document.getElementById('bk-id').value = bookingId;
+      document.getElementById('bkStart').value = lokal(0);
+      modal.hidden = false;
+      await warte(120);
+    };
+
+    // Streifen: Kundenfrage „wer ist in welchem Raum", ohne Patientendaten
+    await warte(150);
+    const streifen = document.getElementById('raumStreifen');
+    pruefe('Streifen ist sichtbar und steht vor der Kalenderleiste', !streifen.hidden && streifen.nextElementSibling?.id === 'calViewToolbar');
+    pruefe('Streifen nennt Raum und Therapeut-Kürzel', /Behandlungsraum 1/.test(streifen.textContent) && /A\. B\./.test(streifen.textContent));
+    pruefe('Streifen zeigt Restzeit', /noch \d+ Min\./.test(streifen.textContent));
+    pruefe('Freier Raum heißt frei', /Gerätefläche\s*frei/.test(streifen.textContent));
+    pruefe('Termin ohne Raum wird genannt', /1 Termin läuft ohne Raum/.test(streifen.textContent));
+    pruefe('Keine Patientennamen im Streifen', !/Maria|Musterfrau|Erika|Online Buchung/.test(streifen.innerHTML));
+    pruefe('Anderer Standort fehlt im Streifen', !/Anderer Standort/.test(streifen.textContent));
+    streifen.querySelector('[data-termin-id]').click();
+    pruefe('Klick öffnet den Termin', geoeffnet === 'k1');
+
+    // Neuer Termin
+    await oeffne();
+    const gruppe = document.getElementById('bkRaumGroup');
+    const auswahl = document.getElementById('bkRaum');
+    pruefe('Raumwahl sitzt unter dem Mitarbeiter', document.getElementById('bkEmployeeGroup').nextElementSibling === gruppe);
+    pruefe('Raumwahl sichtbar', !gruppe.hidden);
+    const texte = [...auswahl.options].map(o => o.textContent);
+    pruefe('Belegt steht im Text, freie zuerst', texte[0] === 'Kein Raum' && texte.includes('Behandlungsraum 1 (belegt)') && texte.indexOf('Gerätefläche') < texte.indexOf('Behandlungsraum 1 (belegt)'));
+    pruefe('Plätze stehen im Text', texte.includes('Wärme (1 von 2 Plätzen belegt)'));
+    pruefe('Raum eines anderen Standorts fehlt', !texte.some(t => t.includes('Anderer')));
+    auswahl.value = 'r3';
+    pruefe('Gewählter Raum bringt seinen Standort mit', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: 'r3', business_id: 'b1' }));
+    auswahl.value = '';
+    pruefe('Kein Raum leert das Feld', JSON.stringify(raumFelder()) === JSON.stringify({ room_id: null }));
+
+    // Bestehender Termin
+    await oeffne('k2');
+    pruefe('Bestehender Termin zeigt seinen Raum', document.getElementById('bkRaum').value === 'r2');
+    pruefe('Eigener Termin zählt beim Bearbeiten nicht', [...auswahl.options].some(o => o.textContent === 'Wärme'));
+
+    // Gefährlichster Fall: Raum nicht lesbar, also nichts überschreiben
+    fehlerBei.bookings_room_id = true;
+    await oeffne('k2');
+    pruefe('Lesefehler: Raum wird nicht angefasst', JSON.stringify(raumFelder()) === '{}');
+    fehlerBei.bookings_room_id = false;
+
+    // Warnung: nachgeben und abbrechen
+    fragen.length = 0;
+    antwort = false;
+    const abgebrochen = await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: 'r1' });
+    pruefe('Warnung nennt den Raum und erlaubt Abbruch', abgebrochen === false && /Behandlungsraum 1/.test(fragen[0]?.message));
+    antwort = true;
+    pruefe('Trotzdem eintragen ist möglich', await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: 'r1' }));
+    tabellen.time_offs.push({ employee_id: 'm9', start_date: iso(-600), end_date: iso(600), reason: 'Krankheit', note: 'Geheim', type: 'krank' });
+    fragen.length = 0;
+    await terminWarnungen({ empId: 'm9', startIso: iso(0), endIso: iso(10), raumId: null });
+    pruefe('Abwesenheit warnt ohne Grund zu nennen', fragen[0]?.message === 'Therapeut:in ist an diesem Tag nicht verfügbar.');
+
+    // Aktionspanel
+    await raumAktionsTermin({ id: 'k3', user_id: 'm2', start_time: iso(-5), end_time: iso(15) });
+    const aktion = document.getElementById('bkActRaum');
+    pruefe('Aktionspanel zeigt Raumwahl', !aktion.hidden);
+    document.getElementById('bkActRaumAuswahl').value = 'r3';
+    document.getElementById('bkActRaumSpeichern').click();
+    await warte(120);
+    pruefe('Raum wird nachgetragen', tabellen.bookings.find(b => b.id === 'k3').room_id === 'r3');
+    await raumAktionsTermin(null);
+    pruefe('Ohne Termin verschwindet die Raumwahl', aktion.hidden);
+
+    // Verwaltung
+    document.getElementById('panel-calendar').classList.remove('active');
+    document.getElementById('panel-hours').classList.add('active');
+    await warte(120);
+    const name = document.getElementById('raumNeuName');
+    name.value = '  Fango   Kabine ';
+    document.getElementById('raumNeuPlaetze').value = '2';
+    document.getElementById('raumNeuBtn').click();
+    await warte(120);
+    const neu = tabellen.rooms.find(r => r.name === 'Fango Kabine');
+    pruefe('Raum wird angelegt, Name bereinigt', neu?.plaetze === 2 && neu?.owner_id === OWNER && neu?.business_id === 'b1');
+    document.getElementById('raumNeuName').value = 'wärme';
+    document.getElementById('raumNeuBtn').click();
+    await warte(80);
+    pruefe('Doppelter Name wird abgewiesen', toasts.some(t => t.art === 'error'));
+
+    document.getElementById('panel-hours').classList.remove('active');
+    document.getElementById('panel-calendar').classList.add('active');
+    await warte(120);
+    modal.hidden = true;
+    window.__probe = ergebnisse;
+    document.title = 'fertig';
+  </script>
+</body>
+</html>

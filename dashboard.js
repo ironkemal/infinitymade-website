@@ -1,4 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin } from './module/planung-bruecke.js?v=20261031a';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -2206,7 +2207,6 @@ async function renderDayView(dateStr) {
   const isToday = dateStr === toISODate(_now);
   const nowMin = _now.getHours() * 60 + _now.getMinutes();
 
-
   const ownerId = getOwnerId();
   const dStart = new Date(dateStr + 'T00:00:00').toISOString();
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
@@ -2723,7 +2723,7 @@ async function openBookingActionModal(booking, opts = {}) {
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
   setzeAktionsSichtbarkeit(!!booking, getSector() === 'podologie');
-  bkActionBookingCache = booking || null;
+  bkActionBookingCache = booking || null; raumAktionsTermin(booking).catch(() => {});
   // Der Kassenstatus steht am Patienten, und der wird erst weiter unten geladen.
   // Die Geldzeile zeichnet deshalb zweimal: sofort (noch ohne Zahler) und
   // erneut, sobald `lead` da ist. Ohne das zweite Zeichnen fragt der €-Knopf
@@ -4669,9 +4669,9 @@ async function doMoveBooking(startStr, empId) {
   const oldS = new Date(moveBooking.start_time);
   const durMs = e - oldS;
   const newE = new Date(s.getTime() + durMs);
+  if (!await terminWarnungen({ id: moveBooking.id, empId: empId || moveBooking.user_id, startIso: s.toISOString(), endIso: newE.toISOString() })) return;
   const payload = {
-    start_time: s.toISOString(),
-    end_time: newE.toISOString()
+    start_time: s.toISOString(), end_time: newE.toISOString()
   };
   if (empId && empId !== moveBooking.user_id) payload.user_id = empId;
   const { error } = await supabase.from('bookings').update(payload).eq('id', moveBooking.id);
@@ -5088,7 +5088,7 @@ document.getElementById('bkAnzahl')?.addEventListener('input', () => {
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
   loescheTerminFehler();
-  const id = document.getElementById('bk-id').value;
+  const id = document.getElementById('bk-id').value; const raumWahl = raumFelder(); // Raumwahl vor dem ersten await einfrieren
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
   const startV = document.getElementById('bkStart').value;
@@ -5222,7 +5222,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + totalBlockMin * 60000).toISOString();
-
+  if (!await terminWarnungen({ id: id || null, empId, startIso, endIso, raumId: raumWahl.room_id })) return; // Abwesenheit, Raum: warnen, nicht sperren
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
   if (isSeries) {
     const dateStr = startV.substring(0, 10);
@@ -5246,7 +5246,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       leadId: custId || null,
       customerPhone: phone || null,
       notes: notes || null,
-      duration: durMin,
+      duration: durMin, roomId: raumWahl.room_id || null,
       hausbesuch: document.getElementById('bkHausbesuch').checked || false
     };
     const res = await fetch(API + '/booking/batch-create', {
@@ -5261,7 +5261,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     // Ops 235 / S1.10: jeder Serientermin traegt dieselbe Leistungskombination.
     await speichereLeistungenFuerErstellte(created, { showToast });
     closeModal('bookingModal');
-    await refreshBookingViews();
+    await refreshBookingViews(); serieNachpruefen({ raumId: raumWahl.room_id, empId, termine: created });
 
     if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast });
     // Terminbestätigung drucken dialog — pass patient email if available
@@ -5292,7 +5292,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         notes: notes || null,
         hausbesuch: document.getElementById('bkHausbesuch').checked || false,
         group_capacity: groupCapacity,
-        dauer_quelle: dauerQuelle()
+        dauer_quelle: dauerQuelle(), ...raumWahl
       };
       
       const { error: upErr } = await supabase
@@ -5338,7 +5338,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         status: 'confirmed',
         is_group: true,
         group_capacity: groupCapacity,
-        dauer_quelle: dauerQuelle()
+        dauer_quelle: dauerQuelle(), ...raumWahl
       };
       
       const { data: parentBooking, error: pErr } = await supabase
@@ -5400,7 +5400,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     lead_id: custId || null,
     rezeptart: rezeptart || null,
     payment_method: paymentMethod || null,
-    dauer_quelle: dauerQuelle()
+    dauer_quelle: dauerQuelle(), ...raumWahl
   };
 
   // For update: keep existing insert logic; for insert: need to get the new booking id
@@ -12094,6 +12094,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
+planungVerdrahten({ supabase, getOwnerId, getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
 // DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
 dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 
@@ -14086,7 +14087,6 @@ async function saveRezept() {
 }
 
 // ===== Business Switcher (multi-business, Paket 3) =====
-
 
 function isEnterprise() {
   const plan = (ownerProfile?.plan || currentProfile?.plan || '').toLowerCase();
