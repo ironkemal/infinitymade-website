@@ -248,6 +248,7 @@ export async function ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen })
   await Promise.all([...new Set(behs.map(b => tag(b.behandlungsdatum)))]
     .map(async t => karten.set(t, await ladePodoPositionen(t).catch(() => null))));
   const summe = zuzahlungFuerPodoVerordnung(rx, behs, (code, datum) => karten.get(tag(datum))?.get?.(String(code)) || null);
+  summe.ladefehler = [...karten.values()].find(k => k?.ladefehler)?.ladefehler;
   // Übernommene VO: im Altsystem schon kassiert (Migration 0086) — Praxura fordert nur den Rest (Vertrag § 8).
   const altsystem = Number(rx?.zuzahlung_altsystem_eur) || 0;
   if (altsystem > 0 && Number.isFinite(Number(summe?.gesamt))) {
@@ -321,13 +322,13 @@ export function euroZustand(rx, stand, lead) {
                titel: `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(rest)} nachkassieren und quittieren` };
     }
     // Zu viel kassiert: Erstattung GoBD-sauber über Storno des Belegs + neues Kassieren des richtigen Betrags.
-    return { ton: 'bezahlt', text: fmt(ist ?? stand.gesamt), label: 'Zuzahlung', aktion: 'beleg',
+    return { ton: 'bezahlt', text: stand.ladefehler && ist == null ? '—' : fmt(ist ?? stand.gesamt), label: 'Zuzahlung', aktion: 'beleg',
              titel: abw ? `Kassiert ${fmt(ist)}, fällig ${fmt(stand.gesamt)} — ${fmt(Math.round((ist - stand.gesamt) * 100) / 100)} zu viel: Beleg im Zahlungsjournal stornieren (Betrag zurückgeben) und ${fmt(stand.gesamt)} neu kassieren`
                         : 'Bereits kassiert — Beleg öffnen' };
   }
   if (stand.unbekannt) {
     return { ton: 'unbekannt', text: '—', label: 'Zuzahlung', aktion: 'keine',
-             titel: 'Für diese Position steht kein Preis im Katalog — Betrag lässt sich nicht berechnen' };
+             titel: stand.ladefehler?.message || 'Für diese Position steht kein Preis im Katalog — Betrag lässt sich nicht berechnen' };
   }
   if (!(stand.gesamt > 0)) {
     return { ton: 'unbekannt', text: fmt(0), label: 'Zuzahlung', aktion: 'keine',
@@ -381,10 +382,10 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
     '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
     + (zeigeSumme
         ? feld('Summe', escapeHtml(summeText), 'var(--text-main)',
-               stand?.unbekannt ? 'Position steht nicht im Katalog'
+               stand?.ladefehler?.message || (stand?.unbekannt ? 'Position steht nicht im Katalog'
                                 : stand.ausBehandlungen
                                   ? `${stand.einheiten} dokumentierte Behandlung(en) — Grundlage der Zuzahlung`
-                                  : `${stand.einheiten} Einheit(en) — Grundlage der Zuzahlung`)
+                                  : `${stand.einheiten} Einheit(en) — Grundlage der Zuzahlung`))
         : '')
     + feld(zz.label + (stand?.geschaetzt ? ' (voraussichtlich)' : ''), escapeHtml(zz.text), TON_FARBE[zz.ton], zz.titel)
     + (st ? feld('Status', escapeHtml(st.label), st.farbe, st.hilfe) : '')
@@ -395,7 +396,8 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
     + 'color:' + (aktiv ? 'var(--text-main)' : 'var(--text-muted)') + ';'
     + 'font-size:16px;font-weight:700;font-family:inherit;'
     + 'cursor:' + (aktiv ? 'pointer' : 'not-allowed') + ';">€</button>'
-    + '</div>';
+    + '</div>'
+    + (stand?.ladefehler ? '<div role="status" style="font-size:14px;color:var(--text-muted);margin-top:6px;">' + escapeHtml(stand.ladefehler.message) + '</div>' : '');
 
   const knopf = el.querySelector('#bkRxEuroBtn');
   if (knopf) {
@@ -431,12 +433,19 @@ export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
 export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
   const {
     sb, ownerId, sector, katalog = [], patientName = '',
-    ladePodoPositionen, kassieren, belegOeffnen, rechnungAusVerordnung, services = [],
+    ladePodoPositionen: ladePodo, kassieren, belegOeffnen, rechnungAusVerordnung, services = [],
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
   } = deps;
 
   let lead = null, position = null, privat = null, podo = null, rechnung = null, kassiert = null;
-  let standGkv = null, standPrivat = null;
+  let standGkv = null, standPrivat = null, ladefehler = null;
+  // Ein Panelaufruf teilt auch fehlgeschlagene Tagesabfragen; kein stiller Retry.
+  const tagesabfragen = new Map();
+  const ladePodoPositionen = ladePodo && (datum => {
+    const tag = String(datum || '').slice(0, 10);
+    if (!tagesabfragen.has(tag)) tagesabfragen.set(tag, ladePodo(datum));
+    return tagesabfragen.get(tag);
+  });
 
   const zeichne = () => {
     if (!el || !el.isConnected) return;
@@ -444,6 +453,9 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo });
     // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
     standGkv.geschaetzt = sector === 'podologie' && !podo;
+    standGkv.ladefehler = podo?.ladefehler || ladefehler;
+    // Auch ein vorhandener Frontendpreis macht den ausgefallenen Katalog nicht belastbar.
+    if (standGkv.ladefehler) standGkv.unbekannt = true;
     standGkv.kassiert = kassiert;
     standPrivat = ermittleGeldstand({ rx, erbracht, zahler: 'privat', privat });
     standPrivat.rechnungOhneBetrag = sector === 'podologie' && !!rx?.id;
@@ -486,7 +498,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
       return rechnungsEditorFuerPatient(rx.patient_id || booking?.lead_id || '');
     }
 
-    if (aktion !== 'kassieren') return;
+    if (aktion !== 'kassieren' || stand.unbekannt || stand.ladefehler) return;
     const ok = await kassieren({
       rxId: rx.id,
       patientId: rx.patient_id || booking?.lead_id || null,
@@ -512,6 +524,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     }
     if (sector === 'podologie' && ladePodoPositionen) {
       const karte = await ladePodoPositionen(rx.ausstellungsdatum).catch(() => null);
+      ladefehler = karte?.ladefehler || null;
       position = findePosition(rx, { podoKarte: karte, katalog }) || position;
       podo = await ladePodoZuzahlung({ sb, ownerId, rx, ladePodoPositionen }).catch(() => null);
     }
