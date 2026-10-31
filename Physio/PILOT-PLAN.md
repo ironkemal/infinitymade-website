@@ -1,4 +1,4 @@
-# Physio-Pilot P1 — iş planı ve iş bölümü (Kemal ↔ Melih)
+| K10 | ✅ | K8 | ✅ | K7 | ✅ | K6 | ✅ | K3 | ✅ # Physio-Pilot P1 — iş planı ve iş bölümü (Kemal ↔ Melih)
 
 > Başlangıç 30.10.2026. Depo **public** → müşteri adı, şehir ve fiyat bu dosyaya yazılmaz.
 > Müşteriye rumuz **P1** denir. Ham görüşme notları depo dışında (Kemal'de).
@@ -55,7 +55,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | K6 | **Vorlagen-Studio: kendi belgeler** — praxis kendi metnini yazar ya da PDF yükler, imza alanını sürükleyip yerleştirir, tablette (Kiosk) imzalatır, akteye kaydolur. Sayfada "Inhalt verantwortet die Praxis" notu | Aufklärungsbogen + Ausfallregel kendi metniyle imzalanıp aktede görünür |
 | K7 | **E-Akte** — hastaya dosya yükleme; Physio'da Dokumente sekmesi | Yüklenen dosya aktede listelenir, açılır, silinir |
 | K8 | **Physio-Befund formu** (ROM, Kraft, Tests — alanları `physio` ajanı verir) | Befund kaydedilir, Therapiebericht'e taşınır |
-| K9 | **Versand** — Rechnung'u hastaya mail; **Fax = Fax-to-Mail** (praxis'in sağlayıcı adres deseni ayarlanır, ör. `{nummer}@…`; bizim gateway yok, G8 temiz) | Rechnung maille gider; Therapiebericht fax adresine PDF olarak gider |
+| K9 | 🟨 Rechnung maili canlıda (Gmail/SMTP); Fax kodu bitti, yalnız kutuda gönderir, gerçek gönderim denenmedi — **Versand** — Rechnung'u hastaya mail; **Fax = Fax-to-Mail** (praxis'in sağlayıcı adres deseni ayarlanır, ör. `{nummer}@…`; bizim gateway yok, G8 temiz) | Rechnung maille gider; Therapiebericht fax adresine PDF olarak gider |
 | K10 | **Startseite: elle görev** ekle/işaretle (otomatik uyarıların yanında) | Görev eklenir, abhaken, kalıcı |
 | K11 | ✅ **Physio katalogu** — MLD30, Kompression, Wärme (Fango/Heißluft/Heiße Rolle/Ultraschall), Kälte, Elektro hazır listeye (`PHYSIO_KATALOG_ERGAENZUNG`) — 30.10.2026. **Gruppen bilinçli dışarıda:** takvimde grup Termin'i yok (physio) | Seed'de görünür, fiyat `physio_positions.js` ile aynı (test) |
 | K12 | ~~Seans imza listesi~~ — **düştü 31.10.2026 (Kemal):** Verordnung arkasındaki seans imzası kâğıtta kalır | — |
