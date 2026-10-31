@@ -16,6 +16,15 @@
 import crypto from 'node:crypto';
 import PDFDocument from 'pdfkit';
 import { findPodologiePosition } from '../billing/codes/podologie_positions.js';
+import { baueBefundBlock, befundBlockZeilen, filtereBefundeFuerVo } from './physio-befund-bericht.js';
+
+export { baueBefundBlock, befundBlockZeilen, filtereBefundeFuerVo };
+
+export function istSchemaFehler(err) {
+  if (!err) return false;
+  const code = String(err.code || '');
+  return code === '42P01' || code === 'PGRST205' || code === '42703' || code === 'PGRST204';
+}
 
 export const EMPFEHLUNG_CODES = Object.freeze({
   fortsetzung: 'Fortsetzung der Behandlung empfohlen.',
@@ -53,7 +62,17 @@ export function erzeugePasswort(laenge = 10) {
 /**
  * Die reine Umformung DB-Zeilen → Snapshot. Ohne Supabase testbar.
  */
-export function baueSnapshot({ profil = {}, rx = {}, lead = null, arzt = null, behandlungen = [], befunde = [] }) {
+export function baueSnapshot({
+  profil = {},
+  rx = {},
+  lead = null,
+  arzt = null,
+  behandlungen = [],
+  befunde = [],
+  physioBefunde = [],
+  physioMessungen = [],
+  prescriptionId = rx?.id,
+}) {
   const plz = t(profil.plz) || t(profil.zip);
   const istPodo = rx.therapie_bereich === 'podo';
   const aktuell = befunde.filter(b => b && b.ist_aktuell !== false)
@@ -69,6 +88,11 @@ export function baueSnapshot({ profil = {}, rx = {}, lead = null, arzt = null, b
     : { datum: String(b.done_at || '').slice(0, 10), massnahmen: [], lokalisation: '' })
     .filter(z => z.datum)
     .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  const pId = prescriptionId || rx?.id || null;
+  const physioBefund = !istPodo && physioBefunde && physioBefunde.length > 0
+    ? baueBefundBlock({ befunde: physioBefunde, messungen: physioMessungen, prescriptionId: pId })
+    : null;
 
   return {
     v: 1,
@@ -99,7 +123,9 @@ export function baueSnapshot({ profil = {}, rx = {}, lead = null, arzt = null, b
       einheiten_verordnet: rx.anzahl_einheiten ?? null,
     },
     behandlungen: zeilen,
-    befund: istPodo ? { erster: befundKurz(aktuell[0]), letzter: befundKurz(aktuell.length > 1 ? aktuell[aktuell.length - 1] : null) } : null,
+    befund: istPodo
+      ? { erster: befundKurz(aktuell[0]), letzter: befundKurz(aktuell.length > 1 ? aktuell[aktuell.length - 1] : null) }
+      : physioBefund,
   };
 }
 
@@ -115,7 +141,9 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
     const e = new Error('Verordnung nicht gefunden.'); e.status = 404; throw e;
   }
 
-  const [profilR, leadR, arztR, behR, befR] = await Promise.all([
+  const istPodo = rx.therapie_bereich === 'podo';
+
+  const [profilR, leadR, arztR, behR, befR, physioBefR] = await Promise.all([
     supabase.from('profiles')
       .select('business_name, praxis_inhaber, owner_first_name, owner_last_name, street, house_number, plz, zip, city, phone, email')
       .eq('id', tenantId).maybeSingle(),
@@ -125,22 +153,57 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
     rx.arzt_id
       ? supabase.from('aerzte').select('arzt_name, praxis_name, adresse, lanr, fax, email, telefon').eq('id', rx.arzt_id).eq('owner_id', tenantId).maybeSingle()
       : Promise.resolve({ data: null }),
-    rx.therapie_bereich === 'podo'
+    istPodo
       ? supabase.from('podologie_behandlungen').select('behandlungsdatum, hpnr_codes, lokalisation')
           .eq('verordnung_id', rx.id).eq('owner_id', tenantId).is('storniert_am', null)
       : supabase.from('prescription_sessions').select('done_at').eq('prescription_id', rx.id).eq('status', 'done'),
-    rx.therapie_bereich === 'podo' && rx.patient_id
+    istPodo && rx.patient_id
       ? supabase.from('pat_fussbefund').select('erstellt_am, wagner_grad, notiz, ist_aktuell')
           .eq('lead_id', rx.patient_id).eq('owner_id', tenantId).eq('ist_aktuell', true)
       : Promise.resolve({ data: [] }),
+    !istPodo && rx.patient_id
+      ? supabase.from('physio_befunde')
+          .select('id, prescription_id, befundart, befund_datum, ist_aktuell, daten, created_at')
+          .eq('lead_id', rx.patient_id)
+          .eq('owner_id', tenantId)
+          .eq('ist_aktuell', true)
+          .order('befund_datum', { ascending: true })
+      : Promise.resolve({ data: [] }),
   ]);
   for (const r of [profilR, leadR, arztR, behR, befR]) if (r.error) throw r.error;
+  if (physioBefR.error && !istSchemaFehler(physioBefR.error)) {
+    throw physioBefR.error;
+  }
+
+  const rohePhysioBefunde = physioBefR.data || [];
+  const physioBefunde = filtereBefundeFuerVo(rohePhysioBefunde, rx.id);
+  let physioMessungen = [];
+  const physioIds = physioBefunde.map(b => b.id).filter(Boolean);
+  if (!istPodo && physioIds.length) {
+    try {
+      const messR = await supabase.from('messreihen')
+        .select('id, befund_id, typ, koerperteil, wert, einheit, seite, notiz')
+        .in('befund_id', physioIds)
+        .eq('owner_id', tenantId);
+      if (messR.error) {
+        if (!istSchemaFehler(messR.error)) {
+          throw messR.error;
+        }
+      } else {
+        physioMessungen = messR.data || [];
+      }
+    } catch (err) {
+      if (!istSchemaFehler(err)) throw err;
+    }
+  }
 
   return {
     rx,
     snapshot: baueSnapshot({
       profil: profilR.data || {}, rx, lead: leadR.data, arzt: arztR.data,
       behandlungen: behR.data || [], befunde: befR.data || [],
+      physioBefunde, physioMessungen,
+      prescriptionId: rx.id,
     }),
   };
 }
@@ -262,7 +325,13 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
   }
 
   const bf = s.befund;
-  if (bf && (bf.erster || bf.letzter)) {
+  if (bf && bf.erst) {
+    abschnitt('Befund');
+    const zeilen = befundBlockZeilen(bf);
+    for (const z of zeilen) {
+      doc.text(z, { width: breite });
+    }
+  } else if (bf && (bf.erster || bf.letzter)) {
     abschnitt('Befund');
     const befundZeile = (label, b) => {
       if (!b) return;

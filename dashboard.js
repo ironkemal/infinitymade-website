@@ -51,8 +51,8 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y';
-import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031a'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261031a';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
@@ -3099,7 +3099,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     const { data: prevNoShows } = await supabase
       .from('bookings')
       .select('id,start_time')
-      .eq('lead_id', leadId)
+      .eq('owner_id', getOwnerId()).eq('lead_id', leadId)
       .eq('status', 'no_show')
       .neq('id', booking.id)
       .order('start_time', { ascending: false })
@@ -7647,8 +7647,8 @@ async function refreshMessreihen(leadId) {
 
   const { data, error } = await supabase
     .from('messreihen')
-    .select('id, typ, koerperteil, wert, einheit, gemessen_am, notiz')
-    .eq('lead_id', leadId)
+    .select('id, typ, koerperteil, wert, einheit, gemessen_am, notiz, seite')
+    .eq('owner_id', getOwnerId()).eq('lead_id', leadId)
     .order('gemessen_am', { ascending: true });
 
   if (loading) loading.hidden = true;
@@ -7661,14 +7661,14 @@ async function refreshMessreihen(leadId) {
   // Grupple: typ + koerperteil
   const groups = new Map();
   for (const m of data) {
-    const key = `${m.typ}||${m.koerperteil || ''}`;
+    const key = `${m.typ}||${m.koerperteil || ''}||${m.seite || ''}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(m);
   }
 
   for (const [key, points] of groups) {
-    const [typ, koerperteil] = key.split('||');
-    const label = `${typ}${koerperteil ? ' · ' + koerperteil : ''}`;
+    const [typ, koerperteil, seite] = key.split('||');
+    const label = `${typ}${koerperteil ? ' · ' + koerperteil : ''}${seite ? ' (' + seite + ')' : ''}`;
     const color = MESS_COLORS[typ] || '#888';
     const maxY  = MESS_MAX[typ] || 100;
     const lowerBetter = typ === 'VAS';
@@ -7695,7 +7695,7 @@ async function refreshMessreihen(leadId) {
           <div class="mess-row">
             <span class="mess-date">${new Date(p.gemessen_am).toLocaleDateString('de-DE')}</span>
             <span class="mess-val" style="color:${color};font-weight:700;">${p.wert}</span>
-            <span class="mess-unit">${p.einheit || MESS_UNITS[typ] || ''}</span>
+            <span class="mess-unit">${escapeHtml(p.einheit || MESS_UNITS[typ] || '')}</span>
             ${p.notiz ? `<span class="mess-note">${escapeHtml(p.notiz)}</span>` : '<span></span>'}
             <button class="mess-del-btn" data-id="${p.id}" title="Löschen">✕</button>
           </div>`).join('')}
@@ -7707,7 +7707,7 @@ async function refreshMessreihen(leadId) {
     btn.addEventListener('click', async () => {
       const ok = await showConfirmModal({ title: 'Messung löschen', message: 'Messung löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
       if (!ok) return;
-      await supabase.from('messreihen').delete().eq('id', btn.dataset.id);
+      await supabase.from('messreihen').delete().eq('owner_id', getOwnerId()).eq('id', btn.dataset.id);
       refreshMessreihen(leadId);
     });
   });
@@ -7986,7 +7986,7 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     }
   });
 });
-verdrahteAkteKopf({ ...folgeDeps, leadId: () => pdCurrentLeadId }); verdrahteDokumente({ supabase, getOwnerId, showToast, getLeadId: () => pdCurrentLeadId, userId: () => currentSession?.user?.id || null });   // „+ Termin" / „+ Verordnung" im Akte-Kopf (Podologie)
+verdrahteAkteKopf({ ...folgeDeps, leadId: () => pdCurrentLeadId }); verdrahteDokumente({ supabase, getOwnerId, showToast, getLeadId: () => pdCurrentLeadId, userId: () => currentSession?.user?.id || null }); verdrahtePhysioBefund({ supabase, getOwnerId, showToast, getLeadId: () => pdCurrentLeadId, userId: () => currentSession?.user?.id || null, getBusinessId: () => currentBusiness?.id || null, getTherapeutName: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.full_name || currentSession?.user?.user_metadata?.full_name || null });   // „+ Termin" / „+ Verordnung" im Akte-Kopf (Podologie)
 
 document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
   if (btn.closest('#panel-kunden')) {

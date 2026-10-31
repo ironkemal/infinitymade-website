@@ -9,19 +9,20 @@ test('Podologie: genau die sechs Reiter, Rezepte heisst „Verordnungen"', () =>
   assert.deepEqual(sichtbarListe(p).sort(), [...PODO_AKTE_REITER].sort());
   assert.equal(PODO_AKTE_REITER.length, 6);
   assert.equal(p.rezepteText, 'Verordnungen');
-  for (const weg of ['notes', 'einwilligung', 'ueberweisung', 'messreihen', 'termine', 'mail']) assert.equal(p.sichtbar[weg], false, weg);
+  for (const weg of ['notes', 'einwilligung', 'ueberweisung', 'befund', 'messreihen', 'termine', 'mail']) assert.equal(p.sichtbar[weg], false, weg);
 });
 
 test('Physio: Rezepte + Messreihen + Dokumente sichtbar, Fußbefund nicht', () => {
   const p = akteReiterPlan({ isPhysio: true, isPodo: false });
   assert.equal(p.rezepteText, 'Rezepte');
   assert.deepEqual(sichtbarListe(p).sort(),
-    ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'messreihen', 'dokumente', 'rechnungen', 'termine', 'mail'].sort());
+    ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'befund', 'messreihen', 'dokumente', 'rechnungen', 'termine', 'mail'].sort());
 });
 
 test('Nicht-Praxis-Sektor: kein Rezepte/Messreihen wie bisher, Dokumente sichtbar', () => {
   const p = akteReiterPlan({ isPhysio: false, isPodo: false });
   assert.equal(p.sichtbar.rezepte, false);
+  assert.equal(p.sichtbar.befund, false);
   assert.equal(p.sichtbar.messreihen, false);
   assert.equal(p.sichtbar.fussbefund, false);
   assert.equal(p.sichtbar.dokumente, true);
@@ -44,7 +45,7 @@ function fakeDoc(ids, tabs) {
     getElementById: (i) => byId[i] || null,
     querySelector: (s) => { const m = s.match(/data-tab="([^"]+)"/); return m ? tabEl[m[1]] || null : null; } };
 }
-const ALLE = ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'messreihen', 'fussbefund', 'dokumente', 'rechnungen', 'termine', 'mail'];
+const ALLE = ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte', 'befund', 'messreihen', 'fussbefund', 'dokumente', 'rechnungen', 'termine', 'mail'];
 const IDS = [...PODO_PANEL_UMZUG.flat(), 'pdVerlaufNotizenBox', 'pdVerlaufTermineBox', 'pdDokEinwilligungBox', 'pdDokUeberweisungBox', 'pdDokMailBox', 'pdRezLoading', 'pdRezLeer', 'pdKopfAktionen'];
 
 test('setzeAkteReiter Podologie: Reiter, Umzug der Panels (ids bleiben), Abschnitte + Kopf frei', () => {

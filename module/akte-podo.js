@@ -37,7 +37,7 @@ export const PODO_AKTE_REITER = ['verlauf', 'anamnese', 'fussbefund', 'rezepte',
 
 /** Alle Reiter der Akte (Werte von `data-tab`). */
 const ALLE_REITER = ['verlauf', 'notes', 'anamnese', 'einwilligung', 'ueberweisung', 'rezepte',
-  'messreihen', 'fussbefund', 'dokumente', 'rechnungen', 'termine', 'mail'];
+  'befund', 'messreihen', 'fussbefund', 'dokumente', 'rechnungen', 'termine', 'mail'];
 
 /**
  * Welche Reiter sind sichtbar, wie heisst „rezepte"?
@@ -56,6 +56,7 @@ export function akteReiterPlan({ isPhysio, isPodo }) {
     // Bisheriges Verhalten (dashboard.js vor S4 P3): Rezepte/Messreihen nur Physio, Fußbefund nur Podo.
     // Dokumente-Reiter auch für Physio/Ergo/Logo sichtbar (K7 Uploads).
     sichtbar.rezepte = !!isPhysio;
+    sichtbar.befund = !!isPhysio;
     sichtbar.messreihen = !!isPhysio;
     sichtbar.fussbefund = false;
     sichtbar.dokumente = true;
