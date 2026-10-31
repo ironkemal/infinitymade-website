@@ -1718,6 +1718,8 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | **Faz 6.1b** — iki ayrı envanter: npm tarafı SBOM ile üretilir (CycloneDX), compose image'ları **elle** `onprem/NOTICE.md`'de tutulur (`npm sbom` Kong/GoTrue/Studio'yu görmez — asıl risk orada). İzinli lisans listesi (MIT/Apache-2.0/BSD/ISC/PostgreSQL/MPL-2.0/0BSD/CC0), yasak liste (GPL/AGPL/SSPL/BUSL/Elastic/Commons Clause/"Sustainable Use"). Kapı: compose'daki `image:` satır sayısı taban olur, artış = red (kayıtsız tabloda commit reddeden `check-tabellen-register.sh` ile aynı mantık). Ayrıntı: `RELEASE-STANDARD.md` §8 |
 | **Durum** | 🟡 **kısmen `gelöst` (11.09.2026, `b2fdbb8`)** — taban kondu, kapı yarım |
 
+> **31.10.2026 (`16035e2c`):** izinli listeye `Zlib` eklendi (`api-backend/tools/lizenzen-erzeugen.mjs:35`). Sebep: `pdf-lib` altındaki `pako` `(MIT AND Zlib)` lisanslı, image build lisans kapısında durdu; kapı işini yaptı. Zlib izin verici, copyleft değil, ücretli dağıtıma engel yok. Tek şartı lisans metninin korunması; üretici `LICENSE` dosyalarını taşıyor. Yukarıdaki Çözüm satırındaki izinli liste yalnız ilk taban, güncel liste `ERLAUBT` sabitidir. İtiraz yok.
+
 > **11.09.2026 — yapılan ve yapılmayan.**
 > `onprem/NOTICE.md` açıldı: 7 image için sürüm · lisans · kaynak, ayrıca **bilinçli
 > olarak içermediklerimiz** tablosu (başında n8n, G3 gerekçesiyle). Kapıya `onprem_image`
@@ -6813,7 +6815,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Çözüm** | (1) Beş kopyanın beşi aynı regex; tercihen tek paylaşılan sabit (`merkez/` zaten `api-backend/merkez-istemci/`'den import ediyor). (2) Test: `gpt-4.1-mini` geçer, `.x`, `a..b`, `a/b`, 65 karakter red — iki tarafta (kutu + merkez). (3) Geçersiz deployment açılışta bir uyarı satırı basar (O-50 deseni: zutat bozuksa susmaz). `encodeURIComponent` yolu korunur. Korkuluk: G1/G2/G3/G8 temiz |
 | **Durum** | `kısmen gelöst` — `00ceaac9` (31.10.2026): şart (1) ve (2) tamam. Kalan: şart (3), geçersiz deployment adında açılış uyarı satırı |
 
-### O-231 — K9 Fax-to-Mail: fax sağlayıcısının adres deseni `profiles`'ta, PDF praksisin SMTP'sinden (ön kontrol 31.10.2026) 🟡 **geplant (Physio-Pilot K9)**
+### O-231 — K9 Fax-to-Mail: fax sağlayıcısının adres deseni `profiles`'ta, PDF praksisin SMTP'sinden (ön kontrol 31.10.2026) 🟡 **kısmen gelöst (`fa10c72d`) — kalan: kutu testi**
 
 | Alan | İçerik |
 |---|---|
@@ -6822,7 +6824,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | A (praksisin SMTP'si + praksisin seçtiği fax sağlayıcısı) + D + G |
 | **Kutuda ne olur** | SMTP'li kutu: mail praksisin sunucusundan praksisin sağlayıcısına gider, bizden geçmez. SMTP'siz kutu (varsayılan, O-142): gönderilemez, açık uyarı + PDF indirme. Fax PDF'i parola taşıyamaz → açık PHI üçüncü tarafa (sağlayıcı) gider; bu praksisin işleyicisidir, bizim değil |
 | **Çözüm** | Şartlar: (1) Gerçek gönderim yalnız `versandMoeglich()` (kutu + SMTP) — **SaaS'ta gönderim yok**, O-216 şart 5 aynen: `noreply@praxura.de`'den açık PHI eki çıkmaz (G1/K6); SaaS'ta PDF iner. (2) Desen doğrulaması: tam bir `{nummer}`, `@`'den sonra geçerli alan adı, numara yalnız rakama indirgenir (`+` → `00`), CRLF/virgül/ikinci alıcı reddi. (3) Gönderen `getMailFrom()`, `absender_fest` tabanı (2) artmaz. (4) Log'a alıcı/numara yazılmaz (O-216 şart 4). (5) Migration zincire dosya + aynı commit'te `db/` dökümü; kolon `NULL`'lanabilir, `:stable` bozulmaz. (6) Hukuk (sağlayıcı AVV'si, açık PDF) → legal-de |
-| **Durum** | `geplant` — Physio-Pilot K9. Korkuluk: G1 şart (1) ile temiz · G2/G3/G8 temiz |
+| **Durum** | `kısmen gelöst` — `fa10c72d` (0094 `profiles.fax_mail_muster`, CHECK ile tek `{nummer}`) + `entscheideFaxVersand` (`dokument-mail.js:42`): SaaS `SAAS`, SMTP yok `KEIN_SMTP`, gönderen `getMailFrom` — şart (1)(2)(3) kodda doğrulandı. Kalan: gerçek SMTP + fax sağlayıcısıyla kutu testi (O-51 ile aynı sınıf), şart (6) legal-de. Korkuluk: G1/G2/G3/G8 temiz |
 
 ### O-232 — SaaS'ta KI elle açıldı; SaaS onayı sabit `saas` kimliğiyle; kutuda onay sözleşmedeki KI-Anlage ile ve „kurulumda KI açık" (bildirim 31.10.2026) 🟡 **offen (kutu tarafı)**
 
@@ -6835,7 +6837,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Çözüm** | (a) „Kurulumda KI açık" kilitli kararın (K4, K-20 kutu varsayılanı `aus`) değiştirilmesidir → **Kemal playbook'ta açıkça yeniden yazar**; ajan değiştirmez. O-169 bitmeden kutuda açık varsayılan teknik olarak mümkün değil. (b) „KI-Anlage vX imzalandı" kaydı kutuya **lisans/kurulum yoluyla** varmalı (merkez sözleşmeyi bilir, kutu bilmez): lisans yükünde ya da `install.sh` adımında sürüm + tarih, hasta verisi yok (G1 temiz). Elle girilen bir bayrak olmamalı. (c) `istKutu()` için açılışta koruma: `/var/lib/praxura` kutu volume'leri var ama `SUPABASE_PUBLIC_URL` boşsa açılış uyarısı ya da red — Faz 2.1 deseni. (d) SaaS env değişikliği git'te iz bırakmaz: `CLAUDE.md` VPS env listesine üç ad eklenmeli; `tools/check-vps-drift.sh` env'i görmez (bilinen sınır) |
 | **Durum** | `offen` — (a) Kemal kararı (playbook K4) · (b) O-169'a bağlanır · (c) Faz 2.1 · (d) belge, builder. SaaS tarafı (1)-(3) uygulandı, kabul. Korkuluk: G1/G2/G3/G8 temiz |
 
-### O-233 — Physio-Pilot P1: K9 Rechnung-Mail (pdfkit + SMTP/Gmail) · K6 `pdf-lib` · K7 E-Akte yükleme (ön kontrol 31.10.2026) 🟡 **geplant (Physio-Pilot P1)**
+### O-233 — Physio-Pilot P1: K9 Rechnung-Mail (pdfkit + SMTP/Gmail) · K6 `pdf-lib` · K7 E-Akte yükleme (ön kontrol 31.10.2026) 🟡 **kısmen gelöst (`fa10c72d`, `8cc4fea5`) — kalan: kutu testi + sayaç ölçümü**
 
 | Alan | İçerik |
 |---|---|
@@ -6844,4 +6846,15 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | A (Gmail, yalnız SaaS, praksisin kendi anahtarı) · G (merkez değil kutu) · D (K7 sınır değişirse) |
 | **Kutuda ne olur** | K9: kutuda tek yol praksis SMTP'si; `SMTP_HOST` yoksa mail düğmesi kapalı, PDF indir/yazdır kalır — dışarı çağrı yok. Gmail kutuda kapalı (O-08). K6: `pdf-lib` saf JS, ağ çağrısı yok; backend'e girerse Dockerfile lisans kapısından otomatik geçer. K7: kova baseline ile her yeni kutuda var, dosyalar `volumes/storage`'da, `backup.sh` storage arşivini DB'den önce alıyor — yedek kapsamında |
 | **Çözüm** | Şartlar: (1) gönderim seçimi tek fonksiyonda (`istKutu()` → SMTP, değilse Gmail); SaaS'ta **bizim** SMTP'mize düşen yedek yol yok (gönderen praksis olmalı). (2) Gmail ucu kutuda da kayıtlı kalır ama token olmadığından çalışmaz — yeni env yok, yeni host yok. (3) PDF anlık üretilir, ayrıca şifresiz storage'a yazılmaz. (4) `pdf-lib` **backend**'de (pdfkit'in yanında, tek lisans kapısı, vendor/ bakımı yok); frontend gerekirse `vendor/` + `tools/vendor-lizenzen.mjs`. (5) K7 sınırı: dosya başına **10 MB** (prescriptions kovasıyla aynı); değişiklik **yeni migration** (`UPDATE storage.buckets`), baseline'a dokunulmaz; `application/octet-stream` listeden çıkarılsın (pdf/png/jpeg/webp yeter). Yedek kotası (`BACKUP_MAX_GB`) büyüyen storage'ı zaten ölçüyor |
-| **Durum** | `geplant` — Physio-Pilot P1 |
+| **Durum** | `kısmen gelöst` — kod ve 0093-0095 canlıda (31.10.2026). Doğrulandı: `versandWeg()` tek seçim, kutuda yalnız SMTP (`dokument-mail.js:74`) · `pdf-lib` 1.17.1 MIT, backend `package.json:27`, `formular-signieren.js` içinde dış çağrı yok, log yalnız `e.code` · kova 10 MB + pdf/png/jpeg/webp yeni migration ile (`0093:522`), `octet-stream` çıktı, kutu `FILE_SIZE_LIMIT` 50 MB üstünde. ⚠️ `erwartete-zaehler.json` `bis_version` 0095 (tablo 92, policy 174, fonksiyon 116, trigger 114, index 341) **hesaplandı**, `gemessen_am` hâlâ 2026-10-16. Bu migration'lar yapı ekliyor; sayı yanlışsa her yeni kutunun öz kontrolü kırmızı yanar. Sonraki kutu sürümünden önce temiz PostgreSQL'de `migrate.js` ile fiziksel ölçüm şart (KHS §5b). Not: formular-signieren gövdesi 6 MB (`server.js:143`), kova 10 MB; ikisi ayrı sınır |
+
+### O-234 — `mitarbeiter_anstellung`: kod tabloyu okuyup yazıyor, zincirde ve dökümde yok; kutuya varmaz 🔴 **offen** (31.10.2026)
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Çalışan sözleşme alanları (Vollzeit/Teilzeit, Wochenstunden, Urlaubstage) ve izin hesabı depoda tanımı olmayan bir tabloya bağlı. Migration Melih'te |
+| **Nerede** | `module/anstellung.js:156` (okuma) `:263` (upsert) · `dashboard.js:9542` · `api-backend/db/migrations/` 0 eşleşme · `db/SCHEMA.sql` 0 · `sql-melih/` 0 · `api-backend/dsgvo/` 0 |
+| **Tip** | D |
+| **Kutuda ne olur** | Tablo yok, PostgREST hata döner. Okuma `fehler: true` ile biter, kaydetme „Anstellung konnte nicht gespeichert werden." der; uygulama çökmez ama özellik her kutuda ölü. Tablo SaaS'a elle uygulanırsa iki şema gerçeği doğar (G7), kutu asla yetişemez. Canlıda var mı doğrulanmadı |
+| **Çözüm** | Melih'in SQL'i sıradaki boş numarayla zincire girer (0092-0095 dolu). Önce dosya, sonra canlı, aynı commit'te `db/` dökümü + `db/REGISTER.md` + `erwartete-zaehler.json`. Kişisel veri (çalışan): `api-backend/dsgvo/klassifikation.js` kaydı şart. RLS: `db-ustasi`. Canlıda zaten varsa önce `db-ustasi` doğrular, dosya `IF NOT EXISTS` ile yazılır |
+| **Durum** | `offen` — sahip Melih + `db-ustasi`; kutu sürümü engeli. Korkuluk: G1/G2/G3/G8 temiz, G7 riski |
