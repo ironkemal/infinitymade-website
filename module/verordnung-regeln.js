@@ -186,6 +186,26 @@ export const BEREICHE = {
  *          `gruppen` ist nach Gruppenkürzel geschlüsselt; `luecken` benennt,
  *          was mangels Regeldaten NICHT geprüft werden kann.
  */
+/**
+ * Liegt ein ICD-Kode in einem der Bereiche aus `diagnosegruppen.icd_ranges`?
+ * Formate: "M40-M54" (Kategorienbereich), "M95" (Kategorie), "F45.4" (Präfix).
+ *
+ * ⚠ `icd_ranges` ist eine eigene Hilfstabelle, KEINE amtliche Zuordnung —
+ * HeilM-RL § 4 Abs. 2: Beispieldiagnosen „nicht abschließend". Daher nur für
+ * Warnungen verwenden, nie zum Sperren (gkv-302, 31.10.2026).
+ */
+export function icdInBereichen(code, ranges = []) {
+  const k = String(code || '').toUpperCase().replace(/\s+/g, '');
+  const kat = k.slice(0, 3);
+  if (!/^[A-Z]\d\d$/.test(kat)) return false;
+  return (ranges || []).some(r => {
+    const b = String(r || '').toUpperCase().trim();
+    const m = /^([A-Z]\d\d)-([A-Z]\d\d)$/.exec(b);
+    if (m) return kat >= m[1] && kat <= m[2];
+    return b.includes('.') ? k.startsWith(b) : kat === b;
+  });
+}
+
 export function regelnFuerBereich(bereich, dbZeilen = []) {
   const key = bereichSchluessel(bereich);
   const profil = BEREICHE[key] || null;
@@ -207,6 +227,7 @@ export function regelnFuerBereich(bereich, dbZeilen = []) {
       icd_exclude:         z.icd_exclude         || [],
       icd_accept_unsicher: z.icd_accept_unsicher || [],
       icd_enforcement:     z.icd_enforcement     || 'warn',
+      icd_ranges:          z.icd_ranges          || [],
       untergruppen:        z.untergruppen        || [],
       leitsymptomatik:     profil?.leitsymptomatikKatalog?.[code] || null,
     };

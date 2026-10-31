@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { pruefeVerordnung, zaehleBefunde, SCHWERE, voAusGespeicherterVerordnung } from './verordnung-pruefung.js';
-import { regelnFuerBereich, dgWurzel, bereichSchluessel, POD_HOECHSTMENGE } from './verordnung-regeln.js';
+import { regelnFuerBereich, dgWurzel, bereichSchluessel, POD_HOECHSTMENGE, icdInBereichen } from './verordnung-regeln.js';
 
 // Ausschnitt aus `diagnosegruppen` (bereich = podologie). `hoechstmenge` ist
 // dort heute NULL — genau deshalb greift der Rückfall aus verordnung-regeln.js.
@@ -597,4 +597,33 @@ test('Prüfziffer von LANR und Versichertennummer: Warnung, kein Blocker (canli-
   assert.ok(codes.includes('PRUEFZIFFER_LANR'));
   assert.ok(codes.includes('PRUEFZIFFER_KVNR'));
   assert.ok(e.befunde.filter(b => b.code.startsWith('PRUEFZIFFER')).every(b => b.schwere === 'warnung'));
+});
+
+// ── K3 (31.10.2026): Physio — ICD ausserhalb der typischen Bereiche, nur Warnung ──
+
+test('icdInBereichen: Kategorienbereich, Einzelkategorie, Präfix mit Punkt', () => {
+  assert.equal(icdInBereichen('M54.5', ['M40-M54']), true);
+  assert.equal(icdInBereichen('M55.1', ['M40-M54']), false);
+  assert.equal(icdInBereichen('M95.0', ['M95']), true);
+  assert.equal(icdInBereichen('F45.41', ['F45.4']), true);
+  assert.equal(icdInBereichen('F45.3', ['F45.4']), false);
+  assert.equal(icdInBereichen('', ['M40-M54']), false);
+});
+
+test('Physio: ICD ausserhalb icd_ranges ergibt Warnung ICD_DG_UNTYPISCH, nie Blocker', () => {
+  const satz = regelnFuerBereich('physiotherapy', [{ ...PHYSIO_ZEILEN[0], icd_ranges: ['M40-M54', 'Q76'] }]);
+  const basis = {
+    bereich: 'physiotherapy', diagnosegruppe: 'WS2', heilmittel: 'KG',
+    heilmittelPosition: 'X0501', anzahl: 6, frequenz: '2x', ausstellungsdatum: '2026-09-01',
+    versichertennummer: 'A1', kasseIk: '1', arztLanr: '1', arztBsnr: '2', rezeptart: 'gkv',
+  };
+  const passt = pruefeVerordnung({ ...basis, icd: 'M54.5' }, satz, HEUTE);
+  assert.ok(!codes(passt).includes('ICD_DG_UNTYPISCH'));
+  assert.ok(passt.geprueft.includes('ICD ⇄ Diagnosegruppe (typische Bereiche)'));
+  const fremd = pruefeVerordnung({ ...basis, icd: 'S82.0' }, satz, HEUTE);
+  const b = fremd.befunde.find(x => x.code === 'ICD_DG_UNTYPISCH');
+  assert.ok(b);
+  assert.equal(b.schwere, SCHWERE.warnung);
+  const zweiKodes = pruefeVerordnung({ ...basis, icd: 'S82.0, M54.5' }, satz, HEUTE);
+  assert.ok(!codes(zweiKodes).includes('ICD_DG_UNTYPISCH'));
 });

@@ -74,8 +74,8 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
 // verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261021f';
-import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261031k3';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261021f';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';

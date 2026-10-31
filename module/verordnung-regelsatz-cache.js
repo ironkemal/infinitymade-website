@@ -17,7 +17,7 @@
  * NICHT verschluckt: ohne Regeln gibt es kein Urteil, `null` sagt das offen.
  */
 
-import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=20260918';
+import { bereichSchluessel, regelnFuerBereich } from './verordnung-regeln.js?v=20261031k3';
 
 const _cache = new Map();
 
@@ -33,7 +33,7 @@ export async function regelsatzLaden(supabase, bereich) {
 
   const { data, error } = await supabase
     .from('diagnosegruppen')
-    .select('code, label, hoechstmenge, untergruppen, icd_accept, icd_exclude, icd_accept_unsicher, icd_enforcement')
+    .select('code, label, hoechstmenge, untergruppen, icd_accept, icd_exclude, icd_accept_unsicher, icd_enforcement, icd_ranges')
     .eq('aktiv', true)
     .eq('bereich', key)
     .order('sort');

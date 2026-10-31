@@ -6802,7 +6802,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 
 ---
 
-### O-230 — KI deployment adı noktayı reddediyordu: SaaS'ta KI 08.10'dan beri sessizce kapalı; düzeltme beş kopyadan üçüne girdi 🟡 **offen (düzeltme yolda, 31.10.2026)**
+### O-230 — KI deployment adı noktayı reddediyordu: SaaS'ta KI 08.10'dan beri sessizce kapalı; düzeltme beş kopyadan üçüne girdi 🟡 **kısmen gelöst (`00ceaac9`: beş kopya tek kural + merkez testi) — kalan: şart (3) açılış uyarısı**
 
 | Alan | İçerik |
 |---|---|
@@ -6811,7 +6811,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | C-yakını (config doğrulaması) + A |
 | **Kutuda ne olur** | Bugün kutu `AI_MODE=aus`, etki yok. Jeton modu (O-169) açılınca merkez noktalı deployment adı için jeton vermez, kutuda KI hata vermeden kapalı kalır. SaaS'ta 23 gün sessiz kapalılık ölçüldü — arıza sınıfı „zutat geçersiz ama uygulama susuyor" |
 | **Çözüm** | (1) Beş kopyanın beşi aynı regex; tercihen tek paylaşılan sabit (`merkez/` zaten `api-backend/merkez-istemci/`'den import ediyor). (2) Test: `gpt-4.1-mini` geçer, `.x`, `a..b`, `a/b`, 65 karakter red — iki tarafta (kutu + merkez). (3) Geçersiz deployment açılışta bir uyarı satırı basar (O-50 deseni: zutat bozuksa susmaz). `encodeURIComponent` yolu korunur. Korkuluk: G1/G2/G3/G8 temiz |
-| **Durum** | `offen` — kalan iki kopya + test girince `gelöst` (commit ile) |
+| **Durum** | `kısmen gelöst` — `00ceaac9` (31.10.2026): şart (1) ve (2) tamam. Kalan: şart (3), geçersiz deployment adında açılış uyarı satırı |
 
 ### O-231 — K9 Fax-to-Mail: fax sağlayıcısının adres deseni `profiles`'ta, PDF praksisin SMTP'sinden (ön kontrol 31.10.2026) 🟡 **geplant (Physio-Pilot K9)**
 
@@ -6823,3 +6823,14 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | SMTP'li kutu: mail praksisin sunucusundan praksisin sağlayıcısına gider, bizden geçmez. SMTP'siz kutu (varsayılan, O-142): gönderilemez, açık uyarı + PDF indirme. Fax PDF'i parola taşıyamaz → açık PHI üçüncü tarafa (sağlayıcı) gider; bu praksisin işleyicisidir, bizim değil |
 | **Çözüm** | Şartlar: (1) Gerçek gönderim yalnız `versandMoeglich()` (kutu + SMTP) — **SaaS'ta gönderim yok**, O-216 şart 5 aynen: `noreply@praxura.de`'den açık PHI eki çıkmaz (G1/K6); SaaS'ta PDF iner. (2) Desen doğrulaması: tam bir `{nummer}`, `@`'den sonra geçerli alan adı, numara yalnız rakama indirgenir (`+` → `00`), CRLF/virgül/ikinci alıcı reddi. (3) Gönderen `getMailFrom()`, `absender_fest` tabanı (2) artmaz. (4) Log'a alıcı/numara yazılmaz (O-216 şart 4). (5) Migration zincire dosya + aynı commit'te `db/` dökümü; kolon `NULL`'lanabilir, `:stable` bozulmaz. (6) Hukuk (sağlayıcı AVV'si, açık PDF) → legal-de |
 | **Durum** | `geplant` — Physio-Pilot K9. Korkuluk: G1 şart (1) ile temiz · G2/G3/G8 temiz |
+
+### O-232 — SaaS'ta KI elle açıldı; SaaS onayı sabit `saas` kimliğiyle; kutuda onay sözleşmedeki KI-Anlage ile ve „kurulumda KI açık" (bildirim 31.10.2026) 🟡 **offen (kutu tarafı)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | (1) VPS `/opt/calendar-api/.env.calendar`'a `AI_ACTIVATION_READY=1`, `AI_MAIL_READY=1`, `AI_ALLOW_FREETEXT=1` elle eklendi (Kemal talimatı). (2) `calendar-api`'ye `ki_freigaben` volume'ü — VPS ve `api-backend/docker-compose.yml:93,183` senkron. (3) `2742413a`: `api-backend/ai/ki-einwilligung.js:29,32` kutu değilse `boxId='saas'`. (4) Karar: kutuda Inhaber onayı uygulama içi tık değil, satın alma sözleşmesindeki ayrı KI-Anlage (legal-de); kurulumda KI açık gelir, „KI aus" düğmesi kalır, sistem „KI-Anlage vX imzalandı" kaydını tutar |
+| **Nerede** | `api-backend/lib/dagitim.js:2` `istKutu() = !!SUPABASE_PUBLIC_URL` · `onprem/docker-compose.yml:440,542,654` (kutu volume'ü zaten vardı) · `.env.calendar` git dışı (§8) |
+| **Tip** | E/F değil; G + H + O-84 drift (env) |
+| **Kutuda ne olur** | (3) kutuyu değiştirmez: kutu compose'u `SUPABASE_PUBLIC_URL`'i her zaman geçirir. Ama bu tek değişkene bağlı: boş kalan bir kutu bütün `istKutu()` kapılarıyla birlikte SaaS gibi davranır, KI onayı da `saas` kimliğine düşer. (4) bugünkü varsayılanla çelişir: kutu `AI_MODE=aus` varsayılanı K4/K-20'nin uygulamasıdır, ve jeton modu (O-169) açılmadan kutuda KI zaten çalışamaz |
+| **Çözüm** | (a) „Kurulumda KI açık" kilitli kararın (K4, K-20 kutu varsayılanı `aus`) değiştirilmesidir → **Kemal playbook'ta açıkça yeniden yazar**; ajan değiştirmez. O-169 bitmeden kutuda açık varsayılan teknik olarak mümkün değil. (b) „KI-Anlage vX imzalandı" kaydı kutuya **lisans/kurulum yoluyla** varmalı (merkez sözleşmeyi bilir, kutu bilmez): lisans yükünde ya da `install.sh` adımında sürüm + tarih, hasta verisi yok (G1 temiz). Elle girilen bir bayrak olmamalı. (c) `istKutu()` için açılışta koruma: `/var/lib/praxura` kutu volume'leri var ama `SUPABASE_PUBLIC_URL` boşsa açılış uyarısı ya da red — Faz 2.1 deseni. (d) SaaS env değişikliği git'te iz bırakmaz: `CLAUDE.md` VPS env listesine üç ad eklenmeli; `tools/check-vps-drift.sh` env'i görmez (bilinen sınır) |
+| **Durum** | `offen` — (a) Kemal kararı (playbook K4) · (b) O-169'a bağlanır · (c) Faz 2.1 · (d) belge, builder. SaaS tarafı (1)-(3) uygulandı, kabul. Korkuluk: G1/G2/G3/G8 temiz |

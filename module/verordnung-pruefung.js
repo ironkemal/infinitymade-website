@@ -42,7 +42,7 @@
 
 import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
-import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260918';
+import { dgWurzel, bereichSchluessel, icdInBereichen } from './verordnung-regeln.js?v=20261031k3';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
@@ -304,6 +304,18 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
     if (treffer.excluded.length) {
       melde(SCHWERE.hinweis, 'ICD_AUSGESCHLOSSEN',
         `Ausgeschlossen für ${dg}: ${treffer.excluded.join(', ')}.`, 'icd', profil?.quelle);
+    }
+  }
+
+  // ── 3b. Physio & Co.: ICD ausserhalb der typischen Bereiche → nur Hinweis ──
+  // Ohne amtliche ICD⇄DG-Zuordnung (HeilM-RL § 4 Abs. 2: Beispiele „nicht
+  // abschließend") gibt es hier nie eine Sperre — gkv-302, 31.10.2026 (K3).
+  else if (regel && !regel.icd_accept.length && regel.icd_ranges?.length && icdCodes.length) {
+    geprueft.push('ICD ⇄ Diagnosegruppe (typische Bereiche)');
+    if (!icdCodes.some(c => icdInBereichen(c, regel.icd_ranges))) {
+      melde(SCHWERE.warnung, 'ICD_DG_UNTYPISCH',
+        `${icdCodes.join(', ')} liegt außerhalb der typischen Bereiche der Diagnosegruppe ${dg} – bitte prüfen.`,
+        'icd', profil?.quelle);
     }
   }
 

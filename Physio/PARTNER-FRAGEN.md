@@ -120,3 +120,10 @@
 - **Cevap "hayır" ise değişen:** Tek IK ise iki Standort'un Abrechnung'u tek gönderici, tek Dateinummer sayacı — iki ayrı hesapta tutulursa numaralar çakışır; tek Abrechnung ekranından iki Standort birlikte çıkmalı.
 - **Öncelik:** 🔴 para/hata
 - **Eklendi:** 2026-10-30 (P1) · **Cevap:** —
+
+### #15 — Befund: wie tief, wie oft?
+- **Soru (Almanca, partnere aynen):** „Dokumentieren Ihre Therapeuten den Erstbefund strukturiert (ROM-Gradzahlen, MFT 0–5, Tests +/−) oder als Freitext — und machen Sie einen Zwischenbefund nur, wenn der Arzt einen Bericht anfordert?"
+- **Varsayımımız:** Erstbefund kısa-yapılandırılmış (NRS, ROM, MFT, 3–5 test, Ziel) + serbest not; Zwischenbefund yalnız Therapiebericht istendiğinde veya Folgeverordnung öncesi; Abschlussbefund = Erstbefund'un kopyası, yalnız değişen alanlar. K8 formu buna göre.
+- **Cevap "hayır" ise değişen:** Serbest metin ağırlıklıysa yapılandırılmış alanlar opsiyonel + katlanır olur, ilk ekranda yalnız NRS + Ziel + not; Zwischenbefund rutinse seri ortasında (örn. 6'nın 3.'sünde) otomatik hatırlatma eklenir.
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-10-31 (P1, K8) · **Cevap:** —

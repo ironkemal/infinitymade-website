@@ -34,9 +34,9 @@
  * eine fehlerhafte Verordnung muss erfassbar bleiben.
  */
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20261021f';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20261031k3';
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { normalisiereRezeptart } from './rezeptart.js?v=20261006a';
 
 const $ = (id) => document.getElementById(id);
