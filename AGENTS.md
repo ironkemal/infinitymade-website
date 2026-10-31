@@ -606,6 +606,21 @@ Yani:
 
 ⛔ İstisna: kullanıcı belirli bir iş için açıkça "bunu ayrı dalda yap" derse.
 
+### 🔁 AUTO-COMMIT-PFLICHT — 🚩 [AUTO-COMMIT] (2026-11-01)
+
+**Ajan işi bitirince KENDİSİ commit eder — kullanıcıya sormaz, bekletmez.** Sebep: 22–25.10.
+arası commit edilmemiş 26 dosya birikti, `origin/main` 111 commit ileri gitti, `git push`
+reddedildi, `git pull` 15 dosyada çakıştı (01.11.2026).
+
+- Her tamamlanmış, testi geçen mantıksal adımdan sonra: `git add <dosyalar>` → `git commit`.
+  Birikmiş "sonra commit ederim" yasak.
+- Oturum başında ve bitirmeden önce: `git fetch && git status -sb`. **Geride (`behind`) ise
+  önce `git pull --rebase`**, sonra devam et. Commit edilmemiş iş ≥ 1 gün bekletilmez.
+- Push yine yalnız kullanıcı isterse (canlıya gider). Commit ≠ push.
+- Commit'e girmez: `Claude outputs/`, loglar, sırlar, başka oturumun yarım işi
+  (bkz. memory: parallele Sessions) — bunları ayrı bırak, adını raporda yaz.
+- Bu satırı gören ajan kuralı uygulamak zorundadır: `grep -n "AUTO-COMMIT" CLAUDE.md AGENTS.md`.
+
 ---
 
 ## 🧪 Lokal testen und Browser-Proben (2026-08-25)
