@@ -58,6 +58,19 @@ test('direct fallback: missing AI_MODE uses complete legacy AZURE_* config as di
   assert.equal(cfg.activationReady, true);
 });
 
+test('deployment name: dots allowed (live SaaS uses gpt-4.1-mini), leading dot and ".." rejected', () => {
+  const base = {
+    AZURE_OPENAI_ENDPOINT: 'https://legacy-host.openai.azure.com',
+    AZURE_OPENAI_API_KEY: 'test-key',
+    AZURE_OPENAI_REGION: 'swedencentral',
+  };
+  const opts = { allowedHosts: ['legacy-host.openai.azure.com'] };
+  assert.equal(createAiConfig({ ...base, AZURE_OPENAI_DEPLOYMENT: 'gpt-4.1-mini' }, opts).valid, true);
+  for (const bad of ['..', '.hidden', 'a..b', 'a/b', 'a%2Fb']) {
+    assert.equal(createAiConfig({ ...base, AZURE_OPENAI_DEPLOYMENT: bad }, opts).code, 'AI_DEPLOYMENT_INVALID', bad);
+  }
+});
+
 test('direct fallback incomplete: missing legacy key leaves mode aus', () => {
   const env = {
     AZURE_OPENAI_ENDPOINT: 'https://legacy-host.openai.azure.com'

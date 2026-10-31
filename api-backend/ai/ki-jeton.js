@@ -31,7 +31,8 @@ const INTERNAL_CENTRE_TIMEOUT_MS = 15_000;
 const TAG_MS = 86_400_000;
 const utcTagStart = (ms) => Math.floor(ms / TAG_MS) * TAG_MS;
 
-const RE_SAFE_SEGMENT = /^[a-zA-Z0-9_-]{1,64}$/;
+// Azure deployment names may contain dots (gpt-4.1-mini); a leading dot and ".." stay out of the URL path.
+const RE_SAFE_SEGMENT = /^(?!.*\.\.)[a-zA-Z0-9_-][a-zA-Z0-9._-]{0,63}$/;
 const RE_API_VERSION = /^\d{4}-\d{2}-\d{2}(-preview)?$/;
 const RE_CONTROL_CHARS = /[\r\n\x00-\x1f\x7f]/;
 
