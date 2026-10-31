@@ -4079,7 +4079,7 @@
       <div class="modal-body">
         <div id="rxScanChooser" style="display:flex;gap:12px;flex-direction:column;">
           <button class="btn-primary" id="rxScanWebcamBtn" type="button"
-            style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Mit Kamera fotografieren</button>
+            style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Barcode mit Kamera scannen</button>
           <button class="btn-ghost" id="rxScanFileBtn" type="button"
             style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Bild oder PDF auswählen</button>
           <button class="btn-ghost" id="rxScanManuellBtn" type="button"
@@ -4091,8 +4091,15 @@
           </p>
         </div>
         <div id="rxScanCamera" style="display:none;">
-          <video id="rxScanVideo" autoplay playsinline muted
-            style="width:100%;max-height:60vh;background:#000;border-radius:8px;"></video>
+          <!-- Sucher: roter Rahmen = Bereich, der live auf den PDF417-Barcode gelesen wird (module/rezept-barcode-dialog.js) -->
+          <div id="rxScanViewport" style="position:relative;width:100%;margin:0 auto;overflow:hidden;border-radius:8px;background:#000;">
+            <video id="rxScanVideo" autoplay playsinline muted
+              style="display:block;width:100%;height:100%;object-fit:cover;"></video>
+            <div id="rxScanFrame" aria-hidden="true"
+              style="position:absolute;left:8%;top:32%;width:84%;height:36%;border:3px solid #e11d48;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);transition:border-color .15s;"></div>
+          </div>
+          <p id="rxScanHint" style="text-align:center;font-size:14px;color:var(--text-main);margin-top:10px;">
+            Barcode des Rezepts in den roten Rahmen halten – er wird automatisch erkannt.</p>
           <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;">
             <button class="btn-primary" id="rxScanShotBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Aufnehmen</button>
             <button class="btn-ghost" id="rxScanCancelCamBtn" type="button">Abbrechen</button>
@@ -5901,7 +5908,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261030zns"></script>
+  <script type="module" src="dashboard.js?v=20261031live"></script>
 </body>
 
 </html>

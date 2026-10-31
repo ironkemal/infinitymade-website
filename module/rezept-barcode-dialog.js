@@ -6,10 +6,13 @@ export function initBarcodeDialog(deps) {
   const g=id=>document.getElementById(id);
   if(!g('rezeptScanBtn')) return;
   if(deps.sichtbar()) g('rezeptScanBtn').style.display='';
-  let stream=null, controller=null, epoch=0, reading=false, failed=false, handoff=null;
+  let stream=null, controller=null, epoch=0, reading=false, failed=false, handoff=null, liveTimer=null;
+  // Live-Sucher: nur der rote Rahmen (Anteile des Videobilds, wie #rxScanFrame) wird gelesen.
+  const RAHMEN={x:0.08,y:0.32,w:0.84,h:0.36};
+  function rahmenFarbe(farbe) {const el=g('rxScanFrame');if(el) el.style.borderColor=farbe;}
   function error(text) {g('rxScanError').textContent=text;g('rxScanError').style.display='';}
   function chooser() {g('rxScanCamera').style.display='none';g('rxScanProcessing').style.display='none';g('rxScanChooser').style.display='flex';}
-  function stopCamera() {stream?.getTracks().forEach(t=>t.stop());stream=null;g('rxScanVideo').srcObject=null;}
+  function stopCamera() {clearTimeout(liveTimer);liveTimer=null;stream?.getTracks().forEach(t=>t.stop());stream=null;g('rxScanVideo').srcObject=null;rahmenFarbe('#e11d48');}
   function cancel() {epoch++;controller?.abort();controller=null;reading=false;handoff=null;stopCamera();chooser();}
   async function scan(dataUri, token) {
     const scanController=controller;
@@ -18,13 +21,42 @@ export function initBarcodeDialog(deps) {
     try {
       const result=await scanneRezeptLokal(dataUri,{signal:scanController.signal});
       if(token!==epoch || scanController.signal.aborted) return;
-      zaehleBarcode('barcode_ok');handoff=token;deps.schliessen();
-      await uebernehmeRezeptInMaske(result,{oeffneMaske:()=>deps.maske(null),patienten:deps.patienten,
-        istAktuell:()=>token===epoch && !scanController.signal.aborted && !g('rezeptModal')?.hidden});
+      await uebernehmen(result,token,scanController);
     } catch(e) {
       if(token!==epoch || e.name==='AbortError') return;
       failed=true;chooser();error('Barcode konnte nicht übernommen werden. Bitte das Bild erneut versuchen oder von Hand erfassen.');
     } finally {if(handoff===token) handoff=null;if(token===epoch) reading=false;}
+  }
+  async function uebernehmen(result, token, scanController) {
+    zaehleBarcode('barcode_ok');handoff=token;deps.schliessen();
+    await uebernehmeRezeptInMaske(result,{oeffneMaske:()=>deps.maske(null),patienten:deps.patienten,
+      istAktuell:()=>token===epoch && !scanController.signal.aborted && !g('rezeptModal')?.hidden});
+  }
+  // Liest alle ~0,5 s still den Rahmenausschnitt. Kein Treffer = kein Fehlertext, nur weiter suchen.
+  async function liveTick(camToken) {
+    liveTimer=null;
+    const video=g('rxScanVideo');
+    if(camToken!==epoch || !stream || reading) return;
+    if(video.videoWidth && video.videoHeight) {
+      const canvas=document.createElement('canvas');
+      let result=null;
+      try {
+        const sx=Math.round(video.videoWidth*RAHMEN.x), sy=Math.round(video.videoHeight*RAHMEN.y);
+        canvas.width=Math.round(video.videoWidth*RAHMEN.w);canvas.height=Math.round(video.videoHeight*RAHMEN.h);
+        canvas.getContext('2d').drawImage(video,sx,sy,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+        result=await scanneRezeptLokal(canvas.toDataURL('image/png'));
+      } catch { result=null; } finally { canvas.width=canvas.height=0; }
+      if(camToken!==epoch || !stream || reading) return;
+      if(result) {
+        const token=begin();if(token==null) return;
+        rahmenFarbe('#16a34a');stopCamera();
+        try { await uebernehmen(result,token,controller); }
+        catch { if(token===epoch){failed=true;chooser();error('Barcode konnte nicht übernommen werden. Bitte erneut versuchen oder von Hand erfassen.');} }
+        finally { if(handoff===token) handoff=null; if(token===epoch) reading=false; }
+        return;
+      }
+    }
+    liveTimer=setTimeout(()=>void liveTick(camToken),500);
   }
   function begin() {if(reading) return null;reading=true;controller=new AbortController();return ++epoch;}
   g('rezeptScanBtn').addEventListener('click',()=>{cancel();failed=false;g('rxScanError').style.display='none';deps.wahl(null);});
@@ -54,7 +86,12 @@ export function initBarcodeDialog(deps) {
       if(token!==epoch){captured.getTracks().forEach(t=>t.stop());return;}
       stream=captured;g('rxScanVideo').srcObject=stream;await g('rxScanVideo').play();
       if(token!==epoch) return;
+      const v=g('rxScanVideo'), seite=v.videoWidth && v.videoHeight ? v.videoWidth/v.videoHeight : 4/3;
+      // Sucher hat exakt das Seitenverhältnis des Kamerabilds, damit Rahmen und Ausschnitt deckungsgleich sind.
+      const vp=g('rxScanViewport');if(vp){vp.style.aspectRatio=String(seite);vp.style.maxWidth=`calc(60vh * ${seite})`;}
+      rahmenFarbe('#e11d48');
       g('rxScanChooser').style.display='none';g('rxScanCamera').style.display='';
+      liveTimer=setTimeout(()=>void liveTick(token),400);
     } catch {if(token!==epoch) return;stopCamera();chooser();error('Kamera nicht verfügbar. Bitte Browserberechtigung prüfen oder Bild/PDF auswählen.');}
   });
   g('rxScanShotBtn').addEventListener('click',()=>{

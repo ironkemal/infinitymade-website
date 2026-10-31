@@ -99,7 +99,7 @@ import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDiens
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
-import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261021v';
+import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261031live';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261021v';
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021v';

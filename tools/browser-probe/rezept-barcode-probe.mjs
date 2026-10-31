@@ -23,7 +23,7 @@ try {
   result=await page.evaluate(()=>window.m3Probe.results);
 } finally {await browser.close();}
 for(const row of result) console.log(`${row.pass?'PASS':'FAIL'} ${row.name || row.file || row.error}`);
-const pass=result.length===39 && new Set(result.map(row=>row.name || row.file)).size===39
+const pass=result.length===40 && new Set(result.map(row=>row.name || row.file)).size===40
   && result.every(row=>row.pass) && !errors.length && !foreign.length && !writes.length && !fontWarnings.length && fonts.length>0;
 console.log(JSON.stringify({passed:result.filter(row=>row.pass).length,total:result.length,pageErrors:errors,
   blockedForeignOrigins:foreign,networkWrites:writes,fontWarnings,localFontRequests:fonts.length}));

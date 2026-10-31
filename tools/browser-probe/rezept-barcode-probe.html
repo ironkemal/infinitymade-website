@@ -176,6 +176,26 @@
       document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await tick();
       check('Gemeinsames Escape schließt Kamera und beendet alle Tracks',scanModal.hidden && !g('rxScanVideo').srcObject && fakeStream.getTracks().every(track=>track.readyState==='ended'));
     } finally {fakeStream.getTracks().forEach(track=>track.stop());navigator.mediaDevices.getUserMedia=oldCapture;}
+    // Live-Sucher: fixture drawn only inside the red frame region of a synthetic camera;
+    // the dialog must find the barcode by itself (no "Aufnehmen" click) and hand off to the mask.
+    {
+      const img=new Image();img.src='./fixtures/m3/muster13.png';await img.decode();
+      const cam=document.createElement('canvas');cam.width=1920;cam.height=1440;
+      const fx=cam.width*0.08,fy=cam.height*0.32,fw=cam.width*0.84,fh=cam.height*0.36;
+      const scale=Math.min(fw/img.naturalWidth,fh/img.naturalHeight);
+      const paint=()=>{const c=cam.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cam.width,cam.height);
+        c.drawImage(img,fx+(fw-img.naturalWidth*scale)/2,fy+(fh-img.naturalHeight*scale)/2,img.naturalWidth*scale,img.naturalHeight*scale);};
+      paint();const liveStream=cam.captureStream(5);const keep=setInterval(paint,200);
+      navigator.mediaDevices.getUserMedia=async()=>liveStream;
+      try {
+        g('rezeptScanBtn').click();g('rxScanWebcamBtn').click();
+        const liveUntil=Date.now()+25000;
+        while(!g('rzBarcodeBestaetigungWrap') && Date.now()<liveUntil) await new Promise(r=>setTimeout(r,100));
+        check('Live-Sucher erkennt Barcode im roten Rahmen ohne Aufnehmen',!!g('rzBarcodeBestaetigungWrap')
+          && g('rzPatName').value==='Müller' && scanModal.hidden && liveStream.getTracks().every(t=>t.readyState==='ended'));
+      } finally {clearInterval(keep);liveStream.getTracks().forEach(t=>t.stop());navigator.mediaDevices.getUserMedia=oldCapture;}
+      g('rezeptModal').hidden=true;await tick();
+    }
     g('rezeptScanBtn').click();
     const png=await(await realFetch('./fixtures/m3/muster13.png')).blob();
     const transfer=new DataTransfer();transfer.items.add(new File([png],'synthetic.png',{type:'image/png'}));

@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-10-30 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-31 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3851 fonksiyon** (3729 JS · 95 bash · 27 ps1) · 485 dosya · 42 sidebar modülü
+**3854 fonksiyon** (3732 JS · 95 bash · 27 ps1) · 485 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -515,7 +515,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fehler` — api-backend/billing/api/artefakt-historie.js:26 · api-backend/billing/api/artefakt-registry.js:15 · api-backend/billing/codes/physio-leistungszeilen.js:27 · module/therapiebericht.js:204
 - `fehler` — installieren/install.sh:22 · onprem/backup.sh:50 · onprem/restore.sh:47 · onprem/update.sh:65
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:63 · module/fussbefund.js:307 · module/rezeptinfo-geld.js:373
-- `invalidate` — api-backend/ai/ki-jeton.js:146 · module/patient-notizen.js:9 · module/patient-ueberweisung-upload.js:4 · module/rezept-patientenkopf.js:19
+- `invalidate` — api-backend/ai/ki-jeton.js:145 · module/patient-notizen.js:9 · module/patient-ueberweisung-upload.js:4 · module/rezept-patientenkopf.js:19
 
 ## Shell (onprem/)
 
