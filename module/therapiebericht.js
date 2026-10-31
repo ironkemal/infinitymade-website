@@ -22,7 +22,7 @@
  */
 import { API_BASE } from '../supabase-config.js';
 import { mailtoLink } from './mail-entwurf.js?v=20261007a';
-import { druckeFaxDeckblatt } from './fax-deckblatt.js?v=20261022a';
+import { druckeFaxDeckblatt } from './fax-deckblatt.js?v=20261031a';
 
 'use strict';
 
@@ -225,6 +225,7 @@ export async function oeffneBerichtDialog({ supabase, rxId, arztId = null, nachh
         },
       });
       if (r.pdf_base64 && fenster) fenster.location.href = pdfBlobUrl(r.pdf_base64);
+      if (aktion === 'fax' && r.gesendet && fenster) fenster.close();
       if (aktion === 'vorschau') { knoepfe.forEach(k => { k.disabled = false; }); return; }
       zeigeErgebnis(ov, r, aktion, supabase);
       if (typeof nachher === 'function') nachher();
@@ -268,14 +269,32 @@ function zeigeErgebnis(ov, r, aktion, supabase) {
       try { await api(supabase, `/dokument/therapiebericht/${encodeURIComponent(r.bericht_id)}/passwort-telefonisch`, { method: 'POST', body: {} }); }
       catch (err) { e.target.checked = false; e.target.disabled = false; alert(err.message); }
     });
+  } else if (aktion === 'fax') {
+    if (r.gesendet) {
+      body.innerHTML = `
+        <p style="margin:0 0 8px;">Bericht erstellt und in der Akte vermerkt.</p>
+        <p style="margin:0 0 8px;font-size:13px;">Das Fax wurde über Ihren Mail-Server an Ihren Fax-Dienst übergeben (Empfang bitte prüfen).</p>
+        ${r.empfaenger ? `<p style="margin:0 0 8px;font-size:12px;color:var(--text-muted);">Empfänger: <strong>${esc(r.empfaenger)}</strong></p>` : ''}`;
+    } else {
+      const hinweise = {
+        SAAS: 'In der Cloud-Version versendet Praxura keine Faxe. Drucken Sie das PDF und faxen Sie es mit Ihrem Gerät.',
+        KEIN_SMTP: 'Kein Mail-Server eingerichtet. Drucken Sie das PDF und faxen Sie es mit Ihrem Gerät oder richten Sie in der Box einen Mail-Server ein.',
+        KEIN_MUSTER: 'Hinterlegen Sie unter Einstellungen das Adressmuster Ihres Fax-Dienstes.',
+        KEINE_FAXNUMMER: 'Beim Arzt ist keine Faxnummer hinterlegt.',
+      };
+      const hinweis = hinweise[r.fax_hinweis] || 'Das Fax konnte nicht automatisch versendet werden.';
+      body.innerHTML = `
+        <p style="margin:0 0 8px;">Bericht erstellt und in der Akte vermerkt. Das PDF ist in einem neuen Fenster geöffnet — dort drucken.</p>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--text-muted);">${esc(hinweis)}</p>
+        ${r.empfaenger ? `<p style="margin:0 0 8px;font-size:13px;">Fax an: <strong>${esc(r.empfaenger)}</strong></p>` : ''}
+        <button type="button" class="btn btn-secondary btn-sm" data-tb-deckblatt>Fax-Deckblatt drucken</button>`;
+      body.querySelector('[data-tb-deckblatt]')?.addEventListener('click', () => {
+        druckeFaxDeckblatt({ praxis: r.praxis || {}, empfaenger: { name: r.arzt?.name || '', fax: r.arzt?.fax || '', telefon: r.arzt?.telefon || '' }, betreff: 'Therapiebericht' });
+      });
+    }
   } else {
     body.innerHTML = `
-      <p style="margin:0 0 8px;">Bericht erstellt und in der Akte vermerkt. Das PDF ist in einem neuen Fenster geöffnet — dort drucken.</p>
-      ${aktion === 'fax' ? `<p style="margin:0 0 8px;font-size:13px;">Fax an: <strong>${esc(r.empfaenger || 'keine Faxnummer hinterlegt')}</strong></p>
-        <button type="button" class="btn btn-secondary btn-sm" data-tb-deckblatt>Fax-Deckblatt drucken</button>` : ''}`;
-    body.querySelector('[data-tb-deckblatt]')?.addEventListener('click', () => {
-      druckeFaxDeckblatt({ praxis: r.praxis || {}, empfaenger: { name: r.arzt?.name || '', fax: r.arzt?.fax || '', telefon: r.arzt?.telefon || '' }, betreff: 'Therapiebericht' });
-    });
+      <p style="margin:0 0 8px;">Bericht erstellt und in der Akte vermerkt. Das PDF ist in einem neuen Fenster geöffnet — dort drucken.</p>`;
   }
   fuss.innerHTML = '<button type="button" class="btn btn-primary" data-tb-fertig>Fertig</button>';
   fuss.onclick = (e) => { if (e.target.closest('[data-tb-fertig]')) ov.querySelector('[data-tb-zu]').click(); };

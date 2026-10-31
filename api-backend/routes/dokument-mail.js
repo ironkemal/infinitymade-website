@@ -24,6 +24,7 @@ import {
 } from '../lib/therapiebericht.js';
 import { erzeugeRechnungPdf, rechnungDateiname } from '../lib/rechnung-pdf.js';
 import { sendeUeberGmail } from '../lib/gmail-senden.js';
+import { pruefeFaxMuster, faxNummerNormalisieren, baueFaxAdresse } from '../lib/fax-adresse.js';
 
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 const MAX_TEXT = 4000;
@@ -31,6 +32,23 @@ const MAX_TEXT = 4000;
 /** Darf diese Instanz selbst mailen? Nur Box mit eigenem SMTP (siehe Kopf). */
 export function versandMoeglich(env = process.env, kutu = istKutu()) {
   return !!(kutu && env.SMTP_HOST);
+}
+
+/**
+ * Reine Entscheidung über Faxversand (onprem O-231).
+ * Gibt { senden: true, adresse } oder { senden: false, code } zurück.
+ * Codes: 'SAAS' | 'KEIN_SMTP' | 'KEIN_MUSTER' | 'KEINE_FAXNUMMER'.
+ */
+export function entscheideFaxVersand({ kutu = false, smtp = null, muster = null, nummer = null } = {}) {
+  if (!kutu) return { senden: false, code: 'SAAS' };
+  if (!smtp) return { senden: false, code: 'KEIN_SMTP' };
+  const p = pruefeFaxMuster(muster);
+  if (!p.ok) return { senden: false, code: 'KEIN_MUSTER' };
+  const nr = faxNummerNormalisieren(nummer);
+  if (!nr) return { senden: false, code: 'KEINE_FAXNUMMER' };
+  const adresse = baueFaxAdresse(muster, nummer);
+  if (!adresse) return { senden: false, code: 'KEIN_MUSTER' };
+  return { senden: true, adresse };
 }
 
 /** Eingaben prüfen und normalisieren. Gibt {fehler} oder {werte} zurück. */
@@ -87,7 +105,8 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
       }
 
       const passwort = werte.aktion === 'mail' ? erzeugePasswort() : null;
-      const pdf = await erzeugeBerichtPdf(inhalt, { passwort });
+      const faxDeckblatt = werte.aktion === 'fax';
+      const pdf = await erzeugeBerichtPdf(inhalt, { passwort, faxDeckblatt });
       const an = werte.aktion === 'mail' ? (werte.an_email || snapshot.arzt?.email || '')
         : werte.aktion === 'fax' ? (snapshot.arzt?.fax || '') : '';
 
@@ -109,6 +128,49 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         } catch (e) {
           console.error('[dokument/therapiebericht] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
           return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden (Mailserver). Bitte Einstellungen prüfen oder als Fax/Druck senden.', code: 'SMTP_FEHLER' });
+        }
+      }
+
+      let faxEntscheidung = null;
+      if (werte.aktion === 'fax') {
+        let muster = null;
+        try {
+          const { data: prof, error: profErr } = await supabase
+            .from('profiles')
+            .select('fax_mail_muster')
+            .eq('id', tenantId)
+            .maybeSingle();
+          if (!profErr && prof?.fax_mail_muster) {
+            muster = prof.fax_mail_muster;
+          }
+        } catch {
+          muster = null;
+        }
+
+        faxEntscheidung = entscheideFaxVersand({
+          kutu: kutu(),
+          smtp: env.SMTP_HOST,
+          muster,
+          nummer: an,
+        });
+
+        if (faxEntscheidung.senden) {
+          try {
+            await transportFabrik({ requireTLS: true }).sendMail({
+              from: getMailFrom(snapshot.praxis?.name),
+              to: faxEntscheidung.adresse,
+              subject: 'Fax',
+              text: 'Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie ein Telefax.\n\nMit freundlichen Grüßen\n' + (snapshot.praxis?.name || ''),
+              attachments: [{ filename: dateiname, content: pdf, contentType: 'application/pdf' }],
+            });
+            gesendet = true;
+          } catch (e) {
+            console.error('[dokument/therapiebericht] Fax-Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
+            return res.status(502).json({
+              error: 'Das Fax konnte nicht über den Mailserver versendet werden. Bitte Einstellungen prüfen oder das PDF drucken.',
+              code: 'SMTP_FEHLER',
+            });
+          }
         }
       }
 
@@ -139,6 +201,7 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         bericht_id: zeile.id,
         gesendet,
         ...(werte.aktion === 'mail' && !gesendet ? { code: 'SMTP_FEHLT' } : {}),
+        ...(werte.aktion === 'fax' && !gesendet ? { code: 'FAX_NICHT_GESENDET', fax_hinweis: faxEntscheidung?.code } : {}),
         ...(passwort ? { passwort } : {}),
         ...(gesendet ? {} : { pdf_base64: pdf.toString('base64'), dateiname }),
         empfaenger: an || null,

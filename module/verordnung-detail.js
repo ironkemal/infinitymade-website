@@ -93,7 +93,7 @@ import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 // Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
-import { mountTherapiebericht } from './therapiebericht.js?v=20261022a';
+import { mountTherapiebericht } from './therapiebericht.js?v=20261031a';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `

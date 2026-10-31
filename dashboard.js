@@ -48,7 +48,7 @@ import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrah
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
-import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261009k15'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
+import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031a'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y';
@@ -71,8 +71,8 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261022tb';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261022tb';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261031a';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261031a';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q';

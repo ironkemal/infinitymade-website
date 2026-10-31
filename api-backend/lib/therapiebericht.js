@@ -79,6 +79,7 @@ export function baueSnapshot({ profil = {}, rx = {}, lead = null, arzt = null, b
       plzOrt: [plz, t(profil.city)].filter(Boolean).join(' '),
       telefon: t(profil.phone),
       email: t(profil.email),
+      fax: t(profil.fax),
     },
     patient: lead ? {
       name: [t(lead.first_name), t(lead.last_name)].filter(Boolean).join(' ') || t(lead.title),
@@ -148,7 +149,7 @@ export async function ladeSnapshot(supabase, tenantId, prescriptionId) {
  * PDF erzeugen. Mit `passwort` verschlüsselt (AES-256), sonst offen (Fax/Druck/Vorschau).
  * @returns {Promise<Buffer>}
  */
-export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf = '', empfehlung = '', empfehlung_code = null, datum = new Date() }, { passwort = null } = {}) {
+export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf = '', empfehlung = '', empfehlung_code = null, datum = new Date() }, { passwort = null, faxDeckblatt = false } = {}) {
   const opts = { size: 'A4', margins: { top: 56, bottom: 56, left: 62, right: 62 }, info: { Title: 'Therapiebericht' } };
   if (passwort) {
     Object.assign(opts, {
@@ -166,6 +167,52 @@ export function erzeugeBerichtPdf({ snapshot, art = 'zwischenbericht', verlauf =
   const s = snapshot || {};
   const p = s.praxis || {};
   const breite = doc.page.width - 124;
+
+  if (faxDeckblatt) {
+    // Fax-Deckblatt als Seite 1 (onprem O-231).
+    // KEIN Patientenname, KEINE Diagnose, KEIN Geburtsdatum auf dem Deckblatt.
+    doc.font('Helvetica-Bold').fontSize(22).text('TELEFAX');
+    doc.moveDown(0.8);
+
+    // Kopf Praxis (aus snapshot.praxis)
+    doc.font('Helvetica-Bold').fontSize(10).text('Absender (Praxis):');
+    doc.font('Helvetica').fontSize(10).fillColor('#000');
+    if (p.name) doc.text(p.name);
+    const anschrift = [p.strasse, p.plzOrt].filter(Boolean).join(', ');
+    if (anschrift) doc.text(anschrift);
+    if (p.telefon) doc.text(`Tel.: ${p.telefon}`);
+    if (p.fax) doc.text(`Fax: ${p.fax}`);
+    doc.moveDown(0.8);
+
+    // Empfänger (aus snapshot.arzt)
+    doc.font('Helvetica-Bold').fontSize(10).text('Empfänger:');
+    doc.font('Helvetica').fontSize(10);
+    if (s.arzt) {
+      if (s.arzt.name) doc.text(s.arzt.name);
+      if (s.arzt.praxis) doc.text(s.arzt.praxis);
+      if (s.arzt.fax) doc.text(`Fax: ${s.arzt.fax}`);
+      if (s.arzt.telefon) doc.text(`Tel.: ${s.arzt.telefon}`);
+    } else {
+      doc.text('—');
+    }
+    doc.moveDown(0.8);
+
+    // Datum & Betreff
+    const dStr = datumDE(datum.toISOString ? datum.toISOString() : datum);
+    if (dStr) doc.text(`Datum: ${dStr}`);
+    doc.font('Helvetica-Bold').fontSize(10).text('Betreff: ', { continued: true })
+      .font('Helvetica').text('Therapiebericht');
+    doc.moveDown(1.2);
+
+    // Hinweise
+    doc.font('Helvetica-Bold').fontSize(9).text('Bei Fehlzustellung bitte telefonisch benachrichtigen.');
+    doc.moveDown(0.4);
+    doc.font('Helvetica').fontSize(8).fillColor('#333')
+      .text('Vertraulich – dieses Fax kann Gesundheitsdaten enthalten, die der ärztlichen Schweigepflicht (§ 203 StGB) unterliegen. Es ist ausschließlich für den oben genannten Empfänger bestimmt. Sollten Sie dieses Fax irrtümlich erhalten haben, benachrichtigen Sie uns bitte umgehend telefonisch und vernichten Sie die Unterlagen.', { width: breite });
+
+    doc.fillColor('#000');
+    doc.addPage();
+  }
 
   // Kopf: Praxis
   doc.font('Helvetica-Bold').fontSize(12).text(p.name || '', { width: breite });

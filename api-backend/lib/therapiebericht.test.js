@@ -64,3 +64,20 @@ test('datumDE', () => {
   assert.equal(datumDE('2026-01-05'), '05.01.2026');
   assert.equal(datumDE(''), '');
 });
+
+test('PDF mit faxDeckblatt: erzeugt offenes PDF mit TELEFAX auf Seite 1', async () => {
+  const snapshot = baueSnapshot({
+    profil: { business_name: 'Praxis X', street: 'Hauptstr.', house_number: '1', zip: '53721', city: 'Siegburg', phone: '02241 123', fax: '02241 999' },
+    rx: rxPodo,
+    lead: { first_name: 'Erika', last_name: 'Muster', geburtsdatum: '1950-02-03' },
+    arzt: { arzt_name: 'Dr. Med. Test', fax: '0221 444', telefon: '0221 555' },
+  });
+  assert.equal(snapshot.praxis.fax, '02241 999');
+  const mitDeckblatt = (await erzeugeBerichtPdf({ snapshot }, { faxDeckblatt: true })).toString('latin1');
+  assert.ok(mitDeckblatt.startsWith('%PDF'));
+  assert.ok(!/\/Encrypt/.test(mitDeckblatt));
+  // Seiteninhalt ist komprimiert: das Deckblatt zeigt sich als zusätzliche Seite.
+  const ohne = (await erzeugeBerichtPdf({ snapshot })).toString('latin1');
+  const seiten = (t) => Number(/\/Count (\d+)/.exec(t)[1]);
+  assert.equal(seiten(mitDeckblatt), seiten(ohne) + 1);
+});

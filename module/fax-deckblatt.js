@@ -7,12 +7,13 @@
  * idealerweise auch per Fax"). Praxis und Arzt verkehren im Alltag noch per
  * Fax: Therapieberichte, Rückfragen zur Verordnung, Änderungswünsche.
  *
- * Rahmen (legal-de + onprem, 22.10.2026 — compliance/LEGAL_DECISIONS.md):
- *   - Praxura SENDET NICHT. Die Praxis druckt das Deckblatt und faxt mit
- *     ihrem eigenen Gerät (Fritzbox, Multifunktionsdrucker). Ein Fax-Dienst
- *     (sipgate o. ä.) wurde bewusst verworfen: Gesundheitsdaten liefen dann
- *     über einen neuen Dritten (guvenlik-Veto „PHI an neuen Ort") und die Box
- *     bekäme eine neue Außenverbindung (G8).
+ * Rahmen (legal-de + onprem, 22.10.2026 / 31.10.2026 O-231 — compliance/LEGAL_DECISIONS.md):
+ *   - In einer Box mit eigenem SMTP und hinterlegtem Fax-to-Mail-Muster sendet
+ *     die Box das Fax selbst (Backend: routes/dokument-mail.js, Deckblatt dort
+ *     als erste PDF-Seite); im SaaS und ohne Mail-Server bleibt es beim
+ *     Ausdruck, dann ist dieses Modul der Rückfall. Der Fax-Dienst selbst bleibt
+ *     beim Provider der Praxis (kein Praxura-Dritter, keine neue Außenverbindung
+ *     außer dem bestehenden SMTP der Praxis).
  *   - Auf das Deckblatt gehört KEIN Patientenname und keine Diagnose — es
  *     liegt im Empfangsfach des Arztes oben auf. Deshalb hat der Betreff einen
  *     Hinweis und das Freitextfeld ebenso.

@@ -20,6 +20,7 @@
  * @param {Function} deps.showToast
  */
 import { httpsUrl } from './branding.js?v=20261022q';
+import { renderFaxSettings } from './fax-einstellungen.js?v=20261031a';
 
 export const OWNER_HINWEIS = 'Ihre Online-Terminseite betreiben Sie als Praxis selbst: Tragen Sie die Adressen Ihres '
   + 'Impressums und Ihrer Datenschutzerklärung ein – ohne Eintrag erscheint ein automatisch aus Ihren Praxisdaten '
@@ -95,6 +96,7 @@ export function renderRechtslinksSettings(deps, doc = document) {
     doc.getElementById('setRechtslinksSaveBtn').addEventListener('click', () => speichern(deps, doc));
   }
   for (const [spalte, id] of FELDER) doc.getElementById(id).value = deps.profile?.[spalte] || '';
+  renderFaxSettings(deps, doc);
 }
 
 async function speichern(deps, doc) {
