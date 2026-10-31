@@ -49,6 +49,8 @@
  *   vertagt). Diese Datei soll das NICHT heimlich zu reparieren versuchen.
  */
 
+import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261031b';
+
 // Vom Aufrufer (dashboard.js) injizierte Abhängigkeiten.
 let supabase = null;
 let API = '';
@@ -383,7 +385,16 @@ function enterKioskMode(modus = 'anamnese') {
     document.dispatchEvent(new CustomEvent('praxura:kiosk', { detail: { aktiv: true, modus } }));
     if (nurEinwilligung && openEinwilligung && patientId) {
       // Overlay der Einwilligung liegt über dem Kiosk (z-index 99999, später im DOM), unter dessen PIN-Modal.
-      openEinwilligung({ patientId, onClose: zeigeDanke }).catch(() => zeigeDanke());
+      openEinwilligung({
+        patientId,
+        onClose: () => oeffneFormularAuswahl({
+          supabase,
+          leadId: patientId,
+          showToast,
+          nurEinwilligungen: true,
+          onFertig: zeigeDanke,
+        }),
+      }).catch(() => zeigeDanke());
     } else if (nurEinwilligung) {
       zeigeDanke();
     }

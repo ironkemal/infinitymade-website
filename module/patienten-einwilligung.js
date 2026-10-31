@@ -403,7 +403,7 @@ function geraetLabel() {
 // Kein `signature_pad` von einem CDN: G8 verbietet neue Drittanbieter-Skripte,
 // weil jede zusätzliche Cloud-Kette die On-Prem-Migration teurer macht.
 
-function signaturePad(canvas, hinweis) {
+export function signaturePad(canvas, hinweis) {
   const ctx = canvas.getContext('2d');
   let zeichnet = false;
   let leer = true;

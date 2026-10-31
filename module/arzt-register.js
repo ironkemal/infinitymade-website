@@ -59,7 +59,7 @@
 // Dieselbe Version wie in `dashboard.js` — eine abweichende Query-Zeichenkette
 // wäre für den Browser ein zweites Modul.
 import { attachArztSearch, arztMetaText } from '../arzt-suche.js?v=20261001a';
-import { mountFaxDeckblatt } from './fax-deckblatt.js?v=20261022a';
+import { mountFaxDeckblatt } from './fax-deckblatt.js?v=20261031a';
 
 /** @type {object|null} Von `initArztRegister` gesetzter Zugang zur Dashboard-Umgebung. */
 let ctx = null;

@@ -35,6 +35,7 @@ import dsgvoRouter from './routes/dsgvo.js';
 import ueberRouter from './routes/ueber.js';
 import { createManifestRouter } from './routes/manifest.js';
 import { createDokumentMailRouter } from './routes/dokument-mail.js';
+import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -137,15 +138,16 @@ const handleAiParsing = (req, res, next) => {
   });
 };
 
-// 2. Default JSON Parser for everything else (billing, booking, etc.)
+// 2. Default JSON Parser for everything else (billing, booking, etc.) + 6mb for formular-signieren
 const defaultParser = express.json({ limit: '256kb' });
+const signierenParser = express.json({ limit: '6mb' });
 
 app.use((req, res, next) => {
-  const isAiRoute = req.path.startsWith('/api/ai/') || req.path.startsWith('/api/rezept/');
-  if (isAiRoute) {
+  if (req.path === '/api/dokument/formular-signieren') {
+    signierenParser(req, res, next);
+  } else if (req.path.startsWith('/api/ai/') || req.path.startsWith('/api/rezept/')) {
     handleAiParsing(req, res, next);
   } else {
-    // Only apply 256kb limit check for non-AI routes, which defaultParser enforces
     defaultParser(req, res, next);
   }
 });
@@ -623,6 +625,7 @@ app.use('/api', dsgvoRouter);
 app.use('/api', ueberRouter);
 // Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
 app.use('/api', createDokumentMailRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
+app.use('/api', createFormularSignierenRouter({ supabase }));
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {

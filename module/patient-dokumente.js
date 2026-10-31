@@ -7,6 +7,8 @@
  * `patient-documents` und die Tabelle `patient_dokumente` (§ 630f BGB).
  */
 
+import { oeffneFormularAuswahl } from './formular-unterschreiben.js?v=20261031b';
+
 'use strict';
 
 /** Alle zulässigen Kategorien für die Anzeige (inkl. formular_signiert). */
@@ -201,6 +203,7 @@ function montiereHost(host, deps) {
           <option value="sonstiges">Sonstiges</option>
         </select>
         <input type="text" id="pdDokNotiz" class="form-input" placeholder="Notiz (optional)" style="min-height:44px;flex:1;min-width:160px;background:var(--bg-card-solid);color:var(--text-main);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:14px;box-sizing:border-box;">
+        <button type="button" class="btn" id="pdDokFormularSignBtn" style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;cursor:pointer;font-weight:500;box-sizing:border-box;background:var(--bg-card-solid);color:var(--text-main);border:1px solid var(--border);border-radius:6px;">Formular unterschreiben lassen</button>
         <label class="btn btn-primary" id="pdDokUploadBtn" style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;cursor:pointer;font-weight:500;box-sizing:border-box;user-select:none;">
           <span id="pdDokUploadBtnText">Datei hochladen</span>
           <input type="file" id="pdDokFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" style="display:none;">
@@ -215,6 +218,22 @@ function montiereHost(host, deps) {
   const uploadBtn = host.querySelector('#pdDokUploadBtn');
   const fileInput = host.querySelector('#pdDokFileInput');
   const uploadText = host.querySelector('#pdDokUploadBtnText');
+  const signBtn = host.querySelector('#pdDokFormularSignBtn');
+  signBtn?.addEventListener('click', () => {
+    const leadId = typeof deps?.getLeadId === 'function' ? deps.getLeadId() : deps?.getLeadId;
+    const ownerId = typeof deps?.getOwnerId === 'function' ? deps.getOwnerId() : deps?.getOwnerId;
+    if (!leadId) {
+      deps.showToast('Bitte zuerst einen Patienten auswählen.', 'error');
+      return;
+    }
+    oeffneFormularAuswahl({
+      supabase: deps.supabase,
+      ownerId,
+      leadId,
+      showToast: deps.showToast,
+      onFertig: () => ladeDokumente(host, deps, { ownerId, leadId }),
+    });
+  });
 
   uploadBtn.addEventListener('click', (e) => {
     if (!katSelect.value) {

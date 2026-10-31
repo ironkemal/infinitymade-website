@@ -14,6 +14,8 @@
  * @param {Function} deps.showToast
  */
 
+import { renderFormulareSettings } from './formular-editor.js?v=20261031b';
+
 export const FAX_MUSTER_RE = /^[A-Za-z0-9._+-]*\{nummer\}[A-Za-z0-9._+-]*@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
 
 export const FAX_HINWEIS_TEXT = 'Hinterlegen Sie das Adressmuster Ihres Fax-Dienstes, z. B. {nummer}@fax.ihr-anbieter.de. '
@@ -104,6 +106,7 @@ export function renderFaxSettings(deps, doc = document) {
   }
   const input = doc.getElementById('setFaxMailMuster');
   if (input) input.value = deps.profile?.fax_mail_muster || '';
+  renderFormulareSettings(deps, doc);
 }
 
 async function speichern(deps, doc) {
