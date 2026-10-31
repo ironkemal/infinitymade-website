@@ -1,4 +1,4 @@
-| K10 | ✅ | K8 | ✅ | K7 | ✅ | K6 | ✅ | K3 | ✅ # Physio-Pilot P1 — iş planı ve iş bölümü (Kemal ↔ Melih)
+# Physio-Pilot P1 — iş planı ve iş bölümü (Kemal ↔ Melih)
 
 > Başlangıç 30.10.2026. Depo **public** → müşteri adı, şehir ve fiyat bu dosyaya yazılmaz.
 > Müşteriye rumuz **P1** denir. Ham görüşme notları depo dışında (Kemal'de).
@@ -49,14 +49,14 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 |---|---|---|
 | K1 | ✅ **Zertifikatspositionen** — MT/MLD/KGG hizmetlerine `required_certificate` (seed + mevcutlara backfill) — 30.10.2026 | `module/physio-katalog-migration.js` testleri |
 | K2 | ✅ **KG-ZNS sertifikası** — CHECK constraint'e Bobath/Vojta/PNF değerleri (migration) + X07xx eşlemesi | Sertifikasız terapiste KG-ZNS Termin'inde uyarı |
-| K3 | **Physio ICD ↔ Diagnosegruppe kontrolü** (`verordnung-regeln.js` `icd_accept` boş) — `physio` + `gkv-302` | "Verordnung prüfen" uyumsuz ICD/DG'de uyarı |
+| K3 | ✅ **Physio ICD ↔ Diagnosegruppe kontrolü** (`verordnung-regeln.js` `icd_accept` boş) — `physio` + `gkv-302` | "Verordnung prüfen" uyumsuz ICD/DG'de uyarı |
 | K4 | 🟨 **KI** — **SaaS'ta açık ve gerçek Azure çağrısıyla doğrulandı 31.10.2026** (mail taslağı + Serie; üç hata: noktalı deployment adı, SaaS'ta kutu kimliği olmadan onay yazılamıyordu, sunucu şalteri). Kutuda:  (jeton modu, O-169) + risk kabulü kaydı — **kod bitti 30.10.2026**, gerçek Azure çağrısı bekliyor (Azure kimliği + merkez deploy, bkz. `fortschritte/2026-10-30.md`) | Kutuda Serienplanung + Mail-Assistent çalışır |
 | K5 | **Sesle yazdırma** — mikrofon → kutu → Azure transkripsiyon (EU) → metin kutuda maskelenir → mail taslağı. Tarayıcının Web Speech API'si **kullanılmaz** (sesi Google'a gönderir) | Mail-Assistent'te mikrofon düğmesi, Almanca dikte çalışır |
-| K6 | **Vorlagen-Studio: kendi belgeler** — praxis kendi metnini yazar ya da PDF yükler, imza alanını sürükleyip yerleştirir, tablette (Kiosk) imzalatır, akteye kaydolur. Sayfada "Inhalt verantwortet die Praxis" notu | Aufklärungsbogen + Ausfallregel kendi metniyle imzalanıp aktede görünür |
-| K7 | **E-Akte** — hastaya dosya yükleme; Physio'da Dokumente sekmesi | Yüklenen dosya aktede listelenir, açılır, silinir |
-| K8 | **Physio-Befund formu** (ROM, Kraft, Tests — alanları `physio` ajanı verir) | Befund kaydedilir, Therapiebericht'e taşınır |
+| K6 | ✅ **Vorlagen-Studio: kendi belgeler** — praxis kendi metnini yazar ya da PDF yükler, imza alanını sürükleyip yerleştirir, tablette (Kiosk) imzalatır, akteye kaydolur. Sayfada "Inhalt verantwortet die Praxis" notu | Aufklärungsbogen + Ausfallregel kendi metniyle imzalanıp aktede görünür |
+| K7 | ✅ **E-Akte** — hastaya dosya yükleme; Physio'da Dokumente sekmesi | Yüklenen dosya aktede listelenir, açılır, silinir |
+| K8 | ✅ **Physio-Befund formu** (ROM, Kraft, Tests — alanları `physio` ajanı verir) | Befund kaydedilir, Therapiebericht'e taşınır |
 | K9 | 🟨 Rechnung maili canlıda (Gmail/SMTP); Fax kodu bitti, yalnız kutuda gönderir, gerçek gönderim denenmedi — **Versand** — Rechnung'u hastaya mail; **Fax = Fax-to-Mail** (praxis'in sağlayıcı adres deseni ayarlanır, ör. `{nummer}@…`; bizim gateway yok, G8 temiz) | Rechnung maille gider; Therapiebericht fax adresine PDF olarak gider |
-| K10 | **Startseite: elle görev** ekle/işaretle (otomatik uyarıların yanında) | Görev eklenir, abhaken, kalıcı |
+| K10 | ✅ **Startseite: elle görev** ekle/işaretle (otomatik uyarıların yanında) | Görev eklenir, abhaken, kalıcı |
 | K11 | ✅ **Physio katalogu** — MLD30, Kompression, Wärme (Fango/Heißluft/Heiße Rolle/Ultraschall), Kälte, Elektro hazır listeye (`PHYSIO_KATALOG_ERGAENZUNG`) — 30.10.2026. **Gruppen bilinçli dışarıda:** takvimde grup Termin'i yok (physio) | Seed'de görünür, fiyat `physio_positions.js` ile aynı (test) |
 | K12 | ~~Seans imza listesi~~ — **düştü 31.10.2026 (Kemal):** Verordnung arkasındaki seans imzası kâğıtta kalır | — |
 | K13 | **Datenübernahme (THEORG)** — hasta + açık VO importu. Ayrı kalem, en son | Örnek export'tan import |
