@@ -133,7 +133,7 @@ export function mountStartAufgaben(ctx, doc = document) {
         </div>
       </form>
 
-      <ul id="startAufgabenOffenListe" class="einrichtung-pop" style="list-style:none;margin:0;padding:0;">
+      <ul id="startAufgabenOffenListe" style="list-style:none;margin:0;padding:0;">
         <li style="padding:16px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine offenen Aufgaben</li>
       </ul>
 
@@ -141,7 +141,7 @@ export function mountStartAufgaben(ctx, doc = document) {
         <summary style="cursor:pointer;color:var(--text-muted);font-size:13px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;user-select:none;">
           Erledigt (zuletzt 5)
         </summary>
-        <ul id="startAufgabenErledigtListe" class="einrichtung-pop" style="list-style:none;margin:8px 0 0;padding:0;">
+        <ul id="startAufgabenErledigtListe" style="list-style:none;margin:8px 0 0;padding:0;">
           <li style="padding:8px 0;font-size:13px;color:var(--text-muted);list-style:none;">Keine erledigten Aufgaben</li>
         </ul>
       </details>
