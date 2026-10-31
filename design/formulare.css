@@ -1,0 +1,146 @@
+/* V8.03 — bestehende Formulare im freigegebenen Neu-Design.
+   Nach seiten.css laden. Nur Bildschirm, keine Dokument-/Druckgestaltung.
+   Anzeigezustände, klinische Farben, Fußdiagramme und Datenlogik bleiben beim Bestand. */
+@media screen {
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services, #panel-vorlagen, #panel-fussstatus) {
+    min-width: 0;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services, #vorlagenModal) :is(.form-group, .form-row) {
+    min-width: 0;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services, #vorlagenModal) :is(.form-input, .form-select, .form-textarea) {
+    min-height: 44px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services, #panel-vorlagen, #vorlagenModal) :is(.form-actions, .panel-actions) {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-hours, #panel-services, #panel-vorlagen, #vorlagenModal) :is(button.btn-primary, button.btn-ghost, button.btn-sm, button.btn-icon) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Anamnese: bestehende Abschnitte und DOM-Reihenfolge, größere Auswahlzeilen.
+     Das Panel wird auch in Akte und Kiosk verschoben: keine main-area-Abhängigkeit. */
+  [data-design="neu"] #panel-anamnese :is(#anamPhysioForm, #anamDynForm) > .card {
+    padding: 24px;
+    box-shadow: none;
+  }
+  [data-design="neu"] #panel-anamnese .anam-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 4px 16px;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label {
+    min-height: 44px;
+    padding: 8px;
+    gap: 10px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  [data-design="neu"] #panel-anamnese .anam-other {
+    min-height: 44px;
+    border-color: var(--border-input);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    font: inherit;
+    padding: 10px 12px;
+  }
+  [data-design="neu"] #panel-anamnese .anam-slider-wrap input[type="range"] { min-width: 0; min-height: 44px; }
+
+  /* Arbeitszeiten: Tag, Schalter und Uhrzeiten bleiben eine Gruppe.
+     Die zweite, leere Rasterzelle aus renderHoursGrid wird nur räumlich entfernt. */
+  [data-design="neu"] #panel-hours .hours-row {
+    grid-template-columns: minmax(110px, 0.65fr) minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px 20px;
+  }
+  [data-design="neu"] #panel-hours .hours-row > div:nth-child(2):empty { display: none; }
+  [data-design="neu"] #panel-hours .hours-row.inactive { opacity: 1; }
+  [data-design="neu"] #panel-hours .hours-row.inactive .hours-day { color: var(--text-muted); }
+  [data-design="neu"] #panel-hours .hours-times { min-width: 0; flex-wrap: wrap; }
+  [data-design="neu"] #panel-hours .hours-times input[type="time"] { width: 132px; min-height: 44px; max-width: 100%; }
+  [data-design="neu"] #panel-hours .toggle-switch { width: 44px; height: 44px; }
+  [data-design="neu"] #panel-hours .toggle-slider { inset: 11px 3px; }
+  [data-design="neu"] #panel-hours .toggle-switch input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  [data-design="neu"] #panel-hours .hours-breaks-wrap {
+    padding: 0 20px 12px !important; /* gegen Inline-padding-left:44px aus renderHoursGrid */
+    margin-bottom: 0 !important; /* Abstände werden durch die Tagesgruppe getragen */
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-hours .break-form { max-width: 100%; flex-wrap: wrap; margin-top: 8px; }
+  [data-design="neu"] #panel-hours :is(.break-add-btn, .break-confirm, .break-del) { min-height: 44px; min-width: 44px; }
+  [data-design="neu"] #panel-hours .hours-calendar-section { grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1fr); }
+  [data-design="neu"] #panel-hours :is(.hours-cal-left, .hours-cal-right) { min-width: 0; background: var(--bg-card-solid); }
+  [data-design="neu"] #panel-hours .hours-cal-right { padding: 24px; border: 1px solid var(--border); border-radius: var(--radius); }
+  [data-design="neu"] #panel-hours .hours-employee-select { flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  [data-design="neu"] #panel-hours .hours-employee-select select { max-width: 100%; }
+
+  /* Leistungen: GKV-Katalog und eigene Leistungen behalten ihre getrennten Gruppen.
+     Farbwahl, Kalenderpunkte und Vergütungen werden nicht überschrieben. */
+  [data-design="neu"] #panel-services .add-service-form {
+    max-width: 800px;
+    padding: 24px;
+    margin-top: 24px;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: none;
+  }
+  [data-design="neu"] #panel-services .add-service-form h3 { margin-bottom: 20px; font-size: 18px; line-height: 1.4; }
+  [data-design="neu"] #panel-services :is(.emp-checkbox-item, .gkv-form-info) { min-height: 44px; }
+  [data-design="neu"] #panel-services :is(.btn-gkv-edit, .btn-gkv-setup, .srv-del-btn) { min-height: 44px; min-width: 44px; }
+  [data-design="neu"] #panel-services .srv-gruppe { background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: var(--radius); }
+  [data-design="neu"] #panel-services .srv-gruppe-kopf { flex-wrap: wrap; gap: 8px 16px; }
+
+  /* Fußbefund: eine ruhige Formularfläche statt ineinander gestapelter Karten.
+     Links/Rechts, Fußbilder, Marker-Layer und fachliche Werkzeugfarben unverändert. */
+  [data-design="neu"] #fussstatusContent .fbp-paper-card { padding: 24px; gap: 0; box-shadow: none; border-radius: var(--radius); }
+  [data-design="neu"] #fussstatusContent .fbp-section { padding: 20px 0; border: 0; border-radius: 0; }
+  [data-design="neu"] #fussstatusContent .fbp-section + .fbp-section { border-top: 1px solid var(--border); }
+  [data-design="neu"] #fussstatusContent .fbp-section:first-child { padding-top: 0; }
+  [data-design="neu"] #fussstatusContent .fbp-section:last-child { padding-bottom: 0; }
+  [data-design="neu"] #fussstatusContent .input-control {
+    min-height: 44px;
+    border-color: var(--border-input) !important; /* gegen feldStil-Inline-Rand im Bestandsrenderer */
+    border-radius: var(--radius-sm) !important; /* gegen feldStil-Inline-6px */
+  }
+  [data-design="neu"] #fussstatusContent .input-control:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"] #fussstatusContent :is(#fbpNewBtn, #fbpSaveBtn) { min-height: 44px; }
+  [data-design="neu"] #fussstatusContent .fbp-grid-table td { min-height: 44px; height: 44px; }
+
+  /* Vorlagen: nur Verwaltung und Editor; iframe/Papier und Druck bleiben eigenständig. */
+  [data-design="neu"] #panel-vorlagen .vorlage-card { border-radius: var(--radius); box-shadow: none; }
+  [data-design="neu"] #panel-vorlagen .vorlage-card-footer { padding: 16px; }
+  [data-design="neu"] #panel-vorlagen .vorlage-card-title { overflow-wrap: anywhere; }
+  [data-design="neu"] #panel-vorlagen .vorlage-card-actions { flex-wrap: wrap; gap: 8px; }
+  [data-design="neu"] #vorlagenModal .modal { width: min(760px, calc(100vw - 32px)); }
+  [data-design="neu"] #vorlagenModal .modal-body { min-width: 0; }
+}
+
+@media screen and (max-width: 1100px) {
+  [data-design="neu"] #panel-hours .hours-calendar-section { grid-template-columns: minmax(0, 1fr); }
+}
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-hours .hours-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 16px; }
+  [data-design="neu"] #panel-hours .hours-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  [data-design="neu"] #panel-hours .hours-times input[type="time"] { width: 100%; }
+  [data-design="neu"] #panel-hours .hours-breaks-wrap { padding-inline: 16px !important; } /* gegen Inline-Einrückung der Pausen */
+  [data-design="neu"] #panel-hours .hours-cal-right { padding: 16px; }
+  [data-design="neu"] #panel-anamnese :is(#anamPhysioForm, #anamDynForm) > .card { padding: 16px; }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .form-row) { grid-template-columns: minmax(0, 1fr); }
+  [data-design="neu"] #panel-anamnese .anam-radio-row { gap: 4px 12px; }
+  [data-design="neu"] #panel-services .add-service-form { padding: 16px; }
+  [data-design="neu"] #panel-services .srv-gruppe { overflow-x: auto; }
+  [data-design="neu"] #panel-services .srv-tabelle { min-width: 640px; }
+  [data-design="neu"] #fussstatusContent .fbp-paper-card { padding: 16px; }
+  [data-design="neu"] #panel-vorlagen #vorlagenPanelGrid { grid-template-columns: minmax(0, 1fr) !important; } /* gegen Inline-minmax(220px,1fr) */
+}
