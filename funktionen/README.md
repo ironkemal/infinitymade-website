@@ -117,6 +117,10 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.11.2026 · K10 Patientensuche repariert (`module/start-aufgaben.js`)
+- Neu: `patientenSucheOptionen(ctx)`. Niye: die eigene Abfrage verlangte `leads.birth_date` (gibt es nicht), der Fehler wurde verschluckt, die Suche fand nie jemanden; ausserdem ohne bizScope und mit eigenem Matcher.
+  Nerede: Aufgaben auf der Übersicht. Abfrage, Treffer und Anzeige kommen jetzt aus `dashboard.js` (`bizScope`, `patientMatchesQuery`, `displayNameWithBirth`).
+
 ### 31.10.2026 · Physio-Pilot P1: Zusagen aus dem Gespräch (9d04c428..fa10c72d)
 - Niye (alle): im Gespräch dem P1 zugesagt (`Physio/PILOT-PLAN.md`).
 - K9 `module/rechnung-mail.js` + `api-backend/lib/rechnung-pdf.js` + `lib/gmail-senden.js`. Nerede: Rechnung-Ansicht, passwortgeschütztes PDF.

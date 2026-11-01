@@ -74,6 +74,28 @@ export function letzteErledigte(liste, n = 5) {
 }
 
 /**
+ * Abfrage, Treffer und Anzeige der Patientensuche gehoeren dem Aufrufer: dieselben
+ * wie in den anderen Masken (bizScope, Geburtsdatum, beide Rufnummern). Die eigene
+ * Abfrage verlangte eine nicht vorhandene Spalte und verschluckte den Fehler —
+ * die Suche fand deshalb nie jemanden.
+ * @param {object} ctx
+ */
+export function patientenSucheOptionen(ctx) {
+  return {
+    loadLeads: async () => {
+      try {
+        return (await ctx.ladePatienten()) || [];
+      } catch {
+        ctx.showToast?.('Patienten konnten nicht geladen werden.', 'error');
+        return [];
+      }
+    },
+    matches: ctx.patientPasst,
+    labelOf: ctx.patientLabel,
+  };
+}
+
+/**
  * @param {object} ctx
  * @param {object} ctx.supabase
  * @param {() => string} ctx.getOwnerId
@@ -82,6 +104,9 @@ export function letzteErledigte(liste, n = 5) {
  * @param {(msg: string, typ?: string) => void} ctx.showToast
  * @param {Function} [ctx.showConfirmModal]
  * @param {Function} [ctx.attachPatientSearch]
+ * @param {() => Promise<Array>} [ctx.ladePatienten] wirft bei Fehler
+ * @param {(lead: object, q: string) => boolean} [ctx.patientPasst]
+ * @param {(lead: object) => string} [ctx.patientLabel]
  * @param {Document} [doc]
  * @returns {{ laden: () => Promise<void> }}
  */
@@ -197,26 +222,7 @@ export function mountStartAufgaben(ctx, doc = document) {
     ctx.attachPatientSearch(patientSearch, {
       listEl: patientList,
       containerEl: patientBox,
-      loadLeads: async () => {
-        const ownerId = typeof ctx.getOwnerId === 'function' ? ctx.getOwnerId() : ctx.getOwnerId;
-        if (!ownerId) return [];
-        const { data, error } = await ctx.supabase
-          .from('leads')
-          .select('id, first_name, last_name, birth_date, phone, title')
-          .eq('owner_id', ownerId)
-          .order('last_name', { ascending: true });
-        if (error) return [];
-        return data || [];
-      },
-      matches: (lead, query) => {
-        const q = String(query || '').toLowerCase().trim();
-        const fn = (lead.first_name || '').toLowerCase();
-        const ln = (lead.last_name || '').toLowerCase();
-        const ph = (lead.phone || '').replace(/\s+/g, '');
-        const full = `${fn} ${ln}`;
-        return full.includes(q) || ln.includes(q) || ph.includes(q.replace(/\s+/g, ''));
-      },
-      labelOf: (l) => `${l.first_name || ''} ${l.last_name || ''}`.trim() || l.title || 'Patient',
+      ...patientenSucheOptionen(ctx),
       onSelect: (lead) => {
         gewaehlterPatient = lead;
         if (patientBox) patientBox.style.display = 'none';

@@ -6,7 +6,9 @@ import {
   darfLoeschen,
   sortiereOffene,
   letzteErledigte,
+  patientenSucheOptionen,
 } from './start-aufgaben.js';
+import { readFileSync } from 'node:fs';
 
 test('bereinigeText: schneidet Leerzeichen ab', () => {
   assert.equal(bereinigeText('   Aufgabe erledigen   '), 'Aufgabe erledigen');
@@ -142,4 +144,36 @@ test('letzteErledigte: beschraenkt auf n Eintraege (Standard 5)', () => {
 test('letzteErledigte: toleriert leere Eingabe', () => {
   assert.deepEqual(letzteErledigte([]), []);
   assert.deepEqual(letzteErledigte(null), []);
+});
+
+test('Patientensuche: Abfrage, Treffer und Anzeige kommen vom Aufrufer', async () => {
+  const leads = [{ id: '1' }];
+  const patientPasst = () => true;
+  const patientLabel = () => 'Name';
+  const o = patientenSucheOptionen({ ladePatienten: async () => leads, patientPasst, patientLabel });
+  assert.equal(await o.loadLeads(), leads);
+  assert.equal(o.matches, patientPasst);
+  assert.equal(o.labelOf, patientLabel);
+});
+
+test('Patientensuche: Ladefehler wird gemeldet, nicht verschluckt', async () => {
+  const meldungen = [];
+  const o = patientenSucheOptionen({
+    ladePatienten: async () => { throw new Error('42703'); },
+    showToast: (m, t) => meldungen.push([m, t]),
+  });
+  assert.deepEqual(await o.loadLeads(), []);
+  assert.equal(meldungen.length, 1);
+  assert.equal(meldungen[0][1], 'error');
+});
+
+test('Patientensuche: dashboard.js fragt nur Spalten ab, die leads wirklich hat', () => {
+  const dash = readFileSync(new URL('../dashboard.js', import.meta.url), 'utf8');
+  const stelle = dash.slice(dash.indexOf('mountStartAufgaben({'));
+  const spalten = stelle.match(/from\('leads'\)\.select\('([^']+)'\)/)[1].split(',');
+  const schema = readFileSync(new URL('../db/SCHEMA.sql', import.meta.url), 'utf8');
+  const tabelle = schema.match(/CREATE TABLE public\.leads \(([\s\S]*?)\n\);/)[1];
+  const vorhanden = new Set(tabelle.split('\n').map((z) => z.trim().split(/\s+/)[0]));
+  for (const s of spalten) assert.ok(vorhanden.has(s), `leads.${s} gibt es nicht`);
+  assert.match(stelle.slice(0, 700), /bizScope\(/);
 });
