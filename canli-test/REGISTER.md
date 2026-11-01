@@ -1943,6 +1943,7 @@ Neuer Termin an einem geschlossenen Tag: Hinweis „Die Praxis ist an diesem Tag
 
 ### Einbettungscode Termin-Anfrage-Widget (M7) — nav etiketi: `anfragen` (Termin-Anfragen)
 
+**⚠️ 01.11.2026 değişti (Kemal):** Praxis artık kod görmüyor; blok „Anfrageformular auf Ihrer Webseite" yalnız Praxura-Team'e yönlendiriyor (`mailto:support@praxura.de`), textarea/kopyala düğmesi yok. Aşağıdaki kod beklentisi ve test sonuçları eski ekrana ait; widget'ın kendisi (rahmen, Header) hâlâ geçerli.
 **Beklenen:** Block „Auf Ihrer Webseite einbinden" über dem Buchungslink mit kopierbarem `<iframe>` auf `praxura.de/widget/booking-widget.html?owner=…`
 (SaaS-Host praxura.de, nicht app-Subdomain), Datenschutz-Hinweis, Button „Code kopieren". Auf einer fremden HTTPS-Seite lädt das Formular
 (Schritt 1 von 4) mit Praxisnamen. `booking.html` darf nicht gerahmt werden.

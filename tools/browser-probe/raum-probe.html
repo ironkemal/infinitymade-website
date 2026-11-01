@@ -293,11 +293,11 @@
     pruefe('Arbeitstage kommen aus der Verfügbarkeit', basis.arbeitstage.size === 2);
     pruefe('Formular steht über den Kennzahlen', urlaubHost.querySelector('.emp-anstellung')?.nextElementSibling?.className === 'emp-urlaub-kpi');
 
-    // Einbettungscode
-    mountWidgetEinbettung(document.getElementById('linkKarte'), { ownerId: '11111111-2222-4333-8444-555555555555', istKutu: true, origin: 'https://hafer-turm-9.box.praxura.de', showToast: () => {} });
-    pruefe('Box bekommt Code mit eigenem Host', /https:\/\/hafer-turm-9\.box\.praxura\.de\/widget\/booking-widget\.html/.test(document.getElementById('widgetEinbettungCode')?.value || ''));
-    mountWidgetEinbettung(document.getElementById('linkKarte'), { ownerId: '11111111-2222-4333-8444-555555555555', istKutu: true, origin: 'https://praxis.home.arpa', showToast: () => {} });
-    pruefe('LAN-Box bekommt keinen Code', !document.getElementById('widgetEinbettungCode') && /nicht erreichbar/.test(document.getElementById('widgetEinbettung').textContent));
+    // Webseiten-Hinweis statt Einbettungscode
+    mountWidgetEinbettung(document.getElementById('linkKarte'));
+    pruefe('Hinweis nennt das Praxura-Team', /Praxura-Team/.test(document.getElementById('widgetEinbettung').textContent));
+    pruefe('Mail-Link führt zum Support', /^mailto:support@praxura\.de/.test(document.querySelector('#widgetEinbettung a')?.href || ''));
+    pruefe('Kein Code und kein Kopierknopf für die Praxis', !document.querySelector('#widgetEinbettung textarea, #widgetEinbettung button'));
 
     modal.hidden = true;
     window.__probe = ergebnisse;

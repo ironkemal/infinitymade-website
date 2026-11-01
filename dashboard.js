@@ -18392,7 +18392,7 @@ function initAnfragenPanel() {
   if (ownerId) {
     const linkInput = document.getElementById('bookingRequestLinkInput');
     const link = `${window.location.origin}/booking-request.html?business=${ownerId}`;
-    if (linkInput) linkInput.value = link; mountWidgetEinbettung(linkInput?.parentElement?.parentElement, { ownerId, istKutu: IST_KUTU, origin: window.location.origin, showToast });
+    if (linkInput) linkInput.value = link; mountWidgetEinbettung(linkInput?.parentElement?.parentElement);
     document.getElementById('copyBookingLinkBtn')?.addEventListener('click', () => {
       navigator.clipboard.writeText(link).then(() => showToast('Link kopiert!', 'success'));
     });
