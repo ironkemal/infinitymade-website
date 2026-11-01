@@ -1907,3 +1907,21 @@ aussagekräftig. Visueller Vergleich nur über berechnete Farben, keine Screensh
 
 **Nicht geprüft:** Kalender- und Verordnungen-Panel im neuen Design (Owner-Zugang nötig),
 Dunkelmodus + `neu`, mobile Breiten, Kutu-Image mit den neuen Dateien.
+
+### Räume (M1) und Raum-Streifen (M2a) — nav etiketi: `hours` (Verfügbarkeit) + `calendar`
+
+**Beklenen:** Inhaber legt unter Verfügbarkeit → „Räume" Räume an, benennt sie um, setzt Plätze, deaktiviert sie.
+Aktive Räume erscheinen im Terminformular (`#bkRaum`) und im Aktionspanel („Raum zuweisen"), deaktivierte nicht.
+Ist ein Raum zur Terminzeit voll (belegte Termine ≥ Plätze), erscheint nur ein Hinweis „Raum … ist zu dieser Zeit belegt.
+Möchten Sie den Termin trotzdem eintragen?" (Abbrechen / Trotzdem eintragen) — nie ein harter Block, nie Patientenname.
+„Trotzdem eintragen" speichert den Termin. Streifen über der Tagesansicht zeigt je Raum „frei"/belegt, Kürzel, Restzeit,
+„n Termine ohne Raum", keinen Patientennamen.
+**Bağımlı ekranlar:** Terminkalender (Einzel, Serie, Verschieben), Termin-Aktionspanel, Online-Buchung (ohne Raum).
+**Son test:** 2026-11-01 — Desktop 1280 px, QA-Tenant „Podologie Nord", Inhaber-Sitzung (Podologie, nicht Physio-Mandant).
+- GEÇTİ: Raum anlegen; umbenennen + Plätze 1→3 („gespeichert ✓"); bleibt nach Neuladen; deaktivieren (Button wechselt zu „Aktivieren");
+  Terminformular listet nur aktive Räume; Raum aus Buchung steht im Aktionspanel; Überbelegungs-Hinweis erscheint ohne Patientenname;
+  Streifen zeigt „QA Raum A2 | frei" ohne Namen.
+- KALDI: F1 (siehe `Physio/AUTOPILOT.md`) — nach „Trotzdem eintragen" wird nicht gespeichert, Formular bleibt ohne Meldung offen.
+- **Nicht geprüft:** Serie mit Raum, Verschieben/Statuswechsel erhält Raum, Streifen im Zustand „belegt" (Kürzel, Restzeit),
+  „n Termine ohne Raum", Raum-Reaktivierung, Mobil 390 px, Konsole systematisch, Physio-Mandant. Hinweis: Plätze von „QA Raum A2"
+  stehen jetzt auf 1; Testdaten (Räume A2/B, Termin 09.11. 10:00) bleiben im QA-Tenant.
