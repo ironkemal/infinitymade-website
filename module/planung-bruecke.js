@@ -2,7 +2,7 @@
  * planung-bruecke.js — einziger Anschluss der Raumplanung an dashboard.js (Physio/PILOT-PLAN.md M1/M2).
  *
  * dashboard.js darf nicht wachsen (Konsey 2026-08-13), deshalb hängt alles hier: Raumverwaltung im Panel
- * Verfügbarkeit, Raum-Streifen über dem Kalender, Raumwahl im Termin.
+ * Verfügbarkeit, Raum-Streifen über dem Kalender, Raumwahl im Termin, Tagesansicht Therapeut | Raum.
  *
  * Nur über diese Datei importieren: raum-auswahl.js hält Zustand, ein zweiter Import mit anderem `?v=`
  * wäre eine zweite Instanz ohne Kontext.
@@ -13,6 +13,7 @@ import {
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js';
 import { mountRaumStreifen } from './raum-streifen.js';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101a';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
@@ -180,7 +181,7 @@ export function planungVerdrahten(deps) {
   verdrahtet = deps;
   setzeGrundSichtbar(empId => deps.istInhaber() || deps.getEigeneId() === empId);
   // Eine fehlende Stelle im DOM darf den Rest von dashboard.js nicht abbrechen.
-  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige]) {
+  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts })]) {
     try {
       schritt(deps);
     } catch (fehler) {

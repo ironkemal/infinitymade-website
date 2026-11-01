@@ -5008,8 +5008,20 @@ textarea {
   }
 
   .hours-row {
-    grid-template-columns: 100px 44px 1fr;
+    grid-template-columns: 72px 44px minmax(0, 1fr);
     gap: 10px;
+    padding: 12px;
+  }
+
+  /* F3 (Live-Test 01.11.2026): Zeiten-Felder brechen nicht mehr aus der Zeile aus (390 px) */
+  .hours-times {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .hours-times input[type=time] {
+    width: 100%;
+    min-width: 0;
   }
 
   .data-table {

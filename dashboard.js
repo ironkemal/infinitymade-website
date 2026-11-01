@@ -1,5 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261031e';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261101a';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -12094,7 +12094,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
-planungVerdrahten({ supabase, getOwnerId, getEigeneId: () => currentProfile?.id, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
+planungVerdrahten({ supabase, getOwnerId, getEigeneId: () => currentProfile?.id, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, blockHtml: b => renderBookingSlotInner(b, []) + terminHinweiseHtml(b), farbeFuer: b => { const f = terminFarben(b, { teamMembers, empFarben: EMP_COLORS }); return { ...f, hintergrund: mitDeckkraft(f.flaeche, '25', '15%') }; }, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
 // DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
 dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 

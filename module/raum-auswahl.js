@@ -29,6 +29,17 @@ export function optionenFuerAuswahl(raeume, termine, start, ende, optionen = {})
   ];
 }
 
+/**
+ * Hinweiszeile unter der Raumwahl: welche Räume zur gewählten Zeit noch Platz haben. Nur Anzeige, sperrt nichts.
+ * Ohne Zeit oder ohne Räume: leerer Text.
+ */
+export function freieRaeumeHinweis(raeume, termine, start, ende, optionen = {}) {
+  if (!start || !ende || !raeume?.length) return '';
+  const frei = raumAuswahl(raeume, termine, start, ende, optionen).filter(e => !e.voll).map(e => e.raum.name);
+  if (!frei.length) return 'Zu dieser Zeit ist kein Raum frei.';
+  return `Frei zu dieser Zeit: ${frei.join(', ')}`;
+}
+
 export function felderAusWahl(wahl, raeume) {
   if (!wahl) return { room_id: null };
   const raum = raeume.find(r => r.id === wahl);
@@ -163,10 +174,11 @@ function mountTerminmaske() {
   huelle.className = 'form-group';
   huelle.id = 'bkRaumGroup';
   huelle.hidden = true;
-  huelle.innerHTML = '<label class="form-label" for="bkRaum">Raum</label><select id="bkRaum" class="form-select"></select>';
+  huelle.innerHTML = '<label class="form-label" for="bkRaum">Raum</label><select id="bkRaum" class="form-select"></select><div class="form-hint" id="bkRaumFrei" aria-live="polite"></div>';
   gruppe.after(huelle);
   const auswahl = huelle.querySelector('select');
-  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0, anfang: '' };
+  const hinweis = huelle.querySelector('#bkRaumFrei');
+  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0, anfang: '', tag: '' };
 
   function zeitraum() {
     const startText = document.getElementById('bkStart')?.value;
@@ -181,6 +193,7 @@ function mountTerminmaske() {
     const { startIso, endIso } = zeitraum();
     const id = document.getElementById('bk-id')?.value || null;
     fuelleAuswahl(auswahl, optionenFuerAuswahl(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id }), wert);
+    hinweis.textContent = freieRaeumeHinweis(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id });
   }
 
   async function oeffnen() {
@@ -205,6 +218,7 @@ function mountTerminmaske() {
     if (lauf !== stand.lauf) return;
     stand.raeume = raeume;
     stand.termine = termine;
+    stand.tag = vonISO;
     if (!raeume.length) return;
     zeichne(wert);
     stand.anfang = auswahl.value;
@@ -216,7 +230,23 @@ function mountTerminmaske() {
     if (!modal.hidden) oeffnen().catch(() => {});
     else stand.lauf += 1;
   }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
-  document.getElementById('bkStart')?.addEventListener('change', () => { if (stand.bereit) zeichne(auswahl.value); });
+  // Zeit oder Leistung (Dauer) geändert: Auswahl und Hinweis neu rechnen. Anderer Tag: Belegungen dieses Tages nachladen.
+  const neuRechnen = async () => {
+    if (!stand.bereit) return;
+    const lauf = stand.lauf;
+    const { startIso } = zeitraum();
+    if (startIso) {
+      const { vonISO, bisISO } = tagesgrenzen(startIso);
+      if (vonISO !== stand.tag) {
+        const termine = await ladeBelegungen(kontext.supabase, kontext.getOwnerId(), vonISO, bisISO);
+        if (lauf !== stand.lauf) return;
+        stand.termine = termine;
+        stand.tag = vonISO;
+      }
+    }
+    zeichne(auswahl.value);
+  };
+  for (const feld of ['bkStart', 'bkService']) document.getElementById(feld)?.addEventListener('change', () => { neuRechnen().catch(() => {}); });
   return stand;
 }
 

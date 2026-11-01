@@ -52,6 +52,10 @@
         { id: 'k1', owner_id: OWNER, user_id: 'm1', business_id: 'b1', room_id: 'r1', status: 'confirmed', customer_name: 'Maria Musterfrau', start_time: iso(-5), end_time: iso(20), group_parent_id: null },
         { id: 'k2', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: 'r2', status: 'confirmed', customer_name: 'Erika Beispiel', start_time: iso(-5), end_time: iso(10), group_parent_id: null },
         { id: 'k3', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: null, status: 'confirmed', customer_name: 'Online Buchung', start_time: iso(-5), end_time: iso(15), group_parent_id: null },
+        { id: 'q1', owner_id: OWNER, user_id: 'm1', business_id: 'b1', room_id: 'r1', status: 'confirmed', customer_name: 'Tag Eins', start_time: new Date('2026-12-23T09:00:00').toISOString(), end_time: new Date('2026-12-23T09:30:00').toISOString(), group_parent_id: null },
+        { id: 'q2', owner_id: OWNER, user_id: 'm2', business_id: 'b1', room_id: 'r2', status: 'confirmed', customer_name: 'Tag Zwei', start_time: new Date('2026-12-23T09:00:00').toISOString(), end_time: new Date('2026-12-23T09:30:00').toISOString(), group_parent_id: null },
+        { id: 'q3', owner_id: OWNER, user_id: 'm1', business_id: 'b1', room_id: 'r2', status: 'confirmed', customer_name: 'Tag Drei', start_time: new Date('2026-12-23T09:00:00').toISOString(), end_time: new Date('2026-12-23T09:30:00').toISOString(), group_parent_id: null },
+        { id: 'q4', owner_id: OWNER, user_id: 'm1', business_id: 'b1', room_id: null, status: 'confirmed', customer_name: 'Tag Online', start_time: new Date('2026-12-23T10:00:00').toISOString(), end_time: new Date('2026-12-23T10:30:00').toISOString(), group_parent_id: null },
       ],
       time_offs: [],
       working_hours: [{ user_id: 'm2', day_of_week: 1, is_active: true }, { user_id: 'm2', day_of_week: 2, is_active: true }],
@@ -97,6 +101,7 @@
       };
     }
 
+    let tagDatum = '2026-12-24';
     const toasts = [];
     const fragen = [];
     let geoeffnet = null;
@@ -107,7 +112,8 @@
       getEigeneId: () => OWNER,
       getBusinessId: () => 'b1',
       istInhaber: () => true,
-      getTagDatum: () => '2026-12-24',
+      getTagDatum: () => tagDatum,
+      blockHtml: b => `<strong>${b.customer_name}</strong>`,
       getTeam: () => [{ id: 'm1', business_name: 'Anna Beispiel' }, { id: 'm2', business_name: 'Ben Muster' }],
       oeffneTermin: id => { geoeffnet = id; },
       getDauerMin: () => 30,
@@ -138,12 +144,44 @@
     streifen.querySelector('[data-termin-id]').click();
     pruefe('Klick öffnet den Termin', geoeffnet === 'k1');
 
+    // Tagesansicht Therapeut | Raum
+    const umschalter = document.getElementById('calAnsichtUmschalter');
+    const rasterHost = document.getElementById('raumTagGrid');
+    const panelKal = document.getElementById('panel-calendar');
+    pruefe('Umschalter erscheint, wenn es Räume gibt', umschalter && !umschalter.hidden);
+    pruefe('Umschalter heißt Therapeut | Raum', /Therapeut/.test(umschalter.textContent) && /Raum/.test(umschalter.textContent));
+    tagDatum = '2026-12-23';
+    document.getElementById('dayViewDateLabel').textContent = '23.12.2026';
+    umschalter.querySelector('[data-modus="raum"]').click();
+    await warte(300);
+    pruefe('Raum-Modus blendet die Therapeutenansicht aus', rasterHost.classList.contains('raum-sichtbar') && getComputedStyle(document.getElementById('dayViewGrid')).display === 'none');
+    const kopfzeilen = [...rasterHost.querySelectorAll('.dv-col-header')].map(k => k.textContent);
+    pruefe('Eine Spalte je aktivem Raum plus Ohne Raum', kopfzeilen.join('|') === 'Behandlungsraum 1|Wärme (2 Plätze)|Gerätefläche (3 Plätze)|Ohne Raum');
+    pruefe('Raum eines anderen Standorts fehlt als Spalte', !kopfzeilen.some(k => /Anderer/.test(k)));
+    const inSpalte = id => [...rasterHost.querySelectorAll(`[data-raum-id="${id}"] .dv-booking-block`)];
+    pruefe('Termin steht in der Spalte seines Raums', inSpalte('r1').length === 1 && /Tag Eins/.test(inSpalte('r1')[0].textContent));
+    pruefe('Zwei Termine bei zwei Plätzen stehen nebeneinander', inSpalte('r2').length === 2 && inSpalte('r2')[0].style.left !== inSpalte('r2')[1].style.left && !inSpalte('r2').some(b => b.classList.contains('raum-ueberbelegt')));
+    pruefe('Termin ohne Raum steht in der Spalte Ohne Raum', inSpalte('__ohne_raum__').length === 1 && /Tag Online/.test(inSpalte('__ohne_raum__')[0].textContent));
+    pruefe('Namen bleiben sichtbar wie in der Therapeutenansicht', /Tag Zwei/.test(rasterHost.textContent));
+    inSpalte('r1')[0].click();
+    pruefe('Klick auf Block öffnet den Termin', geoeffnet === 'q1');
+    umschalter.querySelector('[data-modus="therapeut"]').click();
+    await warte(150);
+    pruefe('Zurück zur Therapeutenansicht', !rasterHost.classList.contains('raum-sichtbar') && getComputedStyle(document.getElementById('dayViewGrid')).display !== 'none');
+    tagDatum = '2026-12-24';
+    document.getElementById('dayViewDateLabel').textContent = '24.12.2026';
+    await warte(250);
+    const ueberlaufUmschalter = (() => { panelKal.style.width = '390px'; const l = document.getElementById('calViewToolbar'); const r = umschalter.getBoundingClientRect(); const lr = l.getBoundingClientRect(); const ok = r.right <= lr.right + 1; panelKal.style.width = ''; return ok; })();
+    pruefe('Umschalter liegt innerhalb der Leiste', ueberlaufUmschalter);
+    geoeffnet = null;
+
     // Neuer Termin
     await oeffne();
     const gruppe = document.getElementById('bkRaumGroup');
     const auswahl = document.getElementById('bkRaum');
     pruefe('Raumwahl sitzt unter dem Mitarbeiter', document.getElementById('bkEmployeeGroup').nextElementSibling === gruppe);
     pruefe('Raumwahl sichtbar', !gruppe.hidden);
+    pruefe('Hinweis nennt die freien Räume', /Frei zu dieser Zeit: .*Gerätefläche/.test(document.getElementById('bkRaumFrei').textContent) && !/Behandlungsraum 1/.test(document.getElementById('bkRaumFrei').textContent));
     const texte = [...auswahl.options].map(o => o.textContent);
     pruefe('Belegt steht im Text, freie zuerst', texte[0] === 'Kein Raum' && texte.includes('Behandlungsraum 1 (belegt)') && texte.indexOf('Gerätefläche') < texte.indexOf('Behandlungsraum 1 (belegt)'));
     pruefe('Plätze stehen im Text', texte.includes('Wärme (1 von 2 Plätzen belegt)'));

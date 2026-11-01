@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  optionenFuerAuswahl, felderAusWahl, ladeRaumliste, ladeBelegungen, raumWarnung, raumFelder, terminWarnungen, tagesgrenzen,
+  optionenFuerAuswahl, felderAusWahl, ladeRaumliste, ladeBelegungen, raumWarnung, freieRaeumeHinweis, raumFelder, terminWarnungen, tagesgrenzen,
 } from './raum-auswahl.js';
 
 const raeume = [
@@ -68,4 +68,14 @@ test('Tagesgrenzen umfassen den ganzen lokalen Tag', () => {
   assert.ok(Date.parse(vonISO) <= Date.parse('2026-11-02T09:10:00Z'));
   assert.ok(Date.parse(bisISO) >= Date.parse('2026-11-02T09:10:00Z'));
   assert.ok(Date.parse(bisISO) - Date.parse(vonISO) < 864e5);
+});
+
+test('Hinweis: nennt die freien Räume, belegte nicht', () => {
+  assert.equal(freieRaeumeHinweis(raeume, termine, start, ende), 'Frei zu dieser Zeit: Wärme, Einzelpraxis');
+});
+
+test('Hinweis: alles belegt, ohne Zeit oder ohne Räume', () => {
+  assert.equal(freieRaeumeHinweis([raeume[0]], termine, start, ende), 'Zu dieser Zeit ist kein Raum frei.');
+  assert.equal(freieRaeumeHinweis(raeume, termine, null, null), '');
+  assert.equal(freieRaeumeHinweis([], termine, start, ende), '');
 });
