@@ -2001,3 +2001,6 @@ Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 versc
 - [ ] **F5 offen:** Termin mit `room_id` (DB-geprüft: 10.11. 15:00 = QA Raum A2) steht in „Ohne Raum“. Ursache: `TERMIN_SELECT` (`module/termin-laden.js:70`) enthält kein `room_id`. Siehe `Physio/AUTOPILOT.md` F5.
 - [ ] Nicht geprüft: Hinweiszeile „Frei zu dieser Zeit“ im Terminformular, Überbelegt-Markierung, Klick auf Termin in der Raumspalte (erst nach F5 sinnvoll).
 - Hinweis M7: Kemal hat den Einbettungscode im Termin-Anfragen-Panel entfernt (`17a966c2`); frühere Checks „Code sichtbar/Code kopieren“ gelten für die Panel-Ansicht nicht mehr.
+- [x] S7 nach Fix F5 live (`?v=20261101b`): Termin 10.11. 15:00 steht in Spalte „QA Raum A2“, keine Spalte „Ohne Raum“ mehr.
+- [x] „Frei zu dieser Zeit“ im Terminformular (Raum A2, Plätze 1): 10.11. 15:00 → „Zu dieser Zeit ist kein Raum frei.“; 16:30 → „Frei zu dieser Zeit: QA Raum A2“. Nur angezeigt, nichts gespeichert.
+- [ ] **F6 offen:** Backend-Image seit S6 nicht gebaut (CI rot, `planErlaubt is not defined` in `auth-handlers.test.js`). Live: `ai-suggest-series` mit erfundener employeeId → 200 statt 400, fremde serviceId → 400 (alter Code). S-58/S-59/S6-Backend damit NICHT live geprüft/wirksam.
