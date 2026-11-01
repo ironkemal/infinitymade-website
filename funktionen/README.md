@@ -117,6 +117,10 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.11.2026 · K10 Standort + Spalten-Kapi
+- `standortAuswahl`, `fremderStandortName` (`module/start-aufgaben.js`). Niye: Aufgaben waren standortuebergreifend gemischt; Kemal: standortgebunden, bei Mehrstandort zuweisbar. Nerede: Aufgaben auf der Übersicht. Kein gemeinsamer Standort-Picker vorhanden (fonksiyon-ustasi), Kandidat fuer spaeter neben den Dropdowns in `dashboard.js`.
+- `tools/check-select-spalten.mjs` + `.sh`. Niye: K10-Abfrage auf nicht vorhandene Spalte blieb unbemerkt. Nerede: `.githooks/pre-commit`; `--alle` prueft das ganze Repo.
+
 ### 01.11.2026 · K8 Vorauswahl der Verordnung (`module/physio-befund-logik.js`)
 - Neu: `standardVerordnungId(verordnungen)`. Niye: suchte den Status `active`, den es in `prescriptions` nicht gibt, `in_therapy` fehlte; laufende VO wurde übergangen, auch stornierte konnte vorausgewählt werden. Nerede: Physio-Befund, Formular öffnen.
 

@@ -74,6 +74,31 @@ export function letzteErledigte(liste, n = 5) {
 }
 
 /**
+ * Standort-Auswahl fuer neue Aufgaben. Nur bei mehreren Standorten; vorgewaehlt ist
+ * der aktive, damit eine Aufgabe ohne Zutun dort landet, wo man gerade arbeitet.
+ * @param {Array<{id: string, name?: string}>} standorte
+ * @param {?string} aktivId
+ * @returns {?{optionen: Array<{id: string, name: string}>, gewaehlt: string}}
+ */
+export function standortAuswahl(standorte, aktivId) {
+  const liste = standorte || [];
+  if (liste.length < 2) return null;
+  const optionen = liste.map((b) => ({ id: b.id, name: b.name || 'Standort' }));
+  const gewaehlt = optionen.some((o) => o.id === aktivId) ? aktivId : optionen[0].id;
+  return { optionen, gewaehlt };
+}
+
+/**
+ * Standort-Name fuer die Zeile, wenn die Aufgabe zu einem anderen Standort gehoert
+ * (sichtbar nur bei Datenfreigabe zwischen Standorten).
+ */
+export function fremderStandortName(aufgabe, standorte, aktivId) {
+  const id = aufgabe?.business_id;
+  if (!id || id === aktivId) return '';
+  return (standorte || []).find((b) => b.id === id)?.name || '';
+}
+
+/**
  * Abfrage, Treffer und Anzeige der Patientensuche gehoeren dem Aufrufer: dieselben
  * wie in den anderen Masken (bizScope, Geburtsdatum, beide Rufnummern). Die eigene
  * Abfrage verlangte eine nicht vorhandene Spalte und verschluckte den Fehler —
@@ -107,6 +132,9 @@ export function patientenSucheOptionen(ctx) {
  * @param {() => Promise<Array>} [ctx.ladePatienten] wirft bei Fehler
  * @param {(lead: object, q: string) => boolean} [ctx.patientPasst]
  * @param {(lead: object) => string} [ctx.patientLabel]
+ * @param {() => Array<{id: string, name?: string}>} [ctx.getStandorte]
+ * @param {() => ?string} [ctx.getBusinessId] aktiver Standort
+ * @param {(query: object, kategorie: string) => object} [ctx.bizScope]
  * @param {Document} [doc]
  * @returns {{ laden: () => Promise<void> }}
  */
@@ -145,6 +173,7 @@ export function mountStartAufgaben(ctx, doc = document) {
             <span id="startAufgabePatientChipName" style="color:var(--text-main);font-weight:500;"></span>
             <button type="button" id="startAufgabePatientRemove" style="background:none;border:none;cursor:pointer;color:var(--text-muted);min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:14px;" aria-label="Patientenbezug entfernen" title="Verknüpfung entfernen">✕</button>
           </div>
+          <select id="startAufgabeStandort" hidden title="Standort" aria-label="Standort" style="flex:0 1 180px;min-height:44px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-main);font-size:13px;box-sizing:border-box;"></select>
           <button type="submit" id="startAufgabeAddBtn" class="btn-primary" style="flex:0 0 auto;min-height:44px;padding:0 18px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;box-sizing:border-box;">Hinzufügen</button>
         </div>
 
@@ -183,6 +212,7 @@ export function mountStartAufgaben(ctx, doc = document) {
   const patientBox = doc.getElementById('startAufgabePatientBox');
   const patientSearch = doc.getElementById('startAufgabePatientSearch');
   const patientList = doc.getElementById('startAufgabePatientList');
+  const standortSelect = doc.getElementById('startAufgabeStandort');
   const offenListe = doc.getElementById('startAufgabenOffenListe');
   const erledigtListe = doc.getElementById('startAufgabenErledigtListe');
 
@@ -232,6 +262,28 @@ export function mountStartAufgaben(ctx, doc = document) {
     });
   }
 
+  const standorte = () => (typeof ctx.getStandorte === 'function' ? ctx.getStandorte() : []) || [];
+  const aktiverStandort = () => (typeof ctx.getBusinessId === 'function' ? ctx.getBusinessId() : null);
+
+  // Die Standorte stehen erst nach dem Start fest, darum nicht beim Mount. Eine laufende Auswahl bleibt.
+  function aktualisiereStandortAuswahl() {
+    if (!standortSelect) return;
+    const auswahl = standortAuswahl(standorte(), aktiverStandort());
+    standortSelect.hidden = !auswahl;
+    if (!auswahl) { standortSelect.innerHTML = ''; return; }
+    const bisher = standortSelect.value;
+    standortSelect.innerHTML = auswahl.optionen
+      .map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join('');
+    standortSelect.value = auswahl.optionen.some((o) => o.id === bisher) ? bisher : auswahl.gewaehlt;
+  }
+
+  function standortMarke(a) {
+    const name = fremderStandortName(a, standorte(), aktiverStandort());
+    return name
+      ? `<span style="font-size:12px;color:var(--text-muted);background:var(--bg-input);padding:2px 8px;border-radius:4px;border:1px solid var(--border);white-space:nowrap;">${esc(name)}</span>`
+      : '';
+  }
+
   function renderListen() {
     const heuteISO = holeHeuteISO();
     const offene = sortiereOffene(gespeicherteAufgaben, heuteISO);
@@ -271,6 +323,7 @@ export function mountStartAufgaben(ctx, doc = document) {
             </span>
             ${faelligHtml}
             ${patientHtml}
+            ${standortMarke(a)}
             ${deleteBtnHtml}
           </li>`;
         }).join('');
@@ -308,11 +361,14 @@ export function mountStartAufgaben(ctx, doc = document) {
     try { ownerId = typeof ctx.getOwnerId === 'function' ? ctx.getOwnerId() : ctx.getOwnerId; } catch { ownerId = null; }  // vor dem Login ist das Profil noch leer
     if (!ownerId || !ctx.supabase) return;
 
+    aktualisiereStandortAuswahl();
+
     try {
-      const { data, error } = await ctx.supabase
+      const abfrage = ctx.supabase
         .from('praxis_aufgaben')
         .select('id, owner_id, business_id, lead_id, text, faellig_am, erledigt_at, erledigt_von, erstellt_von, created_at, updated_at')
         .eq('owner_id', ownerId);
+      const { data, error } = await (ctx.bizScope ? ctx.bizScope(abfrage, 'activities') : abfrage);
 
       if (error) {
         if (ctx.showToast) ctx.showToast('Fehler beim Laden der Aufgaben: ' + error.message, 'error');
@@ -374,6 +430,11 @@ export function mountStartAufgaben(ctx, doc = document) {
     if (uid) {
       payload.erstellt_von = uid;
     }
+    // Ohne Angabe setzt der Trigger den Standard-Standort, nicht den aktiven.
+    const standortId = (standortSelect && !standortSelect.hidden && standortSelect.value) || aktiverStandort();
+    if (standortId) {
+      payload.business_id = standortId;
+    }
 
     const { error } = await ctx.supabase
       .from('praxis_aufgaben')
@@ -392,7 +453,10 @@ export function mountStartAufgaben(ctx, doc = document) {
     aktualisierePatientenAnzeige();
     if (patientBox) patientBox.style.display = 'none';
 
-    if (ctx.showToast) ctx.showToast('Aufgabe erstellt', 'success');
+    if (ctx.showToast) {
+      const anderer = fremderStandortName({ business_id: standortId }, standorte(), aktiverStandort());
+      ctx.showToast(anderer ? `Aufgabe für „${anderer}" erstellt` : 'Aufgabe erstellt', 'success');
+    }
     await laden();
   }
 

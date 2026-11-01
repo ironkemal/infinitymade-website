@@ -7,6 +7,8 @@ import {
   sortiereOffene,
   letzteErledigte,
   patientenSucheOptionen,
+  standortAuswahl,
+  fremderStandortName,
 } from './start-aufgaben.js';
 import { readFileSync } from 'node:fs';
 
@@ -176,4 +178,25 @@ test('Patientensuche: dashboard.js fragt nur Spalten ab, die leads wirklich hat'
   const vorhanden = new Set(tabelle.split('\n').map((z) => z.trim().split(/\s+/)[0]));
   for (const s of spalten) assert.ok(vorhanden.has(s), `leads.${s} gibt es nicht`);
   assert.match(stelle.slice(0, 700), /bizScope\(/);
+});
+
+test('standortAuswahl: bei einem oder keinem Standort keine Auswahl', () => {
+  assert.equal(standortAuswahl([], 'a'), null);
+  assert.equal(standortAuswahl(null, null), null);
+  assert.equal(standortAuswahl([{ id: 'a', name: 'Mitte' }], 'a'), null);
+});
+
+test('standortAuswahl: aktiver Standort ist vorgewaehlt, sonst der erste', () => {
+  const liste = [{ id: 'a', name: 'Mitte' }, { id: 'b', name: 'Nord' }];
+  assert.equal(standortAuswahl(liste, 'b').gewaehlt, 'b');
+  assert.equal(standortAuswahl(liste, 'x').gewaehlt, 'a');
+  assert.equal(standortAuswahl(liste, null).optionen.length, 2);
+});
+
+test('fremderStandortName: nur fuer einen anderen als den aktiven Standort', () => {
+  const liste = [{ id: 'a', name: 'Mitte' }, { id: 'b', name: 'Nord' }];
+  assert.equal(fremderStandortName({ business_id: 'b' }, liste, 'a'), 'Nord');
+  assert.equal(fremderStandortName({ business_id: 'a' }, liste, 'a'), '');
+  assert.equal(fremderStandortName({ business_id: null }, liste, 'a'), '');
+  assert.equal(fremderStandortName({ business_id: 'z' }, liste, 'a'), '');
 });
