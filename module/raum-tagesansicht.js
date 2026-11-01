@@ -12,6 +12,9 @@
  */
 import { DV_SLOT_MIN, DV_SLOT_PX, rasterStunden } from './kalender-raster.js?v=20261021p';
 import { TERMIN_SELECT } from './termin-laden.js?v=20261021s';
+
+// TERMIN_SELECT (Tagesliste) enthält room_id nicht; ohne sie landen alle Termine in „Ohne Raum“ (F5).
+export const RAUM_TAGES_SELECT = `${TERMIN_SELECT},room_id`;
 import { raeumeDesStandorts } from './raum-plan.js';
 import { ladeRaumliste } from './raum-auswahl.js';
 import { mitarbeiterKuerzel } from './raum-streifen.js';
@@ -295,7 +298,7 @@ export function mountRaumTagesansicht(deps, doc = globalThis.document) {
       const datum = deps.getTagDatum();
       const vonISO = new Date(`${datum}T00:00:00`).toISOString();
       const bisISO = new Date(`${datum}T23:59:59`).toISOString();
-      const { data, error } = await deps.supabase.from('bookings').select(TERMIN_SELECT)
+      const { data, error } = await deps.supabase.from('bookings').select(RAUM_TAGES_SELECT)
         .eq('owner_id', deps.getOwnerId()).gte('start_time', vonISO).lte('start_time', bisISO).neq('status', 'cancelled');
       if (error) throw error;
       if (lauf !== stand.lauf) return;

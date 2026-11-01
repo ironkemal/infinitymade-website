@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spurenVerteilen, spaltenModell, spaltenKopf, blockGeometrie, OHNE_RAUM_ID } from './raum-tagesansicht.js';
+import { spurenVerteilen, spaltenModell, spaltenKopf, blockGeometrie, OHNE_RAUM_ID, RAUM_TAGES_SELECT } from './raum-tagesansicht.js';
 
 const t = (id, room, von, bis, extra = {}) => ({
   id, room_id: room, status: 'confirmed', customer_name: `Patient ${id}`,
@@ -75,4 +75,17 @@ test('Blockgeometrie: Position, Höhe und Spurbreite', () => {
 test('Keine Räume: leeres Modell, keine Spalten', () => {
   assert.deepEqual(spaltenModell([], []).spalten, []);
   assert.deepEqual(spaltenModell(undefined, undefined).spalten, []);
+});
+
+test('F5: Raum-Select enthält room_id und das volle Termin-Select', async () => {
+  const { TERMIN_SELECT } = await import('./termin-laden.js');
+  assert.ok(RAUM_TAGES_SELECT.split(',').includes('room_id'));
+  assert.ok(RAUM_TAGES_SELECT.startsWith(TERMIN_SELECT));
+});
+
+test('F5: zeichnen() fragt bookings mit RAUM_TAGES_SELECT ab, nicht mit TERMIN_SELECT', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const quelle = await readFile(new URL('./raum-tagesansicht.js', import.meta.url), 'utf8');
+  assert.match(quelle, /from\('bookings'\)\.select\(RAUM_TAGES_SELECT\)/);
+  assert.doesNotMatch(quelle, /from\('bookings'\)\.select\(TERMIN_SELECT\)/);
 });

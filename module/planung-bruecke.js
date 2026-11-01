@@ -13,7 +13,7 @@ import {
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js';
 import { mountRaumStreifen } from './raum-streifen.js';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101a';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101b';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';

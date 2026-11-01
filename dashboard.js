@@ -1,5 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261101a';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261101b';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';

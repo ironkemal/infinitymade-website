@@ -84,6 +84,8 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
 
+- 2026-11-01 · F5 · behoben: Raum-Modus nutzt `RAUM_TAGES_SELECT` (= TERMIN_SELECT + `room_id`), Test prüft Select-Konstante und Aufrufstelle · Cache-Version `?v=20261101b` (dashboard.js → planung-bruecke → raum-tagesansicht) · **bitte Live-Test:** nach Deploy Seite hart neu laden, Tagesansicht 10.11. → Raum → Termin 15:00 steht in Spalte „QA Raum A2“, „Ohne Raum“ nur für Termine ohne Raum.
+
 - 2026-11-01 · Blocker · Supabase-Token in `~/.zshenv` ungültig (API direkt 401, nicht nur MCP) → 0096/0097 NICHT live, nichts davon committet (Entwürfe nur im Arbeitsbaum). Melih muss neuen Token setzen + T3 neu starten. Keine Live-Migration ohne Melihs GO und nur per MCP.
 - 2026-11-01 · **bitte Live-Test (S7, `1abeacc6`…`be9de2d8`, schon deployt, wenn Vercel durch):** (1) Tagesansicht → Umschalter „Therapeut | Raum" → Raumspalten zeigen Termine, Wechsel zurück stellt Therapeutenansicht her. (2) Neuer Termin, Raum + Zeit wählen → Zeile „Frei zu dieser Zeit: …" erscheint. (3) S6-Regression: Kalender, Online-Buchung, Serie unverändert (Tabelle `employee_standort_plan` existiert noch nicht = altes Verhalten). (4) S-58/S-59: Serienvorschlag (Service, Mitarbeiter, Patient) einmal durchspielen; fremde/fehlende Service-ID darf nicht gehen. (5) F4 Monatszelle 390 px nach Deploy. Nicht gebaut/ungeprüft erwartet: Mitarbeiterfilter im Raummodus, klickbare Leerslots, Jetzt-Linie.
 - 2026-11-01 · Hinweis M7 · Kemal hat in `17a966c2` den Einbettungscode aus dem Termin-Anfragen-Panel entfernt → M7-Plan beachtet das, kein Einbettungscode-UI mehr bauen.
