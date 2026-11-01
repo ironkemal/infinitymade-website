@@ -71,7 +71,7 @@ Gepusht und **live ungetestet** (bitte Live-Test-Chat im QA-Tenant prüfen, Erge
 - **S7:** Tagesansicht-Umschalter „Therapeut | Raum" (`module/raum-tagesansicht.js`), Hinweiszeile „Frei zu dieser Zeit" im Terminformular.
 - **S6:** Standort-Filter (Tagesansicht, `getAvailableSlots`, `ai-suggest-series`, `batch-create`) — ohne Tabelle `employee_standort_plan` = altes Verhalten, also jetzt nur auf Regression prüfen (Kalender, Online-Buchung, Serie unverändert).
 - **S-58/S-59:** `ai-suggest-series` prüft IDs gegen den Mandanten → Serienvorschlag im QA-Tenant einmal durchspielen (Service, Mitarbeiter, Patient).
-- **F1 bleibt offen:** im Code keine Ursache gefunden; bitte mit Konsole/Netzwerk-Log reproduzieren (Request nach „Trotzdem eintragen" ja/nein, JS-Fehler) und die Zeile hier ergänzen.
+- **F1 zurückgezogen** (Live-Test-Chat, 01.11.: Testfehler, Meldung steht in `#bkSaveError`). Nicht weiter suchen.
 Wartet auf Melih: neuer Supabase-Token + Neustart, dann 0096/0097 live (Autopilot-Chat macht das, Live-Test danach M5/M4).
 
 ## Fehlerkanal Live-Test-Chat → Autopilot
@@ -82,3 +82,7 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 ## Übergabe-Protokoll (Autopilot schreibt, neueste oben)
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
+
+- 2026-11-01 · Blocker · Supabase-Token in `~/.zshenv` ungültig (API direkt 401, nicht nur MCP) → 0096/0097 NICHT live, nichts davon committet (Entwürfe nur im Arbeitsbaum). Melih muss neuen Token setzen + T3 neu starten. Keine Live-Migration ohne Melihs GO und nur per MCP.
+- 2026-11-01 · **bitte Live-Test (S7, `1abeacc6`…`be9de2d8`, schon deployt, wenn Vercel durch):** (1) Tagesansicht → Umschalter „Therapeut | Raum" → Raumspalten zeigen Termine, Wechsel zurück stellt Therapeutenansicht her. (2) Neuer Termin, Raum + Zeit wählen → Zeile „Frei zu dieser Zeit: …" erscheint. (3) S6-Regression: Kalender, Online-Buchung, Serie unverändert (Tabelle `employee_standort_plan` existiert noch nicht = altes Verhalten). (4) S-58/S-59: Serienvorschlag (Service, Mitarbeiter, Patient) einmal durchspielen; fremde/fehlende Service-ID darf nicht gehen. (5) F4 Monatszelle 390 px nach Deploy. Nicht gebaut/ungeprüft erwartet: Mitarbeiterfilter im Raummodus, klickbare Leerslots, Jetzt-Linie.
+- 2026-11-01 · Hinweis M7 · Kemal hat in `17a966c2` den Einbettungscode aus dem Termin-Anfragen-Panel entfernt → M7-Plan beachtet das, kein Einbettungscode-UI mehr bauen.
