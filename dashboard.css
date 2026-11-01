@@ -7493,7 +7493,7 @@ textarea:focus-visible,
 /* Nav badge for anfragen */
 .nav-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--danger, #dc2626); color: #fff;
+  background: var(--danger); color: #fff;
   font-size: 10px; font-weight: 700; min-width: 18px; height: 18px;
   border-radius: 9px; padding: 0 5px; margin-left: 6px; line-height: 1;
 }
@@ -8477,3 +8477,30 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
      deutsche Silbentrennung hat (dashboard.html lang="de"), mit Trennstrich. */
   #abVerlaufTbody td:nth-child(2) { overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; }
 }
+
+/* Standortplan je Mitarbeiter (module/standort-plan.js, M4c) */
+.standort-plan { padding: 16px; background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+.standort-plan h4 { margin: 8px 0 0; font-size: 14px; font-weight: 600; color: var(--text-main); }
+.standort-plan h4:first-child { margin-top: 0; }
+.standort-plan .form-hint { margin: 0; font-size: 12px; color: var(--text-muted); }
+.sp-tabelle-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.sp-tabelle { border-collapse: collapse; font-size: 13px; color: var(--text-main); }
+.sp-tabelle th, .sp-tabelle td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border); }
+.sp-tabelle th[scope="row"] { text-align: left; font-weight: 500; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.sp-tabelle input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+.sp-versetzen { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; font-size: 13px; color: var(--text-main); }
+.sp-versetzen label { display: flex; flex-direction: column; gap: 4px; }
+.sp-ziele { display: flex; flex-wrap: wrap; gap: 10px; }
+.sp-ziel { flex-direction: row !important; align-items: center; gap: 6px !important; min-height: 36px; }
+.sp-tage { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-main); }
+.sp-tage li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sp-tage li > span:first-child { min-width: 110px; font-variant-numeric: tabular-nums; }
+.sp-tage .sp-tag-weg { margin-left: auto; }
+.sp-warnung { border: 1px solid var(--danger); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text-main); }
+.sp-warnung p { margin: 0 0 8px; }
+.sp-warnung ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sp-warn-termin { width: 100%; display: flex; flex-wrap: wrap; gap: 4px 12px; text-align: left; padding: 8px; min-height: 44px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); cursor: pointer; font: inherit; }
+.sp-warn-termin:hover, .sp-warn-termin:focus-visible { border-color: var(--danger); }
+.sp-warn-ort { color: var(--text-muted); }
+.sp-aktionen { display: flex; justify-content: flex-end; }
+.sp-ziel input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }

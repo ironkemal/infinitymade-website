@@ -2985,7 +2985,8 @@
     "module/verordnung-anlegen.test.js",
     "module/warteliste-nachruecker.test.js",
     "onboarding.js",
-    "tools/browser-probe/raum-probe.html"
+    "tools/browser-probe/raum-probe.html",
+    "tools/browser-probe/standort-plan-probe.html"
    ],
    "register": true,
    "status": "aktiv",
@@ -3408,7 +3409,7 @@
     {
      "name": "holeDaten",
      "file": "module/planung-bruecke.js",
-     "start": 74,
+     "start": 75,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4298,9 +4299,57 @@
      ]
     },
     {
+     "name": "mountStandortPlan",
+     "file": "module/standort-plan.js",
+     "start": 172,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "mountStreifen",
      "file": "module/planung-bruecke.js",
-     "start": 65,
+     "start": 66,
      "module": [],
      "uiPfad": []
     },
@@ -5122,6 +5171,54 @@
      "uiPfad": []
     },
     {
+     "name": "warnungPruefen",
+     "file": "module/standort-plan.js",
+     "start": 197,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "wendePresetAn",
      "file": "module/fussbefund.js",
      "start": 1619,
@@ -5875,6 +5972,7 @@
     "module/rechnung-verordnung.js",
     "module/signal.js",
     "module/sondertag.js",
+    "module/standort-plan.js",
     "module/termin-aktionen.js",
     "module/termin-dauer.js",
     "module/termin-folge.js",
@@ -8538,6 +8636,13 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "mountStandortplanReiter",
+     "file": "module/planung-bruecke.js",
+     "start": 186,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
@@ -8763,7 +8868,8 @@
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
     "booking.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/planung-bruecke.js"
    ],
    "module": [
     "abrechnung",
@@ -9586,7 +9692,8 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
-    "module/standort-plan-laden.test.js"
+    "module/standort-plan-laden.test.js",
+    "tools/browser-probe/standort-plan-probe.html"
    ],
    "register": true,
    "status": "aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt",
@@ -9689,12 +9796,166 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "name",
+     "file": "module/standort-plan.js",
+     "start": 180,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "mountStandortPlan",
+     "file": "module/standort-plan.js",
+     "start": 172,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "speichern",
+     "file": "module/standort-plan.js",
+     "start": 238,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    }
+   ],
    "dateien": [
     "api-backend/lib/standort-plan-laden.js",
-    "module/standort-plan-laden.js"
+    "module/standort-plan-laden.js",
+    "module/standort-plan.js"
    ],
    "module": [
     "abrechnung",

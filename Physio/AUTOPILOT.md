@@ -29,7 +29,7 @@ Status: `offen` · `läuft` · `wartet-GO` · `blockiert` · `fertig`. Reihenfol
 | S2 | Live-Test M1, M2a, M5, M6a, M7 im **QA-Tenant** (nie im P1-Testkonto I6) — **macht der Chat „Live-Test", Autopilot überspringt S2** | offen | S1 live | **canli-test**, physio | Einträge in `canli-test/REGISTER.md`; Fehler → neue Scheibe hier |
 | S3 | M4a Migration `employee_standort_plan` (ohne anon, Tag-Granularität) | fertig (live 01.11.2026, mit 0096 in einem Commit) | — | **db-ustasi**, **guvenlik**, **onprem** | wie S1 |
 | S4 | M4b Regel Einzeltag → Wochenmuster → alle zugeordneten Standorte, Backend `api-backend/lib/standort-plan.js` + Frontend `module/standort-plan-regel.js`, gemeinsame Testvektoren | fertig (46 Tests grün; Schnittmenge mit `employee_business_assignments` noch in S6 prüfen) | — | **fonksiyon-ustasi** | Beide Fassungen bestehen dieselben Vektoren |
-| S5 | M4c UI: Wochenmuster, Einzeltag, „Versetzen" als ein Ablauf, Warnliste gebuchter Termine (nie automatisch verschieben) | offen | S3 live, S4 | **fonksiyon-ustasi**, physio, Skill `impeccable` | Montag A: in B nicht sichtbar; Einzeltag wirkt in beiden |
+| S5 | M4c UI: Wochenmuster, Einzeltag, „Versetzen" als ein Ablauf, Warnliste gebuchter Termine (nie automatisch verschieben) | fertig (Reiter „Standorte“ im Team-Panel, nur Inhaber, ab 2 Standorten; Probe 18/18; live ungetestet; „gültig ab Datum“ für Wochenmuster fehlt bewusst, keine Spalte) | S3 live, S4 | **fonksiyon-ustasi**, physio, Skill `impeccable` | Montag A: in B nicht sichtbar; Einzeltag wirkt in beiden |
 | S6 | M4d Filter Kalender + `getAvailableSlots` + Serienplaner; leere Tabelle/Lesefehler = altes Verhalten | fertig (Tagesansicht, getAvailableSlots, ai-suggest-series, batch-create; fällt ohne Tabelle auf altes Verhalten; Wochen-/Monatsansicht nicht gefiltert; live ungetestet) | S5 | **onprem**, fonksiyon-ustasi | Tests + Browser-Probe grün |
 | S7 | M2b Raumspalten (Umschalter Therapeut/Raum) + freie Räume im Terminformular | fertig (Umschalter Therapeut/Raum in Tagesansicht, Hinweiszeile freie Räume; Probe 59/59; live ungetestet, Mitarbeiterfilter im Raum-Modus und Klick auf leere Slots bewusst nicht) | S6 | physio, Skill `impeccable`, mobil-ui | Spalten je Raum; freie Räume gelistet |
 | S8 | M6b Migration Mitteilungsprotokoll + Route Vorschau/Senden (`api-backend/routes/sondertag.js`): **nie automatisch** — System erstellt Vorschau, **Praxis-Mitarbeiter:in prüft und gibt frei, erst dann Versand** (Melih 01.11.2026; welche Rolle freigeben darf, klären guvenlik + legal-de — bisheriger Plan: nur Inhaber), Einzelmails, fester Text, nur mit Opt-in, Dedup in DB, Deckel je Lauf, kein Cron, über `api-backend/lib/mail.js` | blockiert | **Kemal: E13-Einwilligungstext um „Terminänderungen" ergänzen** | **db-ustasi**, **guvenlik**, **onprem**, legal-de | Route + Tests; Migration `wartet-GO` |
@@ -84,6 +84,17 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 ## Übergabe-Protokoll (Autopilot schreibt, neueste oben)
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
+
+- 2026-11-01 · S5 · Standortplan-UI (`module/standort-plan.js`, Reiter „Standorte“) · Regel korrigiert (`6906870d`): Wochentag ohne Häkchen = alle Standorte wie bisher (vorher „frei“, widersprach M4b). · **bitte Live-Test (QA-Tenant, Inhaber, ≥ 2 Standorte):**
+  1. Team → Mitarbeiter öffnen → Reiter „Standorte“ sichtbar (als Mitarbeiter-Login: nicht sichtbar; bei nur 1 Standort: nicht sichtbar).
+  2. Raster zeigt nur die Standorte, die im Reiter Info dem Mitarbeiter zugeordnet sind.
+  3. Mo bei Standort A anhaken → Speichern → „Standortplan gespeichert ✓“. Kalender Standort B, nächster Montag, Tagesansicht: Mitarbeiter-Spalte fehlt (außer er hat dort einen Termin). Standort A: Spalte da. Dienstag: in beiden da.
+  4. Online-Buchung Standort B, Montag: Mitarbeiter ohne Slots. Standort A: Slots da.
+  5. Einen künftigen Montagstermin des Mitarbeiters in Standort B anlegen (vorher), dann Plan speichern → Dialog „Trotzdem speichern?“ + Warnliste (Datum, Zeit, Patient, Leistung, „gebucht: B“). Zeile antippen → Termin öffnet sich. Termin wird NICHT verschoben.
+  6. Versetzen: Von/Bis = ein Montag, Ziel B, „Tage übernehmen“, Speichern → an diesem Montag in B sichtbar, in A nicht (Einzeltag gewinnt).
+  7. Einzeltag „Entfernen“ + Speichern → wieder Wochenmuster.
+  8. Alle Häkchen weg + Speichern → überall wie vorher.
+  9. 390 px: Raster scrollt waagrecht, kein Seitenüberlauf.
 
 - 2026-11-01 · S1+S3 · 0096 `mitarbeiter_anstellung` + 0097 `employee_standort_plan` **live** (Management-API mit gültigem Token; MCP-Prozess hielt noch den alten). Vorher frische Kette 0000–0097 + RLS-Probe (3 neue Fälle) grün; live RLS/Policies/Grants/Advisors geprüft. `db/SCHEMA*` voll aus Live-Katalog neu (alter Dump war von Hand fortgeschrieben, u. a. fehlte `bookings.room_id → rooms`). · **bitte Live-Test:** (1) M5: Team → Mitarbeiter → Reiter Urlaub: Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch (z. B. 28) speichern, Seite neu laden → Werte bleiben, Resturlaub rechnet mit 28. Als Mitarbeiter einloggen: eigene Werte sichtbar, Kollegen nicht. (2) S6-Regression weiter ohne Planzeilen (Tabelle leer = altes Verhalten). M4-Pflege-UI (S5) kommt als Nächstes.
 

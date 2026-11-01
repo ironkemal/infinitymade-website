@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>läuft</title>
+<link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+<!-- Probe S5 (M4c): Standortplan-Reiter mit gefälschtem Supabase. Kein Netz, keine echten Daten. -->
+<main style="max-width:760px;margin:16px auto;padding:0 12px;">
+  <div id="host"></div>
+</main>
+<script type="module">
+import { mountStandortPlan } from '/module/standort-plan.js';
+
+const probe = window.__probe = [];
+const pruefe = (name, ok) => probe.push({ name, ok: !!ok });
+const warte = ms => new Promise(r => setTimeout(r, ms));
+
+const protokoll = { insert: [], delete: [] };
+let plan = [
+  { id: 'w1', employee_id: 'e1', business_id: 'A', weekday: 1, datum: null },
+];
+const termine = [
+  { id: 't-mo-b', start_time: '2026-11-16T09:00:00Z', customer_name: 'Muster, Anna', business_id: 'B', status: 'confirmed', services: { title: 'KG' } },
+  { id: 't-di-b', start_time: '2026-11-17T09:00:00Z', customer_name: 'Beispiel, Ben', business_id: 'B', status: 'confirmed', services: { title: 'MT' } },
+];
+
+function abfrage(tabelle) {
+  const stand = { op: 'select', filter: {} };
+  const b = {
+    select() { return b; }, eq(k, v) { stand.filter[k] = v; return b; }, gte() { return b; }, lte() { return b; },
+    neq() { return b; }, order() { return b; }, limit() { return b; },
+    in(k, v) { stand.filter[k] = v; return b; },
+    insert(zeilen) { stand.op = 'insert'; stand.zeilen = zeilen; return b; },
+    delete() { stand.op = 'delete'; return b; },
+    then(ok, fehl) {
+      let res;
+      if (tabelle === 'employee_standort_plan' && stand.op === 'select') res = { data: plan.map(z => ({ ...z })), error: null };
+      else if (tabelle === 'employee_standort_plan' && stand.op === 'insert') {
+        protokoll.insert.push(...stand.zeilen);
+        plan = plan.concat(stand.zeilen.map((z, i) => ({ ...z, id: `neu${protokoll.insert.length}-${i}` })));
+        res = { data: null, error: null };
+      } else if (tabelle === 'employee_standort_plan' && stand.op === 'delete') {
+        protokoll.delete.push(...stand.filter.id);
+        plan = plan.filter(z => !stand.filter.id.includes(z.id));
+        res = { data: null, error: null };
+      } else if (tabelle === 'bookings') res = { data: termine, error: null };
+      else res = { data: [], error: null };
+      return Promise.resolve(res).then(ok, fehl);
+    },
+  };
+  return b;
+}
+const supabase = { from: abfrage };
+
+const toasts = [];
+let geoeffnet = null;
+let bestaetigt = 0;
+const host = document.getElementById('host');
+const deps = {
+  supabase, ownerId: 'o', empId: 'e1', heute: '2026-11-02',
+  standorte: [{ id: 'A', business_name: 'Praxis Nord' }, { id: 'B', business_name: 'Praxis Süd' }, { id: 'C', business_name: 'Nicht zugeordnet' }],
+  erlaubteIds: ['A', 'B'],
+  showToast: (m, t) => toasts.push({ m, t }),
+  showConfirmModal: async () => { bestaetigt += 1; return true; },
+  oeffneTermin: id => { geoeffnet = id; },
+};
+
+try {
+  await mountStandortPlan(host, deps);
+  pruefe('Raster: 2 zugeordnete Standorte × 7 Tage', host.querySelectorAll('.sp-muster').length === 14);
+  pruefe('Nicht zugeordneter Standort wird nicht angeboten', !host.textContent.includes('Nicht zugeordnet'));
+  pruefe('Bestehendes Muster Mo Nord angehakt', host.querySelector('.sp-muster[data-weekday="1"][data-standort="A"]').checked);
+  pruefe('Hinweis zur Regel sichtbar', host.textContent.includes('Ein Tag ohne Häkchen: wie bisher an allen Standorten'));
+
+  // Di Nord anhaken -> Termin Di in Süd wird Konflikt; Mo-Termin in Süd ist schon Konflikt (Mo = Nord).
+  const di = host.querySelector('.sp-muster[data-weekday="2"][data-standort="A"]');
+  di.click();
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  pruefe('Speichern legt genau Di Nord an', protokoll.insert.length === 1 && protokoll.insert[0].weekday === 2 && protokoll.insert[0].business_id === 'A' && protokoll.insert[0].datum === null);
+  pruefe('Nichts gelöscht', protokoll.delete.length === 0);
+  pruefe('Bestätigung bei Konflikten gefragt', bestaetigt === 1);
+  const warn = host.querySelectorAll('.sp-warn-termin');
+  pruefe('Warnliste: 2 Termine (Mo und Di in Süd)', warn.length === 2);
+  pruefe('Warnliste nennt Patient und gebuchten Standort', host.querySelector('.sp-warnung')?.textContent.includes('Muster, Anna') && host.querySelector('.sp-warnung')?.textContent.includes('gebucht: Praxis Süd'));
+  warn[0]?.click();
+  pruefe('Klick öffnet Termin zum Umbuchen', geoeffnet === 't-mo-b');
+  pruefe('Erfolgsmeldung', toasts.some(t => t.m.startsWith('Standortplan gespeichert')));
+
+  // Versetzen: 16.–17.11. nach Süd -> zwei Einzeltage, Konflikte verschwinden.
+  host.querySelector('#spVon').value = '2026-11-16';
+  host.querySelector('#spBis').value = '2026-11-17';
+  host.querySelector('.sp-versetzen-ziel[value="B"]').click();
+  host.querySelector('#spVersetzenBtn').click();
+  pruefe('Versetzen zeigt 2 Einzeltage', host.querySelectorAll('.sp-tag-weg').length === 2);
+  const vorher = protokoll.insert.length;
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  const neueTage = protokoll.insert.slice(vorher);
+  pruefe('Speichern legt 2 Einzeltage in Süd an', neueTage.length === 2 && neueTage.every(z => z.business_id === 'B' && z.weekday === null));
+  pruefe('Keine Warnliste mehr (Termine liegen jetzt richtig)', host.querySelectorAll('.sp-warn-termin').length === 0);
+  pruefe('Keine zweite Bestätigung ohne Konflikt', bestaetigt === 1);
+
+  // Einzeltag entfernen -> genau eine Löschung.
+  host.querySelector('.sp-tag-weg').click();
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  pruefe('Einzeltag entfernen löscht genau eine Zeile', protokoll.delete.length === 1);
+
+  // Ungültiger Zeitraum -> Fehlermeldung, nichts übernommen.
+  host.querySelector('#spVon').value = '2026-10-01';
+  host.querySelector('#spBis').value = '2026-10-02';
+  host.querySelector('.sp-versetzen-ziel[value="B"]').click();
+  host.querySelector('#spVersetzenBtn').click();
+  pruefe('Vergangene Tage abgelehnt', toasts.at(-1)?.t === 'error');
+
+  // Keine Änderung -> kein Schreibzugriff.
+  const n = protokoll.insert.length + protokoll.delete.length;
+  await mountStandortPlan(host, deps);
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(150);
+  pruefe('Ohne Änderung kein Schreiben', protokoll.insert.length + protokoll.delete.length === n && toasts.at(-1)?.m === 'Keine Änderung.');
+} catch (e) {
+  pruefe(`Ausnahme: ${e.message}`, false);
+}
+document.title = 'fertig';
+</script>
+</body>
+</html>

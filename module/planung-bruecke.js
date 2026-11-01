@@ -17,6 +17,7 @@ import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101b';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
+import { mountStandortPlan } from './standort-plan.js?v=20261101a';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
@@ -177,11 +178,43 @@ export async function zeigeAnrufliste({ von, bis, type, startTime, endTime }) {
 }
 
 /** Einmal beim Start, nach dem Profil. Alle Werte als Getter, weil Standort und Team wechseln können. */
+/**
+ * Reiter „Standorte" im Team-Panel (M4c/S5). openEmpDetail klont die Reiterknöpfe bei jedem Öffnen,
+ * deshalb hört ein delegierter Listener am Detailbereich; die Sichtbarkeit folgt dem Namensfeld, das
+ * openEmpDetail bei jedem Öffnen setzt.
+ */
+function mountStandortplanReiter(deps) {
+  const detail = document.getElementById('teamDetailView');
+  const inhalt = document.getElementById('tab-standorte');
+  const name = document.getElementById('empDetailName');
+  if (!detail || !inhalt || !name || !deps.getDetailEmpId || !deps.getStandorte) return;
+  const knopf = () => detail.querySelector('.tab-btn[data-tab="standorte"]');
+  const sichtbar = () => {
+    const k = knopf();
+    if (k) k.hidden = !(deps.istInhaber() && (deps.getStandorte() || []).length > 1);
+  };
+  new MutationObserver(sichtbar).observe(name, { childList: true, characterData: true, subtree: true });
+  sichtbar();
+  detail.addEventListener('click', async (ereignis) => {
+    if (!ereignis.target.closest?.('.tab-btn[data-tab="standorte"]')) return;
+    const empId = deps.getDetailEmpId();
+    if (!empId) return;
+    let erlaubteIds = null;
+    const { data } = await deps.supabase.from('employee_business_assignments').select('business_id').eq('employee_id', empId);
+    if (Array.isArray(data) && data.length) erlaubteIds = data.map(z => z.business_id);
+    mountStandortPlan(inhalt, {
+      supabase: deps.supabase, ownerId: deps.getOwnerId(), empId,
+      standorte: (deps.getStandorte() || []).map(b => ({ id: b.id, business_name: b.business_name })),
+      erlaubteIds, showToast: deps.showToast, showConfirmModal: deps.showConfirmModal, oeffneTermin: deps.oeffneTermin,
+    }).catch(() => { inhalt.innerHTML = '<p class="form-hint">Standortplan ist gerade nicht verfügbar.</p>'; });
+  });
+}
+
 export function planungVerdrahten(deps) {
   verdrahtet = deps;
   setzeGrundSichtbar(empId => deps.istInhaber() || deps.getEigeneId() === empId);
   // Eine fehlende Stelle im DOM darf den Rest von dashboard.js nicht abbrechen.
-  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts })]) {
+  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts }), mountStandortplanReiter]) {
     try {
       schritt(deps);
     } catch (fehler) {
