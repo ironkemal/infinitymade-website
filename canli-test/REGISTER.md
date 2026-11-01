@@ -1985,8 +1985,10 @@ Zweiter Therapeut, gleicher Raum und Zeit: Wechsel des Mitarbeiters leert die Le
 - [x] Mobil 390 px: Sondertag-Etikett in Tag und Woche passt
 - [ ] F4 behoben — Sondertag-Etikett in der Monatszelle (47 px breit) wurde abgeschnitten; Korrektur in `dashboard.css` (Commit `8d942bb9`, lokal), vorab mit eingefügtem CSS gemessen (Etikett 81 → 33 px, mit Auslassung), echte Prüfung erst nach Deploy
 - Beobachtung Mobil: Speichern-Knopf im Terminformular 32 px, Therapeut/Raum-Umschalter 28 px hoch (unter 44 px), Raum-Auswahl 43 px
-- [ ] Feiertag, Sondertermin mit Uhrzeit, mehrtägiger Sondertag, Sondertag löschen
-- [ ] „Code kopieren" (Zwischenablage), Absenden einer Anfrage über das Widget
+- [x] Feiertag (20.11., Etikett „Praxis geschlossen“), Sondertermin 09:00–12:00 (Etikett „Sonderöffnung 09:00–12:00“), mehrtägiger Sondertag 26.–27.11. (zwei Einträge, beide markiert), Notizen erscheinen in keinem Etikett
+- [x] Sondertag löschen: Rückfrage „Diesen Sondertag wirklich löschen?“, Eintrag weg, nach Neuladen weiterhin weg (nur eigener Testeintrag 20.11. gelöscht)
+- [x] „Code kopieren“: Toast „Code kopiert!“ (Zwischenablage selbst nicht lesbar, Browser verweigert)
+- [ ] Absenden einer Anfrage über das Widget — bewusst nicht getestet (löst Eintrag/Benachrichtigung der Praxis aus)
 - [ ] Physio-Mandant (alles bisher im Podologie-Mandanten)
 - [ ] M5 (wartet auf Migration 0096 live)
 - [ ] Konsole systematisch: beim Laden des Dashboards einmal „Failed to load resource: 404" gesehen, Ressource nicht ermittelt
