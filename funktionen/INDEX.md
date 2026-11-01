@@ -3,7 +3,7 @@
 > Üretim: 2026-11-01 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4179 fonksiyon** (4057 JS · 95 bash · 27 ps1) · 517 dosya · 42 sidebar modülü
+**4180 fonksiyon** (4058 JS · 95 bash · 27 ps1) · 517 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -387,6 +387,15 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 2 — `fmt()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `fmt()` — [dashboard.js:9660](dashboard.js#L9660-L12661) · 3002 satır · employee_scope_overrides:delete, employee_scope_overrides:insert
 - `saveEmpPermissions()` — [dashboard.js:9939](dashboard.js#L9939-L9990) · 52 satır · employee_scope_overrides:delete, employee_scope_overrides:insert
+
+### `employee_standort_plan` — 2 bağımsız yazma yolu
+
+**Yol 1 — `standortplanAufraeumen()`** · Ekran: _UI yolu çözülemedi_
+- `standortplanAufraeumen()` — [api-backend/routes/mitarbeiter-zugang.js:323](api-backend/routes/mitarbeiter-zugang.js#L323-L336) · 14 satır · employee_standort_plan:delete
+
+**Yol 2 — `mountStandortPlan()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
+- `mountStandortPlan()` — [module/standort-plan.js:172](module/standort-plan.js#L172-L276) · 105 satır · employee_standort_plan:insert, employee_standort_plan:delete
+- `speichern()` — [module/standort-plan.js:238](module/standort-plan.js#L238-L273) · 36 satır · employee_standort_plan:insert, employee_standort_plan:delete
 
 ### `fahrten` — 2 bağımsız yazma yolu
 

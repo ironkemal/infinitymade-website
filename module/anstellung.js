@@ -339,7 +339,7 @@ export function anstellungHtml(anstellung = {}, { istInhaber = false, idSuffix =
     </div>
     <button type="button" id="${id('SpeichernBtn')}" class="btn-primary anst-speichern" style="height:36px;white-space:nowrap;">Speichern</button>
   </div>
-  <div class="form-hint" style="margin-top:8px;font-size:12px;color:var(--text-muted);">Vertragliche Arbeitszeit und Urlaubsanspruch in Tagen pro Kalenderjahr.</div>
+  <div class="form-hint" style="margin-top:8px;font-size:12px;color:var(--text-muted);">Vertragliche Arbeitszeit und Urlaubsanspruch in Tagen pro Kalenderjahr. Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem; gesetzliche Aufbewahrungspflichten erfüllen Sie in Ihrer Lohnbuchhaltung.</div>
 </div>
   `.trim();
 }

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-01",
  "dateien": 517,
- "funktionen": 4179,
+ "funktionen": 4180,
  "module": [
   "abrechnung",
   "anamnese",
@@ -39576,12 +39576,40 @@
    "uiPfad": []
   },
   {
+   "name": "standortplanAufraeumen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/routes/mitarbeiter-zugang.js",
+   "start": 323,
+   "end": 336,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [
+    "employee_standort_plan"
+   ],
+   "rpcs": [],
+   "writes": [
+    "employee_standort_plan:delete"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "error"
+   ],
+   "calledBy": [
+    "(datei) api-backend/routes/mitarbeiter-zugang.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "genericFail",
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 515,
-   "end": 530,
+   "start": 542,
+   "end": 557,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -176951,6 +176979,7 @@
     "speichereStufen",
     "speichern",
     "standardVerordnung",
+    "standortplanAufraeumen",
     "start",
     "starteDevServer",
     "starteZahlungseingang",
@@ -240934,6 +240963,142 @@
        "writes": [
         "employee_scope_overrides:delete",
         "employee_scope_overrides:insert"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 38 modülden çağrılıyor"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tabelle": "employee_standort_plan",
+   "anzahl": 2,
+   "pfade": [
+    {
+     "leitfunktion": "standortplanAufraeumen",
+     "funktionen": [
+      {
+       "name": "standortplanAufraeumen",
+       "file": "api-backend/routes/mitarbeiter-zugang.js",
+       "start": 323,
+       "end": 336,
+       "lines": 14,
+       "writes": [
+        "employee_standort_plan:delete"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "mountStandortPlan",
+     "funktionen": [
+      {
+       "name": "mountStandortPlan",
+       "file": "module/standort-plan.js",
+       "start": 172,
+       "end": 276,
+       "lines": 105,
+       "writes": [
+        "employee_standort_plan:insert",
+        "employee_standort_plan:delete"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 38 modülden çağrılıyor"
+       ]
+      },
+      {
+       "name": "speichern",
+       "file": "module/standort-plan.js",
+       "start": 238,
+       "end": 273,
+       "lines": 36,
+       "writes": [
+        "employee_standort_plan:insert",
+        "employee_standort_plan:delete"
        ],
        "modules": [
         "abrechnung",

@@ -309,3 +309,8 @@ test('F7: IDs je Mitarbeiter eindeutig, Labels zeigen auf die eigene Karte', () 
   for (const i of ids(a).filter(i => !i.includes('Speichern'))) assert.ok(a.includes(`for="${i}"`), i);
   assert.ok(!anstellungHtml({}, { istInhaber: true, idSuffix: '"><x' }).includes('"><x'));
 });
+
+test('Hinweis: kein Lohn-/Arbeitszeiterfassungssystem (legal-de), nur im Inhaber-Formular', () => {
+  assert.match(anstellungHtml({}, { istInhaber: true }), /kein Lohn- oder Arbeitszeiterfassungssystem/);
+  assert.doesNotMatch(anstellungHtml({}, { istInhaber: false }), /Lohnbuchhaltung/);
+});

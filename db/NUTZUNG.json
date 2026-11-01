@@ -9692,6 +9692,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/routes/mitarbeiter-zugang-aufraeumen.test.js",
     "module/standort-plan-laden.test.js",
     "tools/browser-probe/standort-plan-probe.html"
    ],
@@ -9950,10 +9951,21 @@
       "delete",
       "insert"
      ]
+    },
+    {
+     "name": "standortplanAufraeumen",
+     "file": "api-backend/routes/mitarbeiter-zugang.js",
+     "start": 323,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
     }
    ],
    "dateien": [
     "api-backend/lib/standort-plan-laden.js",
+    "api-backend/routes/mitarbeiter-zugang.js",
     "module/standort-plan-laden.js",
     "module/standort-plan.js"
    ],
@@ -14537,6 +14549,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
+    "api-backend/routes/mitarbeiter-zugang-aufraeumen.test.js",
     "module/anstellung.test.js"
    ],
    "register": true,

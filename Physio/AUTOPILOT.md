@@ -86,6 +86,8 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
 
+- 2026-11-01 · Team · Entfernen eines Mitarbeiters löscht seinen Standortplan (Backend, nach der Sperre, idempotent; Anstellung bleibt für Resturlaub-Abgeltung, db-ustasi) · Hinweis in der Anstellungs-Karte „Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem …“ (legal-de) · **bitte Live-Test** (nach grünem publish-calendar-api): Test-Mitarbeiter mit Planzeile → Entfernen → Antwort 200 ohne `aufraeumen_offen`, per REST als Inhaber keine `employee_standort_plan`-Zeile mehr für ihn; `mitarbeiter_anstellung`-Zeile noch da. Inhaber-Karte zeigt den Hinweistext.
+
 - 2026-11-01 · F7 · Anstellungs-Karte: IDs je Mitarbeiter eindeutig (`anstellungUrlaubJahrestage-<empId>` …), Speichern sucht per Klasse im eigenen Container · Cache `planung-bruecke ?v=20261101d`, `anstellung ?v=20261101f7` · **bitte Live-Test:** zwei Mitarbeiter-Karten nacheinander öffnen, in der zweiten 25 Tage speichern → richtiger Mitarbeiter, keine doppelten IDs (DevTools).
 
 - 2026-11-01 · S5 · Standortplan-UI (`module/standort-plan.js`, Reiter „Standorte“) · Regel korrigiert (`6906870d`): Wochentag ohne Häkchen = alle Standorte wie bisher (vorher „frei“, widersprach M4b). · **bitte Live-Test (QA-Tenant, Inhaber, ≥ 2 Standorte):**

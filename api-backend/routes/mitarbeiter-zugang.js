@@ -313,6 +313,28 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
   }
 });
 
+/**
+ * Nach dem Entfernen: Einsatzplan (employee_standort_plan, 0097) des Mitarbeiters loeschen — er hat nach dem
+ * Austritt keinen Zweck mehr (db-ustasi 01.11.2026). mitarbeiter_anstellung bleibt bewusst stehen: Resturlaub-
+ * Abgeltung (§ 7 Abs. 4 BUrlG) braucht Anspruch + time_offs; beide spaeter gemeinsam per Frist (legal-de).
+ * Idempotent; ein Fehler hebt die Sperre nicht auf, er wird nur gemeldet.
+ * @returns {Promise<boolean>} true = geloescht oder nichts zu tun
+ */
+export async function standortplanAufraeumen(db, { ownerId, employeeId }) {
+  try {
+    const { error } = await db.from('employee_standort_plan').delete()
+      .eq('owner_id', ownerId).eq('employee_id', employeeId);
+    if (error) {
+      console.error('[mitarbeiter-zugang] Standortplan nicht geloescht:', error.code || error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('[mitarbeiter-zugang] Standortplan nicht geloescht:', e?.message);
+    return false;
+  }
+}
+
 // ── POST /team/mitarbeiter/:id/entfernen ──────────────────────────────────────
 // Mitarbeiter entfernen: Das Auth-Konto wird für 100 Jahre gesperrt (ban_duration)
 // und aktive Sitzungen werden beendet, aber der Datensatz bleibt in profiles erhalten.
@@ -360,7 +382,9 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
     }
 
     if (targetProfile.is_active === false) {
-      return res.status(200).json({ ok: true, bereits_entfernt: true });
+      // Nachholen, falls das Aufraeumen beim ersten Entfernen scheiterte (idempotent).
+      const planGeloescht = await standortplanAufraeumen(supabase, { ownerId, employeeId: targetId });
+      return res.status(200).json({ ok: true, bereits_entfernt: true, ...(planGeloescht ? {} : { aufraeumen_offen: true }) });
     }
 
     // 3. Auth-Konto sperren und Einrichtungscode entwerten
@@ -394,7 +418,10 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
       return res.status(500).json({ error: 'Mitarbeiter konnte nicht deaktiviert werden' });
     }
 
-    // 6. Audit-Log & Antwort
+    // 6. Einsatzplan aufraeumen (nach der Sperre: die Sperre ist die Schutzmassnahme, das hier nur Ordnung)
+    const planGeloescht = await standortplanAufraeumen(supabase, { ownerId, employeeId: targetId });
+
+    // 7. Audit-Log & Antwort
     logAccess(supabase, {
       userId: ownerId,
       ownerId,
@@ -407,7 +434,7 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
       ip: req.ip,
     });
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, ...(planGeloescht ? {} : { aufraeumen_offen: true }) });
 
   } catch (err) {
     console.error('[mitarbeiter-zugang] Unerwarteter Fehler beim Entfernen des Mitarbeiters:', err);
