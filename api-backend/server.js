@@ -878,7 +878,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   // nicht am Standort vorsieht. Tabelle fehlt/Fehler/leer -> ladeStandortPlan liefert [] = altes Verhalten.
   if (activeBiz?.id) {
     const planZeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: [userId] });
-    if (!planErlaubt(planZeilen, userId, date, activeBiz.id)) return { slots: [], reason: 'standort_plan' };
+    if (!planErlaubt(planZeilen, userId, date, activeBiz.id)) return { slots: [], reason: 'working_hours_inactive' }; // bewusst kein eigener Grund: öffentlich nicht vom freien Tag unterscheidbar (S-59)
   }
 
   // 1.5 Check custom_days (shop-wide closed/holiday/special)
@@ -1732,6 +1732,14 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     // Slot-Enumeration aufbläht
     const count = Math.max(1, Math.min(parseInt(countRaw, 10) || 8, MAX_SERIES_COUNT));
 
+    // Mandantenprüfung der Body-Werte (S-58): fremde IDs ablehnen, nicht still übernehmen.
+    const serviceGuard = await validateAuthenticatedService(supabase, serviceId, ownerId);
+    if (!serviceGuard.ok) return res.status(serviceGuard.status || 400).json({ error: serviceGuard.error });
+    if (employeeId) {
+      const therapistGuard = await validateTherapist(supabase, employeeId, ownerId);
+      if (!therapistGuard.ok) return res.status(therapistGuard.status || 400).json({ error: therapistGuard.error });
+    }
+
     // 1) Resolve service + duration
     const { data: svc } = await supabase.from('services')
       .select('id,title,duration_minutes,price_config').eq('id', serviceId).single();
@@ -1757,7 +1765,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     // 2) Resolve owner profile (sector) + customer
     const [{ data: ownerProfile }, { data: customer }] = await Promise.all([
       supabase.from('profiles').select('sector,business_name').eq('id', ownerId).single(),
-      customerId ? supabase.from('leads').select('id,first_name,last_name,title,phone,metadata').eq('id', customerId).single() : Promise.resolve({ data: null })
+      customerId ? supabase.from('leads').select('id,first_name,last_name,title,phone,metadata').eq('id', customerId).eq('owner_id', ownerId).maybeSingle() : Promise.resolve({ data: null })
     ]);
     const sector = ownerProfile?.sector || 'unknown';
 
