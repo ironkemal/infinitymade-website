@@ -1957,3 +1957,35 @@ Neuer Termin an einem geschlossenen Tag: Hinweis „Die Praxis ist an diesem Tag
 ### Mobil 390 px (Stichprobe M1/M6a)
 - Terminkalender und Termin-Anfragen: kein horizontaler Überlauf. Sondertage- und Räume-Formular passen in 390 px. Buttons dort 30–36 px hoch (unter 44 px).
 - KALDI: F3 — Verfügbarkeit, Arbeitszeiten-Zeile: Endzeit-Feld reicht bis x=433, Raster nur 343 px breit und `overflow:hidden`, Endzeit abgeschnitten (nicht Teil von M1–M7).
+
+### Nachprüfung und Rest-Checkliste S2 (2026-11-01, QA-Tenant „Podologie Nord", Inhaber, Desktop 1280 px)
+
+**F1 zurückgezogen (Fehler lag im Test, nicht im Produkt):** Die Meldung steht in `#bkSaveError` über dem Speichern-Knopf; ich hatte sie zuvor übersehen.
+Gleicher Therapeut, gleicher Slot: „Dieser Zeitraum ist für diese:n Mitarbeiter:in bereits belegt. Bitte eine andere Uhrzeit wählen." (sichtbar, Formular bleibt offen — richtig, die Therapeuten-Sperre gilt hart).
+Zweiter Therapeut, gleicher Raum und Zeit: Wechsel des Mitarbeiters leert die Leistung, die Meldung „Bitte eine Leistung auswählen." erscheint; nach erneuter Leistungswahl kommen drei Hinweise
+(kein Arbeitstag, Praxis geschlossen, Raum belegt), nach „Trotzdem eintragen" ist der Termin gespeichert.
+
+- [x] Raum anlegen, umbenennen, Plätze ändern, bleibt nach Neuladen (Desktop)
+- [x] Raum deaktivieren: nicht mehr im Terminformular
+- [x] Raum reaktivieren: „Raum aktiviert ✓", erscheint wieder im Terminformular (danach wieder deaktiviert)
+- [x] Raum im Einzeltermin; Raum im Aktionspanel ändern („Raum gespeichert.", in der Datenbank geprüft)
+- [x] Serie mit Raum: 3 Serientermine, alle drei mit Raum (Datenbank geprüft)
+- [x] Verschieben (10.11. 14:00 → 15:00): Raum bleibt, Zeit bleibt nach Neuladen
+- [x] Statuswechsel (Nicht erschienen, mit Absagegrund): Status `no_show`, Raum bleibt (Datenbank)
+- [x] Überbelegungs-Hinweis nur als Warnung, ohne Patientenname; Termin trotzdem speicherbar
+- [x] Streifen „belegt": zeigt Kürzel und „noch 28 Min."; kein Patientenname
+- [x] Streifen „n Termine ohne Raum": „1 Termin läuft ohne Raum"
+- [x] Streifen nach Neuladen: Nicht-erschienen-Termin zählt nicht mehr als belegt („frei")
+- [x] Sondertag anlegen, Hinweis, Anrufliste, Etikett in Tag/Woche/Monat, Hinweis im Terminformular (siehe Abschnitt M6a)
+- [x] Einbettungscode sichtbar, Header richtig, Formular lädt in fremder HTTPS-Seite (3 weitere Ladeversuche ohne Fehler)
+- [ ] Streifen aktualisiert sich sofort nach Raumzuweisung/Statuswechsel — nein: er holt alle 60 s neu (Code: `intervallMs = 60000`), nach Neuladen stimmt er. Kein Fehler, aber nicht sofort.
+- [ ] F2 behoben — nicht reproduzierbar, nichts geändert
+- [ ] F3 behoben — Korrektur in `dashboard.css` (Commit liegt lokal), vorab gegen das Live-DOM mit eingefügtem CSS gemessen (Überlauf 28 → 0 Elemente), echte Prüfung erst nach Deploy
+- [ ] Mobil 390 px für Räume, Streifen, Serie, Sondertag-Markierungen im Kalender
+- [ ] Feiertag, Sondertermin mit Uhrzeit, mehrtägiger Sondertag, Sondertag löschen
+- [ ] „Code kopieren" (Zwischenablage), Absenden einer Anfrage über das Widget
+- [ ] Physio-Mandant (alles bisher im Podologie-Mandanten)
+- [ ] M5 (wartet auf Migration 0096 live)
+- [ ] Konsole systematisch: beim Laden des Dashboards einmal „Failed to load resource: 404" gesehen, Ressource nicht ermittelt
+
+Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 verschoben), zwei Termine am 01.11. (einer Nicht erschienen), Termin 09.11. 10:00 (zweiter Therapeut).
