@@ -63,6 +63,17 @@ ergänzen** (guvenlik M1: sonst bleiben Vertragsdaten nach Kontolöschung stehen
 legal-de 01.11.: Kategorie `loeschen`, keine eigene Frist, Modell Inhaber-schreibt/Mitarbeiter-liest-eigene-Zeile reicht. Pflicht: BEIDE Tabellen (`mitarbeiter_anstellung`, `employee_standort_plan`, Filter `owner_id`) in `loeschen.js`; Zeilen löschen, wenn Mitarbeiter aus dem Team entfernt wird; Hilfetext „Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem …"; Einzeltag-Zeilen älter 12 Monate später bereinigen (niedrig). guvenlik 0097: Mandantengrenze hält; Testlücken ergänzen (UPDATE owner_id/employee_id auf fremden Wert, fremder UPDATE/DELETE, ON CONFLICT als Fremder); optional `REVOKE REFERENCES, TRIGGER` von authenticated. S-58/S-59 behoben (server.js). Offen für Melih: darf nur der Inhaber schreiben (so im Entwurf; im Code gibt es keine Standortleiter-Rolle).
 Optional (niedrig): `ladeAnstellung` soll für Nicht-Inhaber bei fremder `empId` „nicht sichtbar" statt Vorgabe 30 Tage liefern (`module/anstellung.js:164`).
 
+
+## Abstimmung Autopilot-Chat ↔ Live-Test-Chat (01.11.2026, Stand nach S7)
+
+Ziel Autopilot-Chat: M4a–M4d, M2b, M5-Fix bis zum zweiten Standort (Ende Dez) live bringen; M6-Mail erst nach E13.
+Gepusht und **live ungetestet** (bitte Live-Test-Chat im QA-Tenant prüfen, Ergebnis in `canli-test/REGISTER.md`, Fehler als `F`-Scheibe hier):
+- **S7:** Tagesansicht-Umschalter „Therapeut | Raum" (`module/raum-tagesansicht.js`), Hinweiszeile „Frei zu dieser Zeit" im Terminformular.
+- **S6:** Standort-Filter (Tagesansicht, `getAvailableSlots`, `ai-suggest-series`, `batch-create`) — ohne Tabelle `employee_standort_plan` = altes Verhalten, also jetzt nur auf Regression prüfen (Kalender, Online-Buchung, Serie unverändert).
+- **S-58/S-59:** `ai-suggest-series` prüft IDs gegen den Mandanten → Serienvorschlag im QA-Tenant einmal durchspielen (Service, Mitarbeiter, Patient).
+- **F1 bleibt offen:** im Code keine Ursache gefunden; bitte mit Konsole/Netzwerk-Log reproduzieren (Request nach „Trotzdem eintragen" ja/nein, JS-Fehler) und die Zeile hier ergänzen.
+Wartet auf Melih: neuer Supabase-Token + Neustart, dann 0096/0097 live (Autopilot-Chat macht das, Live-Test danach M5/M4).
+
 ## Fehlerkanal Live-Test-Chat → Autopilot
 
 Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`, … mit Status `offen` in die Warteschlange ein
