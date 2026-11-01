@@ -3,8 +3,10 @@
 // wie JS getDay) ODER {employee_id, business_id, datum 'YYYY-MM-DD'}.
 //   1) Einzeltag-Zeilen fuer den Tag vorhanden -> NUR diese.
 //   2) sonst Wochenmuster-Zeilen fuer den Wochentag.
-//   3) Hat der Mitarbeiter ein Wochenmuster, aber nicht fuer diesen Wochentag -> [] (freier Tag).
-//   4) Kein Eintrag fuer den Mitarbeiter / leere oder fehlerhafte Eingabe -> alle Standorte (altes Verhalten).
+//   3) Kein Eintrag fuer diesen Tag (auch: Wochenmuster ohne diesen Wochentag), keine Zeile fuer den
+//      Mitarbeiter, leere oder fehlerhafte Eingabe -> alle Standorte (altes Verhalten). Ob jemand an einem
+//      Tag ueberhaupt arbeitet, steuern Arbeitszeiten/Abwesenheiten, nicht der Standortplan
+//      (Physio/PLANUNG-UMSETZUNG.md M4b „Einzeltag -> Wochenmuster -> alle“, physio 01.11.2026).
 // Zwei Fassungen (api-backend/lib/standort-plan.js, module/standort-plan-regel.js) mit
 // IDENTISCHER Logik; beide laufen gegen module/standort-plan-vektoren.json.
 
@@ -35,9 +37,9 @@ export function standorteFuerTag(zeilen, employeeId, datum, alleStandortIds) {
   const einzel = eigene.filter((z) => typeof z.datum === 'string' && z.datum.slice(0, 10) === t.tag);
   if (einzel.length) return eindeutig(einzel);
 
-  const woche = eigene.filter((z) => z.datum == null && z.weekday != null && z.weekday !== '');
-  if (!woche.length) return alle;
-  return eindeutig(woche.filter((z) => Number(z.weekday) === t.wochentag));
+  const woche = eigene.filter((z) => z.datum == null && z.weekday != null && z.weekday !== ''
+    && Number(z.weekday) === t.wochentag);
+  return woche.length ? eindeutig(woche) : alle;
 }
 
 export function istAmStandort(zeilen, employeeId, datum, standortId, alleStandortIds) {

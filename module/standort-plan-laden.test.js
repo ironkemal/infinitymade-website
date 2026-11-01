@@ -7,7 +7,8 @@ function fake(result, zaehler) {
   return { from: (t) => { assert.equal(t, 'employee_standort_plan'); return q; } };
 }
 const team = [{ id: 'e1' }, { id: 'e2' }];
-const plan = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }];
+// e1: Montag B, Dienstag A (ein Wochentag ohne Eintrag hiesse "alle", nicht "frei").
+const plan = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }, { employee_id: 'e1', business_id: 'A', weekday: 2, datum: null }];
 
 test('Tabelle fehlt -> [], danach kein zweiter Request', async () => {
   _planSperreZuruecksetzen();
@@ -52,7 +53,7 @@ test('Spalten: Plan darf nicht erweitern, Standort A bleibt fuer e1 aus am Monta
 });
 
 test('Spalten: alle ausgeblendet -> unveraendert', () => {
-  const p = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }, { employee_id: 'e2', business_id: 'B', weekday: 1, datum: null }];
+  const p = [{ employee_id: 'e1', business_id: 'A', weekday: 2, datum: null }, { employee_id: 'e2', business_id: 'A', weekday: 2, datum: null }];
   assert.equal(spaltenNachPlan(team, p, '2026-11-03', 'B'), team);
 });
 

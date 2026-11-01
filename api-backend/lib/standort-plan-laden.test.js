@@ -6,7 +6,8 @@ function fake(result, z) {
   const q = { select: () => q, eq: () => q, in: () => { z.n++; if (result instanceof Error) throw result; return Promise.resolve(result); } };
   return { from: () => q };
 }
-const plan = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }];
+// e1: Montag B, Dienstag A (ein Wochentag ohne Eintrag hiesse "alle", nicht "frei").
+const plan = [{ employee_id: 'e1', business_id: 'B', weekday: 1, datum: null }, { employee_id: 'e1', business_id: 'A', weekday: 2, datum: null }];
 
 test('Tabelle fehlt -> [] und nur ein Request', async () => {
   _planSperreZuruecksetzen();
