@@ -8,6 +8,7 @@
  * Keine DOM-Abhaengigkeiten, keine Netzwerkaufrufe.
  */
 
+import { alsBerlinDatum } from './berlin-datum.js';
 import {
   FORM_VERSION,
   BEFUNDARTEN,
@@ -27,12 +28,23 @@ import {
 } from './physio-befund-katalog.js';
 
 /**
+ * Vorauswahl der Verordnung: die juengste laufende, sonst die juengste nicht
+ * stornierte. Erwartet die Liste absteigend nach created_at.
+ */
+export function standardVerordnungId(verordnungen) {
+  const liste = verordnungen || [];
+  const laufend = liste.find((v) => ['parsed', 'confirmed', 'in_therapy'].includes(v.status));
+  const treffer = laufend || liste.find((v) => v.status !== 'cancelled');
+  return treffer ? treffer.id : null;
+}
+
+/**
  * Erzeugt einen initialen, leeren Befund-Zustand.
  */
 export function neuerBefundZustand({ befundart = 'erst', datum = null, therapeutId = null } = {}) {
   return {
     befundart: befundart || 'erst',
-    datum: datum || new Date().toISOString().slice(0, 10),
+    datum: datum || alsBerlinDatum(new Date()),
     therapeutId: therapeutId || null,
     regionen: {},
     inspektion: { auswahl: [], text: '' },

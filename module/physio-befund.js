@@ -36,7 +36,9 @@ import {
   baueMessreihenZeilen,
   leseMesswerte,
   uebernehmeVonVorbefund,
-} from './physio-befund-logik.js';
+  standardVerordnungId,
+} from './physio-befund-logik.js?v=20261101b';
+import { alsBerlinDatum } from './berlin-datum.js';
 
 /**
  * HTML-Escaping fuer sichere Textausgabe.
@@ -610,7 +612,7 @@ async function starteFormular(host, deps, { ownerId, leadId, befundart, vorBefun
   `;
 
   const uid = typeof deps.userId === 'function' ? deps.userId() : deps.userId;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = alsBerlinDatum(new Date());
 
   let state;
   let vorMessungen = [];
@@ -654,12 +656,9 @@ async function starteFormular(host, deps, { ownerId, leadId, befundart, vorBefun
     verordnungen = rxData || [];
   } catch (_) {}
 
-  // Standard-Verordnung: falls vorBefund vorhanden dessen prescription_id, sonst juengste aktive
+  // Standard-Verordnung: falls vorBefund vorhanden dessen prescription_id, sonst juengste laufende
   let selectedRxId = vorBefund?.prescription_id || null;
-  if (!selectedRxId && verordnungen.length > 0) {
-    const aktive = verordnungen.find(v => v.status === 'active' || v.status === 'confirmed');
-    selectedRxId = aktive ? aktive.id : verordnungen[0].id;
-  }
+  if (!selectedRxId) selectedRxId = standardVerordnungId(verordnungen);
 
   renderFormular(host, deps, { ownerId, leadId, state, verordnungen, selectedRxId, vorBefund });
 }

@@ -117,6 +117,9 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.11.2026 · K8 Vorauswahl der Verordnung (`module/physio-befund-logik.js`)
+- Neu: `standardVerordnungId(verordnungen)`. Niye: suchte den Status `active`, den es in `prescriptions` nicht gibt, `in_therapy` fehlte; laufende VO wurde übergangen, auch stornierte konnte vorausgewählt werden. Nerede: Physio-Befund, Formular öffnen.
+
 ### 01.11.2026 · K10 Patientensuche repariert (`module/start-aufgaben.js`)
 - Neu: `patientenSucheOptionen(ctx)`. Niye: die eigene Abfrage verlangte `leads.birth_date` (gibt es nicht), der Fehler wurde verschluckt, die Suche fand nie jemanden; ausserdem ohne bizScope und mit eigenem Matcher.
   Nerede: Aufgaben auf der Übersicht. Abfrage, Treffer und Anzeige kommen jetzt aus `dashboard.js` (`bizScope`, `patientMatchesQuery`, `displayNameWithBirth`).

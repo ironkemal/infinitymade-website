@@ -3,7 +3,7 @@
 > Üretim: 2026-11-01 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4153 fonksiyon** (4031 JS · 95 bash · 27 ps1) · 516 dosya · 42 sidebar modülü
+**4154 fonksiyon** (4032 JS · 95 bash · 27 ps1) · 516 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -412,9 +412,9 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveMessung()` — [dashboard.js:7765](dashboard.js#L7765-L7802) · 38 satır · messreihen:insert
 
 **Yol 2 — `renderFormular()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `renderFormular()` — [module/physio-befund.js:670](module/physio-befund.js#L670-L1006) · 337 satır · messreihen:insert
-- `speichern()` — [module/physio-befund.js:907](module/physio-befund.js#L907-L1002) · 96 satır · messreihen:insert
-- `zeigeWiederholenDialog()` — [module/physio-befund.js:1011](module/physio-befund.js#L1011-L1051) · 41 satır · messreihen:insert
+- `renderFormular()` — [module/physio-befund.js:669](module/physio-befund.js#L669-L1005) · 337 satır · messreihen:insert
+- `speichern()` — [module/physio-befund.js:906](module/physio-befund.js#L906-L1001) · 96 satır · messreihen:insert
+- `zeigeWiederholenDialog()` — [module/physio-befund.js:1010](module/physio-befund.js#L1010-L1050) · 41 satır · messreihen:insert
 
 ### `module_visibility` — 2 bağımsız yazma yolu
 
@@ -427,10 +427,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `physio_befunde` — 2 bağımsız yazma yolu
 
 **Yol 1 — `renderFormular()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `renderFormular()` — [module/physio-befund.js:670](module/physio-befund.js#L670-L1006) · 337 satır · physio_befunde:insert
+- `renderFormular()` — [module/physio-befund.js:669](module/physio-befund.js#L669-L1005) · 337 satır · physio_befunde:insert
 
 **Yol 2 — `speichern()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `speichern()` — [module/physio-befund.js:907](module/physio-befund.js#L907-L1002) · 96 satır · physio_befunde:insert
+- `speichern()` — [module/physio-befund.js:906](module/physio-befund.js#L906-L1001) · 96 satır · physio_befunde:insert
 
 ### `podologie_behandlungen` — 2 bağımsız yazma yolu
 
@@ -527,7 +527,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farklı iş yapıyor olabilir.
 `aynalar` doluysa o konum bilinçli ayna; boşsa isim çakışması başka bir şeydir, incele.
 
-- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:24 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:526 · module/abrechnung-status.js:187 · module/abrechnungsstatus.js:735 · module/anstellung.js:15 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:37 · module/diagnosegruppen-regeln.js:32 · module/fax-deckblatt.js:30 · module/formular-editor.js:172 · module/formular-unterschreiben.js:102 · module/fussbefund.js:204 · module/kalender-raster.js:24 · module/kalender-woche.js:42 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/patient-dokumente.js:40 · module/patient-termine.js:1 · module/physio-befund.js:44 · module/raum-streifen.js:110 · module/raum-verwaltung.js:18 · module/rezeptinfo-geld.js:73 · module/sondertag.js:27 · module/termin-aktionen.js:42 · module/termin-druck.js:27 · module/termin-panel.js:34 · module/warteliste-ansicht.js:26 · module/warteliste-nachruecker.js:49
+- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:24 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:526 · module/abrechnung-status.js:187 · module/abrechnungsstatus.js:735 · module/anstellung.js:15 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:37 · module/diagnosegruppen-regeln.js:32 · module/fax-deckblatt.js:30 · module/formular-editor.js:172 · module/formular-unterschreiben.js:102 · module/fussbefund.js:204 · module/kalender-raster.js:24 · module/kalender-woche.js:42 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/patient-dokumente.js:40 · module/patient-termine.js:1 · module/physio-befund.js:46 · module/raum-streifen.js:110 · module/raum-verwaltung.js:18 · module/rezeptinfo-geld.js:73 · module/sondertag.js:27 · module/termin-aktionen.js:42 · module/termin-druck.js:27 · module/termin-panel.js:34 · module/warteliste-ansicht.js:26 · module/warteliste-nachruecker.js:49
 - `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-artefakte.js:22 · module/abrechnung-auswahl.js:765 · module/abrechnung-detail.js:175 · module/abrechnung-freigabe.js:112 · module/anamnese.js:44 · module/arzt-register.js:127 · module/branding-ui.js:16 · module/datev-einstellungen.js:30 · module/einrichtung-ring.js:13 · module/krankenkasse-suche.js:642 · module/mitarbeiter-app-einstellungen.js:35 · module/patienten-einwilligung.js:60 · module/patienten-import.js:317 · module/patientenkarte.js:44 · module/podo-einheiten.js:380 · module/podo-vorgeschichte-form.js:17 · module/raum-tagesansicht.js:96 · module/rechnung-mail.js:17 · module/rechnung-zahlungseingang.js:225 · module/start-aufgaben.js:6 · module/termin-hinweise.js:37 · module/therapiebericht.js:29 · module/ueber.js:26 · module/verordnung-feldmarker.js:80 · module/verordnung-uebersicht.js:115 · module/zuzahlung-befreiung.js:305 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
 - `fmt` — api-backend/setup/router.js:122 · dashboard.js:1146 · dashboard.js:7540 · dashboard.js:9302 · dashboard.js:9579 · dashboard.js:9660 · dashboard.js:12742 · dashboard.js:17444 · dashboard.js:17530 · dashboard.js:17609 · dashboard.js:17641 · dashboard.js:17701 · module/kalender-raster.js:71 · module/rechnung-ansicht.js:222 · module/rezeptinfo-geld.js:71
 - `$` — attendance.js:10 · module/anamnese.js:43 · module/branding-ui.js:31 · module/kiosk.js:74 · module/podo-vorgeschichte-form.js:88 · module/rechnung-zahlungseingang.js:455 · module/ueber.js:52 · module/verordnung-podo.js:84 · module/verordnung-pruefen-knopf.js:42 · module/zuzahlung-korrektur.js:206 · ops/app.js:48 · widget/booking-widget.js:24
@@ -546,7 +546,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeile` — api-backend/lib/therapiebericht.js:299 · module/branding-ui.js:39 · module/fax-deckblatt.js:62 · module/rechnung-druck.js:33 · module/verordnung-detail.js:279 · module/verordnung-detail.js:408 · module/verordnung-detail.js:465 · module/verordnung-pruefen-knopf.js:116
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `init` — attendance.js:299 · booking-request.js:1420 · booking.js:64 · cookie-consent.js:205 · dashboard.js:14586 · onboarding.js:77 · setup.js:221
-- `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/physio-befund.js:907 · module/praxis-rechtslinks-einstellungen.js:102 · module/verordnung-detail.js:833
+- `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/verordnung-detail.js:833
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:368
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:706
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49

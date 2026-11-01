@@ -774,3 +774,28 @@ describe('10. positiveTests', () => {
     });
   });
 });
+
+import { standardVerordnungId } from './physio-befund-logik.js';
+
+test('standardVerordnungId: laufende VO schlaegt neuere abgeschlossene und stornierte', () => {
+  assert.equal(standardVerordnungId([
+    { id: 'storno', status: 'cancelled' },
+    { id: 'fertig', status: 'completed' },
+    { id: 'laeuft', status: 'in_therapy' },
+    { id: 'alt', status: 'confirmed' },
+  ]), 'laeuft');
+});
+
+test('standardVerordnungId: ohne laufende VO nie die stornierte', () => {
+  assert.equal(standardVerordnungId([
+    { id: 'storno', status: 'cancelled' },
+    { id: 'fertig', status: 'billed' },
+  ]), 'fertig');
+  assert.equal(standardVerordnungId([{ id: 'storno', status: 'cancelled' }]), null);
+  assert.equal(standardVerordnungId([]), null);
+});
+
+test('neuerBefundZustand: Datum ist der Berliner Kalendertag', (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-11-01T23:30:00Z') });
+  assert.equal(neuerBefundZustand({}).datum, '2026-11-02');
+});
