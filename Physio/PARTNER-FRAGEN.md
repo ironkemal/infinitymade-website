@@ -127,3 +127,10 @@
 - **Cevap "hayır" ise değişen:** Serbest metin ağırlıklıysa yapılandırılmış alanlar opsiyonel + katlanır olur, ilk ekranda yalnız NRS + Ziel + not; Zwischenbefund rutinse seri ortasında (örn. 6'nın 3.'sünde) otomatik hatırlatma eklenir.
 - **Öncelik:** 🟠 her gün sürtünme
 - **Eklendi:** 2026-10-31 (P1, K8) · **Cevap:** —
+
+### #16 — Standortwechsel: Einzeltage oder Zeiträume?
+- **Soru (Almanca, partnere aynen):** „Wenn ein Therapeut am anderen Standort aushilft — ist das meist ein einzelner Tag, oder kommen mehrwöchige Vertretungen (Urlaub, Krankheit) mit festem Wochenmuster vor?"
+- **Varsayımımız:** Çoğunlukla tek gün; birkaç haftalık Vertretung nadir. Pilot: Wochenmuster (ab Datum) + Einzeltag; Einzeltag girişinde "von–bis" aralığı N adet Einzeltag üretir (ayrı Zeitraum modeli yok). M4c, `employee_standort_plan`.
+- **Cevap "hayır" ise değişen:** Mehrwöchige Vertretung sıksa ayrı "Zeitraum mit eigenem Wochenmuster" (gültig von–bis, sonra eski desene dönüş) gerekir — tabloya `gueltig_bis` + UI'da "befristet versetzen".
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-01 (P1, M4) · **Cevap:** —
