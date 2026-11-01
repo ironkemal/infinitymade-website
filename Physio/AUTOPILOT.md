@@ -7,7 +7,7 @@
 
 ## Steuerung (Melih schreibt hier)
 
-- Autopilot: **AN**  ← auf `AUS` setzen stoppt jeden weiteren Lauf
+- Autopilot: **AUS** (bis Blocker unten gelöst; zum Starten auf `AN` setzen) ← auf `AUS` setzen stoppt jeden weiteren Lauf
 - GO Live-Migrationen (Melih setzt `[x]`, Autopilot wendet dann per MCP an):
   - [ ] GO 0096 `mitarbeiter_anstellung` (S1)
   - [ ] GO M4a `employee_standort_plan` (S3)
@@ -25,7 +25,7 @@ Status: `offen` · `läuft` · `wartet-GO` · `blockiert` · `fertig`. Reihenfol
 
 | # | Scheibe | Status | Abhängig | Agenten (Pflicht fett) | Fertig wenn |
 |---|---|---|---|---|---|
-| S1 | **M5-Fix:** Migration `0096_mitarbeiter_anstellung` (Kollegen lesen nichts, nur Inhaber schreibt, Mitarbeiter liest eigene Zeile), `klassifikation.js`, `db/REGISTER.md`, lokal frische DB | offen | — | **db-ustasi**, **guvenlik**, **onprem** | Datei + Tests grün → `wartet-GO`; nach GO: live, `db/SCHEMA*` neu, Commit+Push |
+| S1 | **M5-Fix:** Migration `0096_mitarbeiter_anstellung` (Kollegen lesen nichts, nur Inhaber schreibt, Mitarbeiter liest eigene Zeile), `klassifikation.js`, `db/REGISTER.md`, lokal frische DB | wartet-GO (Entwurf fertig, nicht committet) | — | **db-ustasi**, **guvenlik**, **onprem** | Datei + Tests grün → `wartet-GO`; nach GO: live, `db/SCHEMA*` neu, Commit+Push |
 | S2 | Live-Test M1, M2a, M5, M6a, M7 im **QA-Tenant** (nie im P1-Testkonto I6) — **macht der Chat „Live-Test", Autopilot überspringt S2** | offen | S1 live | **canli-test**, physio | Einträge in `canli-test/REGISTER.md`; Fehler → neue Scheibe hier |
 | S3 | M4a Migration `employee_standort_plan` (ohne anon, Tag-Granularität) | offen | — | **db-ustasi**, **guvenlik**, **onprem** | wie S1 |
 | S4 | M4b Regel Einzeltag → Wochenmuster → alle zugeordneten Standorte, Backend `api-backend/lib/standort-plan.js` + Frontend `module/standort-plan-regel.js`, gemeinsame Testvektoren | offen | — | **fonksiyon-ustasi** | Beide Fassungen bestehen dieselben Vektoren |
@@ -36,6 +36,26 @@ Status: `offen` · `läuft` · `wartet-GO` · `blockiert` · `fertig`. Reihenfol
 | S9 | M6c Dialog Vorschau, Abwahl je Empfänger, Anrufliste (ohne Opt-in/Adresse/SMTP) | blockiert | S8 | fonksiyon-ustasi, legal-de | Ablauf vollständig, Box ohne SMTP liefert Liste |
 
 Nicht im Autopilot: Ops #202 HMV13 „+"-Button (Kemals Bereich Verordnung → erst Absprache), #242 QA-Konten löschen (rote Linie), M3-Abnahme (nur echte Box).
+
+## Blocker und Nacharbeit (Stand 01.11.2026, Melih + Claude)
+
+1. **Supabase-MCP „Unauthorized"** (Hauptsitzung und Agenten): Live-Prüfung (`select to_regclass('public.mitarbeiter_anstellung')`) und jede Live-Migration gehen erst, wenn der MCP-Token wieder gültig ist. Melih erneuert ihn.
+2. **`npm test` ist auf `main` rot, nicht durch den Autopilot verursacht:**
+   `module/import-versionen.test.js` „Modulgraph" meldet `module/podologie-positionen.js` unter zwei URLs
+   (`?v=20260902` in `dashboard.js:95` und `module/verordnung-detail.js:80`, `?v=20261022auth1` in `module/abrechnung-auswahl.js:69`;
+   Ursache: gesicherte Arbeit vom 22.10., Commit `ce098678`). Dazu der ungetrackte Test
+   `module/billing-loader-503.test.js` einer anderen Sitzung (11 rote Fälle). Beides gehört nicht zu Planung; bis geklärt, wer es behebt,
+   gilt für den Autopilot: `npm test` darf **genau diese Fehler** zeigen und sonst nichts; jede weitere rote Zeile = stoppen.
+3. **GO 0096** steht aus (Kästchen oben).
+
+**S1 Entwurf liegt uncommittet im Arbeitsbaum** (nicht anfassen, nicht überschreiben):
+`api-backend/db/migrations/0096_mitarbeiter_anstellung.sql` (auf frischer DB getestet, guvenlik: keine kritische/hohe Lücke),
+`api-backend/db/erwartete-zaehler.json`, `api-backend/dsgvo/klassifikation.js` (Eintrag auskommentiert), `db/REGISTER.md`, `onprem/REGISTER.md`.
+**Nach GO in EINEM Commit:** Migration live (MCP) → Marker `-- SaaS: angewandt <Datum>, MCP.` → `db/SCHEMA*.sql` neu → Eintrag in `klassifikation.js`
+einkommentieren → **`{ table: 'mitarbeiter_anstellung', filter: 'owner_id' }` in `api-backend/dsgvo/loeschen.js` (Liste `einfacheLoeschTabellen`, ~Z. 533)
+ergänzen** (guvenlik M1: sonst bleiben Vertragsdaten nach Kontolöschung stehen) → `node tools/tabellenkarte.mjs`, Tests, Push.
+Offen für legal-de: Aufbewahrungsfrist der Vertragsdaten (Entwurf nimmt „keine eigene Frist" an). Offen für Melih: darf nur der Inhaber schreiben (so im Entwurf; im Code gibt es keine Standortleiter-Rolle).
+Optional (niedrig): `ladeAnstellung` soll für Nicht-Inhaber bei fremder `empId` „nicht sichtbar" statt Vorgabe 30 Tage liefern (`module/anstellung.js:164`).
 
 ## Fehlerkanal Live-Test-Chat → Autopilot
 
