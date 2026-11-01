@@ -5024,6 +5024,18 @@ textarea {
     min-width: 0;
   }
 
+  /* F4 (Live-Test 01.11.2026): Sondertag-Etikett in der Monatszelle (47 px) mit Auslassung statt abgeschnitten */
+  .month-cell .sondertag-etikett {
+    display: block !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px !important;
+    padding: 1px 3px !important;
+  }
+
   .data-table {
     font-size: 12px;
     min-width: 560px;
