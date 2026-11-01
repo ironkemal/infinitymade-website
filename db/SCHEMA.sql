@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261031222456 0093_physio_akte_dokumente
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092, 0093, 0094, 0095)
--- ERZEUGT AM:         2026-10-30
+-- LAST MIGRATION:     0097_employee_standort_plan (SaaS, Management-API 01.11.2026)
+-- EXPORTED AT:        2026-11-01T18:00:00Z
+-- ERZEUGT AM:         2026-11-01
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       102
---   table_columns:       1491
+--   public_tables:       104
+--   table_columns:       1516
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        183
+--   rls_policies:        191
 --   functions:           124
---   triggers:            118
---   indexes:             363
+--   triggers:            120
+--   indexes:             369
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -1116,6 +1116,7 @@ CREATE TABLE public.bookings (
 --   FK group_parent_id -> bookings(id)
 --   FK lead_id -> leads(id)
 --   FK owner_id -> auth.users(id)
+--   FK room_id -> rooms(id)
 --   FK service_id -> services(id)
 --   FK user_id -> auth.users(id)
 --   FK vehicle_id -> vehicles(id)
@@ -1148,6 +1149,9 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.bookings
   ADD CONSTRAINT bookings_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL;
 
 ALTER TABLE ONLY public.bookings
   ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
@@ -1659,6 +1663,42 @@ ALTER TABLE ONLY public.employee_services
 
 ALTER TABLE ONLY public.employee_services
   ADD CONSTRAINT employee_services_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE;
+
+CREATE TABLE public.employee_standort_plan (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  employee_id uuid NOT NULL,
+  business_id uuid NOT NULL,
+  weekday smallint,
+  datum date,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK employee_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.employee_standort_plan OWNER TO postgres;
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_art_check CHECK ((weekday IS NULL) <> (datum IS NULL));
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_eindeutig UNIQUE NULLS NOT DISTINCT (employee_id, business_id, weekday, datum);
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_weekday_check CHECK (weekday IS NULL OR weekday >= 0 AND weekday <= 6);
 
 CREATE TABLE public.fahrten (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2346,10 +2386,41 @@ ALTER TABLE ONLY public.messreihen
   ADD CONSTRAINT messreihen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
 
 ALTER TABLE ONLY public.messreihen
-  ADD CONSTRAINT messreihen_seite_check CHECK (seite IS NULL OR seite = ANY (ARRAY['links'::text, 'rechts'::text, 'beidseits'::text]));
+  ADD CONSTRAINT messreihen_seite_check CHECK (seite IS NULL OR (seite = ANY (ARRAY['links'::text, 'rechts'::text, 'beidseits'::text])));
 
 ALTER TABLE ONLY public.messreihen
   ADD CONSTRAINT messreihen_typ_check CHECK (typ = ANY (ARRAY['VAS'::text, 'ROM'::text, 'kraft'::text, 'custom'::text]));
+
+CREATE TABLE public.mitarbeiter_anstellung (
+  employee_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  beschaeftigung text DEFAULT 'vollzeit'::text NOT NULL,
+  wochenstunden numeric(3,1),
+  urlaub_jahrestage integer DEFAULT 30 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK employee_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.mitarbeiter_anstellung OWNER TO postgres;
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_beschaeftigung_check CHECK (beschaeftigung = ANY (ARRAY['vollzeit'::text, 'teilzeit'::text]));
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_pkey PRIMARY KEY (employee_id);
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_urlaub_jahrestage_check CHECK (urlaub_jahrestage >= 0 AND urlaub_jahrestage <= 60);
+
+ALTER TABLE ONLY public.mitarbeiter_anstellung
+  ADD CONSTRAINT mitarbeiter_anstellung_wochenstunden_check CHECK (wochenstunden IS NULL OR wochenstunden >= 0::numeric AND wochenstunden <= 80::numeric);
 
 CREATE TABLE public.module_visibility (
   module_id text NOT NULL,
@@ -2516,7 +2587,7 @@ ALTER TABLE ONLY public.patient_dokumente
   ADD CONSTRAINT patient_dokumente_formular_id_fkey FOREIGN KEY (formular_id) REFERENCES praxis_formulare(id) ON DELETE RESTRICT;
 
 ALTER TABLE ONLY public.patient_dokumente
-  ADD CONSTRAINT patient_dokumente_geloescht_check CHECK ((geloescht_at IS NULL AND geloescht_von IS NULL AND loeschgrund IS NULL) OR (geloescht_at IS NOT NULL AND length(btrim(loeschgrund)) > 0));
+  ADD CONSTRAINT patient_dokumente_geloescht_check CHECK (geloescht_at IS NULL AND geloescht_von IS NULL AND loeschgrund IS NULL OR geloescht_at IS NOT NULL AND length(btrim(loeschgrund)) > 0);
 
 ALTER TABLE ONLY public.patient_dokumente
   ADD CONSTRAINT patient_dokumente_geloescht_von_fkey FOREIGN KEY (geloescht_von) REFERENCES profiles(id) ON DELETE SET NULL;
@@ -2537,7 +2608,7 @@ ALTER TABLE ONLY public.patient_dokumente
   ADD CONSTRAINT patient_dokumente_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.patient_dokumente
-  ADD CONSTRAINT patient_dokumente_storage_path_check CHECK (storage_path LIKE (owner_id::text || '/%') AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
+  ADD CONSTRAINT patient_dokumente_storage_path_check CHECK (storage_path ~~ (owner_id::text || '/%'::text) AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
 
 CREATE TABLE public.patient_notes (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2693,15 +2764,15 @@ COMMENT ON COLUMN public.podologie_behandlungen.invoice_id IS 'Gesetzt, sobald d
 COMMENT ON COLUMN public.podologie_behandlungen.employee_id IS 'Wer die Behandlung durchgefuehrt hat. NULL bei Altbestand oder wenn der Owner selbst behandelt hat. Ops #252.';
 COMMENT ON COLUMN public.podologie_behandlungen.storniert_am IS 'Zeitpunkt der Stornierung. NULL = wirksame Behandlung. Gesetzt statt geloescht (§ 630f Abs. 1 S. 2 BGB): die Zeile bleibt lesbar, zaehlt aber nicht mehr — weder fuer die Einmaligkeitssperre noch fuer die §302-Datei.';
 COMMENT ON COLUMN public.podologie_behandlungen.storniert_von IS 'Wer storniert hat. ON DELETE SET NULL, damit das Loeschen eines Mitarbeiterkontos nicht an dieser Zeile haengenbleibt.';
-COMMENT ON COLUMN public.podologie_behandlungen.herkunft IS 'praxura = in Praxura erbracht; altsystem = im bisherigen Programm erbracht, nachgetragen beim Praxiswechsel (Datum + HPNR, employee_id NULL). Festgeschrieben.';
 COMMENT ON COLUMN public.podologie_behandlungen.storno_grund IS 'Warum storniert wurde. Pflichtangabe — das "warum/wann erkennbar" ist der eigentliche Inhalt von § 630f Abs. 1 S. 2 BGB, ohne Grund ist die Stornierung dokumentarisch wertlos.';
 COMMENT ON COLUMN public.podologie_behandlungen.therapiezeit_min IS 'Dokumentierte Therapiezeit in Minuten (78020 Komplexbehandlung: > 20). NULL = nicht erfasst.';
-
-ALTER TABLE ONLY public.podologie_behandlungen
-  ADD CONSTRAINT podologie_behandlungen_herkunft_check CHECK (herkunft = ANY (ARRAY['praxura'::text, 'altsystem'::text]));
+COMMENT ON COLUMN public.podologie_behandlungen.herkunft IS 'praxura = in Praxura erbracht; altsystem = im bisherigen Programm erbracht, nachgetragen beim Praxiswechsel (Datum + HPNR, employee_id NULL). Festgeschrieben.';
 
 ALTER TABLE ONLY public.podologie_behandlungen
   ADD CONSTRAINT podologie_behandlungen_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_herkunft_check CHECK (herkunft = ANY (ARRAY['praxura'::text, 'altsystem'::text]));
 
 ALTER TABLE ONLY public.podologie_behandlungen
   ADD CONSTRAINT podologie_behandlungen_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE SET NULL;
@@ -2841,7 +2912,7 @@ ALTER TABLE ONLY public.praxis_formulare
   ADD CONSTRAINT praxis_formulare_signatur_felder_check CHECK (jsonb_typeof(signatur_felder) = 'array'::text);
 
 ALTER TABLE ONLY public.praxis_formulare
-  ADD CONSTRAINT praxis_formulare_storage_path_check CHECK (storage_path LIKE (owner_id::text || '/%') AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
+  ADD CONSTRAINT praxis_formulare_storage_path_check CHECK (storage_path ~~ (owner_id::text || '/%'::text) AND storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
 
 ALTER TABLE ONLY public.praxis_formulare
   ADD CONSTRAINT praxis_formulare_titel_check CHECK (length(btrim(titel)) > 0);
@@ -3104,15 +3175,11 @@ COMMENT ON COLUMN public.prescriptions.abrechnung_status IS 'Abrechnungsachse. S
 COMMENT ON COLUMN public.prescriptions.leitsymptomatik IS '§302 Heilmittel Leitsymptomatik: 4-char a/b/c/d (each 0|1), e.g. 1010; 0000 requires free-text patientenLeitsymptomatik';
 COMMENT ON COLUMN public.prescriptions.diagnose_freitext IS 'Muster 13: Freitext-Diagnose neben ICD-10 (z. B. "Unguis incarnatus rechts")';
 COMMENT ON COLUMN public.prescriptions.ergaenzendes_heilmittel IS 'Muster 13: Ergänzendes Heilmittel (Freitext)';
-COMMENT ON COLUMN public.prescriptions.ergaenzend_position IS 'Physio/Ergo/Logo: Positionsnummer des ergänzenden Heilmittels (X-Vorlage wie heilmittel_position). Abgerechnet je Sitzung mit prescription_sessions.ergaenzend_erbracht.';
-COMMENT ON COLUMN public.prescriptions.hausbesuch_ort IS 'Ort des Hausbesuchs als Kategorie (keine Adresse): haeuslich→X9950, soziale_einrichtung→X9951, tagespflege_kurzzeit_betreut→X9922. NULL = Altbestand, Mapper fällt auf hausbesuch zurück.';
-COMMENT ON COLUMN public.prescriptions.doppelbehandlung IS 'Doppelbehandlung ausdrücklich verordnet (HeilM-RL §12 Abs. 8): eine Sitzung = zwei Einheiten, DTA eine EHE mit Anzahl 2. Nicht für ergänzende Heilmittel.';
 COMMENT ON COLUMN public.prescriptions.therapie_bereich IS 'Muster 13: angekreuzter Therapiebereich (physio|podo|stimme|ergo|ernaehrung)';
 COMMENT ON COLUMN public.prescriptions.hinweise IS 'Muster 13: ggf. Therapieziele / weitere med. Befunde und Hinweise';
 COMMENT ON COLUMN public.prescriptions.icd10_2 IS 'Zweiter behandlungsrelevanter ICD-10-Code (Muster 13, 2. Diagnose)';
 COMMENT ON COLUMN public.prescriptions.zuzahlung_kassiert_am IS 'Zeitpunkt der Vereinnahmung der gesetzlichen Zuzahlung. NULL = offen. Einmal je Verordnung (nicht je Sitzung).';
 COMMENT ON COLUMN public.prescriptions.zuzahlung_zahlart IS 'Zahlungsart, mit der die Zuzahlung kassiert wurde. Gehört zu zuzahlung_kassiert_am/_von.';
-COMMENT ON COLUMN public.prescriptions.zuzahlung_altsystem_eur IS 'Im Altsystem schon kassierte Zuzahlung dieser übernommenen VO; Praxura kassiert Soll minus Vermerk (gkv-302 21.10.2026).';
 COMMENT ON COLUMN public.prescriptions.patient_name IS 'Freitextname vom Anlagezeitpunkt (aus verordnungen uebernommen 09.2026). NICHT fuer die Abrechnung verwenden — der Name kommt immer aus leads.';
 COMMENT ON COLUMN public.prescriptions.rezeptart IS 'Zahlerachse: kassen|privat|selbstzahler. NICHT mit rezept_typ verwechseln — das ist die Formachse (standard|blanko|lhb_bvb).';
 COMMENT ON COLUMN public.prescriptions.notizen IS 'Interne Notiz der Praxis. Gegenstueck: hinweise = Therapieziel vom Arzt (aus dem gescannten Muster 13).';
@@ -3126,6 +3193,10 @@ COMMENT ON COLUMN public.prescriptions.bg_kostenzusage_datum IS 'Datum der Koste
 COMMENT ON COLUMN public.prescriptions.bg_kostenzusage_zeichen IS 'Zeichen/Nummer der Kostenzusage.';
 COMMENT ON COLUMN public.prescriptions.bg_einverstaendnis_am IS 'Datum des dokumentierten Patienten-Einverstaendnisses zur Uebermittlung an den UV-Traeger (§ 100 SGB X, § 203 StGB).';
 COMMENT ON COLUMN public.prescriptions.bg_einverstaendnis_version IS 'Version des Einverstaendnis-Wortlauts (module/bg-angaben.js EINVERSTAENDNIS_VERSION), dem zugestimmt wurde. Gehoert zu bg_einverstaendnis_am.';
+COMMENT ON COLUMN public.prescriptions.zuzahlung_altsystem_eur IS 'Im Altsystem schon kassierte Zuzahlung dieser übernommenen VO; Praxura kassiert Soll minus Vermerk (gkv-302 21.10.2026).';
+COMMENT ON COLUMN public.prescriptions.ergaenzend_position IS 'Physio/Ergo/Logo: Positionsnummer des ergänzenden Heilmittels (X-Vorlage wie heilmittel_position). Abgerechnet je Sitzung mit prescription_sessions.ergaenzend_erbracht.';
+COMMENT ON COLUMN public.prescriptions.hausbesuch_ort IS 'Ort des Hausbesuchs als Kategorie (keine Adresse): haeuslich→X9950, soziale_einrichtung→X9951, tagespflege_kurzzeit_betreut→X9922. NULL = Altbestand, Mapper fällt auf hausbesuch zurück.';
+COMMENT ON COLUMN public.prescriptions.doppelbehandlung IS 'Doppelbehandlung ausdrücklich verordnet (HeilM-RL §12 Abs. 8): eine Sitzung = zwei Einheiten, DTA eine EHE mit Anzahl 2. Nicht für ergänzende Heilmittel.';
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
@@ -3158,13 +3229,13 @@ ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES auth.users(id);
 
 ALTER TABLE ONLY public.prescriptions
-  ADD CONSTRAINT prescriptions_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);
-
-ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_ergaenzend_position_format CHECK (ergaenzend_position IS NULL OR ergaenzend_position ~ '^[X0-9][0-9]{4}$'::text);
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_hausbesuch_ort_check CHECK (hausbesuch_ort IS NULL OR (hausbesuch_ort = ANY (ARRAY['haeuslich'::text, 'soziale_einrichtung'::text, 'tagespflege_kurzzeit_betreut'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_krankenkasse_ik_format CHECK (krankenkasse_ik IS NULL OR krankenkasse_ik ~ '^[0-9]{9}$'::text);
@@ -3191,9 +3262,6 @@ ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
 
 ALTER TABLE ONLY public.prescriptions
-  ADD CONSTRAINT prescriptions_zuzahlung_altsystem_check CHECK (zuzahlung_altsystem_eur IS NULL OR zuzahlung_altsystem_eur >= 0::numeric);
-
-ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_signature_confidence_check CHECK (signature_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text]));
 
 ALTER TABLE ONLY public.prescriptions
@@ -3204,6 +3272,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_wagner_grad_check CHECK (wagner_grad IS NULL OR wagner_grad >= 0 AND wagner_grad <= 5);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_zuzahlung_altsystem_check CHECK (zuzahlung_altsystem_eur IS NULL OR zuzahlung_altsystem_eur >= 0::numeric);
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_zuzahlung_kassiert_von_fkey FOREIGN KEY (zuzahlung_kassiert_von) REFERENCES auth.users(id);
@@ -3666,6 +3737,10 @@ CREATE TABLE public.therapieberichte (
 --   FK versendet_von -> auth.users(id)
 --   FK vorgaenger_id -> therapieberichte(id)
 ALTER TABLE ONLY public.therapieberichte OWNER TO postgres;
+COMMENT ON TABLE public.therapieberichte IS 'Versandte Therapieberichte an den verordnenden Arzt. Zeile entsteht beim Versand und ist festgeschrieben (§ 630f BGB). Passwort des PDFs wird nie gespeichert (legal-de 22.10.2026).';
+COMMENT ON COLUMN public.therapieberichte.inhalt_snapshot IS 'Eingefrorener automatischer Teil zum Versandzeitpunkt: praxis, patient, arzt, verordnung, behandlungen, befund. Quelle für die Neuerzeugung des PDFs.';
+COMMENT ON COLUMN public.therapieberichte.verschluesselt IS 'true = PDF war passwortgeschützt (Mail). Fax/Druck: false.';
+COMMENT ON COLUMN public.therapieberichte.passwort_telefonisch IS 'Vermerk der Praxis: Passwort auf separatem Kanal (Telefon) übermittelt. Einzige Spalte, die nach dem Versand noch gesetzt werden darf (false → true).';
 
 ALTER TABLE ONLY public.therapieberichte
   ADD CONSTRAINT therapieberichte_art_check CHECK (art = ANY (ARRAY['zwischenbericht'::text, 'abschlussbericht'::text]));
@@ -3674,7 +3749,7 @@ ALTER TABLE ONLY public.therapieberichte
   ADD CONSTRAINT therapieberichte_arzt_id_fkey FOREIGN KEY (arzt_id) REFERENCES aerzte(id) ON DELETE SET NULL;
 
 ALTER TABLE ONLY public.therapieberichte
-  ADD CONSTRAINT therapieberichte_empfehlung_code_check CHECK (empfehlung_code IS NULL OR empfehlung_code = ANY (ARRAY['fortsetzung'::text, 'ziel_erreicht'::text, 'abklaerung'::text]));
+  ADD CONSTRAINT therapieberichte_empfehlung_code_check CHECK (empfehlung_code IS NULL OR (empfehlung_code = ANY (ARRAY['fortsetzung'::text, 'ziel_erreicht'::text, 'abklaerung'::text])));
 
 ALTER TABLE ONLY public.therapieberichte
   ADD CONSTRAINT therapieberichte_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE RESTRICT;
@@ -3696,11 +3771,6 @@ ALTER TABLE ONLY public.therapieberichte
 
 ALTER TABLE ONLY public.therapieberichte
   ADD CONSTRAINT therapieberichte_vorgaenger_id_fkey FOREIGN KEY (vorgaenger_id) REFERENCES therapieberichte(id) ON DELETE RESTRICT;
-
-COMMENT ON TABLE public.therapieberichte IS 'Versandte Therapieberichte an den verordnenden Arzt. Zeile entsteht beim Versand und ist festgeschrieben (§ 630f BGB). Passwort des PDFs wird nie gespeichert (legal-de 22.10.2026).';
-COMMENT ON COLUMN public.therapieberichte.inhalt_snapshot IS 'Eingefrorener automatischer Teil zum Versandzeitpunkt: praxis, patient, arzt, verordnung, behandlungen, befund. Quelle für die Neuerzeugung des PDFs.';
-COMMENT ON COLUMN public.therapieberichte.verschluesselt IS 'true = PDF war passwortgeschützt (Mail). Fax/Druck: false.';
-COMMENT ON COLUMN public.therapieberichte.passwort_telefonisch IS 'Vermerk der Praxis: Passwort auf separatem Kanal (Telefon) übermittelt. Einzige Spalte, die nach dem Versand noch gesetzt werden darf (false → true).';
 
 CREATE TABLE public.therapist_certificates (
   id uuid DEFAULT gen_random_uuid() NOT NULL,

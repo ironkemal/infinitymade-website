@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261031222456 0093_physio_akte_dokumente
--- EXPORTED AT:        2026-10-30T12:45:00.000Z (gezielt fortgeschrieben: 0087, 0088, 0089, 0090, 0091, 0092, 0093, 0094, 0095)
--- ERZEUGT AM:         2026-10-30
+-- LAST MIGRATION:     0097_employee_standort_plan (SaaS, Management-API 01.11.2026)
+-- EXPORTED AT:        2026-11-01T18:00:00Z
+-- ERZEUGT AM:         2026-11-01
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       102
---   table_columns:       1491
+--   public_tables:       104
+--   table_columns:       1516
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        183
+--   rls_policies:        191
 --   functions:           124
---   triggers:            118
---   indexes:             363
+--   triggers:            120
+--   indexes:             369
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -26,39 +26,13 @@
 -- This document is a deterministic structural documentation snapshot.
 -- It is NOT guaranteed to be standalone restore-executable in one single pass
 -- due to circular dependencies, catalog constraints, and external state.
-CREATE OR REPLACE FUNCTION public.bookings_room_mandant()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-DECLARE
-  r_owner  uuid;
-  r_biz    uuid;
-  t_owner  uuid;
-BEGIN
-  IF NEW.room_id IS NULL THEN
-    RETURN NEW;
-  END IF;
-  SELECT r.owner_id, r.business_id INTO r_owner, r_biz FROM public.rooms r WHERE r.id = NEW.room_id;
-  SELECT COALESCE(p.owner_id, p.id) INTO t_owner FROM public.profiles p WHERE p.id = NEW.user_id;
-  IF r_owner IS NULL
-     OR r_owner IS DISTINCT FROM NEW.owner_id
-     OR r_owner IS DISTINCT FROM t_owner
-     OR r_biz <> NEW.business_id THEN
-    RAISE EXCEPTION 'room_id gehoert nicht zu Mandant oder Standort des Termins' USING ERRCODE = '23514';
-  END IF;
-  RETURN NEW;
-END;
-$function$
-;
-
 -- ============================================================================
 -- ----------------------------------------------------------------------------
 -- OUTSIDE-PUBLIC INVENTORIES
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_06, realtime.messages_2026_10_07, realtime.messages_2026_10_08, realtime.messages_2026_10_09, realtime.messages_2026_10_10, realtime.messages_2026_10_11, realtime.messages_2026_10_12])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_29, realtime.messages_2026_10_30, realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -126,7 +100,6 @@ $function$
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY (RLS) STATUS
 -- ----------------------------------------------------------------------------
-ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.abrechnung ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.abrechnung_artefakt_freeze ENABLE ROW LEVEL SECURITY;
@@ -209,6 +182,8 @@ ALTER TABLE public.employee_scope_overrides ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.employee_services ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.employee_standort_plan ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.fahrten ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.fahrten_aenderungen ENABLE ROW LEVEL SECURITY;
@@ -246,6 +221,8 @@ ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mahnungen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.messreihen ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.mitarbeiter_anstellung ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.module_visibility ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -291,6 +268,8 @@ ALTER TABLE public.rechnung_zahlungen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.referral_drafts ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.scraper_data ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
@@ -299,7 +278,7 @@ ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.terapeut_zertifikat ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.therapieberichte ENABLE ROW LEVEL SECURITY;
-
+-- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.therapist_certificates ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.time_offs ENABLE ROW LEVEL SECURITY;
@@ -689,14 +668,6 @@ CREATE POLICY "Owners can view team bookings" ON public.bookings
   TO PUBLIC
   USING ((auth.uid() = owner_id));
 
-CREATE POLICY "Employees can see owner breaks" ON public.breaks
-  AS PERMISSIVE
-  FOR SELECT
-  TO PUBLIC
-  USING (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
-   FROM profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id = breaks.user_id))))));
-
 CREATE POLICY breaks_team_modify ON public.breaks
   AS PERMISSIVE
   FOR ALL
@@ -707,6 +678,14 @@ CREATE POLICY breaks_team_modify ON public.breaks
   WITH CHECK (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
    FROM profiles p
   WHERE ((p.id = breaks.user_id) AND (p.owner_id = auth.uid()))))));
+
+CREATE POLICY "Employees can see owner breaks" ON public.breaks
+  AS PERMISSIVE
+  FOR SELECT
+  TO PUBLIC
+  USING (((user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id = breaks.user_id))))));
 
 CREATE POLICY businesses_delete_owner_only ON public.businesses
   AS PERMISSIVE
@@ -914,6 +893,39 @@ CREATE POLICY "Public read employee services" ON public.employee_services
   TO PUBLIC
   USING (true);
 
+CREATE POLICY employee_standort_plan_delete ON public.employee_standort_plan
+  AS PERMISSIVE
+  FOR DELETE
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)));
+
+CREATE POLICY employee_standort_plan_insert ON public.employee_standort_plan
+  AS PERMISSIVE
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM profiles e
+  WHERE ((e.id = employee_standort_plan.employee_id) AND (COALESCE(e.owner_id, e.id) = employee_standort_plan.owner_id)))) AND (EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_standort_plan.business_id) AND (b.owner_id = employee_standort_plan.owner_id))))));
+
+CREATE POLICY employee_standort_plan_select ON public.employee_standort_plan
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING (((owner_id = ( SELECT auth.uid() AS uid)) OR (employee_id = ( SELECT auth.uid() AS uid))));
+
+CREATE POLICY employee_standort_plan_update ON public.employee_standort_plan
+  AS PERMISSIVE
+  FOR UPDATE
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)))
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM profiles e
+  WHERE ((e.id = employee_standort_plan.employee_id) AND (COALESCE(e.owner_id, e.id) = employee_standort_plan.owner_id)))) AND (EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_standort_plan.business_id) AND (b.owner_id = employee_standort_plan.owner_id))))));
+
 CREATE POLICY "fahrten delete policy" ON public.fahrten
   AS PERMISSIVE
   FOR DELETE
@@ -1114,6 +1126,35 @@ CREATE POLICY messreihen_owner_access ON public.messreihen
    FROM profiles
   WHERE (profiles.id = auth.uid())))));
 
+CREATE POLICY mitarbeiter_anstellung_delete ON public.mitarbeiter_anstellung
+  AS PERMISSIVE
+  FOR DELETE
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)));
+
+CREATE POLICY mitarbeiter_anstellung_insert ON public.mitarbeiter_anstellung
+  AS PERMISSIVE
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM profiles e
+  WHERE ((e.id = mitarbeiter_anstellung.employee_id) AND (COALESCE(e.owner_id, e.id) = mitarbeiter_anstellung.owner_id))))));
+
+CREATE POLICY mitarbeiter_anstellung_select ON public.mitarbeiter_anstellung
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING (((owner_id = ( SELECT auth.uid() AS uid)) OR (employee_id = ( SELECT auth.uid() AS uid))));
+
+CREATE POLICY mitarbeiter_anstellung_update ON public.mitarbeiter_anstellung
+  AS PERMISSIVE
+  FOR UPDATE
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)))
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM profiles e
+  WHERE ((e.id = mitarbeiter_anstellung.employee_id) AND (COALESCE(e.owner_id, e.id) = mitarbeiter_anstellung.owner_id))))));
+
 CREATE POLICY mv_admin_delete ON public.module_visibility
   AS PERMISSIVE
   FOR DELETE
@@ -1181,20 +1222,28 @@ CREATE POLICY patient_dokumente_owner_and_team_insert ON public.patient_dokument
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY patient_dokumente_owner_and_team_select ON public.patient_dokumente
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY patient_dokumente_owner_and_team_update ON public.patient_dokumente
   AS PERMISSIVE
   FOR UPDATE
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))))
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))))
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY "Employees can view team patient_notes" ON public.patient_notes
   AS PERMISSIVE
@@ -1222,20 +1271,28 @@ CREATE POLICY physio_befunde_owner_and_team_insert ON public.physio_befunde
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY physio_befunde_owner_and_team_select ON public.physio_befunde
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY physio_befunde_owner_and_team_update ON public.physio_befunde
   AS PERMISSIVE
   FOR UPDATE
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))))
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))))
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY "Employees can view team podologie_behandlungen" ON public.podologie_behandlungen
   AS PERMISSIVE
@@ -1269,7 +1326,9 @@ CREATE POLICY praxis_aufgaben_insert ON public.praxis_aufgaben
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)) AND ((lead_id IS NULL) OR (EXISTS ( SELECT 1 FROM leads l WHERE ((l.id = praxis_aufgaben.lead_id) AND (l.owner_id = praxis_aufgaben.owner_id)))))));
+  WITH CHECK (((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)) AND ((lead_id IS NULL) OR (EXISTS ( SELECT 1
+   FROM leads l
+  WHERE ((l.id = praxis_aufgaben.lead_id) AND (l.owner_id = praxis_aufgaben.owner_id)))))));
 
 CREATE POLICY praxis_aufgaben_select ON public.praxis_aufgaben
   AS PERMISSIVE
@@ -1282,26 +1341,36 @@ CREATE POLICY praxis_aufgaben_update ON public.praxis_aufgaben
   FOR UPDATE
   TO authenticated
   USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)))
-  WITH CHECK (((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)) AND ((lead_id IS NULL) OR (EXISTS ( SELECT 1 FROM leads l WHERE ((l.id = praxis_aufgaben.lead_id) AND (l.owner_id = praxis_aufgaben.owner_id)))))));
+  WITH CHECK (((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)) AND ((lead_id IS NULL) OR (EXISTS ( SELECT 1
+   FROM leads l
+  WHERE ((l.id = praxis_aufgaben.lead_id) AND (l.owner_id = praxis_aufgaben.owner_id)))))));
 
 CREATE POLICY praxis_formulare_owner_and_team_insert ON public.praxis_formulare
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY praxis_formulare_owner_and_team_select ON public.praxis_formulare
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY praxis_formulare_owner_and_team_update ON public.praxis_formulare
   AS PERMISSIVE
   FOR UPDATE
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))))
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id FROM profiles p WHERE (p.id = auth.uid())))));
+  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))))
+  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
+   FROM profiles p
+  WHERE (p.id = auth.uid())))));
 
 CREATE POLICY prescription_documents_owner_all ON public.prescription_documents
   AS PERMISSIVE
@@ -1407,6 +1476,21 @@ CREATE POLICY "Users can view own referral drafts" ON public.referral_drafts
   FOR SELECT
   TO PUBLIC
   USING ((owner_id = auth.uid()));
+
+CREATE POLICY rooms_select_mandant ON public.rooms
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)));
+
+CREATE POLICY rooms_write_owner ON public.rooms
+  AS PERMISSIVE
+  FOR ALL
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)))
+  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND ((business_id IS NULL) OR (EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = rooms.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))));
 
 CREATE POLICY owner_crud_scraper_data ON public.scraper_data
   AS PERMISSIVE
@@ -1678,21 +1762,6 @@ CREATE POLICY "Korrekturen select scoping" ON public.zuzahlung_korrekturen
    FROM profiles
   WHERE (profiles.owner_id = zuzahlung_korrekturen.owner_id)))));
 
-CREATE POLICY rooms_select_mandant ON public.rooms
-  AS PERMISSIVE
-  FOR SELECT
-  TO authenticated
-  USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)));
-
-CREATE POLICY rooms_write_owner ON public.rooms
-  AS PERMISSIVE
-  FOR ALL
-  TO authenticated
-  USING ((owner_id = ( SELECT auth.uid() AS uid)))
-  WITH CHECK (((owner_id = ( SELECT auth.uid() AS uid)) AND ((business_id IS NULL) OR (EXISTS ( SELECT 1
-   FROM businesses b
-  WHERE ((b.id = rooms.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))));
-
 -- ----------------------------------------------------------------------------
 -- FUNCTIONS & PROCEDURES
 -- ----------------------------------------------------------------------------
@@ -1887,12 +1956,9 @@ $function$
 ;
 ALTER FUNCTION public.anamnese_versionieren() OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION public.approve_booking_request_atomic(
-  p_request_id uuid, p_owner_id uuid, p_actor_id uuid,
-  p_expected_updated_at timestamptz, p_employee_id uuid,
-  p_changes jsonb, p_bookings jsonb, p_result jsonb
-) RETURNS jsonb
-LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION public.approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 DECLARE
@@ -2342,12 +2408,10 @@ end $function$
 ;
 ALTER FUNCTION public.audit_write_log() OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION public.ausfall_status_buchen(
-  p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid,
-  p_status text, p_zahlart text DEFAULT NULL::text
-) RETURNS void
-LANGUAGE plpgsql
-SET search_path = public
+CREATE OR REPLACE FUNCTION public.ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   af public.ausfallrechnungen%ROWTYPE;
@@ -2538,6 +2602,33 @@ END;
 $function$
 ;
 ALTER FUNCTION public.belegliste_storno_pruefen() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.bookings_room_mandant()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  r_owner  uuid;
+  r_biz    uuid;
+  t_owner  uuid;
+BEGIN
+  IF NEW.room_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT r.owner_id, r.business_id INTO r_owner, r_biz FROM public.rooms r WHERE r.id = NEW.room_id;
+  SELECT COALESCE(p.owner_id, p.id) INTO t_owner FROM public.profiles p WHERE p.id = NEW.user_id;
+  IF r_owner IS NULL
+     OR r_owner IS DISTINCT FROM NEW.owner_id
+     OR r_owner IS DISTINCT FROM t_owner
+     OR r_biz <> NEW.business_id THEN
+    RAISE EXCEPTION 'room_id gehoert nicht zu Mandant oder Standort des Termins' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.bookings_room_mandant() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.business_lookup_for_inbound(p_whatsapp_phone_number_id text)
  RETURNS TABLE(business_id uuid, business_name text, sector text, city text, language text, is_active boolean, cal_api_key text, cal_username text, whatsapp_access_token text, whatsapp_waba_id text, working_hours jsonb, faq jsonb, message_templates jsonb, system_prompt text, services jsonb)
@@ -3727,7 +3818,6 @@ CREATE OR REPLACE FUNCTION public.patient_dokumente_unveraenderlich()
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
-  -- Alle Inhaltsspalten sind unveraenderlich.
   IF (to_jsonb(NEW) - ARRAY['geloescht_at','geloescht_von','loeschgrund'])
      IS DISTINCT FROM
      (to_jsonb(OLD) - ARRAY['geloescht_at','geloescht_von','loeschgrund']) THEN
@@ -3735,7 +3825,6 @@ BEGIN
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- Solange geloescht_at NULL bleibt, duerfen geloescht_von / loeschgrund sich nicht aendern.
   IF OLD.geloescht_at IS NULL AND NEW.geloescht_at IS NULL THEN
     IF NEW.geloescht_von IS NOT NULL OR NEW.loeschgrund IS NOT NULL THEN
       RAISE EXCEPTION 'patient_dokumente: geloescht_von und loeschgrund nur bei gesetztem geloescht_at erlaubt'
@@ -3743,13 +3832,11 @@ BEGIN
     END IF;
   END IF;
 
-  -- Ein geloeschtes Dokument kann nicht wiederhergestellt oder weiter geaendert werden.
   IF OLD.geloescht_at IS NOT NULL THEN
     RAISE EXCEPTION 'patient_dokumente: ein geloeschtes Dokument kann nicht geaendert oder wiederhergestellt werden'
       USING ERRCODE = 'check_violation';
   END IF;
 
-  -- Beim Uebergang auf NOT NULL: Stempel und Ausloeser erzwingen, Loeschgrund pruefen.
   IF OLD.geloescht_at IS NULL AND NEW.geloescht_at IS NOT NULL THEN
     IF length(btrim(coalesce(NEW.loeschgrund, ''))) = 0 THEN
       RAISE EXCEPTION 'patient_dokumente: Loeschgrund ist Pflicht'
@@ -3909,7 +3996,6 @@ CREATE OR REPLACE FUNCTION public.physio_befunde_unveraenderlich()
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
-  -- Erlaubt ist nur ist_aktuell true -> false (ausgeloest vom Versionierungs-Trigger) und prescription_id -> NULL (ON DELETE SET NULL).
   IF (to_jsonb(NEW) - ARRAY['ist_aktuell','prescription_id'])
      IS DISTINCT FROM
      (to_jsonb(OLD) - ARRAY['ist_aktuell','prescription_id']) THEN
@@ -3946,7 +4032,6 @@ AS $function$
 DECLARE
   v_max integer;
 BEGIN
-  -- Schutz vor Fremd-eintrag_id oder falscher lead_id
   IF EXISTS (
     SELECT 1 FROM public.physio_befunde
      WHERE eintrag_id = NEW.eintrag_id
@@ -6169,12 +6254,6 @@ ALTER FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_exp
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
-CREATE TRIGGER rooms_updated_at BEFORE UPDATE ON rooms FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
-
-CREATE TRIGGER trg_set_business_id BEFORE INSERT ON rooms FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
-
-CREATE TRIGGER trg_zz_booking_room BEFORE INSERT OR UPDATE OF room_id, owner_id, user_id, business_id ON bookings FOR EACH ROW EXECUTE FUNCTION bookings_room_mandant();
-
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
 
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
@@ -6245,6 +6324,8 @@ CREATE TRIGGER trg_normalize_booking_phone BEFORE INSERT OR UPDATE ON bookings F
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON bookings FOR EACH ROW EXECUTE FUNCTION set_bookings_business_id_default();
 
+CREATE TRIGGER trg_zz_booking_room BEFORE INSERT OR UPDATE OF room_id, owner_id, user_id, business_id ON bookings FOR EACH ROW EXECUTE FUNCTION bookings_room_mandant();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON breaks FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER businesses_updated_at BEFORE UPDATE ON businesses FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
@@ -6260,6 +6341,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON custom_days FOR EACH ROW EXE
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON email_logs FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON employee_services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER employee_standort_plan_updated_at BEFORE UPDATE ON employee_standort_plan FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
 CREATE TRIGGER trg_fahrten_aenderung_protokollieren AFTER DELETE OR UPDATE ON fahrten FOR EACH ROW EXECUTE FUNCTION fahrten_aenderung_protokollieren();
 
@@ -6290,6 +6373,8 @@ CREATE TRIGGER trg_sync_leads_location BEFORE INSERT OR UPDATE OF lat, lng ON le
 CREATE TRIGGER trg_set_mahnung_nr BEFORE INSERT ON mahnungen FOR EACH ROW WHEN (new.mahnung_nr IS NULL OR new.mahnung_nr = 0) EXECUTE FUNCTION set_next_mahnung_nr();
 
 CREATE TRIGGER trg_zz_messreihen_befund BEFORE INSERT OR UPDATE OF befund_id, owner_id, lead_id ON messreihen FOR EACH ROW EXECUTE FUNCTION messreihen_befund_mandant_pruefen();
+
+CREATE TRIGGER mitarbeiter_anstellung_updated_at BEFORE UPDATE ON mitarbeiter_anstellung FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
 CREATE TRIGGER pat_fussbefund_versionieren_trg BEFORE INSERT ON pat_fussbefund FOR EACH ROW EXECUTE FUNCTION pat_fussbefund_versionieren();
 
@@ -6367,6 +6452,10 @@ CREATE TRIGGER trigger_notify_new_referral_draft AFTER INSERT ON referral_drafts
 
 CREATE TRIGGER update_referral_drafts_updated_at BEFORE UPDATE ON referral_drafts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER rooms_updated_at BEFORE UPDATE ON rooms FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
+
+CREATE TRIGGER trg_set_business_id BEFORE INSERT ON rooms FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON scraper_data FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -6409,13 +6498,7 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON zuzahlung_korrekturen FOR EA
 -- INDEXES
 -- ----------------------------------------------------------------------------
 -- Index abrechnung_pkey ON public.abrechnung is enforced by constraint
--- DDL: CREATE INDEX bookings_room_time_idx ON public.bookings USING btree (room_id, start_time) WHERE (room_id IS NOT NULL);
-
-CREATE INDEX rooms_business_idx ON public.rooms USING btree (business_id);
-
-CREATE UNIQUE INDEX rooms_name_uniq ON public.rooms USING btree (owner_id, COALESCE(business_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name));
-
-CREATE UNIQUE INDEX abrechnung_pkey ON abrechnung USING btree (id);
+-- DDL: CREATE UNIQUE INDEX abrechnung_pkey ON abrechnung USING btree (id);
 
 CREATE UNIQUE INDEX abrechnung_vkz03_ursprung_unique ON abrechnung USING btree (zuzahlungsforderung_ursprung_id) WHERE verarbeitungskennzeichen = '03'::text;
 
@@ -6542,7 +6625,7 @@ CREATE INDEX idx_b2b_contacts_owner ON b2b_contacts USING btree (owner_id);
 -- Index belegliste_pkey ON public.belegliste is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX belegliste_pkey ON belegliste USING btree (id);
 
-CREATE UNIQUE INDEX belegliste_storno_von_einmal ON belegliste USING btree (storno_von) WHERE (storno_von IS NOT NULL);
+CREATE UNIQUE INDEX belegliste_storno_von_einmal ON belegliste USING btree (storno_von) WHERE storno_von IS NOT NULL;
 
 CREATE INDEX idx_belegliste_invoice ON belegliste USING btree (invoice_id) WHERE invoice_id IS NOT NULL;
 
@@ -6571,6 +6654,8 @@ CREATE INDEX idx_booking_status_korrekturen_booking_id ON booking_status_korrekt
 
 -- Index bookings_pkey ON public.bookings is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX bookings_pkey ON bookings USING btree (id);
+
+CREATE INDEX bookings_room_time_idx ON bookings USING btree (room_id, start_time) WHERE room_id IS NOT NULL;
 
 CREATE INDEX idx_bookings_business ON bookings USING btree (business_id);
 
@@ -6750,6 +6835,16 @@ CREATE INDEX idx_employee_services_employee ON employee_services USING btree (em
 
 CREATE INDEX idx_employee_services_service ON employee_services USING btree (service_id);
 
+CREATE INDEX employee_standort_plan_business_idx ON employee_standort_plan USING btree (business_id);
+
+-- Index employee_standort_plan_eindeutig ON public.employee_standort_plan is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX employee_standort_plan_eindeutig ON employee_standort_plan USING btree (employee_id, business_id, weekday, datum) NULLS NOT DISTINCT;
+
+CREATE INDEX employee_standort_plan_owner_idx ON employee_standort_plan USING btree (owner_id);
+
+-- Index employee_standort_plan_pkey ON public.employee_standort_plan is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX employee_standort_plan_pkey ON employee_standort_plan USING btree (id);
+
 -- Index fahrten_booking_id_key ON public.fahrten is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX fahrten_booking_id_key ON fahrten USING btree (booking_id);
 
@@ -6912,7 +7007,7 @@ CREATE INDEX idx_mahnungen_prescription ON mahnungen USING btree (prescription_i
 -- Index mahnungen_pkey ON public.mahnungen is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX mahnungen_pkey ON mahnungen USING btree (id);
 
-CREATE INDEX idx_messreihen_befund ON public.messreihen USING btree (befund_id) WHERE (befund_id IS NOT NULL);
+CREATE INDEX idx_messreihen_befund ON messreihen USING btree (befund_id) WHERE befund_id IS NOT NULL;
 
 CREATE INDEX idx_messreihen_lead ON messreihen USING btree (lead_id, gemessen_am);
 
@@ -6920,6 +7015,11 @@ CREATE INDEX idx_messreihen_owner ON messreihen USING btree (owner_id);
 
 -- Index messreihen_pkey ON public.messreihen is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX messreihen_pkey ON messreihen USING btree (id);
+
+CREATE INDEX mitarbeiter_anstellung_owner_idx ON mitarbeiter_anstellung USING btree (owner_id);
+
+-- Index mitarbeiter_anstellung_pkey ON public.mitarbeiter_anstellung is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX mitarbeiter_anstellung_pkey ON mitarbeiter_anstellung USING btree (employee_id);
 
 -- Index module_visibility_pkey ON public.module_visibility is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX module_visibility_pkey ON module_visibility USING btree (module_id, sector, role);
@@ -6949,11 +7049,11 @@ CREATE INDEX patient_consents_patient_idx ON patient_consents USING btree (patie
 
 CREATE INDEX patient_consents_type_idx ON patient_consents USING btree (patient_id, consent_type, consented_at DESC);
 
-CREATE INDEX idx_patient_dokumente_business ON public.patient_dokumente USING btree (business_id);
+CREATE INDEX idx_patient_dokumente_business ON patient_dokumente USING btree (business_id);
 
-CREATE INDEX idx_patient_dokumente_formular ON public.patient_dokumente USING btree (formular_id) WHERE (formular_id IS NOT NULL);
+CREATE INDEX idx_patient_dokumente_formular ON patient_dokumente USING btree (formular_id) WHERE formular_id IS NOT NULL;
 
-CREATE INDEX idx_patient_dokumente_lead ON public.patient_dokumente USING btree (owner_id, lead_id) WHERE (geloescht_at IS NULL);
+CREATE INDEX idx_patient_dokumente_lead ON patient_dokumente USING btree (owner_id, lead_id) WHERE geloescht_at IS NULL;
 
 -- Index patient_dokumente_pkey ON public.patient_dokumente is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX patient_dokumente_pkey ON patient_dokumente USING btree (id);
@@ -6980,13 +7080,13 @@ CREATE INDEX idx_patient_notes_lead ON patient_notes USING btree (lead_id);
 -- Index pending_signups_pkey ON public.pending_signups is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX pending_signups_pkey ON pending_signups USING btree (id);
 
-CREATE INDEX idx_physio_befunde_business ON public.physio_befunde USING btree (business_id);
+CREATE INDEX idx_physio_befunde_business ON physio_befunde USING btree (business_id);
 
-CREATE INDEX idx_physio_befunde_lead ON public.physio_befunde USING btree (owner_id, lead_id, befund_datum DESC) WHERE ist_aktuell;
+CREATE INDEX idx_physio_befunde_lead ON physio_befunde USING btree (owner_id, lead_id, befund_datum DESC) WHERE ist_aktuell;
 
-CREATE INDEX idx_physio_befunde_prescription ON public.physio_befunde USING btree (prescription_id) WHERE (prescription_id IS NOT NULL);
+CREATE INDEX idx_physio_befunde_prescription ON physio_befunde USING btree (prescription_id) WHERE prescription_id IS NOT NULL;
 
-CREATE UNIQUE INDEX physio_befunde_aktuell_uidx ON public.physio_befunde USING btree (owner_id, eintrag_id) WHERE ist_aktuell;
+CREATE UNIQUE INDEX physio_befunde_aktuell_uidx ON physio_befunde USING btree (owner_id, eintrag_id) WHERE ist_aktuell;
 
 -- Index physio_befunde_eintrag_version_uq ON public.physio_befunde is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX physio_befunde_eintrag_version_uq ON physio_befunde USING btree (owner_id, eintrag_id, version);
@@ -7009,16 +7109,16 @@ CREATE INDEX podologie_empfangsnachweise_behandlung_event_idx ON podologie_empfa
 -- Index podologie_empfangsnachweise_pkey ON public.podologie_empfangsnachweise is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX podologie_empfangsnachweise_pkey ON podologie_empfangsnachweise USING btree (id);
 
-CREATE INDEX praxis_aufgaben_lead_idx ON public.praxis_aufgaben USING btree (lead_id) WHERE (lead_id IS NOT NULL);
+CREATE INDEX praxis_aufgaben_lead_idx ON praxis_aufgaben USING btree (lead_id) WHERE lead_id IS NOT NULL;
 
-CREATE INDEX praxis_aufgaben_owner_faellig_idx ON public.praxis_aufgaben USING btree (owner_id, faellig_am) WHERE (erledigt_at IS NULL);
+CREATE INDEX praxis_aufgaben_owner_faellig_idx ON praxis_aufgaben USING btree (owner_id, faellig_am) WHERE erledigt_at IS NULL;
 
 -- Index praxis_aufgaben_pkey ON public.praxis_aufgaben is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX praxis_aufgaben_pkey ON praxis_aufgaben USING btree (id);
 
-CREATE INDEX idx_praxis_formulare_business ON public.praxis_formulare USING btree (business_id);
+CREATE INDEX idx_praxis_formulare_business ON praxis_formulare USING btree (business_id);
 
-CREATE INDEX idx_praxis_formulare_owner ON public.praxis_formulare USING btree (owner_id) WHERE aktiv;
+CREATE INDEX idx_praxis_formulare_owner ON praxis_formulare USING btree (owner_id) WHERE aktiv;
 
 -- Index praxis_formulare_pkey ON public.praxis_formulare is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX praxis_formulare_pkey ON praxis_formulare USING btree (id);
@@ -7127,6 +7227,13 @@ CREATE INDEX idx_referral_drafts_status ON referral_drafts USING btree (status);
 
 -- Index referral_drafts_pkey ON public.referral_drafts is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX referral_drafts_pkey ON referral_drafts USING btree (id);
+
+CREATE INDEX rooms_business_idx ON rooms USING btree (business_id);
+
+CREATE UNIQUE INDEX rooms_name_uniq ON rooms USING btree (owner_id, COALESCE(business_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name));
+
+-- Index rooms_pkey ON public.rooms is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX rooms_pkey ON rooms USING btree (id);
 
 CREATE INDEX idx_scraper_data_business ON scraper_data USING btree (business_id);
 
@@ -7597,8 +7704,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=anamnese_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=anamnese_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uuid, p_actor_id uuid, p_expected_updated_at timestamp with time zone, p_employee_id uuid, p_changes jsonb, p_bookings jsonb, p_result jsonb) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uu column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=approve_booking_request_atomic(p_request_id uuid, p_owner_id uu column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_freeze(p_owner uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=artefakt_owner_unfreeze(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -7627,8 +7734,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=artefakt_version_no_delete() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=audit_write_log() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfall_id uuid, p_status text, p_zahlart text) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfa column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=ausfall_status_buchen(p_owner_id uuid, p_actor_id uuid, p_ausfa column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=ausfallrechnung_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_sitzungen_beenden(p_user uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -7637,6 +7744,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=auth_tenant_id() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_tenant_id() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=auth_tenant_id() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=bookings_room_mandant() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=bookings_room_mandant() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=box(box3d) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box(box3d) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box(box3d) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -7715,8 +7826,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=box3dtobox(box3d) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_inbound(p_whatsapp_phone_number_id text) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=business_lookup_for_twilio(p_to_number text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -10011,6 +10120,12 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=overlaps_nd(gidx, gidx) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=pat_fussbefund_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pat_fussbefund_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_before_insert() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_before_insert() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_delete_gesperrt() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -10019,12 +10134,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_mandant_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_unveraenderlich() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=patient_dokumente_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
--- ACL: type=FUNCTION schema=public object=path(geometry) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=pending_signup_consume(p_pending_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pending_signup_consume(p_pending_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=pending_signup_delete(p_pending_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -13318,8 +13427,6 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity_commutator_op(text, text) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -13350,6 +13457,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=word_similarity(text, text) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=working_hours_owner_ableiten() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=SCHEMA schema=public object=public column=- grantee=anon privilege=USAGE grantor=pg_database_owner grantable=NO
@@ -14707,6 +14816,29 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=employee_services column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=employee_services column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=employee_services column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=authenticated privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=employee_standort_plan column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=fahrten column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=fahrten column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=fahrten column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -15284,6 +15416,29 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=messreihen column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=messreihen column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=messreihen column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=authenticated privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=mitarbeiter_anstellung column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=module_visibility column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=module_visibility column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=module_visibility column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -15886,6 +16041,30 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=referral_drafts column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=referral_drafts column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=referral_drafts column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=authenticated privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=rooms column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=scraper_data column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=scraper_data column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=scraper_data column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -16023,10 +16202,26 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapist_certificates column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapist_certificates column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
@@ -16564,6 +16759,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_employee_scope_overrides column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_employee_services column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_employee_services column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_employee_standort_plan column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_employee_standort_plan column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_fahrten column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_fahrten column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_fahrten_aenderungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16632,6 +16829,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_mahnungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_messreihen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_messreihen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_mitarbeiter_anstellung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_mitarbeiter_anstellung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_module_visibility column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_module_visibility column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_nummernkreise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16640,16 +16839,24 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_pat_fussbefund column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patient_consents column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patient_consents column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_patient_dokumente column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_patient_dokumente column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patient_notes column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patient_notes column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patients column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_patients column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_pending_signups column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_pending_signups column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_physio_befunde column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_physio_befunde column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_behandlungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_behandlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_empfangsnachweise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_empfangsnachweise column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_aufgaben column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_aufgaben column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_formulare column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_formulare column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_migrations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_migrations column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_setup column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16670,6 +16877,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_rechnung_zahlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_referral_drafts column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_referral_drafts column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_rooms column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_rooms column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_scraper_data column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_scraper_data column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_services column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16680,6 +16889,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_spheroid column=- grantee=supabase_admin privilege=USAGE grantor=supabase_admin grantable=NO
 -- ACL: type=TYPE schema=public object=_terapeut_zertifikat column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_terapeut_zertifikat column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_therapieberichte column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_therapieberichte column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_therapist_certificates column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_therapist_certificates column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_time_offs column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16798,6 +17009,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=employee_scope_overrides column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=employee_services column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=employee_services column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=employee_standort_plan column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=employee_standort_plan column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=fahrten column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=fahrten column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=fahrten_aenderungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16866,6 +17079,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=mahnungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=messreihen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=messreihen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=mitarbeiter_anstellung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=mitarbeiter_anstellung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=module_visibility column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=module_visibility column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=nummernkreise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16874,16 +17089,24 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=pat_fussbefund column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patient_consents column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patient_consents column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=patient_dokumente column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=patient_dokumente column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patient_notes column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patient_notes column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patients column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=patients column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=pending_signups column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=pending_signups column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=physio_befunde column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=physio_befunde column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_behandlungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_behandlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_empfangsnachweise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_empfangsnachweise column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_aufgaben column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_aufgaben column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_formulare column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_formulare column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_migrations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_migrations column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_setup column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16904,6 +17127,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=rechnung_zahlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=referral_drafts column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=referral_drafts column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=rooms column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=rooms column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=scraper_data column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=scraper_data column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=services column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16914,6 +17139,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=spheroid column=- grantee=supabase_admin privilege=USAGE grantor=supabase_admin grantable=NO
 -- ACL: type=TYPE schema=public object=terapeut_zertifikat column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=terapeut_zertifikat column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=therapieberichte column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=therapieberichte column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=therapist_certificates column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=therapist_certificates column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=time_offs column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO

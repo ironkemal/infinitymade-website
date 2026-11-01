@@ -420,6 +420,26 @@ export const TABELLEN = [
     mitarbeiterFilter: 'employee_id',
     anmerkung: 'Mitarbeiter-Leistungszuordnung',
   },
+  // 0096_mitarbeiter_anstellung (db-ustasi 01.11.2026, SaaS live 01.11.2026). Kategorie 'loeschen' wie time_offs:
+  // Vertragsrahmen fuer Planung und Urlaubsrechnung, kein Lohnkonto, keine eigene gesetzliche Frist in Praxura.
+  {
+    table: 'mitarbeiter_anstellung',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'employee_id',
+    anmerkung: 'Anstellung Mitarbeiter (Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch), nur Inhaber und Betroffener lesen',
+  },
+  // 0097_employee_standort_plan (db-ustasi 01.11.2026, SaaS live 01.11.2026). Kategorie 'loeschen' wie time_offs:
+  // Einsatzplan (welcher Standort an welchem Tag), keine gesetzliche Frist.
+  // Loeschkette: beide Tabellen stehen in loeschen.js → einfacheLoeschTabellen (Profile werden im Sperrmodell
+  // nie geloescht, FK-CASCADE greift bei der Kontoloeschung also nicht).
+  {
+    table: 'employee_standort_plan',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'employee_id',
+    anmerkung: 'Standortplan Mitarbeiter (Wochenmuster/Einzeltag je Standort), nur Inhaber und Betroffener lesen',
+  },
   {
     table: 'calendar_integrations',
     kategorie: 'loeschen',

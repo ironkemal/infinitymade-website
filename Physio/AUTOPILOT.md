@@ -9,8 +9,8 @@
 
 - Autopilot: **AUS** (bis Blocker unten gelöst; zum Starten auf `AN` setzen) ← auf `AUS` setzen stoppt jeden weiteren Lauf
 - GO Live-Migrationen (Melih setzt `[x]`, Autopilot wendet dann per MCP an):
-  - [ ] GO 0096 `mitarbeiter_anstellung` (S1)
-  - [ ] GO M4a `employee_standort_plan` (S3)
+  - [x] GO 0096 `mitarbeiter_anstellung` (S1) — Melih 01.11.2026 („ohne meine Zustimmung weiterführen“), live 01.11.2026
+  - [x] GO M4a `employee_standort_plan` (S3) — wie oben, live 01.11.2026
   - [ ] GO M6b Sondertag-Mitteilungsprotokoll (S8)
 
 ## Rechte (Melih, 01.11.2026)
@@ -25,9 +25,9 @@ Status: `offen` · `läuft` · `wartet-GO` · `blockiert` · `fertig`. Reihenfol
 
 | # | Scheibe | Status | Abhängig | Agenten (Pflicht fett) | Fertig wenn |
 |---|---|---|---|---|---|
-| S1 | **M5-Fix:** Migration `0096_mitarbeiter_anstellung` (Kollegen lesen nichts, nur Inhaber schreibt, Mitarbeiter liest eigene Zeile), `klassifikation.js`, `db/REGISTER.md`, lokal frische DB | wartet-GO (Entwurf fertig, nicht committet) | — | **db-ustasi**, **guvenlik**, **onprem** | Datei + Tests grün → `wartet-GO`; nach GO: live, `db/SCHEMA*` neu, Commit+Push |
+| S1 | **M5-Fix:** Migration `0096_mitarbeiter_anstellung` (Kollegen lesen nichts, nur Inhaber schreibt, Mitarbeiter liest eigene Zeile), `klassifikation.js`, `db/REGISTER.md`, lokal frische DB | fertig (live 01.11.2026) | — | **db-ustasi**, **guvenlik**, **onprem** | Datei + Tests grün → `wartet-GO`; nach GO: live, `db/SCHEMA*` neu, Commit+Push |
 | S2 | Live-Test M1, M2a, M5, M6a, M7 im **QA-Tenant** (nie im P1-Testkonto I6) — **macht der Chat „Live-Test", Autopilot überspringt S2** | offen | S1 live | **canli-test**, physio | Einträge in `canli-test/REGISTER.md`; Fehler → neue Scheibe hier |
-| S3 | M4a Migration `employee_standort_plan` (ohne anon, Tag-Granularität) | wartet-GO (Entwurf `0097` fertig, auf frischer DB getestet, uncommittet; geht mit 0096 in EINEN Commit) | — | **db-ustasi**, **guvenlik**, **onprem** | wie S1 |
+| S3 | M4a Migration `employee_standort_plan` (ohne anon, Tag-Granularität) | fertig (live 01.11.2026, mit 0096 in einem Commit) | — | **db-ustasi**, **guvenlik**, **onprem** | wie S1 |
 | S4 | M4b Regel Einzeltag → Wochenmuster → alle zugeordneten Standorte, Backend `api-backend/lib/standort-plan.js` + Frontend `module/standort-plan-regel.js`, gemeinsame Testvektoren | fertig (46 Tests grün; Schnittmenge mit `employee_business_assignments` noch in S6 prüfen) | — | **fonksiyon-ustasi** | Beide Fassungen bestehen dieselben Vektoren |
 | S5 | M4c UI: Wochenmuster, Einzeltag, „Versetzen" als ein Ablauf, Warnliste gebuchter Termine (nie automatisch verschieben) | offen | S3 live, S4 | **fonksiyon-ustasi**, physio, Skill `impeccable` | Montag A: in B nicht sichtbar; Einzeltag wirkt in beiden |
 | S6 | M4d Filter Kalender + `getAvailableSlots` + Serienplaner; leere Tabelle/Lesefehler = altes Verhalten | fertig (Tagesansicht, getAvailableSlots, ai-suggest-series, batch-create; fällt ohne Tabelle auf altes Verhalten; Wochen-/Monatsansicht nicht gefiltert; live ungetestet) | S5 | **onprem**, fonksiyon-ustasi | Tests + Browser-Probe grün |
@@ -52,7 +52,7 @@ Nicht im Autopilot: Ops #202 HMV13 „+"-Button (Kemals Bereich Verordnung → e
    Ursache: gesicherte Arbeit vom 22.10., Commit `ce098678`). Dazu der ungetrackte Test
    `module/billing-loader-503.test.js` einer anderen Sitzung (11 rote Fälle). Beides gehört nicht zu Planung; bis geklärt, wer es behebt,
    gilt für den Autopilot: `npm test` darf **genau diese Fehler** zeigen und sonst nichts; jede weitere rote Zeile = stoppen.
-3. **GO 0096** steht aus (Kästchen oben).
+3. ~~**GO 0096** steht aus~~ erledigt: 0096 + 0097 live 01.11.2026.
 
 > **Update Kemal-Sitzung 01.11.2026:** Blocker 2 behoben. `podologie-positionen.js` jetzt unter einer URL (`9f7de78d`); `S:01012` auch aus `regel-schwere.js` entfernt (fehlte nach `ce098678`, Ops #340). `npm test` frontend 2350/0, backend nur die bekannten Windows-Faelle (ai/m4-*, ki-einwilligung). `billing-loader-503.test.js` liegt nicht im Repo. Blocker 1 (MCP) betrifft nur Melihs Maschine — in Kemals Sitzung ist der MCP gueltig.
 
@@ -84,6 +84,8 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 ## Übergabe-Protokoll (Autopilot schreibt, neueste oben)
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
+
+- 2026-11-01 · S1+S3 · 0096 `mitarbeiter_anstellung` + 0097 `employee_standort_plan` **live** (Management-API mit gültigem Token; MCP-Prozess hielt noch den alten). Vorher frische Kette 0000–0097 + RLS-Probe (3 neue Fälle) grün; live RLS/Policies/Grants/Advisors geprüft. `db/SCHEMA*` voll aus Live-Katalog neu (alter Dump war von Hand fortgeschrieben, u. a. fehlte `bookings.room_id → rooms`). · **bitte Live-Test:** (1) M5: Team → Mitarbeiter → Reiter Urlaub: Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch (z. B. 28) speichern, Seite neu laden → Werte bleiben, Resturlaub rechnet mit 28. Als Mitarbeiter einloggen: eigene Werte sichtbar, Kollegen nicht. (2) S6-Regression weiter ohne Planzeilen (Tabelle leer = altes Verhalten). M4-Pflege-UI (S5) kommt als Nächstes.
 
 - 2026-11-01 · F6 · behoben: `api-backend/booking/auth-handlers.test.js` gibt `ladeStandortPlan`/`planErlaubt` (aus `lib/standort-plan-laden.js`) in den vm-Kontext · api-backend `npm ci && npm test` lokal 1743 pass / 0 fail · **bitte Live-Test** nach grünem `publish-calendar-api` + Watchtower: `ai-suggest-series` mit erfundener `employeeId` → 400, erfundene `serviceId` → 400 (S-58); S6-Backend: Slots/Serie unverändert, solange kein Plan gepflegt ist.
 - 2026-11-01 · F5 · live bestätigt (Live-Test-Chat): 10.11. 15:00 in „QA Raum A2“, „Frei zu dieser Zeit“ korrekt.

@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-10-31",
+ "erzeugt": "2026-11-01",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-10-30)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-31)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-01)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-01)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 102,
+ "anzahl": 104,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -1812,7 +1812,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3865,
+     "start": 3900,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2321,7 +2321,7 @@
     {
      "name": "verdrahteGeldzeile",
      "file": "module/rezeptinfo-geld.js",
-     "start": 431,
+     "start": 433,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2369,6 +2369,7 @@
    ],
    "schreiber": [],
    "dateien": [
+    "Claude outputs/2026-10-16-release/weitere-bugs/journal/repro.mjs",
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/belegliste.routes.test.js",
     "api-backend/billing/api/datev.routes.js",
@@ -2864,7 +2865,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4040,
+     "start": 4075,
      "module": [],
      "uiPfad": []
     }
@@ -2938,6 +2939,7 @@
     "bookings",
     "leads",
     "auth.users",
+    "rooms",
     "services",
     "vehicles",
     "prescriptions"
@@ -2946,6 +2948,21 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-empty-history-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-duration130-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-empty-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-foreign-owner-data-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-foreign-patient-data-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-date-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-duration-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-owner-query-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-patient-query-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-time-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-duration130-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-empty-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-time0901-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-wrong-owner-query-fixture.js",
+    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-wrong-patient-query-fixture.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
     "api-backend/billing/api/podo-empfangsnachweis-gates.harness.mjs",
     "api-backend/billing/api/warteliste-security.test.js",
@@ -2955,10 +2972,12 @@
     "api-backend/booking/from-request.test.js",
     "api-backend/booking/public-handlers.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "module/billing-loader-503.test.js",
     "module/booking-status-korrektur.test.js",
     "module/fahrt-km.js",
     "module/patienten-import.js",
     "module/podo-einheiten.test.js",
+    "module/raum-tagesansicht.test.js",
     "module/sondertag.test.js",
     "module/termin-dauer.test.js",
     "module/termin-nicht-erschienen.test.js",
@@ -3334,7 +3353,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -3389,7 +3408,7 @@
     {
      "name": "holeDaten",
      "file": "module/planung-bruecke.js",
-     "start": 73,
+     "start": 74,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3437,7 +3456,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1798,
+     "start": 1831,
      "module": [],
      "uiPfad": []
     },
@@ -3547,7 +3566,7 @@
     {
      "name": "ladeBelegungen",
      "file": "module/raum-auswahl.js",
-     "start": 48,
+     "start": 59,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4231,16 +4250,64 @@
      ]
     },
     {
+     "name": "mountRaumTagesansicht",
+     "file": "module/raum-tagesansicht.js",
+     "start": 245,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "mountStreifen",
      "file": "module/planung-bruecke.js",
-     "start": 64,
+     "start": 65,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "mountTerminmaske",
      "file": "module/raum-auswahl.js",
-     "start": 158,
+     "start": 169,
      "module": [],
      "uiPfad": []
     },
@@ -4391,7 +4458,7 @@
     {
      "name": "oeffnen",
      "file": "module/raum-auswahl.js",
-     "start": 186,
+     "start": 199,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4590,7 +4657,7 @@
     {
      "name": "raumAktionsTermin",
      "file": "module/raum-auswahl.js",
-     "start": 252,
+     "start": 282,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4947,7 +5014,7 @@
     {
      "name": "terminWarnungen",
      "file": "module/raum-auswahl.js",
-     "start": 96,
+     "start": 107,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4995,7 +5062,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4040,
+     "start": 4075,
      "module": [],
      "uiPfad": []
     },
@@ -5058,6 +5125,54 @@
      "name": "wendePresetAn",
      "file": "module/fussbefund.js",
      "start": 1619,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeichnen",
+     "file": "module/raum-tagesansicht.js",
+     "start": 286,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5599,7 +5714,7 @@
     {
      "name": "mountAktionspanel",
      "file": "module/raum-auswahl.js",
-     "start": 223,
+     "start": 253,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5754,6 +5869,7 @@
     "module/podo-tag-zusatz.js",
     "module/podologie-abrechnung.js",
     "module/raum-auswahl.js",
+    "module/raum-tagesansicht.js",
     "module/rechnung-editor.js",
     "module/rechnung-editor.test.js",
     "module/rechnung-verordnung.js",
@@ -5839,14 +5955,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1798,
+     "start": 1831,
      "module": [],
      "uiPfad": []
     }
@@ -6095,7 +6211,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -6414,7 +6530,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 68,
+   "sqlTreffer": 70,
    "codeStumm": false
   },
   {
@@ -6440,7 +6556,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -6724,14 +6840,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1798,
+     "start": 1831,
      "module": [],
      "uiPfad": []
     },
@@ -8316,7 +8432,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -9455,6 +9571,172 @@
     "warteliste"
    ],
    "sqlTreffer": 49,
+   "codeStumm": false
+  },
+  {
+   "name": "employee_standort_plan",
+   "spalten": 8,
+   "fkRaus": [
+    "businesses",
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
+    "module/standort-plan-laden.test.js"
+   ],
+   "register": true,
+   "status": "aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt",
+   "warum": "An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A\") und Einzeltag („am 09.11. in B\") in **einer** Tabelle, Tag-Granularität, keine Halbtage. Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.",
+   "seit": "01.11.2026 · `0097_employee_standort_plan` (SaaS live 01.11.2026).",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeStandortPlan",
+     "file": "api-backend/lib/standort-plan-laden.js",
+     "start": 22,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladeStandortPlan",
+     "file": "module/standort-plan-laden.js",
+     "start": 19,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/lib/standort-plan-laden.js",
+    "module/standort-plan-laden.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "sqlTreffer": 45,
    "codeStumm": false
   },
   {
@@ -11369,6 +11651,7 @@
     "module/fahrt-abschluss-referenz.test.js",
     "module/patienten-kontext.test.js",
     "module/rechnung-snapshot.test.js",
+    "module/start-aufgaben.test.js",
     "tools/browser-probe/abrechnung-probe.html",
     "tools/schema-dokumente.test.js"
    ],
@@ -11924,7 +12207,7 @@
     {
      "name": "laden",
      "file": "module/start-aufgaben.js",
-     "start": 300,
+     "start": 306,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12658,7 +12941,7 @@
     {
      "name": "mountStartAufgaben",
      "file": "module/start-aufgaben.js",
-     "start": 88,
+     "start": 113,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13001,7 +13284,7 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1449,
+     "start": 1460,
      "module": [],
      "uiPfad": []
     },
@@ -13534,7 +13817,7 @@
     {
      "name": "starteFormular",
      "file": "module/physio-befund.js",
-     "start": 604,
+     "start": 606,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13582,7 +13865,7 @@
     {
      "name": "zeigeLesemodus",
      "file": "module/physio-befund.js",
-     "start": 379,
+     "start": 381,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13630,7 +13913,7 @@
     {
      "name": "zeigeUebersicht",
      "file": "module/physio-befund.js",
-     "start": 194,
+     "start": 196,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13731,7 +14014,7 @@
     {
      "name": "renderFormular",
      "file": "module/physio-befund.js",
-     "start": 670,
+     "start": 669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13833,7 +14116,7 @@
     {
      "name": "speichern",
      "file": "module/physio-befund.js",
-     "start": 907,
+     "start": 906,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13884,7 +14167,7 @@
     {
      "name": "zeigeWiederholenDialog",
      "file": "module/physio-befund.js",
-     "start": 1011,
+     "start": 1010,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13979,6 +14262,174 @@
     "warteliste"
    ],
    "sqlTreffer": 43,
+   "codeStumm": false
+  },
+  {
+   "name": "mitarbeiter_anstellung",
+   "spalten": 7,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
+    "module/anstellung.test.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Vertragsrahmen je Mitarbeiter (Vollzeit/Teilzeit, Wochenstunden, Urlaubsanspruch in Tagen) für Teamplanung und Resturlaub. Bewusst **nicht** in `profiles`: `profiles` ist im Team lesbar, Vertragsdaten sollen Kollegen nicht sehen (Physio/PLANUNG-UMSETZUNG.md Entscheidung 7: legal-de, guvenlik, db-ustasi).",
+   "seit": "01.11.2026 · `0096_mitarbeiter_anstellung` (SaaS live 01.11.2026). Der Code (`module/anstellung.js`) lief vorher gegen eine nicht existierende Tabelle (onprem O-234) und fiel auf die Vorgabe 30 Tage zurück.",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeAnstellung",
+     "file": "module/anstellung.js",
+     "start": 143,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "speichereAnstellung",
+     "file": "module/anstellung.js",
+     "start": 234,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "module/anstellung.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "sqlTreffer": 38,
    "codeStumm": false
   },
   {
@@ -15072,7 +15523,7 @@
     "module/patient-dokumente.js"
    ],
    "module": [],
-   "sqlTreffer": 45,
+   "sqlTreffer": 47,
    "codeStumm": false
   },
   {
@@ -15554,7 +16005,7 @@
     {
      "name": "zeigeUebersicht",
      "file": "module/physio-befund.js",
-     "start": 194,
+     "start": 196,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15604,7 +16055,7 @@
     {
      "name": "renderFormular",
      "file": "module/physio-befund.js",
-     "start": 670,
+     "start": 669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15655,7 +16106,7 @@
     {
      "name": "speichern",
      "file": "module/physio-befund.js",
-     "start": 907,
+     "start": 906,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15748,7 +16199,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 54,
+   "sqlTreffer": 56,
    "codeStumm": false
   },
   {
@@ -15769,9 +16220,11 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/behandlungsbeginn.test.js",
+    "module/billing-loader-503.test.js",
     "module/podo-behandlungen-oeffnen.test.js",
     "module/rechnung-verordnung.test.js",
-    "module/rezeptinfo-geld.test.js"
+    "module/rezeptinfo-geld.test.js",
+    "tools/browser-probe/billing-loader-503-probe.html"
    ],
    "register": true,
    "status": "aktiv",
@@ -16743,7 +17196,7 @@
     {
      "name": "laden",
      "file": "module/start-aufgaben.js",
-     "start": 300,
+     "start": 306,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16793,7 +17246,7 @@
     {
      "name": "fuegeAufgabeHinzu",
      "file": "module/start-aufgaben.js",
-     "start": 344,
+     "start": 350,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16844,7 +17297,7 @@
     {
      "name": "loescheAufgabe",
      "file": "module/start-aufgaben.js",
-     "start": 436,
+     "start": 442,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16895,7 +17348,7 @@
     {
      "name": "macheRueckgaengig",
      "file": "module/start-aufgaben.js",
-     "start": 415,
+     "start": 421,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16946,7 +17399,7 @@
     {
      "name": "markiereErledigt",
      "file": "module/start-aufgaben.js",
-     "start": 393,
+     "start": 399,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16997,7 +17450,7 @@
     {
      "name": "mountStartAufgaben",
      "file": "module/start-aufgaben.js",
-     "start": 88,
+     "start": 113,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17091,7 +17544,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 39,
+   "sqlTreffer": 41,
    "codeStumm": false
   },
   {
@@ -17174,7 +17627,7 @@
     "module/formular-unterschreiben.js"
    ],
    "module": [],
-   "sqlTreffer": 35,
+   "sqlTreffer": 37,
    "codeStumm": false
   },
   {
@@ -17227,7 +17680,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 551,
+     "start": 555,
      "module": [],
      "uiPfad": []
     },
@@ -18100,6 +18553,7 @@
     "api-backend/lib/therapiebericht.test.js",
     "module/behandlungsbeginn.js",
     "module/behandlungsbeginn.test.js",
+    "module/billing-loader-503.test.js",
     "module/booking-status-korrektur.test.js",
     "module/patienten-import.js",
     "module/podo-behandlungen-oeffnen.test.js",
@@ -18111,6 +18565,7 @@
     "module/verordnung-topf.js",
     "module/verordnung-topf.test.js",
     "tools/browser-probe/abrechnung-probe.html",
+    "tools/browser-probe/billing-loader-503-probe.html",
     "tools/browser-probe/redesign-fixture.js",
     "tools/schema-dokumente.test.js"
    ],
@@ -18123,7 +18578,7 @@
     {
      "name": "aufEuro",
      "file": "module/rezeptinfo-geld.js",
-     "start": 457,
+     "start": 469,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19414,7 +19869,7 @@
     {
      "name": "starteFormular",
      "file": "module/physio-befund.js",
-     "start": 604,
+     "start": 606,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19469,7 +19924,7 @@
     {
      "name": "verdrahteGeldzeile",
      "file": "module/rezeptinfo-geld.js",
-     "start": 431,
+     "start": 433,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20179,6 +20634,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": true,
    "erwaehnt": [
+    "Claude outputs/2026-10-16-release/weitere-bugs/journal/repro.mjs",
     "api-backend/ai/ki-woerterbuch.test.js",
     "api-backend/billing/api/artefakt-routes.test.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
@@ -20300,14 +20756,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4015,
+     "start": 4050,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -22694,7 +23150,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 361,
+   "sqlTreffer": 365,
    "codeStumm": false
   },
   {
@@ -22786,7 +23242,7 @@
     {
      "name": "ladeRaumliste",
      "file": "module/raum-auswahl.js",
-     "start": 39,
+     "start": 50,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22917,7 +23373,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 9,
+   "sqlTreffer": 37,
    "codeStumm": false
   },
   {
@@ -23082,7 +23538,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4327,
+     "start": 4362,
      "module": [],
      "uiPfad": []
     },
@@ -23192,7 +23648,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -24230,7 +24686,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 14,
+   "sqlTreffer": 32,
    "codeStumm": false
   },
   {
@@ -24529,14 +24985,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1798,
+     "start": 1831,
      "module": [],
      "uiPfad": []
     },
@@ -25955,7 +26411,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 792,
+     "start": 796,
      "module": [],
      "uiPfad": []
     },
@@ -26010,7 +26466,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1798,
+     "start": 1831,
      "module": [],
      "uiPfad": []
     },
@@ -27045,6 +27501,7 @@
    "employee_business_assignments",
    "employee_groups",
    "employee_services",
+   "employee_standort_plan",
    "fahrten",
    "fahrten_aenderungen",
    "feedbacks",
@@ -27052,6 +27509,7 @@
    "leads",
    "mahnungen",
    "messreihen",
+   "mitarbeiter_anstellung",
    "nummernkreise",
    "pat_fussbefund",
    "patient_consents",
@@ -27107,9 +27565,11 @@
    "employee_groups",
    "employee_scope_overrides",
    "employee_services",
+   "employee_standort_plan",
    "feedbacks",
    "group_scopes",
    "kiosk_pins",
+   "mitarbeiter_anstellung",
    "patients",
    "pending_signups",
    "praxis_aufgaben",
