@@ -45,6 +45,9 @@ import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { sendeUeberGmail } from './lib/gmail-senden.js';
+import { startWarnungen } from './lib/start-pruefungen.js';
+import { createAiConfig } from './ai/ki-config.js';
+import { ladeKimlik } from './merkez-istemci/kimlik.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
@@ -4804,6 +4807,10 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
   if (wartungsmodus) console.error('[start] WARTUNGSMODUS — nur /health beantwortet.');
+  // O-230/O-232: stille Fehlkonfigurationen sichtbar machen (lib/start-pruefungen.js).
+  try {
+    for (const w of startWarnungen({ kimlikVorhanden: !!ladeKimlik(), aiConfig: createAiConfig() })) console.warn(w);
+  } catch (e) { console.warn('[start] Startpruefung fehlgeschlagen', e?.code || ''); }
 });
 
 // Asılı soketlerin birikmesini önle (yavaş/zombi client'lar event-loop'u tüketmesin).
