@@ -48,6 +48,8 @@ Nicht im Autopilot: Ops #202 HMV13 „+"-Button (Kemals Bereich Verordnung → e
    gilt für den Autopilot: `npm test` darf **genau diese Fehler** zeigen und sonst nichts; jede weitere rote Zeile = stoppen.
 3. **GO 0096** steht aus (Kästchen oben).
 
+> **Update Kemal-Sitzung 01.11.2026:** Blocker 2 behoben. `podologie-positionen.js` jetzt unter einer URL (`9f7de78d`); `S:01012` auch aus `regel-schwere.js` entfernt (fehlte nach `ce098678`, Ops #340). `npm test` frontend 2350/0, backend nur die bekannten Windows-Faelle (ai/m4-*, ki-einwilligung). `billing-loader-503.test.js` liegt nicht im Repo. Blocker 1 (MCP) betrifft nur Melihs Maschine — in Kemals Sitzung ist der MCP gueltig.
+
 **S1 Entwurf liegt uncommittet im Arbeitsbaum** (nicht anfassen, nicht überschreiben):
 `api-backend/db/migrations/0096_mitarbeiter_anstellung.sql` (auf frischer DB getestet, guvenlik: keine kritische/hohe Lücke),
 `api-backend/db/erwartete-zaehler.json`, `api-backend/dsgvo/klassifikation.js` (Eintrag auskommentiert), `db/REGISTER.md`, `onprem/REGISTER.md`.
