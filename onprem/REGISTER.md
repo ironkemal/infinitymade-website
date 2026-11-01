@@ -6732,7 +6732,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Çözüm** | Öneri, karar bekliyor. Kemal "evet" derse `builder` işi: (1) proje adı/ağ/konteyner adı/volume öneki `.env`'den gelen tek kimliğe (`PRAXURA_INSTANZ`) bağlanır, kutuda varsayılan `praxura` (mevcut kutular değişmez); realtime için `container_name` yerine ağ takma adı. (2) systemd birimleri şablon birim (`praxura-update@<instanz>`) olur. (3) Host 80/443'ü tek ön vekil (SNI geçirgen, TLS'i sonlandırmaz — her yığın kendi DNS-01 sertifikasını tutar) alır, yığın Caddy'leri yalnız iç porta bağlanır. (4) Açık dağıtım modu bayrağı (`PRAXURA_DAGITIM=kutu|barindirilan`, `api-backend/lib/dagitim.js`'e), `istKutu()` barındırılan modda da `true` kalır. (5) Merkez `internet` IP modu (`merkez/server.js:213-215`) zaten var — DNS tarafı hazır |
 | **Durum** | 🔵 öneri — karar bekliyor. ⚠️ Kilitli karar çatışması: K1 (SaaS satılmaz), K12 (bizim Hetzner hesabımızda hasta verisi yok), K10 (veriye erişim yok — barındırılan modda host root'u `.env`'deki `DATA_ENCRYPTION_KEY`'i okur, teknik olarak tutulamaz, yalnız organizasyonel) ve G1'in "bizim kontrolümüzdeki sistem" ifadesi. Bunlar Kemal açıkça değiştirmeden gerçek hasta verisiyle barındırılan kutu `DUR`; test verisiyle çoklu-yığın hazırlığı (1)-(4) iki dağıtımda da çalışır, G7/G8 temiz |
 
-### O-224 — Mehrstandort kutuda görünmüyor: kutu owner'ı `professional` doğuyor, Standort/Datenfreigabe ekranları `isEnterprise()` arkasında 🔴 **offen** (30.10.2026)
+### O-224 — Mehrstandort kutuda görünmüyor: kutu owner'ı `professional` doğuyor, Standort/Datenfreigabe ekranları `isEnterprise()` arkasında 🟡 **kısmen gelöst** (kod 921bffcf, kutu kabulü açık)
 
 | Alan | İçerik |
 |---|---|
@@ -6741,7 +6741,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | H (yetkilendirme) |
 | **Kutuda ne olur** | Owner tek `businesses` satırıyla kalır; "Standort hinzufügen" bölümü, switcher ve Datenfreigabe hiç çizilmez. Tarayıcıdan plan yükseltilemez (`0053` kilit trigger'ı). Yani "iki Standort, ortak DB" isteyen müşteriye kutu bugün tek Standort verir. Veri katmanı (tablolar, `bizScope`) hazır, kapı yalnız UI'da |
 | **Çözüm** | `builder`, küçük (S): `isEnterprise()` kutuda `true` dönsün — `dashboard.js:168` `employeeLimit()`'in `IST_KUTU ? …` deseniyle aynı, satır sayısı artmadan (G7: SaaS davranışı değişmez). `KUTU_OWNER_PLAN`'ı `enterprise`'a çevirmek **tercih edilmez**: mevcut kutuların owner'ı değişmez, ayrıca update yolu ister. Kalıcı yer Faz 3.3 `entitlements` (O-31). Kabul: kutuda (WSL) ikinci Standort aç → switcher görünür → Datenfreigabe kaydedilir → çalışan iki Standort'a atanır; `canli-test` ölçer |
-| **Durum** | `offen` — Ops kartı açılınca `geplant`. Satış hedefi Dezember 2026 sonu |
+| **Durum** | `kısmen gelöst` — kod `921bffcf` (31.10.2026): `isEnterprise()` kutuda `IST_KUTU ||` ile true, satır sayısı aynı, SaaS değişmez (01.11.2026 kodda doğrulandı, `dashboard.js` `isEnterprise`). Kalan: gerçek kutuda kabul (ikinci Standort → switcher → Datenfreigabe → çalışan ataması → yeni „Standorte“ sekmesi, S5). Satış hedefi Dezember 2026 sonu |
 
 ### O-225 — Tek müşteriye özel barındırılan kutu (THEORG modeli, 30.10.2026): teknik yol hazır, sahiplik/erişim modeli K10/K12 ile çelişiyor → ⚪ **geplant — Kemal (a)'yı seçti (30.10.2026)**
 
