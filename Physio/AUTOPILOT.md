@@ -59,7 +59,7 @@ Nicht im Autopilot: Ops #202 HMV13 „+"-Button (Kemals Bereich Verordnung → e
 **Nach GO in EINEM Commit:** Migration live (MCP) → Marker `-- SaaS: angewandt <Datum>, MCP.` → `db/SCHEMA*.sql` neu → Eintrag in `klassifikation.js`
 einkommentieren → **`{ table: 'mitarbeiter_anstellung', filter: 'owner_id' }` in `api-backend/dsgvo/loeschen.js` (Liste `einfacheLoeschTabellen`, ~Z. 533)
 ergänzen** (guvenlik M1: sonst bleiben Vertragsdaten nach Kontolöschung stehen) → `node tools/tabellenkarte.mjs`, Tests, Push.
-Offen für legal-de: Aufbewahrungsfrist der Vertragsdaten (Entwurf nimmt „keine eigene Frist" an). Offen für Melih: darf nur der Inhaber schreiben (so im Entwurf; im Code gibt es keine Standortleiter-Rolle).
+legal-de 01.11.: Kategorie `loeschen`, keine eigene Frist, Modell Inhaber-schreibt/Mitarbeiter-liest-eigene-Zeile reicht. Pflicht: BEIDE Tabellen (`mitarbeiter_anstellung`, `employee_standort_plan`, Filter `owner_id`) in `loeschen.js`; Zeilen löschen, wenn Mitarbeiter aus dem Team entfernt wird; Hilfetext „Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem …"; Einzeltag-Zeilen älter 12 Monate später bereinigen (niedrig). guvenlik 0097: Mandantengrenze hält; Testlücken ergänzen (UPDATE owner_id/employee_id auf fremden Wert, fremder UPDATE/DELETE, ON CONFLICT als Fremder); optional `REVOKE REFERENCES, TRIGGER` von authenticated. S-58/S-59 behoben (server.js). Offen für Melih: darf nur der Inhaber schreiben (so im Entwurf; im Code gibt es keine Standortleiter-Rolle).
 Optional (niedrig): `ladeAnstellung` soll für Nicht-Inhaber bei fremder `empId` „nicht sichtbar" statt Vorgabe 30 Tage liefern (`module/anstellung.js:164`).
 
 ## Fehlerkanal Live-Test-Chat → Autopilot
