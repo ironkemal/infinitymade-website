@@ -1,0 +1,37 @@
+{
+  "alle": ["A", "B", "C"],
+  "zeilen": [
+    { "employee_id": "e1", "business_id": "A", "weekday": 1 },
+    { "employee_id": "e1", "business_id": "B", "weekday": 2 },
+    { "employee_id": "e1", "business_id": "C", "datum": "2026-11-04" },
+    { "employee_id": "e2", "business_id": "A", "weekday": 3 },
+    { "employee_id": "e2", "business_id": "B", "weekday": 3 },
+    { "employee_id": "e3", "business_id": "B", "datum": "2026-11-10" },
+    { "employee_id": "e4", "business_id": "A", "weekday": 0 },
+    { "employee_id": "e5", "business_id": "B", "weekday": 6 },
+    { "employee_id": "e5", "business_id": "A", "datum": "2026-12-01" }
+  ],
+  "faelle": [
+    { "name": "Montag A", "employee": "e1", "datum": "2026-11-02", "erwartet": ["A"] },
+    { "name": "Dienstag B", "employee": "e1", "datum": "2026-11-03", "erwartet": ["B"] },
+    { "name": "Einzeltag ueberschreibt Wochenmuster (Mittwoch)", "employee": "e1", "datum": "2026-11-04", "erwartet": ["C"] },
+    { "name": "Freier Tag: Wochenmuster ohne diesen Wochentag", "employee": "e1", "datum": "2026-11-05", "erwartet": [] },
+    { "name": "Mehrere Standorte am selben Tag", "employee": "e2", "datum": "2026-11-04", "erwartet": ["A", "B"] },
+    { "name": "Anderer Mitarbeiter ohne Eintrag = alle", "employee": "e9", "datum": "2026-11-02", "erwartet": ["A", "B", "C"] },
+    { "name": "Nur Einzeltag woanders, kein Wochenmuster = alle", "employee": "e3", "datum": "2026-11-02", "erwartet": ["A", "B", "C"] },
+    { "name": "Einzeltag ohne Wochenmuster gilt nur an dem Tag", "employee": "e3", "datum": "2026-11-10", "erwartet": ["B"] },
+    { "name": "Sonntag (weekday 0)", "employee": "e4", "datum": "2026-11-01", "erwartet": ["A"] },
+    { "name": "Sonntag-Muster, Montag frei", "employee": "e4", "datum": "2026-11-02", "erwartet": [] },
+    { "name": "Monatswechsel 30.11. Montag", "employee": "e1", "datum": "2026-11-30", "erwartet": ["A"] },
+    { "name": "Monatswechsel 01.12. Dienstag", "employee": "e1", "datum": "2026-12-01", "erwartet": ["B"] },
+    { "name": "Einzeltag am Monatsersten gewinnt gegen Wochenmuster", "employee": "e5", "datum": "2026-12-01", "erwartet": ["A"] },
+    { "name": "Samstag-Muster", "employee": "e5", "datum": "2026-11-07", "erwartet": ["B"] },
+    { "name": "Datum mit Zeitanteil wird kalendarisch gelesen", "employee": "e1", "datum": "2026-11-02T23:30:00", "erwartet": ["A"] },
+    { "name": "Ungueltiges Datum = alle", "employee": "e1", "datum": "kein-datum", "erwartet": ["A", "B", "C"] },
+    { "name": "Leere Tabelle = alle", "zeilen": [], "employee": "e1", "datum": "2026-11-02", "erwartet": ["A", "B", "C"] },
+    { "name": "null = alle", "zeilen": null, "employee": "e1", "datum": "2026-11-02", "erwartet": ["A", "B", "C"] },
+    { "name": "undefined/kein Array = alle", "zeilen": "kaputt", "employee": "e1", "datum": "2026-11-02", "erwartet": ["A", "B", "C"] },
+    { "name": "Fehlerhafte Zeilen werden ignoriert", "zeilen": [null, 5, { "employee_id": "e1", "business_id": "B", "weekday": 1 }], "employee": "e1", "datum": "2026-11-02", "erwartet": ["B"] },
+    { "name": "Doppelte Zeilen werden entdoppelt", "zeilen": [{ "employee_id": "e1", "business_id": "B", "weekday": 1 }, { "employee_id": "e1", "business_id": "B", "weekday": 1 }], "employee": "e1", "datum": "2026-11-02", "erwartet": ["B"] }
+  ]
+}

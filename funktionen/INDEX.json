@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-01",
- "dateien": 511,
- "funktionen": 4113,
+ "dateien": 513,
+ "funktionen": 4121,
  "module": [
   "abrechnung",
   "anamnese",
@@ -21130,6 +21130,7 @@
    "storage": [],
    "calls": [
     "add",
+    "eindeutig",
     "has",
     "kassenartAusQuelle"
    ],
@@ -30515,6 +30516,7 @@
     "dgVorschlag",
     "dmrzExport",
     "druckeInline",
+    "eindeutig",
     "einheitenPlan",
     "einmalJeSitzung",
     "empfaengerSnapshot",
@@ -34344,6 +34346,143 @@
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js"
    ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "wochentagVon",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/standort-plan.js",
+   "start": 13,
+   "end": 20,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "standorteFuerTag"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "eindeutig",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/standort-plan.js",
+   "start": 22,
+   "end": 26,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/zuzahlung/erbrachte-sitzungen.js",
+    "_verdrahteAktionen",
+    "standorteFuerTag",
+    "waehleAnnahmestelle"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "standorteFuerTag",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/standort-plan.js",
+   "start": 28,
+   "end": 41,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "eindeutig",
+    "wochentagVon"
+   ],
+   "calledBy": [
+    "istAmStandort"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istAmStandort",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/standort-plan.js",
+   "start": 43,
+   "end": 45,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "standorteFuerTag"
+   ],
+   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -93729,6 +93868,7 @@
     "_erstelleKorrektur",
     "_vkz01Ausnahme",
     "downloadAbrechnungFile",
+    "eindeutig",
     "zeigeDateiversionen"
    ],
    "calledBy": [
@@ -117822,8 +117962,8 @@
    "lang": "js",
    "file": "module/einrichtung-ring.js",
    "start": 23,
-   "end": 93,
-   "lines": 71,
+   "end": 92,
+   "lines": 70,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -118150,8 +118290,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/einrichtung-ring.js",
-   "start": 96,
-   "end": 103,
+   "start": 95,
+   "end": 102,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -182152,6 +182292,143 @@
    "uiPfad": []
   },
   {
+   "name": "wochentagVon",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/standort-plan-regel.js",
+   "start": 13,
+   "end": 20,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "standorteFuerTag"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "eindeutig",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/standort-plan-regel.js",
+   "start": 22,
+   "end": 26,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/zuzahlung/erbrachte-sitzungen.js",
+    "_verdrahteAktionen",
+    "standorteFuerTag",
+    "waehleAnnahmestelle"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "standorteFuerTag",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/standort-plan-regel.js",
+   "start": 28,
+   "end": 41,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "eindeutig",
+    "wochentagVon"
+   ],
+   "calledBy": [
+    "istAmStandort"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istAmStandort",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/standort-plan-regel.js",
+   "start": 43,
+   "end": 45,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "standorteFuerTag"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "istPraxisweit",
    "kind": "function",
    "lang": "js",
@@ -238691,6 +238968,14 @@
    "aynalar": []
   },
   {
+   "name": "eindeutig",
+   "orte": [
+    "api-backend/lib/standort-plan.js:22",
+    "module/standort-plan-regel.js:22"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "einzeln",
    "orte": [
     "api-backend/billing/api/artefakt-ausmustern.js:50",
@@ -238900,6 +239185,14 @@
    "orte": [
     "module/patienten-einwilligung.js:315",
     "module/patienten-einwilligung.js:509"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "istAmStandort",
+   "orte": [
+    "api-backend/lib/standort-plan.js:43",
+    "module/standort-plan-regel.js:43"
    ],
    "aynalar": []
   },
@@ -239404,6 +239697,14 @@
    "aynalar": []
   },
   {
+   "name": "standorteFuerTag",
+   "orte": [
+    "api-backend/lib/standort-plan.js:28",
+    "module/standort-plan-regel.js:28"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "starte",
    "orte": [
     "api-backend/start.mjs:39",
@@ -239552,6 +239853,14 @@
    "orte": [
     "api-backend/booking/series.js:42",
     "module/serien-termine.js:58"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "wochentagVon",
+   "orte": [
+    "api-backend/lib/standort-plan.js:13",
+    "module/standort-plan-regel.js:13"
    ],
    "aynalar": []
   },
