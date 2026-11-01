@@ -1980,8 +1980,11 @@ Zweiter Therapeut, gleicher Raum und Zeit: Wechsel des Mitarbeiters leert die Le
 - [x] Einbettungscode sichtbar, Header richtig, Formular lädt in fremder HTTPS-Seite (3 weitere Ladeversuche ohne Fehler)
 - [ ] Streifen aktualisiert sich sofort nach Raumzuweisung/Statuswechsel — nein: er holt alle 60 s neu (Code: `intervallMs = 60000`), nach Neuladen stimmt er. Kein Fehler, aber nicht sofort.
 - [ ] F2 behoben — nicht reproduzierbar, nichts geändert
-- [ ] F3 behoben — Korrektur in `dashboard.css` (Commit liegt lokal), vorab gegen das Live-DOM mit eingefügtem CSS gemessen (Überlauf 28 → 0 Elemente), echte Prüfung erst nach Deploy
-- [ ] Mobil 390 px für Räume, Streifen, Serie, Sondertag-Markierungen im Kalender
+- [x] F3 behoben und live geprüft (390 px): Endzeit-Feld endet bei x=346, Raster bei 359, kein Überlauf
+- [x] Mobil 390 px: Räume-Formular, Sondertage-Formular, Streifen (35 px hoch, passt), Terminformular mit Raum und Serie: kein Überlauf, `scrollWidth` 390
+- [x] Mobil 390 px: Sondertag-Etikett in Tag und Woche passt
+- [ ] F4 behoben — Sondertag-Etikett in der Monatszelle (47 px breit) wurde abgeschnitten; Korrektur in `dashboard.css` (Commit `8d942bb9`, lokal), vorab mit eingefügtem CSS gemessen (Etikett 81 → 33 px, mit Auslassung), echte Prüfung erst nach Deploy
+- Beobachtung Mobil: Speichern-Knopf im Terminformular 32 px, Therapeut/Raum-Umschalter 28 px hoch (unter 44 px), Raum-Auswahl 43 px
 - [ ] Feiertag, Sondertermin mit Uhrzeit, mehrtägiger Sondertag, Sondertag löschen
 - [ ] „Code kopieren" (Zwischenablage), Absenden einer Anfrage über das Widget
 - [ ] Physio-Mandant (alles bisher im Podologie-Mandanten)
