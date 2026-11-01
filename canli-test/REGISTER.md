@@ -2004,3 +2004,4 @@ Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 versc
 - [x] S7 nach Fix F5 live (`?v=20261101b`): Termin 10.11. 15:00 steht in Spalte „QA Raum A2“, keine Spalte „Ohne Raum“ mehr.
 - [x] „Frei zu dieser Zeit“ im Terminformular (Raum A2, Plätze 1): 10.11. 15:00 → „Zu dieser Zeit ist kein Raum frei.“; 16:30 → „Frei zu dieser Zeit: QA Raum A2“. Nur angezeigt, nichts gespeichert.
 - [ ] **F6 offen:** Backend-Image seit S6 nicht gebaut (CI rot, `planErlaubt is not defined` in `auth-handlers.test.js`). Live: `ai-suggest-series` mit erfundener employeeId → 200 statt 400, fremde serviceId → 400 (alter Code). S-58/S-59/S6-Backend damit NICHT live geprüft/wirksam.
+- [x] F4 live (`dashboard.css?v=20261101f4`, 390 px, Monat Nov 2026): vier Sondertag-Etiketten 33 px in 47-px-Zelle, `text-overflow: ellipsis`, kein Überlauf.
