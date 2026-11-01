@@ -2005,3 +2005,13 @@ Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 versc
 - [x] „Frei zu dieser Zeit“ im Terminformular (Raum A2, Plätze 1): 10.11. 15:00 → „Zu dieser Zeit ist kein Raum frei.“; 16:30 → „Frei zu dieser Zeit: QA Raum A2“. Nur angezeigt, nichts gespeichert.
 - [ ] **F6 offen:** Backend-Image seit S6 nicht gebaut (CI rot, `planErlaubt is not defined` in `auth-handlers.test.js`). Live: `ai-suggest-series` mit erfundener employeeId → 200 statt 400, fremde serviceId → 400 (alter Code). S-58/S-59/S6-Backend damit NICHT live geprüft/wirksam.
 - [x] F4 live (`dashboard.css?v=20261101f4`, 390 px, Monat Nov 2026): vier Sondertag-Etiketten 33 px in 47-px-Zelle, `text-overflow: ellipsis`, kein Überlauf.
+
+### Nach F6 und Migration 0096/0097 (Live-Test 2026-11-01, QA-Tenant)
+- [x] F6 behoben (`06bff588`), `publish-calendar-api` grün (6906870d, 2cae983a). S-58 live: `ai-suggest-series` mit erfundener serviceId → 400, mit erfundener employeeId → 400 „Therapeut nicht verfügbar“, eigene IDs → 200. Erfundene customerId → 200 ohne Daten (Abfrage ist auf `owner_id` begrenzt, kein Leck).
+- [ ] S-58 mit ECHTER fremder ID eines zweiten Mandanten: nicht geprüft (kein zweiter Mandant).
+- [x] M5 Inhaber: Team → qa-mitarbeiter → „Anstellung & Urlaub“: Teilzeit, 20 Std., 28 Tage gespeichert, nach Neuladen unverändert, „Tage übrig“ und „Jahresanspruch“ = 28.
+- [x] M5 RLS (REST als Mitarbeiter, Zugang lokal): sieht nur eigene Zeile, auch wenn der Inhaber für sich selbst eine zweite Zeile (25 Tage) hat; Inhaber sieht beide. Schreiben der eigenen Zeile als Mitarbeiter: 0 Zeilen geändert.
+- [x] `employee_standort_plan` leer → Verhalten wie vorher (Kalender, Slots, Raum-Tagesansicht laufen).
+- [ ] M5 Mitarbeiter-OBERFLÄCHE (eigene Werte im Dashboard sichtbar): nicht geprüft, nur API/RLS.
+- [ ] F7 offen (niedrig): doppelte IDs in den Anstellungs-Karten.
+- Beobachtung F2: Direkt nach einem Backend-Deploy (Image-Wechsel, ~22:36) blockierte CORS beim Laden `ai/_config` und `attendance/report` (Preflight ohne Header), eine Minute später 200. Passt zum einmaligen F2-Befund (Container-Neustart durch Watchtower). Kein eigener Fehler, nur beobachten.
