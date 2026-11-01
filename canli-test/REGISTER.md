@@ -1995,3 +1995,9 @@ Zweiter Therapeut, gleicher Raum und Zeit: Wechsel des Mitarbeiters leert die Le
 - [ ] Konsole systematisch: beim Laden des Dashboards einmal „Failed to load resource: 404" gesehen, Ressource nicht ermittelt
 
 Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 verschoben), zwei Termine am 01.11. (einer Nicht erschienen), Termin 09.11. 10:00 (zweiter Therapeut).
+
+### S7 Raum-Tagesansicht (Live-Test 2026-11-01, QA-Tenant)
+- [x] Umschalter „Therapeut | Raum“ sichtbar, Spalten „QA Raum A2“ und „Ohne Raum“ werden gezeichnet (1.11. und 10.11.).
+- [ ] **F5 offen:** Termin mit `room_id` (DB-geprüft: 10.11. 15:00 = QA Raum A2) steht in „Ohne Raum“. Ursache: `TERMIN_SELECT` (`module/termin-laden.js:70`) enthält kein `room_id`. Siehe `Physio/AUTOPILOT.md` F5.
+- [ ] Nicht geprüft: Hinweiszeile „Frei zu dieser Zeit“ im Terminformular, Überbelegt-Markierung, Klick auf Termin in der Raumspalte (erst nach F5 sinnvoll).
+- Hinweis M7: Kemal hat den Einbettungscode im Termin-Anfragen-Panel entfernt (`17a966c2`); frühere Checks „Code sichtbar/Code kopieren“ gelten für die Panel-Ansicht nicht mehr.
