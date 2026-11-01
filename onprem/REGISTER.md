@@ -6804,7 +6804,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 
 ---
 
-### O-230 — KI deployment adı noktayı reddediyordu: SaaS'ta KI 08.10'dan beri sessizce kapalı; düzeltme beş kopyadan üçüne girdi 🟡 **kısmen gelöst (`00ceaac9`: beş kopya tek kural + merkez testi) — kalan: şart (3) açılış uyarısı**
+### O-230 — KI deployment adı noktayı reddediyordu: SaaS'ta KI 08.10'dan beri sessizce kapalı; düzeltme beş kopyadan üçüne girdi ✅ **gelöst (`00ceaac9` + `c76c5bf5`)**
 
 | Alan | İçerik |
 |---|---|
@@ -6813,7 +6813,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | C-yakını (config doğrulaması) + A |
 | **Kutuda ne olur** | Bugün kutu `AI_MODE=aus`, etki yok. Jeton modu (O-169) açılınca merkez noktalı deployment adı için jeton vermez, kutuda KI hata vermeden kapalı kalır. SaaS'ta 23 gün sessiz kapalılık ölçüldü — arıza sınıfı „zutat geçersiz ama uygulama susuyor" |
 | **Çözüm** | (1) Beş kopyanın beşi aynı regex; tercihen tek paylaşılan sabit (`merkez/` zaten `api-backend/merkez-istemci/`'den import ediyor). (2) Test: `gpt-4.1-mini` geçer, `.x`, `a..b`, `a/b`, 65 karakter red — iki tarafta (kutu + merkez). (3) Geçersiz deployment açılışta bir uyarı satırı basar (O-50 deseni: zutat bozuksa susmaz). `encodeURIComponent` yolu korunur. Korkuluk: G1/G2/G3/G8 temiz |
-| **Durum** | `kısmen gelöst` — `00ceaac9` (31.10.2026): şart (1) ve (2) tamam. Kalan: şart (3), geçersiz deployment adında açılış uyarı satırı |
+| **Durum** | `gelöst` — `00ceaac9` (31.10.2026): şart (1)(2). `c76c5bf5` (01.11.2026): şart (3), `api-backend/lib/start-pruefungen.js` `AI_MODE≠aus` ve config geçersizse `[start] KI-Konfiguration ungueltig (<code>)` yazar, env değeri yazmaz. Yalnız uyarı, açılışı durdurmaz (Watchtower yeniden başlatma döngüsü). Sınır: kutuda log'u kimse okumaz → aynı bulgu derin `/status`'ta görünmeli (O-40 deseni), O-232 (c) ile birlikte |
 
 ### O-231 — K9 Fax-to-Mail: fax sağlayıcısının adres deseni `profiles`'ta, PDF praksisin SMTP'sinden (ön kontrol 31.10.2026) 🟡 **kısmen gelöst (`fa10c72d`) — kalan: kutu testi**
 
@@ -6835,7 +6835,7 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Tip** | E/F değil; G + H + O-84 drift (env) |
 | **Kutuda ne olur** | (3) kutuyu değiştirmez: kutu compose'u `SUPABASE_PUBLIC_URL`'i her zaman geçirir. Ama bu tek değişkene bağlı: boş kalan bir kutu bütün `istKutu()` kapılarıyla birlikte SaaS gibi davranır, KI onayı da `saas` kimliğine düşer. (4) bugünkü varsayılanla çelişir: kutu `AI_MODE=aus` varsayılanı K4/K-20'nin uygulamasıdır, ve jeton modu (O-169) açılmadan kutuda KI zaten çalışamaz |
 | **Çözüm** | (a) „Kurulumda KI açık" kilitli kararın (K4, K-20 kutu varsayılanı `aus`) değiştirilmesidir → **Kemal playbook'ta açıkça yeniden yazar**; ajan değiştirmez. O-169 bitmeden kutuda açık varsayılan teknik olarak mümkün değil. (b) „KI-Anlage vX imzalandı" kaydı kutuya **lisans/kurulum yoluyla** varmalı (merkez sözleşmeyi bilir, kutu bilmez): lisans yükünde ya da `install.sh` adımında sürüm + tarih, hasta verisi yok (G1 temiz). Elle girilen bir bayrak olmamalı. (c) `istKutu()` için açılışta koruma: `/var/lib/praxura` kutu volume'leri var ama `SUPABASE_PUBLIC_URL` boşsa açılış uyarısı ya da red — Faz 2.1 deseni. (d) SaaS env değişikliği git'te iz bırakmaz: `CLAUDE.md` VPS env listesine üç ad eklenmeli; `tools/check-vps-drift.sh` env'i görmez (bilinen sınır) |
-| **Durum** | `offen` — (a) Kemal kararı (playbook K4) · (b) O-169'a bağlanır · (c) Faz 2.1 · (d) belge, builder. SaaS tarafı (1)-(3) uygulandı, kabul. Korkuluk: G1/G2/G3/G8 temiz |
+| **Durum** | `offen` — (a) Kemal kararı (playbook K4) · (b) O-169'a bağlanır · (c) 🟡 kısmen `c76c5bf5` (01.11.2026): kutu kimliği var, `SUPABASE_PUBLIC_URL` yoksa açılışta uyarı satırı. Açılışı reddetmek ayrı karar, Faz 2.1'e bırakıldı. Tavsiye: red değil, uyarıyı derin `/status`'a ve kurulum panelinin sağlık ekranına taşımak · (d) belge, builder. SaaS tarafı (1)-(3) uygulandı, kabul. Korkuluk: G1/G2/G3/G8 temiz |
 
 ### O-233 — Physio-Pilot P1: K9 Rechnung-Mail (pdfkit + SMTP/Gmail) · K6 `pdf-lib` · K7 E-Akte yükleme (ön kontrol 31.10.2026) 🟡 **kısmen gelöst (`fa10c72d`, `8cc4fea5`) — kalan: kutu testi + sayaç ölçümü**
 
