@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-01",
  "dateien": 517,
- "funktionen": 4178,
+ "funktionen": 4179,
  "module": [
   "abrechnung",
   "anamnese",
@@ -107926,8 +107926,8 @@
    "lang": "js",
    "file": "module/anstellung.js",
    "start": 283,
-   "end": 342,
-   "lines": 60,
+   "end": 345,
+   "lines": 63,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -107935,10 +107935,76 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "escapeHtml"
+    "escapeHtml",
+    "id"
    ],
    "calledBy": [
     "mountAnstellung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "id",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/anstellung.js",
+   "start": 286,
+   "end": 286,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "(datei) ops/tools/regroup.mjs",
+    "anstellungHtml",
+    "initSentry"
    ],
    "modules": [
     "abrechnung",
@@ -107990,8 +108056,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/anstellung.js",
-   "start": 357,
-   "end": 425,
+   "start": 360,
+   "end": 428,
    "lines": 69,
    "spiegelHinweis": null,
    "tables": [],
@@ -231513,6 +231579,7 @@
    "storage": [],
    "calls": [
     "deepScrub",
+    "id",
     "init",
     "scrubString"
    ],

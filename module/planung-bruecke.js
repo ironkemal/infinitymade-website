@@ -15,7 +15,7 @@ import { mountRaumVerwaltung } from './raum-verwaltung.js';
 import { mountRaumStreifen } from './raum-streifen.js';
 import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101b';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
-import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js';
+import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261101f7';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261101a';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';

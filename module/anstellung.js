@@ -280,7 +280,10 @@ export async function speichereAnstellung({
  * @param {{ istInhaber?: boolean }} optionen
  * @returns {string} HTML
  */
-export function anstellungHtml(anstellung = {}, { istInhaber = false } = {}) {
+export function anstellungHtml(anstellung = {}, { istInhaber = false, idSuffix = '' } = {}) {
+  // IDs je Mitarbeiter eindeutig: mehrere offene Karten duerfen sich nicht ueberdecken (Live-Test F7).
+  const sfx = String(idSuffix || '').replace(/[^A-Za-z0-9_-]/g, '');
+  const id = name => `anstellung${name}${sfx ? `-${sfx}` : ''}`;
   const beschaeftigung = anstellung?.beschaeftigung === 'teilzeit' ? 'teilzeit' : 'vollzeit';
   const beschaeftigungLabel = beschaeftigung === 'teilzeit' ? 'Teilzeit' : 'Vollzeit';
   const stundenText = anstellung?.wochenstunden != null
@@ -320,21 +323,21 @@ export function anstellungHtml(anstellung = {}, { istInhaber = false } = {}) {
   <h4 style="margin:0 0 12px;font-size:14px;font-weight:600;color:var(--text-main);">Anstellung &amp; Urlaub</h4>
   <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
     <div style="flex:1;min-width:140px;">
-      <label class="form-label" for="anstellungBeschaeftigung" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Beschäftigung</label>
-      <select id="anstellungBeschaeftigung" class="form-input" style="width:100%;">
+      <label class="form-label" for="${id('Beschaeftigung')}" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Beschäftigung</label>
+      <select id="${id('Beschaeftigung')}" class="form-input anst-beschaeftigung" style="width:100%;">
         <option value="vollzeit"${beschaeftigung === 'vollzeit' ? ' selected' : ''}>Vollzeit</option>
         <option value="teilzeit"${beschaeftigung === 'teilzeit' ? ' selected' : ''}>Teilzeit</option>
       </select>
     </div>
     <div style="width:120px;">
-      <label class="form-label" for="anstellungWochenstunden" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Wochenstunden</label>
-      <input type="text" id="anstellungWochenstunden" class="form-input" placeholder="z. B. 38,5" value="${escapeHtml(wochenstundenWert)}" style="width:100%;">
+      <label class="form-label" for="${id('Wochenstunden')}" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Wochenstunden</label>
+      <input type="text" id="${id('Wochenstunden')}" class="form-input anst-wochenstunden" placeholder="z. B. 38,5" value="${escapeHtml(wochenstundenWert)}" style="width:100%;">
     </div>
     <div style="width:120px;">
-      <label class="form-label" for="anstellungUrlaubJahrestage" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Urlaub (Tage)</label>
-      <input type="number" id="anstellungUrlaubJahrestage" class="form-input" min="0" max="60" value="${escapeHtml(urlaubTage)}" style="width:100%;">
+      <label class="form-label" for="${id('UrlaubJahrestage')}" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Urlaub (Tage)</label>
+      <input type="number" id="${id('UrlaubJahrestage')}" class="form-input anst-urlaub" min="0" max="60" value="${escapeHtml(urlaubTage)}" style="width:100%;">
     </div>
-    <button type="button" id="anstellungSpeichernBtn" class="btn-primary" style="height:36px;white-space:nowrap;">Speichern</button>
+    <button type="button" id="${id('SpeichernBtn')}" class="btn-primary anst-speichern" style="height:36px;white-space:nowrap;">Speichern</button>
   </div>
   <div class="form-hint" style="margin-top:8px;font-size:12px;color:var(--text-muted);">Vertragliche Arbeitszeit und Urlaubsanspruch in Tagen pro Kalenderjahr.</div>
 </div>
@@ -371,21 +374,21 @@ export async function mountAnstellung(container, deps = {}) {
       container.innerHTML = '<p class="form-hint">Anstellung ist gerade nicht verfügbar.</p>';
       return;
     }
-    container.innerHTML = anstellungHtml(anstellung, { istInhaber });
+    container.innerHTML = anstellungHtml(anstellung, { istInhaber, idSuffix: empId });
 
     if (!istInhaber) return;
 
     const btn = typeof container.querySelector === 'function'
-      ? container.querySelector('#anstellungSpeichernBtn')
+      ? container.querySelector('.anst-speichern')
       : null;
     const beschaeftigungEl = typeof container.querySelector === 'function'
-      ? container.querySelector('#anstellungBeschaeftigung')
+      ? container.querySelector('.anst-beschaeftigung')
       : null;
     const stundenEl = typeof container.querySelector === 'function'
-      ? container.querySelector('#anstellungWochenstunden')
+      ? container.querySelector('.anst-wochenstunden')
       : null;
     const urlaubEl = typeof container.querySelector === 'function'
-      ? container.querySelector('#anstellungUrlaubJahrestage')
+      ? container.querySelector('.anst-urlaub')
       : null;
 
     if (btn && beschaeftigungEl && stundenEl && urlaubEl) {

@@ -300,3 +300,12 @@ test('Lesefehler ist nicht „keine Zeile": das Formular darf echte Werte nicht 
   assert.match(behaelter.innerHTML, /nicht verfügbar/);
   assert.doesNotMatch(behaelter.innerHTML, /Speichern/);
 });
+
+test('F7: IDs je Mitarbeiter eindeutig, Labels zeigen auf die eigene Karte', () => {
+  const a = anstellungHtml({}, { istInhaber: true, idSuffix: 'emp-1' });
+  const b = anstellungHtml({}, { istInhaber: true, idSuffix: 'emp-2' });
+  const ids = html => [...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(ids(a).filter(i => ids(b).includes(i)).length, 0);
+  for (const i of ids(a).filter(i => !i.includes('Speichern'))) assert.ok(a.includes(`for="${i}"`), i);
+  assert.ok(!anstellungHtml({}, { istInhaber: true, idSuffix: '"><x' }).includes('"><x'));
+});
