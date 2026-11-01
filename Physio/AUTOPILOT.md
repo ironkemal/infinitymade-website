@@ -85,6 +85,9 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 
 <!-- Format: JJJJ-MM-TT HH:MM · S# · Ergebnis · Commit · nächster Schritt / Blocker -->
 
+- 2026-11-01 · F6 · behoben: `api-backend/booking/auth-handlers.test.js` gibt `ladeStandortPlan`/`planErlaubt` (aus `lib/standort-plan-laden.js`) in den vm-Kontext · api-backend `npm ci && npm test` lokal 1743 pass / 0 fail · **bitte Live-Test** nach grünem `publish-calendar-api` + Watchtower: `ai-suggest-series` mit erfundener `employeeId` → 400, erfundene `serviceId` → 400 (S-58); S6-Backend: Slots/Serie unverändert, solange kein Plan gepflegt ist.
+- 2026-11-01 · F5 · live bestätigt (Live-Test-Chat): 10.11. 15:00 in „QA Raum A2“, „Frei zu dieser Zeit“ korrekt.
+
 - 2026-11-01 · F5 · behoben: Raum-Modus nutzt `RAUM_TAGES_SELECT` (= TERMIN_SELECT + `room_id`), Test prüft Select-Konstante und Aufrufstelle · Cache-Version `?v=20261101b` (dashboard.js → planung-bruecke → raum-tagesansicht) · **bitte Live-Test:** nach Deploy Seite hart neu laden, Tagesansicht 10.11. → Raum → Termin 15:00 steht in Spalte „QA Raum A2“, „Ohne Raum“ nur für Termine ohne Raum.
 
 - 2026-11-01 · Blocker · Supabase-Token in `~/.zshenv` ungültig (API direkt 401, nicht nur MCP) → 0096/0097 NICHT live, nichts davon committet (Entwürfe nur im Arbeitsbaum). Melih muss neuen Token setzen + T3 neu starten. Keine Live-Migration ohne Melihs GO und nur per MCP.

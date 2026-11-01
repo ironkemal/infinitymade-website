@@ -7,6 +7,8 @@ import * as authGuards from './auth-guards.js';
 import * as backendSeries from './series.js';
 import * as frontendSeries from '../../module/serien-termine.js';
 import { raumFelderFuerTermin } from '../lib/raum-zuordnung.js';
+// server.js ruft seit S6 (8e239319) ladeStandortPlan/planErlaubt auf; ohne sie im vm-Kontext ReferenceError (F6).
+import { ladeStandortPlan, planErlaubt } from '../lib/standort-plan-laden.js';
 
 const serverSrc = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const extract = (s, e) => {
@@ -107,6 +109,8 @@ const mockSupabase = {
 
 const ctx = vm.createContext({
   raumFelderFuerTermin,
+  ladeStandortPlan,
+  planErlaubt,
   ...guards,
   ...authGuards,
   ...backendSeries,
