@@ -65,6 +65,7 @@ import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
+import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
 
@@ -873,6 +874,13 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     }
   }
 
+  // 1.45 Standort-Plan (S6/M4d): nur wenn ein Plan fuer diesen Mitarbeiter existiert und ihn an diesem Tag
+  // nicht am Standort vorsieht. Tabelle fehlt/Fehler/leer -> ladeStandortPlan liefert [] = altes Verhalten.
+  if (activeBiz?.id) {
+    const planZeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: [userId] });
+    if (!planErlaubt(planZeilen, userId, date, activeBiz.id)) return { slots: [], reason: 'standort_plan' };
+  }
+
   // 1.5 Check custom_days (shop-wide closed/holiday/special)
   const { data: customDay } = await supabase
     .from('custom_days')
@@ -1513,6 +1521,10 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   const created = [];
   const conflicts = [];
 
+  // Standort-Plan (S6/M4d): Standort = Raum-Standort. Ohne Raum/Plan/Tabelle wie bisher.
+  const planStandortId = raum.felder.business_id || null;
+  const planZeilen = planStandortId ? await ladeStandortPlan(supabase, { ownerId, employeeIds: [userId] }) : [];
+
   const targetDates = serienDaten({
     startDatum: startDate,
     anzahl: count,
@@ -1526,6 +1538,7 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   }
 
   for (const dateStr of targetDates.slice(0, count)) {
+    if (!planErlaubt(planZeilen, userId, dateStr, planStandortId)) { conflicts.push({ date: dateStr, reason: 'Mitarbeiter an diesem Tag nicht an diesem Standort eingeplant' }); continue; }
     try {
       const start_time = berlinLocalToUTC(dateStr, time);
       const end_time = new Date(start_time.getTime() + dur * 60000);
@@ -1793,6 +1806,15 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       });
     }
 
+    // 3b) Standort-Plan (S6/M4d): optional `businessId` im Body, nur wenn er zum Mandanten gehoert.
+    // Kein Standort, kein Plan, fehlende Tabelle -> planZeilen leer = altes Verhalten.
+    let planStandortId = null;
+    if (req.body.businessId && typeof req.body.businessId === 'string') {
+      const { data: planBiz } = await supabase.from('businesses').select('id').eq('id', req.body.businessId).eq('owner_id', ownerId).maybeSingle();
+      planStandortId = planBiz?.id || null;
+    }
+    const planZeilen = planStandortId ? await ladeStandortPlan(supabase, { ownerId, employeeIds: allowedIds }) : [];
+
     // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings over the search horizon.
     // Der Horizont muss aus der Anfrage folgen: bei 18 Terminen à 1x/Woche brauchen wir
     // 18 Wochen. Ein fester 14-Wochen-Horizont hat längere Serien stumm abgeschnitten
@@ -1930,6 +1952,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       for (const emp of empList) {
         const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
         if (!w) continue;
+        if (!planErlaubt(planZeilen, emp.id, dateStr, planStandortId)) continue;
 
         let startMins = timeToMinsLocal(w.start_time);
         let endMins = timeToMinsLocal(w.end_time);
@@ -2004,6 +2027,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       for (const emp of empList) {
         const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
         if (!w) continue;
+        if (!planErlaubt(planZeilen, emp.id, dateStr, planStandortId)) continue;
         let startMins = timeToMinsLocal(w.start_time);
         let endMins = timeToMinsLocal(w.end_time);
         if (cd && cd.type === 'special' && cd.start_time && cd.end_time) {

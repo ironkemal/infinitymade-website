@@ -149,7 +149,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261031a';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261031a'; import { planSpalten } from './module/standort-plan-laden.js?v=20261101a';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -2199,7 +2199,7 @@ async function renderDayView(dateStr) {
   const timeFrag = document.createDocumentFragment();
   const colFrag = document.createDocumentFragment();
 
-  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
+  let emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
   if (!emps.length) { timeCol.replaceChildren(); colsWrap.replaceChildren(); return; }
 
   // Heute: vergangene Stunden ausblenden + Live-"Jetzt"-Linie
@@ -2217,7 +2217,7 @@ async function renderDayView(dateStr) {
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
 
-  const empIds = emps.map(e => e.id);
+  emps = await planSpalten(supabase, { team: emps, bookings, datum: dateStr, businessId: currentBusiness?.id || null, ownerId }); const empIds = emps.map(e => e.id);
   const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
   const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
   for (let h = DV_VON; h < DV_BIS; h++) {
@@ -5837,7 +5837,7 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     recurrence: recInfo.recurrence,
     intervalDays: recInfo.intervalDays,
     startDate,
-    weekdays,
+    weekdays, businessId: currentBusiness?.id || null,
     preferredTime,
     preferences,
     // Ops 235 / S1.10: Maske kann laenger sein als der Katalogwert — sonst

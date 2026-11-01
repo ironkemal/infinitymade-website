@@ -1925,3 +1925,35 @@ Möchten Sie den Termin trotzdem eintragen?" (Abbrechen / Trotzdem eintragen) �
 - **Nicht geprüft:** Serie mit Raum, Verschieben/Statuswechsel erhält Raum, Streifen im Zustand „belegt" (Kürzel, Restzeit),
   „n Termine ohne Raum", Raum-Reaktivierung, Mobil 390 px, Konsole systematisch, Physio-Mandant. Hinweis: Plätze von „QA Raum A2"
   stehen jetzt auf 1; Testdaten (Räume A2/B, Termin 09.11. 10:00) bleiben im QA-Tenant.
+
+### Sondertage (M6a) — nav etiketi: `hours` (Verfügbarkeit) + `calendar`
+
+**Beklenen:** Inhaber legt unter Verfügbarkeit → „Sondertage" einen Tag (Geschlossen/Feiertag/Sondertermin) an. Liegen aktive Termine im
+Zeitraum, erscheint zuerst ein Hinweis mit Terminliste (Abbrechen / Trotzdem schließen), danach eine Anrufliste (Uhrzeit, Patient, Telefon;
+ohne Grund, ohne interne Notiz). Der Tag ist in Tag-, Wochen- und Monatsansicht markiert („Praxis geschlossen"), ohne Notiztext.
+Neuer Termin an einem geschlossenen Tag: Hinweis „Die Praxis ist an diesem Tag geschlossen. Möchten Sie den Termin trotzdem eintragen?".
+**Bağımlı ekranlar:** Terminkalender (Tag/Woche/Monat), Neuer-Termin-Formular, Online-Buchung.
+**Son test:** 2026-11-01 — Desktop 1280 px, QA-Tenant „Podologie Nord", Inhaber-Sitzung.
+- GEÇTİ: Sondertag 09.11. „Geschlossen" mit Notiz angelegt; Konflikt-Hinweis mit Terminliste; „Trotzdem schließen" speichert und öffnet die
+  Anrufliste („Keine Telefonnummer hinterlegt", kein Grund, keine Notiz); Eintrag steht nach Neuladen in der Liste; Etikett „Praxis geschlossen"
+  in Woche, Monat und Tag (Notiz nicht im Etikett); Neuer Termin am 09.11. zeigt den Hinweis „Praxis geschlossen" (Abbrechen getestet, nichts gespeichert).
+- Beobachtung (klein): Liste der Sondertage zeigt das Datum als ISO („2026-11-09") statt „09.11.2026".
+- **Nicht geprüft:** Feiertag, Sondertermin mit Uhrzeit, Zeitraum über mehrere Tage, Löschen eines Sondertags, Mobil 390 px für die Markierungen im Kalender, Konsole systematisch.
+  Der Sondertag 09.11. bleibt im QA-Tenant stehen.
+
+### Einbettungscode Termin-Anfrage-Widget (M7) — nav etiketi: `anfragen` (Termin-Anfragen)
+
+**Beklenen:** Block „Auf Ihrer Webseite einbinden" über dem Buchungslink mit kopierbarem `<iframe>` auf `praxura.de/widget/booking-widget.html?owner=…`
+(SaaS-Host praxura.de, nicht app-Subdomain), Datenschutz-Hinweis, Button „Code kopieren". Auf einer fremden HTTPS-Seite lädt das Formular
+(Schritt 1 von 4) mit Praxisnamen. `booking.html` darf nicht gerahmt werden.
+**Bağımlı ekranlar:** `widget/booking-widget.html`, Backend `GET /booking-request/praxis`, `vercel.json` (frame-ancestors).
+**Son test:** 2026-11-01 — Desktop 1280 px, QA-Tenant, Test-Einbettung per iframe in einer fremden HTTPS-Seite (example.com).
+- GEÇTİ: Block und Code sichtbar, Code enthält praxura.de-Host und Sandbox/Referrer-Attribute; Widget-Header erlaubt Rahmen von https
+  (`frame-ancestors https:`), `booking.html` sendet `X-Frame-Options: SAMEORIGIN`; zweiter Ladeversuch zeigt „Terminanfrage an Podologie Nord", Schritt 1 von 4.
+- KALDI: F2 — beim ersten Laden CORS-Fehler auf `/booking-request/praxis` (Origin praxura.de), Widget zeigte „Online-Terminanfrage ist gerade nicht erreichbar".
+  Zweiter Versuch 15 s später ohne Fehler; per `curl` ist der Header vorhanden. Nicht reproduzierbar, Ursache offen.
+- **Nicht geprüft:** Klick auf „Code kopieren" (Zwischenablage), Absenden einer Anfrage (würde Mail/Kontakt auslösen), Physio-Mandant, Mobil 390 px des Formulars, Box-Variante.
+
+### Mobil 390 px (Stichprobe M1/M6a)
+- Terminkalender und Termin-Anfragen: kein horizontaler Überlauf. Sondertage- und Räume-Formular passen in 390 px. Buttons dort 30–36 px hoch (unter 44 px).
+- KALDI: F3 — Verfügbarkeit, Arbeitszeiten-Zeile: Endzeit-Feld reicht bis x=433, Raster nur 343 px breit und `overflow:hidden`, Endzeit abgeschnitten (nicht Teil von M1–M7).
