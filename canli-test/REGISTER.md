@@ -2015,3 +2015,9 @@ Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 versc
 - [ ] M5 Mitarbeiter-OBERFLÄCHE (eigene Werte im Dashboard sichtbar): nicht geprüft, nur API/RLS.
 - [ ] F7 offen (niedrig): doppelte IDs in den Anstellungs-Karten.
 - Beobachtung F2: Direkt nach einem Backend-Deploy (Image-Wechsel, ~22:36) blockierte CORS beim Laden `ai/_config` und `attendance/report` (Preflight ohne Header), eine Minute später 200. Passt zum einmaligen F2-Befund (Container-Neustart durch Watchtower). Kein eigener Fehler, nur beobachten.
+
+### Live-Test 2026-11-02 (nach S5, F7, Team-Aufräumen)
+- [x] F7 live: Anstellungs-Karten mit eindeutigen IDs (`anstellung…-<empId>`), 8 Elemente ohne Duplikat bei zwei offenen Karten; 26 Tage in der 2. Karte landen beim Inhaber (26), Mitarbeiter bleibt 28 (REST).
+- [x] Hinweis „Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem …“ in der Anstellungs-Karte sichtbar.
+- [ ] **S5 Standortplan-UI NICHT geprüft:** Das QA-Tenant hat nur 1 Standort, und „Geschäfte/Standorte“ in den Einstellungen gibt es nur im Enterprise-Tarif (`isEnterprise()`, `renderBusinessesSection`). Reiter „Standorte“ ist erwartungsgemäß nicht sichtbar. Voraussetzung für Schritte 2–9: QA-Tenant auf Enterprise stellen (Entscheidung Melih, Tarifänderung) und 2. Standort anlegen.
+- [ ] Team-Aufräumen (Entfernen eines Mitarbeiters löscht Standortplan, Anstellung bleibt): NICHT geprüft, braucht Test-Mitarbeiter und Entfernen (Löschen) = GO von Melih.
