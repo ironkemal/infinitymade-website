@@ -777,9 +777,9 @@ async function switchPanel(id) {
       }
     }
   }
-  // Ein angefangenes Verschieben gehoert zum Kalender. Verlaesst man ihn, wird es
-  // beendet — sonst bliebe der Modus unsichtbar aktiv.
+  // Beim Verlassen des Kalenders Verschiebemodus und Termin-Seitenbereich beenden.
   if (id !== 'calendar' && moveBooking) cancelMoveBooking();
+  if (activePanel === 'calendar' && id !== 'calendar') closeBkActionPanel();
   if (id !== 'notizen') notizenController.invalidate();
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));

@@ -55271,6 +55271,7 @@
     "cancelMoveBooking",
     "checkB2bSetup",
     "checkB2cSetup",
+    "closeBkActionPanel",
     "closeSidebar",
     "formatDateDE",
     "fussbefundCtx",
@@ -55664,6 +55665,7 @@
     "handleTerminStarten",
     "oeffnePodoBehandlungen",
     "openBookingActionModal",
+    "switchPanel",
     "uebernimmVerordnungAlsVorlage"
    ],
    "modules": [
