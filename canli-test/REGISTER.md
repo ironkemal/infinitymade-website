@@ -2044,3 +2044,13 @@ Kapılar: Backend 200, dashboard.js?v=20261101st (yerel = canlı, ilk bakışta 
 - [ ] NICHT geprüft: Gruppentermin (QA hat keinen Gruppen-Service), Mail-Entwurf (Google-Konto nicht verbunden), Einrichtungscode PRX-/INF- (in Einstellungen keine Anzeige; nur `ensureCompanyCode`), Zuzahlung-Kasse-Betrag (kein Vergleichswert), Physio-Akzente (Mehrfach-Heilmittel, Einheiten korrigieren, Physio-VO-Import) — QA = Podologie.
 - Findings (siehe Übergabe): Woche-Navigation schnell (3 Klicks) = Spaltenreste anderer Wochen; Urlaub-Body läuft aus der schmalen Team-Karte; Termin-Panel bleibt über Panelwechsel offen; Geburtsdatum in Patientenkopf „2.2.1942“; Touch-Ziele <44 px mobil.
 - Nebenwirkung: Test-Termin TEST-Hilde 24.11.2026 10:00, Urlaub 28.–29.12., Behandlungsvertrag-Unterschrift (Schritt 1) für TEST-Hanna ggf. gespeichert.
+
+### Regression 02.11.2026 (commit 6ac36be3, `?v=20261102w10`) — GEÇTİ (P3 notları)
+Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), oturum TEST-Podologie QA.
+- [x] Patientenakte-Kopf Geburtsdatum „02.02.1942“; Einwilligung Schritt 1 Kopf „02.11.2026“ (`datumDe`); Kiosk-Pfad nur über denselben Helper geprüft.
+- [x] CSV-Import-Vorschau (390 px): „1 ok · 1 Hinweis · 1 Fehler“, „doppelt in Datei (Zeile 2) – wird übersprungen“; Seite ohne Überlauf, Tabelle scrollt im eigenen Container (600 px in 308). Nicht importiert.
+- [x] Muster 13 Podologie: kein „+ weiteres Heilmittel“ (Breite 0), „Doppelb.“-Etikett, 1440 + 390 Maske intakt, kein Seitenüberlauf.
+- [x] Patientensuche; Termin-Panel; Termin ↔ VO: 05.10. vs. VO 12.10. → Termin angelegt, „…der Verordnung nicht zugeordnet: … nicht abrechenbar“.
+- Konsole: 0 Fehler (nur §3 #4/#6).
+- P3: Vorschau-Zähler „(1 neu · 1 vorhanden)“ zählt Datei-Dublette als „vorhanden“. P3: Datumsfeld Muster 13 zeigt im Test-Browser „11/02/2026“ (nativ, Browser-Locale).
+- Nebenwirkung: Test-Termin TEST-Hanna 05.10.2026 10:00 (ohne VO) angelegt; Einwilligung nicht gezeichnet.
