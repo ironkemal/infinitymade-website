@@ -1,5 +1,7 @@
 # Autopilot „Planung" (M1–M7) — Warteschlange und Steuerung
 
+> **Live-Nachprüfung 02.11.2026, ca. 21:45 CET, QA:** Kalender-Befund F8 (in Übergaben auch F8-Woche) und F10 für Team/Dashboard live bestanden. Woche dreimal schnell vor und zurück: genau sieben passende Tagesköpfe, alle sichtbaren Buchungsstarts passen zum Spaltentag (23.–29.11. sowie 26.10.–01.11.). Geöffnetes Termin-Panel schließt beim Wechsel auf Team und Dashboard. S9 ohne Versandweg live bestanden: nach Schließtag-Speicherung Mail-Hinweis oben, Anrufliste darunter, kein Senden-Knopf. Kein neuer Fehler, kein echter Versand. Produktfrage (hier F11, in jüngster Übergabe F8 genannt) bleibt Entscheidung Melih; IDs nicht umnummeriert. Detailnachweis: `canli-test/REGISTER.md`, Abschnitt Live-Nachprüfung f6bc1277. Diese Nachprüfung ersetzt ältere „live offen“-Angaben nur für genannte Prüfschritte.
+
 > Angelegt 01.11.2026 (Melih + Claude Code). Wird von einer T3-geplanten Aufgabe abgearbeitet:
 > jeder Lauf = **frische Sitzung** (leerer Kontext), nimmt **eine** Scheibe, endet mit Commit/Push und Übergabe hier.
 > Repo public: keine Namen, Städte, Preise, Zugangsdaten. Grundlage: `Physio/PILOT-PLAN.md`, `Physio/PLANUNG-UMSETZUNG.md`

@@ -2068,6 +2068,15 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - Route-Datei-Tests prüfen `ladeLage` und `sendeLauf` direkt mit Stubs. Kein HTTP-End-to-End-Nachweis für Auth/Rate-Limits, kein echter Versand, keine Live-UI-Abnahme.
 - Git nach Fetch: `main` = `origin/main` bei `38c73d9b`, keine Konflikte/kein Rebase. Fremde unversionierte Dateien unverändert belassen.
 
+### Live-Nachprüfung f6bc1277 — 02.11.2026, ca. 21:45 CET, QA
+
+- Aktive bestehende QA-Sitzung mit synthetischem Testpatienten und QA-Mitarbeiter. Geladen: `dashboard.js?v=20261102f8`, `planung-bruecke.js?v=20261102b`, `kalender-woche.js?v=20261102f8`. CI-/DB-Status aus Übergabe, nicht erneut unabhängig geprüft.
+- Kalender F8-Woche: drei schnelle Vorwärtsklicks → 23.–29.11., genau sieben Spalten, sichtbarer Testtermin am 24.11. korrekt. Rückwärtsprüfung in Wochenansicht → 26.10.–01.11., sieben passende Spalten; fünf sichtbare Buchungsstarts am jeweiligen Spaltentag. Kein alter Wochenrest beobachtet.
+- F10: Testtermin geöffnet (Seitenpanel mit „Ausgewählter Termin“), Wechsel Team → Panel weg. Erneut geöffnet, Wechsel Dashboard → Panel weg. Verordnungen-Wechsel nicht separat geprüft.
+- S9: unter Verfügbarkeit Schließtag 24.11.2026 angelegt, Notiz „QA S8 Live-Test 02.11.2026 – kein Mailversand“. Warnung für einen bestehenden Testtermin bestätigt („Trotzdem schließen“). Dialog zeigt zuerst „Per E-Mail informieren“ + Hinweis auf nicht eingerichteten Versandweg, danach Anrufliste mit einem Testtermin. Nur Schließen-Knopf, kein Senden-Knopf. Dialog geschlossen. Kein echter Versand, keine Termine verschoben.
+- Nebenwirkung: Test-Schließtag 24.11. bleibt im QA-Tenant; keine Löschung vorgenommen. Keine neue Fehlernummer nötig. Produktfrage bleibt offen (Repo F11, jüngste Übergabe F8); keine ID-Änderung.
+- Steuerungsstörungen: ein Klick und eine Wartebedingung liefen in Timeouts; später lokaler MCP-Transportfehler. Fallback Computer Use nicht verfügbar („Sky Computer Use native pipe startup failed“). Nach erneuter Zustandsabfrage Preview wieder funktionsfähig; bestätigte Speicherung erst danach einmal ausgeführt. Kein Produktfehler daraus abgeleitet.
+
 ### S8 HTTP-Integration 02.11.2026 — ausschließlich lokal
 
 - Ergänzt in `api-backend/routes/sondertag-mitteilung.test.js`: echter Express-Router und `requireAuth` über Loopback-HTTP; Supabase-Auth, Tabellen und Mailtransport ausschließlich synthetisch. Unerwartete Auth-Ziele werden im Stub abgewiesen.
