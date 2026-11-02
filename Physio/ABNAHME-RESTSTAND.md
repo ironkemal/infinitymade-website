@@ -1,10 +1,10 @@
 # Planung: Abschlussaudit und verbleibende Abnahmen
 
-Stand: 02.11.2026, nach QA-Nachweis `4bd18b23`. Kein pauschaler Abschluss des Gesamtziels.
+Stand: 02.11.2026, nach technischem Nachweis `4bd18b23` und anschließender Korrektur der unbestätigten QA-Zuordnung. Kein pauschaler Abschluss des Gesamtziels.
 
 | Anforderung | Nachweis | Status / nächster notwendiger Schritt |
 |---|---|---|
-| F2: fünf frische Widget-Ladungen in fremder HTTPS-Einbettung | QA `4bd18b23`: 5/5, Widget und Praxisroute HTTP200, Formular sichtbar, kein neuer CORS-Fehler, Cross-Origin-Zugriff des Hosts gesperrt | Ladeakzeptanz bestanden. Keine Dauer-/Cachegarantie; kein Submit oder Nachweis vollständiger Anfrageverarbeitung. |
+| F2: fünf frische Widget-Ladungen in fremder HTTPS-Einbettung | Technische Probe `4bd18b23`: 5/5, Widget und Praxisroute HTTP200, Formular sichtbar, kein neuer CORS-Fehler, Cross-Origin-Zugriff des Hosts gesperrt. Verwendeter DOM-Slug praxura-de nicht als ursprünglicher QA-Mandant bestätigt. | Technische Ladeprobe bestanden; QA-Abnahme offen bis eindeutige Mandantenzuordnung. Historischer QA-Slug test-podologie-qa darf nicht mit praxura-de gleichgesetzt werden. Keine weiteren Tests am unbestätigten Mandanten, kein Submit. Keine Dauer-/Cachegarantie oder vollständige Anfrageverarbeitung. |
 | F8: schnelles Vor-/Zurückblättern der Woche | `012a5f36`, ergänzend `b8f2b715` | Lokal und live bestanden. |
 | F10: Terminpanel beim Wechsel Team/Dashboard/Verordnungen schließen | `012a5f36` + `b8f2b715`, bestehende Regressionen | Alle drei Ziele live bestanden. |
 | F9: Urlaubskarte ohne abgeschnittene Auswahl | `597670f8`: reale synthetische Vorlage, 12 Breiten-/Theme-Kombinationen ohne Überlauf | Lokal bestanden. Veröffentlichung benötigt ausdrückliches Push-/Deploy-GO; danach Live-Nachprüfung. |
