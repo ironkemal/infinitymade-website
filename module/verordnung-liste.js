@@ -108,7 +108,7 @@ export async function verordnungenListeLaden(ctx) {
       // hätte man seine Eingabe ohne eigenes Zutun verloren.
       if (istVeraendert()) return;
       if (_auswahl && document.getElementById('vordDetailContent')?.isConnected) {
-        oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id, rolle: ctx.rolle });
+        oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id, rolle: ctx.rolle, apiBase: ctx.apiBase });
       }
     });
   }
@@ -137,7 +137,7 @@ export async function verordnungenListeLaden(ctx) {
 
   tbody.querySelectorAll('.vord-row').forEach(row => {
     row.addEventListener('click', () => {
-      oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId, rolle: ctx.rolle });
+      oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId, rolle: ctx.rolle, apiBase: ctx.apiBase });
     });
   });
   // Ops #310: Statuswechsel direkt aus der Zeile, ohne die Verordnung zu
@@ -216,7 +216,7 @@ function pruefTitel(pruefung) {
 }
 
 /** Eine Verordnung in der unteren Hälfte aufschlagen. */
-function oeffne({ supabase, escapeHtml, quelle, id, rolle }) {
+function oeffne({ supabase, escapeHtml, quelle, id, rolle, apiBase }) {
   _auswahl = { quelle, id };
   markiere(_auswahl);
   return zeigeVerordnungDetail({
@@ -227,6 +227,7 @@ function oeffne({ supabase, escapeHtml, quelle, id, rolle }) {
     inhalt: document.getElementById('vordDetailContent'),
     escapeHtml,
     rolle,
+    apiBase,
     // Nur hier: die untere Hälfte trägt die Muster-13-Maske selbst, gefüllt
     // und änderbar (Kemal, 06.09.2026). In der Patientenakte bleibt es bei
     // der Leseansicht — es gibt nur EIN Exemplar der Maske.

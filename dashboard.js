@@ -70,7 +70,7 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261101u';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261102c';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261102b';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
@@ -13571,7 +13571,7 @@ async function ladeRzPatientenCache() {
 // Belegnummer neben dem Namen und der Klick auf die Zeile dazu.
 async function loadVerordnungen() {
   return verordnungenListeLaden({
-    supabase, ownerId: getOwnerId(), escapeHtml, rolle: currentProfile?.role,
+    supabase, ownerId: getOwnerId(), escapeHtml, rolle: currentProfile?.role, apiBase: API,
     onNeu: () => openRezeptModal(null, null)
   });
 }
@@ -17116,7 +17116,7 @@ async function loadPatRxTable() {
 // Verordnungsliste ebenfalls benutzt — eine Feldliste, nicht zwei.
 async function openPatRxDetail(rxId, leadId) {
   return zeigeVerordnungDetail({
-    supabase, rxId, leadId, escapeHtml, rolle: currentProfile?.role,
+    supabase, rxId, leadId, escapeHtml, rolle: currentProfile?.role, apiBase: API,
     panel:  document.getElementById('patRxDetailPanel'),
     titel:  document.getElementById('patRxDetailName'),
     inhalt: document.getElementById('patRxDetailContent')
