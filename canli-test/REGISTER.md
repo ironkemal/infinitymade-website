@@ -2061,6 +2061,22 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - [x] 'Daten löschen' live (02.11., GO Melih direkt im Chat, nur QA-Testdaten): Bestätigungsdialog zeigt Warnung (Frist läuft, nicht rückgängig); danach Anstellung 0 Zeilen, Standortplan 0 Zeilen, Profil bleibt (is_active=false), Eintrag nicht mehr unter 'Ehemalige Mitarbeiter'. Abwesenheiten: Tabellenname nicht ermittelt, nicht per REST gegengeprüft.
 - [ ] I6-Testkonto (Physio + Enterprise, 2 Standorte) für S5/S5b: Melih erlaubt I6 nur lesend mit Rückbau, aber der Zugang liegt lokal nicht vor ('Giriş bilgisi depoda yok', fortschritte/2026-10-31.md). Wartet auf Zugang von Melih (lokal ablegen, nicht in den Chat).
 
+### Aktueller Koordinationsstand 02.11.2026, später Abend
+
+- Die ältere Einmal-Mailfreigabe unten ist durch ausdrücklichen Nutzer-STOP zurückgestellt. Kein echter Versand, keine Gmail-/SMTP-Ersatzkonfiguration, auch nicht bei später zufällig verbundener Sitzung. Fortsetzung erst nach erneuter ausdrücklicher Aufnahme.
+- F11-Produktentscheidung inzwischen getroffen und in `597670f8` lokal umgesetzt („Mein Urlaub“). Alte Aussagen „Produktfrage offen“ sind historisch; Veröffentlichung und Live-Abnahme bleiben getrennte Schritte. F9 ebenfalls lokal umgesetzt, Live-Prüfung der neuen Version noch offen.
+- Standort-QA laut jüngster Nutzerbestätigung noch nicht vorbereitet: Enterprise-Tarif und zwei synthetische Standorte fehlen. I6 ist kein Ausweich-Testmandant. Echte installierte Kundenbox nicht nachgewiesen; lokales Box-Testgerüst ersetzt diese Abnahme nicht.
+- Zusammenarbeit: laufender Unterstützungs-Chat besitzt Gesamtsuiten/Build und `Physio/AUTOPILOT.md`; dieser QA-Chat besitzt diesen Prüfnachweis. Keine parallelen F11/F9/Box-Edits, kein Push/Deploy aus diesem Auftrag.
+
+### F2 produktive Fremd-Ursprung-Ladeprüfung — 02.11.2026, 22:37–22:38 CET
+
+- Öffentliche QA-Kennung über vorhandene `ladeKennung`-Auflösung des bekannten QA-Slugs bestätigt; kein Token/kein Zugang ausgelesen. Neuer eigener Browser-Tab, bestehende Nutzer-Tabs unverändert.
+- Produktives `https://praxura.de/widget/booking-widget.html` mit QA-Owner als sandboxed iframe im lokalen DOM einer fremden HTTPS-Seite (`https://example.org`) geladen. Kein HTML veröffentlicht, keine Host-Konfiguration geändert. Fünf frische iframe-Navigationen mit unterschiedlichem `qaLoad`-Parameter.
+- **5/5 bestanden:** je Navigation Widget HTTP 200 und GET `/booking-request/praxis` HTTP 200; Formular „Was möchten Sie?“ mit QA-Praxis und Anliegen/Versicherung sichtbar. Keine Meldung „gerade nicht erreichbar“, keine neuen CORS-/CSP-Konsolenfehler im erfolgreichen Fremdseiten-Zeitfenster. Browser-Origin-Isolation bestätigt: Host liest `iframe.contentDocument` nicht (`null`).
+- Vorversuch auf App-Ursprung wurde durch dessen eigene `frame-src`-CSP blockiert; kein Widget-CORS-Fehler und keine Schutzumgehung. Test danach auf fremdem HTTPS-Ursprung ohne diese Host-Beschränkung. Eine `waitFor(text)`-Abfrage sah iframe-Text nicht und lief aus; Frame-Inhalt anschließend per Accessibility-Snapshot direkt nachgewiesen.
+- Abnahmegrenze: fünf produktive Formular-Ladungen, keine Dauer-/Cachegarantie. Keine Anfrage abgesendet, kein Mailversand, keine DB-Schreiboperation durch diesen Prüfschritt. Schritte 2–4 und Anfrageverarbeitung hier nicht geprüft. Keine neue Fehlernummer; ursprünglicher sporadischer F2-Ladefehler in dieser Stichprobe nicht reproduziert.
+- Parallelprüfung klar zugeschrieben: Unterstützungs-Chat meldet Gesamtsuite **4826 PASS / 2 SKIP / 0 Fehler**, Dashboard-Bundle erfolgreich. Nicht nochmals in diesem Chat ausgeführt.
+
 ### S8 Nachprüfung 02.11.2026 — lokal, Basis `38c73d9b`
 
 - Unabhängig ausgeführt: `node --test api-backend/lib/sondertag-mitteilung.test.js api-backend/routes/sondertag-mitteilung.test.js module/sondertag-mitteilung.test.js module/sondertag-mitteilung-waechter.test.js` → **28/28 PASS**.
