@@ -2060,3 +2060,10 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - [x] S5/S5b LOKAL (nicht live) unabhängig nachgeprüft 02.11.: `tools/browser-probe/standort-plan-probe.mjs` 24/24 grün, Überlauf 390 px 0 (Raster, Warnliste, Versetzen, Gilt ab, Entfernen). Live weiter offen, siehe oben.
 - [x] 'Daten löschen' live (02.11., GO Melih direkt im Chat, nur QA-Testdaten): Bestätigungsdialog zeigt Warnung (Frist läuft, nicht rückgängig); danach Anstellung 0 Zeilen, Standortplan 0 Zeilen, Profil bleibt (is_active=false), Eintrag nicht mehr unter 'Ehemalige Mitarbeiter'. Abwesenheiten: Tabellenname nicht ermittelt, nicht per REST gegengeprüft.
 - [ ] I6-Testkonto (Physio + Enterprise, 2 Standorte) für S5/S5b: Melih erlaubt I6 nur lesend mit Rückbau, aber der Zugang liegt lokal nicht vor ('Giriş bilgisi depoda yok', fortschritte/2026-10-31.md). Wartet auf Zugang von Melih (lokal ablegen, nicht in den Chat).
+
+### S8 Nachprüfung 02.11.2026 — lokal, Basis `38c73d9b`
+
+- Unabhängig ausgeführt: `node --test api-backend/lib/sondertag-mitteilung.test.js api-backend/routes/sondertag-mitteilung.test.js module/sondertag-mitteilung.test.js module/sondertag-mitteilung-waechter.test.js` → **28/28 PASS**.
+- Beide früheren Befunde lokal behoben: Dedup berücksichtigt Buchung und Beginn; SMTP-Fehler mit fehlgeschlagenem Protokoll-Update hinterlässt `IN_ARBEIT`, keinen falschen Status `gesendet`. Unklarer Zustand wird nicht automatisch erneut versendet.
+- Route-Datei-Tests prüfen `ladeLage` und `sendeLauf` direkt mit Stubs. Kein HTTP-End-to-End-Nachweis für Auth/Rate-Limits, kein echter Versand, keine Live-UI-Abnahme.
+- Git nach Fetch: `main` = `origin/main` bei `38c73d9b`, keine Konflikte/kein Rebase. Fremde unversionierte Dateien unverändert belassen.
