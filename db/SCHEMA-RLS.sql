@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0101_termin_mitteilungen (SaaS, Management-API 02.11.2026)
--- EXPORTED AT:        2026-11-02T14:00:00Z
+-- LAST MIGRATION:     0102_termin_mitteilungen_tagesdeckel (SaaS, Management-API 02.11.2026)
+-- EXPORTED AT:        2026-11-02T18:00:00Z
 -- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        194
---   functions:           127
---   triggers:            123
+--   functions:           128
+--   triggers:            124
 --   indexes:             375
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -6192,6 +6192,35 @@ $function$
 ;
 ALTER FUNCTION public.sync_profiles_clinic_location() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.termin_mitteilungen_tagesdeckel()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'pg_catalog'
+AS $function$
+BEGIN
+  IF current_setting('transaction_isolation') <> 'read committed' THEN
+    RAISE EXCEPTION USING ERRCODE = '40001', MESSAGE = 'Mitteilungsprotokoll braucht READ COMMITTED';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended('termin_mitteilungen:' || NEW.owner_id::text, 0));
+  -- Zeit erst NACH dem Lock erfassen; vom Aufrufer backdatierte Claims zaehlen ebenfalls.
+  NEW.created_at := clock_timestamp();
+  IF EXISTS (
+    SELECT 1 FROM public.termin_mitteilungen
+    WHERE booking_id = NEW.booking_id AND anlass = NEW.anlass AND termin_beginn = NEW.termin_beginn
+  ) THEN
+    RETURN NEW; -- Originaler UNIQUE-Konflikt steuert Dedup/Retry im Backend.
+  END IF;
+  IF (SELECT count(*) FROM public.termin_mitteilungen
+      WHERE owner_id = NEW.owner_id AND created_at >= NEW.created_at - interval '24 hours') >= 500 THEN
+    RAISE EXCEPTION USING ERRCODE = 'PT429', MESSAGE = 'TERMIN_MITTEILUNGEN_TAGESDECKEL';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.termin_mitteilungen_tagesdeckel() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.therapieberichte_festschreibung()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6655,6 +6684,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON services FOR EACH ROW EXECUT
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER zertifikat_updated_at BEFORE UPDATE ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+
+CREATE TRIGGER termin_mitteilungen_tagesdeckel BEFORE INSERT ON termin_mitteilungen FOR EACH ROW EXECUTE FUNCTION termin_mitteilungen_tagesdeckel();
 
 CREATE TRIGGER therapieberichte_festschreibung BEFORE DELETE OR UPDATE ON therapieberichte FOR EACH ROW EXECUTE FUNCTION therapieberichte_festschreibung();
 
@@ -13568,6 +13599,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=sync_leads_location() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sync_profiles_clinic_location() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=sync_profiles_clinic_location() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=termin_mitteilungen_tagesdeckel() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=termin_mitteilungen_tagesdeckel() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=text(geometry) column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO

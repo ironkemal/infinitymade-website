@@ -1,5 +1,5 @@
 -- F12: Tagesdeckel atomar ueber alle Backend-Prozesse sichern (02.11.2026).
--- SaaS: NICHT ANGEWANDT. Lokaler Entwurf; Anwendung braucht gesondertes GO.
+-- SaaS: angewandt 02.11.2026, Supabase Management-API mit MCP-Token (Melih GO 02.11., BEGIN/COMMIT, Katalog geprueft).
 -- Keine neue Tabelle: neue Protokollzeilen zaehlen, Retry-UPDATE bleibt unveraendert.
 -- VOLATILE + getrennte Abfrage nach dem Mandanten-Lock: frischer Snapshot bei READ COMMITTED.
 -- Andere Isolation wird abgewiesen, statt mit einem alten Transaktionssnapshot zu zaehlen.
@@ -33,6 +33,8 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.termin_mitteilungen_tagesdeckel() FROM PUBLIC;
+-- Supabase-Default-Privilegien vergeben EXECUTE zusaetzlich an anon/authenticated (live 02.11. gemessen).
+REVOKE ALL ON FUNCTION public.termin_mitteilungen_tagesdeckel() FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.termin_mitteilungen_tagesdeckel() TO service_role;
 DROP TRIGGER IF EXISTS termin_mitteilungen_tagesdeckel ON public.termin_mitteilungen;
 CREATE TRIGGER termin_mitteilungen_tagesdeckel
