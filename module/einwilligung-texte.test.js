@@ -5,8 +5,8 @@ import { EINWILLIGUNG_TEXTE, renderEinwilligungText, renderTerminDatenschutz } f
 const basis = { praxis_name: 'Praxis Nord', praxis_adresse: 'Weg 1, 53721 Siegburg', patient_name: 'A B', patient_geburtsdatum: '01.01.1970', datum: '06.10.2026', profile: {}, optionen: [] };
 const ds = (extra = {}) => renderEinwilligungText('datenschutz', { ...basis, ...extra }).text;
 
-test('Version erhöht: v5 (KI mit Mail-Entwürfen 30.10.) (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
-  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v5-2026-10-30');
+test('Version erhöht: v6 (Terminänderungen, SMS entfällt, 02.11.) (der Text wurde inhaltlich geändert, der Hash dient als Nachweis)', () => {
+  assert.equal(EINWILLIGUNG_TEXTE.datenschutz.version, 'datenschutz-v6-2026-11-02');
   assert.equal(EINWILLIGUNG_TEXTE.foto.version, 'foto-v2-2026-10-06');
 });
 
@@ -113,4 +113,22 @@ test('Terminseite: Verantwortlicher, Rechtsgrundlagen, kein Platzhalter-Rest, ke
 test('Terminseite: Inhaber gleich Praxisname wird nicht doppelt genannt', () => {
   const r = renderTerminDatenschutz({ praxis_name: 'Eva Muster', inhaber_name: 'Eva Muster', praxis_anschrift: 'X' });
   assert.match(r.absaetze[0].text, /ist Eva Muster, X\./);
+});
+
+test('Datenschutz: kein SMS in Text und Optionen; Terminerinnerung enthält Terminänderungen', () => {
+  // Volltext (mit und ohne gewählte Optionen bzw. KI) enthält kein SMS
+  assert.doesNotMatch(ds({ kiAktiv: true }), /SMS/);
+  assert.doesNotMatch(ds({ kiAktiv: false }), /SMS/);
+  assert.doesNotMatch(ds({ optionen: ['terminerinnerung', 'arztkommunikation'] }), /SMS/);
+
+  // Weder Label noch Text der Optionen enthalten SMS
+  for (const opt of EINWILLIGUNG_TEXTE.datenschutz.optionen) {
+    assert.doesNotMatch(opt.label, /SMS/);
+    assert.doesNotMatch(opt.text, /SMS/);
+  }
+
+  // terminerinnerung-Label enthält „Terminänderungen"
+  const opt = EINWILLIGUNG_TEXTE.datenschutz.optionen.find((o) => o.key === 'terminerinnerung');
+  assert.ok(opt, 'Option terminerinnerung muss vorhanden sein');
+  assert.match(opt.label, /Terminänderungen/);
 });

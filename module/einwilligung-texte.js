@@ -148,7 +148,7 @@ export const EINWILLIGUNG_TEXTE = {
   // einzeln waehlbar und standardmaessig AUS.
   // -------------------------------------------------------------------
   datenschutz: {
-    version: 'datenschutz-v5-2026-10-30',
+    version: 'datenschutz-v6-2026-11-02',
     consentType: 'datenschutz',
     titel: 'Datenschutz — Information und Einwilligung',
     kurzfassung: [
@@ -255,8 +255,9 @@ export const EINWILLIGUNG_TEXTE = {
     optionen: [
       {
         key: 'terminerinnerung',
-        label: 'Terminerinnerungen per E-Mail oder SMS an mich senden',
-        text: 'Terminerinnerungen per E-Mail/SMS',
+        label:
+          'Die Praxis darf mich per E-Mail an Termine erinnern und über Terminänderungen oder -absagen (z. B. bei Praxisschließung) informieren – unverschlüsselt und ohne Angaben zu Diagnose oder Behandlung.',
+        text: 'Terminerinnerungen und Terminänderungen per E-Mail (unverschlüsselt, ohne Behandlungsangaben)',
       },
       {
         key: 'arztkommunikation',
