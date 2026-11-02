@@ -6894,3 +6894,13 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 | **Kutuda ne olur** | Eklemeli: yeni tablo/fonksiyon, mevcut tabloda yalnız CHECK (canlıda 99 satır uyumlu; kutuda boş/uyumlu satır). `:stable` image tabloyu görmez, zarar yok. Dış çağrı, env, sır, sabit adres yok (G1/G2/G3/G8 temiz). |
 | **Durum** | Sayaç `erwartete-zaehler.json` nachgerechnet (95/184/119/119/350), fiziksel ölçüm YOK (Docker kapalıydı). `db/SCHEMA*` canlı uygulamadan sonra tazelenecek. |
 | **Ek (02.11.2026)** | `batch-create-explicit` artık `business_id`/`room_id` yazıyor (şema değişikliği yok, kutuda sorunsuz). Hüküm: GEÇER. | | | | | |
+### O-240 — 0101 `termin_mitteilungen` (zunächst als 0099 geplant, Nummer an Kemals 0099/0100 vergeben) + Sondertag-Absage per Mail (S8/M6b, ön kontrol 02.11.2026) 🟡 **geplant**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Sondertag „geschlossen" olunca etkilenen termin hastalarına önizleme → serbest bırakma → mail. Yeni tablo (yalnız protokol: owner/booking/custom_day id, e-posta yok), iki rota, versand yolu `dokument-mail.js` `versandWeg()` (O-233) |
+| **Nerede** | `api-backend/db/migrations/0101_termin_mitteilungen.sql` · `api-backend/routes/sondertag-mitteilung.js` (`versandWeg` `:54`, SMTP `:136`, Gmail `:139`) · `api-backend/lib/sondertag-mitteilung.js` · `api-backend/server.js` (+3) · `module/sondertag-mitteilung.js:35` (`deps.apiBase`, sabit host yok) |
+| **Tip** | D (şema) · A değil: mail praxisin kendi SMTP'si (kutu) / kendi Gmail'i (SaaS), Praxura sunucusu aradan geçmez · F değil: cron yok, elle tetik |
+| **Kutuda ne olur** | `:stable` ne 0099'u ne rotayı taşır, değişmez. `:beta` ikisini aynı image'da getirir; additif (yeni tablo, FK'ler baseline tablolarına), `:beta`→`:stable` geri dönüşte tablo kullanılmadan durur, veri kaybı yok. `SMTP_HOST` yoksa `versandWeg`=null → herkes Anrufliste (doğru). SMTP var ama ulaşılamıyorsa her alıcı için nodemailer bağlantı zaman aşımı beklenir; Gmail dalındaki gibi erken kesme yok — 100 alıcıda istek dakikalarca asılır. G1/G2/G3/G8 temiz: yeni env, sır, dış host, Vercel fonksiyonu yok |
+| **Çözüm** | Aynı commit: `erwartete-zaehler.json` `bis_version` 0099 + `_hinweis_0099` (+1 tablo/+1 policy/+0/+0/+3 index — PK + UNIQUE + owner_zeit, hesap doğru) · `api-backend/dsgvo/klassifikation.js` kaydı (booking'e bağlı → kişisel ilişkili; silme CASCADE ile gider) · `db/REGISTER.md` · `db/SCHEMA*` tazele. Sıra: yerel taze zincir 0000–0099 (0099 iki kez) → SaaS canlı → push. Öneri (veto değil): SMTP dalında ilk bağlantı hatasında (`ECONNECTION`/`ETIMEDOUT`/`EAUTH`) döngüyü kes, 409 dön |
+| **Durum** | `geplant` — sahip Melih + `db-ustasi`; kod uncommitted (02.11.2026). Fiziksel kutu ölçümü yok, O-233 ile aynı sınıf |
