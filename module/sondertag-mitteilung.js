@@ -84,8 +84,9 @@ export async function mountMitteilung(host, deps = {}) {
       if (d.doppelt) teile.push(`${d.doppelt} bereits informiert`);
       if (d.abgelehnt) teile.push(`${d.abgelehnt} nicht mehr zulässig (bitte anrufen)`);
       if (d.fehler) teile.push(`${d.fehler} fehlgeschlagen (bitte anrufen)`);
+      if (d.unklar) teile.push(`${d.unklar} Versandstatus unklar (bitte anrufen)`);
       ergebnis.textContent = teile.join(' · ');
-      showToast(d.fehler ? 'Teilweise gesendet.' : 'E-Mails gesendet ✓', d.fehler ? 'error' : undefined);
+      showToast(d.unklar ? 'Versandstatus unklar. Bitte telefonisch informieren.' : d.fehler ? 'Teilweise gesendet.' : 'E-Mails gesendet ✓', d.fehler || d.unklar ? 'error' : undefined);
       host.querySelectorAll('.stm-wahl').forEach(c => { c.disabled = true; });
     } catch {
       ergebnis.textContent = 'Versand fehlgeschlagen. Bitte telefonisch informieren.';
