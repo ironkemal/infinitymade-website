@@ -48,6 +48,10 @@ const START_STUNDE = 8;
 const END_STUNDE = 20;
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
+// Schnelles Blättern: nur der neueste Zeichenlauf darf nach einer Antwort
+// Spalten einfügen (F8). Gilt auch für Filterwechsel innerhalb derselben Woche.
+let laufendeAbfrage = 0;
+
 /** Zweistellig — fuer die Uhrzeit-Beschriftung der Rasterfelder. */
 const zwei = (n) => String(n).padStart(2, '0');
 
@@ -124,6 +128,7 @@ export async function renderWoche({
   onTerminKlick,
   setzeDatumsLabel,
 }) {
+  const meins = ++laufendeAbfrage;
   const tage = wochenTage(dateStr);
 
   const kurz = (d) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
@@ -186,6 +191,7 @@ export async function renderWoche({
     // Leere Liste würde zu einem ungültigen in.() werden.
     .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
+  if (meins !== laufendeAbfrage) return;
 
   // Bei genau einem gewählten Mitarbeiter ist die Zuordnung eindeutig und der
   // Doppelklick kann ihn vorbelegen. Bei „Alle" bleibt das Feld in der Maske
@@ -197,6 +203,7 @@ export async function renderWoche({
     vonISO: vonDatum.toISOString(),
     bisISO: bisDatum.toISOString(),
   });
+  if (meins !== laufendeAbfrage) return;
 
   // ── Sieben Tagesspalten ──────────────────────────────────────────────────
   tage.forEach(tag => {

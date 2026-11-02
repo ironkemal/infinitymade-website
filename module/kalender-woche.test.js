@@ -1,11 +1,51 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { montagDerWoche, wochenTage, pixelFuerMinute } from './kalender-woche.js';
+import { montagDerWoche, wochenTage, pixelFuerMinute, renderWoche } from './kalender-woche.js';
 import { mitDeckkraft } from './kalender-farben.js';
 import { WV_SLOT_PX } from './kalender-raster.js';
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+test('F8: langsame Termin- oder Abwesenheitsantwort darf neuere Woche nicht ergaenzen', async (t) => {
+  const vorher = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  t.after(() => { if (vorher) Object.defineProperty(globalThis, 'document', vorher); else delete globalThis.document; });
+  for (const langsam of ['bookings', 'time_offs']) {
+    const element = () => ({
+      children: [], dataset: {}, style: {}, classList: { add() {} },
+      appendChild(child) { this.children.push(child); }, addEventListener() {},
+      set innerHTML(value) { this.children = []; },
+    });
+    const timeCol = element();
+    const colsWrap = element();
+    globalThis.document = {
+      getElementById: id => id === 'wvTimeCol' ? timeCol : colsWrap,
+      createElement: element,
+    };
+    let freigeben;
+    let erreicht;
+    const wartet = new Promise(resolve => { erreicht = resolve; });
+    const spaet = new Promise(resolve => { freigeben = resolve; });
+    let erster = true;
+    const supabase = { from(table) {
+      const antwort = table === langsam && erster ? (erster = false, erreicht(), spaet) : Promise.resolve({ data: [] });
+      const query = { then: antwort.then.bind(antwort) };
+      for (const method of ['select', 'eq', 'gte', 'lte', 'in', 'neq']) query[method] = () => query;
+      return query;
+    } };
+    let label;
+    const optionen = { supabase, ownerId: 'synthetic', teamMembers: [{ id: 'synthetic-employee' }],
+      setzeDatumsLabel: value => { label = value; } };
+    const alt = renderWoche({ ...optionen, dateStr: '2026-11-09' });
+    await wartet;
+    await renderWoche({ ...optionen, dateStr: '2026-11-16' });
+    freigeben({ data: [] });
+    await alt;
+    assert.equal(label, '16.11. – 22.11.');
+    assert.deepEqual(colsWrap.children.map(col => col.children[0].dataset.datum),
+      ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22'], langsam);
+  }
+});
 
 test('Montag einer Woche — Wochenmitte', () => {
   // 22.08.2026 ist ein Samstag.

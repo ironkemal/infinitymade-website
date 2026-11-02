@@ -114,7 +114,7 @@ import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschl
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261031';
+import { renderWoche } from './module/kalender-woche.js?v=20261102f8';
 import { renderMonat } from './module/kalender-monat.js?v=20261031';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld, datumDe } from './module/datum.js?v=20261001a';

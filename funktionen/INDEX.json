@@ -134750,8 +134750,8 @@
    "lang": "js",
    "file": "module/kalender-woche.js",
    "start": 42,
-   "end": 62,
-   "lines": 21,
+   "end": 66,
+   "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -134975,8 +134975,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 52,
-   "end": 62,
+   "start": 56,
+   "end": 66,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -135043,8 +135043,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 71,
-   "end": 78,
+   "start": 75,
+   "end": 82,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -135106,8 +135106,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 81,
-   "end": 88,
+   "start": 85,
+   "end": 92,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -135171,8 +135171,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 91,
-   "end": 93,
+   "start": 95,
+   "end": 97,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -135234,9 +135234,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 114,
-   "end": 343,
-   "lines": 230,
+   "start": 118,
+   "end": 350,
+   "lines": 233,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -135313,8 +135313,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/kalender-woche.js",
-   "start": 129,
-   "end": 139,
+   "start": 134,
+   "end": 144,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -250108,7 +250108,7 @@
    "name": "kurz",
    "orte": [
     "api-backend/routes/sondertag-mitteilung.js:134",
-    "module/kalender-woche.js:129"
+    "module/kalender-woche.js:134"
    ],
    "aynalar": []
   },
@@ -250806,7 +250806,7 @@
    "name": "zwei",
    "orte": [
     "module/datum.js:37",
-    "module/kalender-woche.js:52"
+    "module/kalender-woche.js:56"
    ],
    "aynalar": []
   }
