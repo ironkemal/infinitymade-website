@@ -44,13 +44,15 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261027p';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
-import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
+import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261102b';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261010zd';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010zc';
+import { initialisiereHeilmittelZeilen, fuelleHeilmittelZeilen, liesHeilmittelZeilenAusMaske, leereHeilmittelZeilen, aktualisiereAddBtnSichtbarkeit } from './heilmittel-zeilen-ui.js';
+import { pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -101,7 +103,19 @@ let _bruecke = null;
  * @param {(ja:boolean)=>void} b.setHausbesuch               `setM13Hausbesuch`
  * @param {(id:string,wert:string)=>void} b.setFrequenz      `setFreqValue`
  */
-export function setzeMaskeBruecke(b) { _bruecke = b || null; }
+export function setzeMaskeBruecke(b) {
+  _bruecke = b || null;
+  if (_bruecke) {
+    try {
+      initialisiereHeilmittelZeilen({
+        tableEl: document.getElementById('rzHmTable'),
+        addBtnEl: document.getElementById('rzHmAddLine'),
+        bereichFn: typeof _bruecke.bereich === 'function' ? _bruecke.bereich : () => document.getElementById('rzTherapieBereich')?.value || 'physio',
+        supabase: _bruecke.supabase,
+      });
+    } catch (e) { console.warn('[setzeMaskeBruecke:hmZeilen]', e); }
+  }
+}
 
 /** Die id der gerade bearbeiteten Verordnung — `saveRezept()` fragt hier. */
 export function bearbeitungsId() { return _bearbeitung?.id || null; }
@@ -494,6 +508,11 @@ export function fuelleMuster13(rx, opt = {}) {
   setz('rzHmErgPosition', rx.ergaenzend_position || '');
   setz('rzHbOrt', rx.hausbesuch_ort === 'haeuslich' ? '' : (rx.hausbesuch_ort || ''));
   haken('rzDoppel', rx.doppelbehandlung);
+  if (Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.some(i => i && typeof i === 'object' && i.einheiten != null)) {
+    fuelleHeilmittelZeilen(rx.heilmittel_items);
+  } else {
+    leereHeilmittelZeilen();
+  }
   setz('rzHinweise', rx.hinweise || '');
   _bruecke?.setFrequenz?.('rzFreq', rx.frequenz || '');
   _bruecke?.setTherapiebereich?.(rx.therapie_bereich || '');
@@ -647,23 +666,13 @@ export function pruefeAenderungErlaubt() {
  *   `status`     — über den Bearbeitungsstand entscheidet der Ablauf,
  *                  nicht dieses Formular.
  *   `owner_id`   — gehört zum Anlegen, nicht zum Ändern.
- *   `heilmittel_items` — Altbestand. Die Spalte wird seit dem 06.09.2026 von
- *                  keinem Weg mehr beschrieben (ihr einziger Schreiber, das
- *                  getrennte Formular der Abrechnungsseite, ist in dieser
- *                  Maske aufgegangen) und von der Abrechnung nicht gelesen —
- *                  die §302-Positionen stammen aus
- *                  `podologie_behandlungen.hpnr_codes`. Sie hier zu füllen
- *                  ergäbe Daten, aus denen nichts folgt.
- *
- *                  ⚠️ Und sie ist NICHT der Ort für „mehrere Heilmittel je
- *                  Verordnung". HeilM-RL § 12 Abs. 2 S. 1 erlaubt das Aufteilen
- *                  der Verordnungseinheiten auf bis zu drei vorrangige
- *                  Heilmittel nur für Physiotherapie und Ergotherapie; S. 2 ist
- *                  für Stimm-, Sprech-, Sprach- und Schlucktherapie eine eigene
- *                  Regel (drei Behandlungszeiten bzw. Einzel-/Gruppen). Die
- *                  Podologie steht in keinem der beiden Sätze; ihr Katalog
- *                  bildet „beides zugleich" als eigenes Heilmittel ab — c)
- *                  Komplexbehandlung, § 27a Abs. 4 Nr. 3. Geprüft 14./21.09.2026.
+ *   `heilmittel_items` — Beschluss vom 02.11.2026 (gkv-302 + db-ustasi, Ops #202):
+ *                  `heilmittel_items` ist der Ort für mehrere vorrangige Heilmittel
+ *                  je Verordnung nach HeilM-RL § 12 Abs. 2 S. 1 (bis zu 3 vorrangige
+ *                  Heilmittel bei Physiotherapie und Ergotherapie). Bei nur einem
+ *                  Heilmittel bleibt die Spalte NULL (Rückwärtskompatibilität).
+ *                  Podologie bleibt weiterhin ausgenommen: ihr Katalog bildet
+ *                  „beides zugleich" als eigenes Heilmittel ab (Komplexbehandlung).
  *
  * @param {object} v  Was `dashboard.js` schon ausgerechnet hat
  */
@@ -706,6 +715,8 @@ export function nutzlastAusMaske(v) {
   const el = (id) => document.getElementById(id);
   const txt = (id) => (el(id)?.value || '').trim();
   const an = (id) => !!el(id)?.checked;
+  const hmZeilen = liesHeilmittelZeilenAusMaske();
+  const spiegel = hmZeilen.spiegel;
 
   return {
     patient_id: v.patientId,
@@ -722,15 +733,16 @@ export function nutzlastAusMaske(v) {
     // wer den zweiten Kode löscht, will ihn los sein.
     icd10_2: nurIcdKode(txt('rzIcd2')) || null,
     gueltig_bis: v.gueltigBis,
-    anzahl_einheiten: v.anzahl,
+    anzahl_einheiten: spiegel.anzahl_einheiten ?? v.anzahl,
+    vorrangig_einheiten: spiegel.vorrangig_einheiten ?? (v.anzahl || null),
     is_dringend: v.isDringend,
     doctor_lanr: v.lanr,
     doctor_bsnr: v.bsnr,
     leitsymptomatik: v.leitsymptomatik?.code ?? null,
     pat_leitsymptomatik: v.leitsymptomatik?.patText ?? null,
     diagnosegruppe: txt('rzDg') || null,
-    heilmittel: txt('rzHm') || null,
-    heilmittel_position: txt('rzHmPosition') || null,
+    heilmittel: spiegel.heilmittel || txt('rzHm') || null,
+    heilmittel_position: spiegel.heilmittel_position || txt('rzHmPosition') || null,
     frequenz: txt('rzFreq') || null,
     hausbesuch: an('rzHausbesuch'),
     is_blanko: an('rzBlanko'),
@@ -745,7 +757,8 @@ export function nutzlastAusMaske(v) {
     // Ort nur bei „Hausbesuch: ja" — sonst rechnete der Mapper etwas Gelöschtes ab.
     ergaenzend_position: txt('rzHmErg') ? (txt('rzHmErgPosition') || null) : null,
     hausbesuch_ort: an('rzHausbesuch') ? (txt('rzHbOrt') || 'haeuslich') : null,
-    doppelbehandlung: an('rzDoppel'),
+    doppelbehandlung: spiegel.doppelbehandlung != null ? spiegel.doppelbehandlung : an('rzDoppel'),
+    heilmittel_items: hmZeilen.items || null,
     therapie_bereich: txt('rzTherapieBereich') || null,
     hinweise: txt('rzHinweise') || null,
     unterschrift_vorhanden: an('rzUnterschrift'),
@@ -831,7 +844,7 @@ export async function schreibeVerordnung(supabase, v) {
     });
     if(erfassung) rumpf.erfassung=erfassung;
     const json = await sendeAnServer(supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf });
-    return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null, status: json.status };
+    return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null, status: json.status, items: nutzlast.heilmittel_items || null };
   }
 
   // AENDERN laeuft seit Ops #289 auch ueber den Server — derselbe Grund wie
@@ -846,5 +859,5 @@ export async function schreibeVerordnung(supabase, v) {
   // Gespeichert heisst: die Maske und die Datenbank sagen wieder dasselbe —
   // ein Neuzeichnen von aussen darf jetzt wieder durch (siehe `istVeraendert`).
   _bearbeitung.veraendert = false;
-  return { id: editId, aktualisiert: true, patientId: json.patient_id || null, status: json.status };
+  return { id: editId, aktualisiert: true, patientId: json.patient_id || null, status: json.status, items: nutzlast.heilmittel_items || null };
 }

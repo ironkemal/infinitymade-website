@@ -65,7 +65,7 @@ Die Praxis hat Maus und Tastatur während der gesamten Sitzung selbst bedient. �
 | Vorgeschichte (Daten früherer Leistungen) | ☐ | ____ Patient/innen | |
 | Beiläufig sichtbar (z. B. andere Fenster der bisherigen Software) | ☐ | — | Art: ____________ |
 
-Nicht übernommen (verbleiben im bisherigen System): Befunde, Behandlungsnotizen, Bilder/Dokumente, Rechnungen, bereits abgerechnete Verordnungen.
+Nicht übernommen (verbleiben im bisherigen System): Befunde, Behandlungsnotizen, Bilder/Dokumente, Rechnungen, bereits abgerechnete Verordnungen. Einwilligungen (E-Mail-Erinnerung, Arztberichte) werden nicht übernommen. Diese Funktionen sind für importierte Patienten erst nach neuer Einwilligung aktiv.
 
 Bestätigungen in der Software (z. B. Arztstempel/Unterschrift vorhanden, erbrachte Tage) hat die Praxis selbst abgegeben. ☐ bestätigt
 

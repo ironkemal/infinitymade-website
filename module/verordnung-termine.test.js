@@ -105,6 +105,38 @@ test('der Owner-Riegel der Datenbank wird im Klartext durchgereicht', async () =
   assert.match(res.fehler, /anderen Praxis/);
 });
 
+test('bindeTermin #339: Termin vor Ausstellungsdatum wird blockiert und DB-Update nicht aufgerufen', async () => {
+  let updateAufgerufen = false;
+  const mockDb = {
+    from: () => ({
+      update: () => { updateAufgerufen = true; return mockDb.from(); },
+      eq: () => mockDb.from(),
+      select: () => Promise.resolve({ data: [{ id: 'b1' }], error: null }),
+    }),
+  };
+
+  const res = await bindeTermin(mockDb, {
+    bookingId: 'b1',
+    vordId: 'v1',
+    terminZeit: '2026-10-05T08:00:00Z',
+    ausstellungsdatum: '2026-10-10',
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.fehler, 'Dieser Termin liegt vor dem Ausstellungsdatum der Verordnung und ist nicht abrechenbar.');
+  assert.equal(updateAufgerufen, false, 'DB UPDATE darf nicht aufgerufen werden!');
+});
+
+test('bindeTermin #339: Termin am selben Tag oder danach ist zulässig', async () => {
+  const gut = await bindeTermin(fakeUpdate({ rows: [{ id: 'b1' }] }), {
+    bookingId: 'b1',
+    vordId: 'v1',
+    terminZeit: '2026-10-10T08:00:00Z',
+    ausstellungsdatum: '2026-10-10',
+  });
+  assert.equal(gut.ok, true);
+});
+
 // gkv-302, 10.10.2026 (canli-test T33: Karte 0/2, Akte 1/2): verbraucht = dokumentierte Einheit.
 test('podoBelegung: dokumentierte Einheit ohne Termin zaehlt, Termin am selben Tag nicht doppelt, Befund/No-show/Storno nicht', async () => {
   const { podoBelegung } = await import('./verordnung-termine.js');

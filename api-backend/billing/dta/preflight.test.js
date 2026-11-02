@@ -351,6 +351,30 @@ test('allows therapist certificate qualification if hasCert = true', () => {
   assert.equal(r.ok, true);
 });
 
+test('catches Arbeitsunfall unfallkennzeichen=1 with S:01014 (#290)', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.unfallkennzeichen = '1';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'S:01014'));
+});
+
+test('catches rezeptart=bg with S:01014 (#290)', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.rezeptart = 'bg';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'S:01014'));
+});
+
+test('allows unfallkennzeichen=2 (sonstige Unfallfolgen) without S:01014', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.unfallkennzeichen = '2';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+  assert.equal(hasErr(r, 'S:01014'), false);
+});
+
 // ---------------------------------------------------------------------------
 // Schritt 1.8 — ICD-10 ODER Diagnosetext (Anlage 1 TP5 V21, Kap. 5.5.3.3 S.72)
 //

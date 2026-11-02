@@ -99,6 +99,8 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       leitsymptomatik: n.leitsymptomatik ?? null,
       pat_leitsymptomatik: n.pat_leitsymptomatik ?? null,
       heilmittel: n.heilmittel || null,
+      heilmittel_items: Array.isArray(n.heilmittel_items) && n.heilmittel_items.length > 1 ? n.heilmittel_items : null,
+      vorrangig_einheiten: n.vorrangig_einheiten ?? null,
       heilmittel_feld_text: n.heilmittel_feld_text || null,
       heilmittel_position: n.heilmittel_position || null,
       anzahl_einheiten: n.anzahl_einheiten ?? null,

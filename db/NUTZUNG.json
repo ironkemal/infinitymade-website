@@ -51,7 +51,7 @@
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2145,
+     "start": 2148,
      "module": [],
      "uiPfad": []
     },
@@ -113,7 +113,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2329,
+     "start": 2332,
      "module": [],
      "uiPfad": []
     },
@@ -168,7 +168,7 @@
     {
      "name": "verarbeiteVerschluesselungsSchritt",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1586,
+     "start": 1589,
      "module": [],
      "uiPfad": []
     }
@@ -366,7 +366,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": []
     },
@@ -807,7 +807,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 14586,
+     "start": 14230,
      "module": [],
      "uiPfad": []
     },
@@ -917,7 +917,7 @@
     {
      "name": "neuerBkKanal",
      "file": "dashboard.js",
-     "start": 14638,
+     "start": 14280,
      "module": [],
      "uiPfad": []
     }
@@ -1068,7 +1068,7 @@
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 13543,
+     "start": 13187,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1166,7 +1166,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 13602,
+     "start": 13246,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1176,7 +1176,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 13611,
+     "start": 13255,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1260,6 +1260,7 @@
     "api-backend/ai/audit.test.js",
     "api-backend/ai/m4-privacy-regression.test.js",
     "api-backend/ai/router.test.js",
+    "api-backend/ai/tasks/transkribieren.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js"
    ],
@@ -1272,7 +1273,7 @@
     {
      "name": "makeUsageAggregateSupplier",
      "file": "api-backend/ai/audit.js",
-     "start": 86,
+     "start": 87,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1510,7 +1511,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1812,7 +1813,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3900,
+     "start": 3961,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1939,7 +1940,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2012,7 +2013,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 10535,
+     "start": 10180,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2060,62 +2061,9 @@
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert",
-      "update"
-     ]
-    },
-    {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 10542,
+     "start": 10187,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2259,7 +2207,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7277,
+     "start": 6993,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2314,14 +2262,14 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6408,
+     "start": 6124,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "verdrahteGeldzeile",
      "file": "module/rezeptinfo-geld.js",
-     "start": 433,
+     "start": 444,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2369,7 +2317,6 @@
    ],
    "schreiber": [],
    "dateien": [
-    "Claude outputs/2026-10-16-release/weitere-bugs/journal/repro.mjs",
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/belegliste.routes.test.js",
     "api-backend/billing/api/datev.routes.js",
@@ -2505,49 +2452,8 @@
      "name": "_speichereAusnahme",
      "file": "module/abrechnung-einstellungen.js",
      "start": 827,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "upsert"
      ]
@@ -2556,49 +2462,8 @@
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
      "start": 271,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "delete"
      ]
@@ -2865,7 +2730,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4075,
+     "start": 4136,
      "module": [],
      "uiPfad": []
     }
@@ -2948,21 +2813,6 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-empty-history-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-duration130-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-empty-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-foreign-owner-data-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-foreign-patient-data-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-date-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-duration-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-owner-query-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-patient-query-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r2-wrong-time-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-duration130-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-empty-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-time0901-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-wrong-owner-query-fixture.js",
-    "Claude outputs/2026-10-23-ops-fortsetzung/faq25-review-r3-wrong-patient-query-fixture.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
     "api-backend/billing/api/podo-empfangsnachweis-gates.harness.mjs",
     "api-backend/billing/api/warteliste-security.test.js",
@@ -2972,7 +2822,6 @@
     "api-backend/booking/from-request.test.js",
     "api-backend/booking/public-handlers.test.js",
     "api-backend/dsgvo/klassifikation.js",
-    "module/billing-loader-503.test.js",
     "module/booking-status-korrektur.test.js",
     "module/fahrt-km.js",
     "module/patienten-import.js",
@@ -2997,7 +2846,7 @@
     {
      "name": "_terminBearbeiten",
      "file": "module/verordnung-detail.js",
-     "start": 901,
+     "start": 988,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3098,9 +2947,16 @@
      "uiPfad": []
     },
     {
+     "name": "bindeSitzungenAnTermin",
+     "file": "module/sitzung-bindung.js",
+     "start": 49,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2685,
+     "start": 2450,
      "module": [],
      "uiPfad": []
     },
@@ -3158,54 +3014,6 @@
      "start": 1347,
      "module": [],
      "uiPfad": []
-    },
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
     },
     {
      "name": "frag",
@@ -3354,14 +3162,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "heuteAktualisieren",
      "file": "module/termin-heute.js",
-     "start": 153,
+     "start": 155,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3457,7 +3265,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1831,
+     "start": 1835,
      "module": [],
      "uiPfad": []
     },
@@ -3508,13 +3316,6 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "initCalendar",
-     "file": "dashboard.js",
-     "start": 2038,
-     "module": [],
-     "uiPfad": []
     },
     {
      "name": "ladeAbrechnungAuswahl",
@@ -3670,7 +3471,7 @@
     {
      "name": "ladeKommendeTermineDesPatienten",
      "file": "module/termin-patient-bezug.js",
-     "start": 130,
+     "start": 133,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3814,7 +3615,7 @@
     {
      "name": "ladePodoTermine",
      "file": "module/verordnung-termine.js",
-     "start": 67,
+     "start": 69,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4006,7 +3807,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1559,
+     "start": 1546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4054,7 +3855,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 10223,
+     "start": 9868,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4102,7 +3903,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7106,
+     "start": 6822,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4150,7 +3951,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1316,
+     "start": 1303,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4205,7 +4006,7 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 17624,
+     "start": 17263,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4254,49 +4055,8 @@
      "name": "mountRaumTagesansicht",
      "file": "module/raum-tagesansicht.js",
      "start": 245,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "mountStandortPlan",
@@ -4411,7 +4171,7 @@
     {
      "name": "nurZiffern",
      "file": "module/termin-patient-bezug.js",
-     "start": 52,
+     "start": 54,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4556,6 +4316,54 @@
      "name": "oeffneStatusDialog",
      "file": "module/abrechnungsstatus.js",
      "start": 530,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "oeffneTerminBearbeiten",
+     "file": "module/verordnung-einheiten.js",
+     "start": 250,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4761,7 +4569,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2192,
+     "start": 1959,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4809,14 +4617,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1160,
+     "start": 1147,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1240,
+     "start": 1227,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4912,7 +4720,7 @@
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 12801,
+     "start": 12445,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4960,7 +4768,7 @@
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 12706,
+     "start": 12350,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5111,14 +4919,14 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4075,
+     "start": 4136,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "verdrahteAktionsPatientensuche",
      "file": "module/termin-aktionen.js",
-     "start": 95,
+     "start": 96,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5365,7 +5173,7 @@
     {
      "name": "zeigeVerordnungenFuerTermin",
      "file": "module/termin-verordnung.js",
-     "start": 394,
+     "start": 415,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5415,7 +5223,7 @@
     {
      "name": "bindeTermin",
      "file": "module/verordnung-termine.js",
-     "start": 194,
+     "start": 196,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5486,7 +5294,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 4664,
+     "start": 4380,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5537,7 +5345,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3261,
+     "start": 2980,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5588,7 +5396,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3717,
+     "start": 3435,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5598,7 +5406,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 3925,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5659,7 +5467,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5679,7 +5487,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4092,
+     "start": 3810,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5730,7 +5538,7 @@
     {
      "name": "loeseTermin",
      "file": "module/verordnung-termine.js",
-     "start": 205,
+     "start": 232,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5781,7 +5589,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3583,
+     "start": 3301,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5821,7 +5629,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5872,7 +5680,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3627,
+     "start": 3345,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5882,7 +5690,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3505,
+     "start": 3223,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5971,6 +5779,7 @@
     "module/rechnung-editor.test.js",
     "module/rechnung-verordnung.js",
     "module/signal.js",
+    "module/sitzung-bindung.js",
     "module/sondertag.js",
     "module/standort-plan.js",
     "module/termin-aktionen.js",
@@ -5984,6 +5793,7 @@
     "module/termin-verordnung.js",
     "module/verordnung-anlegen.js",
     "module/verordnung-detail.js",
+    "module/verordnung-einheiten.js",
     "module/verordnung-termine.js",
     "module/warteliste-nachruecker.js"
    ],
@@ -6053,75 +5863,23 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1831,
+     "start": 1835,
      "module": [],
      "uiPfad": []
     }
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert"
-     ]
-    },
-    {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 10283,
+     "start": 9928,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6173,7 +5931,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 9040,
+     "start": 8756,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6295,7 +6053,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14097,
+     "start": 13741,
      "module": [],
      "uiPfad": []
     },
@@ -6309,7 +6067,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
@@ -6391,7 +6149,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 14444,
+     "start": 14088,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6401,7 +6159,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6513,7 +6271,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 9016,
+     "start": 8732,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6564,7 +6322,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 14361,
+     "start": 14005,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6654,14 +6412,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9992,
+     "start": 9637,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6709,60 +6467,9 @@
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete"
-     ]
-    },
-    {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 10996,
+     "start": 10641,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6938,14 +6645,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1831,
+     "start": 1835,
      "module": [],
      "uiPfad": []
     },
@@ -7096,7 +6803,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 9133,
+     "start": 8849,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7146,7 +6853,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 9236,
+     "start": 8952,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7286,7 +6993,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 14565,
+     "start": 14209,
      "module": [],
      "uiPfad": []
     }
@@ -7295,7 +7002,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 14207,
+     "start": 13851,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7606,7 +7313,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 11271,
+     "start": 10916,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7654,7 +7361,7 @@
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 11714,
+     "start": 11359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7704,7 +7411,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 11632,
+     "start": 11277,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7755,7 +7462,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 11864,
+     "start": 11509,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7806,7 +7513,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 11832,
+     "start": 11477,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7857,7 +7564,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 11841,
+     "start": 11486,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7906,62 +7613,9 @@
      ]
     },
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert",
-      "update"
-     ]
-    },
-    {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 11542,
+     "start": 11187,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8012,50 +7666,9 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 11802,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 11447,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "insert",
       "update"
@@ -8064,50 +7677,9 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 11888,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 11533,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "insert"
      ]
@@ -8166,7 +7738,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 11857,
+     "start": 11502,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8309,60 +7881,9 @@
    "leser": [],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "insert"
-     ]
-    },
-    {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7852,
+     "start": 7568,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8479,14 +8000,14 @@
     {
      "name": "berechneVerschluesselung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1443,
+     "start": 1446,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ermittleEmpfaengerZertifikatStatus",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1941,
+     "start": 1944,
      "module": [],
      "uiPfad": []
     }
@@ -8523,14 +8044,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14097,
+     "start": 13741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
@@ -8544,7 +8065,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9796,
+     "start": 9441,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8592,7 +8113,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9339,
+     "start": 9055,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8647,61 +8168,9 @@
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "upsert"
-     ]
-    },
-    {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8711,7 +8180,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9838,
+     "start": 9483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8763,7 +8232,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9691,
+     "start": 9336,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8814,7 +8283,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9939,
+     "start": 9584,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8933,57 +8402,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 9796,
+     "start": 9441,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9031,7 +8452,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 9838,
+     "start": 9483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9079,7 +8500,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9691,
+     "start": 9336,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9129,7 +8550,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9207,7 +8628,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9905,
+     "start": 9550,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9255,61 +8676,9 @@
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert"
-     ]
-    },
-    {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9319,7 +8688,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9939,
+     "start": 9584,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9487,68 +8856,16 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 14878,
+     "start": 14520,
      "module": [],
      "uiPfad": []
     }
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert"
-     ]
-    },
-    {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9558,7 +8875,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10375,
+     "start": 10020,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10042,7 +9359,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1559,
+     "start": 1546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10090,7 +9407,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 15580,
+     "start": 15222,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10140,7 +9457,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3627,
+     "start": 3345,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10150,7 +9467,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3505,
+     "start": 3223,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10276,7 +9593,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 12975,
+     "start": 12619,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10391,57 +9708,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 9905,
+     "start": 9550,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10489,7 +9758,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 9939,
+     "start": 9584,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10539,7 +9808,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10661,7 +9930,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
-    "api-backend/dsgvo/klassifikation.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "module/verordnung-import.js"
    ],
    "register": true,
    "status": "veraltet",
@@ -10811,7 +10081,7 @@
     {
      "name": "ladeOffeneRechnung",
      "file": "module/verordnung-maske.js",
-     "start": 304,
+     "start": 318,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10907,7 +10177,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1559,
+     "start": 1546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10955,7 +10225,7 @@
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 7914,
+     "start": 7630,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11003,7 +10273,7 @@
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 13047,
+     "start": 12691,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11258,7 +10528,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 13213,
+     "start": 12857,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -11461,7 +10731,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 15132,
+     "start": 14774,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11806,7 +11076,7 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 15017,
+     "start": 14659,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12020,7 +11290,7 @@
     {
      "name": "findeLeadIdZuTermin",
      "file": "module/termin-patient-bezug.js",
-     "start": 73,
+     "start": 75,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12073,57 +11343,9 @@
      "uiPfad": []
     },
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3261,
+     "start": 2980,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12171,7 +11393,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3717,
+     "start": 3435,
      "module": [],
      "uiPfad": []
     },
@@ -12185,7 +11407,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4422,
+     "start": 4138,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12233,7 +11455,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 3925,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12281,7 +11503,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3129,
+     "start": 2889,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12329,7 +11551,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 16813,
+     "start": 16452,
      "module": [],
      "uiPfad": []
     },
@@ -12480,7 +11702,7 @@
     {
      "name": "laden",
      "file": "module/start-aufgaben.js",
-     "start": 306,
+     "start": 359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12734,7 +11956,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1559,
+     "start": 1546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12830,7 +12052,7 @@
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 10625,
+     "start": 10270,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12878,7 +12100,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4432,
+     "start": 4148,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12926,7 +12148,7 @@
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 13075,
+     "start": 12719,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12974,7 +12196,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7106,
+     "start": 6822,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13022,7 +12244,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 12328,
+     "start": 11973,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13070,7 +12292,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 7852,
+     "start": 7568,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13118,7 +12340,7 @@
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 17576,
+     "start": 17215,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13214,50 +12436,9 @@
     {
      "name": "mountStartAufgaben",
      "file": "module/start-aufgaben.js",
-     "start": 113,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
+     "start": 141,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "noopMiddleware",
@@ -13269,7 +12450,7 @@
     {
      "name": "nurZiffern",
      "file": "module/termin-patient-bezug.js",
-     "start": 52,
+     "start": 54,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13365,7 +12546,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13413,7 +12594,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 4331,
+     "start": 4049,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13557,14 +12738,14 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1460,
+     "start": 1464,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3360,
+     "start": 3078,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13612,14 +12793,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3627,
+     "start": 3345,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 15251,
+     "start": 14893,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13751,7 +12932,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3841,
+     "start": 3559,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13761,9 +12942,50 @@
     {
      "name": "importiere",
      "file": "module/patienten-import.js",
-     "start": 523,
-     "module": [],
-     "uiPfad": [],
+     "start": 550,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
      "ops": [
       "insert"
      ]
@@ -13771,7 +12993,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 16524,
+     "start": 16163,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13781,7 +13003,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13802,7 +13024,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 6602,
+     "start": 6318,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13874,9 +13096,50 @@
     {
      "name": "schritt3",
      "file": "module/patienten-import.js",
-     "start": 544,
-     "module": [],
-     "uiPfad": [],
+     "start": 571,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
      "ops": [
       "delete"
      ]
@@ -13968,7 +13231,8 @@
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
     "module/verordnung-podo.js",
-    "module/verordnung-uebersicht.js"
+    "module/verordnung-uebersicht.js",
+    "tools/check-select-spalten.test.js"
    ],
    "module": [
     "abrechnung",
@@ -14236,7 +13500,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 7641,
+     "start": 7357,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14338,7 +13602,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 7765,
+     "start": 7481,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14749,7 +14013,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 589,
+     "start": 587,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15895,7 +15159,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1559,
+     "start": 1546,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15943,7 +15207,7 @@
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 7827,
+     "start": 7543,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15991,7 +15255,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16042,49 +15306,8 @@
      "name": "erstelleNotizenController",
      "file": "module/patient-notizen.js",
      "start": 2,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "insert",
       "update"
@@ -16251,7 +15474,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": []
     }
@@ -16516,11 +15739,9 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/behandlungsbeginn.test.js",
-    "module/billing-loader-503.test.js",
     "module/podo-behandlungen-oeffnen.test.js",
     "module/rechnung-verordnung.test.js",
-    "module/rezeptinfo-geld.test.js",
-    "tools/browser-probe/billing-loader-503-probe.html"
+    "module/rezeptinfo-geld.test.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -16737,7 +15958,7 @@
     {
      "name": "ladePodoZuzahlung",
      "file": "module/rezeptinfo-geld.js",
-     "start": 241,
+     "start": 252,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16840,7 +16061,7 @@
     {
      "name": "ladeVerordnungsBehandlungen",
      "file": "module/verordnung-termine.js",
-     "start": 180,
+     "start": 182,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17492,7 +16713,7 @@
     {
      "name": "laden",
      "file": "module/start-aufgaben.js",
-     "start": 306,
+     "start": 359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17542,50 +16763,9 @@
     {
      "name": "fuegeAufgabeHinzu",
      "file": "module/start-aufgaben.js",
-     "start": 350,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 406,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "insert"
      ]
@@ -17593,50 +16773,9 @@
     {
      "name": "loescheAufgabe",
      "file": "module/start-aufgaben.js",
-     "start": 442,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 506,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "delete"
      ]
@@ -17644,50 +16783,9 @@
     {
      "name": "macheRueckgaengig",
      "file": "module/start-aufgaben.js",
-     "start": 421,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 485,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -17695,50 +16793,9 @@
     {
      "name": "markiereErledigt",
      "file": "module/start-aufgaben.js",
-     "start": 399,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 463,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -17746,50 +16803,9 @@
     {
      "name": "mountStartAufgaben",
      "file": "module/start-aufgaben.js",
-     "start": 113,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 141,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "delete",
       "insert",
@@ -17976,7 +16992,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 555,
+     "start": 559,
      "module": [],
      "uiPfad": []
     },
@@ -18041,7 +17057,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18095,7 +17111,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 6497,
+     "start": 6213,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18143,7 +17159,7 @@
     {
      "name": "ladePrivatSumme",
      "file": "module/rezeptinfo-geld.js",
-     "start": 154,
+     "start": 156,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18196,9 +17212,9 @@
      "uiPfad": []
     },
     {
-     "name": "loadCalRpUnverga",
+     "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 3213,
+     "start": 5203,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18244,9 +17260,9 @@
      ]
     },
     {
-     "name": "loadRxSessionsPanel",
-     "file": "dashboard.js",
-     "start": 5487,
+     "name": "oeffnePhysioEinheitenDialog",
+     "file": "module/verordnung-einheiten.js",
+     "start": 396,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18370,7 +17386,7 @@
     {
      "name": "waehleVerordnungFuerPanel",
      "file": "module/termin-aktionen.js",
-     "start": 224,
+     "start": 225,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18466,9 +17482,60 @@
    ],
    "schreiber": [
     {
+     "name": "_verdrahteSitzungsHeilmittelTausch",
+     "file": "module/verordnung-detail.js",
+     "start": 1073,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "bindeSitzungenAnTermin",
      "file": "module/sitzung-bindung.js",
-     "start": 44,
+     "start": 49,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18539,7 +17606,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3261,
+     "start": 2980,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18600,7 +17667,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 6510,
+     "start": 6226,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18621,7 +17688,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 6478,
+     "start": 6194,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18654,7 +17721,9 @@
     "module/sitzung-bindung.js",
     "module/sitzungsfortschritt.js",
     "module/termin-aktionen.js",
-    "module/termin-nicht-erschienen.js"
+    "module/termin-nicht-erschienen.js",
+    "module/verordnung-detail.js",
+    "module/verordnung-einheiten.js"
    ],
    "module": [
     "abrechnung",
@@ -18849,7 +17918,6 @@
     "api-backend/lib/therapiebericht.test.js",
     "module/behandlungsbeginn.js",
     "module/behandlungsbeginn.test.js",
-    "module/billing-loader-503.test.js",
     "module/booking-status-korrektur.test.js",
     "module/patienten-import.js",
     "module/podo-behandlungen-oeffnen.test.js",
@@ -18861,7 +17929,6 @@
     "module/verordnung-topf.js",
     "module/verordnung-topf.test.js",
     "tools/browser-probe/abrechnung-probe.html",
-    "tools/browser-probe/billing-loader-503-probe.html",
     "tools/browser-probe/redesign-fixture.js",
     "tools/schema-dokumente.test.js"
    ],
@@ -18874,7 +17941,7 @@
     {
      "name": "aufEuro",
      "file": "module/rezeptinfo-geld.js",
-     "start": 469,
+     "start": 480,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18939,6 +18006,61 @@
      "start": 320,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "bindeSitzungenAnTermin",
+     "file": "module/sitzung-bindung.js",
+     "start": 49,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "bindeTermin",
+     "file": "module/verordnung-termine.js",
+     "start": 196,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
     },
     {
      "name": "bucheErgaenzendMit",
@@ -19355,7 +18477,7 @@
     {
      "name": "ladeTerminVerordnungen",
      "file": "module/termin-verordnung.js",
-     "start": 359,
+     "start": 380,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19595,14 +18717,14 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 6510,
+     "start": 6226,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7277,
+     "start": 6993,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19650,7 +18772,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 17408,
+     "start": 17047,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19698,14 +18820,14 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 1746,
+     "start": 1733,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 5487,
+     "start": 5203,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19753,7 +18875,7 @@
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 17510,
+     "start": 17149,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19898,13 +19020,54 @@
      "name": "oeffneZuzahlungKorrektur",
      "file": "module/zuzahlung-korrektur.js",
      "start": 76,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20062,7 +19225,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 15251,
+     "start": 14893,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20213,14 +19376,14 @@
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 6892,
+     "start": 6608,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "verdrahteGeldzeile",
      "file": "module/rezeptinfo-geld.js",
-     "start": 433,
+     "start": 444,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20323,14 +19486,55 @@
     {
      "name": "vorschau",
      "file": "module/verordnung-import.js",
-     "start": 388,
-     "module": [],
-     "uiPfad": []
+     "start": 617,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
     },
     {
      "name": "waehleVerordnungFuerPanel",
      "file": "module/termin-aktionen.js",
-     "start": 224,
+     "start": 225,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20385,7 +19589,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 981,
+     "start": 1145,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20506,7 +19710,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 7496,
+     "start": 7212,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20557,7 +19761,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 6333,
+     "start": 6049,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20608,7 +19812,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20628,9 +19832,50 @@
     {
      "name": "oeffneVerordnungImport",
      "file": "module/verordnung-import.js",
-     "start": 316,
-     "module": [],
-     "uiPfad": [],
+     "start": 537,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -20648,7 +19893,7 @@
     {
      "name": "senden",
      "file": "module/verordnung-import.js",
-     "start": 442,
+     "start": 719,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20699,7 +19944,7 @@
     {
      "name": "speichereEinheiten",
      "file": "module/verordnung-einheiten.js",
-     "start": 126,
+     "start": 185,
      "module": [
       "abrechnung",
       "anamnese",
@@ -20750,7 +19995,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6408,
+     "start": 6124,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20760,7 +20005,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 15975,
+     "start": 15614,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -20770,9 +20015,50 @@
     {
      "name": "w",
      "file": "module/verordnung-import.js",
-     "start": 148,
-     "module": [],
-     "uiPfad": [],
+     "start": 239,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -20862,6 +20148,7 @@
     "module/rechnung-zahlung.js",
     "module/rechnung-zur-verordnung.js",
     "module/rezeptinfo-geld.js",
+    "module/sitzung-bindung.js",
     "module/sitzungsfortschritt.js",
     "module/termin-aktionen.js",
     "module/termin-folge.js",
@@ -20871,6 +20158,7 @@
     "module/verordnung-detail.js",
     "module/verordnung-einheiten.js",
     "module/verordnung-import.js",
+    "module/verordnung-termine.js",
     "module/verordnung-uebersicht.js",
     "module/verordnung-uebersicht.test.js",
     "module/zuzahlung-befreiung.js",
@@ -20930,7 +20218,6 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": true,
    "erwaehnt": [
-    "Claude outputs/2026-10-16-release/weitere-bugs/journal/repro.mjs",
     "api-backend/ai/ki-woerterbuch.test.js",
     "api-backend/billing/api/artefakt-routes.test.js",
     "api-backend/billing/api/ausfall-atomar.test.js",
@@ -20963,49 +20250,8 @@
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
      "start": 502,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "bereichFuerAbrechnung",
@@ -21052,14 +20298,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4050,
+     "start": 4111,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
@@ -21073,14 +20319,14 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3841,
+     "start": 3559,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "handleEmpfaengerPruefung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2145,
+     "start": 2148,
      "module": [],
      "uiPfad": []
     },
@@ -21304,14 +20550,14 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 511,
+     "start": 509,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 15528,
+     "start": 15170,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21359,7 +20605,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 15580,
+     "start": 15222,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21407,7 +20653,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 15882,
+     "start": 15524,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21455,7 +20701,7 @@
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 8931,
+     "start": 8647,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21510,7 +20756,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9339,
+     "start": 9055,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21613,7 +20859,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 17650,
+     "start": 17289,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21661,7 +20907,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 2329,
+     "start": 2332,
      "module": [],
      "uiPfad": []
     },
@@ -21675,14 +20921,14 @@
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1288,
+     "start": 1291,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 3874,
+     "start": 3592,
      "module": [],
      "uiPfad": []
     },
@@ -21751,7 +20997,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 9691,
+     "start": 9336,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21806,7 +21052,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 632,
+     "start": 630,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22252,50 +21498,9 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 12505,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
+     "start": 12149,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "sectorFuer",
@@ -22386,6 +21591,54 @@
      "start": 37,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "zeigeVerordnungDetail",
+     "file": "module/verordnung-detail.js",
+     "start": 1145,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
@@ -22442,50 +21695,9 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 12118,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 11763,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -22493,7 +21705,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 4963,
+     "start": 4679,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -22503,101 +21715,9 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 12101,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "update"
-     ]
-    },
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "start": 11746,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -22615,7 +21735,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 18345,
+     "start": 17984,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22666,7 +21786,7 @@
     {
      "name": "kontoLoeschenIntern",
      "file": "api-backend/dsgvo/loeschen.js",
-     "start": 105,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -22687,49 +21807,8 @@
      "name": "mountBrandingExtras",
      "file": "module/branding-ui.js",
      "start": 27,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -22839,7 +21918,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9992,
+     "start": 9637,
      "module": [
       "abrechnung",
       "anamnese",
@@ -22890,7 +21969,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1809,
+     "start": 1796,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -23206,49 +22285,8 @@
      "name": "stempelEntfernen",
      "file": "module/stempel.js",
      "start": 70,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -23257,49 +22295,8 @@
      "name": "stempelHochladen",
      "file": "module/stempel.js",
      "start": 55,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -23308,49 +22305,8 @@
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
      "start": 271,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -23411,6 +22367,7 @@
     "module/praxis-standort.js",
     "module/selbstzahler-stufen.js",
     "module/stempel.js",
+    "module/verordnung-detail.js",
     "onboarding.js",
     "tools/stripe-url-contract.test.js"
    ],
@@ -23842,7 +22799,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4362,
+     "start": 4423,
      "module": [],
      "uiPfad": []
     },
@@ -23856,55 +22813,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3249,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
+     "start": 2968,
      "module": [
       "abrechnung",
       "anamnese",
@@ -23952,7 +22861,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
@@ -23964,16 +22873,9 @@
      "uiPfad": []
     },
     {
-     "name": "initCalendar",
-     "file": "dashboard.js",
-     "start": 2038,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10375,
+     "start": 10020,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24028,7 +22930,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 8304,
+     "start": 8020,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24172,7 +23074,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4760,
+     "start": 4476,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24236,7 +23138,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 8325,
+     "start": 8041,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24287,7 +23189,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 6699,
+     "start": 6415,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -24298,7 +23200,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 8512,
+     "start": 8228,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24412,7 +23314,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 8699,
+     "start": 8415,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24475,7 +23377,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 14361,
+     "start": 14005,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -24694,7 +23596,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1006,
+     "start": 1001,
      "module": [],
      "uiPfad": []
     },
@@ -24711,49 +23613,8 @@
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
      "start": 502,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "upsert"
      ]
@@ -24762,49 +23623,8 @@
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
      "start": 271,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "upsert"
      ]
@@ -25064,7 +23884,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10375,
+     "start": 10020,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25112,61 +23932,9 @@
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert"
-     ]
-    },
-    {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 10461,
+     "start": 10106,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25289,14 +24057,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1831,
+     "start": 1835,
      "module": [],
      "uiPfad": []
     },
@@ -25351,7 +24119,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 10223,
+     "start": 9868,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25399,7 +24167,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 9537,
+     "start": 9252,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25447,55 +24215,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 17650,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadUrlaubListe",
-     "file": "dashboard.js",
-     "start": 9641,
+     "start": 17289,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25545,7 +24265,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 9593,
+     "start": 9308,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25591,115 +24311,12 @@
      ],
      "ops": [
       "delete"
-     ]
-    },
-    {
-     "name": "deleteUrlaub",
-     "file": "dashboard.js",
-     "start": 9670,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete"
-     ]
-    },
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "insert"
      ]
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9339,
+     "start": 9055,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25760,7 +24377,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 9992,
+     "start": 9637,
      "module": [
       "abrechnung",
       "anamnese",
@@ -25804,16 +24421,6 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ],
-     "ops": [
-      "insert"
-     ]
-    },
-    {
-     "name": "saveUrlaub",
-     "file": "dashboard.js",
-     "start": 9609,
-     "module": [],
-     "uiPfad": [],
      "ops": [
       "insert"
      ]
@@ -25942,7 +24549,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 7890,
+     "start": 7606,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26196,115 +24803,23 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14097,
+     "start": 13741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 12575,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
+     "start": 12219,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "upsert"
-     ]
-    },
-    {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 12654,
+     "start": 12298,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26355,7 +24870,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 14523,
+     "start": 14167,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26435,21 +24950,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3465,
+     "start": 3183,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3627,
+     "start": 3345,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3505,
+     "start": 3223,
      "module": [],
      "uiPfad": []
     }
@@ -26458,7 +24973,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 15724,
+     "start": 15366,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26509,7 +25024,7 @@
     {
      "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 15836,
+     "start": 15478,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26594,7 +25109,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 16689,
+     "start": 16328,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26644,7 +25159,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 16847,
+     "start": 16486,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -26726,62 +25241,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 796,
+     "start": 800,
      "module": [],
      "uiPfad": []
     },
     {
-     "name": "getEmployeeWorkingHours",
-     "file": "dashboard.js",
-     "start": 1958,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1831,
+     "start": 1835,
      "module": [],
      "uiPfad": []
     },
@@ -26932,14 +25399,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1160,
+     "start": 1147,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1240,
+     "start": 1227,
      "module": [
       "abrechnung",
       "anamnese",
@@ -26987,7 +25454,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 9040,
+     "start": 8756,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27035,7 +25502,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 9133,
+     "start": 8849,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27094,60 +25561,9 @@
      ]
     },
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 9660,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "anfragen",
-      "b2b",
-      "b2c",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "patientDetailModal",
-      "podologie-billing",
-      "rechnungen",
-      "rezeptModal",
-      "services",
-      "settings",
-      "statistik",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen",
-      "vorlagen",
-      "warteliste"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 38 modülden çağrılıyor"
-     ],
-     "ops": [
-      "upsert"
-     ]
-    },
-    {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 10283,
+     "start": 9928,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27272,7 +25688,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 15251,
+     "start": 14893,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27389,7 +25805,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7277,
+     "start": 6993,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27437,7 +25853,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2718,
+     "start": 2483,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27539,7 +25955,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 7568,
+     "start": 7284,
      "module": [
       "abrechnung",
       "anamnese",
@@ -27699,7 +26115,9 @@
  ],
  "ohneRegister": [],
  "ungeklaert": [],
- "registerVerwaist": [],
+ "registerVerwaist": [
+  "einheiten_korrekturen"
+ ],
  "codeStumm": [
   {
    "name": "abrechnung_artefakt_freeze",
@@ -27812,6 +26230,7 @@
    "data_access_log",
    "data_sharing_settings",
    "document_vorlagen",
+   "einheiten_korrekturen",
    "email_logs",
    "employee_business_assignments",
    "employee_groups",

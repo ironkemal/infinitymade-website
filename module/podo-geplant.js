@@ -7,7 +7,7 @@
  * Reine Rechnung, keine Abfrage.
  */
 
-import { istVergeben } from './verordnung-termine.js?v=20261010zc';
+import { istVergeben } from './verordnung-termine.js?v=20261102a';
 
 /**
  * Welche HPNR trägt eine Leistung? `gkv_position_nr`, sonst `code`.

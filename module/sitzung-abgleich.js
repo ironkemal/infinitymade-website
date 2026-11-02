@@ -94,7 +94,7 @@ export function terminZiel(anzahlEinheiten, doppelbehandlung = false) {
   return doppelbehandlung ? Math.ceil(n / 2) : n;
 }
 
-export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false }) {
+export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false, items = null }) {
   if (!supabase || !prescriptionId) return { ergaenzt: 0, fehler: null };
   if (status && ABGESCHLOSSEN.includes(status)) return { ergaenzt: 0, fehler: null };
 
@@ -104,14 +104,40 @@ export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinhe
     .eq('prescription_id', prescriptionId);
   if (leseFehler) return { ergaenzt: 0, fehler: leseFehler.message };
 
-  const fehlt = fehlendeSitzungsnummern(vorhandene, terminZiel(anzahlEinheiten, doppelbehandlung));
+  let soll = 0;
+  const itemSlots = [];
+
+  if (Array.isArray(items) && items.length > 0) {
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const count = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
+      if (Number.isFinite(count) && count > 0) {
+        itemSlots.push({ index: i, count });
+        soll += count;
+      }
+    }
+  } else {
+    soll = terminZiel(anzahlEinheiten, doppelbehandlung);
+  }
+
+  const fehlt = fehlendeSitzungsnummern(vorhandene, soll);
   if (!fehlt.length) return { ergaenzt: 0, fehler: null };
+
+  function indexFuerNummer(num) {
+    if (!itemSlots.length) return heilmittelIndex;
+    let offset = 0;
+    for (const slot of itemSlots) {
+      if (num <= offset + slot.count) return slot.index;
+      offset += slot.count;
+    }
+    return itemSlots[itemSlots.length - 1].index;
+  }
 
   const zeilen = fehlt.map(n => ({
     prescription_id: prescriptionId,
     session_number: n,
     status: 'planned',
-    heilmittel_index: heilmittelIndex,
+    heilmittel_index: indexFuerNummer(n),
   }));
 
   const { error: schreibFehler } = await supabase

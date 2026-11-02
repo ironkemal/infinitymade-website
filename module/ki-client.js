@@ -1,10 +1,12 @@
 /** Local authenticated KI client. Default off; server capabilities remain authoritative. */
+import { attachDiktatToMailInputs } from './diktat.js';
+export { attachDiktatToMailInputs };
 export const CURRENT_EINWILLIGUNG_VERSION = '2026-10-30-v1';
 const TASKS = new Set(['b2c-draft', 'b2b-draft', 'appointment-confirm-draft', 'series-rank', 'series_meta']);
 const MAIL = new Set(['b2c-draft', 'b2b-draft']);
 const DEFAULT_AI_BASE = '/api/ai';
 const fail = (code, message, status = 400) => Object.assign(new Error(message), { code, status, kiClientError:true });
-const offline = () => ({ effective:false, mode:'aus', operatorReady:false, ownerActive:false, mailReady:false, freeText:false,
+const offline = () => ({ effective:false, mode:'aus', operatorReady:false, ownerActive:false, mailReady:false, freeText:false, diktat_verfuegbar:false,
   capabilities:{mailDraft:false,appointmentDraft:false,freeText:false}, disabledReason:'KI_DEAKTIVIERT',
   disabledReasonText:'KI-Unterstützung ist deaktiviert oder derzeit nicht erreichbar.', informationVersion:null, decidedAt:null });
 
@@ -21,6 +23,7 @@ export async function getKiConfig(deps = {}) {
     const mode = ['aus','direkt','jeton'].includes(data.mode) ? data.mode : 'aus';
     const valid = (employee ? data.ok === true : data.success === true) && ['direkt','jeton'].includes(mode);
     const effective = valid && data.active === true && (employee || (data.operatorReady === true && data.ownerActive === true));
+    const diktat_verfuegbar = effective && (data.diktat_verfuegbar === true);
     const capabilities = {
       freeText:effective && data.capabilities?.freeText === true,
       mailDraft:effective && data.capabilities?.freeText === true && data.capabilities?.mailDraft === true,
@@ -28,6 +31,7 @@ export async function getKiConfig(deps = {}) {
     };
     return { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
       mailReady:data.mailReady === true || (employee && capabilities.appointmentDraft),freeText:capabilities.freeText,capabilities,
+      diktat_verfuegbar,
       disabledReason:effective ? null : 'KI_DEAKTIVIERT',disabledReasonText:effective ? null : offline().disabledReasonText,
       informationVersion:typeof data.optIn?.informationVersion === 'string' ? data.optIn.informationVersion : null,
       decidedAt:typeof data.optIn?.decidedAt === 'string' && Number.isFinite(Date.parse(data.optIn.decidedAt)) ? data.optIn.decidedAt : null };
@@ -132,6 +136,7 @@ export async function runMailDraftInUi({task='b2c-draft',intent,contacts=[],owne
     const result=await requestKiTask(task,{intent,contacts:contacts.slice(0,30),owner_info:ownerInfo},deps);
     if (!result.draft) throw fail('KI_TASK_FAILED','Kein E-Mail-Entwurf verfügbar.');
     aiAddMsg?.('Entwurf erstellt — bitte prüfen und manuell senden.','ai',containerId);
+    try { attachDiktatToMailInputs(deps); } catch {}
     openComposeModal?.(result.draft);return result.draft;
   } catch(err) {aiAddMsg?.(err.canceled ? 'Vorgang abgebrochen.' : 'KI-Entwurf derzeit nicht verfügbar. Bitte manuell schreiben.','ai',containerId);throw err;}
   finally {loading?.remove();}
@@ -150,5 +155,6 @@ export async function refreshKiControls(deps = {}) {
   ids.forEach(id=>{const el=doc?.getElementById(id);if(el) el.disabled=true;});
   const cfg = await getKiConfig(deps);
   ids.forEach(id=>{const el=doc?.getElementById(id);if(el) {el.disabled=id.endsWith('VoiceBtn') || cfg.capabilities.mailDraft !== true;el.title=el.disabled ? 'KI-E-Mail-Assistent derzeit deaktiviert. Manuelles Schreiben bleibt verfügbar.' : '';}});
+  try { attachDiktatToMailInputs({ ...deps, diktat_verfuegbar: cfg.diktat_verfuegbar }); } catch {}
   return cfg;
 }

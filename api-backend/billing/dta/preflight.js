@@ -497,6 +497,12 @@ export function preflight(input) {
       E(errors, 'V:01009', `${at}.verordnung`, `Therapiebericht angefordert aber ausstehend (Status: "${v.berichtStatus || 'offen'}")`);
     }
 
+    // Arbeitsunfall (ZHE8=1) / BG darf nicht über § 302 SGB V abgerechnet werden (#290)
+    if (String(v.unfallkennzeichen ?? '').trim() === '1' || v.rezeptart === 'bg' || p.rezeptart === 'bg') {
+      E(errors, 'S:01014', `${at}.verordnung.unfallkennzeichen`,
+        'Arbeitsunfall / Berufsgenossenschaft (ZHE-Feld 8 = 1) ist nicht über § 302 SGB V GKV-abrechenbar');
+    }
+
 
     // Tarif
     const t = p.tarif || {};

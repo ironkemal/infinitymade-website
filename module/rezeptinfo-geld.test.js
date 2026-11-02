@@ -71,6 +71,33 @@ test('sechs Einheiten à 30 € ergeben 18 € Anteil plus 10 € Pauschale', ()
   assert.equal(st.gesamt, 28);
 });
 
+test('Mehrfach-Heilmittel: X0501x6 + X1201x6 ergibt Summe beider Posten, Einzelfall bleibt alt', () => {
+  const rx = {
+    anzahl_einheiten: 12,
+    heilmittel_items: [
+      { code: 'X0501', einheiten: 6 },
+      { code: 'X1201', einheiten: 6 },
+    ],
+  };
+  const st = ermittleGeldstand({ rx, erbracht: 0, zahler: 'gkv', katalog: KATALOG });
+  // Posten 1: 6 × 30 € = 180 € (10 % = 18,00 €)
+  // Posten 2: 6 × 40 € = 240 € (10 % = 24,00 €)
+  // Brutto: 420,00 €
+  // Prozent: 42,00 €
+  // Pauschale: 10,00 €
+  // Gesamt: 52,00 €
+  assert.equal(st.brutto, 420);
+  assert.equal(st.prozent, 42);
+  assert.equal(st.pauschale, 10);
+  assert.equal(st.gesamt, 52);
+
+  // Einzelnes Heilmittel: altes Ergebnis
+  const rxAlt = { anzahl_einheiten: 6 };
+  const stAlt = ermittleGeldstand({ rx: rxAlt, erbracht: 6, zahler: 'gkv', position: POS });
+  assert.equal(stAlt.brutto, 180);
+  assert.equal(stAlt.gesamt, 28);
+});
+
 // Die Pauschale hängt an der Verordnung, nicht an der Sitzung — beim Abbruch
 // sinkt nur der Prozentanteil.
 test('Abbruch nach drei Sitzungen senkt den Anteil, nicht die Pauschale', () => {

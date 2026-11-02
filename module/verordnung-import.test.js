@@ -1,16 +1,32 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { leseCsv, ordneSpaltenZu } from './patienten-import.js';
-import { VO_SPALTEN, VO_VORLAGE_CSV, voFehlendePflicht, pruefeVerordnungen, voRumpf, leseNagel, janein } from './verordnung-import.js';
+import {
+  VO_SPALTEN,
+  VO_VORLAGE_CSV,
+  VO_VORLAGE_CSV_PHYSIO,
+  voFehlendePflicht,
+  pruefeVerordnungen,
+  voRumpf,
+  leseNagel,
+  janein,
+  setzeDefaultPhysioKatalog,
+} from './verordnung-import.js';
+import { PHYSIO_POSITIONS } from '../api-backend/billing/codes/physio_positions.js';
 
-const patienten = [{ id: 'p1', first_name: 'Erika', last_name: 'Muster', geburtsdatum: '1950-02-01', versichertennummer: 'A123456780', krankenkasse_ik: '104212505', krankenkasse: 'AOK' }];
-const k = (extra = {}) => ({ patienten, vorhandeneVo: new Set(), heute: '2026-10-20', ...extra });
+setzeDefaultPhysioKatalog(PHYSIO_POSITIONS);
+
+const patienten = [
+  { id: 'p1', first_name: 'Erika', last_name: 'Muster', geburtsdatum: '1950-02-01', versichertennummer: 'A123456780', krankenkasse_ik: '104212505', krankenkasse: 'AOK' },
+  { id: 'p2', first_name: 'Çağlar', last_name: 'Şahin', geburtsdatum: '1985-06-15', versichertennummer: 'B987654321', krankenkasse_ik: '104212505', krankenkasse: 'TK' },
+];
+const k = (extra = {}) => ({ patienten, vorhandeneVo: new Set(), heute: '2026-10-20', katalog: PHYSIO_POSITIONS, ...extra });
 const zuVon = (csv) => ordneSpaltenZu(leseCsv(csv)[0], VO_SPALTEN);
 
-test('Vorlage: alle Spalten erkannt, Zeile übernehmbar', () => {
+test('Vorlage (Podologie): alle Spalten erkannt, Zeile übernehmbar', () => {
   const zu = zuVon(VO_VORLAGE_CSV);
-  assert.deepEqual(voFehlendePflicht(zu), []);
-  const e = pruefeVerordnungen(VO_VORLAGE_CSV, zu, k());
+  assert.deepEqual(voFehlendePflicht(zu, 'podo'), []);
+  const e = pruefeVerordnungen(VO_VORLAGE_CSV, zu, k({ bereich: 'podo' }));
   assert.equal(e.ok, 1, JSON.stringify(e.zeilen[0].fehler));
   const v = e.zeilen[0].verordnung;
   assert.equal(v.patient.id, 'p1');
@@ -19,29 +35,29 @@ test('Vorlage: alle Spalten erkannt, Zeile übernehmbar', () => {
   assert.equal(v.anzahl, 6);
 });
 
-test('Ablehnung: Frist abgelaufen, schon erbracht, abgerechnet, ohne Unterschrift, unbekannter Patient', () => {
+test('Ablehnung (Podologie): Frist abgelaufen, schon erbracht, abgerechnet, ohne Unterschrift, unbekannter Patient', () => {
   const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Leitsymptomatik;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
   const csv = kopf
     + 'Muster;Erika;01.02.1950;01.08.2026;123456601;DF;a;6;ja;0;nein\n'   // Frist abgelaufen
-    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;NF;a;6;ja;2;nein\n'   // schon behandelt
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;NF;a;6;ja;2;nein\n'   // schon behandelt (Podo Schritt 2)
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;QF;a;6;ja;0;ja\n'     // abgerechnet
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;DF;b;6;nein;0;nein\n' // ohne Unterschrift
     + 'Fremd;Hans;01.01.1960;15.10.2026;123456601;DF;a;6;ja;0;nein\n';    // Patient fehlt
-  const e = pruefeVerordnungen(csv, zuVon(csv), k());
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'podo' }));
   assert.equal(e.ok, 1);
   assert.match(e.zeilen[0].fehler.join(), /Beginnfrist/);
-  assert.deepEqual(e.zeilen[1].fehler, []);   // Schritt 2: teilweise erbracht wird übernommen
+  assert.deepEqual(e.zeilen[1].fehler, []);   // Schritt 2: teilweise erbracht wird bei Podo übernommen
   assert.ok(e.zeilen[1].hinweise.some(h => /Teilweise erbracht/.test(h)));
   assert.match(e.zeilen[2].fehler.join(), /abgerechnet/);
   assert.match(e.zeilen[3].fehler.join(), /Unterschrift/);
   assert.match(e.zeilen[4].fehler.join(), /Patientenstamm/);
 });
 
-test('UI: nur a), Höchstmenge 4 bei UI2, Nagel fehlt als Hinweis, b) wird abgelehnt', () => {
+test('UI (Podologie): nur a), Höchstmenge 4 bei UI2, Nagel fehlt als Hinweis, b) wird abgelehnt', () => {
   const csv = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;DG;Leitsymptomatik;Anzahl\n'
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;UI 2;;6\n'
     + 'Muster;Erika;01.02.1950;16.10.2026;123456601;UI1;b;4\n';
-  const e = pruefeVerordnungen(csv, zuVon(csv), k());
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'podo' }));
   const [a, b] = e.zeilen;
   assert.deepEqual(a.fehler, []);
   assert.equal(a.verordnung.heilmittel, 'Nagelspangenbehandlung');
@@ -50,12 +66,12 @@ test('UI: nur a), Höchstmenge 4 bei UI2, Nagel fehlt als Hinweis, b) wird abgel
   assert.match(b.fehler.join(), /kennt Leitsymptomatik b/);
 });
 
-test('Dublette: in Praxura vorhanden und doppelt in Datei', () => {
+test('Dublette (Podologie): in Praxura vorhanden und doppelt in Datei', () => {
   const csv = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;DG;Heilmittel;Anzahl\n'
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;DF;Hornhautabtragung;6\n'
     + 'Muster;Erika;01.02.1950;15.10.2026;123456601;DF;Hornhautabtragung;6\n'
     + 'Muster;Erika;01.02.1950;14.10.2026;123456601;DF;Hornhautabtragung;6\n';
-  const e = pruefeVerordnungen(csv, zuVon(csv), k({ vorhandeneVo: new Set(['p1|2026-10-14|123456601|DF']) }));
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'podo', vorhandeneVo: new Set(['p1|2026-10-14|123456601|DF']) }));
   assert.deepEqual(e.zeilen[0].fehler, []);
   assert.match(e.zeilen[1].fehler.join(), /doppelt in Datei/);
   assert.match(e.zeilen[2].fehler.join(), /schon in Praxura/);
@@ -63,7 +79,7 @@ test('Dublette: in Praxura vorhanden und doppelt in Datei', () => {
 
 test('voRumpf: Patient-ID, Bereich podo, Leitsymptomatik-Code, Kasse aus der Akte', () => {
   const zu = zuVon(VO_VORLAGE_CSV);
-  const v = pruefeVerordnungen(VO_VORLAGE_CSV, zu, k()).zeilen[0].verordnung;
+  const v = pruefeVerordnungen(VO_VORLAGE_CSV, zu, k({ bereich: 'podo' })).zeilen[0].verordnung;
   const r = voRumpf(v, '2026-10-20');
   assert.equal(r.patient_id, 'p1');
   assert.equal(r.patient_neu, false);
@@ -90,7 +106,7 @@ test('Zuordnung nur über Name + Geburtsdatum, nie KVNR allein (canli-test 21.10
   const csv = 'Nachname;Vorname;Geburtsdatum;Versichertennummer;Krankenkasse;Ausstellungsdatum;LANR;DG;Leitsymptomatik;Anzahl\n'
     + 'Import;Erna;05.05.1955;A123456780;AOK;15.10.2026;123456601;DF;a;6\n'
     + 'Unbekannt;Hans;01.01.1950;A123456780;AOK;15.10.2026;123456601;DF;a;6\n';
-  const e = pruefeVerordnungen(csv, zuVon(csv), k({ patienten: zwei }));
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'podo', patienten: zwei }));
   assert.equal(e.zeilen[0].verordnung.patient.id, 'richtig');
   assert.match(e.zeilen[1].fehler.join(), /Patientenstamm/);
 });
@@ -103,16 +119,159 @@ test('Jede Spalte der eigenen Vorlage wird erkannt', () => {
   assert.deepEqual(fehlt, []);
 });
 
-test('Fall B: Frist am ersten Behandlungstag, Menge, Zuzahlungs-Vermerk (gkv-302 21.10.2026)', () => {
+test('Fall B (Podologie): Frist am ersten Behandlungstag, Menge, Zuzahlungs-Vermerk (gkv-302 21.10.2026)', () => {
   const csv = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;DG;Leitsymptomatik;Anzahl;Erbracht;Erster Behandlungstag;Zuzahlung bereits kassiert (EUR)\n'
-    + 'Muster;Erika;01.02.1950;01.07.2026;123456601;DF;c;6;3;20.07.2026;12,50\n'   // Frist 29.07., erster Tag davor → ok, obwohl heute später
-    + 'Muster;Erika;01.02.1950;02.07.2026;123456601;DF;c;6;3;15.08.2026;\n'      // erster Tag nach Frist
-    + 'Muster;Erika;01.02.1950;03.07.2026;123456601;DF;c;6;7;;\n';               // mehr erbracht als verordnet
-  const e = pruefeVerordnungen(csv, zuVon(csv), k());
+    + 'Muster;Erika;01.02.1950;01.07.2026;123456601;DF;c;6;3;20.07.2026;12,50\n'
+    + 'Muster;Erika;01.02.1950;02.07.2026;123456601;DF;c;6;3;15.08.2026;\n'
+    + 'Muster;Erika;01.02.1950;03.07.2026;123456601;DF;c;6;7;;\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'podo' }));
   assert.deepEqual(e.zeilen[0].fehler, []);
   assert.equal(e.zeilen[0].verordnung.zuzahlungAlt, 12.5);
   assert.equal(e.zeilen[0].verordnung.erbracht, 3);
   assert.match(e.zeilen[1].fehler.join(), /nach der Beginnfrist/);
   assert.match(e.zeilen[2].fehler.join(), /Mehr Einheiten erbracht/);
   assert.match(voRumpf(e.zeilen[0].verordnung, '2026-10-21').parsed.rezept.therapieziele, /Teilweise im Altsystem erbracht: 3/);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHYSIO-KOLU TESTS (Aufgabe W6)
+// ═══════════════════════════════════════════════════════════════════════════
+
+test('Physio: Vorlage CSV wird erkannt und ist übernehmbar', () => {
+  const zu = zuVon(VO_VORLAGE_CSV_PHYSIO);
+  assert.deepEqual(voFehlendePflicht(zu, 'physio'), []);
+  const e = pruefeVerordnungen(VO_VORLAGE_CSV_PHYSIO, zu, k({ bereich: 'physio' }));
+  assert.equal(e.ok, 1, JSON.stringify(e.zeilen[0].fehler));
+  assert.equal(e.rot, 0);
+  const v = e.zeilen[0].verordnung;
+  assert.equal(v.patient.id, 'p1');
+  assert.equal(v.dg, 'WS');
+  assert.equal(v.heilmittel_position, 'X0501');
+  assert.equal(v.anzahl, 6);
+  assert.equal(v.heilmittel_items.length, 1);
+  assert.equal(v.heilmittel_items[0].code, 'X0501');
+});
+
+test('Physio: Zeilenfarben (grün ok / gelb Hinweis / rot Fehler)', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    // Zeile 1: Grün (alles vollständig und gültig)
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;ja;0;nein\n'
+    // Zeile 2: Gelb (BSNR fehlt -> Hinweis, aber übernehmbar)
+    + 'Muster;Erika;01.02.1950;16.10.2026;123456601;;WS;M54.5;X0501;6;ja;0;nein\n'
+    // Zeile 3: Rot (LANR fehlt -> Pflichtfehler)
+    + 'Muster;Erika;01.02.1950;17.10.2026;;123456700;WS;M54.5;X0501;6;ja;0;nein\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen.length, 3);
+  // Zeile 1: grün
+  assert.equal(e.zeilen[0].fehler.length, 0);
+  assert.equal(e.zeilen[0].hinweise.length, 0);
+  // Zeile 2: gelb
+  assert.equal(e.zeilen[1].fehler.length, 0);
+  assert.ok(e.zeilen[1].hinweise.length > 0);
+  // Zeile 3: rot
+  assert.ok(e.zeilen[2].fehler.length > 0);
+
+  assert.equal(e.ok, 2);
+  assert.equal(e.gelb, 1);
+  assert.equal(e.rot, 1);
+});
+
+test('Physio: Bereits begonnene VO ist ROT („Bereits begonnene Verordnungen bitte von Hand anlegen.")', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;ja;2;nein\n'
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;ja;0;nein\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.rot, 1);
+  assert.match(e.zeilen[0].fehler.join(), /Bereits begonnene Verordnungen bitte von Hand anlegen/);
+  assert.equal(e.zeilen[1].fehler.length, 0);
+});
+
+test('Physio: 3 Heilmittel (vorrangig 1-3) -> Summe Einheiten & Items geprüft', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl;Heilmittel 2;Anzahl 2;Heilmittel 3;Anzahl 3\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;X1201;6;X0201;6\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen[0].fehler.length, 0, e.zeilen[0].fehler.join(', '));
+  const v = e.zeilen[0].verordnung;
+  assert.equal(v.anzahl, 18);
+  assert.equal(v.heilmittel_items.length, 3);
+  assert.equal(v.heilmittel_items[0].code, 'X0501');
+  assert.equal(v.heilmittel_items[1].code, 'X1201');
+  assert.equal(v.heilmittel_items[2].code, 'X0201');
+  assert.equal(v.heilmittel_position, 'X0501'); // Spiegel von items[0]
+});
+
+test('Physio: >3 Heilmittel ist ROT (Maximal 3 vorrangige Heilmittel zulässig)', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl;Heilmittel 2;Anzahl 2;Heilmittel 3;Anzahl 3;Heilmittel 4;Anzahl 4\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;X1201;6;X0201;6;X0106;6\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.ok(e.zeilen[0].fehler.length > 0);
+  assert.match(e.zeilen[0].fehler.join(), /Maximal 3 vorrangige Heilmittel/);
+  assert.equal(e.rot, 1);
+});
+
+test('Physio: Unbekannter Heilmittel-Code ist ROT', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;UNBEKANNT_XYZ;6\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.ok(e.zeilen[0].fehler.length > 0);
+  assert.match(e.zeilen[0].fehler.join(), /unbekannt/);
+  assert.equal(e.rot, 1);
+});
+
+test('Physio: Dublette (gleicher Patient, gleiches Datum, gleiche Position) -> gelb/wird übersprungen', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6\n'
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6\n'
+    + 'Muster;Erika;01.02.1950;14.10.2026;123456601;WS;X0501;6\n';
+  // p1 hat am 14.10.2026 schon X0501 in Praxura
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({
+    bereich: 'physio',
+    vorhandeneVo: new Set(['p1|2026-10-14|X0501']),
+  }));
+  // Zeile 0: Erstes Vorkommen -> ok
+  assert.equal(e.zeilen[0].fehler.length, 0);
+  assert.equal(e.zeilen[0].istDublette, false);
+  // Zeile 1: Doppelt in Datei -> gelb (kein Fehler), istDublette = true
+  assert.equal(e.zeilen[1].fehler.length, 0);
+  assert.equal(e.zeilen[1].istDublette, true);
+  assert.match(e.zeilen[1].hinweise.join(), /doppelt in Datei.*übersprungen/);
+  // Zeile 2: Schon in Praxura -> gelb (kein Fehler), istDublette = true
+  assert.equal(e.zeilen[2].fehler.length, 0);
+  assert.equal(e.zeilen[2].istDublette, true);
+  assert.match(e.zeilen[2].hinweise.join(), /existiert bereits.*übersprungen/);
+
+  assert.equal(e.ok, 1); // Nur Zeile 0 wird übernommen
+  assert.equal(e.rot, 0); // Keine roten Fehler
+});
+
+test('Physio: Türkische und deutsche Sonderzeichen + UTF-8 BOM', () => {
+  const bomCsv = '\uFEFFNachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n'
+    + 'Şahin;Çağlar;15.06.1985;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;ja;0;nein\n';
+  const e = pruefeVerordnungen(bomCsv, zuVon(bomCsv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen.length, 1);
+  assert.equal(e.zeilen[0].fehler.length, 0, e.zeilen[0].fehler.join());
+  assert.equal(e.zeilen[0].verordnung.patient.id, 'p2');
+  assert.equal(e.zeilen[0].verordnung.csvName, 'Şahin, Çağlar');
+  assert.equal(e.ok, 1);
+});
+
+test('Physio: voRumpf trägt therapie_bereich physio und heilmittel_items', () => {
+  const csv = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl;Heilmittel 2;Anzahl 2\n'
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;X1201;6\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  const v = e.zeilen[0].verordnung;
+  const r = voRumpf(v, '2026-10-20');
+  assert.equal(r.patient_id, 'p1');
+  assert.equal(r.parsed.rezept.therapiebereich, 'physio');
+  assert.equal(r.parsed.rezept.heilmittel_position, 'X0501');
+  assert.equal(r.parsed.rezept.anzahl_einheiten, 12);
+  assert.equal(r.parsed.rezept.heilmittel_items.length, 2);
+  assert.equal(r.parsed.rezept.heilmittel_items[0].code, 'X0501');
+  assert.equal(r.parsed.rezept.heilmittel_items[1].code, 'X1201');
 });

@@ -55,6 +55,7 @@ export function uhrzeitBerlin(startTime) {
  * Dasselbe Muster steht in `loadScheduleBookings()` (dashboard.js:1732).
  */
 import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
+import { datumDe } from './datum.js?v=20261001a';
 
 export function tagesgrenzen(jetzt = new Date()) {
   const tag = alsBerlinDatum(jetzt);
@@ -100,7 +101,7 @@ export function baueHeuteIndex(termine, jetzt = new Date()) {
     // ist. Ein Doppelname wird bewusst komplett verworfen, nicht geraten.
     const { name, geburtsdatum } = parseNameMitGeburt(b.customer_name);
     if (!name) continue;
-    const schluessel = `${name.toLowerCase()}|${geburtsdatum || ''}`;
+    const schluessel = `${name.toLowerCase()}|${geburtsdatum ? datumDe(geburtsdatum) : ''}`;
 
     // Zwei Termine auf denselben Namen sind erst dann zwei Menschen, wenn
     // lead_id oder Telefonnummer sich unterscheiden. Zwei Termine desselben
@@ -134,7 +135,8 @@ export function terminZuLead(index, lead) {
   const name = leadName(lead).toLowerCase();
   if (!name) return null;
   // Erst mit Geburtsdatum (eindeutiger), dann ohne.
-  const mitGeburt = index.nachName.get(`${name}|${lead.geburtsdatum || ''}`);
+  const gebDe = lead.geburtsdatum ? datumDe(lead.geburtsdatum) : '';
+  const mitGeburt = index.nachName.get(`${name}|${gebDe}`);
   return mitGeburt || index.nachName.get(`${name}|`) || null;
 }
 

@@ -554,11 +554,14 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
   // Kombi-Termin-Zeilen mit heilmittel_index > 0 meinen ein ANDERES Heilmittel
-  // der Verordnung. Der Mapper kennt dafür noch keine Position und hätte
-  // still die des ersten Heilmittels abgerechnet (falsche Position, falscher
-  // Preis — gkv-302, 26.10.2026). Lieber anhalten als falsch abrechnen.
+  // der Verordnung. Wenn heilmittel_items mit Einheiten vorliegt, wird jede Zeile
+  // über ihren Index aufgelöst. Fehlen die Items, halten wir an.
+  const hasItems = Array.isArray(rx.heilmittel_items) &&
+    rx.heilmittel_items.length > 0 &&
+    rx.heilmittel_items.some(it => it && typeof it === 'object' && it.einheiten != null);
+
   const fremdesHeilmittel = doneSessions.find(s => (s.heilmittel_index || 0) > 0);
-  if (fremdesHeilmittel) {
+  if (fremdesHeilmittel && !hasItems) {
     const e = new Error(`Verordnung ${rx.id.slice(0, 8)}: Sitzung ${fremdesHeilmittel.session_number} gehört zum ` +
       `${(fremdesHeilmittel.heilmittel_index || 0) + 1}. Heilmittel der Verordnung. Für weitere Heilmittel ist die ` +
       'Abrechnung noch nicht freigeschaltet — bitte nicht abrechnen und den Support informieren.');
@@ -894,7 +897,7 @@ router.post('/abrechnung/create', async (req, res) => {
         id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
-        heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
+        heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
@@ -2722,7 +2725,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
+        prescription_sessions (id, session_number, status, done_at, heilmittel_index, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
       `)
       .eq('id', req.params.id)
       .single();
@@ -3089,7 +3092,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         *,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city, patientennummer),
         aerzte:arzt_id (arzt_name),
-        prescription_sessions (id, session_number, status, done_at, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
+        prescription_sessions (id, session_number, status, done_at, heilmittel_index, ergaenzend_erbracht, bookings:booking_id (hausbesuch))
       `)
       .eq('id', req.params.id)
       .single();
@@ -3624,7 +3627,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
-        heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
+        heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,

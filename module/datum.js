@@ -75,6 +75,15 @@ export function alsISODatum(d) {
  * @returns {string}
  */
 export function datumDe(wert, leer = '') {
+  if (wert === null || wert === undefined || wert === '') return leer;
+  if (typeof wert === 'string') {
+    const s = wert.trim();
+    if (!s) return leer;
+    const deMatch = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (deMatch) {
+      return `${zwei(deMatch[1])}.${zwei(deMatch[2])}.${deMatch[3]}`;
+    }
+  }
   const iso = typeof wert === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(wert) ? wert : alsISODatum(wert);
   if (!iso) return leer;
   const [j, m, t] = iso.split('-');

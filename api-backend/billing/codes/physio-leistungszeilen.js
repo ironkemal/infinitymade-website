@@ -41,14 +41,69 @@ function fehler(msg, code) {
  */
 export function physioLeistungszeilen(rx, sessions) {
   const zeilen = [];
-  const vorrangig = rx?.heilmittel_position || '';
-  const anzahlVorrangig = rx?.doppelbehandlung ? 2 : 1;
-  const ergMax = Number(rx?.ergaenzend_einheiten) || Number(rx?.vorrangig_einheiten) || Number(rx?.anzahl_einheiten) || Infinity;
   const hbOrt = HAUSBESUCH_POSITION[rx?.hausbesuch_ort] || HAUSBESUCH_POSITION.haeuslich;
   let ergAnzahl = 0;
 
-  // Doppelbehandlung bei ungerader Menge: nie mehr Einheiten abrechnen als verordnet
-  // (7 Einheiten → 2+2+2+1). gkv-302 27.10.2026: Höchstmenge wächst durch Doppel nicht.
+  const istMulti = Array.isArray(rx?.heilmittel_items) &&
+    rx.heilmittel_items.length > 0 &&
+    rx.heilmittel_items.some(it => it && typeof it === 'object' && it.einheiten != null);
+
+  if (istMulti) {
+    const items = rx.heilmittel_items;
+    const verbrauchtJeItem = new Array(items.length).fill(0);
+    const summeVerordnet = items.reduce((s, it) => s + (Number(it?.einheiten) || 0), 0);
+    const ergMax = Number(rx?.ergaenzend_einheiten) || summeVerordnet || Infinity;
+
+    for (const s of sessions || []) {
+      const basis = { sessionId: s.id, done_at: s.done_at || null, session: s };
+      const idx = s.heilmittel_index != null ? Number(s.heilmittel_index) : 0;
+
+      if (!Number.isInteger(idx) || idx < 0 || idx >= items.length || !items[idx]) {
+        throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: Sitzungsindex ${idx} hat kein passendes Heilmittel.`,
+          'HEILMITTEL_INDEX_UNBEKANNT');
+      }
+
+      const item = items[idx];
+      const verordnet = Number(item.einheiten) || 0;
+      const verbraucht = verbrauchtJeItem[idx];
+      const rest = verordnet - verbraucht;
+
+      if (rest <= 0) {
+        throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: Heilmittel ${item.code || item.bezeichnung || idx} über verordnete Menge (${verordnet}) erbracht.`,
+          'HEILMITTEL_UEBER_MENGE');
+      }
+
+      const anzahlVorrangig = item.doppelbehandlung ? 2 : 1;
+      const anzahl = Math.max(1, Math.min(anzahlVorrangig, rest));
+      verbrauchtJeItem[idx] += anzahl;
+
+      const code = item.code || item.position || rx?.heilmittel_position || '';
+      zeilen.push({ ...basis, id: s.id, code, anzahl, art: 'vorrangig' });
+
+      if (s.ergaenzend_erbracht) {
+        if (!rx?.ergaenzend_position) {
+          throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: ergänzendes Heilmittel erbracht, aber ohne Positionsnummer. ` +
+            'Bitte in der Verordnung die Position des ergänzenden Heilmittels eintragen.', 'ERGAENZEND_POSITION_FEHLT');
+        }
+        ergAnzahl += 1;
+        if (ergAnzahl > ergMax) {
+          throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: ergänzendes Heilmittel ${ergAnzahl}× erbracht, verordnet ${ergMax}×.`,
+            'ERGAENZEND_UEBER_MENGE');
+        }
+        zeilen.push({ ...basis, id: `${s.id}:erg`, code: rx.ergaenzend_position, anzahl: 1, art: 'ergaenzend' });
+      }
+
+      if (rx?.hausbesuch && s.bookings?.hausbesuch) {
+        zeilen.push({ ...basis, id: `${s.id}:hb`, code: hbOrt, anzahl: 1, art: 'hausbesuch' });
+      }
+    }
+
+    return zeilen;
+  }
+
+  const vorrangig = rx?.heilmittel_position || '';
+  const anzahlVorrangig = rx?.doppelbehandlung ? 2 : 1;
+  const ergMax = Number(rx?.ergaenzend_einheiten) || Number(rx?.vorrangig_einheiten) || Number(rx?.anzahl_einheiten) || Infinity;
   const verordnet = Number(rx?.vorrangig_einheiten) || Number(rx?.anzahl_einheiten) || Infinity;
   let verbraucht = 0;
 

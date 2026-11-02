@@ -34,6 +34,7 @@ const mockSupabase = {
     const b = {
       select: () => b,
       eq: (col, val) => { filters[col] = val; return b; },
+      in: () => b,
       insert: (p) => {
         writeOp = { type: 'insert', payload: p };
         const rows = Array.isArray(p) ? p : [p];
@@ -155,7 +156,11 @@ const F = {
   foreignService: { id: 'FS', title: 'Fremde Leistung', duration_minutes: 30, price: '50', owner_id: 'FO', is_internal: false },
   lead: { id: 'L', owner_id: 'O' },
   booking: { id: 'B1', owner_id: 'O', user_id: 'T', service_id: 'S', status: 'confirmed', start_time: '2026-10-20T10:00:00Z', end_time: '2026-10-20T10:30:00Z' },
-  foreignBooking: { id: 'FB1', owner_id: 'FO', user_id: 'FT', service_id: 'FS', status: 'confirmed', start_time: '2026-10-20T10:00:00Z', end_time: '2026-10-20T10:30:00Z' }
+  foreignBooking: { id: 'FB1', owner_id: 'FO', user_id: 'FT', service_id: 'FS', status: 'confirmed', start_time: '2026-10-20T10:00:00Z', end_time: '2026-10-20T10:30:00Z' },
+  room: { id: 'R1', owner_id: 'O', name: 'Raum 1', business_id: 'BIZ1' },
+  foreignRoom: { id: 'FR1', owner_id: 'FO', name: 'Fremder Raum', business_id: 'FBIZ1' },
+  business: { id: 'BIZ1', owner_id: 'O', business_name: 'Standort 1' },
+  foreignBusiness: { id: 'FBIZ1', owner_id: 'FO', business_name: 'Fremder Standort' }
 };
 
 function resetDb(overrides = {}) {
@@ -165,6 +170,8 @@ function resetDb(overrides = {}) {
       services: [F.service, F.internalService, F.legacyServiceUserIdOnly, F.foreignService],
       leads: [F.lead],
       bookings: [JSON.parse(JSON.stringify(F.booking)), JSON.parse(JSON.stringify(F.foreignBooking))],
+      rooms: [F.room, F.foreignRoom],
+      businesses: [F.business, F.foreignBusiness],
       ...overrides.tables
     },
     writes: [],
@@ -353,6 +360,68 @@ describe('Authenticated Booking Security Guards Suite (K4)', () => {
       }, 'O'), res);
       assert.equal(res.statusCode, 200);
       assert.equal(currentDb.writes[0].data.service_id, 'SL');
+    });
+  });
+
+  describe('Room and Business Validation in batch-create-explicit', () => {
+    it('valid room writes room_id and business_id to bookings', async () => {
+      const res = mockRes();
+      await explicitHandler(authReq({
+        roomId: 'R1',
+        slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }]
+      }, 'O'), res);
+      assert.equal(res.statusCode, 200);
+      assert.equal(res.body.count, 1);
+      assert.equal(currentDb.writes.length, 1);
+      assert.equal(currentDb.writes[0].data.room_id, 'R1');
+      assert.equal(currentDb.writes[0].data.business_id, 'BIZ1');
+    });
+
+    it('foreign room is rejected with 400 and zero writes', async () => {
+      const res = mockRes();
+      await explicitHandler(authReq({
+        roomId: 'FR1',
+        slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }]
+      }, 'O'), res);
+      assert.equal(res.statusCode, 400);
+      assert.equal(res.body?.error, 'Raum nicht gefunden');
+      assert.equal(currentDb.writes.length, 0);
+    });
+
+    it('foreign businessId is rejected with 400 and zero writes', async () => {
+      const res = mockRes();
+      await explicitHandler(authReq({
+        businessId: 'FBIZ1',
+        slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }]
+      }, 'O'), res);
+      assert.equal(res.statusCode, 400);
+      assert.equal(res.body?.error, 'Standort nicht gefunden');
+      assert.equal(currentDb.writes.length, 0);
+    });
+
+    it('valid businessId without room writes business_id to bookings', async () => {
+      const res = mockRes();
+      await explicitHandler(authReq({
+        businessId: 'BIZ1',
+        slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }]
+      }, 'O'), res);
+      assert.equal(res.statusCode, 200);
+      assert.equal(res.body.count, 1);
+      assert.equal(currentDb.writes.length, 1);
+      assert.equal(currentDb.writes[0].data.room_id, undefined);
+      assert.equal(currentDb.writes[0].data.business_id, 'BIZ1');
+    });
+
+    it('no roomId provided preserves legacy behavior (writes without room_id or business_id)', async () => {
+      const res = mockRes();
+      await explicitHandler(authReq({
+        slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }]
+      }, 'O'), res);
+      assert.equal(res.statusCode, 200);
+      assert.equal(res.body.count, 1);
+      assert.equal(currentDb.writes.length, 1);
+      assert.equal(currentDb.writes[0].data.room_id, undefined);
+      assert.equal(currentDb.writes[0].data.business_id, undefined);
     });
   });
 

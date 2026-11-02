@@ -28,6 +28,8 @@
  * zugeordneter Fußbefund ist ein Dokumentationsfehler in einer Patientenakte.
  */
 
+import { datumDe } from './datum.js?v=20261001a';
+
 /**
  * Zerlegt `customer_name` in Name und Geburtsdatum.
  *
@@ -42,7 +44,7 @@
  */
 export function parseNameMitGeburt(customerName) {
   const roh = String(customerName || '').trim();
-  const treffer = roh.match(/^(.+?)\s*·\s*(\d{4}-\d{2}-\d{2})$/);
+  const treffer = roh.match(/^(.+?)\s*·\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4})$/);
   return treffer
     ? { name: treffer[1].trim(), geburtsdatum: treffer[2] }
     : { name: roh, geburtsdatum: null };
@@ -104,7 +106,8 @@ export async function findeLeadIdZuTermin(sb, booking, ownerId, opts = {}) {
 
   // Steht am Termin ein Geburtsdatum, entscheidet es die Namensdopplung.
   if (perName.length > 1 && geburtsdatum) {
-    const genau = perName.filter(l => (l.geburtsdatum || l.metadata?.geburtsdatum) === geburtsdatum);
+    const gebDe = datumDe(geburtsdatum);
+    const genau = perName.filter(l => datumDe(l.geburtsdatum || l.metadata?.geburtsdatum) === gebDe);
     if (genau.length) perName = genau;
   }
 

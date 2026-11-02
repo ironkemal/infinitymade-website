@@ -170,6 +170,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
   const apiKey = getEnvOverride(safeEnv, 'AI_API_KEY', 'AZURE_OPENAI_API_KEY', '');
   const deployment = getEnvOverride(safeEnv, 'AI_MODEL_TEXT', 'AZURE_OPENAI_DEPLOYMENT', 'gpt-4o-mini');
   const visionDeployment = getEnvOverride(safeEnv, 'AI_MODEL_VISION', null, '');
+  const transcribeDeployment = getEnvOverride(safeEnv, 'AI_MODEL_TRANSCRIBE', null, '');
   const apiVersion = getEnvOverride(safeEnv, 'AI_API_VERSION', 'AZURE_OPENAI_API_VERSION', '2024-10-21');
   let region = getEnvOverride(safeEnv, 'AI_REGION', 'AZURE_OPENAI_REGION', '').trim().toLowerCase();
 
@@ -187,6 +188,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
         apiKey,
         deployment,
         visionDeployment,
+        transcribeDeployment,
         apiVersion,
         region,
         activationReady,
@@ -224,6 +226,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -244,6 +247,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -264,6 +268,27 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
+      apiVersion,
+      region,
+      activationReady,
+      mailReady,
+      allowFreeText,
+      allowedHosts: normalizedHosts
+    };
+  }
+
+  if (transcribeDeployment && !RE_SAFE_SEGMENT.test(transcribeDeployment)) {
+    return {
+      valid: false,
+      code: 'AI_DEPLOYMENT_INVALID',
+      mode,
+      provider,
+      endpoint,
+      apiKey,
+      deployment,
+      visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -283,6 +308,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -302,6 +328,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -323,6 +350,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
         apiKey,
         deployment,
         visionDeployment,
+        transcribeDeployment,
         apiVersion,
         region,
         activationReady,
@@ -341,6 +369,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -361,6 +390,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -381,6 +411,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -411,6 +442,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
       apiKey,
       deployment,
       visionDeployment,
+      transcribeDeployment,
       apiVersion,
       region,
       activationReady,
@@ -429,6 +461,7 @@ export function createAiConfig(env = process.env, { allowedHosts = VERIFIED_AZUR
     apiKey,
     deployment,
     visionDeployment,
+    transcribeDeployment,
     apiVersion,
     region,
     activationReady,
@@ -445,6 +478,7 @@ export function healthSummary(customConfig) {
     code: cfg.code,
     provider: cfg.provider,
     activationReady: cfg.activationReady,
-    mailReady: cfg.mailReady
+    mailReady: cfg.mailReady,
+    transcribeReady: Boolean(cfg.transcribeDeployment)
   };
 }

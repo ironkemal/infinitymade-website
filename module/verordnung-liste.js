@@ -45,7 +45,7 @@
 
 import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261021f';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261101u';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261102b';
 import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261027p';
 import { on } from './signal.js?v=20260813';
 
@@ -108,7 +108,7 @@ export async function verordnungenListeLaden(ctx) {
       // hätte man seine Eingabe ohne eigenes Zutun verloren.
       if (istVeraendert()) return;
       if (_auswahl && document.getElementById('vordDetailContent')?.isConnected) {
-        oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id });
+        oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id, rolle: ctx.rolle });
       }
     });
   }
@@ -137,7 +137,7 @@ export async function verordnungenListeLaden(ctx) {
 
   tbody.querySelectorAll('.vord-row').forEach(row => {
     row.addEventListener('click', () => {
-      oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId });
+      oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId, rolle: ctx.rolle });
     });
   });
   // Ops #310: Statuswechsel direkt aus der Zeile, ohne die Verordnung zu
@@ -216,7 +216,7 @@ function pruefTitel(pruefung) {
 }
 
 /** Eine Verordnung in der unteren Hälfte aufschlagen. */
-function oeffne({ supabase, escapeHtml, quelle, id }) {
+function oeffne({ supabase, escapeHtml, quelle, id, rolle }) {
   _auswahl = { quelle, id };
   markiere(_auswahl);
   return zeigeVerordnungDetail({
@@ -226,6 +226,7 @@ function oeffne({ supabase, escapeHtml, quelle, id }) {
     titel: document.getElementById('vordDetailName'),
     inhalt: document.getElementById('vordDetailContent'),
     escapeHtml,
+    rolle,
     // Nur hier: die untere Hälfte trägt die Muster-13-Maske selbst, gefüllt
     // und änderbar (Kemal, 06.09.2026). In der Patientenakte bleibt es bei
     // der Leseansicht — es gibt nur EIN Exemplar der Maske.

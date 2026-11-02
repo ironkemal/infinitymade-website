@@ -534,3 +534,53 @@ test('independent PM2 workers: two client instances have independent RAM token s
   assert.equal(worker1.getState().hasToken, false);
   assert.equal(worker2.getState().hasToken, true);
 });
+
+test('deploymentTranscribe in payload parsed and validated', async () => {
+  const fakeNow = 1_700_000_000_000;
+  const client = createJetonClient({
+    config: makeJetonConfig(),
+    merkezFetchImpl: async () => ({
+      status: 200,
+      ok: true,
+      json: {
+        token: 'sample-valid-token-value-12345', // secret-scan: ignore
+        exp: Math.floor(fakeNow / 1000) + 1800,
+        endpoint: `https://${FAKE_HOST}`,
+        deployment: 'gpt-4o-mini',
+        deploymentTranscribe: 'whisper',
+        region: 'swedencentral',
+        apiVersion: '2024-10-21'
+      }
+    }),
+    now: () => fakeNow,
+    allowedHosts: ALLOWED_HOSTS
+  });
+
+  const res = await client.getToken();
+  assert.equal(res.deploymentTranscribe, 'whisper');
+
+  // Invalid deploymentTranscribe fails closed
+  const clientBad = createJetonClient({
+    config: makeJetonConfig(),
+    merkezFetchImpl: async () => ({
+      status: 200,
+      ok: true,
+      json: {
+        token: 'sample-valid-token-value-12345', // secret-scan: ignore
+        exp: Math.floor(fakeNow / 1000) + 1800,
+        endpoint: `https://${FAKE_HOST}`,
+        deployment: 'gpt-4o-mini',
+        deploymentTranscribe: 'bad/name..with/slash',
+        region: 'swedencentral',
+        apiVersion: '2024-10-21'
+      }
+    }),
+    now: () => fakeNow,
+    allowedHosts: ALLOWED_HOSTS
+  });
+
+  await assert.rejects(
+    () => clientBad.getToken(),
+    (err) => err.code === 'AI_DEPLOYMENT_INVALID'
+  );
+});

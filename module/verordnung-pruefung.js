@@ -46,6 +46,7 @@ import { dgWurzel, bereichSchluessel, icdInBereichen } from './verordnung-regeln
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
+import { pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };
@@ -238,6 +239,21 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
     melde(SCHWERE.warnung, 'POSITION_FEHLT',
       'Dem Heilmittel ist keine Positionsnummer zugeordnet. Zuzahlung und Abrechnungspreis lassen sich damit nicht exakt ermitteln.',
       'heilmittelPosition', QUELLE_PFLICHT);
+  }
+
+  if (Array.isArray(vo?.heilmittelItems) && vo.heilmittelItems.length > 1) {
+    geprueft.push('Mehrere Heilmittelzeilen');
+    const hmCheck = pruefeHeilmittelZeilen({
+      bereich,
+      zeilen: vo.heilmittelItems,
+      ergaenzend: vo.ergaenzendesHeilmittel ? { text: vo.ergaenzendesHeilmittel, einheiten: vo.ergaenzendEinheiten, doppelbehandlung: false } : null,
+    });
+    for (const f of hmCheck.fehler) {
+      melde(SCHWERE.blocker, 'HEILMITTEL_FEHLER', f, 'heilmittel', 'HeilM-RL § 12');
+    }
+    for (const w of hmCheck.warnungen) {
+      melde(SCHWERE.warnung, 'HEILMITTEL_WARNUNG', w, 'heilmittel', 'HeilM-RL § 12');
+    }
   }
 
   // ── 2. Diagnosegruppe bekannt ────────────────────────────────────────────
@@ -512,6 +528,9 @@ export function voAusGespeicherterVerordnung(row) {
     leitsymptomatikFreitext: row?.pat_leitsymptomatik || '',
     heilmittel:         row?.heilmittel || heilmittelAusItems(row?.heilmittel_items),
     heilmittelPosition: row?.heilmittel_position || erstePositionAusItems(row?.heilmittel_items),
+    heilmittelItems:    Array.isArray(row?.heilmittel_items) && row.heilmittel_items.length > 1 ? row.heilmittel_items : null,
+    ergaenzendesHeilmittel: row?.ergaenzendes_heilmittel || '',
+    ergaenzendEinheiten:    row?.ergaenzend_einheiten || null,
     anzahl:             row?.anzahl_einheiten ?? row?.behandlungseinheiten,
     frequenz:           row?.frequenz || row?.therapiefrequenz || '',
     ausstellungsdatum:  row?.ausstellungsdatum || '',

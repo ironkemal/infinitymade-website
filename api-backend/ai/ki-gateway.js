@@ -25,7 +25,7 @@
 // 9. Returns { output, meta }
 
 import crypto from 'node:crypto';
-import { chat } from './azureClient.js';
+import { chat, transcribe } from './azureClient.js';
 import { createAiConfig } from './ki-config.js';
 import { validateTaskPayload } from './ki-schema.js';
 import { createOwnerDecisionStore } from './ki-einwilligung.js';
@@ -70,7 +70,8 @@ import {
 const MAIL_TASKS = new Set([
   'b2c-draft',
   'b2b-draft',
-  'appointment-confirm-draft'
+  'appointment-confirm-draft',
+  'transkribieren'
 ]);
 
 let _defaultConfirmationService = null;
@@ -186,6 +187,70 @@ export async function executeKiTask({
   // 3. Schema validation
   const allowFreeText = cfg.allowFreeText === true;
   validateTaskPayload(task, payload, { mode: cfg.mode, allowFreeText });
+
+  if (task === 'transkribieren') {
+    const audioBuffer = payload.audioBuffer;
+    if (!audioBuffer || (!Buffer.isBuffer(audioBuffer) && !(audioBuffer instanceof Uint8Array))) {
+      throw createGatewayError('Nutzlast entspricht nicht dem Schema', 400, 'KI_SCHEMA');
+    }
+    if (audioBuffer.length > 10 * 1024 * 1024) {
+      throw createGatewayError('Audiodatei überschreitet das Limit von 10 MB', 413, 'AI_PAYLOAD_TOO_LARGE');
+    }
+    const duration = Number(payload.duration);
+    if (Number.isFinite(duration) && duration > 180) {
+      throw createGatewayError('Audiodauer überschreitet das Limit von 3 Minuten', 413, 'AI_PAYLOAD_TOO_LARGE');
+    }
+
+    if (cfg.mode === 'direkt' && !cfg.transcribeDeployment) {
+      throw createGatewayError('Transkription ist nicht eingerichtet', 503, 'AI_TRANSKRIPTION_NICHT_EINGERICHTET');
+    }
+
+    let freshDecision = dependencies.ownerDecision;
+    if (!freshDecision) {
+      const store = dependencies.ownerDecisionStore || getOwnerDecisionStore();
+      freshDecision = await store.read(auth.tenantId);
+    }
+    if (!freshDecision || freshDecision.enabled !== true) {
+      throw createGatewayError('Einwilligung widerrufen oder geändert während der Ausführung', 503, 'AI_OWNER_OPTIN_REQUIRED');
+    }
+
+    const freshCfg = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
+    if (freshCfg.mode !== cfg.mode || freshCfg.valid !== true || !['direkt', 'jeton'].includes(freshCfg.mode) || freshCfg.activationReady !== true || freshCfg.mailReady !== true) {
+      throw createGatewayError('KI-Dienst wurde während der Ausführung deaktiviert', 503, 'AI_MODE_AUS');
+    }
+
+    if (freshCfg.mode === 'direkt' && !freshCfg.transcribeDeployment) {
+      throw createGatewayError('Transkription ist nicht eingerichtet', 503, 'AI_TRANSKRIPTION_NICHT_EINGERICHTET');
+    }
+
+    const transport = dependencies.transcribeTransport || dependencies.transport || transcribe;
+    const injectedJetonClient = freshCfg.mode === 'jeton' ? (dependencies.jetonClient || getTenantJetonClient(auth.tenantId, dependencies.supabase, dependencies.configProvider || (() => dependencies.config || createAiConfig()))) : undefined;
+
+    const transportRes = await transport({
+      audioBuffer,
+      mimeType: payload.mimeType || 'audio/webm',
+      config: freshCfg,
+      jetonClient: injectedJetonClient,
+      beforeSend: async () => {
+        const currentConfig = await (dependencies.configProvider?.() || dependencies.config || createAiConfig());
+        const currentOwner = dependencies.ownerDecision || await (dependencies.ownerDecisionStore || getOwnerDecisionStore()).read(auth.tenantId);
+        if (currentOwner?.enabled !== true) throw createGatewayError('Einwilligung widerrufen', 503, 'AI_OWNER_OPTIN_REQUIRED');
+        if (currentConfig?.valid !== true || currentConfig.mode !== cfg.mode || currentConfig.activationReady !== true || currentConfig.mailReady !== true) throw createGatewayError('KI-Dienst wurde deaktiviert', 503, 'AI_MODE_AUS');
+        return true;
+      }
+    });
+
+    return {
+      output: { text: transportRes.text || '' },
+      meta: {
+        model: transportRes.model || 'whisper',
+        deployment: transportRes.deployment,
+        usage: transportRes.usage || {},
+        dry_run: !!transportRes.dry_run,
+        latency_ms: transportRes.latency_ms
+      }
+    };
+  }
 
   // 4. Tenant dictionary loading (fail-closed)
   let dictionary = [];

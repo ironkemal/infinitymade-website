@@ -44,6 +44,8 @@
  *      hier zu filtern liesse fachlich zugehörige Termine verschwinden.
  */
 
+import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
+
 const ABGESAGT = ['cancelled', 'no_show'];
 
 /** Zählt dieser Termin gegen die verordnete Menge? Siehe Regel 2 oben. */
@@ -191,7 +193,32 @@ export async function ladeVerordnungsBehandlungen(sb, { ownerId, vordId } = {}) 
  *
  * @returns {Promise<{ok:boolean, fehler?:string}>}
  */
-export async function bindeTermin(sb, { bookingId, vordId }) {
+export async function bindeTermin(sb, { bookingId, vordId, terminZeit, ausstellungsdatum }) {
+  if (!sb || !bookingId || !vordId) return { ok: false, fehler: NICHT_GESCHRIEBEN };
+
+  let tZeit = terminZeit;
+  let aDatum = ausstellungsdatum;
+
+  if (!tZeit) {
+    try {
+      const q = sb.from('bookings').select('start_time').eq('id', bookingId);
+      const res = typeof q?.maybeSingle === 'function' ? await q.maybeSingle() : await q;
+      tZeit = res?.data?.start_time;
+    } catch (_e) { /* mock / fallback */ }
+  }
+  if (!aDatum) {
+    try {
+      const q = sb.from('prescriptions').select('ausstellungsdatum').eq('id', vordId);
+      const res = typeof q?.maybeSingle === 'function' ? await q.maybeSingle() : await q;
+      aDatum = res?.data?.ausstellungsdatum;
+    } catch (_e) { /* mock / fallback */ }
+  }
+
+  const check = pruefeTerminVoDatum(tZeit, aDatum);
+  if (!check.ok) {
+    return { ok: false, fehler: check.fehler };
+  }
+
   const { data, error } = await sb.from('bookings')
     .update({ verordnung_id: vordId })
     .eq('id', bookingId)

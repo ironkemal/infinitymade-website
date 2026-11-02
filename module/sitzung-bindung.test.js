@@ -93,3 +93,38 @@ test('der Text sagt, dass der Termin trotzdem steht', () => {
   assert.match(t, /von Hand zuordnen/);
   assert.doesNotMatch(t, /undefined/);
 });
+
+test('bindeSitzungenAnTermin #339: Termin vor Ausstellungsdatum wird blockiert und kein UPDATE ausgeführt', async () => {
+  let updateAufgerufen = false;
+  const sb = {
+    from() {
+      return {
+        update() {
+          updateAufgerufen = true;
+          return { in() { return { select: async () => ({ data: [{ id: 's1' }], error: null }) }; } };
+        },
+      };
+    },
+  };
+
+  const r = await bindeSitzungenAnTermin(sb, 'b1', ['s1'], {
+    terminZeit: '2026-10-05T09:00:00Z',
+    ausstellungsdatum: '2026-10-10',
+  });
+
+  assert.equal(r.ok, false);
+  assert.equal(r.gebunden, 0);
+  assert.deepEqual(r.fehlend, ['s1']);
+  assert.equal(r.meldung, 'Dieser Termin liegt vor dem Ausstellungsdatum der Verordnung und ist nicht abrechenbar.');
+  assert.equal(updateAufgerufen, false, 'UPDATE darf nicht aufgerufen werden!');
+});
+
+test('bindeSitzungenAnTermin #339: Termin am selben Tag wie Ausstellung ist zulässig', async () => {
+  const sb = sbAttrappe({ data: [{ id: 's1' }] });
+  const r = await bindeSitzungenAnTermin(sb, 'b1', ['s1'], {
+    terminZeit: '2026-10-10T09:00:00Z',
+    ausstellungsdatum: '2026-10-10',
+  });
+  assert.equal(r.ok, true);
+  assert.equal(r.gebunden, 1);
+});

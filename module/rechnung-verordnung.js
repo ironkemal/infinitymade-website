@@ -241,7 +241,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
   // ── Physio / Ergo / Logopädie-Weg ─────────────────────────────────────────
   const { data: rxs, error: rErr } = await sb
     .from('prescriptions')
-    .select('id, ausstellungsdatum, diagnosegruppe, heilmittel, anzahl_einheiten, status, belegnummer, verordnungsnummer, prescription_sessions(id, booking_id, status, done_at)')
+    .select('id, ausstellungsdatum, diagnosegruppe, heilmittel, heilmittel_items, anzahl_einheiten, status, belegnummer, verordnungsnummer, prescription_sessions(id, booking_id, status, done_at, heilmittel_index)')
     .eq('owner_id', ownerId)
     .eq('patient_id', leadId)
     .order('ausstellungsdatum', { ascending: false });
@@ -275,14 +275,21 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
     const sessions = (rx.prescription_sessions || [])
       .filter(s => DONE_STATUS.includes(s.status));
 
-    const rxTitel = rx.heilmittel || rx.diagnosegruppe || 'Behandlung';
+    const rxTitel = (Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1)
+      ? rx.heilmittel_items.map(it => it.bezeichnung || it.code).filter(Boolean).join(' · ')
+      : (rx.heilmittel || rx.diagnosegruppe || 'Behandlung');
 
     const behandlungen = sessions.map(s => {
       let zeilen;
       let hinweis = null;
 
       if (!s.booking_id) {
-        zeilen = [{ title: rxTitel, quantity: 1, unit_price: 0 }];
+        let title = rxTitel;
+        if (Array.isArray(rx.heilmittel_items) && rx.heilmittel_items[s.heilmittel_index ?? 0]) {
+          const item = rx.heilmittel_items[s.heilmittel_index ?? 0];
+          title = item.bezeichnung || item.code || rxTitel;
+        }
+        zeilen = [{ title, quantity: 1, unit_price: 0 }];
         hinweis = 'kein Termin verknüpft';
       } else {
         const bk = bookingsMap[s.booking_id];

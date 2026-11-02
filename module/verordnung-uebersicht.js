@@ -86,7 +86,7 @@ import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { on } from './signal.js?v=20260813';
 import { druckenMenueHtml, verdrahteDruckenMenue } from './rechnung-zur-verordnung.js?v=20261010zc';
 import { istKasse, rezeptartLabel } from './rezeptart.js?v=20261006a';
-import { istBehandlungseinheit } from './verordnung-termine.js?v=20261010zc';
+import { istBehandlungseinheit } from './verordnung-termine.js?v=20261102a';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -351,7 +351,9 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       quelle: 'physio',
       ziel: 'verordnungen',
       datum: rx.ausstellungsdatum,
-      titel: rx.heilmittel || rx.diagnosegruppe || 'Verordnung',
+      titel: (Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1)
+        ? rx.heilmittel_items.map(it => it.bezeichnung || it.code).filter(Boolean).join(' · ')
+        : (rx.heilmittel || rx.diagnosegruppe || 'Verordnung'),
       diagnose: [rx.icd10, rx.diagnosegruppe].filter(Boolean).join(' · '),
       frequenz: rx.frequenz || '',
       nummer: belegnummerRosette(rx, { patientennummer: pnr, escapeHtml: esc, titel: BELEG_TITEL }),

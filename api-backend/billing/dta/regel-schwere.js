@@ -139,6 +139,7 @@ export const REGEL_SCHWERE = Object.freeze({
   'S:01011': { schwere: 'hart', kasse: 'zeile', quelle: '§ 125 SGB V Verträge (MT/MLD/KGG/KG-ZNS)',          hinweis: 'Therapeut ohne erforderliche Qualifikation' },
   // 'S:01012' entfernt (Ops #340, 22.10.2026, gkv-302): pauschale 84-Tage-Sperre unbelegt, siehe REGELN.md. Code nicht wiederverwenden.
   'S:01013': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL § 12 Abs. 8; Podologie Anlage 2 § 2 c (78610 bis 2× je Tag)', hinweis: 'Mehr als eine Behandlung (78010/78020) je Tag an derselben Verordnung' },
+  'S:01014': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 3 TP5 §8.1.2; § 302 SGB V', hinweis: 'Arbeitsunfall (ZHE8=1) / BG nicht über GKV § 302 abrechenbar' },
 
   // ── Tarif (SLLA.EHE, LEGS) ───────────────────────────────────────────────
   'T:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anhang 3 Anlage 1 TP5 § 8.14 (Abrechnungscode)', hinweis: 'Abrechnungscode unbekannt' },

@@ -143,3 +143,55 @@ test('gleicheSitzungenAb legt bei Doppelbehandlung nur halb so viele Zeilen an',
   assert.equal(r.ergaenzt, 3);
   assert.deepEqual(geschrieben[0].zeilen.map(z => z.session_number), [1, 2, 3]);
 });
+
+test('gleicheSitzungenAb: Mehrere Heilmittel-Items verteilen session_number und heilmittel_index ardışık', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ vorhandene: [] });
+  const items = [
+    { code: 'X0501', einheiten: 6, doppelbehandlung: false },
+    { code: 'X1201', einheiten: 6, doppelbehandlung: false },
+  ];
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', items });
+  assert.equal(r.ergaenzt, 12);
+  const zeilen = geschrieben[0].zeilen;
+  assert.equal(zeilen.length, 12);
+  // Sitzungen 1..6 haben heilmittel_index 0
+  for (let i = 0; i < 6; i++) {
+    assert.equal(zeilen[i].session_number, i + 1);
+    assert.equal(zeilen[i].heilmittel_index, 0);
+  }
+  // Sitzungen 7..12 haben heilmittel_index 1
+  for (let i = 6; i < 12; i++) {
+    assert.equal(zeilen[i].session_number, i + 1);
+    assert.equal(zeilen[i].heilmittel_index, 1);
+  }
+});
+
+test('gleicheSitzungenAb: Items mit Doppelbehandlung berechnen Soll je Item und setzen heilmittel_index', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({ vorhandene: [] });
+  const items = [
+    { code: 'X0501', einheiten: 6, doppelbehandlung: false }, // 6 Termine -> 1..6 (index 0)
+    { code: 'X1201', einheiten: 6, doppelbehandlung: true },  // 3 Termine -> 7..9 (index 1)
+  ];
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', items });
+  assert.equal(r.ergaenzt, 9);
+  const zeilen = geschrieben[0].zeilen;
+  assert.deepEqual(zeilen.map(z => z.session_number), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(zeilen.map(z => z.heilmittel_index), [0, 0, 0, 0, 0, 0, 1, 1, 1]);
+});
+
+test('gleicheSitzungenAb: Vorhandene Zeilen werden bei Items nicht überschrieben, Lücken mit passendem Index gefüllt', async () => {
+  const { supabase, geschrieben } = supabaseDoppel({
+    vorhandene: [{ session_number: 1 }, { session_number: 2 }, { session_number: 7 }],
+  });
+  const items = [
+    { code: 'X0501', einheiten: 6, doppelbehandlung: false }, // 1..6
+    { code: 'X1201', einheiten: 4, doppelbehandlung: false }, // 7..10
+  ];
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', items });
+  assert.equal(r.ergaenzt, 7); // 3, 4, 5, 6 (index 0) und 8, 9, 10 (index 1)
+  const zeilen = geschrieben[0].zeilen;
+  assert.deepEqual(zeilen.map(z => [z.session_number, z.heilmittel_index]), [
+    [3, 0], [4, 0], [5, 0], [6, 0],
+    [8, 1], [9, 1], [10, 1]
+  ]);
+});

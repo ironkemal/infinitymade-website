@@ -62,7 +62,7 @@
  * Betrag, den die gedruckte Quittung ausweist.
  */
 
-import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
+import { berechneZuzahlung, wirksameEinheiten, zuzahlungFuerPodoVerordnung, zuzahlungFuerRezept } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
 import { statusAusTopf } from './verordnung-topf.js?v=20260930c';
 import { preisAusService, offeneBehandlungen, zeilenAusBehandlungen } from './rechnung-bruecke.js?v=20261010zc';
@@ -115,7 +115,9 @@ export function zahlerTyp(lead, rx) {
  * @returns {{preis:number, zuzahlung:number|null, frei:boolean, quelle:string}|null}
  */
 export function findePosition(rx, { podoKarte = null, katalog = [] } = {}) {
-  const roh = String(rx?.heilmittel_position || '').trim();
+  const roh = String(
+    (typeof rx === 'string' ? rx : (rx?.code || rx?.heilmittel_position || rx?.heilmittel_items?.[0]?.code)) || ''
+  ).trim();
   if (!roh) return null;
 
   const varianten = [roh];
@@ -125,12 +127,12 @@ export function findePosition(rx, { podoKarte = null, katalog = [] } = {}) {
   if (podoKarte) {
     for (const v of varianten) {
       const p = podoKarte.get?.(v);
-      if (p) return { preis: Number(p.preis) || 0, zuzahlung: p.zuzahlung, frei: p.zuzahlung == null, quelle: 'podologie' };
+      if (p) return { preis: Number(p.preis) || 0, zuzahlung: p.zuzahlung, frei: p.zuzahlung == null, zuzahlung_frei: p.zuzahlung == null, quelle: 'podologie' };
     }
   }
   for (const v of varianten) {
     const e = (katalog || []).find(k => String(k.code) === v);
-    if (e) return { preis: Number(e.price) || 0, zuzahlung: null, frei: false, quelle: 'katalog' };
+    if (e) return { preis: Number(e.price) || 0, zuzahlung: null, frei: false, zuzahlung_frei: false, quelle: 'katalog' };
   }
   return null;
 }
@@ -200,7 +202,7 @@ export async function ladePodoPrivatSumme({ sb, ownerId, rx, services = [], kata
  * @returns {{zahler:string, brutto:number, gesamt:number, befreit:boolean,
  *           einheiten:number, unbekannt:boolean, offenePreise:number}}
  */
-export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', position = null, privat = null, podo = null }) {
+export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', position = null, privat = null, podo = null, katalog = [], podoKarte = null, opt = {} }) {
   const einheiten = wirksameEinheiten({ verordnet: rx?.anzahl_einheiten, erbracht });
 
   if (zahler === 'privat') {
@@ -222,14 +224,23 @@ export function ermittleGeldstand({ rx, erbracht = 0, zahler = 'unbekannt', posi
              offenePreise: 0, ausBehandlungen: true };
   }
 
-  const betrag = berechneZuzahlung({
-    einheiten,
-    preisProEinheit: position?.preis || 0,
-    zuzahlungProEinheit: position?.zuzahlung ?? null,
-    positionFrei: !!position?.frei,
-    befreit: !!rx?.zuzahlung_befreit,
+  const resolvePos = (code) => {
+    if (typeof opt?.findePosition === 'function') return opt.findePosition(code);
+    return findePosition(code, { podoKarte, katalog });
+  };
+
+  const hasItems = Array.isArray(rx?.heilmittel_items) && rx.heilmittel_items.length > 1;
+
+  const betrag = zuzahlungFuerRezept(rx, position, {
+    erbracht,
+    findePosition: resolvePos,
   });
-  return { ...betrag, zahler, einheiten, unbekannt: !position, offenePreise: 0 };
+
+  const unbekannt = hasItems
+    ? rx.heilmittel_items.some(it => !resolvePos(it?.code))
+    : !position;
+
+  return { ...betrag, zahler, einheiten: betrag.einheiten, unbekannt, offenePreise: 0 };
 }
 
 /**
@@ -450,7 +461,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
   const zeichne = () => {
     if (!el || !el.isConnected) return;
     const zahler = zahlerTyp(lead, rx);
-    standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo });
+    standGkv    = ermittleGeldstand({ rx, erbracht, zahler: 'gkv', position, podo, katalog });
     // Podologie ohne dokumentierte Behandlung: der Betrag ist nur eine Schätzung über die Einheiten.
     standGkv.geschaetzt = sector === 'podologie' && !podo;
     standGkv.ladefehler = podo?.ladefehler || ladefehler;

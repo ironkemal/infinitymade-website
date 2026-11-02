@@ -9,6 +9,7 @@ import { heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
   rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './rezept-felder.js';
 import { statusAusAbrechnungStatus } from '../billing/utils/einreichbar.js';
 import { normalisiereGeschlecht } from './geschlecht.js';
+import { pruefeHeilmittelItems } from './heilmittel-items-pruefen.js';
 
 const source = readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const provenance = { quelle:'barcode', format:'PDF417', parser_version:'KBV-BFB-4.80-M13-10', bestaetigt:true };
@@ -67,7 +68,7 @@ function fixture({ existing, foreignPatient=false, validationOk=true } = {}) {
     supabase, validiereBarcodeErfassung, computedMitErfassung,
     heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
     rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt,
-    statusAusAbrechnungStatus, normalisiereGeschlecht,
+    statusAusAbrechnungStatus, normalisiereGeschlecht, pruefeHeilmittelItems,
     kostentraegerIkAufloesen:async()=>null,
     resolveOrCreateArzt:async(_db, tenantId, input, options)=>{
       doctors.push({tenantId,input,options});return {id:'synthetic-doctor'};
@@ -185,4 +186,67 @@ test('Production PATCH of draft confirms only a fresh clean save; warnings revok
     if(overridden) {assert.equal(row.abrechnung_status,null);assert.equal(row.confirmed_at,null);}
     else {assert.ok(row.confirmed_at);assert.equal(row.confirmed_by,'synthetic-user');}
   }
+});
+
+test('Production POST und PATCH validieren heilmittel_items und berechnen anzahl_einheiten neu', async () => {
+  // 1. Ungültiges Format liefert 422
+  const f1 = fixture();
+  const b1 = body();
+  const badReq = {
+    ...b1,
+    parsed: {
+      ...b1.parsed,
+      rezept: {
+        ...b1.parsed.rezept,
+        therapiebereich: 'podologie',
+        heilmittel_items: [
+          { code: '78010', einheiten: 6 },
+          { code: '78020', einheiten: 6 },
+        ],
+      },
+    },
+  };
+  const res1 = await f1.invoke('post', badReq);
+  assert.equal(res1.statusCode, 422);
+  assert.match(res1.body.error, /Physiotherapie und Ergotherapie/);
+
+  // 2. Gültiges Format rechnet anzahl_einheiten = sum(einheiten) neu
+  const f2 = fixture();
+  const b2 = body();
+  const goodReq = {
+    ...b2,
+    parsed: {
+      ...b2.parsed,
+      rezept: {
+        ...b2.parsed.rezept,
+        therapiebereich: 'physiotherapy',
+        anzahl_einheiten: 999, // wird überschrieben
+        heilmittel_items: [
+          { code: 'X0501', einheiten: 6, doppelbehandlung: false },
+          { code: 'X1201', einheiten: 6, doppelbehandlung: true },
+        ],
+      },
+    },
+  };
+  const res2 = await f2.invoke('post', goodReq);
+  assert.equal(res2.statusCode, 200);
+  const row2 = f2.writes.find(q => q.table === 'prescriptions').value;
+  assert.equal(row2.anzahl_einheiten, 12);
+  assert.equal(row2.heilmittel_items.length, 2);
+
+  // 3. PATCH mit ungültigem Code liefert 422
+  const f3 = fixture({ existing: { id: 'synthetic-rx', owner_id: 'synthetic-tenant', status: 'parsed' } });
+  const b3 = body();
+  const badPatchReq = {
+    ...b3,
+    parsed: {
+      ...b3.parsed,
+      rezept: {
+        ...b3.parsed.rezept,
+        heilmittel_items: [{ code: 'INVALID_LONG_CODE', einheiten: 6 }],
+      },
+    },
+  };
+  const res3 = await f3.invoke('patch', badPatchReq);
+  assert.equal(res3.statusCode, 422);
 });

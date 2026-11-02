@@ -21,6 +21,7 @@ function baueConfig({
   clientSecret = null,
   endpoint = null,
   deployment = null,
+  deploymentTranscribe = null,
   region = null,
   apiVersion = null,
   monatsLimit = null,
@@ -32,6 +33,7 @@ function baueConfig({
     clientId,
     endpoint,
     deployment,
+    deploymentTranscribe,
     region,
     apiVersion,
     monatsLimit,
@@ -96,6 +98,13 @@ export function kiConfigAusEnv(env = process.env) {
     if (!deployment) return baueConfig({ grund: 'fehlt:KI_DEPLOYMENT' });
     if (!RE_DEPLOYMENT.test(deployment)) return baueConfig({ grund: 'ungueltig:KI_DEPLOYMENT' });
 
+    let deploymentTranscribe = null;
+    if (e.KI_DEPLOYMENT_TRANSCRIBE !== undefined && e.KI_DEPLOYMENT_TRANSCRIBE !== '') {
+      const rawTranscribe = String(e.KI_DEPLOYMENT_TRANSCRIBE).trim();
+      if (!RE_DEPLOYMENT.test(rawTranscribe)) return baueConfig({ grund: 'ungueltig:KI_DEPLOYMENT_TRANSCRIBE' });
+      deploymentTranscribe = rawTranscribe;
+    }
+
     const rawRegion = e.KI_REGION;
     if (!rawRegion) return baueConfig({ grund: 'fehlt:KI_REGION' });
     const region = String(rawRegion).toLowerCase();
@@ -130,6 +139,7 @@ export function kiConfigAusEnv(env = process.env) {
       clientSecret,
       endpoint,
       deployment,
+      deploymentTranscribe,
       region,
       apiVersion,
       monatsLimit,

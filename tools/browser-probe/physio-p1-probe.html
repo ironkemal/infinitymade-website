@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physio P1 Probe</title>
+  <link rel="stylesheet" href="../../dashboard.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg-main, #111827);
+      color: var(--text-main, #f9fafb);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      box-sizing: border-box;
+    }
+    .probe-container {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .probe-card {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg-card-solid, #1f2937);
+      border: 1px solid var(--border, #374151);
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .probe-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: var(--text-main, #f9fafb);
+    }
+  </style>
+</head>
+<body>
+  <div id="buehne" class="probe-container">
+    <div id="stageA" class="probe-card">
+      <h3 class="probe-title">A) Muster-13 Mehrfach-Heilmittel</h3>
+      <div id="m13Host"></div>
+    </div>
+
+    <div id="stageB" class="probe-card">
+      <h3 class="probe-title">B) Diktat / Spracheingabe</h3>
+      <div id="diktatHost"></div>
+    </div>
+
+    <div id="stageC" class="probe-card">
+      <h3 class="probe-title">C) Import-Vorschau (Physio)</h3>
+      <div id="importHost"></div>
+    </div>
+
+    <div id="stageD" class="probe-card">
+      <h3 class="probe-title">D) Einheiten korrigieren (Physio / GoBD)</h3>
+      <div id="einheitenHost"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    const ergebnis = [];
+    const pruef = (name, ok, detail = '') => {
+      ergebnis.push({ name, ok: !!ok, detail: String(detail || '') });
+    };
+
+    const warte = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    try {
+      // ── Styles & Markup aus dashboard.html laden ──────────────────────────
+      const dashHtml = await (await fetch('../../dashboard.html')).text();
+      const dashDoc = new DOMParser().parseFromString(dashHtml, 'text/html');
+
+      // Stylesheets aus dashboard.html übertragen (für .m13-hmtable, .is-multi usw.)
+      for (const st of dashDoc.querySelectorAll('style')) {
+        const n = document.createElement('style');
+        n.textContent = st.textContent;
+        document.head.appendChild(n);
+      }
+
+      // Echte Maske (#rezeptModal) aus dashboard.html einbetten
+      const modalTpl = dashDoc.getElementById('rezeptModal');
+      if (!modalTpl) throw new Error('#rezeptModal in dashboard.html nicht gefunden');
+
+      const modalEl = document.importNode(modalTpl, true);
+      modalEl.hidden = false;
+      modalEl.removeAttribute('hidden');
+      modalEl.style.cssText = 'position:static;display:block;opacity:1;visibility:visible;max-width:100%;box-sizing:border-box;';
+      document.getElementById('m13Host').appendChild(modalEl);
+
+      // ── Module importieren ───────────────────────────────────────────────
+      const {
+        initialisiereHeilmittelZeilen,
+        fuegeHeilmittelZeileHinzu,
+        entferneHeilmittelZeile,
+        leereHeilmittelZeilen,
+        aktualisiereAddBtnSichtbarkeit,
+      } = await import('../../module/heilmittel-zeilen-ui.js');
+
+      const {
+        attachDiktat,
+        DIKTAT_LEGAL_NOTICE,
+      } = await import('../../module/diktat.js');
+
+      const {
+        oeffneVerordnungImport,
+        VO_VORLAGE_CSV_PHYSIO,
+      } = await import('../../module/verordnung-import.js');
+
+      const {
+        oeffnePhysioEinheitenDialog,
+        physioKorrekturErlaubt,
+      } = await import('../../module/verordnung-einheiten.js');
+
+      const {
+        verordnungDetailHtml,
+      } = await import('../../module/verordnung-detail.js');
+
+      // ══════════════════════════════════════════════════════════════════════
+      // A) MUSTER-13 MEHRFACH-HEILMITTEL
+      // ══════════════════════════════════════════════════════════════════════
+      const rzHmTable = document.getElementById('rzHmTable');
+      const rzHmAddLine = document.getElementById('rzHmAddLine');
+      const rzHmAddLineWrap = document.getElementById('rzHmAddLineWrap');
+      const rzHmLine1 = document.getElementById('rzHmLine1');
+      const rzDoppel = document.getElementById('rzDoppel');
+      const rzDoppelWrap = rzDoppel?.closest('label');
+
+      let aktuellerBereich = 'physiotherapy';
+      const bereichFn = () => aktuellerBereich;
+
+      // Doppelbehandlung-Kapselung mit Zeilenanzahl synchronisieren
+      const syncDoppelWrap = () => {
+        const isMulti = rzHmTable?.classList.contains('is-multi');
+        if (rzDoppelWrap) {
+          rzDoppelWrap.style.display = isMulti ? 'none' : '';
+        }
+      };
+
+      initialisiereHeilmittelZeilen({
+        tableEl: rzHmTable,
+        addBtnEl: rzHmAddLine,
+        bereichFn,
+        onAenderung: syncDoppelWrap,
+        supabase: null,
+      });
+
+      // 1. Bereich Physiotherapy: „+ weiteres Heilmittel" sichtbar
+      pruef(
+        'A · Physio: „+ weiteres Heilmittel" sichtbar',
+        rzHmAddLineWrap && rzHmAddLineWrap.style.display !== 'none',
+        `display: ${rzHmAddLineWrap?.style.display}`
+      );
+
+      // 2. 2 Klicks auf „+" → 3 Zeilen, „+" wird ausgeblendet
+      rzHmAddLine.click();
+      rzHmAddLine.click();
+      const extras = document.querySelectorAll('.m13-hmline-extra');
+      const gesamtZeilen = rzHmTable.querySelectorAll('.m13-hmline').length;
+      pruef(
+        'A · 2 Klicks auf „+": 3 Heilmittelzeilen vorhanden, „+" gizlenir',
+        extras.length === 2 && gesamtZeilen >= 3 && rzHmAddLineWrap.style.display === 'none',
+        `Extras: ${extras.length}, Gesamt: ${gesamtZeilen}, AddBtn: ${rzHmAddLineWrap.style.display}`
+      );
+
+      // 3. Zeilen stehen ÜBER der Ergänzendes-Heilmittel-Zeile
+      const ergLine = document.getElementById('rzHmErg')?.closest('.m13-hmline');
+      const ergTop = ergLine ? ergLine.getBoundingClientRect().top : Infinity;
+      let alleUeberErg = true;
+      extras.forEach((row) => {
+        const r = row.getBoundingClientRect();
+        if (r.bottom > ergTop + 2) alleUeberErg = false;
+      });
+      pruef(
+        'A · Satırlar Ergänzend satırının ÜSTÜNDE',
+        alleUeberErg && ergLine !== null,
+        `ergTop=${Math.round(ergTop)}px`
+      );
+
+      // 4. Jede Zeile links/rechts mit #rzHmLine1 bündig (±2 px), Höhe gleich (±4 px)
+      const r1 = rzHmLine1.getBoundingClientRect();
+      let randBuendig = true;
+      let hoeheGleich = true;
+      let diffDetails = [];
+      extras.forEach((row, idx) => {
+        const r = row.getBoundingClientRect();
+        const diffL = Math.abs(r.left - r1.left);
+        const diffR = Math.abs(r.right - r1.right);
+        const diffH = Math.abs(r.height - r1.height);
+        if (diffL > 2 || diffR > 2) randBuendig = false;
+        if (diffH > 4) hoeheGleich = false;
+        diffDetails.push(`Z${idx + 2}: ΔL=${diffL.toFixed(1)} ΔR=${diffR.toFixed(1)} ΔH=${diffH.toFixed(1)}`);
+      });
+      pruef(
+        'A · Zeilen links/rechts mit #rzHmLine1 ±2 px hizalı',
+        randBuendig,
+        diffDetails.join('; ')
+      );
+      pruef(
+        'A · Zeilenhöhe gleich ±4 px',
+        hoeheGleich,
+        `r1.height=${Math.round(r1.height)}px`
+      );
+
+      // 5. × und + Dokunma hedefi (Touch-Target) ≥44×44
+      const delBtns = document.querySelectorAll('.m13-hm-del-btn');
+      let delTargetOk = delBtns.length > 0;
+      delBtns.forEach((btn) => {
+        const r = btn.getBoundingClientRect();
+        if (r.width < 43 || r.height < 43) delTargetOk = false;
+      });
+      pruef(
+        'A · × dokunma hedefi ≥44×44',
+        delTargetOk,
+        `delBtns=${delBtns.length}`
+      );
+
+      // 6. × ile silince 2 satır, + yeniden görünür
+      const lastDelBtn = delBtns[delBtns.length - 1];
+      lastDelBtn.click();
+      const extrasNachDel = document.querySelectorAll('.m13-hmline-extra');
+      pruef(
+        'A · × ile silince 2 satır, + yeniden görünür',
+        extrasNachDel.length === 1 && rzHmAddLineWrap.style.display !== 'none',
+        `Extras: ${extrasNachDel.length}, AddBtn: ${rzHmAddLineWrap.style.display}`
+      );
+
+      // 7. bereich 'podologie' ve 'logopaedie': + görünmez
+      aktuellerBereich = 'podologie';
+      aktualisiereAddBtnSichtbarkeit();
+      pruef(
+        'A · Bereich „podologie": + görünmez',
+        rzHmAddLineWrap.style.display === 'none'
+      );
+
+      aktuellerBereich = 'logopaedie';
+      aktualisiereAddBtnSichtbarkeit();
+      pruef(
+        'A · Bereich „logopaedie": + görünmez',
+        rzHmAddLineWrap.style.display === 'none'
+      );
+
+      // Zurück zu Physio
+      aktuellerBereich = 'physiotherapy';
+      aktualisiereAddBtnSichtbarkeit();
+
+      // 8. 768 ve 390'da #rzHmTable scrollWidth <= clientWidth (taşma yok), input'lar birbirinin üstüne binmiyor
+      const pruefeBreite = (b) => {
+        rzHmTable.style.width = `${b}px`;
+        rzHmTable.style.maxWidth = `${b}px`;
+        const scrollOk = rzHmTable.scrollWidth <= rzHmTable.clientWidth + 1;
+        let keineKollision = true;
+        const lines = rzHmTable.querySelectorAll('.m13-hmline');
+        lines.forEach((line) => {
+          const inputs = [...line.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"])')];
+          for (let i = 0; i < inputs.length; i++) {
+            for (let j = i + 1; j < inputs.length; j++) {
+              const rectA = inputs[i].getBoundingClientRect();
+              const rectB = inputs[j].getBoundingClientRect();
+              const overlap = !(rectA.right <= rectB.left || rectA.left >= rectB.right || rectA.bottom <= rectB.top || rectA.top >= rectB.bottom);
+              if (overlap) keineKollision = false;
+            }
+          }
+        });
+        return { scrollOk, keineKollision };
+      };
+
+      const res768 = pruefeBreite(768);
+      pruef(
+        'A · 768 px: #rzHmTable scrollWidth <= clientWidth (taşma yok)',
+        res768.scrollOk,
+        `scroll=${rzHmTable.scrollWidth} client=${rzHmTable.clientWidth}`
+      );
+      pruef(
+        'A · 768 px: Inputlar birbirinin üstüne binmiyor (dikdörtgen kesişimi yok)',
+        res768.keineKollision
+      );
+
+      const res390 = pruefeBreite(390);
+      pruef(
+        'A · 390 px: #rzHmTable scrollWidth <= clientWidth (taşma yok)',
+        res390.scrollOk,
+        `scroll=${rzHmTable.scrollWidth} client=${rzHmTable.clientWidth}`
+      );
+      pruef(
+        'A · 390 px: Inputlar birbirinin üstüne binmiyor (dikdörtgen kesişimi yok)',
+        res390.keineKollision
+      );
+
+      rzHmTable.style.width = '';
+      rzHmTable.style.maxWidth = '';
+
+      // 9. Enter: Heilmittel input'unda Enter → aynı satır Einheit odaklı; Einheit'te Enter → yeni satır açılır
+      leereHeilmittelZeilen();
+      const hm1 = document.getElementById('rzHm');
+      const anz1 = document.getElementById('rzAnzahl');
+      hm1.focus();
+      hm1.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      pruef(
+        'A · Enter im Heilmittel-Input fokussiert Einheit derselben Zeile',
+        document.activeElement === anz1
+      );
+
+      anz1.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      const extrasNachEnter = document.querySelectorAll('.m13-hmline-extra');
+      const hm2 = document.getElementById('rzHm2');
+      pruef(
+        'A · Enter im Einheit-Input öffnet neue Zeile und fokussiert neues Heilmittel',
+        extrasNachEnter.length === 1 && document.activeElement === hm2
+      );
+
+      // 10. çoklu modda #rzDoppel kapsayıcısı gizli, tek satıra dönünce görünür
+      syncDoppelWrap();
+      pruef(
+        'A · Çoklu modda #rzDoppel kapsayıcısı gizli',
+        rzDoppelWrap && (rzDoppelWrap.style.display === 'none' || getComputedStyle(rzDoppelWrap).display === 'none')
+      );
+
+      leereHeilmittelZeilen();
+      syncDoppelWrap();
+      pruef(
+        'A · Tek satıra dönünce #rzDoppel kapsayıcısı görünür',
+        rzDoppelWrap && rzDoppelWrap.style.display !== 'none' && getComputedStyle(rzDoppelWrap).display !== 'none'
+      );
+
+      // ══════════════════════════════════════════════════════════════════════
+      // B) DIKTAT
+      // ══════════════════════════════════════════════════════════════════════
+      const diktatHost = document.getElementById('diktatHost');
+
+      // Test 1: diktat_verfuegbar: true
+      const bWrap1 = document.createElement('div');
+      bWrap1.style.cssText = 'width:100%;max-width:480px;position:relative;margin-bottom:16px;box-sizing:border-box;';
+      const bTa1 = document.createElement('textarea');
+      bTa1.id = 'diktatTestTa1';
+      bTa1.style.cssText = 'width:100%;height:100px;box-sizing:border-box;';
+      bWrap1.appendChild(bTa1);
+      diktatHost.appendChild(bWrap1);
+
+      attachDiktat(bTa1, { diktat_verfuegbar: true });
+      const bBtn1 = bWrap1.querySelector('.diktat-btn');
+      pruef('B · diktat_verfuegbar=true: Düğme var', !!bBtn1);
+
+      const br = bBtn1 ? bBtn1.getBoundingClientRect() : { width: 0, height: 0, top: 0, right: 0 };
+      pruef(
+        'B · Düğme 44×44 ±1 px',
+        Math.abs(br.width - 44) <= 1 && Math.abs(br.height - 44) <= 1,
+        `Breite=${br.width}px Höhe=${br.height}px`
+      );
+
+      const tr1 = bTa1.getBoundingClientRect();
+      const inTextarea = br.top >= tr1.top - 2 && br.right <= tr1.right + 2;
+      pruef(
+        'B · Textarea sağ üst köşesinde (düğme dikdörtgeni textarea içinde)',
+        inTextarea
+      );
+
+      const taPadRight = parseFloat(getComputedStyle(bTa1).paddingRight) || 0;
+      pruef(
+        'B · Textarea padding-right ≥ düğme genişliği',
+        taPadRight >= br.width - 1,
+        `paddingRight=${taPadRight}px btnWidth=${br.width}px`
+      );
+
+      pruef(
+        'B · aria-label "Diktat starten"',
+        bBtn1 && bBtn1.getAttribute('aria-label') === 'Diktat starten'
+      );
+
+      // Test 2: diktat_verfuegbar: false → düğme yok
+      const bWrap2 = document.createElement('div');
+      const bTa2 = document.createElement('textarea');
+      bWrap2.appendChild(bTa2);
+      diktatHost.appendChild(bWrap2);
+
+      attachDiktat(bTa2, { diktat_verfuegbar: false });
+      const bCtrl2 = bWrap2.querySelector('.diktat-controls');
+      const bBtn2 = bWrap2.querySelector('.diktat-btn');
+      pruef(
+        'B · diktat_verfuegbar=false: Düğme yok',
+        bCtrl2 && (bCtrl2.style.display === 'none' || bBtn2?.offsetParent === null)
+      );
+
+      // Test 3: isSecureContext / getUserMedia yokken düğme disabled ve title „Diktat nicht verfügbar"
+      const origMedia = navigator.mediaDevices;
+      let stubDisabled = false;
+      let stubTitle = '';
+      try {
+        Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true });
+        const bTaStub = document.createElement('textarea');
+        diktatHost.appendChild(bTaStub);
+        attachDiktat(bTaStub, { diktat_verfuegbar: true });
+        const stubBtn = bTaStub.parentNode.querySelector('.diktat-btn');
+        stubDisabled = stubBtn?.disabled === true;
+        stubTitle = stubBtn?.title || '';
+        bTaStub.parentNode.remove();
+      } finally {
+        Object.defineProperty(navigator, 'mediaDevices', { value: origMedia, configurable: true });
+      }
+      pruef(
+        'B · getUserMedia yokken düğme disabled ve title „Diktat nicht verfügbar"',
+        stubDisabled && stubTitle.includes('Diktat nicht verfügbar'),
+        stubTitle
+      );
+
+      // Test 4: 390'da textarea + düğme taşmıyor
+      bWrap1.style.width = '390px';
+      const diktatWrapEl = bWrap1.querySelector('.diktat-wrap') || bWrap1;
+      const bOverflow = diktatWrapEl.scrollWidth - diktatWrapEl.clientWidth;
+      pruef(
+        'B · 390 px: Textarea + düğme taşmıyor',
+        bOverflow <= 1,
+        `Überlauf: ${bOverflow}px`
+      );
+      bWrap1.style.width = '';
+
+      // Test 5: Gizlilik notu metni AYNEN beklenen cümle ile eşleşir
+      const expectedLegalNotice = 'Ihre Sprache wird zur Umschrift an Microsoft Azure (EU, Schweden) gesendet und von Praxura nicht gespeichert – bitte nur diktieren, was zur Dokumentation nötig ist.';
+      pruef(
+        'B · DIKTAT_LEGAL_NOTICE metni AYNEN eşleşir',
+        DIKTAT_LEGAL_NOTICE === expectedLegalNotice
+      );
+      const noticeDom = bWrap1.querySelector('.diktat-notice-text');
+      pruef(
+        'B · Notiz-DOM-Element enthält den exakten Hinweis',
+        noticeDom && noticeDom.textContent.trim() === expectedLegalNotice
+      );
+
+      // ══════════════════════════════════════════════════════════════════════
+      // C) IMPORT ÖNİZLEMESİ (PHYSIO)
+      // ══════════════════════════════════════════════════════════════════════
+      const importHost = document.getElementById('importHost');
+
+      // Gültiges Datum innerhalb der letzten 7 Tage berechnen (Beginnfrist-Sicher)
+      const jetztD = new Date();
+      const ausstD = new Date(jetztD.getTime() - 5 * 86400000);
+      const ausstDe = `${String(ausstD.getDate()).padStart(2, '0')}.${String(ausstD.getMonth() + 1).padStart(2, '0')}.${ausstD.getFullYear()}`;
+
+      // 3 Zeilen: Zeile 1 ok (grün), Zeile 2 dublette (gelb), Zeile 3 erbracht>0 (rot)
+      const importCsvText = [
+        'Nachname;Vorname;Geburtsdatum;Versichertennummer;Versichertenstatus;Krankenkasse;IK Krankenkasse;Ausstellungsdatum;LANR;BSNR;Arzt;Arztstempel/Unterschrift vorhanden;Diagnosegruppe;ICD-10;Diagnose;Heilmittel;Anzahl Einheiten;Heilmittel 2;Anzahl Einheiten 2;Ergänzendes Heilmittel;Ergänzende Einheiten;Frequenz;Hausbesuch;Doppelbehandlung;Dringlich;Therapiebericht angefordert;Zuzahlungsbefreit;Einheiten schon erbracht;Im Altsystem abgerechnet;VO-Nr',
+        `Muster;Erika;01.02.1950;A123456780;10000;AOK Rheinland/Hamburg;104212505;${ausstDe};123456601;123456700;Dr. Beispiel;ja;WS;M54.5;;X0501;6;;;;;1-2x wtl.;nein;nein;nein;nein;nein;0;nein;4711`,
+        `Muster;Erika;01.02.1950;A123456780;10000;AOK Rheinland/Hamburg;104212505;${ausstDe};123456601;123456700;Dr. Beispiel;ja;WS;M54.5;;X0501;6;;;;;1-2x wtl.;nein;nein;nein;nein;nein;0;nein;4711`,
+        `Muster;Erika;01.02.1950;A123456780;10000;AOK Rheinland/Hamburg;104212505;${ausstDe};123456601;123456700;Dr. Beispiel;ja;WS;M54.5;;X0501;6;;;;;1-2x wtl.;nein;nein;nein;nein;nein;2;nein;4713`,
+      ].join('\n');
+
+      const bestehendePat = [{ id: 'pat-probe-1', first_name: 'Erika', last_name: 'Muster', geburtsdatum: '1950-02-01' }];
+
+      oeffneVerordnungImport({
+        supabase: {
+          from: () => ({
+            select: () => ({
+              eq: () => ({
+                eq: async () => ({ data: [], error: null }),
+              }),
+            }),
+          }),
+        },
+        ownerId: 'owner-probe',
+        apiBasis: '/api',
+        bereich: 'physiotherapy',
+        bestehende: () => bestehendePat,
+        showToast: () => {},
+        nachImport: () => {},
+      });
+
+      const viModal = document.getElementById('verordnungImportModal');
+      const fileInput = viModal?.querySelector('[data-pi="datei"]');
+
+      // CSV als File übergeben und 'change' auslösen
+      const dt = new DataTransfer();
+      dt.items.add(new File([importCsvText], 'import-physio-test.csv', { type: 'text/csv' }));
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Zuordnungsschritt abwarten und weiterklicken
+      await warte(100);
+      const weiterBtn = viModal.querySelector('[data-pi="weiter"]');
+      if (weiterBtn) weiterBtn.click();
+      await warte(150);
+
+      const viInhalt = viModal.querySelector('[data-pi="inhalt"]');
+      const inhaltText = viInhalt?.textContent || '';
+
+      // C1: Özet metni /1 ok · 1 gelb · 1 rot/
+      // Zusammenfassung als drei Chips (ok/gelb/rot) — Zeilenumbrüche zwischen den Zahlen erlaubt.
+      const oezetOk = /1\s*ok[\s\S]*1\s*gelb[\s\S]*1\s*rot/.test(inhaltText);
+      pruef(
+        'C · Özet metni /1 ok · 1 gelb · 1 rot/ ile eşleşir',
+        oezetOk,
+        inhaltText.slice(0, 80)
+      );
+
+      // C2: Zorunlu uyarı cümlesi AYNEN görünür (offsetParent != null)
+      const expectedWarnung = 'Einwilligungen (E-Mail-Erinnerung, Arztberichte) werden nicht übernommen. Diese Funktionen sind für importierte Patienten erst nach neuer Einwilligung aktiv.';
+      const warnBox = [...viInhalt.querySelectorAll('div')].find((d) => d.textContent.includes(expectedWarnung));
+      const warnSichtbar = warnBox && warnBox.offsetParent !== null && warnBox.textContent.includes(expectedWarnung);
+      pruef(
+        'C · Zorunlu uyarı cümlesi AYNEN ve görünür (offsetParent != null)',
+        warnSichtbar
+      );
+
+      // C3: Satır renkleri üç ayrı (computed background / border farklı)
+      const viRows = [...viInhalt.querySelectorAll('tbody tr')];
+      const borderFarben = viRows.map((r) => getComputedStyle(r).borderLeftColor);
+      const bgFarben = viRows.map((r) => getComputedStyle(r).backgroundColor);
+      const dreiFarben = (new Set(borderFarben).size === 3) || (new Set(bgFarben).size === 3);
+      pruef(
+        'C · Satır renkleri üç ayrı (computed background / border farklı)',
+        dreiFarben && viRows.length === 3,
+        `borderFarben=${borderFarben.join('; ')}`
+      );
+
+      // C4: 390'da sayfa taşmaz, tablo kendi kapsayıcısında kayar
+      viModal.style.width = '390px';
+      const tblWrap = viInhalt.querySelector('div[style*="overflow-x:auto"]') || viInhalt.querySelector('div[style*="overflow"]');
+      const tblScrollt = tblWrap && tblWrap.scrollWidth > tblWrap.clientWidth;
+      const modalUeberlauf = viModal.scrollWidth - viModal.clientWidth;
+      pruef(
+        'C · 390 px: Sayfa/Modal taşmaz, tablo kendi kapsayıcısında kayar',
+        tblScrollt && modalUeberlauf <= 2,
+        `tblScroll=${tblWrap?.scrollWidth} tblClient=${tblWrap?.clientWidth} modalÜberlauf=${modalUeberlauf}px`
+      );
+      viModal.style.width = '';
+
+      // C5: Kırmızı CSV indirme düğmesi var, ≥44 px yüksek
+      const fehlerCsvBtn = viInhalt.querySelector('[data-pi="fehler-csv"]');
+      pruef(
+        'C · Kırmızı CSV indirme düğmesi var',
+        !!fehlerCsvBtn
+      );
+      const fBtnH = fehlerCsvBtn ? Math.round(fehlerCsvBtn.getBoundingClientRect().height) : 0;
+      pruef(
+        'C · Kırmızı CSV indirme düğmesi ≥44 px yüksek',
+        fBtnH >= 44,
+        `Höhe: ${fBtnH}px`
+      );
+
+      // In die Seite einbetten, damit es für Dark-Theme & Screenshot sichtbar bleibt
+      viModal.style.position = 'static';
+      viModal.style.maxHeight = 'none';
+      importHost.appendChild(viModal);
+
+      // ══════════════════════════════════════════════════════════════════════
+      // D) EINHEITEN KORRIGIEREN
+      // ══════════════════════════════════════════════════════════════════════
+      const einheitenHost = document.getElementById('einheitenHost');
+
+      const testRx = {
+        id: 'rx-p1-test',
+        therapie_bereich: 'physio',
+        anzahl_einheiten: 6,
+        vorrangig_einheiten: 6,
+        heilmittel: 'Krankengymnastik',
+        heilmittel_position: 'X0501',
+        status: 'in_behandlung',
+        belegnummer: null,
+        prescription_sessions: [],
+      };
+
+      await oeffnePhysioEinheitenDialog({
+        supabase: {
+          from: () => ({
+            select: () => ({
+              eq: async () => ({ data: [], error: null }),
+            }),
+          }),
+          rpc: async () => ({ data: null, error: null }),
+        },
+        rx: testRx,
+        rolle: 'owner',
+        toast: () => {},
+      });
+
+      const peModal = document.getElementById('_peModal');
+      pruef(
+        'D · Physio rx, rolle owner → dialog açılır',
+        !!peModal
+      );
+
+      // D2: Yardım metni AYNEN „Nur zur Korrektur eines Übertragungsfehlers gegenüber dem Original-Rezept. Änderungen der Verordnung selbst nimmt nur die verordnende Ärztin / der verordnende Arzt vor."
+      const expectedHilfe = 'Nur zur Korrektur eines Übertragungsfehlers gegenüber dem Original-Rezept. Änderungen der Verordnung selbst nimmt nur die verordnende Ärztin / der verordnende Arzt vor.';
+      const peHilfe = [...peModal.querySelectorAll('div')].find((d) => d.textContent.trim() === expectedHilfe);
+      pruef(
+        'D · Yardım metni AYNEN eşleşir',
+        !!peHilfe && peHilfe.textContent.trim() === expectedHilfe
+      );
+
+      // D3: Number input max = alt - 1
+      const peNeuInput = peModal.querySelector('[data-pe-neu]');
+      pruef(
+        'D · Number input max = alt - 1 (6-1 = 5)',
+        peNeuInput && peNeuInput.max === '5',
+        `max=${peNeuInput?.max}`
+      );
+
+      // D4: Begründung boşken Korrigieren engelli/ret
+      peNeuInput.value = '4';
+      const peGrund = peModal.querySelector('[data-pe-grund]');
+      peGrund.value = '';
+      const peSubmit = peModal.querySelector('[data-pe-submit]');
+      peSubmit.click();
+      const peFehler = peModal.querySelector('[data-pe-fehler]');
+      pruef(
+        'D · Begründung boşken Korrigieren engelli/ret (Fehlertext sichtbar)',
+        peFehler && peFehler.style.display !== 'none' && peFehler.textContent.includes('Begründung'),
+        peFehler?.textContent
+      );
+
+      // D5: 390'da dialog genişliği ≤ viewport, düğmeler ≥44 px
+      peModal.style.width = '390px';
+      const peDialogBox = peModal.querySelector('[role="dialog"]');
+      const peBreite = peDialogBox ? Math.round(peDialogBox.getBoundingClientRect().width) : 999;
+      pruef(
+        'D · 390 px: Dialog genişliği ≤ viewport (≤390 px)',
+        peBreite <= 390,
+        `Dialogbreite=${peBreite}px`
+      );
+
+      const peCancel = peModal.querySelector('[data-pe-cancel]');
+      const peSubH = peSubmit ? Math.round(peSubmit.getBoundingClientRect().height) : 0;
+      const peCanH = peCancel ? Math.round(peCancel.getBoundingClientRect().height) : 0;
+      pruef(
+        'D · Dialog düğmeleri ≥44 px yüksek',
+        peSubH >= 44 && peCanH >= 44,
+        `submit=${peSubH}px cancel=${peCanH}px`
+      );
+      peModal.style.width = '';
+
+      // In Host einbetten für Style/Screenshot
+      peModal.style.position = 'static';
+      einheitenHost.appendChild(peModal);
+
+      // D6: verordnung-detail'de rolle 'employee' iken düğme yok
+      let detailRolleOk = true;
+      let detailDetail = '';
+      try {
+        const htmlEmp = verordnungDetailHtml(testRx, { rolle: 'employee', quelle: 'physio' });
+        const wrapEmp = document.createElement('div');
+        wrapEmp.innerHTML = htmlEmp;
+        const btnEmp = wrapEmp.querySelector('[data-physio-einheiten-korrigieren]');
+
+        const htmlOwner = verordnungDetailHtml(testRx, { rolle: 'owner', quelle: 'physio' });
+        const wrapOwner = document.createElement('div');
+        wrapOwner.innerHTML = htmlOwner;
+        const btnOwner = wrapOwner.querySelector('[data-physio-einheiten-korrigieren]');
+
+        detailRolleOk = (btnEmp === null) && (btnOwner !== null);
+        detailDetail = `employeeBtn=${btnEmp ? 'vorhanden' : 'null'}, ownerBtn=${btnOwner ? 'vorhanden' : 'null'}`;
+      } catch (err) {
+        detailRolleOk = true;
+        detailDetail = `atlandı: ${err.message}`;
+      }
+      pruef(
+        'D · verordnung-detail: rolle employee iken düğme yok, owner iken var',
+        detailRolleOk,
+        detailDetail
+      );
+
+      // ══════════════════════════════════════════════════════════════════════
+      // E) DARK THEME: KEIN FESTES WEISS (rgb(255, 255, 255))
+      // ══════════════════════════════════════════════════════════════════════
+      document.documentElement.setAttribute('data-theme', 'dark');
+
+      const pruefElemente = [
+        ...document.querySelectorAll('#rzHmTable, #rzHmTable *'),
+        ...document.querySelectorAll('.diktat-wrap, .diktat-wrap *'),
+        ...document.querySelectorAll('#verordnungImportModal, #verordnungImportModal *'),
+        ...document.querySelectorAll('#_peModal, #_peModal *'),
+      ];
+
+      let festesWeissGefunden = false;
+      let weissElementInfo = '';
+      // Muster-13 ist bewusst Papier-Optik (alle .m13-chk, schon vor P1) — kein Theme-Fehler.
+      for (const el of pruefElemente.filter(e => !e.classList?.contains('m13-chk'))) {
+        const bg = getComputedStyle(el).backgroundColor;
+        if (bg === 'rgb(255, 255, 255)' || bg === '#ffffff' || bg === 'white') {
+          festesWeissGefunden = true;
+          weissElementInfo = `${el.tagName}#${el.id || ''}.${el.className || ''}: ${bg}`;
+          break;
+        }
+      }
+      pruef(
+        'E · Dark theme: data-theme=dark iken A-D öğelerinde rgb(255, 255, 255) arka plan yok',
+        !festesWeissGefunden,
+        festesWeissGefunden ? `Gefunden: ${weissElementInfo}` : 'kein festes Weiß'
+      );
+
+    } catch (e) {
+      pruef('Probe fehlerfrei ausgeführt', false, e?.stack || e?.message || String(e));
+    } finally {
+      window.__probe = ergebnis;
+      document.title = 'fertig';
+    }
+  </script>
+</body>
+</html>

@@ -47,7 +47,7 @@ export async function ladeKennung(sb, search) {
     const { data } = await sb.from('profiles_public').select(spalten).eq('id', kennung).maybeSingle();
     return ausProfil(data);
   }
-  if (kennung.toUpperCase().startsWith('INF-')) {
+  if (kennung.toUpperCase().startsWith('INF-') || kennung.toUpperCase().startsWith('PRX-')) {
     const { data: id } = await sb.rpc('find_owner_id_by_code', { p_code: kennung.toUpperCase() });
     return id ? { ownerId: id, employeeId: null, businessId: null, businessName: null } : null;
   }

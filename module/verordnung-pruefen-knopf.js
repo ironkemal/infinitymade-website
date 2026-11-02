@@ -38,6 +38,7 @@ import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { normalisiereRezeptart } from './rezeptart.js?v=20261006a';
+import { liesHeilmittelZeilenAusMaske } from './heilmittel-zeilen-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const wert = (id) => ($(id)?.value ?? '').toString().trim();
@@ -57,6 +58,8 @@ function schuetze(s) {
  */
 function lesenMuster13() {
   const ls = ['a', 'b', 'c'].filter(b => haken(`rzLs${b.toUpperCase()}`));
+  const hm = liesHeilmittelZeilenAusMaske();
+  const spiegel = hm.spiegel;
   return {
     bereich:            wert('rzTherapieBereich'),
     // Beide Diagnosefelder, komma-getrennt: `parseIcdList()` (icd-dg-match.js)
@@ -73,9 +76,12 @@ function lesenMuster13() {
     // dieses Feld meldete der Motor „Keine Leitsymptomatik angekreuzt", obwohl
     // die patientenindividuelle Leitsymptomatik ausgefüllt war.
     leitsymptomatikFreitext: haken('rzLsD') ? wert('rzLsDText') : '',
-    heilmittel:         wert('rzHm'),
-    heilmittelPosition: wert('rzHmPosition'),
-    anzahl:             wert('rzAnzahl'),
+    heilmittel:         spiegel.heilmittel || wert('rzHm'),
+    heilmittelPosition: spiegel.heilmittel_position || wert('rzHmPosition'),
+    heilmittelItems:    hm.items || null,
+    ergaenzendesHeilmittel: wert('rzHmErg'),
+    ergaenzendEinheiten: parseInt(wert('rzAnzahlErg'), 10) || null,
+    anzahl:             spiegel.anzahl_einheiten ?? wert('rzAnzahl'),
     frequenz:           wert('rzFreq'),
     ausstellungsdatum:  wert('rzAusstDate'),
     behandlungsbeginn:  '',

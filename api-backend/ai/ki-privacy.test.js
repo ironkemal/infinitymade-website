@@ -86,7 +86,8 @@ test('KNOWN_AI_TASKS: contains all required standard tasks', () => {
   assert.ok(KNOWN_AI_TASKS.has('series-scheduler'));
   assert.ok(KNOWN_AI_TASKS.has('b2b-draft'));
   assert.ok(KNOWN_AI_TASKS.has('rezept-normalize'));
-  assert.equal(KNOWN_AI_TASKS.size, 7);
+  assert.ok(KNOWN_AI_TASKS.has('transkribieren'));
+  assert.equal(KNOWN_AI_TASKS.size, 8);
 });
 
 test('safeAiError: generic safe fallback preserves 400/401/403/409/502/503 statuses but hides message and uses generic code', () => {

@@ -8516,3 +8516,211 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .ehemalige .ehem-name { font-weight: 500; min-width: 120px; }
 .ehemalige .ehem-faellig { color: var(--danger); }
 .ehemalige .ehem-loeschen { margin-left: auto; }
+
+/* ============================================================================
+   DIKTAT / SPRACHEINGABE (K5 / M4 / module/diktat.js)
+   ============================================================================ */
+.diktat-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.diktat-textarea {
+  padding-right: 56px !important;
+  box-sizing: border-box;
+}
+
+.diktat-controls {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.diktat-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border);
+  background: var(--bg-card-solid);
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.diktat-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--bg-hover);
+  color: var(--primary);
+}
+
+.diktat-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.diktat-btn.is-recording {
+  background: var(--danger-dim);
+  color: var(--danger);
+  border-color: var(--danger);
+  animation: diktat-pulse 1.6s ease-in-out infinite;
+}
+
+.diktat-btn.is-processing {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  border-color: var(--border);
+  cursor: wait;
+}
+
+.diktat-btn:disabled,
+.diktat-btn.is-unavailable {
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.diktat-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  padding: 4px 10px;
+  height: 34px;
+  box-sizing: border-box;
+  font-size: 12px;
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+}
+
+.diktat-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--danger);
+  min-width: 30px;
+}
+
+.diktat-level {
+  width: 14px;
+  height: 18px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.diktat-level-bar {
+  width: 100%;
+  height: 100%;
+  background: var(--danger);
+  transform-origin: bottom center;
+  transform: scaleY(0.1);
+  transition: transform 0.08s ease-out;
+}
+
+.diktat-status-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.diktat-notice {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.diktat-notice-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.diktat-notice-close:hover {
+  color: var(--text-main);
+}
+
+.diktat-toast {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 6px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  color: var(--danger);
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+@keyframes diktat-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--danger-dim);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--danger-dim);
+  }
+}
+
+/* Responsiv: 390px und 768px */
+@media (max-width: 768px) {
+  .diktat-status {
+    padding: 2px 6px;
+    gap: 4px;
+  }
+  .diktat-notice {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  .diktat-controls {
+    top: 4px;
+    right: 4px;
+  }
+  .diktat-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .diktat-textarea {
+    padding-right: 52px !important;
+  }
+  .diktat-status-text {
+    display: none;
+  }
+}
+

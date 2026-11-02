@@ -214,6 +214,22 @@ test('im Physio-Topf ist die Menge nicht änderbar — dort wäre es eine Geldä
   assert.doesNotMatch(html, /data-einheiten-aendern/);
 });
 
+test('Ops #251: Physio/Ergo zeigt Inhaber den Knopf „Einheiten korrigieren", Angestellten nicht', () => {
+  const rxPhysio = { ...PHYSIO, therapie_bereich: 'physio' };
+  const htmlOwner = verordnungDetailHtml(rxPhysio, { escapeHtml: esc, quelle: 'physio', rolle: 'owner' });
+  assert.match(htmlOwner, /data-physio-einheiten-korrigieren/);
+  assert.match(htmlOwner, /Einheiten korrigieren/);
+
+  const htmlEmp = verordnungDetailHtml(rxPhysio, { escapeHtml: esc, quelle: 'physio', rolle: 'employee' });
+  assert.doesNotMatch(htmlEmp, /data-physio-einheiten-korrigieren/);
+  assert.doesNotMatch(htmlEmp, /Einheiten korrigieren/);
+
+  const rxBeleg = { ...PHYSIO, therapie_bereich: 'physio', belegnummer: '12-99' };
+  const htmlBeleg = verordnungDetailHtml(rxBeleg, { escapeHtml: esc, quelle: 'physio', rolle: 'owner' });
+  assert.doesNotMatch(htmlBeleg, /data-physio-einheiten-korrigieren/);
+  assert.match(htmlBeleg, /festgeschrieben/);
+});
+
 /* ── Fluchtfunktion ───────────────────────────────────────────────────────── */
 
 test('Freitextfelder werden maskiert', () => {

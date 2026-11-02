@@ -470,3 +470,26 @@ test('rxGeschlossen: Podo-VO mit status=confirmed, aber eingereicht/storniert, i
   assert.equal(rxGeschlossen({ status: 'confirmed', abrechnung_status: null }), null);
   assert.equal(rxGeschlossen(null), null);
 });
+
+test('waehleVerordnung #339: Termin vor Ausstellungsdatum blockiert Auswahl mit Fehlermeldung', async () => {
+  const el = setupWaehleDom();
+  el.bkStart = { value: '2026-10-05T09:00' };
+  const origGetElementById = document.getElementById;
+  document.getElementById = (id) => (id === 'bkStart' ? el.bkStart : origGetElementById(id));
+
+  const rx = {
+    id: 'rx-podo-1',
+    therapie_bereich: 'podo',
+    ausstellungsdatum: '2026-10-10',
+    anzahl_einheiten: 6,
+    heilmittel: 'Podologische Behandlung',
+  };
+
+  await waehleVerordnung(rx, [], {});
+
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Dieser Termin liegt vor dem Ausstellungsdatum der Verordnung und ist nicht abrechenbar.');
+  assert.equal(el.bkSelectedRxId.value, '');
+  assert.equal(window._pendingRxSession, null);
+
+  document.getElementById = origGetElementById;
+});

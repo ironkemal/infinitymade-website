@@ -14,7 +14,8 @@ function handler(req, res) {
   // Vertragsform zurückgeben (O-58 a, onprem-Review 12.09.2026).
   // telemetryEnabled (Ops #166, onprem-Review 17.09.2026): SaaS sendet immer
   // Sentry-Telemetrie — fest true, gleiches Vertragsformat wie istKutu.
-  res.json({ supabaseUrl, supabaseAnonKey, apiBase, istKutu: false, telemetryEnabled: true });
+  const diktat_verfuegbar = Boolean(process.env.AI_MODEL_TRANSCRIBE || process.env.DIKTAT_VERFUEGBAR);
+  res.json({ supabaseUrl, supabaseAnonKey, apiBase, istKutu: false, telemetryEnabled: true, diktat_verfuegbar });
 }
 
 export default withServerlessTelemetry('config', handler);

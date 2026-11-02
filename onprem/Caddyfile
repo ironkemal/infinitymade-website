@@ -112,12 +112,20 @@
 	# → NotAllowedError, kein Fallback ausgelöst, weil isSecureContext hier true
 	# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
 	# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
-	@geo path /dashboard.html /attendance.html
-	@nogeo not path /dashboard.html /attendance.html /widget/booking-widget.html
+	@dashboard path /dashboard.html /dashboard /dashboard/
+	@geo path /attendance.html
+	@nogeo not path /dashboard.html /dashboard /dashboard/ /attendance.html /widget/booking-widget.html
+	header @dashboard Permissions-Policy "camera=(self), microphone=(self), geolocation=(self), serial=(self)"
 	header @geo Permissions-Policy "camera=(self), microphone=(), geolocation=(self), serial=(self)"
 	header @nogeo Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
 
 	# ── Backend (Express) ───────────────────────────────────────────────────
+	handle /api/ai/transkribieren {
+		request_body {
+			max_size 11MB
+		}
+		reverse_proxy api:3000
+	}
 	handle /api/* {
 		reverse_proxy api:3000
 	}

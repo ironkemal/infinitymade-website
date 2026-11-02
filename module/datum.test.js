@@ -85,6 +85,22 @@ test('datumDe: reiner Kalendertag ohne Zeitzonen-Umweg', async () => {
   assert.equal(datumDe('2026-01-01'), '01.01.2026');
 });
 
+test('datumDe: ISO, bereits deutsches Format und leere Werte', async () => {
+  const { datumDe } = await import('./datum.js');
+  // ISO-Format
+  assert.equal(datumDe('1980-05-12'), '12.05.1980');
+  assert.equal(datumDe('1975-01-09'), '09.01.1975');
+  // bereits deutsches Format (bleibt erhalten / normalisiert)
+  assert.equal(datumDe('12.05.1980'), '12.05.1980');
+  assert.equal(datumDe('5.4.1980'), '05.04.1980');
+  assert.equal(datumDe(' 30.09.2026 '), '30.09.2026');
+  // leer / ungültig
+  assert.equal(datumDe(''), '');
+  assert.equal(datumDe(null), '');
+  assert.equal(datumDe(undefined), '');
+  assert.equal(datumDe('   '), '');
+});
+
 test('datumDe: Zeitpunkt wird als lokaler Tag gelesen (Date, timestamptz, ms)', async () => {
   const { datumDe } = await import('./datum.js');
   // Zeitzonen-unabhaengig: lokale Felder rein, dieselben Felder raus.

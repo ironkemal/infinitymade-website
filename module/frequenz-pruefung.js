@@ -65,7 +65,7 @@
  * zu sehen — dort BLOCKIERT `pruefeErsttermin()` unten, siehe dort.)
  */
 
-import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20261010zc';
+import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20261102a';
 import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
 
 export const TOLERANZ_WERKTAGE = 2;

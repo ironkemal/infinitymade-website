@@ -99,6 +99,8 @@ export function ocrAlsVerordnung(parsed) {
     pat_leitsymptomatik: rezept.pat_leitsymptomatik ?? null,
 
     heilmittel: rezept.heilmittel || null,
+    heilmittel_items: rezept.heilmittel_items || null,
+    vorrangig_einheiten: rezept.vorrangig_einheiten ?? null,
     heilmittel_feld_text: rezept.heilmittel_feld_text || null,
     heilmittel_position: rezept.heilmittel_position || null,
     anzahl_einheiten: rezept.anzahl_einheiten ?? null,

@@ -320,11 +320,12 @@ export function parseMuster13Barcode(text) {
     throw new Error('Ungültiges oder unvollständiges Ausstellungsdatum');
   }
 
-  // Feld 16: Heilmittelart (1 n, 1..5 — für v1 M3 nur 2 = Podologie zulässig)
+  // Feld 16: Heilmittelart (1 n, 1..5: 1=Physio, 2=Podo, 4=Ergo)
   const sektor = fields[15].trim();
-  if (sektor !== '2') {
-    throw new Error('Nur Podologie-Verordnungen (Heilmittelart 2) werden unterstützt');
+  if (!['1', '2', '4'].includes(sektor)) {
+    throw new Error('Nur Physiotherapie (1), Podologie (2) und Ergotherapie (4) werden unterstützt');
   }
+  const therapiebereich = sektor === '1' ? 'physio' : (sektor === '4' ? 'ergo' : 'podo');
 
   // Feld 17: ICD-10-GM-Code (<= 10 a)
   let icd10 = null;
@@ -377,37 +378,72 @@ export function parseMuster13Barcode(text) {
   }
 
   // Felder 22 bis 29: Heilmittelzeilen & Behandlungseinheiten
-  // In Podologie gibt es keine Aufteilung auf mehrere vorrangige Heilmittel und kein ergänzendes Heilmittel (§ 12 Abs. 2 HeilM-RL).
-  // Mehrere befüllte Zeilen müssen geschlossen abgewiesen werden (fail-closed -> manuelle Erfassung).
+  const f22 = fields[21].trim();
+  const f23 = fields[22].trim();
   const f24 = fields[23].trim();
   const f25 = fields[24].trim();
   const f26 = fields[25].trim();
   const f27 = fields[26].trim();
   const f28 = fields[27].trim();
   const f29 = fields[28].trim();
-  if (f24 || f25 || f26 || f27 || f28 || f29) {
-    throw new Error('Mehrere Heilmittelzeilen oder ergänzendes Heilmittel in Podologie nicht zulässig');
+
+  let vorrangig = [];
+  let ergaenzendes_heilmittel = null;
+  let anzahl_ergaenzend = null;
+  let heilmittel_position = null;
+
+  if (sektor === '2') {
+    // In Podologie gibt es keine Aufteilung auf mehrere vorrangige Heilmittel und kein ergänzendes Heilmittel (§ 12 Abs. 2 HeilM-RL).
+    if (f24 || f25 || f26 || f27 || f28 || f29) {
+      throw new Error('Mehrere Heilmittelzeilen oder ergänzendes Heilmittel in Podologie nicht zulässig');
+    }
+    if (!f22) throw new Error('Heilmittel fehlt');
+    if (!f23 || !/^\d{1,3}$/.test(f23)) throw new Error('Ungültige Anzahl von Behandlungseinheiten');
+    const einheiten = parseInt(f23, 10);
+    if (einheiten <= 0) throw new Error('Behandlungseinheiten müssen größer als 0 sein');
+    vorrangig.push({ text: f22, einheiten });
+    heilmittel_position = podologiePositionFuerText(f22);
+    if (!heilmittel_position) hinweise.push('Heilmittelposition nicht eindeutig. Bitte passende Position von Hand wählen.');
+  } else {
+    // Physio (1) oder Ergo (4): bis zu 3 vorrangige Heilmittel
+    if (f22) {
+      if (!f23 || !/^\d{1,3}$/.test(f23)) throw new Error('Ungültige Anzahl von Behandlungseinheiten');
+      const e = parseInt(f23, 10);
+      if (e <= 0) throw new Error('Behandlungseinheiten müssen größer als 0 sein');
+      vorrangig.push({ text: f22, einheiten: e });
+    }
+    if (f24) {
+      if (!f25 || !/^\d{1,3}$/.test(f25)) throw new Error('Ungültige Anzahl von Behandlungseinheiten');
+      const e = parseInt(f25, 10);
+      if (e <= 0) throw new Error('Behandlungseinheiten müssen größer als 0 sein');
+      vorrangig.push({ text: f24, einheiten: e });
+    }
+    if (f26) {
+      if (!f27 || !/^\d{1,3}$/.test(f27)) throw new Error('Ungültige Anzahl von Behandlungseinheiten');
+      const e = parseInt(f27, 10);
+      if (e <= 0) throw new Error('Behandlungseinheiten müssen größer als 0 sein');
+      vorrangig.push({ text: f26, einheiten: e });
+    }
+    if (!vorrangig.length) throw new Error('Heilmittel fehlt');
+    if (vorrangig.length > 3) throw new Error('Prüfen Sie das Rezept');
+
+    if (f28) {
+      if (!f29 || !/^\d{1,3}$/.test(f29)) throw new Error('Ungültige Anzahl von Behandlungseinheiten für ergänzendes Heilmittel');
+      const e = parseInt(f29, 10);
+      if (e <= 0) throw new Error('Behandlungseinheiten für ergänzendes Heilmittel müssen größer als 0 sein');
+      ergaenzendes_heilmittel = f28;
+      anzahl_ergaenzend = e;
+    }
   }
 
-  const f22 = fields[21].trim();
-  const f23 = fields[22].trim();
-  if (!f22) {
-    throw new Error('Heilmittel fehlt');
-  }
-  if (!f23 || !/^\d{1,3}$/.test(f23)) {
-    throw new Error('Ungültige Anzahl von Behandlungseinheiten');
-  }
-  const einheiten = parseInt(f23, 10);
-  if (einheiten <= 0) {
-    throw new Error('Behandlungseinheiten müssen größer als 0 sein');
-  }
-
-  const heilmittel = f22;
-  const heilmittel_feld_text = f22;
-  const anzahl_einheiten = einheiten;
-  const heilmittel_position = podologiePositionFuerText(f22);
-  if(!heilmittel_position) hinweise.push('Heilmittelposition nicht eindeutig. Bitte passende Position von Hand wählen.');
-  const heilmittelItems = [{ text: f22, einheiten }];
+  const heilmittel = vorrangig[0].text;
+  const heilmittel_feld_text = vorrangig[0].text;
+  const vorrangig_einheiten = vorrangig[0].einheiten;
+  const anzahl_einheiten = vorrangig.reduce((s, v) => s + v.einheiten, 0);
+  const heilmittelItems = vorrangig;
+  const heilmittel_items = vorrangig.length > 1
+    ? vorrangig.map(v => ({ bezeichnung: v.text, einheiten: v.einheiten, code: null, doppelbehandlung: false }))
+    : null;
 
   // Feld 30: Therapiefrequenz (<= 15 a, optional)
   let frequenz = null;
@@ -465,10 +501,12 @@ export function parseMuster13Barcode(text) {
         ausstellungsdatum,
       },
       rezept: {
-        therapiebereich: 'podo',
+        therapiebereich,
         heilmittel,
         heilmittel_feld_text,
+        vorrangig_einheiten,
         anzahl_einheiten,
+        heilmittel_items,
         icd10,
         icd10_2,
         diagnosegruppe,
@@ -478,8 +516,8 @@ export function parseMuster13Barcode(text) {
         is_dringend,
         hausbesuch,
         bericht_angefordert,
-        ergaenzendes_heilmittel: null,
-        anzahl_ergaenzend: null,
+        ergaenzendes_heilmittel,
+        anzahl_ergaenzend,
         heilmittel_position,
         is_blanko: false,
         is_lhb_bvb: null,

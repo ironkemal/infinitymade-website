@@ -1,6 +1,6 @@
 import { API_BASE, IST_KUTU } from './supabase-config.js';
 import { getPublicClient } from './module/public-supabase.js?v=20261009k15';
-import { ladeKennung } from './module/public-owner.js?v=20261001z';
+import { ladeKennung } from './module/public-owner.js?v=20261102w7';
 import { praxisRechtstexteAnbringen, NICHT_EINGERICHTET } from './module/termin-rechtstexte.js?v=20261009k15c';
 
 const supabase = await getPublicClient();

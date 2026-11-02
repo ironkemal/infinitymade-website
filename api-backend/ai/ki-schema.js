@@ -549,6 +549,13 @@ export function validateTaskPayload(task, payload, options = {}) {
     case 'rezept-validate':
       throw createSchemaError('Lokale Regeln benötigen keinen KI-Transport');
 
+    case 'transkribieren':
+      checkUnknownKeys(payload, ['audioBuffer', 'mimeType', 'duration', 'ki_confirmation']);
+      if (!payload.audioBuffer) {
+        throw createSchemaError('audioBuffer ist erforderlich');
+      }
+      break;
+
     default:
       throw createSchemaError(`Unbekannter Task für Schemaprüfung: ${task}`);
   }

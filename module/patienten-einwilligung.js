@@ -44,7 +44,7 @@
 
 import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261030k4';
 import { IST_KUTU } from '../supabase-config.js';
-import { getKiConfig } from './ki-client.js?v=20261030k4';
+import { getKiConfig } from './ki-client.js?v=20261102w3';
 
 const BUCKET = 'patient-documents';   // existiert bereits, keine neue Infrastruktur
 

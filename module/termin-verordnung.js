@@ -23,7 +23,8 @@
  * wächst nicht mehr.
  */
 
-import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261010zc';
+import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261102a';
+import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
 import { RX_FELDER } from './termin-laden.js?v=20261021s';
@@ -198,6 +199,26 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
   const dotsEl = document.getElementById('bkSessionDots');
   const titleEl = document.getElementById('bkSessionPickerTitle');
   const infoEl = document.getElementById('bkSessionPickerInfo');
+
+  const bkStartEl = typeof document !== 'undefined' ? document.getElementById('bkStart') : null;
+  const startVal = bkStartEl?.value || (typeof window !== 'undefined' ? window._bkStartTime : null);
+  const checkDatum = pruefeTerminVoDatum(startVal, rx.ausstellungsdatum);
+  if (!checkDatum.ok) {
+    if (infoEl) {
+      infoEl.textContent = checkDatum.fehler;
+      if (infoEl.style) infoEl.style.color = 'var(--danger,#ef4444)';
+    }
+    if (pickerBlock) pickerBlock.hidden = false;
+    setzeWert('bkSelectedRxId', '');
+    setzeWert('bkSelectedSessionId', '');
+    if (typeof window !== 'undefined') {
+      window._pendingRxSession = null;
+      window._bkGewaehlteRx = null;
+    }
+    return;
+  }
+  if (infoEl?.style) infoEl.style.color = '';
+
   if (!pickerBlock || !dotsEl) return;
 
   const total = rx.anzahl_einheiten || sessions?.length || 0;

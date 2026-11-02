@@ -33,19 +33,58 @@
  * Kalender, der stimmt, und eine Abrechnung, die nicht stattgefunden hat.
  */
 
+import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
+
 /**
  * Bindet Sitzungszeilen an einen Termin.
  *
  * @param {object} supabase
  * @param {string} bookingId
  * @param {string[]} sessionIds
+ * @param {object} [opt]
+ * @param {string|Date} [opt.terminZeit]
+ * @param {string|Date} [opt.ausstellungsdatum]
  * @returns {Promise<{ok:boolean, gebunden:number, erwartet:number, fehlend:string[], meldung:string}>}
  */
-export async function bindeSitzungenAnTermin(supabase, bookingId, sessionIds) {
+export async function bindeSitzungenAnTermin(supabase, bookingId, sessionIds, { terminZeit, ausstellungsdatum } = {}) {
   const ids = [...new Set((sessionIds || []).filter(Boolean))];
   const erwartet = ids.length;
   if (!supabase || !bookingId || !erwartet) {
     return { ok: true, gebunden: 0, erwartet: 0, fehlend: [], meldung: '' };
+  }
+
+  let tZeit = terminZeit;
+  let aDatum = ausstellungsdatum;
+
+  if (!tZeit) {
+    try {
+      const q = supabase.from('bookings').select('start_time').eq('id', bookingId);
+      const res = typeof q?.maybeSingle === 'function' ? await q.maybeSingle() : await q;
+      tZeit = res?.data?.start_time;
+    } catch (_e) { /* mock / fallback */ }
+  }
+  if (!aDatum && ids.length) {
+    try {
+      const qSess = supabase.from('prescription_sessions').select('prescription_id').eq('id', ids[0]);
+      const resSess = typeof qSess?.maybeSingle === 'function' ? await qSess.maybeSingle() : await qSess;
+      const rxId = resSess?.data?.prescription_id;
+      if (rxId) {
+        const qRx = supabase.from('prescriptions').select('ausstellungsdatum').eq('id', rxId);
+        const resRx = typeof qRx?.maybeSingle === 'function' ? await qRx.maybeSingle() : await qRx;
+        aDatum = resRx?.data?.ausstellungsdatum;
+      }
+    } catch (_e) { /* mock / fallback */ }
+  }
+
+  const check = pruefeTerminVoDatum(tZeit, aDatum);
+  if (!check.ok) {
+    return {
+      ok: false,
+      gebunden: 0,
+      erwartet,
+      fehlend: ids,
+      meldung: check.fehler,
+    };
   }
 
   const { data, error } = await supabase

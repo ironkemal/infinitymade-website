@@ -98,16 +98,42 @@ function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
     ? abrechnungscodeAusLegs(legsFuer(sector))
     : abrechnungscodeAusLegs(legsFuer('physiotherapy'));
 
-  const doneDates = (rx.prescription_sessions || [])
+  const hasItems = Array.isArray(rx.heilmittel_items) &&
+    rx.heilmittel_items.length > 0 &&
+    rx.heilmittel_items.some(it => it && typeof it === 'object' && it.einheiten != null);
+
+  const doneSessions = (rx.prescription_sessions || [])
     .filter(s => s.status === 'done' && s.done_at)
-    .map(s => s.done_at.slice(0, 10))
-    .sort();
+    .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
   const sessions = Array.from({ length: Math.max(0, einheiten) }, (_, i) => {
-    const dateStr = doneDates[i] || rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
+    let dateStr = rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
+    let code = rx.heilmittel_position || '';
+
+    if (hasItems) {
+      if (doneSessions[i]) {
+        dateStr = doneSessions[i].done_at.slice(0, 10);
+        const idx = doneSessions[i].heilmittel_index || 0;
+        const it = rx.heilmittel_items[idx];
+        if (it) code = it.code || it.position || code;
+      } else {
+        let offset = 0;
+        for (const it of rx.heilmittel_items) {
+          const u = Number(it?.einheiten) || 0;
+          if (i < offset + u) {
+            code = it.code || it.position || code;
+            break;
+          }
+          offset += u;
+        }
+      }
+    } else {
+      if (doneSessions[i]) dateStr = doneSessions[i].done_at.slice(0, 10);
+    }
+
     const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
       bereich,
-      code: rx.heilmittel_position || '',
+      code,
       datum: dateStr,
       abrechnungscode,
     });
@@ -166,10 +192,10 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
 
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, patient_id, business_id, heilmittel_position, ausstellungsdatum, '
+      .select('id, owner_id, patient_id, business_id, heilmittel_position, heilmittel_items, ausstellungsdatum, '
         + 'anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, abrechnung_status, belegnummer, '
         + 'leads:patient_id (geburtsdatum), '
-        + 'prescription_sessions (status, done_at)')
+        + 'prescription_sessions (status, done_at, heilmittel_index)')
       .eq('id', prescription_id)
       .maybeSingle();
     if (rxErr) return res.status(500).json({ error: rxErr.message });

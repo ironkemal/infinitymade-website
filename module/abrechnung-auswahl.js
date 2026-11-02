@@ -508,13 +508,13 @@ export async function ladeAbrechnungAuswahl() {
   const [physioRes, podoRes, certsRes] = await Promise.all([
     ctx.supabase.from('prescriptions')
       .select(`
-        id, patient_id, kostentraeger_ik, krankenkasse_ik, heilmittel, heilmittel_position, anzahl_einheiten,
+        id, patient_id, kostentraeger_ik, krankenkasse_ik, heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten,
         zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb,
         bericht_angefordert, bericht_status, belegnummer,
         diagnosegruppe, frequenz, leitsymptomatik, arzt_id, doctor_lanr, doctor_bsnr,
         leads:patient_id(first_name,last_name,geburtsdatum,versichertenstatus,krankenkasse,versichertennummer,patientennummer),
         prescription_sessions (
-          id, session_number, status, done_at,
+          id, session_number, status, done_at, heilmittel_index,
           bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
         )
       `)
@@ -563,7 +563,7 @@ export async function ladeAbrechnungAuswahl() {
     if (!imZeitraum(rx.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis)) { ausgefiltert++; continue; }
     _st.rxRoh.set(rx.id, rx);
     const pos = _findePhysioPosition(rx.heilmittel_position, positionen);
-    const zz = zuzahlungFuerRezept(rx, pos);
+    const zz = zuzahlungFuerRezept(rx, pos, { findePosition: (code) => _findePhysioPosition(code, positionen) });
     const issues = checkPrescriptionCompliance(rx, certsMap);
     const lead = rx.leads || {};
     const zeile = {

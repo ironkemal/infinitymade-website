@@ -37,6 +37,7 @@ export const BK_PANEL_OFFSET = '456px';
 import { RX_FELDER, RX_JOIN } from './termin-laden.js?v=20261021s';
 import { fuelleMuster13 } from './verordnung-maske.js?v=20261027p';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
+import { datumDe } from './datum.js?v=20261001a';
 import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20261026p';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -104,7 +105,7 @@ export function verdrahteAktionsPatientensuche(deps) {
     loadLeads: ladePatienten,
     labelOf: (l) => {
       const name = [l.first_name, l.last_name].filter(Boolean).join(' ').trim() || l.title || '';
-      const geb = l.geburtsdatum ? ` · ${new Date(l.geburtsdatum).toLocaleDateString('de-DE')}` : '';
+      const geb = l.geburtsdatum ? ` · ${datumDe(l.geburtsdatum)}` : '';
       return name + geb;
     },
     matches: (l, q) => {

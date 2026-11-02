@@ -24,7 +24,8 @@ export const KI_TASKS = Object.freeze([
   'appointment-confirm-draft',
   'series-scheduler',
   'b2b-draft',
-  'rezept-normalize'
+  'rezept-normalize',
+  'transkribieren'
 ]);
 
 const ERLAUBTE_TASKS_SET = new Set(KI_TASKS);

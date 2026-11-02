@@ -493,3 +493,27 @@ test('Bericht mit Tagesfenster weit weg von der Serverzeit → nicht gespeichert
     await s.stop();
   }
 });
+
+test('deploymentTranscribe optional im Jeton wenn in Merkez konfiguriert', async () => {
+  const s = await starte({
+    ki: {
+      gueltig: true,
+      grund: null,
+      endpoint: 'https://ki-test.example.openai.azure.com/',
+      deployment: 'gpt-test',
+      deploymentTranscribe: 'whisper',
+      region: 'swedencentral',
+      apiVersion: '2024-10-21',
+      monatsLimit: 600,
+    }
+  });
+  try {
+    const r = await registriere(s);
+    kiBereit(s, r.name);
+    const res = await signiert(s, r.kimlik, { antragsteller: 'praxura-box' });
+    assert.equal(res.status, 200);
+    assert.equal(res.json.deploymentTranscribe, 'whisper');
+  } finally {
+    await s.stop();
+  }
+});

@@ -79,8 +79,9 @@ import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261021f';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20261101u';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
-import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
-import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20261010zc';
+import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten, physioKorrekturErlaubt, oeffnePhysioEinheitenDialog } from './verordnung-einheiten.js?v=20261102b';
+import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20261102a';
+import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
@@ -102,7 +103,7 @@ const SELECT_PHYSIO = `
                      versichertennummer, versichertenstatus, krankenkasse,
                      patientennummer ),
   aerzte!arzt_id ( arzt_name, lanr, bsnr, fachrichtung ),
-  prescription_sessions ( id, session_number, status, booking_id,
+  prescription_sessions ( id, session_number, status, booking_id, heilmittel_index,
                           bookings!booking_id ( start_time, status, no_show ) )
 `;
 
@@ -419,14 +420,23 @@ function _terminePodo(rx, esc, termine) {
     </div>`;
   };
 
-  const vorschlag = (b) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;">
+  const vorschlag = (b) => {
+    const check = pruefeTerminVoDatum(b.start_time, rx.ausstellungsdatum);
+    if (!check.ok) {
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;opacity:0.5;" title="${esc(check.fehler)}">
+        <span style="font-size:11px;color:var(--text-main);">${esc(_datumZeit(b.start_time))}</span>
+        <span style="font-size:10px;color:var(--text-muted);font-style:italic;">vor Ausstellung</span>
+      </div>`;
+    }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;">
       <span style="font-size:11px;color:var(--text-main);">${esc(_datumZeit(b.start_time))}</span>
       <span style="display:flex;gap:4px;flex-shrink:0;">
         ${stift(b)}
-        <button type="button" data-termin-binden="${esc(b.id)}" title="Diesen einen Termin dieser Verordnung zuordnen"
+        <button type="button" data-termin-binden="${esc(b.id)}" data-termin-start="${esc(b.start_time || '')}" title="Diesen einen Termin dieser Verordnung zuordnen"
           style="${knopfStil}">zuordnen</button>
       </span>
     </div>`;
+  };
 
   const inhalt = `
     ${zaehler}
@@ -462,10 +472,34 @@ function _termine(rx, esc, quelle, termine) {
   const vergeben = sitzungen.filter(s => s.booking_id);
   const unvergeben = sitzungen.filter(s => !s.booking_id);
 
-  const zeile = (s, mitDatum) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;">
-      <span style="font-size:12px;color:var(--text-main);">${s.session_number ? `${s.session_number}.` : '·'}</span>
+  const multiItems = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1 ? rx.heilmittel_items : null;
+
+  const zeile = (s, mitDatum) => {
+    const itIdx = s.heilmittel_index ?? 0;
+    const it = multiItems ? multiItems[itIdx] : null;
+    const itName = it ? (it.bezeichnung || it.code) : '';
+    const istErledigt = s.status === 'done' || s.status === 'completed';
+
+    let hmWidget = '';
+    if (multiItems) {
+      if (istErledigt) {
+        hmWidget = `<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg-hover,#2d3748);color:var(--text-main);">${esc(itName)}</span>`;
+      } else {
+        const optionsHtml = multiItems.map((item, idx) =>
+          `<option value="${idx}" ${idx === itIdx ? 'selected' : ''}>${esc(item.bezeichnung || item.code)}</option>`
+        ).join('');
+        hmWidget = `<select class="vord-session-hm-swap form-select" data-session-id="${s.id}" data-current-index="${itIdx}" data-rx-id="${rx.id}" style="font-size:11px;padding:1px 4px;max-width:140px;height:24px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-main);">${optionsHtml}</select>`;
+      }
+    }
+
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:12px;color:var(--text-main);font-weight:600;">${s.session_number ? `${s.session_number}.` : '·'}</span>
+        ${hmWidget}
+      </div>
       <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${mitDatum ? esc(_datumZeit(s.bookings?.start_time)) : 'ohne Termin'}</span>
     </div>`;
+  };
 
   const inhalt = `
     <div style="display:flex;gap:10px;margin-bottom:8px;">
@@ -484,7 +518,7 @@ function _termine(rx, esc, quelle, termine) {
    Linke Spalte: die Felder der Verordnung
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function _felderPhysio(rx, esc) {
+function _felderPhysio(rx, esc, opt = {}) {
   const p = rx.leads || {};
   const arzt = rx.aerzte || {};
   const nummer = belegnummerText(rx, { patientennummer: p.patientennummer });
@@ -521,7 +555,7 @@ function _felderPhysio(rx, esc) {
 
     ${_block('Heilmittel', [
       _feld('Heilmittel', heilmittel, esc, { fett: true }),
-      _feld('Behandlungseinheiten', rx.anzahl_einheiten, esc),
+      _feldEinheiten(rx, esc, erledigt, { quelle: 'physio', rolle: opt.rolle }),
       _feld('Ergänzendes Heilmittel', ergaenzend, esc),
       _feld('Frequenz', rx.frequenz, esc),
       _feld('Sitzungen', sitzungText, esc)
@@ -574,31 +608,53 @@ function _felderPhysio(rx, esc) {
  * gezeigt und verdrahtet. Ist die Verordnung schon bei der Kasse gewesen,
  * erscheint gar kein Knopf, sondern der Grund.
  */
-function _feldEinheiten(v, esc, erbracht) {
-  const riegel = einheitenAenderungErlaubt(v);
-  // String(), nicht nur `?? ''`: `behandlungseinheiten` ist eine Zahl, und
-  // `escapeHtml()` (dashboard.js) ruft `str.replace()` ohne Umwandlung auf —
-  // eine Zahl liess das mit „str.replace is not a function" durchbrechen.
-  // Gefunden 04.09.2026, als genau dieser Wurf hinter dem stummen „Lade…"-
-  // Hängenbleiben steckte (siehe zeigeVerordnungDetail() oben).
-  const wert = v.behandlungseinheiten != null ? String(v.behandlungseinheiten) : '';
-  const knopfStil = 'font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);'
+function _feldEinheiten(v, esc, erbracht, opt = {}) {
+  const istPodo = opt.quelle === 'podologie' || v?.therapie_bereich === 'podo' || (v?.behandlungseinheiten != null && v?.anzahl_einheiten == null) || Array.isArray(v?.podologie_behandlungen);
+  const quelle = istPodo ? 'podologie' : (opt.quelle || 'physio');
+  const rolle = opt.rolle;
+
+  if (istPodo) {
+    const riegel = einheitenAenderungErlaubt(v);
+    // String(), nicht nur `?? ''`: `behandlungseinheiten` ist eine Zahl, und
+    // `escapeHtml()` (dashboard.js) ruft `str.replace()` ohne Umwandlung auf —
+    // eine Zahl liess das mit „str.replace is not a function" durchbrechen.
+    // Gefunden 04.09.2026, als genau dieser Wurf hinter dem stummen „Lade…"-
+    // Hängenbleiben steckte (siehe zeigeVerordnungDetail() oben).
+    const wert = v.behandlungseinheiten != null ? String(v.behandlungseinheiten) : '';
+    const knopfStil = 'font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);'
+      + 'background:var(--bg-card-solid,#1f2937);color:var(--text-main);cursor:pointer;';
+
+    return `<div data-einheiten-feld data-erbracht="${erbracht || 0}">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Behandlungseinheiten</div>
+      <div data-einheiten-anzeige style="display:flex;align-items:center;gap:8px;">
+        <span style="color:${wert === '' ? 'var(--text-muted)' : 'var(--text-main)'};">${esc(wert === '' ? '—' : wert)}</span>
+        ${riegel.erlaubt
+          ? `<button type="button" data-einheiten-aendern style="${knopfStil}">ändern</button>`
+          : `<span title="${esc(riegel.grund)}" style="font-size:11px;color:var(--text-muted);">festgeschrieben</span>`}
+      </div>
+      ${riegel.erlaubt ? `<div data-einheiten-form hidden style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+        <input type="number" min="1" max="60" value="${esc(wert)}" data-einheiten-eingabe style="width:70px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
+        <button type="button" data-einheiten-speichern style="${knopfStil}">Speichern</button>
+        <button type="button" data-einheiten-abbrechen style="${knopfStil}">Abbrechen</button>
+        <div data-einheiten-fehler style="flex-basis:100%;font-size:11px;color:var(--danger,#ef4444);"></div>
+      </div>` : ''}
+    </div>`;
+  }
+
+  // Physio / Ergo:
+  const riegel = physioKorrekturErlaubt(v, rolle);
+  const wert = v?.anzahl_einheiten != null ? String(v.anzahl_einheiten) : (v?.behandlungseinheiten != null ? String(v.behandlungseinheiten) : '');
+  const knopfStil = 'font-size:11px;min-height:44px;min-width:44px;display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;border:1px solid var(--border);'
     + 'background:var(--bg-card-solid,#1f2937);color:var(--text-main);cursor:pointer;';
 
-  return `<div data-einheiten-feld data-erbracht="${erbracht || 0}">
+  return `<div data-einheiten-feld data-erbracht="${erbracht || 0}" data-quelle="${esc(quelle)}">
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Behandlungseinheiten</div>
-    <div data-einheiten-anzeige style="display:flex;align-items:center;gap:8px;">
-      <span style="color:${wert === '' ? 'var(--text-muted)' : 'var(--text-main)'};">${esc(wert === '' ? '—' : wert)}</span>
+    <div data-einheiten-anzeige style="display:flex;align-items:center;gap:8px;min-height:44px;">
+      <span style="color:${wert === '' ? 'var(--text-muted)' : 'var(--text-main)'};font-weight:600;">${esc(wert === '' ? '—' : wert)}</span>
       ${riegel.erlaubt
-        ? `<button type="button" data-einheiten-aendern style="${knopfStil}">ändern</button>`
-        : `<span title="${esc(riegel.grund)}" style="font-size:11px;color:var(--text-muted);">festgeschrieben</span>`}
+        ? `<button type="button" data-physio-einheiten-korrigieren style="${knopfStil}">Einheiten korrigieren</button>`
+        : (v?.belegnummer ? `<span title="${esc(riegel.grund)}" style="font-size:11px;color:var(--text-muted);">festgeschrieben</span>` : '')}
     </div>
-    ${riegel.erlaubt ? `<div data-einheiten-form hidden style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-      <input type="number" min="1" max="60" value="${esc(wert)}" data-einheiten-eingabe style="width:70px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
-      <button type="button" data-einheiten-speichern style="${knopfStil}">Speichern</button>
-      <button type="button" data-einheiten-abbrechen style="${knopfStil}">Abbrechen</button>
-      <div data-einheiten-fehler style="flex-basis:100%;font-size:11px;color:var(--danger,#ef4444);"></div>
-    </div>` : ''}
   </div>`;
 }
 
@@ -639,7 +695,7 @@ function _felderPodo(v, esc) {
 
     ${_block('Heilmittel', [
       _feld('Verordnete Positionen', heilmittel, esc, { fett: true }),
-      _feldEinheiten(v, esc, behs.length),
+      _feldEinheiten(v, esc, behs.length, { quelle: 'podologie' }),
       _feld('Frequenz', v.therapiefrequenz, esc),
       _feld('Dokumentierte Behandlungen', behs.length ? `${behs.length} erbracht` : '', esc)
     ], esc)}
@@ -686,7 +742,7 @@ function _felderPodo(v, esc) {
  * die Einladung, den einen Wert zu ändern und den anderen für aktuell zu
  * halten.
  */
-function _nichtAufDemPapier(rx, esc, quelle) {
+function _nichtAufDemPapier(rx, esc, quelle, opt = {}) {
   const p = rx.leads || {};
   const nummer = belegnummerText(rx, { patientennummer: p.patientennummer });
 
@@ -722,6 +778,7 @@ function _nichtAufDemPapier(rx, esc, quelle) {
       _feld('Gültig bis (Behandlungsbeginn)', _datum(rx.gueltig_bis), esc),
       _feld('Behandlungsbeginn', _datum(rx.behandlungsbeginn), esc),
       _feld('Rezept-Typ', rx.rezept_typ, esc),
+      _feldEinheiten(rx, esc, erledigt, { quelle: 'physio', rolle: opt.rolle }),
       _feld('Sitzungen', sitzungen.length ? `${erledigt} von ${sitzungen.length} erledigt` : '', esc),
       _feld('Zuzahlung kassiert am', _datum(rx.zuzahlung_kassiert_am), esc),
       _feld('Quelle', rx.quelle, esc),
@@ -764,6 +821,19 @@ export function verordnungDetailHtml(rx, opt = {}) {
     ? 'eingefroren bei der Abrechnung'
     : 'vorläufig — wird bei der Abrechnung festgeschrieben';
 
+  const multiItems = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1 ? rx.heilmittel_items : null;
+  let kalemSayaclariHtml = '';
+  if (multiItems) {
+    const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
+    const texte = multiItems.map((item, idx) => {
+      const erledigt = sitzungen.filter(s => (s.heilmittel_index ?? 0) === idx && (s.status === 'done' || s.status === 'completed')).length;
+      const bezeichnung = item.bezeichnung || item.code || `HM ${idx + 1}`;
+      const kuerzel = bezeichnung.includes(' – ') ? bezeichnung.split(' – ')[0] : bezeichnung;
+      return `${esc(kuerzel)} ${erledigt}/${item.einheiten || '?'}`;
+    });
+    kalemSayaclariHtml = `<span title="Erledigte Sitzungen je Heilmittel" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);">${texte.join(' · ')}</span>`;
+  }
+
   return `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:15px;font-weight:700;color:var(--text-main);">${esc(name)}</span>
@@ -773,6 +843,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
         ? `<button type="button" data-status-btn data-vord-id="${esc(rx.id)}" title="Abrechnungsstatus ändern"
              style="background:none;border:0;padding:0;cursor:pointer;">${statusBadgeGross(quelle, rx.status)}</button>`
         : statusBadgeGross(quelle, rx.status)}
+      ${kalemSayaclariHtml}
       ${_manuellHinweis(rx, esc)}
     </div>
     ${_merkmale(rx, esc, quelle, opt.pruefung)}
@@ -783,8 +854,8 @@ export function verordnungDetailHtml(rx, opt = {}) {
     <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:6px;">
       <div style="flex:1 1 ${opt.bearbeitbar ? '560' : '380'}px;min-width:0;">
         ${opt.bearbeitbar
-          ? `<div id="vordMaskeHost"></div>${_nichtAufDemPapier(rx, esc, quelle)}`
-          : (quelle === 'podologie' ? _felderPodo(rx, esc) : _felderPhysio(rx, esc))}
+          ? `<div id="vordMaskeHost"></div>${_nichtAufDemPapier(rx, esc, quelle, opt)}`
+          : (quelle === 'podologie' ? _felderPodo(rx, esc) : _felderPhysio(rx, esc, opt))}
       </div>
       <div style="flex:0 1 260px;min-width:230px;display:flex;flex-direction:column;gap:12px;margin-top:14px;">
         ${_verschreibung(rx, esc, quelle, opt.summe)}
@@ -806,9 +877,25 @@ export function verordnungDetailHtml(rx, opt = {}) {
  * Verordnung ausgeschöpft ist. Eine halb nachgezogene Anzeige wäre genau der
  * Fehler, gegen den `module/signal.js` angetreten ist.
  */
-function _verdrahteEinheiten(wurzel, { supabase, vord, ctx }) {
+function _verdrahteEinheiten(wurzel, { supabase, vord, ctx, quelle }) {
   const feld = wurzel.querySelector('[data-einheiten-feld]');
   if (!feld) return;
+
+  const physioBtn = feld.querySelector('[data-physio-einheiten-korrigieren]');
+  if (physioBtn) {
+    physioBtn.addEventListener('click', () => {
+      oeffnePhysioEinheitenDialog({
+        supabase,
+        rx: vord,
+        rolle: ctx.rolle,
+        apiBase: ctx.apiBase,
+        onFertig: async () => {
+          await zeigeVerordnungDetail(ctx);
+        },
+      });
+    });
+    return;
+  }
 
   const anzeige  = feld.querySelector('[data-einheiten-anzeige]');
   const form     = feld.querySelector('[data-einheiten-form]');
@@ -943,7 +1030,12 @@ function _verdrahteTermine(wurzel, { supabase, vord }) {
 
   wurzel.querySelectorAll('[data-termin-binden]').forEach(b => {
     b.addEventListener('click', () => lauf(b, () =>
-      bindeTermin(supabase, { bookingId: b.dataset.terminBinden, vordId: vord.id })));
+      bindeTermin(supabase, {
+        bookingId: b.dataset.terminBinden,
+        vordId: vord.id,
+        terminZeit: b.dataset.terminStart,
+        ausstellungsdatum: vord.ausstellungsdatum,
+      })));
   });
 
   wurzel.querySelectorAll('[data-termin-loesen]').forEach(b => {
@@ -978,6 +1070,78 @@ function _verdrahteTermine(wurzel, { supabase, vord }) {
  * @param {(s:string)=>string} ctx.escapeHtml
  * @returns {Promise<object|null>} die geladene Zeile (oder null bei Fehler)
  */
+function _verdrahteSitzungsHeilmittelTausch(inhalt, { supabase, rx, ctx }) {
+  if (!inhalt || !supabase || !rx) return;
+  const selects = inhalt.querySelectorAll('.vord-session-hm-swap');
+  if (!selects.length) return;
+
+  selects.forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const selectEl = e.target;
+      const sessId = selectEl.dataset.sessionId;
+      const currentIdx = parseInt(selectEl.dataset.currentIndex, 10);
+      const targetIdx = parseInt(selectEl.value, 10);
+
+      if (targetIdx === currentIdx) return;
+
+      const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
+      const sessionA = sitzungen.find(s => s.id === sessId);
+      if (!sessionA || sessionA.status !== 'planned') {
+        alert('Erledigte Sitzungen können nicht geändert werden.');
+        selectEl.value = String(currentIdx);
+        return;
+      }
+
+      // Finde eine offene Sitzung mit dem Ziel-Index
+      const sessionB = sitzungen.find(s =>
+        s.id !== sessId &&
+        (s.heilmittel_index ?? 0) === targetIdx &&
+        s.status === 'planned' &&
+        // Zwei Einheiten desselben Termins: der Tausch verletzte
+        // uniq_prescription_sessions_booking_hm (prescription, booking, index).
+        !(sessionA.booking_id && s.booking_id === sessionA.booking_id)
+      );
+
+      if (!sessionB) {
+        alert('Keine offene Sitzung dieses Heilmittels zum Tauschen verfügbar. Bereits erbrachte Sitzungen können nicht geändert werden.');
+        selectEl.value = String(currentIdx);
+        return;
+      }
+
+      selectEl.disabled = true;
+      try {
+        const { error: errA } = await supabase
+          .from('prescription_sessions')
+          .update({ heilmittel_index: targetIdx })
+          .eq('id', sessionA.id);
+        if (errA) throw errA;
+
+        const { error: errB } = await supabase
+          .from('prescription_sessions')
+          .update({ heilmittel_index: currentIdx })
+          .eq('id', sessionB.id);
+        if (errB) {
+          // Halber Tausch verschöbe die Zähler je Heilmittel — erste Zeile zurück.
+          await supabase.from('prescription_sessions').update({ heilmittel_index: currentIdx }).eq('id', sessionA.id);
+          throw errB;
+        }
+
+        sessionA.heilmittel_index = targetIdx;
+        sessionB.heilmittel_index = currentIdx;
+
+        if (typeof zeigeVerordnungDetail === 'function' && ctx) {
+          await zeigeVerordnungDetail(ctx);
+        }
+      } catch (err) {
+        console.error('[hm-swap]', err);
+        alert('Tausch fehlgeschlagen: ' + (err?.message || 'Unbekannter Fehler'));
+        selectEl.value = String(currentIdx);
+        selectEl.disabled = false;
+      }
+    });
+  });
+}
+
 export async function zeigeVerordnungDetail(ctx) {
   const { supabase, panel, titel, inhalt, escapeHtml } = ctx;
   const quelle = ctx.quelle === 'podologie' ? 'podologie' : 'physio';
@@ -1090,10 +1254,23 @@ export async function zeigeVerordnungDetail(ctx) {
       }
     }
 
+    let rolle = ctx.rolle || ctx.role;
+    if (!rolle && supabase) {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          const { data: prof } = await supabase.from('profiles').select('role').eq('id', authData.user.id).maybeSingle();
+          rolle = prof?.role;
+        }
+      } catch (_) {}
+    }
+    ctx.rolle = rolle;
+
     const bearbeitbar = ctx.bearbeitbar === true;
     inhalt.innerHTML = verordnungDetailHtml(rx, {
       escapeHtml, quelle, summe, termine, pruefung, bearbeitbar,
       leadId: p.id || ctx.leadId || '',
+      rolle,
     });
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';
@@ -1123,9 +1300,12 @@ export async function zeigeVerordnungDetail(ctx) {
     }
 
     if (quelle === 'podologie') {
-      _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
+      _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx, quelle });
       _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
       _verdrahteStatus(inhalt, { supabase, vord: rx, ctx });
+    } else {
+      _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx, quelle });
+      _verdrahteSitzungsHeilmittelTausch(inhalt, { supabase, rx, ctx });
     }
     if (panel && typeof panel.scrollIntoView === 'function') {
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

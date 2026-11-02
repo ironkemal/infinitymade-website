@@ -92,6 +92,7 @@ test('ladeOwnerId: business direkt, Slug ueber Profil/Business, Mitarbeiter -> O
   assert.equal(await ladeOwnerId(stub({ businesses: { owner_id: 'ob' } }), '?u=filiale'), 'ob');
   assert.equal(await ladeOwnerId(stub({}), '?u=nix'), null);
   assert.equal(await ladeOwnerId(stub({}, 'oc'), '?u=inf-123'), 'oc');
+  assert.equal(await ladeOwnerId(stub({}, 'oc'), '?u=prx-123'), 'oc');
   assert.equal(await ladeOwnerId(stub({ profiles_public: { id: 'p', role: 'owner' } }), '?u=a,b.eq.c)'), null);
 });
 

@@ -489,35 +489,62 @@ export function oeffnePatientenImport(d) {
       return;
     }
     const status = (z) => z.fehler.length
-      ? `<span style="color:var(--danger,#b42318);">${esc(z.fehler.join(' · '))}</span>`
+      ? `<span style="color:var(--danger,#b42318);font-weight:600;">✕ ${esc(z.fehler.join(' · '))}</span>`
       : z.dublette ? `<span style="color:var(--text-muted);">übersprungen — ${esc(z.dublette === 'vorhanden' ? 'schon vorhanden' : z.dublette)}</span>`
-      : z.hinweise.length ? `<span style="color:var(--warning,#b54708);">neu · ${esc(z.hinweise.join(' · '))}</span>`
-      : 'neu';
-    const zeilen = erg.zeilen.slice(0, 200).map(z => `
-      <tr style="border-top:1px solid var(--border);">
+      : z.hinweise.length ? `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ neu · ${esc(z.hinweise.join(' · '))}</span>`
+      : '<span style="color:var(--success,#027a48);font-weight:600;">✓ neu</span>';
+    const zeilen = erg.zeilen.slice(0, 200).map(z => {
+      const farbe = z.fehler.length ? 'var(--danger,#b42318)' : (z.hinweise.length || z.dublette ? 'var(--warning,#b54708)' : 'var(--success,#027a48)');
+      return `
+      <tr style="border-top:1px solid var(--border);border-left:3px solid ${farbe};">
         <td style="padding:6px 8px;color:var(--text-muted);">${z.nr}</td>
         <td style="padding:6px 8px;white-space:nowrap;">${esc(z.patient.last_name)}, ${esc(z.patient.first_name)}</td>
         <td style="padding:6px 8px;white-space:nowrap;">${esc(z.patient.geburtsdatum ? z.patient.geburtsdatum.split('-').reverse().join('.') : '')}</td>
         <td style="padding:6px 8px;">${status(z)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
+
+    const anzahlRot = erg.zeilen.filter(z => z.fehler.length).length;
+    const anzahlGelb = erg.zeilen.filter(z => !z.fehler.length && (z.hinweise.length || z.dublette)).length;
+    const anzahlGruen = erg.zeilen.filter(z => !z.fehler.length && !z.hinweise.length && !z.dublette).length;
+
     inhalt.innerHTML = `
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;">
-        <span><b>${erg.neu}</b> neu</span>
-        <span style="color:var(--text-muted);"><b>${erg.dubletten}</b> schon vorhanden / doppelt</span>
-        <span style="color:${erg.fehlerhaft ? 'var(--danger,#b42318)' : 'var(--text-muted)'};"><b>${erg.fehlerhaft}</b> fehlerhaft</span>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;font-weight:600;">
+        <span style="color:var(--success,#027a48);">${anzahlGruen} ok</span>
+        <span style="color:var(--warning,#b54708);">${anzahlGelb} gelb</span>
+        <span style="color:${anzahlRot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${anzahlRot} rot</span>
+        <span style="color:var(--text-muted);font-weight:400;margin-left:auto;">(${erg.neu} neu · ${erg.dubletten} vorhanden)</span>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="text-align:left;color:var(--text-muted);"><th style="padding:6px 8px;">Zeile</th><th style="padding:6px 8px;">Name</th><th style="padding:6px 8px;">Geboren</th><th style="padding:6px 8px;">Ergebnis</th></tr></thead>
-        <tbody>${zeilen}</tbody>
-      </table>
+      <div style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-main);">
+        <b>Hinweis:</b> Einwilligungen (E-Mail-Erinnerung, Arztberichte) werden nicht übernommen. Diese Funktionen sind für importierte Patienten erst nach neuer Einwilligung aktiv.
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin-bottom:12px;">
+        <table style="width:100%;min-width:600px;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="text-align:left;color:var(--text-muted);"><th style="padding:6px 8px;">Zeile</th><th style="padding:6px 8px;">Name</th><th style="padding:6px 8px;">Geboren</th><th style="padding:6px 8px;">Ergebnis</th></tr></thead>
+          <tbody>${zeilen}</tbody>
+        </table>
+      </div>
       ${erg.zeilen.length > 200 ? `<p style="font-size:13px;color:var(--text-muted);">… und ${erg.zeilen.length - 200} weitere Zeilen.</p>` : ''}
-      <p style="font-size:13px;color:var(--text-muted);margin:12px 0 16px;">Fehlerhafte und vorhandene Zeilen werden nicht übernommen. Die Übernahme lässt sich danach rückgängig machen, solange die Patienten noch nicht verwendet wurden.</p>`;
+      <p style="font-size:13px;color:var(--text-muted);margin:12px 0 16px;">Fehlerhafte und vorhandene Zeilen werden nicht übernommen. Die Übernahme lässt sich danach rückgängig machen, solange die Patienten noch nicht verwendet wurden.</p>
+      ${anzahlRot > 0 ? `<p style="margin:8px 0 14px;"><button type="button" class="btn-ghost" data-pi="fehler-csv" style="${BTN}font-size:13px;min-height:44px;">Fehlerhafte Zeilen als CSV herunterladen</button></p>` : ''}`;
     fuss.innerHTML = `
       ${zurZuordnung ? `<button type="button" class="btn-ghost" data-pi="zuordnung" style="${BTN}">Zuordnung ändern</button>` : `<button type="button" class="btn-ghost" data-pi="zurueck" style="${BTN}">Andere Datei</button>`}
       <button type="button" class="btn-primary" data-pi="los" style="${BTN}${erg.neu ? '' : 'opacity:.45;cursor:not-allowed;'}" ${erg.neu ? '' : 'disabled'}>${erg.neu} Patient${erg.neu === 1 ? '' : 'en'} importieren</button>`;
     fuss.querySelector('[data-pi="zurueck"]')?.addEventListener('click', schritt1);
     fuss.querySelector('[data-pi="zuordnung"]')?.addEventListener('click', zurZuordnung);
     fuss.querySelector('[data-pi="los"]').addEventListener('click', (e) => importiere(erg, e.currentTarget));
+    inhalt.querySelector('[data-pi="fehler-csv"]')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const roteZeilen = erg.zeilen.filter(z => z.fehler.length);
+      const csvText = '﻿Zeile;Nachname;Vorname;Geburtsdatum;Fehler\n' + roteZeilen.map(z =>
+        `${z.nr};"${(z.patient?.last_name || '').replace(/"/g, '""')}";"${(z.patient?.first_name || '').replace(/"/g, '""')}";${z.patient?.geburtsdatum || ''};"${z.fehler.join(' · ').replace(/"/g, '""')}"`
+      ).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csvText], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'abgelehnte-patienten.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
   };
 
   const importiere = async (erg, knopf) => {

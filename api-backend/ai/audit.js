@@ -49,8 +49,9 @@ export async function logCall({
     }
 
     const safeTask = typeof task === 'string' && KNOWN_AI_TASKS.has(task) ? task : 'unknown';
-    const safeModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'].includes(model) ? model : null;
-    const safeDeployment = deployment === createAiConfig().deployment ? deployment : null;
+    const safeModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'whisper'].includes(model) ? model : null;
+    const currentCfg = createAiConfig();
+    const safeDeployment = (deployment === currentCfg.deployment || (currentCfg.transcribeDeployment && deployment === currentCfg.transcribeDeployment)) ? deployment : null;
     const safeStatus = ['ok', 'success', 'error', 'blocked'].includes(status) ? status : 'unknown';
 
     const pt = Number.isSafeInteger(usage?.prompt_tokens) && usage.prompt_tokens >= 0 ? usage.prompt_tokens : null;

@@ -9,6 +9,8 @@ const OWNER = 'owner-1';
 test('parseNameMitGeburt trennt Name und Geburtsdatum', () => {
   assert.deepEqual(parseNameMitGeburt('Frank Becker · 1977-04-05'),
     { name: 'Frank Becker', geburtsdatum: '1977-04-05' });
+  assert.deepEqual(parseNameMitGeburt('Frank Becker · 05.04.1977'),
+    { name: 'Frank Becker', geburtsdatum: '05.04.1977' });
 });
 
 test('parseNameMitGeburt lässt einen Namen ohne Datum unangetastet', () => {
@@ -67,6 +69,10 @@ test('Geburtsdatum entscheidet die Namensdopplung', async () => {
   const treffer = await findeLeadIdZuTermin(sbNie,
     { customer_name: 'Klaus Fischer · 1972-07-23' }, OWNER, { leads });
   assert.equal(treffer, 'jung');
+
+  const trefferDe = await findeLeadIdZuTermin(sbNie,
+    { customer_name: 'Klaus Fischer · 23.07.1972' }, OWNER, { leads });
+  assert.equal(trefferDe, 'jung');
 });
 
 test('Geburtsdatum auch aus dem Altbestand in metadata', async () => {

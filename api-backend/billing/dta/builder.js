@@ -472,13 +472,28 @@ function buildSLLAMessage({
       origRechnungsdatum:        origDatum,
       origBelegnummer:           origBeleg,
     }));
+  } else if (vkz === '02' || vkz === '04') {
+    if (!urspruenglich) {
+      const e = new Error(
+        `Ursprüngliche Rechnungsinformation (URI) fehlt für Korrekturverfahren (VKZ ${vkz}) — Anlage 1 TP5 V21 § 7.2.`
+      );
+      e.status = 422;
+      throw e;
+    }
+    lines.push(...buildSLLA_URI({
+      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer,
+      origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer,
+      origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer ?? urspruenglich.origEinzelRechnungsnummer ?? '0',
+      origRechnungsdatum:        urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum,
+      origBelegnummer:           urspruenglich.belegnummer ?? urspruenglich.origBelegnummer,
+    }));
   } else if (vkz !== '01' && urspruenglich) {
     lines.push(...buildSLLA_URI({
-      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer,
-      origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer,
-      origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer || '0',
-      origRechnungsdatum:        urspruenglich.rechnungsdatum,
-      origBelegnummer:           urspruenglich.belegnummer,
+      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer,
+      origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer,
+      origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer ?? urspruenglich.origEinzelRechnungsnummer ?? '0',
+      origRechnungsdatum:        urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum,
+      origBelegnummer:           urspruenglich.belegnummer ?? urspruenglich.origBelegnummer,
     }));
   }
 

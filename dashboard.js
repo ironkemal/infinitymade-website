@@ -3,7 +3,7 @@ import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumA
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
-import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261030k4';
+import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261102w3';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261030k4';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
@@ -17,8 +17,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261030k4';
 import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
-import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
+import { attachDiagnoseSearch, attachHeilmittelSearch } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20261004m113';
@@ -45,7 +44,7 @@ import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } fr
 import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
+import { ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261021c';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
@@ -70,40 +69,39 @@ import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
-import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
+import { belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261101u';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261101u';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261102b';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
-import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
+import { leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261010zc';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren, verordnungVormerken } from './module/rechnung-verordnung.js?v=20261010zc';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
-import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
+import { zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
+import { behandlungenVerknuepfen, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261010zc';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261021zc';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261102x';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261021s';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261102a';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
 import { initBarcodeDialog } from './module/rezept-barcode-dialog.js?v=20261031live';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261021v';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261021v';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261102a';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20261026p';
@@ -113,13 +111,13 @@ import { bucheErgaenzendMit } from './module/ergaenzend-mitbuchen.js?v=20261027p
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
-import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
+import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
 import { renderWoche } from './module/kalender-woche.js?v=20261031';
 import { renderMonat } from './module/kalender-monat.js?v=20261031';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
-import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
+import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld, datumDe } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20261031';
@@ -141,7 +139,7 @@ import {
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20261027p';
-import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
+import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261102a';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
@@ -185,7 +183,7 @@ const T = {
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
-    lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
+    lead_title: 'Name', lead_city: 'Ort', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
     lead_festnetz: 'Festnetz', lead_handy: 'Handy', lead_geschlecht: 'Geschlecht', lead_geburtsdatum: 'Geburtsdatum', lead_patientennr: 'Nr.',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
@@ -763,7 +761,6 @@ async function gehZuEinstellung(sectionId, focusId) {
 window.gehZuEinstellung = gehZuEinstellung;
 
 async function switchPanel(id) {
-  window.switchPanel = switchPanel;
   const panelId = id;
   if (currentProfile?.role === 'employee' && SIDEBAR_TO_MODULE[id] && !hasModuleAccess(SIDEBAR_TO_MODULE[id])) { showToast('Keine Berechtigung für diesen Bereich.', 'error'); return; }
   // Aktif panelin grubunu otomatik aç
@@ -915,8 +912,6 @@ function closeBkActionPanel() {
   const el = document.getElementById('bkActionModal');
   if (el) { el.hidden = true; el.style.display = 'none'; }
   document.getElementById('mainArea')?.style.removeProperty('padding-right');
-  const calWrap = document.getElementById('calMainWrap');
-  if (calWrap) calWrap.style.paddingRight = '';
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 }
 
@@ -1127,14 +1122,6 @@ function hslToHex(h, s, l) {
   const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
   const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
   return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
-}
-function shiftColorForTime(hex, hour) {
-  if (!hex || hex === 'null') return null;
-  const hsl = hexToHSL(hex);
-  const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
-  hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
-  hsl.s = Math.max(40, Math.min(95, hsl.s - factor * 22));
-  return hslToHex(hsl.h, hsl.s, hsl.l);
 }
 
 function findGaps(whStart, whEnd, bookings) {
@@ -1719,7 +1706,7 @@ function renderBookingSlotInner(b, childBookings = []) {
   document.body.appendChild(tip);
 
   document.addEventListener('mousemove', (e) => {
-    const calWrap = document.getElementById('calMainWrap');
+    const calWrap = document.getElementById('panel-calendar');
     if (!calWrap || !calWrap.contains(e.target)) { tip.style.display = 'none'; return; }
     const grid = calWrap.querySelector('.day-view-grid, .week-view-grid');
     if (!grid || grid.style.display === 'none') { tip.style.display = 'none'; return; }
@@ -1918,28 +1905,6 @@ async function openStripePortal() {
   });
 }
 
-function renderCalEmpList() {
-  const container = document.getElementById('calEmpList');
-  console.log('[DASHBOARD] renderCalEmpList container=', container, 'teamMembers.length=', teamMembers.length);
-  if (!container) return;
-  container.innerHTML = '<div class="cal-emp-title">Mitarbeiter</div>' +
-    teamMembers.map(m => `
-      <button class="cal-emp-pick ${m.id === selectedEmployeeId ? 'active' : ''}" data-emp-id="${m.id}">
-        <div class="cal-emp-dot">${(m.business_name || m.email || '?')[0].toUpperCase()}</div>
-        <span>${m.business_name || m.email?.split('@')[0]}</span>
-      </button>
-    `).join('');
-  container.querySelectorAll('.cal-emp-pick').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const empId = btn.dataset.empId;
-      if (empId === selectedEmployeeId) return;
-      selectedEmployeeId = empId;
-      renderCalEmpList();
-      updateCalendarForEmployee(empId);
-    });
-  });
-}
-
 function renderCalEmpChips() {
   renderEmpChips({
     container: document.getElementById('calEmpChips'),
@@ -1955,204 +1920,6 @@ function renderCalEmpChips() {
   });
 }
 
-async function getEmployeeWorkingHours(empId) {
-  const { data: wh } = await supabase.from('working_hours')
-    .select('day_of_week, is_active').eq('user_id', empId);
-  if ((wh || []).length > 0) return wh;
-  const ownerId = getOwnerId();
-  const { data: ownerWh } = await supabase.from('working_hours')
-    .select('day_of_week, is_active').eq('user_id', ownerId);
-  return ownerWh || [];
-}
-
-async function updateCalendarForEmployee(empId) {
-  if (!calendar) return;
-  const wh = await getEmployeeWorkingHours(empId);
-  const offWeekdays = [];
-  for (let d = 0; d < 7; d++) {
-    const row = wh.find(w => w.day_of_week === d);
-    if (!row || !row.is_active) offWeekdays.push(d);
-  }
-  calendar.setDisabled({ weekdays: offWeekdays });
-  await calendar.reloadMonth();
-}
-
-async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
-  if (!calendar) return;
-  calendar.setSideHead('Slots');
-  try {
-    const res = await fetch(`${API}/booking/get-slots`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: selectedEmployeeId,
-        date: dateStr,
-        duration: durationMinutes,
-        buffer: 0
-      })
-    });
-    const data = await res.json();
-    let slots = data.slots || [];
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    const localIso = new Date(today.getTime() - offset * 60000).toISOString().substring(0, 16);
-    slots = slots.filter(slot => `${dateStr}T${slot}` >= localIso);
-    const slotItems = slots.map(slot => ({
-      label: slot,
-      onClick: () => {
-        prefillBookingModalFromSlot(dateStr, slot, selectedEmployeeId, serviceId, serviceTitle);
-      }
-    }));
-    calendar.renderSide(slotItems);
-  } catch (e) {
-    console.error('loadSlots error:', e);
-    calendar.renderSide([]);
-  }
-}
-
-async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
-  const startIso = `${dateStr}T${timeStr}:00`;
-  document.getElementById('bk-id').value = '';
-  document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
-  document.getElementById('bkWlMatchBtn').hidden = true;
-  document.getElementById('bkDeleteBtn').hidden = true;
-  document.getElementById('bkStart').value = startIso.substring(0, 16);
-  document.getElementById('bkCustomer').value = '';
-  document.getElementById('bkCustomerId').value = '';
-  document.getElementById('bkPhone').value = '';
-  document.getElementById('bkNotes').value = '';
-  if (typeof window._resetRezeptartUI === 'function') window._resetRezeptartUI();
-  const banner = document.getElementById('bkSpecialBanner');
-  if (banner) { banner.hidden = true; banner.textContent = ''; }
-  window._pendingRxSession = null;
-  document.getElementById('bkSeriesToggle').checked = false;
-  resetBkAnzahl();
-  document.getElementById('bkSeriesFields').hidden = true;
-  setzeDauerQuelleZurueck();
-  populateEmpSelects(empId);
-  await populateSrvSelect(serviceId);
-  openModal('bookingModal');
-  await initBkCustomerAutocomplete();
-}
-
-async function initCalendar() {
-  console.log('[DASHBOARD] initCalendar START');
-  const ownerId = getOwnerId();
-  const calEl = document.getElementById('calendarEl');
-  if (!calEl) { console.warn('[initCalendar] #calendarEl not in DOM — skipping legacy FullCalendar init'); return; }
-  calEl.innerHTML = '';
-
-  // Drag-drop: RX unvergebene sessions onto calendar
-  calEl.addEventListener('dragover', (e) => {
-    if (e.dataTransfer.types.includes('application/rx-session')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      calEl.style.outline = '2px dashed var(--primary)';
-    }
-  });
-  calEl.addEventListener('dragleave', (e) => {
-    if (!calEl.contains(e.relatedTarget)) calEl.style.outline = '';
-  });
-  calEl.addEventListener('drop', async (e) => {
-    calEl.style.outline = '';
-    const raw = e.dataTransfer.getData('application/rx-session');
-    if (!raw) return;
-    e.preventDefault();
-    let sessionData;
-    try { sessionData = JSON.parse(raw); } catch { return; }
-    await handleRxSessionDropToModal(sessionData, null, null);
-  });
-
-  if (!selectedEmployeeId) {
-    selectedEmployeeId = currentProfile.role === 'owner'
-      ? (teamMembers[0]?.id || currentSession.user.id)
-      : currentSession.user.id;
-  }
-
-  const { data: srvData } = await bizScope(supabase.from('services')
-    .select('*,employee_services(employee_id)')
-    .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`), 'services');
-  ownerServices = srvData || [];
-  console.log('[DASHBOARD] ownerServices loaded:', ownerServices.length);
-
-  renderCalEmpList();
-  renderCalEmpChips();
-
-  const wh = await getEmployeeWorkingHours(selectedEmployeeId);
-  const offWeekdays = [];
-  for (let d = 0; d < 7; d++) {
-    const row = wh.find(w => w.day_of_week === d);
-    if (!row || !row.is_active) offWeekdays.push(d);
-  }
-
-  calendar = mountCalendar(calEl, {
-    disabledWeekdays: offWeekdays,
-    emptyText: 'Keine freien Termine verfügbar.',
-    placeholder: 'Bitte Datum wählen',
-    onMonthChange: async (year, month) => {
-      const start = toISODate(new Date(year, month, 1));
-      const end = toISODate(new Date(year, month + 1, 0)) + 'T23:59:59';
-      let q = supabase.from('bookings').select('start_time')
-        .eq('owner_id', ownerId).neq('status', 'cancelled')
-        .gte('start_time', start).lte('start_time', end);
-      if (currentProfile.role !== 'owner') {
-        q = q.eq('user_id', currentSession.user.id);
-      } else if (selectedEmployeeId) {
-        q = q.eq('user_id', selectedEmployeeId);
-      }
-      const { data } = await q;
-      const dots = {};
-      (data || []).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
-      return dots;
-    },
-    onDaySelect: async (dateStr) => {
-      console.log('[DASHBOARD] onDaySelect:', dateStr, 'employee:', selectedEmployeeId);
-      const empServices = ownerServices.filter(s =>
-        (s.employee_services || []).some(es => es.employee_id === selectedEmployeeId)
-      );
-      const displayServices = empServices.length > 0 ? empServices : ownerServices;
-      const items = [];
-      displayServices.forEach(s => {
-        const isPhysio = isPraxisSector(getSector());
-        const durKeys = isPhysio && s.price_config?.durations
-          ? Object.keys(s.price_config.durations).filter(k => s.price_config.durations[k].active)
-          : [];
-
-        if (durKeys.length > 0) {
-          // Multi-duration physio service: show duration selection first
-          items.push({
-            label: s.title,
-            meta: 'Sitzungsdauer wählen',
-            color: s.color || '#22c55e',
-            onClick: () => {
-              calendar.setSideHead('Sitzungsdauer');
-              const durItems = durKeys.map(k => ({
-                label: `${k} min`,
-                meta: s.price_config.durations[k].price ? `${s.price_config.durations[k].price} €` : 'Preis nicht festgelegt',
-                onClick: () => loadSlots(dateStr, parseInt(k), s.id, s.title)
-              }));
-              calendar.renderSide(durItems);
-            }
-          });
-        } else {
-          items.push({
-            label: s.title,
-            meta: `${s.duration_minutes || 30} min`,
-            color: s.color || '#22c55e',
-            onClick: () => loadSlots(dateStr, s.duration_minutes || 30, s.id, s.title)
-          });
-        }
-      });
-      items.push({
-        label: t('lbl_other') || 'Andere',
-        meta: '30 min',
-        color: '#94a3b8',
-        onClick: () => loadSlots(dateStr, 30, null, 'Andere')
-      });
-      return items;
-    }
-  });
-}
 
 document.getElementById('calAddBookingBtn').addEventListener('click', () => openBookingModal(null));
 document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
@@ -2537,11 +2304,9 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   if (sessions.length > 1) setzeLeistungen(matchedSrvIds);
   schlageBefundungVor();
 
-  // Rezeptart + Heilmittel ausblenden (Folgetermin, keine neue Verordnung)
-  const rxGroup = document.getElementById('bkRezeptartGroup');
-  if (rxGroup) rxGroup.hidden = true;
-  const heilBlock = document.getElementById('bkHeilmittelBlock');
-  if (heilBlock) heilBlock.hidden = true;
+  // Verordnung-Sektion ausblenden (Folgetermin, keine neue Verordnung)
+  const vSec = document.getElementById('bkVerordnungSection');
+  if (vSec) vSec.hidden = true;
 
   // Session-Banner
   const banner = document.getElementById('bkSpecialBanner');
@@ -3117,11 +2882,6 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
   // Panelbreite (440 px, dashboard.html) + 16 px Luft. Ändert sich die Breite
   // dort, muss dieser Wert mit — sonst liegt der Inhalt unter dem Panel.
   document.getElementById('mainArea')?.style.setProperty('padding-right', BK_PANEL_OFFSET);
-  // Wenn Kalender-Panel offen, calMainWrap ebenfalls nach links verschieben
-  const calWrap = document.getElementById('calMainWrap');
-  if (calWrap && document.getElementById('panel-calendar')?.classList.contains('active')) {
-    calWrap.style.paddingRight = BK_PANEL_OFFSET;
-  }
 }
 
 // ===== Calendar Right Panel (madde 13) =====
@@ -3155,14 +2915,6 @@ function openCalRightPanel(booking) {
   openBookingActionModal(booking);
 }
 
-function closeCalRightPanel() {
-  // bkActionModal'ı kapat
-  const bkModal = document.getElementById('bkActionModal');
-  if (bkModal) { bkModal.style.display = 'none'; bkModal.hidden = true; }
-  document.getElementById('mainArea')?.style.removeProperty('padding-right');
-  const calWrap = document.getElementById('calMainWrap');
-  if (calWrap) calWrap.style.paddingRight = '';
-}
 
 // „⧉ übernehmen" in der Rezeptinfo: Folgeverordnung mit denselben Angaben.
 // Der Ablauf steht in module/termin-aktionen.js; hier wird nur der Zugriff auf
@@ -3210,39 +2962,6 @@ async function uebernehmeDienstleistungAusRx(rx) {
   }
 }
 
-async function loadCalRpUnverga(leadId) {
-  const section = document.getElementById('calRpUnverga');
-  if (!section) return;
-
-  // Planlanmamış prescription_sessions
-  const { data: sessions } = await supabase
-    .from('prescription_sessions')
-    .select('id, session_number, prescriptions!prescription_id(heilmittel, patient_id)')
-    .eq('status', 'planned')
-    .is('booking_id', null)
-    .filter('prescriptions.patient_id', 'eq', leadId)
-    .limit(10);
-
-  if (!sessions || sessions.length === 0) {
-    section.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Alle Heilmittel vergeben.</div>';
-    return;
-  }
-
-  section.innerHTML = sessions.map(s => `
-    <div class="calrp-heilmittel-item" draggable="true" data-session-id="${s.id}"
-      style="padding:6px 8px;background:rgba(177,137,27,0.1);border:1px solid rgba(177,137,27,0.3);border-radius:6px;margin-bottom:4px;cursor:grab;font-size:12px;color:var(--text-main);">
-      📋 Sitzung ${s.session_number || '?'} — ${escapeHtml(s.prescriptions?.heilmittel || 'Heilmittel')}
-    </div>
-  `).join('');
-
-  // Drag start events
-  section.querySelectorAll('.calrp-heilmittel-item').forEach(el => {
-    el.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('sessionId', el.dataset.sessionId);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-  });
-}
 
 // Ops #306: Matching-Logik in module/verordnung-leistung-match.js (testbar,
 // kein DOM) — hier bleibt nur das Laden des Katalogs, das dashboard.js kennt.
@@ -3348,7 +3067,6 @@ async function handleSessionDrop(sessionId, timeStr, empId) {
     }
 
     await refreshBookingViews();
-    await loadCalRpUnverga(lead.id);
 
   } catch (err) {
     console.error('[handleSessionDrop]', err);
@@ -3829,7 +3547,7 @@ async function handlePatientNichtErschienen() {
       ? `Patient nicht erschienen — ${freigegeben} Einheit(en) wieder frei.`
       : 'Patient nicht erschienen.');
 
-    await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
+    await kalenderNeuLaden({ calendar: null, activePanel, loadTodayBookings, renderCalendarView });
 
     // Ausfallgebühr aktiv? — Rechnung anbieten
     await offerAusfallrechnung(bkActionBookingCache, 'no_show');
@@ -4028,7 +3746,7 @@ window.bkCurrentGroupParticipants = [];
 function refreshBkGroupPanel(selectedServiceId = null) {
   const bkId = document.getElementById('bk-id').value;
   const srvId = selectedServiceId || document.getElementById('bkService').value;
-  const service = (window.ownerServices || []).find(s => s.id === srvId);
+  const service = (ownerServices || []).find(s => s.id === srvId);
   const isGroupService = service ? service.is_group : false;
   
   const block = document.getElementById('bkGroupBlock');
@@ -4148,7 +3866,6 @@ async function loadGroupParticipants(parentId, maxCapacity) {
       } else {
         showToast('Teilnehmer entfernt.');
         await loadGroupParticipants(parentId, maxCapacity);
-        if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
         if (activePanel === 'calendar') await renderCalendarView();
 
         // Auch hier ist ein Platz frei geworden — dieselbe Frage wie bei jeder
@@ -4224,6 +3941,8 @@ async function initBkGroupPatientAutocomplete() {
     window.bkAllLeads = data || [];
   }
   
+  if (input.dataset.wired) return;
+  input.dataset.wired = '1';
   input.addEventListener('input', (e) => {
     const q = e.target.value.trim().toLowerCase();
     if (!q) {
@@ -4296,7 +4015,6 @@ async function initBkGroupPatientAutocomplete() {
           } else {
             showToast('Patient hinzugefügt.');
             await loadGroupParticipants(parent.id, parent.group_capacity);
-            if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
             if (activePanel === 'calendar') await renderCalendarView();
           }
         } else {
@@ -4349,8 +4067,6 @@ async function openBookingModal(b) {
   resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
-  const pmEl2 = document.getElementById('bkPaymentMethod');
-  if (pmEl2) pmEl2.value = b.payment_method || '';
   setzeRezeptartInMaske(b.rezeptart);
   const _omLeadId = b.lead_id || document.getElementById('bkCustomerId')?.value || null;
   await zeigeVerordnungenFuerTermin(supabase, {
@@ -5331,7 +5047,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         service_id: srvId,
         start_time: startIso,
         end_time: endIso,
-        customer_name: 'Gruppe: ' + ((window.ownerServices || []).find(s => s.id === srvId)?.title || 'Gruppentermin'),
+        customer_name: 'Gruppe: ' + ((ownerServices || []).find(s => s.id === srvId)?.title || 'Gruppentermin'),
         customer_email: 'group@booking.com',
         notes: notes || null,
         hausbesuch: document.getElementById('bkHausbesuch').checked || false,
@@ -6143,7 +5859,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     leadId: custIdAtConfirm || window._physioFlow?.patient_id || null,
     customerPhone: phone || null,
     notes: notes || null,
-    hausbesuch
+    hausbesuch, roomId: raumFelder()?.room_id || null, businessId: currentBusiness?.id || null
   };
 
   const batchToken = (await supabase.auth.getSession()).data.session?.access_token;
@@ -6851,7 +6567,7 @@ document.getElementById('bkActionAusfallBtn').addEventListener('click', handleDi
 document.getElementById('bkActionKorrekturBtn').addEventListener('click', async (e) => {
   if (bkActionBookingCache && await korrigiereNoShow({ supabase, showToast }, bkActionBookingCache)) {
     e.currentTarget.hidden = true;
-    await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
+    await kalenderNeuLaden({ calendar: null, activePanel, loadTodayBookings, renderCalendarView });
   }
 });
 
@@ -7071,7 +6787,7 @@ function displayName(lead) {
 function leadBirthDate(lead) { return leadGeburtsdatum(lead); }
 function displayNameWithBirth(lead) {
   const name = displayName(lead);
-  const bd = leadBirthDate(lead);
+  const bd = datumDe(leadBirthDate(lead));
   return bd ? `${name} · ${bd}` : name;
 }
 // Zentrale Patientensuche: Name, Geburtsdatum (ISO + dt. Format) und Telefonnummer
@@ -8292,7 +8008,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
 // Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
 // Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.
 document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePatientenImport({
-  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
+  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bereich: getSector(), katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
   nachImport: async (anzahl) => { verwerfeKassenCache(); emit('leads:changed', { anzahl }); await loadLeads(); },
 }));
 
@@ -8388,7 +8104,7 @@ const GKV_PRICES = {
   'X9922': 22.78, 'X9950': 22.78, 'X9951': 13.09,
 };
 
-// GKV-Vergütungskatalog §125 SGB V — sektöre göre standart hizmetler (price_min/max = izin verilen aralık)
+// GKV-Vergütungskatalog §125 SGB V — sektöre göre standart hizmetler (GKV-Preise sind bundeseinheitliche Festpreise)
 const GKV_LEISTUNGSKATALOG = {
   physiotherapy: [
     { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, price_min: 29.63, price_max: 29.63, locked: true },
@@ -8401,7 +8117,7 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
     { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, price_min: 88.94, price_max: 88.94, locked: true },
     { code: 'X0106', kuerzel: 'KMT',   title: 'Klassische Massagetherapie (KMT)',         duration: 20, duration_label: '15–20', price: 21.63, price_min: 21.63, price_max: 21.63, locked: true }, // bis 26.10.2026 falsch X0102 (= Unterwasserdruckstrahlmassage), s. module/physio-katalog-migration.js
-    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
+    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, duration_label: '10–20', price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
   // Podologie: echte Heilmittelpositionsnummern (HPNR), keine Platzhalter.
   //
@@ -9398,7 +9114,6 @@ async function loadTeam() {
   teamMembers = teamReihenfolge(data, currentSession?.user?.id);
 
   if (activePanel === 'calendar') {
-    renderCalEmpList();
     renderCalEmpChips();
     try { await renderCalendarView(); } catch (e) {}
   }
@@ -9604,76 +9319,6 @@ async function deleteEmpTimeOff(timeOffId, empId) {
     if (card && !card.hidden) loadEmpUrlaubSection(empId, card);
   }
   showToast('Gelöscht');
-}
-
-async function saveUrlaub() {
-  const empId = document.getElementById('urlaubEmpSelect')?.value;
-  const von = document.getElementById('urlaubVon')?.value;
-  const bis = document.getElementById('urlaubBis')?.value;
-  const type = document.getElementById('urlaubType')?.value || 'urlaub';
-
-  if (!empId) { showToast('Bitte Mitarbeiter auswählen.', 'error'); return; }
-  if (!von || !bis) { showToast('Bitte Von- und Bis-Datum eingeben.', 'error'); return; }
-  if (von > bis) { showToast('Von-Datum muss vor Bis-Datum liegen.', 'error'); return; }
-
-  // Reines Datum statt fester "+01:00"-Zone: der feste Offset galt im Sommer
-  // nicht mehr (MESZ ist +02:00) und verschob den gespeicherten Zeitpunkt
-  // gegenueber der Abwesend-Anzeige (module/abwesenheit.js liest UTC-Tage).
-  const { error } = await supabase.from('time_offs').insert({
-    employee_id: empId,
-    owner_id: getOwnerId(),
-    start_date: von,
-    end_date: bis,
-    type,
-    reason: type === 'urlaub' ? 'Jahresurlaub' : type,
-  });
-
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-  showToast('Urlaub eingetragen ✓');
-
-  // Reset dates
-  document.getElementById('urlaubVon').value = '';
-  document.getElementById('urlaubBis').value = '';
-
-  loadUrlaubListe(empId);
-}
-
-async function loadUrlaubListe(empId) {
-  const listeEl = document.getElementById('urlaubListe');
-  if (!listeEl || !empId) return;
-
-  listeEl.innerHTML = '<span style="opacity:0.5;">Lade…</span>';
-
-  const { data, error } = await supabase
-    .from('time_offs')
-    .select('id,start_date,end_date,type,reason')
-    .eq('employee_id', empId)
-    .order('start_date', { ascending: false })
-    .limit(10);
-
-  if (error || !data || data.length === 0) {
-    listeEl.innerHTML = '<span style="opacity:0.5;">Keine Einträge vorhanden.</span>';
-    return;
-  }
-
-  const typeLabel = { urlaub: '🏖 Urlaub', krank: '🤒 Krankmeldung', frei: '📅 Freier Tag', elternzeit: '👶 Elternzeit' };
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-
-  listeEl.innerHTML = `<div style="margin-top:8px;">` + data.map(e => `
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
-      <span style="flex:1;color:var(--text-main);">${typeLabel[e.type] || e.type} · ${fmt(e.start_date)} – ${fmt(e.end_date)}</span>
-      <button class="btn-ghost btn-sm" onclick="deleteUrlaub('${e.id}', '${empId}')" style="color:#dc2626;font-size:11px;">Löschen</button>
-    </div>
-  `).join('') + `</div>`;
-}
-
-async function deleteUrlaub(timeOffId, empId) {
-  const ok = await showConfirmModal({ title: 'Urlaub löschen', message: 'Diesen Urlaub-Eintrag wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
-  if (!ok) return;
-  const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-  showToast('Gelöscht.');
-  loadUrlaubListe(empId);
 }
 
 let detailEmpId = null;
@@ -10594,7 +10239,7 @@ function openB2BModal(c) {
   document.getElementById('b2b-email').value = c?.email || '';
   document.getElementById('b2b-status').value = c?.status || 'prospect';
   document.getElementById('b2b-notes').value = c?.notes || '';
-  document.getElementById('b2bModalTitle').textContent = c ? 'Kontakt bearbeiten' : t('b2b_add');
+  document.getElementById('b2bModalTitle').textContent = c ? 'Kontakt bearbeiten' : 'Neuer Kontakt';
   openModal('b2bModal');
 }
 
@@ -12101,7 +11746,7 @@ dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSe
 async function ensureCompanyCode() {
   if (currentProfile.role !== 'owner' || currentProfile.company_code) return;
   const base = (currentProfile.business_name || currentSession.user.email.split('@')[0]).replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 10);
-  const code = 'INF-' + base;
+  const code = 'PRX-' + base;
   await supabase.from('profiles').update({ company_code: code }).eq('id', currentSession.user.id);
   currentProfile.company_code = code;
 }
@@ -12494,7 +12139,6 @@ function openAddEmployeeModal() {
   document.getElementById('ae-email').value = '';
   document.getElementById('ae-phone').value = '';
   document.getElementById('addEmpFormStep').hidden = false;
-  document.getElementById('addEmpResultStep').hidden = true;
   document.getElementById('aeSaveBtn').hidden = false;
   document.getElementById('aeCancelBtn').textContent = 'Abbrechen';
   document.getElementById('aeSaveBtn').disabled = false;
@@ -13731,7 +13375,7 @@ const DIAGNOSE_FIELDS = {
 // Bei Auswahl wird zusätzlich das versteckte Positionsnummer-Feld gesetzt;
 // vorher musste `aiMatchHeilmittel` den getippten Text erraten.
 const HEILMITTEL_FIELDS = {
-  rzHm:  { posField: 'rzHmPosition' }, rzHmErg: { posField: 'rzHmErgPosition' }, // ergänzend: Position für den §302-Mapper (0089)
+  rzHm:  { posField: 'rzHmPosition' }, rzHm2: { posField: 'rzHmPosition2' }, rzHm3: { posField: 'rzHmPosition3' }, rzHmErg: { posField: 'rzHmErgPosition' },
 };
 
 document.addEventListener('focusin', (e) => {
@@ -13927,7 +13571,7 @@ async function ladeRzPatientenCache() {
 // Belegnummer neben dem Namen und der Klick auf die Zeile dazu.
 async function loadVerordnungen() {
   return verordnungenListeLaden({
-    supabase, ownerId: getOwnerId(), escapeHtml,
+    supabase, ownerId: getOwnerId(), escapeHtml, rolle: currentProfile?.role,
     onNeu: () => openRezeptModal(null, null)
   });
 }
@@ -14029,7 +13673,7 @@ async function saveRezept() {
     // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
     // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
     if (!entwurf && fuehrtSitzungsbuch(getSector())) {
-      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!g('rzDoppel')?.checked });
+      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!g('rzDoppel')?.checked, items: rx.items });
     }
 
     const nw = await ladeLhbNachweisHoch(supabase, {
@@ -14626,8 +14270,6 @@ async function init() {
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await bootScheduleViewToggle();
-    try { await initCalendar(); console.log('[init] calendar ok'); }
-    catch (e) { console.error('[init] initCalendar error (non-fatal, init continues)', e); }
 
     // Realtime subscription for bookings — refreshes calendar when a booking is created from booking.html
     const ownerId = getOwnerId();
@@ -15954,9 +15596,6 @@ window.switchPanel = switchPanel;
 window.openVorlagenEdit = openVorlagenEdit;
 window.deleteVorlage = deleteVorlage;
 window.deleteEmpTimeOff = deleteEmpTimeOff;
-window.deleteUrlaub = deleteUrlaub;
-window.editAerzte = editAerzte;
-window.deleteAerzte = deleteAerzte;
 window.renderVorlagenContentForm = renderVorlagenContentForm;
 window._abState = _abState;
 window.openRezeptModal = openRezeptModal;
@@ -17477,7 +17116,7 @@ async function loadPatRxTable() {
 // Verordnungsliste ebenfalls benutzt — eine Feldliste, nicht zwei.
 async function openPatRxDetail(rxId, leadId) {
   return zeigeVerordnungDetail({
-    supabase, rxId, leadId, escapeHtml,
+    supabase, rxId, leadId, escapeHtml, rolle: currentProfile?.role,
     panel:  document.getElementById('patRxDetailPanel'),
     titel:  document.getElementById('patRxDetailName'),
     inhalt: document.getElementById('patRxDetailContent')

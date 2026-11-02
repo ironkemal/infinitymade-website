@@ -176,14 +176,62 @@ export function berechneZuzahlungAusPosten({ posten, befreit = false }) {
  * @returns {{brutto:number, prozent:number, pauschale:number, gesamt:number,
  *           befreit:boolean, einheiten:number, erbracht:number, verordnet:number}}
  */
-export function zuzahlungFuerRezept(rx, position) {
-  const erbracht = (rx?.prescription_sessions || []).filter(s => s?.status === 'done').length;
+export function zuzahlungFuerRezept(rx, position, opt = {}) {
+  const sitzungen = (rx?.prescription_sessions || []).filter(s => s?.status === 'done');
+  const erbracht = Number.isFinite(opt.erbracht) ? opt.erbracht : (Number.isFinite(rx?.erbracht) ? rx.erbracht : sitzungen.length);
   const einheiten = wirksameEinheiten({ verordnet: rx?.anzahl_einheiten, erbracht });
+  const hasItems = Array.isArray(rx?.heilmittel_items) && rx.heilmittel_items.length > 1;
+
+  if (hasItems && typeof opt.findePosition === 'function') {
+    const posten = [];
+    if (erbracht > 0 && sitzungen.length > 0) {
+      for (const s of sitzungen) {
+        const idx = s.heilmittel_index ?? 0;
+        const it = rx.heilmittel_items[idx] || rx.heilmittel_items[0];
+        const p = opt.findePosition(it?.code || rx.heilmittel_position);
+        posten.push({
+          preis: p?.preis || 0,
+          zuzahlung: p?.zuzahlung ?? null,
+          frei: !!(p?.zuzahlung_frei || p?.frei),
+        });
+      }
+    } else if (erbracht > 0) {
+      let remaining = erbracht;
+      for (const it of rx.heilmittel_items) {
+        const count = Math.min(remaining, it.einheiten || 0);
+        const p = opt.findePosition(it?.code || rx.heilmittel_position);
+        for (let i = 0; i < count; i++) {
+          posten.push({
+            preis: p?.preis || 0,
+            zuzahlung: p?.zuzahlung ?? null,
+            frei: !!(p?.zuzahlung_frei || p?.frei),
+          });
+        }
+        remaining -= count;
+        if (remaining <= 0) break;
+      }
+    } else {
+      for (const it of rx.heilmittel_items) {
+        const count = it.einheiten || 0;
+        const p = opt.findePosition(it?.code || rx.heilmittel_position);
+        for (let i = 0; i < count; i++) {
+          posten.push({
+            preis: p?.preis || 0,
+            zuzahlung: p?.zuzahlung ?? null,
+            frei: !!(p?.zuzahlung_frei || p?.frei),
+          });
+        }
+      }
+    }
+    const betrag = berechneZuzahlungAusPosten({ posten, befreit: !!rx?.zuzahlung_befreit });
+    return { ...betrag, einheiten, erbracht, verordnet: Number(rx?.anzahl_einheiten) || 0 };
+  }
+
   const betrag = berechneZuzahlung({
     einheiten,
     preisProEinheit: position?.preis || 0,
     zuzahlungProEinheit: position?.zuzahlung ?? null,
-    positionFrei: !!position?.zuzahlung_frei,
+    positionFrei: !!(position?.zuzahlung_frei || position?.frei),
     befreit: !!rx?.zuzahlung_befreit,
   });
   return { ...betrag, einheiten, erbracht, verordnet: Number(rx?.anzahl_einheiten) || 0 };

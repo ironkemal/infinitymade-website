@@ -14,6 +14,14 @@ import crypto from 'node:crypto';
 const PROCESS_SEED = crypto.randomBytes(32);
 
 export const KNOWN_AI_CODES = Object.freeze({
+  AI_TRANSKRIPTION_NICHT_EINGERICHTET: {
+    status: 503,
+    message: 'Transkription ist nicht eingerichtet'
+  },
+  AI_PAYLOAD_TOO_LARGE: {
+    status: 413,
+    message: 'Audiodatei überschreitet das Limit von 10 MB'
+  },
   AI_OCR_DISABLED: {
     status: 503,
     message: 'OCR über diesen Dienst ist deaktiviert'
@@ -173,7 +181,8 @@ export const KNOWN_AI_TASKS = Object.freeze(new Set([
   'appointment-confirm-draft',
   'series-scheduler',
   'b2b-draft',
-  'rezept-normalize'
+  'rezept-normalize',
+  'transkribieren'
 ]));
 
 /**

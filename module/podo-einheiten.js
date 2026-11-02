@@ -48,11 +48,11 @@
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { ladeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { positionVon } from './podo-geplant.js?v=20261010zc';
-import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261010zc';
+import { istVergeben, ladePodoTermine, bindeTermin, podoBelegung } from './verordnung-termine.js?v=20261102a';
 import { zeigeSitzungenArbeit, setzeSitzungenKopf } from './termin-panel.js?v=20261021f';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20261021k';
-import { rxGeschlossen } from './termin-verordnung.js?v=20261021s';
+import { rxGeschlossen } from './termin-verordnung.js?v=20261102a';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({
@@ -260,7 +260,7 @@ function terminSortierschluessel(b) {
  *          `warnung` = true, wenn die Kappung gegriffen hat — der Aufrufer
  *          zeigt `meldung` dann als Warnung, nicht als reine Info.
  */
-export async function bindePodoSerie(sb, { ownerId, vordId, anzahlEinheiten, created, emit } = {}) {
+export async function bindePodoSerie(sb, { ownerId, vordId, anzahlEinheiten, created, emit, ausstellungsdatum } = {}) {
   const eintraege = (created || [])
     .map(b => ({ id: typeof b === 'string' ? b : (b?.id || b?.booking_id), schluessel: terminSortierschluessel(b) }))
     .filter(e => e.id)
@@ -286,7 +286,7 @@ export async function bindePodoSerie(sb, { ownerId, vordId, anzahlEinheiten, cre
   const fehlend = [];
   let gebunden = 0;
   for (const e of zuBinden) {
-    const r = await bindeTermin(sb, { bookingId: e.id, vordId });
+    const r = await bindeTermin(sb, { bookingId: e.id, vordId, terminZeit: e.schluessel, ausstellungsdatum });
     if (r.ok) gebunden++; else fehlend.push(e.id);
   }
   if (gebunden > 0) emit?.('verordnungen:changed');
@@ -320,12 +320,12 @@ export async function bindePodoSerie(sb, { ownerId, vordId, anzahlEinheiten, cre
 export async function bindePodoSerieVonRezept(sb, { ownerId, prescriptionId, created, emit } = {}) {
   if (!sb || !ownerId || !prescriptionId) return { podo: false };
   const { data: rx } = await sb.from('prescriptions')
-    .select('anzahl_einheiten, therapie_bereich')
+    .select('anzahl_einheiten, therapie_bereich, ausstellungsdatum')
     .eq('id', prescriptionId).maybeSingle();
   if (rx?.therapie_bereich !== 'podo') return { podo: false };
 
   const ergebnis = await bindePodoSerie(sb, {
-    ownerId, vordId: prescriptionId, anzahlEinheiten: rx.anzahl_einheiten, created, emit,
+    ownerId, vordId: prescriptionId, anzahlEinheiten: rx.anzahl_einheiten, created, emit, ausstellungsdatum: rx.ausstellungsdatum,
   });
   return { podo: true, ...ergebnis };
 }

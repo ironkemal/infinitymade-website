@@ -187,7 +187,7 @@ export function createJetonClient(options = {}) {
       throw err;
     }
 
-    const { token, exp, endpoint, deployment, region, apiVersion } = payload;
+    const { token, exp, endpoint, deployment, deploymentTranscribe, region, apiVersion } = payload;
 
     // Token string check (reject control characters / CRLF)
     if (
@@ -237,6 +237,14 @@ export function createJetonClient(options = {}) {
       throw err;
     }
 
+    if (deploymentTranscribe !== undefined && deploymentTranscribe !== null) {
+      if (typeof deploymentTranscribe !== 'string' || !RE_SAFE_SEGMENT.test(deploymentTranscribe)) {
+        const err = new Error('KI-Jeton-Deploymentname Transkription ungültig');
+        err.code = 'AI_DEPLOYMENT_INVALID';
+        throw err;
+      }
+    }
+
     // Region check (EU Data Boundary)
     const normalizedRegion = (region || '').toLowerCase();
     if (!EU_DATA_BOUNDARY_REGIONS.includes(normalizedRegion)) {
@@ -257,6 +265,7 @@ export function createJetonClient(options = {}) {
       exp,
       endpoint: epVal.cleanEndpoint,
       deployment,
+      deploymentTranscribe: deploymentTranscribe || null,
       region: normalizedRegion,
       apiVersion
     };

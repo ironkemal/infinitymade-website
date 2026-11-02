@@ -12,6 +12,7 @@
 // - Zero raw exception echoing or prompt logging
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { requireAuth } from './auth.js';
 import { logCall, hashRequest, getAiSupabaseClient } from './audit.js';
 import { safeAiError } from './ki-privacy.js';
@@ -26,6 +27,7 @@ import { run as seriesScheduler } from './tasks/series-scheduler.js';
 import { run as rezeptNormalize } from './tasks/rezept-normalize.js';
 import { run as rezeptOcr } from './tasks/rezept-ocr.js';
 import { run as rezeptValidate } from './tasks/rezept-validate.js';
+import { run as transkribieren } from './tasks/transkribieren.js';
 
 export const TASKS = Object.freeze({
   'b2c-draft': b2cDraft,
@@ -34,7 +36,8 @@ export const TASKS = Object.freeze({
   'series-scheduler': seriesScheduler,
   'rezept-normalize': rezeptNormalize,
   'rezept-ocr': rezeptOcr,
-  'rezept-validate': rezeptValidate
+  'rezept-validate': rezeptValidate,
+  'transkribieren': transkribieren
 });
 
 const CHALLENGE_TYPES = new Set(['NAME','UNKNOWN','ANREDE_REST','ZIFFERNFOLGE','EMAIL_REST','PLZ_REST','QUASI_REIDENTIFIKATION','FUZZY_NAME_REST']);
@@ -66,9 +69,14 @@ export function createAiRouter({
   summaryProvider = healthSummary,
   authMiddleware = requireAuth,
   supabase = null,
-  invalidateJeton = invalidateTenantJeton
+  invalidateJeton = invalidateTenantJeton,
+  rateLimiter = null
 } = {}) {
   const router = express.Router();
+  const rawAudioParser = express.raw({
+    type: ['audio/webm', 'audio/ogg', 'audio/mp4'],
+    limit: '10mb'
+  });
 
   // GET /_health: try-safe, requires auth, returns task list and whitelisted config summary
   router.get('/_health', authMiddleware, (req, res) => {
@@ -95,11 +103,14 @@ export function createAiRouter({
       const operatorReady = cfg.activationReady === true;
       const ownerActive = decision.enabled === true;
       const effectiveActive = cfg.valid === true && ['direkt','jeton'].includes(cfg.mode) && operatorReady && ownerActive;
+      const transcribeConfigured = cfg.mode === 'direkt' ? Boolean(cfg.transcribeDeployment) : true;
+      const diktatVerfuegbar = effectiveActive && cfg.mailReady === true && transcribeConfigured;
 
       res.json({
         ok: true,
         active: effectiveActive,
         mode: ['aus','direkt','jeton'].includes(cfg.mode) ? cfg.mode : 'aus',
+        diktat_verfuegbar: diktatVerfuegbar,
         capabilities: {
           freeText: effectiveActive && cfg.allowFreeText === true,
           mailDraft: effectiveActive && cfg.mailReady === true && cfg.allowFreeText === true,
@@ -128,6 +139,8 @@ export function createAiRouter({
       const mailReady = cfg.mailReady === true;
       const ownerActive = decision.enabled === true;
       const effectiveActive = cfg.valid === true && ['direkt','jeton'].includes(cfg.mode) && operatorReady && ownerActive;
+      const transcribeConfigured = cfg.mode === 'direkt' ? Boolean(cfg.transcribeDeployment) : true;
+      const diktatVerfuegbar = effectiveActive && mailReady && transcribeConfigured;
 
       let disabledReason = null;
       if (cfg.valid !== true || !['direkt','jeton'].includes(cfg.mode)) {
@@ -151,6 +164,7 @@ export function createAiRouter({
         ownerActive,
         mailReady,
         active: effectiveActive,
+        diktat_verfuegbar: diktatVerfuegbar,
         capabilities,
         disabledReason,
         optIn: {
@@ -220,6 +234,105 @@ export function createAiRouter({
     } catch (err) {
       const safe = safeAiError(err);
       res.status(safe.status || 500).json({ success: false, error: safe.message });
+    }
+  });
+
+  const defaultLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { success: false, code: 'AI_RATE_LIMIT_EXCEEDED', error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' }
+  });
+  const transcribeLimiter = rateLimiter || defaultLimiter;
+
+  // POST /transkribieren: audio speech-to-text with raw body parser
+  router.post('/transkribieren', authMiddleware, transcribeLimiter, (req, res, next) => {
+    rawAudioParser(req, res, (err) => {
+      if (err) {
+        if (err.type === 'entity.too.large' || err.status === 413) {
+          return res.status(413).json({ success: false, code: 'AI_PAYLOAD_TOO_LARGE', error: 'Datenmenge zu groß' });
+        }
+        return res.status(400).json({ success: false, code: 'KI_SCHEMA', error: 'Ungültiges Audioformat' });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    const t0 = Date.now();
+    let status = 'ok';
+    let errorMsg = null;
+    let meta = {};
+
+    const context = {
+      req,
+      auth: req.auth,
+      tenantId: req.auth?.tenantId,
+      userId: req.auth?.userId,
+      role: req.auth?.role,
+      dependencies: { supabase: supabase || getAiSupabaseClient(), configProvider }
+    };
+
+    try {
+      if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+        return res.status(400).json({
+          success: false,
+          code: 'KI_SCHEMA',
+          error: 'Ungültiges Audioformat. Erlaubt: audio/webm, audio/ogg, audio/mp4'
+        });
+      }
+
+      if (req.body.length > 10 * 1024 * 1024) {
+        return res.status(413).json({
+          success: false,
+          code: 'AI_PAYLOAD_TOO_LARGE',
+          error: 'Audiodatei überschreitet das Limit von 10 MB'
+        });
+      }
+
+      const duration = Number(req.headers['x-audio-duration'] || req.query?.duration);
+      if (Number.isFinite(duration) && duration > 180) {
+        return res.status(413).json({
+          success: false,
+          code: 'AI_PAYLOAD_TOO_LARGE',
+          error: 'Audiodauer überschreitet das Limit von 3 Minuten'
+        });
+      }
+
+      const handler = Object.hasOwn(tasks, 'transkribieren') ? tasks['transkribieren'] : transkribieren;
+      const result = await handler({
+        audioBuffer: req.body,
+        mimeType: req.headers['content-type'],
+        duration
+      }, context);
+
+      if (!result || typeof result !== 'object') throw new Error('Invalid task result');
+      meta = result._meta || {};
+      delete result._meta;
+
+      res.json({ success: true, text: result.text || '' });
+    } catch (err) {
+      status = 'error';
+      const safe = safeAiError(err);
+      errorMsg = safe.code;
+      res.status(safe.status || 500).json({
+        success: false,
+        code: safe.code,
+        error: safe.message
+      });
+    } finally {
+      logCall({
+        tenantId: req.auth?.tenantId,
+        userId: req.auth?.userId,
+        task: 'transkribieren',
+        model: meta.model,
+        deployment: meta.deployment,
+        usage: meta.usage || {},
+        latencyMs: meta.latency_ms ?? (Date.now() - t0),
+        status,
+        error: errorMsg,
+        dryRun: !!meta.dry_run,
+        requestHash: null
+      }, supabase);
     }
   });
 

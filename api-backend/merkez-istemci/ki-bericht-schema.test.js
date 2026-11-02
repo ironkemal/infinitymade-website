@@ -39,7 +39,7 @@ test('Konstanten und Regex-Exporte vorhanden und korrekt', () => {
   assert.ok(RE_UTC_DAY.test('2026-10-08T00:00:00.000Z'));
   assert.ok(Array.isArray(KI_TASKS));
   assert.ok(Object.isFrozen(KI_TASKS));
-  assert.equal(KI_TASKS.length, 7);
+  assert.equal(KI_TASKS.length, 8);
 });
 
 test('Gueltiger Bericht ok und Rueckgabe ist frisches isoliertes Objekt', () => {

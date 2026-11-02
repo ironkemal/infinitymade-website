@@ -136,7 +136,7 @@
           </div>
 
           <div class="today-kpi" id="todayKpiBlock">
-            <div class="today-kpi-label" data-i18n="today_bookings">Bugünkü randevularınız</div>
+            <div class="today-kpi-label" data-i18n="today_bookings">Heutige Termine</div>
             <div class="today-kpi-value" id="kpi-today">—</div>
           </div>
 
@@ -160,8 +160,7 @@
           <div class="today-section">
             <div class="schedule-header">
               <button class="btn-icon" id="schedulePrev" type="button">‹</button>
-              <span class="schedule-title" id="scheduleDateLabel" data-i18n="today_bookings">Bugünkü
-                randevularınız</span>
+              <span class="schedule-title" id="scheduleDateLabel" data-i18n="today_bookings">Heutige Termine</span>
               <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
 
@@ -761,39 +760,7 @@
               <div id="otherStandortEmpsList"></div>
             </div>
 
-            <!-- Urlaub eintragen (madde 3) -->
-            <div id="urlaubSection" style="margin-top:24px;" hidden>
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-                <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-main);">Urlaub eintragen für:</h3>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;">
-                <div style="flex:1;min-width:180px;">
-                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Mitarbeiter</label>
-                  <select id="urlaubEmpSelect" style="width:100%;padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
-                    <option value="">— Mitarbeiter wählen —</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Von</label>
-                  <input type="date" id="urlaubVon" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
-                </div>
-                <div>
-                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Bis</label>
-                  <input type="date" id="urlaubBis" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
-                </div>
-                <div>
-                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Art</label>
-                  <select id="urlaubType" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
-                    <option value="urlaub">Urlaub</option>
-                    <option value="krank">Krankmeldung</option>
-                    <option value="frei">Freier Tag</option>
-                    <option value="elternzeit">Elternzeit</option>
-                  </select>
-                </div>
-                <button id="urlaubEintragenBtn" class="btn-primary" style="white-space:nowrap;">Eintragen</button>
-              </div>
-              <div id="urlaubListe" style="font-size:13px;color:var(--text-muted);"></div>
-            </div>
+
           </div>
 
           <div id="teamDetailView" hidden>
@@ -2430,7 +2397,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_beispielmodus">Beispielmodus</h2>
-              <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas für Patientengespräche</p>
+              <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomiekarten für Patientengespräche</p>
             </div>
           </div>
           <div class="body-map-wrap" id="zygoteWrap"></div>
@@ -3721,10 +3688,20 @@
               <div class="m13-lbl">Heilmittel nach Maßgabe des Kataloges</div>
               <div class="m13-beh">Behandlungs&shy;einheiten</div>
             </div>
-            <div class="m13-hmtable">
-              <div class="m13-hmline">
+            <div class="m13-hmtable" id="rzHmTable">
+              <div class="m13-hmline" id="rzHmLine1">
                 <div><div class="m13-cap">Heilmittel</div><input class="m13-v" id="rzHm" autocomplete="off" placeholder=""></div>
-                <div><input class="m13-v m13-center" id="rzAnzahl" type="number" min="1" placeholder=""></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <input class="m13-v m13-center" id="rzAnzahl" type="number" min="1" placeholder="" style="flex:1;min-width:0;max-width:54px;">
+                  <label class="m13-th m13-hm-doppel" id="rzHmRow1DoppelWrap" style="display:none;font-size:11px;margin:0;cursor:pointer;white-space:nowrap;align-items:center;" title="Doppelbehandlung">
+                    <input type="checkbox" id="rzDoppelRow1" class="m13-cbx"><span class="m13-chk"></span> <span style="font-size:11px;margin-left:2px;">D</span>
+                  </label>
+                  <span id="rzHmRow1DelPlaceholder" style="display:none;min-width:44px;min-height:44px;"></span>
+                </div>
+              </div>
+              <div id="rzHmExtraLines"></div>
+              <div id="rzHmAddLineWrap" style="padding:4px 7px;border-bottom:1px solid #9aa8bd;display:none;">
+                <button type="button" id="rzHmAddLine" style="min-height:44px;background:none;border:none;color:var(--primary,#2563eb);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;padding:0 4px;">+ weiteres Heilmittel</button>
               </div>
               <div class="m13-hmline">
                 <div><div class="m13-cap">Ergänzendes Heilmittel</div><input class="m13-v" id="rzHmErg" autocomplete="off" placeholder=""><input type="hidden" id="rzHmErgPosition" /></div>
@@ -3744,7 +3721,7 @@
                   </select>
                 </div>
                 <label class="m13-th"><input type="checkbox" id="rzDringend" class="m13-cbx"><span class="m13-chk"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
-                <label class="m13-th" title="Nur wenn der Arzt Doppelbehandlung ausdrücklich verordnet hat: ein Termin zählt zwei Einheiten."><input type="checkbox" id="rzDoppel" class="m13-cbx"><span class="m13-chk"></span> Doppelbehandlung</label>
+                <label class="m13-th" id="rzDoppelWrap" title="Nur wenn der Arzt Doppelbehandlung ausdrücklich verordnet hat: ein Termin zählt zwei Einheiten."><input type="checkbox" id="rzDoppel" class="m13-cbx"><span class="m13-chk"></span> Doppelbehandlung</label>
               </div>
               <div style="display:flex;flex-direction:column;gap:12px;">
                 <div class="m13-optline">
@@ -3967,6 +3944,7 @@
     .m13-beh{ font-size:12px; font-weight:600; color:#4a5568; text-align:right; }
     .m13-hmtable{ margin-top:5px; border-top:1.4px solid #3a4a63; }
     .m13-hmline{ display:grid; grid-template-columns:1fr 96px; border-bottom:1px solid #9aa8bd; }
+    .m13-hmtable.is-multi .m13-hmline{ grid-template-columns:1fr 150px; }
     .m13-hmline > div{ padding:7px; }
     .m13-hmline > div:first-child{ border-right:1px solid #9aa8bd; }
 
@@ -4705,7 +4683,7 @@
   <div class="modal-overlay" id="b2bModal" hidden>
     <div class="modal">
       <div class="modal-header">
-        <span class="modal-title" id="b2bModalTitle" data-i18n="b2b_add">Neuer Kontakt</span>
+        <span class="modal-title" id="b2bModalTitle">Neuer Kontakt</span>
         <button class="modal-close" data-modal="b2bModal">✕</button>
       </div>
       <div class="modal-body">
@@ -4810,34 +4788,7 @@
           <input class="form-input" id="ae-phone" type="tel" />
         </div>
       </div>
-      <div class="modal-body" id="addEmpResultStep" hidden>
-        <div class="emp-result-card">
-          <div class="emp-result-icon">✓</div>
-          <div class="emp-result-title">Konto erstellt</div>
-          <div class="emp-result-sub">Teilen Sie die Zugangsdaten mit Ihrem Mitarbeiter.</div>
-          <div class="emp-result-box">
-            <div class="emp-result-row">
-              <span class="emp-result-label">E-Mail</span>
-              <span class="emp-result-val" id="ae-res-email">—</span>
-              <button class="btn-icon" id="aeCopyEmailBtn" title="Kopieren">⎘</button>
-            </div>
-            <div class="emp-result-row">
-              <span class="emp-result-label">Passwort</span>
-              <span class="emp-result-val" id="ae-res-password">—</span>
-              <button class="btn-icon" id="aeCopyPwBtn" title="Kopieren">⎘</button>
-            </div>
-            <div class="emp-result-row">
-              <span class="emp-result-label">Login-Link</span>
-              <span class="emp-result-val" id="ae-res-link">—</span>
-              <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">⎘</button>
-            </div>
-          </div>
-          <a class="btn-primary" id="aeShareWaBtn" href="#" target="_blank"
-            style="width:100%;justify-content:center;margin-top:12px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>Via WhatsApp teilen
-          </a>
-        </div>
-      </div>
+
       <div class="modal-footer" id="addEmpFooter">
         <button class="btn-ghost" data-modal="addEmployeeModal" id="aeCancelBtn">Abbrechen</button>
         <button class="btn-primary" id="aeSaveBtn">Speichern</button>

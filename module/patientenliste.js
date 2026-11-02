@@ -31,6 +31,7 @@
 'use strict';
 
 import { statusBadge } from './abrechnungsstatus.js?v=20261003c';
+import { datumDe } from './datum.js?v=20261001a';
 
 /**
  * @param {object} ctx  Alles, was die Tabelle von aussen braucht:
@@ -111,7 +112,7 @@ export function renderPatientenliste(ctx) {
       <td style="color:var(--text-muted);font-size:12px;font-variant-numeric:tabular-nums;">${r.patientennummer ?? '—'}</td>
       <td>${escapeHtml(r.last_name || '')}${insBadge}</td>
       <td>${escapeHtml(r.first_name || '')}</td>
-      <td>${bd ? new Date(bd).toLocaleDateString('de-DE') : '—'}</td>
+      <td>${datumDe(bd, '—')}</td>
       <td>${escapeHtml(r.street || '—')}</td>
       <td>${escapeHtml(r.plz || '—')}</td>
       <td>${escapeHtml(r.city || '—')}</td>
@@ -164,12 +165,19 @@ export function patientPasstZurSuche(lead, q, helfer) {
   if ((lead.title || '').toLowerCase().includes(query)) return true;
 
   const bd = helfer.geburtsdatum(lead);
+  let de = '', deKurz = '';
   const m = bd ? String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
   if (m) {
-    const de = `${m[3]}.${m[2]}.${m[1]}`;          // 12.03.1985
-    const deKurz = `${+m[3]}.${+m[2]}.${m[1]}`;    // 12.3.1985
-    if (de.includes(query) || deKurz.includes(query)) return true;
+    de = `${m[3]}.${m[2]}.${m[1]}`;          // 12.03.1985
+    deKurz = `${+m[3]}.${+m[2]}.${m[1]}`;    // 12.3.1985
+  } else {
+    const mDe = bd ? String(bd).match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/) : null;
+    if (mDe) {
+      de = `${String(mDe[1]).padStart(2, '0')}.${String(mDe[2]).padStart(2, '0')}.${mDe[3]}`;
+      deKurz = `${+mDe[1]}.${+mDe[2]}.${mDe[3]}`;
+    }
   }
+  if (de && (de.includes(query) || deKurz.includes(query))) return true;
 
   const ziffern = query.replace(/\D/g, '');
   if (ziffern.length >= 3) {

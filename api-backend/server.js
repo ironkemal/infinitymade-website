@@ -47,6 +47,7 @@ import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { sendeUeberGmail } from './lib/gmail-senden.js';
 import { startWarnungen } from './lib/start-pruefungen.js';
 import { createAiConfig } from './ai/ki-config.js';
+import { pruefeHeilmittelItems } from './lib/heilmittel-items-pruefen.js';
 import { ladeKimlik } from './merkez-istemci/kimlik.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
@@ -494,6 +495,8 @@ app.use('/api', createManifestRouter({ supabase }));
 // ein reflektierter Host-Header zudem eine unnötige Angriffsfläche
 // (onprem-Review, O-01, 11.09.2026).
 app.get('/api/config', (req, res) => {
+  const aiCfg = createAiConfig();
+  const diktat_verfuegbar = Boolean(aiCfg?.transcribeDeployment || process.env.DIKTAT_VERFUEGBAR || process.env.AI_MODEL_TRANSCRIBE);
   res.json({
     supabaseUrl: process.env.SUPABASE_PUBLIC_URL || '',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
@@ -507,7 +510,8 @@ app.get('/api/config', (req, res) => {
     // Box standardmaessig AUS (G4 — kein Telemetrie-Opt-out noetig, weil es
     // nie an ist). Setup-Wizard-Opt-in kommt in Faz 2.6, noch nicht gebaut —
     // bis dahin ist "aus" der sichere Default.
-    telemetryEnabled: !istKutu()
+    telemetryEnabled: !istKutu(),
+    diktat_verfuegbar
   });
 });
 
@@ -2320,6 +2324,28 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
     }
   }
 
+  const raum = await raumFelderFuerTermin(supabase, req.body.roomId, ownerId);
+  if (!raum.ok) return res.status(400).json({ error: 'Raum nicht gefunden' });
+
+  let validatedBusinessId = null;
+  const rawBusinessId = req.body.businessId || req.body.business_id;
+  if (rawBusinessId) {
+    const { data: biz, error: bizErr } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('id', rawBusinessId)
+      .eq('owner_id', ownerId)
+      .maybeSingle();
+    if (bizErr || !biz) {
+      return res.status(400).json({ error: 'Standort nicht gefunden' });
+    }
+    validatedBusinessId = biz.id;
+  }
+
+  const planStandortId = raum.felder.business_id || validatedBusinessId || null;
+  const employeeIds = Array.from(new Set(slots.map(s => s?.employeeId).filter(Boolean)));
+  const planZeilen = planStandortId ? await ladeStandortPlan(supabase, { ownerId, employeeIds }) : [];
+
   // Einmal je Request geprüft, nicht je Slot — siehe pruefeLeadId().
   const bezugLeadId = await pruefeLeadId(leadId, ownerId);
   let dur = parseInt(duration, 10);
@@ -2341,6 +2367,10 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
       conflicts.push({ slot: s, reason: 'Ungültiger Slot' });
       continue;
     }
+    if (!planErlaubt(planZeilen, s.employeeId, s.date, planStandortId)) {
+      conflicts.push({ slot: s, reason: 'Mitarbeiter an diesem Tag nicht an diesem Standort eingeplant' });
+      continue;
+    }
     try {
       const start_time = berlinLocalToUTC(s.date, s.time);
       const end_time = new Date(start_time.getTime() + dur * 60000);
@@ -2356,7 +2386,9 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
         notes: notes || null,
         hausbesuch: !!hausbesuch,
         status: 'confirmed',
-        lead_id: bezugLeadId
+        lead_id: bezugLeadId,
+        ...(validatedBusinessId ? { business_id: validatedBusinessId } : {}),
+        ...raum.felder
       }).select().single();
       if (error) {
         conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : 'Datenbankfehler' });
@@ -2658,6 +2690,16 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       bgFelder = bgFelderAusRezept(rezept, { art: artFelder.rezeptart, explicitArt: false });   // nur bei BG
     } catch (e) { return res.status(400).json({ error: e.message }); }
 
+    const itemsPruefung = pruefeHeilmittelItems(rezept.heilmittel_items, {
+      therapie_bereich: rezept.therapiebereich
+    });
+    if (!itemsPruefung.ok) {
+      return res.status(422).json({ error: itemsPruefung.error });
+    }
+    const finalItems = itemsPruefung.items;
+    const finalAnzahl = itemsPruefung.summeEinheiten ?? (rezept.anzahl_einheiten ?? null);
+    const finalVorrangig = (finalItems && finalItems[0]?.einheiten) ?? rezept.vorrangig_einheiten ?? null;
+
     // --- Insert prescription row ---
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
@@ -2680,6 +2722,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         hinweise: rezept.therapieziele || null,
         therapie_bereich: rezept.therapiebereich || null,
         heilmittel: rezept.heilmittel || null,
+        heilmittel_items: finalItems,
+        vorrangig_einheiten: finalVorrangig,
         ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
         ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
         // Physio-Zusatzpositionen (0089): nur gueltige Werte, sonst NULL — CHECKs in der DB.
@@ -2688,7 +2732,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         doppelbehandlung: !!rezept.doppelbehandlung,
         heilmittel_feld_text: rezept.heilmittel_feld_text || null,
         heilmittel_position: heilmittelPosition,
-        anzahl_einheiten: rezept.anzahl_einheiten ?? null,
+        anzahl_einheiten: finalAnzahl,
         frequenz: rezept.frequenz || null,
         ausstellungsdatum: arzt.ausstellungsdatum || null,
         behandlungsbeginn: rezept.behandlungsbeginn || null,
@@ -2902,6 +2946,22 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       statusZuruecksetzen = wechsel.statusZuruecksetzen && bestehend.abrechnung_status === 'bereit';
     }
 
+    let patchItemsFelder = {};
+    if (rezept.heilmittel_items !== undefined) {
+      const itemsPruefung = pruefeHeilmittelItems(rezept.heilmittel_items, {
+        therapie_bereich: rezept.therapiebereich || bestehend.therapie_bereich
+      });
+      if (!itemsPruefung.ok) {
+        return res.status(422).json({ error: itemsPruefung.error });
+      }
+      const finalItems = itemsPruefung.items;
+      patchItemsFelder = {
+        heilmittel_items: finalItems,
+        vorrangig_einheiten: (finalItems && finalItems[0]?.einheiten) ?? rezept.vorrangig_einheiten ?? null,
+        ...(itemsPruefung.summeEinheiten !== null ? { anzahl_einheiten: itemsPruefung.summeEinheiten } : {})
+      };
+    }
+
     const entwurf = !!proceed_anyway || !validation.ok || !!validation.warnings?.length;
     const status = entwurf ? 'parsed' : (bestehend.status === 'parsed' ? 'confirmed' : bestehend.status);
     const patch = {
@@ -2921,6 +2981,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       pat_leitsymptomatik: rezept.pat_leitsymptomatik || null,
       hinweise: rezept.therapieziele || null,
       heilmittel: rezept.heilmittel || null,
+      ...patchItemsFelder,
       ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
       ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
       // Physio-Zusatzpositionen (0089): nur gueltige Werte, sonst NULL — CHECKs in der DB.
@@ -2929,7 +2990,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       doppelbehandlung: !!rezept.doppelbehandlung,
       heilmittel_feld_text: rezept.heilmittel_feld_text || null,
       heilmittel_position: heilmittelPosition,
-      anzahl_einheiten: rezept.anzahl_einheiten ?? null,
+      anzahl_einheiten: patchItemsFelder.anzahl_einheiten ?? (rezept.anzahl_einheiten ?? null),
       frequenz: rezept.frequenz || null,
       ausstellungsdatum: arzt.ausstellungsdatum || null,
       behandlungsbeginn: rezept.behandlungsbeginn || null,

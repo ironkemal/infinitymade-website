@@ -145,17 +145,39 @@ test('parseMuster13Barcode: Pflichtfelder Patient werfen ohne PII', () => {
   });
 });
 
-test('parseMuster13Barcode: Sektor 1 (Physio) wird in v1 Podologie abgewiesen', () => {
-  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 15: '1' })), /Podologie-Verordnungen/);
+test('parseMuster13Barcode: Nicht unterstützte Sektoren (z.B. Logo 3) werden abgewiesen', () => {
+  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 15: '3' })), /werden unterstützt/);
 });
 
-test('parseMuster13Barcode: Mehrere Heilmittelzeilen oder Ergänzung führen zu Fail-Closed', () => {
-  // Zweite Zeile befüllt
-  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 23: 'Zweites Heilmittel', 24: '6' })),
+test('parseMuster13Barcode: Physio mit mehreren Heilmitteln wird korrekt geparst', () => {
+  const r = parseMuster13Barcode(erstelleBarcode({
+    15: '1',
+    21: 'Krankengymnastik',
+    22: '6',
+    23: 'Manuelle Therapie',
+    24: '6',
+    27: 'Warmpackung',
+    28: '6',
+  }));
+  assert.equal(r.parsed.rezept.therapiebereich, 'physio');
+  assert.equal(r.parsed.rezept.heilmittel, 'Krankengymnastik');
+  assert.equal(r.parsed.rezept.vorrangig_einheiten, 6);
+  assert.equal(r.parsed.rezept.anzahl_einheiten, 12);
+  assert.equal(r.parsed.rezept.ergaenzendes_heilmittel, 'Warmpackung');
+  assert.equal(r.parsed.rezept.anzahl_ergaenzend, 6);
+  assert.deepEqual(r.parsed.rezept.heilmittel_items, [
+    { bezeichnung: 'Krankengymnastik', einheiten: 6, code: null, doppelbehandlung: false },
+    { bezeichnung: 'Manuelle Therapie', einheiten: 6, code: null, doppelbehandlung: false },
+  ]);
+});
+
+test('parseMuster13Barcode: Mehrere Heilmittelzeilen oder Ergänzung führen in Podologie zu Fail-Closed', () => {
+  // Zweite Zeile befüllt in Podologie (15: '2')
+  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 15: '2', 23: 'Zweites Heilmittel', 24: '6' })),
     /Mehrere Heilmittelzeilen/);
 
-  // Ergänzendes Heilmittel befüllt
-  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 27: 'Warmpackung', 28: '6' })),
+  // Ergänzendes Heilmittel befüllt in Podologie (15: '2')
+  assert.throws(() => parseMuster13Barcode(erstelleBarcode({ 15: '2', 27: 'Warmpackung', 28: '6' })),
     /Mehrere Heilmittelzeilen/);
 
   // 0 Einheiten

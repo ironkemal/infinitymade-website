@@ -715,3 +715,403 @@ export function configSummary(customConfig) {
     code: safeCode
   };
 }
+
+/**
+ * Call Azure OpenAI audio transcription service.
+ *
+ * @param {Object} opts
+ * @param {Buffer|Uint8Array} opts.audioBuffer Audio data
+ * @param {string} [opts.mimeType='audio/webm']
+ * @param {string} [opts.deployment] deployment override
+ * @param {boolean} [opts.mock=false]
+ * @param {Function} [opts.mockFn]
+ * @param {Object} [opts.config]
+ * @param {Function} [opts.configProvider]
+ * @param {Function} [opts.fetchImpl=globalThis.fetch]
+ * @param {Object} [opts.jetonClient]
+ * @param {Function} [opts.beforeSend]
+ * @param {AbortSignal} [opts.signal]
+ * @param {number} [opts.timeoutMs=DEFAULT_TIMEOUT_MS]
+ * @returns {Promise<{text: string, usage: {prompt_tokens: number, completion_tokens: number, total_tokens: number}, model: string, deployment: string, dry_run: boolean, latency_ms: number}>}
+ */
+export async function transcribe(opts = {}) {
+  const {
+    audioBuffer,
+    mimeType = 'audio/webm',
+    deployment: deploymentOverride,
+    mock = false,
+    mockFn,
+    config: injectedConfig,
+    configProvider,
+    fetchImpl = globalThis.fetch,
+    jetonClient: injectedJetonClient,
+    beforeSend,
+    signal: externalSignal,
+    timeoutMs = DEFAULT_TIMEOUT_MS
+  } = opts;
+
+  const t0 = Date.now();
+
+  // 1. Explicit mock handling
+  if (mock) {
+    if (typeof mockFn !== 'function') {
+      const err = new Error('Expliziter Mock erfordert eine mockFn-Funktion');
+      err.code = 'AI_MOCK_FN_REQUIRED';
+      err.status = 500;
+      throw err;
+    }
+    const res = mockFn({ audioBuffer, mimeType });
+    const textStr = typeof res === 'string' ? res : (typeof res?.text === 'string' ? res.text : '');
+    return {
+      text: textStr,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      model: deploymentOverride || 'whisper',
+      deployment: deploymentOverride || 'whisper',
+      dry_run: true,
+      latency_ms: Date.now() - t0
+    };
+  }
+
+  // 2. Resolve configuration dynamically
+  const cfg = injectedConfig || (typeof configProvider === 'function' ? configProvider() : createAiConfig());
+
+  // 3. Mode 'aus' gate
+  if (cfg.mode === 'aus') {
+    const err = new Error('KI-Dienst ist deaktiviert');
+    err.code = 'AI_MODE_AUS';
+    err.status = 503;
+    throw err;
+  }
+
+  // 4. Operator readiness gate
+  if (!cfg.activationReady) {
+    const err = new Error('KI-Dienst ist nicht betriebsbereit geschaltet');
+    err.code = 'AI_NOT_ACTIVATED';
+    err.status = 503;
+    throw err;
+  }
+
+  // 5. Config validity check
+  if (!cfg.valid) {
+    const err = new Error('KI-Konfiguration ist ungültig');
+    err.code = cfg.code || 'AI_CONFIG_INVALID';
+    err.status = 503;
+    throw err;
+  }
+
+  // 6. Audio validation
+  if (!audioBuffer || (!Buffer.isBuffer(audioBuffer) && !(audioBuffer instanceof Uint8Array))) {
+    const err = new Error('Ungültige Audiodaten');
+    err.code = 'AI_PAYLOAD_INVALID';
+    err.status = 400;
+    throw err;
+  }
+
+  if (audioBuffer.length > 10 * 1024 * 1024) {
+    const err = new Error('Audiodatei überschreitet das Limit von 10 MB');
+    err.code = 'AI_PAYLOAD_TOO_LARGE';
+    err.status = 413;
+    throw err;
+  }
+
+  // 7. Timeout handling
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    timeoutController.abort(new DOMException('KI-Anfrage Zeitüberschreitung', 'TimeoutError'));
+  }, timeoutMs);
+
+  let combinedSignal;
+  let combinedCleanup = null;
+  if (typeof AbortSignal.any === 'function' && externalSignal) {
+    combinedSignal = AbortSignal.any([externalSignal, timeoutController.signal]);
+  } else if (externalSignal) {
+    if (externalSignal.aborted) {
+      clearTimeout(timeoutId);
+      const abortErr = new Error('KI-Anfrage abgebrochen');
+      abortErr.name = 'AbortError';
+      abortErr.code = 'AI_ABORTED';
+      abortErr.status = 499;
+      throw abortErr;
+    }
+    const combinedController = new AbortController();
+    const forwardAbort = () => combinedController.abort(new DOMException('KI-Anfrage abgebrochen', 'AbortError'));
+    const timeoutAbort = () => combinedController.abort(timeoutController.signal.reason);
+    externalSignal.addEventListener('abort', forwardAbort, { once: true });
+    timeoutController.signal.addEventListener('abort', timeoutAbort, { once: true });
+    combinedCleanup = () => {
+      externalSignal.removeEventListener('abort', forwardAbort);
+      timeoutController.signal.removeEventListener('abort', timeoutAbort);
+    };
+    combinedSignal = combinedController.signal;
+  } else {
+    combinedSignal = timeoutController.signal;
+  }
+
+  try {
+    const jClient = injectedJetonClient || (
+      cfg.mode === 'jeton'
+        ? (injectedConfig ? createJetonClient({ config: injectedConfig }) : getGlobalJetonClient())
+        : null
+    );
+
+    return await executeTranscribeTransport({
+      cfg,
+      audioBuffer,
+      mimeType,
+      deploymentOverride,
+      fetchImpl,
+      jetonClient: jClient,
+      beforeSend,
+      signal: combinedSignal,
+      t0
+    });
+  } catch (err) {
+    if (err.name === 'TimeoutError' || (combinedSignal.aborted && combinedSignal.reason?.name === 'TimeoutError')) {
+      const timeoutErr = new Error('KI-Anfrage Zeitüberschreitung');
+      timeoutErr.code = 'AI_TIMEOUT';
+      timeoutErr.status = 503;
+      throw timeoutErr;
+    }
+    if (err.name === 'AbortError' || combinedSignal.aborted) {
+      const abortErr = new Error('KI-Anfrage abgebrochen');
+      abortErr.name = 'AbortError';
+      abortErr.code = 'AI_ABORTED';
+      abortErr.status = 499;
+      throw abortErr;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+    if (combinedCleanup) combinedCleanup();
+  }
+}
+
+async function executeTranscribeTransport({
+  cfg,
+  audioBuffer,
+  mimeType,
+  deploymentOverride,
+  fetchImpl,
+  jetonClient,
+  beforeSend,
+  signal,
+  t0
+}) {
+  let jetonAuth = null;
+  let hasRefreshedJeton401 = false;
+
+  async function resolveTranscribeTarget(opts = {}) {
+    if (cfg.mode === 'jeton') {
+      if (!jetonClient) {
+        const err = new Error('Jeton-Client nicht initialisiert');
+        err.code = 'AI_JETON_UNAVAILABLE';
+        err.status = 503;
+        throw err;
+      }
+      jetonAuth = await raceSignal(jetonClient.getToken({ signal, ...opts }), signal);
+
+      if (!jetonAuth || typeof jetonAuth !== 'object' || typeof jetonAuth.token !== 'string' || jetonAuth.token.length < 10 || jetonAuth.token.length > 4096 || RE_CONTROL_CHARS.test(jetonAuth.token)) {
+        const err = new Error('Token ungültig'); err.code = 'AI_AUTH_INVALID'; err.status = 503; throw err;
+      }
+
+      const epVal = validateEndpointUrl(jetonAuth.endpoint, cfg.allowedHosts);
+      if (!epVal.ok) {
+        const err = new Error('Jeton-Endpunkt unzulässig');
+        err.code = 'AI_HOST_NOT_ALLOWED';
+        err.status = 503;
+        throw err;
+      }
+
+      const targetDeployment = jetonAuth.deploymentTranscribe;
+      if (!targetDeployment) {
+        const err = new Error('Transkription ist nicht eingerichtet');
+        err.code = 'AI_TRANSKRIPTION_NICHT_EINGERICHTET';
+        err.status = 503;
+        throw err;
+      }
+      if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
+        const err = new Error('Deploymentname ist ungültig');
+        err.code = 'AI_DEPLOYMENT_INVALID';
+        err.status = 503;
+        throw err;
+      }
+
+      if (deploymentOverride && deploymentOverride !== targetDeployment) {
+        const err = new Error('Deploymentkonflikt in Jeton-Modus');
+        err.code = 'AI_DEPLOYMENT_MISMATCH';
+        err.status = 400;
+        throw err;
+      }
+
+      return {
+        endpoint: epVal.cleanEndpoint,
+        deployment: targetDeployment,
+        apiVersion: jetonAuth.apiVersion,
+        headers: {
+          'Authorization': `Bearer ${jetonAuth.token}`
+        }
+      };
+    }
+
+    // Direct mode
+    const epVal = validateEndpointUrl(cfg.endpoint, cfg.allowedHosts);
+    if (!epVal.ok) {
+      const err = new Error('Endpunkt unzulässig');
+      err.code = epVal.code || 'AI_HOST_NOT_ALLOWED';
+      err.status = 503;
+      throw err;
+    }
+
+    const targetDeployment = deploymentOverride || cfg.transcribeDeployment;
+    if (!targetDeployment) {
+      const err = new Error('Transkription ist nicht eingerichtet');
+      err.code = 'AI_TRANSKRIPTION_NICHT_EINGERICHTET';
+      err.status = 503;
+      throw err;
+    }
+    if (!RE_SAFE_SEGMENT.test(targetDeployment)) {
+      const err = new Error('Deploymentname ist ungültig');
+      err.code = 'AI_DEPLOYMENT_INVALID';
+      err.status = 503;
+      throw err;
+    }
+
+    if (RE_CONTROL_CHARS.test(cfg.apiKey)) {
+      const err = new Error('API-Key enthält unzulässige Steuerzeichen');
+      err.code = 'AI_AUTH_INVALID';
+      err.status = 503;
+      throw err;
+    }
+
+    return {
+      endpoint: epVal.cleanEndpoint,
+      deployment: targetDeployment,
+      apiVersion: cfg.apiVersion,
+      headers: {
+        'api-key': cfg.apiKey
+      }
+    };
+  }
+
+  let target = await resolveTranscribeTarget();
+  let attempts429 = 0;
+
+  while (true) {
+    if (signal.aborted) {
+      const abortErr = new Error('KI-Anfrage abgebrochen');
+      abortErr.name = 'AbortError';
+      abortErr.code = 'AI_ABORTED';
+      abortErr.status = 499;
+      throw abortErr;
+    }
+
+    const url = `${target.endpoint.replace(/\/+$/, '')}/openai/deployments/${encodeURIComponent(target.deployment)}/audio/transcriptions?api-version=${target.apiVersion}`;
+
+    if (typeof beforeSend === 'function') {
+      const permitted = await raceSignal(Promise.resolve().then(beforeSend), signal);
+      if (permitted !== true) {
+        const err = new Error('KI-Freigabe nicht verfügbar');
+        err.code = 'AI_OWNER_DISABLED';
+        err.status = 503;
+        throw err;
+      }
+    }
+
+    const formData = new FormData();
+    const filename = mimeType && mimeType.includes('ogg') ? 'audio.ogg' : (mimeType && mimeType.includes('mp4') ? 'audio.mp4' : 'audio.webm');
+    formData.append('file', new Blob([audioBuffer], { type: mimeType || 'audio/webm' }), filename);
+    formData.append('language', 'de');
+
+    let res;
+    try {
+      const fetchPromise = fetchImpl(url, {
+        method: 'POST',
+        headers: {
+          ...target.headers
+        },
+        body: formData,
+        redirect: 'error',
+        signal
+      });
+      res = await raceSignal(fetchPromise, signal, 'KI-Anfrage abgebrochen');
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError' || signal.aborted) {
+        throw fetchErr;
+      }
+      const err = new Error('KI-Dienst Kommunikationsfehler');
+      err.code = 'AI_COMMUNICATION_ERROR';
+      err.status = 503;
+      throw err;
+    }
+
+    // Handle 401 in Jeton mode: retry once
+    if (res.status === 401 && cfg.mode === 'jeton' && !hasRefreshedJeton401) {
+      hasRefreshedJeton401 = true;
+      const rejectedToken = jetonAuth?.token;
+      jetonClient.invalidate(rejectedToken);
+      target = await resolveTranscribeTarget({ forceRefresh: true, rejectedToken });
+      continue;
+    }
+
+    if (res.status === 401) {
+      const err = new Error('KI-Dienst nicht verfügbar (Authentifizierung fehlgeschlagen)');
+      err.code = 'AI_UNAVAILABLE';
+      err.status = 503;
+      throw err;
+    }
+
+    if (res.status === 429) {
+      if (attempts429 >= MAX_429_RETRIES) {
+        const err = new Error('KI-Dienst überlastet (Ratenbegrenzung)');
+        err.code = 'AI_RATE_LIMIT_EXCEEDED';
+        err.status = 503;
+        throw err;
+      }
+      attempts429++;
+      let delayMs = 1000;
+      const retryAfter = res.headers?.get?.('retry-after');
+      if (retryAfter) {
+        const parsed = parseInt(retryAfter, 10);
+        if (Number.isFinite(parsed) && parsed > 0) delayMs = Math.min(parsed * 1000, MAX_RETRY_AFTER_MS);
+      }
+      await sleepWithSignal(delayMs, signal);
+      target = await resolveTranscribeTarget({ forceRefresh: true });
+      continue;
+    }
+
+    if (!res.ok) {
+      const err = new Error('KI-Dienst nicht verfügbar');
+      err.code = 'AI_UNAVAILABLE';
+      err.status = 503;
+      throw err;
+    }
+
+    let rawText = '';
+    try {
+      rawText = await raceSignal(res.text(), signal, 'KI-Anfrage abgebrochen');
+    } catch (bodyErr) {
+      if (bodyErr.name === 'AbortError' || signal.aborted) throw bodyErr;
+      const err = new Error('KI-Antwort konnte nicht empfangen werden');
+      err.code = 'AI_COMMUNICATION_ERROR';
+      err.status = 503;
+      throw err;
+    }
+
+    let parsedText = '';
+    try {
+      const json = JSON.parse(rawText);
+      parsedText = typeof json?.text === 'string' ? json.text : (typeof json === 'string' ? json : rawText);
+    } catch {
+      parsedText = rawText;
+    }
+
+    return {
+      text: parsedText.trim(),
+      model: target.deployment,
+      deployment: target.deployment,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      dry_run: false,
+      latency_ms: Date.now() - t0
+    };
+  }
+}
