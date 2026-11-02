@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-02",
- "dateien": 527,
- "funktionen": 4281,
+ "dateien": 528,
+ "funktionen": 4285,
  "module": [
   "abrechnung",
   "anamnese",
@@ -86699,6 +86699,7 @@
     "(datei) dashboard.js",
     "(datei) ops/vendor/supabase-js.js",
     "_renderAusnahmenBlock",
+    "aktuell",
     "alles",
     "anstellungFuerUrlaub",
     "baueBegleitzettel",
@@ -86724,6 +86725,7 @@
     "ladePodoZuzahlung",
     "ladeSnapshot",
     "ladeVerlauf",
+    "laden",
     "lauf",
     "letzterKmStand",
     "load",
@@ -86738,6 +86740,7 @@
     "mountBrandingExtras",
     "mountEhemalige",
     "mountFussbefund",
+    "mountMeinUrlaub",
     "oeffneDb",
     "oeffneFolgetermin",
     "openBookingActionModal",
@@ -107509,7 +107512,10 @@
     "arbeitstageImZeitraum"
    ],
    "calledBy": [
-    "loadEmpUrlaubSection"
+    "aktuell",
+    "laden",
+    "loadEmpUrlaubSection",
+    "mountMeinUrlaub"
    ],
    "modules": [
     "abrechnung",
@@ -107574,8 +107580,11 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "aktuell",
     "anstellungFuerUrlaub",
-    "mountAnstellung"
+    "laden",
+    "mountAnstellung",
+    "mountMeinUrlaub"
    ],
    "modules": [
     "abrechnung",
@@ -107775,7 +107784,10 @@
     "id"
    ],
    "calledBy": [
-    "mountAnstellung"
+    "aktuell",
+    "laden",
+    "mountAnstellung",
+    "mountMeinUrlaub"
    ],
    "modules": [
     "abrechnung",
@@ -142806,6 +142818,200 @@
    ]
   },
   {
+   "name": "mountMeinUrlaub",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/mein-urlaub.js",
+   "start": 4,
+   "end": 43,
+   "lines": 40,
+   "spiegelHinweis": null,
+   "tables": [
+    "working_hours",
+    "time_offs"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "aktuell",
+    "all",
+    "anstellungHtml",
+    "ladeAnstellung",
+    "laden",
+    "urlaubsKennzahlen"
+   ],
+   "calledBy": [
+    "mountMeinUrlaubAnzeige"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "laden",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/mein-urlaub.js",
+   "start": 6,
+   "end": 41,
+   "lines": 36,
+   "spiegelHinweis": null,
+   "tables": [
+    "working_hours",
+    "time_offs"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "aktuell",
+    "all",
+    "anstellungHtml",
+    "ladeAnstellung",
+    "urlaubsKennzahlen"
+   ],
+   "calledBy": [
+    "(datei) api-backend/routes/formular-signieren.js",
+    "(datei) api-backend/server.js",
+    "(datei) dashboard.js",
+    "(datei) module/kiosk.js",
+    "(datei) module/verordnung-podo.js",
+    "bindInvEvents",
+    "createFormularSignierenRouter",
+    "fuegeAufgabeHinzu",
+    "ladePapierannahmestelle",
+    "loescheAufgabe",
+    "macheRueckgaengig",
+    "markiereErledigt",
+    "mountMeinUrlaub",
+    "mountStartAufgaben",
+    "noopMiddleware",
+    "openVehicleEditModal",
+    "orteZu"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "aktuell",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/mein-urlaub.js",
+   "start": 13,
+   "end": 38,
+   "lines": 26,
+   "spiegelHinweis": null,
+   "tables": [
+    "working_hours",
+    "time_offs"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "all",
+    "anstellungHtml",
+    "ladeAnstellung",
+    "urlaubsKennzahlen"
+   ],
+   "calledBy": [
+    "baueMessreihenZeilen",
+    "laden",
+    "mountMeinUrlaub",
+    "zeichneRegionenBereich"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "appAdresse",
    "kind": "function",
    "lang": "js",
@@ -152051,6 +152257,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "aktuell",
     "findeRegion",
     "koerperteilName",
     "push"
@@ -153429,6 +153636,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "aktuell",
     "escapeHtml",
     "push",
     "zeichneKraftZeilen",
@@ -154538,8 +154746,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 32,
-   "end": 35,
+   "start": 33,
+   "end": 36,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -154604,8 +154812,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 37,
-   "end": 47,
+   "start": 38,
+   "end": 48,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -154619,6 +154827,7 @@
    ],
    "calledBy": [
     "mountEhemaligeAnzeige",
+    "mountMeinUrlaubAnzeige",
     "mountStreifen",
     "mountVerwaltung"
    ],
@@ -154631,8 +154840,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 39,
-   "end": 44,
+   "start": 40,
+   "end": 45,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -154701,8 +154910,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 49,
-   "end": 66,
+   "start": 50,
+   "end": 67,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
@@ -154725,8 +154934,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 68,
-   "end": 94,
+   "start": 69,
+   "end": 95,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -154756,8 +154965,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 77,
-   "end": 87,
+   "start": 78,
+   "end": 88,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -154829,8 +155038,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 97,
-   "end": 108,
+   "start": 98,
+   "end": 109,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -154898,8 +155107,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 111,
-   "end": 153,
+   "start": 112,
+   "end": 154,
    "lines": 43,
    "spiegelHinweis": null,
    "tables": [],
@@ -154927,8 +155136,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 119,
-   "end": 135,
+   "start": 120,
+   "end": 136,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -155001,8 +155210,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 137,
-   "end": 146,
+   "start": 138,
+   "end": 147,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -155074,8 +155283,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 149,
-   "end": 151,
+   "start": 150,
+   "end": 152,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -155139,8 +155348,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 156,
-   "end": 185,
+   "start": 157,
+   "end": 186,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -155169,8 +155378,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 193,
-   "end": 218,
+   "start": 194,
+   "end": 219,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [
@@ -155196,8 +155405,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 198,
-   "end": 202,
+   "start": 199,
+   "end": 203,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -155262,8 +155471,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 199,
-   "end": 202,
+   "start": 200,
+   "end": 203,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -155333,12 +155542,35 @@
    ]
   },
   {
+   "name": "mountMeinUrlaubAnzeige",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/planung-bruecke.js",
+   "start": 222,
+   "end": 233,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "beiAktivemPanel",
+    "mountMeinUrlaub"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "mountEhemaligeAnzeige",
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 221,
-   "end": 235,
+   "start": 236,
+   "end": 250,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -155361,8 +155593,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/planung-bruecke.js",
-   "start": 237,
-   "end": 248,
+   "start": 252,
+   "end": 263,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -155411,6 +155643,7 @@
     "loescheAufgabe",
     "macheRueckgaengig",
     "markiereErledigt",
+    "mountMeinUrlaub",
     "mountStartAufgaben",
     "noopMiddleware",
     "openVehicleEditModal",
@@ -192145,6 +192378,7 @@
     "loescheAufgabe",
     "macheRueckgaengig",
     "markiereErledigt",
+    "mountMeinUrlaub",
     "mountStartAufgaben",
     "noopMiddleware",
     "openVehicleEditModal",
@@ -249006,7 +249240,7 @@
    "orte": [
     "module/kalender-auswahl.js:39",
     "module/leistung-farbwahl.js:47",
-    "module/planung-bruecke.js:137",
+    "module/planung-bruecke.js:138",
     "module/verordnung-liste.js:255",
     "widget/booking-widget.js:107"
    ],
@@ -249328,7 +249562,7 @@
    "orte": [
     "cookie-consent.js:141",
     "module/mitarbeiter-app-einstellungen.js:53",
-    "module/planung-bruecke.js:198"
+    "module/planung-bruecke.js:199"
    ],
    "aynalar": []
   },
@@ -249338,6 +249572,15 @@
     "module/abrechnung-artefakte.js:68",
     "module/patient-termine.js:46",
     "module/praxis-standort.js:122"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "laden",
+   "orte": [
+    "module/mein-urlaub.js:6",
+    "module/plz.js:38",
+    "module/start-aufgaben.js:359"
    ],
    "aynalar": []
   },
@@ -249417,7 +249660,7 @@
    "name": "pruefen",
    "orte": [
     "module/kvnr.js:111",
-    "module/planung-bruecke.js:39",
+    "module/planung-bruecke.js:40",
     "module/plz.js:106"
    ],
    "aynalar": []
@@ -249524,7 +249767,7 @@
   {
    "name": "zeichnen",
    "orte": [
-    "module/planung-bruecke.js:119",
+    "module/planung-bruecke.js:120",
     "module/raum-tagesansicht.js:286",
     "module/standort-plan.js:265"
    ],
@@ -249640,7 +249883,7 @@
   {
    "name": "beobachte",
    "orte": [
-    "module/planung-bruecke.js:149",
+    "module/planung-bruecke.js:150",
     "module/raum-tagesansicht.js:344"
    ],
    "aynalar": []
@@ -250115,14 +250358,6 @@
    "orte": [
     "api-backend/routes/sondertag-mitteilung.js:137",
     "module/kalender-woche.js:134"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "laden",
-   "orte": [
-    "module/plz.js:38",
-    "module/start-aufgaben.js:359"
    ],
    "aynalar": []
   },

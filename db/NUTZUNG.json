@@ -3236,7 +3236,7 @@
     {
      "name": "holeDaten",
      "file": "module/planung-bruecke.js",
-     "start": 77,
+     "start": 78,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4176,7 +4176,7 @@
     {
      "name": "mountStreifen",
      "file": "module/planung-bruecke.js",
-     "start": 68,
+     "start": 69,
      "module": [],
      "uiPfad": []
     },
@@ -6108,6 +6108,7 @@
    "erwaehnt": [
     "api-backend/billing/api/ausfall-atomar.test.js",
     "api-backend/dsgvo/klassifikation.js",
+    "tools/box-standort-abnahme.test.js",
     "tools/browser-probe/redesign-fixture.js",
     "tools/check-anon-grants.mjs",
     "tools/check-anon-grants.test.js"
@@ -8307,7 +8308,7 @@
     {
      "name": "mountStandortplanReiter",
      "file": "module/planung-bruecke.js",
-     "start": 193,
+     "start": 194,
      "module": [],
      "uiPfad": []
     }
@@ -9157,6 +9158,7 @@
     "api-backend/dsgvo/loeschen.js",
     "api-backend/routes/mitarbeiter-zugang-aufraeumen.test.js",
     "module/standort-plan-laden.test.js",
+    "tools/box-standort-abnahme.test.js",
     "tools/browser-probe/standort-plan-probe.html"
    ],
    "register": true,
@@ -14010,7 +14012,8 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "api-backend/routes/mitarbeiter-zugang-aufraeumen.test.js",
-    "module/anstellung.test.js"
+    "module/anstellung.test.js",
+    "module/mein-urlaub.test.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -24610,6 +24613,7 @@
     "api-backend/dsgvo/loeschen.js",
     "module/abwesenheit.test.js",
     "module/kalender-woche.test.js",
+    "module/mein-urlaub.test.js",
     "tools/browser-probe/render-probe.html"
    ],
    "register": true,
@@ -24618,6 +24622,54 @@
    "seit": "spätestens 13.05.2026 · `add_performance_indexes`",
    "ungeklaert": false,
    "leser": [
+    {
+     "name": "aktuell",
+     "file": "module/mein-urlaub.js",
+     "start": 13,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
@@ -24636,6 +24688,54 @@
      "name": "ladeAbwesenheiten",
      "file": "module/abwesenheit.js",
      "start": 32,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "laden",
+     "file": "module/mein-urlaub.js",
+     "start": 6,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24823,6 +24923,13 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "mountMeinUrlaub",
+     "file": "module/mein-urlaub.js",
+     "start": 4,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
@@ -24994,7 +25101,8 @@
     "api-backend/server.js",
     "dashboard.js",
     "module/abwesenheit.js",
-    "module/ehemalige-mitarbeiter.js"
+    "module/ehemalige-mitarbeiter.js",
+    "module/mein-urlaub.js"
    ],
    "module": [
     "abrechnung",
@@ -25794,6 +25902,7 @@
    "erwaehnt": [
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
+    "module/mein-urlaub.test.js",
     "tools/browser-probe/redesign-fixture.js"
    ],
    "register": true,
@@ -25802,6 +25911,54 @@
    "seit": "spätestens 06.05.2026 · `extend_profiles_for_multi_tenant`",
    "ungeklaert": false,
    "leser": [
+    {
+     "name": "aktuell",
+     "file": "module/mein-urlaub.js",
+     "start": 13,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
@@ -25911,6 +26068,61 @@
      "uiPfad": [
       "ortak yardımcı — 38 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "laden",
+     "file": "module/mein-urlaub.js",
+     "start": 6,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "b2b",
+      "b2c",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "patientDetailModal",
+      "podologie-billing",
+      "rechnungen",
+      "rezeptModal",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 38 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "mountMeinUrlaub",
+     "file": "module/mein-urlaub.js",
+     "start": 4,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "renderBookingCalendar",
@@ -26183,6 +26395,7 @@
     "booking.js",
     "dashboard.js",
     "module/anstellung.js",
+    "module/mein-urlaub.js",
     "module/termin-folge.js",
     "onboarding.js"
    ],

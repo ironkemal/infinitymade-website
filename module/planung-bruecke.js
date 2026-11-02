@@ -20,6 +20,7 @@ import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261102a';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
 import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
+import { mountMeinUrlaub } from './mein-urlaub.js?v=20261102a';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
@@ -217,6 +218,20 @@ function mountStandortplanReiter(deps) {
   });
 }
 
+/** „Mein Urlaub“ in der Startübersicht: nur eigene Werte, nur lesend (F11). */
+function mountMeinUrlaubAnzeige(deps) {
+  const panel = document.getElementById('panel-overview');
+  const willkommen = document.getElementById('welcomeOverview');
+  if (!panel || !willkommen) return;
+  const host = document.createElement('section');
+  host.id = 'meinUrlaub';
+  host.hidden = true;
+  willkommen.after(host);
+  const anzeige = mountMeinUrlaub(host, { supabase: deps.supabase, getProfil: () => ({ id: deps.getEigeneId(), role: deps.getRolle?.() }) });
+  document.addEventListener('praxura:uebersicht', anzeige.laden);
+  beiAktivemPanel(panel, { an: anzeige.laden, aus: anzeige.verwerfen });
+}
+
 /** „Ehemalige Mitarbeiter" unter der Teamliste: Löschfrist für Anstellung + Abwesenheiten (nur Inhaber). */
 function mountEhemaligeAnzeige(deps) {
   const panel = document.getElementById('panel-team');
@@ -238,7 +253,7 @@ export function planungVerdrahten(deps) {
   verdrahtet = deps;
   setzeGrundSichtbar(empId => deps.istInhaber() || deps.getEigeneId() === empId);
   // Eine fehlende Stelle im DOM darf den Rest von dashboard.js nicht abbrechen.
-  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts }), mountStandortplanReiter, mountEhemaligeAnzeige]) {
+  for (const schritt of [raumAuswahlVerdrahten, mountVerwaltung, mountStreifen, mountSondertagAnzeige, d => mountRaumTagesansicht({ ...d, termineDesStandorts }), mountStandortplanReiter, mountEhemaligeAnzeige, mountMeinUrlaubAnzeige]) {
     try {
       schritt(deps);
     } catch (fehler) {

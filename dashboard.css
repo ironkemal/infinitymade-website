@@ -3485,6 +3485,35 @@ textarea {
   position: relative;
 }
 
+/* Expanded leave details must fit even the smallest employee grid column. */
+.emp-card:has(.emp-urlaub-body:not([hidden])) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.emp-card .emp-urlaub-body {
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.emp-card .emp-urlaub-body .form-input,
+.emp-card .emp-urlaub-body .form-select {
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.emp-card .emp-urlaub-body .anstellung-formular > div > div {
+  min-width: 100%;
+  max-width: 100%;
+}
+
+.emp-card .emp-urlaub-body button {
+  min-height: 44px;
+}
+
 .emp-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
