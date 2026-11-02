@@ -120,6 +120,12 @@ export const TABELLEN = [
     anmerkung: 'Behandelte VO -> behandlung (10 J.); unbehandelte VO -> loeschen',
   },
   {
+    table: 'einheiten_korrekturen',
+    kategorie: 'behandlung',
+    export: { filter: 'owner_id' },
+    anmerkung: 'GoBD-Protokoll der Einheiten-Reduzierung (0100); folgt der Verordnung, FK RESTRICT -> behandelte VO bleibt gesperrt',
+  },
+  {
     table: 'prescription_sessions',
     kategorie: 'vo_folgt',
     export: { filter: 'prescriptions.owner_id', select: '*,prescriptions!inner(owner_id)' },

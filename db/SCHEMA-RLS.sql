@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0098_standort_plan_gueltig_ab_austritt (SaaS, Management-API 02.11.2026)
--- EXPORTED AT:        2026-11-02T08:00:00Z
+-- LAST MIGRATION:     0100_einheiten_korrekturen (SaaS, MCP 02.11.2026)
+-- EXPORTED AT:        2026-11-02T11:59:24Z
 -- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       104
---   table_columns:       1518
+--   public_tables:       105
+--   table_columns:       1528
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        191
---   functions:           124
---   triggers:            120
---   indexes:             369
+--   rls_policies:        193
+--   functions:           127
+--   triggers:            123
+--   indexes:             372
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -169,6 +169,8 @@ ALTER TABLE public.diagnosegruppen ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.document_vorlagen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.dta_schluessel ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.einheiten_korrekturen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -797,6 +799,20 @@ CREATE POLICY dta_schluessel_read_all ON public.dta_schluessel
   FOR SELECT
   TO PUBLIC
   USING ((auth.role() = 'authenticated'::text));
+
+CREATE POLICY "Einheiten-Korrekturen insert owner" ON public.einheiten_korrekturen
+  AS PERMISSIVE
+  FOR INSERT
+  TO PUBLIC
+  WITH CHECK ((auth.uid() = owner_id));
+
+CREATE POLICY "Einheiten-Korrekturen select scoping" ON public.einheiten_korrekturen
+  AS PERMISSIVE
+  FOR SELECT
+  TO PUBLIC
+  USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT p.id
+   FROM profiles p
+  WHERE (p.owner_id = einheiten_korrekturen.owner_id)))));
 
 CREATE POLICY owner_all ON public.email_logs
   AS PERMISSIVE
@@ -2932,6 +2948,154 @@ end $function$
 ;
 ALTER FUNCTION public.datenaustausch_zaehler_vorstellen(p_owner uuid, p_absender_ik text, p_empfaenger_ik text, p_referenz bigint, p_transfernummer integer) OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.einheiten_korrekturen_mandant_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.prescriptions p
+                 WHERE p.id = NEW.prescription_id AND p.owner_id = NEW.owner_id) THEN
+    RAISE EXCEPTION 'einheiten_korrekturen: Verordnung gehoert nicht zu diesem Mandanten'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.einheiten_korrekturen_mandant_pruefen() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer DEFAULT NULL::integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_uid      uuid := auth.uid();
+  v_rx       public.prescriptions%ROWTYPE;
+  v_mehrere  boolean;
+  v_index    integer := 0;
+  v_alt      integer;
+  v_doppel   boolean;
+  v_summe    integer;
+  v_items    jsonb;
+  v_done     integer;
+  v_aktiv    integer;
+  v_ziel     integer;
+  v_zuviel   integer;
+  v_abgesagt integer := 0;
+  v_offen    jsonb;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Nicht angemeldet' USING ERRCODE = '42501';
+  END IF;
+  IF p_grund IS NULL OR length(btrim(p_grund)) < 5 THEN
+    RAISE EXCEPTION 'Begruendung (mind. 5 Zeichen) erforderlich' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT * INTO v_rx FROM public.prescriptions WHERE id = p_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Verordnung nicht gefunden' USING ERRCODE = 'P0002';
+  END IF;
+  IF v_rx.owner_id IS DISTINCT FROM v_uid THEN
+    RAISE EXCEPTION 'Nur der Inhaber darf Einheiten korrigieren' USING ERRCODE = '42501';
+  END IF;
+  IF v_rx.belegnummer IS NOT NULL THEN
+    RAISE EXCEPTION 'Verordnung ist bereits eingereicht (festgeschrieben)' USING ERRCODE = 'check_violation';
+  END IF;
+  IF v_rx.therapie_bereich IS NULL OR v_rx.therapie_bereich NOT IN ('physio', 'ergo') THEN
+    RAISE EXCEPTION 'Einheiten-Korrektur nur fuer Physio/Ergo' USING ERRCODE = 'check_violation';
+  END IF;
+
+  v_mehrere := jsonb_typeof(v_rx.heilmittel_items) = 'array'
+               AND jsonb_array_length(v_rx.heilmittel_items) > 0
+               AND (v_rx.heilmittel_items -> 0) ? 'einheiten';
+  IF v_mehrere THEN
+    IF p_heilmittel_index IS NULL OR p_heilmittel_index < 0
+       OR p_heilmittel_index >= jsonb_array_length(v_rx.heilmittel_items) THEN
+      RAISE EXCEPTION 'Bitte das zu korrigierende Heilmittel angeben' USING ERRCODE = '22023';
+    END IF;
+    v_index  := p_heilmittel_index;
+    v_alt    := (v_rx.heilmittel_items -> v_index ->> 'einheiten')::integer;
+    v_doppel := COALESCE((v_rx.heilmittel_items -> v_index ->> 'doppelbehandlung')::boolean, false);
+  ELSE
+    IF p_heilmittel_index IS NOT NULL AND p_heilmittel_index <> 0 THEN
+      RAISE EXCEPTION 'Diese Verordnung hat nur ein Heilmittel' USING ERRCODE = '22023';
+    END IF;
+    v_alt    := COALESCE(v_rx.vorrangig_einheiten, v_rx.anzahl_einheiten);
+    v_doppel := COALESCE(v_rx.doppelbehandlung, false);
+  END IF;
+
+  IF v_alt IS NULL OR p_neu IS NULL OR p_neu >= v_alt OR p_neu < 1 THEN
+    RAISE EXCEPTION 'Neue Einheitenzahl muss kleiner als die bisherige und mindestens 1 sein' USING ERRCODE = '22023';
+  END IF;
+
+  v_ziel := CASE WHEN v_doppel THEN (p_neu + 1) / 2 ELSE p_neu END;
+
+  SELECT count(*) FILTER (WHERE status = 'done'),
+         count(*) FILTER (WHERE status IN ('planned', 'done'))
+    INTO v_done, v_aktiv
+    FROM public.prescription_sessions
+   WHERE prescription_id = p_id AND COALESCE(heilmittel_index, 0) = v_index;
+  IF v_ziel < v_done THEN
+    RAISE EXCEPTION 'Bereits % Termine erbracht - weniger nicht moeglich', v_done USING ERRCODE = 'check_violation';
+  END IF;
+
+  v_summe := COALESCE(v_rx.anzahl_einheiten, v_alt) - v_alt + p_neu;
+  IF v_rx.ergaenzend_einheiten IS NOT NULL AND v_rx.ergaenzend_einheiten > v_summe THEN
+    RAISE EXCEPTION 'Das ergaenzende Heilmittel (% Einheiten) waere dann hoeher als die vorrangigen (%)',
+      v_rx.ergaenzend_einheiten, v_summe USING ERRCODE = 'check_violation';
+  END IF;
+
+  v_zuviel := GREATEST(v_aktiv - v_ziel, 0);
+  IF v_zuviel > 0 THEN
+    WITH z AS (
+      SELECT id FROM public.prescription_sessions
+       WHERE prescription_id = p_id AND COALESCE(heilmittel_index, 0) = v_index
+         AND status = 'planned' AND booking_id IS NULL
+       ORDER BY session_number DESC LIMIT v_zuviel
+       FOR UPDATE
+    ), u AS (
+      UPDATE public.prescription_sessions s SET status = 'cancelled'
+        FROM z WHERE s.id = z.id RETURNING s.id
+    )
+    SELECT count(*) INTO v_abgesagt FROM u;
+  END IF;
+
+  IF v_mehrere THEN
+    v_items := jsonb_set(v_rx.heilmittel_items, ARRAY[v_index::text, 'einheiten'], to_jsonb(p_neu));
+    UPDATE public.prescriptions
+       SET anzahl_einheiten = v_summe,
+           heilmittel_items = v_items,
+           vorrangig_einheiten = CASE WHEN v_index = 0 THEN p_neu ELSE vorrangig_einheiten END
+     WHERE id = p_id;
+  ELSE
+    UPDATE public.prescriptions
+       SET anzahl_einheiten = p_neu,
+           vorrangig_einheiten = CASE WHEN vorrangig_einheiten IS NULL THEN NULL ELSE p_neu END
+     WHERE id = p_id;
+  END IF;
+
+  INSERT INTO public.einheiten_korrekturen (owner_id, prescription_id, heilmittel_index, alt, neu, grund, von)
+  VALUES (v_rx.owner_id, p_id, CASE WHEN v_mehrere THEN v_index END, v_alt, p_neu, btrim(p_grund), v_uid);
+
+  SELECT COALESCE(jsonb_agg(t ORDER BY (t ->> 'session_number')::integer), '[]'::jsonb)
+    INTO v_offen
+    FROM (
+      SELECT jsonb_build_object('session_id', s.id, 'session_number', s.session_number, 'booking_id', s.booking_id) AS t
+        FROM public.prescription_sessions s
+       WHERE s.prescription_id = p_id AND COALESCE(s.heilmittel_index, 0) = v_index
+         AND s.status = 'planned' AND s.booking_id IS NOT NULL
+       ORDER BY s.session_number DESC
+       LIMIT GREATEST(v_zuviel - v_abgesagt, 0)
+    ) x;
+
+  RETURN jsonb_build_object('alt', v_alt, 'neu', p_neu, 'abgesagt', v_abgesagt, 'termin_offen', v_offen);
+END;
+$function$
+;
+ALTER FUNCTION public.einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.fahrten_aenderung_protokollieren()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4418,6 +4582,8 @@ begin
   or new.ergaenzend_position  is distinct from old.ergaenzend_position
   or new.hausbesuch_ort       is distinct from old.hausbesuch_ort
   or new.doppelbehandlung     is distinct from old.doppelbehandlung
+  -- 0099 (Ops #202): mehrere Heilmittel je Verordnung
+  or new.heilmittel_items     is distinct from old.heilmittel_items
   then
     raise exception 'Eingereichte Verordnung ist festgeschrieben (GoBD, §302 SGB V). Offen bleiben nur status/absetzung_*/storno_*/zuzahlung_kassiert_* und die Anonymisierung.';
   end if;
@@ -4494,6 +4660,18 @@ END;
 $function$
 ;
 ALTER FUNCTION public.prevent_booking_status_korrekturen_mod() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.prevent_einheiten_korrekturen_mod()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'Das Einheiten-Korrekturprotokoll ist unveraenderlich (GoBD). Eine falsche Korrektur wird durch eine NEUE Korrektur richtiggestellt.';
+END;
+$function$
+;
+ALTER FUNCTION public.prevent_einheiten_korrekturen_mod() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.prevent_rechnung_zahlungen_mod()
  RETURNS trigger
@@ -6338,6 +6516,12 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON chatbot_usage FOR EACH ROW E
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON custom_days FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER einheiten_korrekturen_mandant_pruefen BEFORE INSERT ON einheiten_korrekturen FOR EACH ROW EXECUTE FUNCTION einheiten_korrekturen_mandant_pruefen();
+
+CREATE TRIGGER trg_prevent_einheiten_korrekturen_mod BEFORE DELETE OR UPDATE ON einheiten_korrekturen FOR EACH ROW EXECUTE FUNCTION prevent_einheiten_korrekturen_mod();
+
+CREATE TRIGGER trg_set_business_id BEFORE INSERT ON einheiten_korrekturen FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON email_logs FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON employee_services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -6784,6 +6968,13 @@ CREATE UNIQUE INDEX uniq_default_vorlage ON document_vorlagen USING btree (owner
 CREATE INDEX idx_schluessel_bereich ON dta_schluessel USING btree (leistungsbereich) WHERE leistungsbereich IS NOT NULL;
 
 CREATE INDEX idx_schluessel_typ ON dta_schluessel USING btree (schluessel_typ, active);
+
+-- Index einheiten_korrekturen_pkey ON public.einheiten_korrekturen is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX einheiten_korrekturen_pkey ON einheiten_korrekturen USING btree (id);
+
+CREATE INDEX idx_einheiten_korrekturen_owner ON einheiten_korrekturen USING btree (owner_id, am DESC);
+
+CREATE INDEX idx_einheiten_korrekturen_rezept ON einheiten_korrekturen USING btree (prescription_id, am DESC);
 
 -- Index email_logs_pkey ON public.email_logs is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX email_logs_pkey ON email_logs USING btree (id);
@@ -7944,6 +8135,11 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=dropgeometrytable(table_name character varying) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=dropgeometrytable(table_name character varying) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=dropgeometrytable(table_name character varying) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrekturen_mandant_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrekturen_mandant_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -10573,6 +10769,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=prevent_belegliste_mod() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=prevent_booking_status_korrekturen_mod() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=prevent_booking_status_korrekturen_mod() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=prevent_einheiten_korrekturen_mod() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=prevent_einheiten_korrekturen_mod() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=prevent_rechnung_zahlungen_mod() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=prevent_rechnung_zahlungen_mod() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=prevent_zuzahlung_korrekturen_mod() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -14624,6 +14822,38 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=dta_schluessel column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=dta_schluessel column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=dta_schluessel column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=anon privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=authenticated privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=einheiten_korrekturen column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=email_logs column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=email_logs column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=email_logs column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -16747,6 +16977,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_document_vorlagen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_dta_schluessel column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_dta_schluessel column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_einheiten_korrekturen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_einheiten_korrekturen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_email_logs column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_email_logs column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_empfaenger_zertifikate column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -16997,6 +17229,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=document_vorlagen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=dta_schluessel column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=dta_schluessel column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=einheiten_korrekturen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=einheiten_korrekturen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=email_logs column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=email_logs column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=empfaenger_zertifikate column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO

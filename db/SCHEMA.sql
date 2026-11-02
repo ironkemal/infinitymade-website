@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0098_standort_plan_gueltig_ab_austritt (SaaS, Management-API 02.11.2026)
--- EXPORTED AT:        2026-11-02T08:00:00Z
+-- LAST MIGRATION:     0100_einheiten_korrekturen (SaaS, MCP 02.11.2026)
+-- EXPORTED AT:        2026-11-02T11:59:24Z
 -- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       104
---   table_columns:       1518
+--   public_tables:       105
+--   table_columns:       1528
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        191
---   functions:           124
---   triggers:            120
---   indexes:             369
+--   rls_policies:        193
+--   functions:           127
+--   triggers:            123
+--   indexes:             372
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -1509,6 +1509,46 @@ ALTER TABLE ONLY public.dta_schluessel
 
 ALTER TABLE ONLY public.dta_schluessel
   ADD CONSTRAINT dta_schluessel_schluessel_typ_code_source_version_key UNIQUE (schluessel_typ, code, source_version);
+
+CREATE TABLE public.einheiten_korrekturen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  prescription_id uuid NOT NULL,
+  heilmittel_index integer,
+  alt integer NOT NULL,
+  neu integer NOT NULL,
+  grund text NOT NULL,
+  von uuid,
+  am timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK von -> auth.users(id)
+ALTER TABLE ONLY public.einheiten_korrekturen OWNER TO postgres;
+COMMENT ON TABLE public.einheiten_korrekturen IS 'GoBD-Protokoll jeder Reduzierung von prescriptions.anzahl_einheiten (nur Verringerung, nur Inhaber). Append-only. Gueltig ist prescriptions.anzahl_einheiten.';
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_grund_check CHECK (length(btrim(grund)) >= 5);
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_neu_kleiner CHECK (neu < alt AND neu >= 0);
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id);
+
+ALTER TABLE ONLY public.einheiten_korrekturen
+  ADD CONSTRAINT einheiten_korrekturen_von_fkey FOREIGN KEY (von) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 CREATE TABLE public.email_logs (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -3238,6 +3278,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_hausbesuch_ort_check CHECK (hausbesuch_ort IS NULL OR (hausbesuch_ort = ANY (ARRAY['haeuslich'::text, 'soziale_einrichtung'::text, 'tagespflege_kurzzeit_betreut'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_heilmittel_items_check CHECK (heilmittel_items IS NULL OR jsonb_typeof(heilmittel_items) = 'array'::text AND (jsonb_array_length(heilmittel_items) <= 3 OR NOT jsonb_path_exists(heilmittel_items, '$[*]?(exists (@."einheiten"))'::jsonpath)));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);

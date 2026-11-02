@@ -817,6 +817,14 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Wer:** `api-backend/billing/api/zuzahlung.routes.js` schreibt (nur dort), `module/zuzahlung-korrektur.js` löst aus.
 - **Achtung:** Append-only — Trigger `prevent_zuzahlung_korrekturen_mod()` blockt UPDATE/DELETE, gleiches Muster wie `belegliste`. Eine falsche Korrektur wird durch eine NEUE richtiggestellt. Der **gültige** Betrag steht weiterhin in `prescriptions.zuzahlung_eur`; diese Tabelle ist das Gedächtnis, nicht die Wahrheit. `verordnung_id` ist für die Podologie vorgesehen, aber noch ungenutzt (dort gibt es bis heute keinen gespeicherten Zuzahlungsbetrag).
 
+### `einheiten_korrekturen`
+- **Warum:** Der Arzt kürzt eine Verordnung oder der Patient bricht ab — die verordnete Einheitenzahl (`prescriptions.anzahl_einheiten`) muss sinken können, aber nicht stillschweigend (GoBD, gleiche Logik wie `zuzahlung_korrekturen`). Je Korrektur: wer, wann, alt, neu, Grund (min. 5 Zeichen).
+- **Seit:** 02.11.2026 · `0100_einheiten_korrekturen` (Ops #251)
+- **Status:** aktiv (Entwurf; SaaS-Anwendung nach Sammelfreigabe)
+- **Wer:** nur die RPC `einheiten_korrigieren(p_id, p_neu, p_grund)` schreibt (SECURITY INVOKER, nur Inhaber, nur Physio/Ergo, nur vor `belegnummer`); Auslöser UI folgt (Ops #251).
+- **Achtung:** Append-only (Trigger `prevent_einheiten_korrekturen_mod()`), nur Verringerung (`neu < alt`). INSERT-Policy bewusst nur Inhaber (gkv-302), anders als `zuzahlung_korrekturen`. Die RPC sagt überzählige `planned`-Sitzungen OHNE Termin ab (nie löschen) und meldet terminierte als `termin_offen` zurück. Nicht abgedeckt: `heilmittel_items[].einheiten` und `vorrangig_/ergaenzend_einheiten` werden nicht mitgekürzt (Aufrufer-Sache). DSGVO: `klassifikation.js` Kategorie `behandlung`.
+- **Quelle:** gkv-302-Entscheidung „nur Inhaber“
+
 ### `zuzahlung_guthaben`
 - **Warum:** Hat der Patient im Voraus für 6 Einheiten gezahlt und bricht nach 3 ab, liegt Geld zuviel in der Praxis. Statt es auszuzahlen, soll es auf die nächste Verordnung angerechnet werden. Das Guthaben gehört dem Patienten, nicht der Verordnung — deshalb eigene Tabelle mit `patient_id` und nicht eine Spalte am Rezept.
 - **Seit:** 01.09.2026 · `20260831120000_zuzahlung_korrektur`

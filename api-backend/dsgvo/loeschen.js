@@ -20,6 +20,7 @@ export const FRIST_KATEGORIEN = ['behandlung', 'einwilligung', 'beleg', 'grundau
 
 export const KATEGORIE_TABELLEN = {
   behandlung: [
+    'einheiten_korrekturen',
     'podologie_behandlungen',
     'anamnese',
     'pat_fussbefund',
@@ -327,6 +328,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
       await pruefeRelation('belegliste', 'prescription_id');
       await pruefeRelation('zuzahlung_korrekturen', 'prescription_id');
       await pruefeRelation('zuzahlung_korrekturen', 'verordnung_id');
+      await pruefeRelation('einheiten_korrekturen', 'prescription_id');
       await pruefeRelation('messreihen', 'prescription_id');
       // guvenlik S-61, CLAUDE_SYNC_AUDIT_REPORT §1.3: Therapiebericht = Behandlungsdokumentation (§ 630f BGB), FK RESTRICT — ohne diese Prüfung bricht 4a mit 23503 ab.
       await pruefeRelation('therapieberichte', 'prescription_id');

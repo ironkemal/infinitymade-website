@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-02)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 104,
+ "anzahl": 105,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -7856,6 +7856,34 @@
    "dateien": [],
    "module": [],
    "sqlTreffer": 42,
+   "codeStumm": true
+  },
+  {
+   "name": "einheiten_korrekturen",
+   "spalten": 10,
+   "fkRaus": [
+    "businesses",
+    "profiles",
+    "prescriptions",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
+   ],
+   "register": true,
+   "status": "aktiv (Entwurf; SaaS-Anwendung nach Sammelfreigabe)",
+   "warum": "Der Arzt kürzt eine Verordnung oder der Patient bricht ab — die verordnete Einheitenzahl (`prescriptions.anzahl_einheiten`) muss sinken können, aber nicht stillschweigend (GoBD, gleiche Logik wie `zuzahlung_korrekturen`). Je Korrektur: wer, wann, alt, neu, Grund (min. 5 Zeichen).",
+   "seit": "02.11.2026 · `0100_einheiten_korrekturen` (Ops #251)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 47,
    "codeStumm": true
   },
   {
@@ -17765,7 +17793,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 49,
+   "sqlTreffer": 53,
    "codeStumm": false
   },
   {
@@ -20204,7 +20232,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 87,
+   "sqlTreffer": 92,
    "codeStumm": false
   },
   {
@@ -22411,7 +22439,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 365,
+   "sqlTreffer": 366,
    "codeStumm": false
   },
   {
@@ -26115,9 +26143,7 @@
  ],
  "ohneRegister": [],
  "ungeklaert": [],
- "registerVerwaist": [
-  "einheiten_korrekturen"
- ],
+ "registerVerwaist": [],
  "codeStumm": [
   {
    "name": "abrechnung_artefakt_freeze",
@@ -26143,6 +26169,11 @@
    "name": "dta_schluessel",
    "sql": 42,
    "status": "Referenz, im Code ungenutzt"
+  },
+  {
+   "name": "einheiten_korrekturen",
+   "sql": 47,
+   "status": "aktiv (Entwurf; SaaS-Anwendung nach Sammelfreigabe)"
   },
   {
    "name": "heilmittel_catalog",

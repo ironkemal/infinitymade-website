@@ -3,12 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-11-02 · 104 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-02), funktionen/INDEX.json (erzeugt 2026-11-02)
+**Erzeugt:** 2026-11-02 · 105 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-02), funktionen/INDEX.json (erzeugt 2026-11-02)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **104/104**
-- 🧹 **Register içinde var, şemada yok (1):** `einheiten_korrekturen`
+- Register kaydı olan: **105/105**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -23,6 +22,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `applications` | 41 | fremd |
 | `datenaustausch_zaehler` | 47 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |
 | `dta_schluessel` | 42 | Referenz, im Code ungenutzt |
+| `einheiten_korrekturen` | 47 | aktiv (Entwurf; SaaS-Anwendung nach Sammelfreigabe) |
 | `heilmittel_catalog` | 38 | veraltet |
 | `heilmittel_position` | 44 | veraltet |
 | `heilmittel_tarif` | 40 | **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`) |
@@ -442,6 +442,11 @@ Warum: Druckvorlagen je Inhaber (Rechnung, Mahnung, Bericht) als JSON. Sonst mü
 
 10 Spalten · Status: Referenz, im Code ungenutzt
 Warum: Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) als Datenbestand.
+
+### `einheiten_korrekturen`
+
+10 Spalten · Status: aktiv (Entwurf; SaaS-Anwendung nach Sammelfreigabe)
+Warum: Der Arzt kürzt eine Verordnung oder der Patient bricht ab — die verordnete Einheitenzahl (`prescriptions.anzahl_einheiten`) muss sinken können, aber nicht stillschweigend (GoBD, gleiche Logik wie `zuzahlung_korrekturen`). Je Korrektur: wer, wann, alt, neu, Grund (min. 5 Zeichen).
 
 ### `email_logs`
 
