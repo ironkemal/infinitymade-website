@@ -92,6 +92,9 @@ export async function sendeLauf(supabase, { tenantId, userId, ids, lage, transpo
     }).select('id').maybeSingle();
     let zeileId = zeile?.id;
     if (iErr) {
+      if (iErr.code === 'PT429') {
+        return { status: 429, body: { error: `Tagesgrenze von ${TAGESDECKEL} Mitteilungen erreicht.`, code: 'TAGESDECKEL', ...zaehler } };
+      }
       if (iErr.code !== '23505') throw iErr;
       const { data: alt, error: uErr } = await supabase.from('termin_mitteilungen').update(reservierung)
         .eq('owner_id', tenantId).eq('booking_id', termin.id).eq('anlass', ANLASS).eq('termin_beginn', termin.start_time)

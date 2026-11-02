@@ -2842,6 +2842,7 @@
     "module/billing-loader-503.test.js",
     "module/booking-status-korrektur.test.js",
     "module/fahrt-km.js",
+    "module/kalender-woche.test.js",
     "module/patienten-import.js",
     "module/podo-einheiten.test.js",
     "module/raum-tagesansicht.test.js",
@@ -2864,7 +2865,7 @@
     {
      "name": "_terminBearbeiten",
      "file": "module/verordnung-detail.js",
-     "start": 988,
+     "start": 989,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4882,7 +4883,7 @@
     {
      "name": "renderWoche",
      "file": "module/kalender-woche.js",
-     "start": 114,
+     "start": 118,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17731,7 +17732,7 @@
     {
      "name": "_verdrahteSitzungsHeilmittelTausch",
      "file": "module/verordnung-detail.js",
-     "start": 1073,
+     "start": 1074,
      "module": [
       "abrechnung",
       "anamnese",
@@ -19838,7 +19839,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 1145,
+     "start": 1146,
      "module": [
       "abrechnung",
       "anamnese",
@@ -21934,7 +21935,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 1145,
+     "start": 1146,
      "module": [
       "abrechnung",
       "anamnese",
@@ -24608,6 +24609,7 @@
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/abwesenheit.test.js",
+    "module/kalender-woche.test.js",
     "tools/browser-probe/render-probe.html"
    ],
    "register": true,
