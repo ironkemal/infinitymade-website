@@ -2054,3 +2054,4 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - Konsole: 0 Fehler (nur §3 #4/#6).
 - P3: Vorschau-Zähler „(1 neu · 1 vorhanden)“ zählt Datei-Dublette als „vorhanden“. P3: Datumsfeld Muster 13 zeigt im Test-Browser „11/02/2026“ (nativ, Browser-Locale).
 - Nebenwirkung: Test-Termin TEST-Hanna 05.10.2026 10:00 (ohne VO) angelegt; Einwilligung nicht gezeichnet.
+- [x] M5 Mitarbeiter-Oberfläche geprüft (headless Login, Zugang lokal): Menü nur Heute/Überblick/Patienten/Notizen/Abrechnung/Rechnungen, kein Team-Menü, Reiter „Standorte“ nicht sichtbar, keine Anstellungs-/Urlaubswerte irgendwo. Ergebnis: F11 (Produktfrage), siehe `Physio/AUTOPILOT.md`.
