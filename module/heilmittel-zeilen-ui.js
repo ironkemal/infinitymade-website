@@ -80,7 +80,7 @@ function baueZeileHtml(index) {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
       <input class="m13-v m13-center" id="rzAnzahl${numId}" type="number" min="1" placeholder="" style="flex:1;min-width:0;max-width:54px;">
       <label class="m13-th m13-hm-doppel" id="rzHmRow${numId}DoppelWrap" style="font-size:11px;margin:0;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;" title="Doppelbehandlung">
-        <input type="checkbox" id="rzDoppelRow${numId}" class="m13-cbx"><span class="m13-chk"></span> <span style="font-size:11px;margin-left:2px;">D</span>
+        <input type="checkbox" id="rzDoppelRow${numId}" class="m13-cbx"><span class="m13-chk"></span> <span style="font-size:11px;margin-left:2px;">Doppelb.</span>
       </label>
       <button type="button" class="m13-hm-del-btn" data-del-zeile="${numId}" aria-label="Heilmittelzeile entfernen" style="min-width:44px;min-height:44px;border:none;background:transparent;color:var(--danger,#dc2626);cursor:pointer;font-size:20px;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;">×</button>
     </div>

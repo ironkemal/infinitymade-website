@@ -6,7 +6,7 @@
  */
 
 import { API_BASE } from '../supabase-config.js';
-import { signaturePad } from './patienten-einwilligung.js?v=20261031a';
+import { signaturePad } from './patienten-einwilligung.js?v=20261102w10';
 import { rendereSeiten } from './formular-pdf-ansicht.js?v=20261031b';
 
 'use strict';

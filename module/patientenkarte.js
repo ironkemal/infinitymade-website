@@ -34,6 +34,7 @@ import { geschlechtLabel } from './geschlecht.js?v=20260816';
 import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20261021f';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260930x';
 import { leadGeburtsdatum, leadHausbesuch } from './lead-felder.js?v=20260929a';
+import { datumDe } from './datum.js?v=20261001a';
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -88,7 +89,7 @@ export function renderStammdaten(grid, lead, deps = {}) {
       ? `<span style="font-family:monospace;font-weight:600;">${esc(lead.patientennummer)}</span>`
       : '—'],
     ['Name', esc(name) || '—'],
-    ['Geburtsdatum', geburt ? `${DE(geburt)}${alter ? ` <span style="color:var(--text-muted);font-size:11px;">${alter} J.</span>` : ''}` : '—'],
+    ['Geburtsdatum', geburt ? `${datumDe(geburt, '—')}${alter ? ` <span style="color:var(--text-muted);font-size:11px;">${alter} J.</span>` : ''}` : '—'],
     ['Geschlecht', esc(sex)],
     ['Krankenkasse', esc(lead.krankenkasse || md.krankenkasse || '—')],
     ['Versicherten-Nr.', esc(lead.versichertennummer || md.krankenkassennummer || '—')],

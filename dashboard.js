@@ -30,7 +30,7 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261021f';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261102w10';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
@@ -57,7 +57,7 @@ import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './modu
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261021v'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261021v';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261102w10'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261102w10';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261027p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
@@ -147,7 +147,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261031a'; import { planSpalten } from './module/standort-plan-laden.js?v=20261102a';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261102w10'; import { planSpalten } from './module/standort-plan-laden.js?v=20261102a';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

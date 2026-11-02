@@ -268,7 +268,7 @@ export function pruefeImport(text, bestehende = [], zuordnungVonHand = null) {
       if (vorhanden) z.dublette = 'vorhanden';
       else {
         const s = nameGeburtSchluessel(z.patient);
-        if (s && gesehen.has(s)) z.dublette = `doppelt in Datei (Zeile ${gesehen.get(s)})`;
+        if (s && gesehen.has(s)) z.dublette = `doppelt in Datei (Zeile ${gesehen.get(s)}) – wird übersprungen`;
         else if (s) gesehen.set(s, z.nr);
       }
     }
@@ -490,7 +490,7 @@ export function oeffnePatientenImport(d) {
     }
     const status = (z) => z.fehler.length
       ? `<span style="color:var(--danger,#b42318);font-weight:600;">✕ ${esc(z.fehler.join(' · '))}</span>`
-      : z.dublette ? `<span style="color:var(--text-muted);">übersprungen — ${esc(z.dublette === 'vorhanden' ? 'schon vorhanden' : z.dublette)}</span>`
+      : z.dublette ? `<span style="color:var(--text-muted);">${esc(z.dublette === 'vorhanden' ? 'übersprungen — schon vorhanden' : z.dublette)}</span>`
       : z.hinweise.length ? `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ neu · ${esc(z.hinweise.join(' · '))}</span>`
       : '<span style="color:var(--success,#027a48);font-weight:600;">✓ neu</span>';
     const zeilen = erg.zeilen.slice(0, 200).map(z => {
@@ -511,8 +511,8 @@ export function oeffnePatientenImport(d) {
     inhalt.innerHTML = `
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;font-weight:600;">
         <span style="color:var(--success,#027a48);">${anzahlGruen} ok</span>
-        <span style="color:var(--warning,#b54708);">${anzahlGelb} gelb</span>
-        <span style="color:${anzahlRot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${anzahlRot} rot</span>
+        <span style="color:var(--warning,#b54708);">${anzahlGelb} Hinweis</span>
+        <span style="color:${anzahlRot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${anzahlRot} Fehler</span>
         <span style="color:var(--text-muted);font-weight:400;margin-left:auto;">(${erg.neu} neu · ${erg.dubletten} vorhanden)</span>
       </div>
       <div style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-main);">

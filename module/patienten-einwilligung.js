@@ -43,6 +43,7 @@
  */
 
 import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261030k4';
+import { datumDe } from './datum.js?v=20261001a';
 import { IST_KUTU } from '../supabase-config.js';
 import { getKiConfig } from './ki-client.js?v=20261102w3';
 
@@ -61,7 +62,7 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-function heute() { return new Date().toLocaleDateString('de-DE'); }
+function heute() { return datumDe(new Date()); }
 
 function patientName(p) {
   if (!p) return '';
@@ -191,9 +192,7 @@ function ctxFor(state = _state) {
     praxis_adresse: [[p.street, p.house_number].filter(Boolean).join(' '),
       [p.zip || p.plz, p.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
     patient_name: patientName(state.patient),
-    patient_geburtsdatum: state.patient.geburtsdatum
-      ? new Date(state.patient.geburtsdatum).toLocaleDateString('de-DE')
-      : '—',
+    patient_geburtsdatum: datumDe(state.patient.geburtsdatum, '—'),
     datum: heute(),
     profile: p,
     optionen: state.optionen,

@@ -511,6 +511,21 @@ export async function oeffnePhysioEinheitenDialog({
     fehlerEl.style.display = t ? '' : 'none';
   };
 
+  if (grundEl) {
+    grundEl.addEventListener('input', () => {
+      if (fehlerEl && fehlerEl.style.display !== 'none') {
+        zeigeFehler('');
+      }
+    });
+  }
+  if (neuInput) {
+    neuInput.addEventListener('input', () => {
+      if (fehlerEl && fehlerEl.style.display !== 'none' && !fehlerEl.textContent.includes('Begründung')) {
+        zeigeFehler('');
+      }
+    });
+  }
+
   const updateState = () => {
     if (multi && selectEl) {
       currentIndex = parseInt(selectEl.value, 10) || 0;

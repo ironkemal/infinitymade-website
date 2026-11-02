@@ -481,11 +481,11 @@
       const viInhalt = viModal.querySelector('[data-pi="inhalt"]');
       const inhaltText = viInhalt?.textContent || '';
 
-      // C1: Özet metni /1 ok · 1 gelb · 1 rot/
-      // Zusammenfassung als drei Chips (ok/gelb/rot) — Zeilenumbrüche zwischen den Zahlen erlaubt.
-      const oezetOk = /1\s*ok[\s\S]*1\s*gelb[\s\S]*1\s*rot/.test(inhaltText);
+      // C1: Özet metni /1 ok · 1 Hinweis · 1 Fehler/
+      // Zusammenfassung als drei Chips (ok/Hinweis/Fehler) — Zeilenumbrüche zwischen den Zahlen erlaubt.
+      const oezetOk = /1\s*ok[\s\S]*1\s*Hinweis[\s\S]*1\s*Fehler/.test(inhaltText);
       pruef(
-        'C · Özet metni /1 ok · 1 gelb · 1 rot/ ile eşleşir',
+        'C · Özet metni /1 ok · 1 Hinweis · 1 Fehler/ ile eşleşir',
         oezetOk,
         inhaltText.slice(0, 80)
       );
@@ -538,6 +538,8 @@
       // In die Seite einbetten, damit es für Dark-Theme & Screenshot sichtbar bleibt
       viModal.style.position = 'static';
       viModal.style.maxHeight = 'none';
+      viModal.style.animation = 'none';
+      viModal.style.opacity = '1';
       importHost.appendChild(viModal);
 
       // ══════════════════════════════════════════════════════════════════════
@@ -593,17 +595,22 @@
         `max=${peNeuInput?.max}`
       );
 
-      // D4: Begründung boşken Korrigieren engelli/ret
+      // D4: Begründung boşken Korrigieren engelli/ret (önce hata yok, Korrigieren sonrası hata var)
       peNeuInput.value = '4';
       const peGrund = peModal.querySelector('[data-pe-grund]');
       peGrund.value = '';
+      const peFehler = peModal.querySelector('[data-pe-fehler]');
+      const fehlerVorherUnsichtbar = !peFehler || peFehler.style.display === 'none' || !peFehler.textContent.trim();
       const peSubmit = peModal.querySelector('[data-pe-submit]');
       peSubmit.click();
-      const peFehler = peModal.querySelector('[data-pe-fehler]');
+      const fehlerNachherSichtbar = peFehler && peFehler.style.display !== 'none' && peFehler.textContent.includes('Begründung');
+      peGrund.value = 'Tippfehler bei Einheiten';
+      peGrund.dispatchEvent(new Event('input', { bubbles: true }));
+      const fehlerNachTippenWeg = !peFehler || peFehler.style.display === 'none' || !peFehler.textContent.trim();
       pruef(
         'D · Begründung boşken Korrigieren engelli/ret (Fehlertext sichtbar)',
-        peFehler && peFehler.style.display !== 'none' && peFehler.textContent.includes('Begründung'),
-        peFehler?.textContent
+        fehlerVorherUnsichtbar && fehlerNachherSichtbar && fehlerNachTippenWeg,
+        `vorher=${fehlerVorherUnsichtbar ? 'kein Fehler' : 'Fehler'}, nach Klick=${fehlerNachherSichtbar ? 'Begründung erforderlich' : 'kein Fehler'}, nach Tippen=${fehlerNachTippenWeg ? 'kein Fehler' : 'Fehler'}`
       );
 
       // D5: 390'da dialog genişliği ≤ viewport, düğmeler ≥44 px
@@ -628,6 +635,8 @@
 
       // In Host einbetten für Style/Screenshot
       peModal.style.position = 'static';
+      peModal.style.animation = 'none';
+      peModal.style.opacity = '1';
       einheitenHost.appendChild(peModal);
 
       // D6: verordnung-detail'de rolle 'employee' iken düğme yok

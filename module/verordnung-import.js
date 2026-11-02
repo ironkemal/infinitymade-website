@@ -20,7 +20,7 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261021v';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261102w10';
 import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
@@ -417,7 +417,7 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
     const posSchluessel = items[0]?.code || w('heilmittel_position') || w('heilmittel');
     schluessel = patient && ausstellungsdatum && posSchluessel ? `${patient.id}|${ausstellungsdatum}|${posSchluessel}` : null;
     if (schluessel && k.vorhandeneVo && k.vorhandeneVo.has(schluessel)) {
-      hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits — wird übersprungen');
+      hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits – wird übersprungen');
       istDublette = true;
     }
   } else {
@@ -457,7 +457,7 @@ export function pruefeVerordnungen(text, zu, k = {}) {
     if (z.schluessel) {
       if (gesehen.has(z.schluessel)) {
         if (normBereich === 'physio' || normBereich === 'ergo') {
-          z.hinweise.push(`doppelt in Datei (Zeile ${gesehen.get(z.schluessel)}) — wird übersprungen`);
+          z.hinweise.push(`doppelt in Datei (Zeile ${gesehen.get(z.schluessel)}) – wird übersprungen`);
           z.istDublette = true;
         } else {
           if (!z.fehler.length) z.fehler.push(`doppelt in Datei (Zeile ${gesehen.get(z.schluessel)})`);
@@ -666,8 +666,8 @@ export function oeffneVerordnungImport(d) {
     inhalt.innerHTML = `
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;font-weight:600;">
         <span style="color:var(--success,#027a48);">${erg.ok} ok</span>
-        <span style="color:var(--warning,#b54708);">${erg.gelb} gelb</span>
-        <span style="color:${erg.rot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${erg.rot} rot</span>
+        <span style="color:var(--warning,#b54708);">${erg.gelb} Hinweis</span>
+        <span style="color:${erg.rot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${erg.rot} Fehler</span>
         <span style="color:var(--text-muted);font-weight:400;margin-left:auto;">(${uebernehmbar.length} werden übernommen)</span>
       </div>
       <div style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-main);">
