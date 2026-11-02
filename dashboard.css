@@ -8504,3 +8504,15 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .sp-warn-ort { color: var(--text-muted); }
 .sp-aktionen { display: flex; justify-content: flex-end; }
 .sp-ziel input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+.sp-ab { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-main); }
+.sp-ab label { display: flex; flex-direction: column; gap: 4px; max-width: 220px; }
+.sp-ab .form-hint { max-width: 560px; }
+/* Ehemalige Mitarbeiter (module/ehemalige-mitarbeiter.js) */
+.ehemalige { margin-top: 16px; padding: 16px; background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: 8px; }
+.ehemalige h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--text-main); }
+.ehemalige .form-hint { margin: 0 0 10px; font-size: 12px; color: var(--text-muted); }
+.ehemalige ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-main); }
+.ehemalige li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.ehemalige .ehem-name { font-weight: 500; min-width: 120px; }
+.ehemalige .ehem-faellig { color: var(--danger); }
+.ehemalige .ehem-loeschen { margin-left: auto; }

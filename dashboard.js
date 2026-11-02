@@ -1,5 +1,5 @@
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261101e';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261102a';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -149,7 +149,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261031a'; import { planSpalten } from './module/standort-plan-laden.js?v=20261101a';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261031a'; import { planSpalten } from './module/standort-plan-laden.js?v=20261102a';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

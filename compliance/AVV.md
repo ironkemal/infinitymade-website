@@ -88,6 +88,7 @@ Die Verarbeitung erfolgt ausschließlich zur Erbringung der in § 1.1 genannten 
 
 **Mitarbeiterdaten:**
 - Name, E-Mail-Adresse, Rolle/Funktion, Arbeitszeitdaten
+- Beschäftigungsumfang (Vollzeit/Teilzeit, Wochenstunden), Urlaubsanspruch, Abwesenheiten (Urlaub, Krankheit — ohne Diagnose), Einsatzplan je Standort, Austrittsdatum
 
 ### 3.3 Rechtsgrundlage des Auftraggebers
 

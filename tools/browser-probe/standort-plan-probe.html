@@ -123,6 +123,29 @@ try {
   host.querySelector('#spSpeichernBtn').click();
   await warte(150);
   pruefe('Ohne Änderung kein Schreiben', protokoll.insert.length + protokoll.delete.length === n && toasts.at(-1)?.m === 'Keine Änderung.');
+
+  // „Änderung gilt ab": Raster als geplante Umstellung, heutiges Muster bleibt.
+  await mountStandortPlan(host, deps);
+  const vorAb = { ins: protokoll.insert.length, del: protokoll.delete.length };
+  host.querySelector('.sp-muster[data-weekday="3"][data-standort="B"]').click();
+  host.querySelector('#spAb').value = '2027-01-05';
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  const abNeu = protokoll.insert.slice(vorAb.ins);
+  pruefe('Gilt ab: neue Version mit gueltig_ab angelegt', abNeu.length > 0 && abNeu.every(z => z.gueltig_ab === '2027-01-05' && z.datum === null));
+  pruefe('Gilt ab: heutiges Muster nicht gelöscht', protokoll.delete.length === vorAb.del);
+  pruefe('Gilt ab: Umstellung in der Liste', host.querySelector('.sp-versionen')?.textContent.includes('05.01.2027'));
+  pruefe('Gilt ab: Raster zeigt weiter heutiges Muster (Mi Süd nicht angehakt)', !host.querySelector('.sp-muster[data-weekday="3"][data-standort="B"]').checked);
+  host.querySelector('#spAb').value = '2026-11-01';
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(150);
+  pruefe('Gilt ab in der Vergangenheit abgelehnt', toasts.at(-1)?.t === 'error');
+  host.querySelector('#spAb').value = '';
+  const vorWeg = protokoll.delete.length;
+  host.querySelector('.sp-version-weg').click();
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  pruefe('Umstellung entfernen löscht genau ihre Zeilen', protokoll.delete.length - vorWeg === abNeu.length && !host.querySelector('.sp-versionen'));
 } catch (e) {
   pruefe(`Ausnahme: ${e.message}`, false);
 }

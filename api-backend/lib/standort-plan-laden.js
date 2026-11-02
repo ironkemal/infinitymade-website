@@ -25,7 +25,7 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
   try {
     const { data, error } = await supabase
       .from('employee_standort_plan')
-      .select('employee_id,business_id,weekday,datum')
+      .select('employee_id,business_id,weekday,datum,gueltig_ab')
       .eq('owner_id', ownerId)
       .in('employee_id', employeeIds);
     if (error) {

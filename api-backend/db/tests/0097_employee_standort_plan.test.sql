@@ -1,5 +1,5 @@
 -- 0097: employee_standort_plan — Mandantengrenze, Rollen, Eindeutigkeit, kein anon.
--- Run only against disposable PostgreSQL after the complete migration chain.
+-- Run only against disposable PostgreSQL after the complete migration chain (ab 0098: Konfliktziel inkl. gueltig_ab).
 -- Synthetic fixtures only; every data change rolls back.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -47,7 +47,7 @@ INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekd
 -- Upsert-Ziel fuer PostgREST onConflict
 INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekday)
   VALUES ('11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',1)
-  ON CONFLICT (employee_id, business_id, weekday, datum) DO UPDATE SET updated_at = now();
+  ON CONFLICT (employee_id, business_id, weekday, datum, gueltig_ab) DO UPDATE SET updated_at = now();
 
 DO $$ BEGIN
   INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekday)
@@ -74,6 +74,21 @@ DO $$ BEGIN
     VALUES ('11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',7);
   RAISE EXCEPTION 'weekday 7 erlaubt';
 EXCEPTION WHEN check_violation THEN NULL; END $$;
+
+-- 0098: Versionen — gleiche Zeile mit anderem gueltig_ab erlaubt, Einzeltag mit gueltig_ab verboten
+INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekday,gueltig_ab)
+  VALUES ('11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',1,'2027-01-05');
+DO $$ BEGIN
+  INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekday,gueltig_ab)
+    VALUES ('11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',1,'2027-01-05');
+  RAISE EXCEPTION 'Doppelte Version erlaubt';
+EXCEPTION WHEN unique_violation THEN NULL; END $$;
+DO $$ BEGIN
+  INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,datum,gueltig_ab)
+    VALUES ('11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','2026-12-01','2026-12-01');
+  RAISE EXCEPTION 'Einzeltag mit gueltig_ab erlaubt';
+EXCEPTION WHEN check_violation THEN NULL; END $$;
+DELETE FROM public.employee_standort_plan WHERE gueltig_ab IS NOT NULL;
 
 -- Mandantengrenze: fremder Standort, fremder Mitarbeiter, fremder owner_id
 DO $$ BEGIN
@@ -167,7 +182,7 @@ END $$;
 DO $$ BEGIN
   INSERT INTO public.employee_standort_plan(owner_id,employee_id,business_id,weekday)
     VALUES ('22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111112','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',1)
-    ON CONFLICT (employee_id, business_id, weekday, datum) DO UPDATE SET updated_at = now();
+    ON CONFLICT (employee_id, business_id, weekday, datum, gueltig_ab) DO UPDATE SET updated_at = now();
   RAISE EXCEPTION 'fremder Inhaber darf per ON CONFLICT schreiben';
 EXCEPTION WHEN insufficient_privilege THEN NULL; END $$;
 SELECT pg_temp.als('22222222-2222-4222-8222-222222222223');

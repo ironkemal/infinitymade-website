@@ -40,7 +40,7 @@ test('Aenderung: Muster umstellen loescht alte Zeile, legt neue an, vergangene E
   const soll = sollZeilen({ muster: new Set(['1|A', '3|B']), einzeltage: new Map([['2026-11-10', ['A']]]) }, { ownerId: 'o', empId: 'e1' });
   const { loeschen, neu } = planAenderung(alt, soll, HEUTE);
   assert.deepEqual(loeschen, ['w2']);
-  assert.deepEqual(neu, [{ owner_id: 'o', employee_id: 'e1', business_id: 'B', weekday: 3, datum: null }]);
+  assert.deepEqual(neu, [{ owner_id: 'o', employee_id: 'e1', business_id: 'B', weekday: 3, datum: null, gueltig_ab: null }]);
 });
 
 test('Aenderung: unveraendert -> nichts zu tun', () => {
@@ -97,4 +97,54 @@ test('Warnliste: leer ohne Konflikt, sonst Patient, Leistung, gebuchter Standort
   assert.match(html, /gebucht: Praxis B/);
   assert.match(html, /KG/);
   assert.ok(!html.includes('<b>'));
+});
+
+// ── Versionen „gilt ab" (0098) ───────────────────────────────────────────────
+import { aktuelleVersion, kuenftigeVersionen, planNachher, naechsterTag, musterText } from './standort-plan.js';
+
+const versioniert = [
+  { id: 'v0', employee_id: 'e1', business_id: 'A', weekday: 1, datum: null, gueltig_ab: null },
+  { id: 'v1', employee_id: 'e1', business_id: 'B', weekday: 1, datum: null, gueltig_ab: '2026-10-01' },
+  { id: 'v2', employee_id: 'e1', business_id: 'A', weekday: 3, datum: null, gueltig_ab: '2027-01-05' },
+];
+
+test('Versionen: aktuelle = groesstes gueltig_ab <= heute, kuenftige aufsteigend', () => {
+  assert.equal(aktuelleVersion(versioniert, HEUTE), '2026-10-01');
+  assert.equal(aktuelleVersion(versioniert.slice(0, 1), HEUTE), null);
+  assert.equal(aktuelleVersion([], HEUTE), undefined);
+  assert.deepEqual(kuenftigeVersionen(versioniert, HEUTE), ['2027-01-05']);
+  assert.deepEqual([...musterAusZeilen(versioniert, '2026-10-01')], ['1|B']);
+});
+
+test('Versionen: geplante Umstellung aendert nur ihre Version, heutiges Muster bleibt', () => {
+  const soll = sollZeilen({ muster: new Set(['3|B']), einzeltage: new Map() }, { ownerId: 'o', empId: 'e1' }, '2027-01-05');
+  const { loeschen, neu } = planAenderung(versioniert, soll, HEUTE, { version: '2027-01-05' });
+  assert.deepEqual(loeschen, ['v2']);
+  assert.deepEqual(neu.map(z => [z.weekday, z.business_id, z.gueltig_ab]), [[3, 'B', '2027-01-05']]);
+});
+
+test('Versionen: aktuelle Version leer speichern raeumt abgeloeste alte mit ab (keine Wiederauferstehung)', () => {
+  const soll = sollZeilen({ muster: new Set(), einzeltage: new Map() }, { ownerId: 'o', empId: 'e1' }, '2026-10-01');
+  const { loeschen } = planAenderung(versioniert, soll, HEUTE, { version: '2026-10-01', aufraeumen: true });
+  assert.deepEqual(loeschen.sort(), ['v0', 'v1']);
+});
+
+test('Versionen: Umstellung entfernen loescht nur deren Zeilen; planNachher fuer die Warnliste', () => {
+  const soll = sollZeilen({ muster: musterAusZeilen(versioniert, '2026-10-01'), einzeltage: new Map() }, { ownerId: 'o', empId: 'e1' }, '2026-10-01');
+  const aend = planAenderung(versioniert, soll, HEUTE, { version: '2026-10-01', entfernteVersionen: ['2027-01-05'] });
+  assert.deepEqual(aend.loeschen, ['v2']);
+  assert.deepEqual(planNachher(versioniert, aend).map(z => z.id), ['v0', 'v1']);
+});
+
+test('Versionen: Warnliste sieht kuenftige Version (Termin nach Stichtag am alten Standort)', () => {
+  const nachher = [...versioniert.slice(0, 2), { employee_id: 'e1', business_id: 'A', weekday: 1, datum: null, gueltig_ab: '2027-01-05' }];
+  const t = [{ id: 'vor', start_time: '2026-12-28T09:00:00Z', business_id: 'B' }, { id: 'nach', start_time: '2027-01-11T09:00:00Z', business_id: 'B' }];
+  assert.deepEqual(konflikte(t, nachher, 'e1', ['A', 'B']).map(x => x.id), ['nach']);
+});
+
+test('Helfer: naechsterTag ueber Jahreswechsel, musterText', () => {
+  assert.equal(naechsterTag('2026-12-31'), '2027-01-01');
+  assert.equal(naechsterTag('kaputt'), '');
+  assert.equal(musterText(new Set(['3|B', '1|A']), id => ({ A: 'Nord', B: 'Süd' })[id]), 'Mo Nord · Mi Süd');
+  assert.equal(musterText(new Set(), () => ''), 'kein Muster (alle Standorte)');
 });

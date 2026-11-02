@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-11-01",
+ "erzeugt": "2026-11-02",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-11-01)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-01)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-02)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-02)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 104,
@@ -3409,7 +3409,7 @@
     {
      "name": "holeDaten",
      "file": "module/planung-bruecke.js",
-     "start": 75,
+     "start": 76,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4301,7 +4301,7 @@
     {
      "name": "mountStandortPlan",
      "file": "module/standort-plan.js",
-     "start": 172,
+     "start": 244,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4349,7 +4349,7 @@
     {
      "name": "mountStreifen",
      "file": "module/planung-bruecke.js",
-     "start": 66,
+     "start": 67,
      "module": [],
      "uiPfad": []
     },
@@ -5173,7 +5173,7 @@
     {
      "name": "warnungPruefen",
      "file": "module/standort-plan.js",
-     "start": 197,
+     "start": 271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8640,7 +8640,7 @@
     {
      "name": "mountStandortplanReiter",
      "file": "module/planung-bruecke.js",
-     "start": 186,
+     "start": 187,
      "module": [],
      "uiPfad": []
     }
@@ -9681,7 +9681,7 @@
   },
   {
    "name": "employee_standort_plan",
-   "spalten": 8,
+   "spalten": 9,
    "fkRaus": [
     "businesses",
     "profiles"
@@ -9801,7 +9801,7 @@
     {
      "name": "name",
      "file": "module/standort-plan.js",
-     "start": 180,
+     "start": 252,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9851,7 +9851,7 @@
     {
      "name": "mountStandortPlan",
      "file": "module/standort-plan.js",
-     "start": 172,
+     "start": 244,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9903,7 +9903,7 @@
     {
      "name": "speichern",
      "file": "module/standort-plan.js",
-     "start": 238,
+     "start": 317,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14539,7 +14539,7 @@
   },
   {
    "name": "mitarbeiter_anstellung",
-   "spalten": 7,
+   "spalten": 8,
    "fkRaus": [
     "profiles"
    ],
@@ -14609,6 +14609,26 @@
    ],
    "schreiber": [
     {
+     "name": "austrittVermerken",
+     "file": "api-backend/routes/mitarbeiter-zugang.js",
+     "start": 345,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "mountEhemalige",
+     "file": "module/ehemalige-mitarbeiter.js",
+     "start": 71,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "speichereAnstellung",
      "file": "module/anstellung.js",
      "start": 234,
@@ -14661,7 +14681,9 @@
     }
    ],
    "dateien": [
-    "module/anstellung.js"
+    "api-backend/routes/mitarbeiter-zugang.js",
+    "module/anstellung.js",
+    "module/ehemalige-mitarbeiter.js"
    ],
    "module": [
     "abrechnung",
@@ -21644,6 +21666,13 @@
      "uiPfad": []
     },
     {
+     "name": "mountEhemalige",
+     "file": "module/ehemalige-mitarbeiter.js",
+     "start": 71,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
      "start": 1288,
@@ -23374,6 +23403,7 @@
     "module/branding-ui.js",
     "module/buchungskonten.js",
     "module/datev-einstellungen.js",
+    "module/ehemalige-mitarbeiter.js",
     "module/fahrtenbuch-export.js",
     "module/fax-einstellungen.js",
     "module/fussbefund.js",
@@ -25718,6 +25748,16 @@
      ]
     },
     {
+     "name": "mountEhemalige",
+     "file": "module/ehemalige-mitarbeiter.js",
+     "start": 71,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "openEmpDetail",
      "file": "dashboard.js",
      "start": 9992,
@@ -25782,7 +25822,8 @@
    "dateien": [
     "api-backend/server.js",
     "dashboard.js",
-    "module/abwesenheit.js"
+    "module/abwesenheit.js",
+    "module/ehemalige-mitarbeiter.js"
    ],
    "module": [
     "abrechnung",

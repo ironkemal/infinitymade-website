@@ -139,6 +139,19 @@ Yavuz Kemal Demir – InfinityMade tritt **doppelt** in Erscheinung:
 | **TOM-Verweis** | siehe TOM.md; guvenlik S-52 bis S-56 (Header, Mail-Escaping, Tagesdeckel, Token) |
 | **Offen** | Ob der Löschjob auf dem Produktivsystem läuft, ist nicht geprüft (legal-de 12.10.2026) |
 
+## Verarbeitung 8 — Mitarbeiter-Planung (im Auftrag, 01.11.2026)
+
+| Feld | Inhalt |
+|---|---|
+| Zweck | Dienst- und Standortplanung, Urlaubsübersicht und Resturlaub im Praxisteam (Physio-Pilot M4/M5) |
+| Betroffene | Mitarbeiter der Praxis |
+| Daten | Beschäftigungsumfang, Wochenstunden, Urlaubsanspruch (`mitarbeiter_anstellung`), Abwesenheiten inkl. Krankheitstage ohne Diagnose (`time_offs`), Einsatzplan je Standort (`employee_standort_plan`), Austrittsdatum |
+| Rechtsgrundlage (Praxis) | Art. 6 Abs. 1 lit. b DSGVO, § 26 BDSG; Krankheitstage Art. 9 Abs. 2 lit. b DSGVO i. V. m. § 26 Abs. 3 BDSG |
+| Rolle Praxura | Auftragsverarbeiter (SaaS); in der Box keine Rolle |
+| Zugriff | Inhaber alles; Mitarbeiter nur eigene Anstellung/Planzeilen (RLS); Kollegen sehen keine Vertragsdaten |
+| Löschung | Einsatzplan beim Entfernen des Mitarbeiters automatisch. Anstellung + Abwesenheiten: empfohlen 31.12. des dritten Kalenderjahres nach dem Austrittsjahr (§§ 195, 199 BGB, Urlaubsabgeltung § 7 Abs. 4 BUrlG; legal-de 01.11.2026), Löschung durch den Inhaber in „Ehemalige Mitarbeiter"; Kontolöschung über `loeschen.js` |
+| Hinweis | Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem; gesetzliche Aufbewahrung erfolgt in der Lohnbuchhaltung der Praxis |
+
 ## Auftragsverarbeiter / Sub-Prozessoren
 
 | Anbieter | Zweck | Sitz / Region | AVV vorhanden | Drittland |

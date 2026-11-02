@@ -4,7 +4,7 @@
 // leeres Ergebnis -> Spalten unveraendert (altes Verhalten), ohne Toast und ohne Konsolenmeldung.
 // Nach einem Fehler wird nicht erneut angefragt (kein Request je Kalender-Aufbau).
 // Der Plan blendet nur AUS, er fuegt nie Spalten hinzu (Zuordnung bleibt Obergrenze).
-import { istAmStandort } from './standort-plan-regel.js';
+import { istAmStandort } from './standort-plan-regel.js?v=20261102a';
 
 const SPERRE_FEHLT_MS = 10 * 60 * 1000;
 const SPERRE_FEHLER_MS = 60 * 1000;
@@ -22,7 +22,7 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
   try {
     const { data, error } = await supabase
       .from('employee_standort_plan')
-      .select('employee_id,business_id,weekday,datum')
+      .select('employee_id,business_id,weekday,datum,gueltig_ab')
       .eq('owner_id', ownerId)
       .in('employee_id', employeeIds);
     if (error) {

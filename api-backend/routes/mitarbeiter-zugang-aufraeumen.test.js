@@ -49,3 +49,44 @@ test('DB-Fehler oder Ausnahme -> false, wirft nicht (Sperre bleibt gueltig)', as
     console.error = fehler;
   }
 });
+
+const { austrittVermerken } = await import('./mitarbeiter-zugang.js');
+
+function anstellungDb(vorhanden, { fehler = null } = {}) {
+  const log = [];
+  return {
+    log,
+    from(tabelle) {
+      const a = { tabelle, op: 'select', filter: {}, wert: null, opt: null };
+      log.push(a);
+      const b = {
+        select() { return b; }, eq(k, v) { a.filter[k] = v; return b; },
+        maybeSingle() { return Promise.resolve(fehler ? { data: null, error: fehler } : { data: vorhanden, error: null }); },
+        upsert(wert, opt) { a.op = 'upsert'; a.wert = wert; a.opt = opt; return Promise.resolve({ error: null }); },
+      };
+      return b;
+    },
+  };
+}
+
+test('Austritt: ohne Datum wird heute vermerkt (Upsert auf employee_id, eigener Mandant)', async () => {
+  const db = anstellungDb(null);
+  assert.equal(await austrittVermerken(db, { ownerId: 'o1', employeeId: 'e1', heute: '2026-11-02' }), true);
+  const up = db.log.find(x => x.op === 'upsert');
+  assert.deepEqual(up.wert, { employee_id: 'e1', owner_id: 'o1', austritt_am: '2026-11-02' });
+  assert.deepEqual(up.opt, { onConflict: 'employee_id' });
+  assert.deepEqual(db.log[0].filter, { owner_id: 'o1', employee_id: 'e1' });
+});
+
+test('Austritt: vorhandenes Datum wird nicht verschoben', async () => {
+  const db = anstellungDb({ austritt_am: '2026-05-01' });
+  assert.equal(await austrittVermerken(db, { ownerId: 'o1', employeeId: 'e1', heute: '2026-11-02' }), true);
+  assert.ok(!db.log.some(x => x.op === 'upsert'));
+});
+
+test('Austritt: Lesefehler -> false, wirft nicht', async () => {
+  const fehler = console.error; console.error = () => {};
+  try {
+    assert.equal(await austrittVermerken(anstellungDb(null, { fehler: { code: 'X' } }), { ownerId: 'o1', employeeId: 'e1' }), false);
+  } finally { console.error = fehler; }
+});

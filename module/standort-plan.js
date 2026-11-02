@@ -9,9 +9,9 @@
  * „Versetzen" = Einzeltage für einen Zeitraum (von–bis) an anderen Standort(en). Termine werden NIE
  * automatisch verschoben: vor dem Speichern zeigt eine Warnliste die künftigen Termine, die danach am
  * falschen Standort lägen; jede Zeile öffnet den Termin zum Umbuchen (physio 01.11.2026).
- * Ein „gültig ab"-Datum für Wochenmuster gibt es nicht (keine Spalte in 0097) — Änderungen gelten sofort.
+ * Wochenmuster in Versionen (gueltig_ab, 0098): „Änderung gilt ab" legt eine geplante Umstellung an.
  */
-import { istAmStandort } from './standort-plan-regel.js';
+import { istAmStandort } from './standort-plan-regel.js?v=20261102a';
 
 /** Anzeige Mo..So, gespeichert wie JS getDay (0 = Sonntag). */
 export const WOCHENTAGE = [
@@ -32,11 +32,44 @@ function escapeHtml(s) {
 
 const musterSchluessel = (weekday, businessId) => `${weekday}|${businessId}`;
 
-/** Wochenmuster-Zeilen -> Set "weekday|business_id". */
-export function musterAusZeilen(zeilen) {
+/** gueltig_ab einer Wochenzeile als 'YYYY-MM-DD' oder null (= seit immer). */
+export function gueltigAb(wert) {
+  if (typeof wert !== 'string') return null;
+  const tag = wert.slice(0, 10);
+  return DATUM_RE.test(tag) ? tag : null;
+}
+
+const istWoche = z => z && z.datum == null && z.weekday != null && z.weekday !== '' && z.business_id;
+/** null zählt als „älter als jedes Datum". */
+const aelter = (a, b) => (a === null ? b !== null : b !== null && a < b);
+
+/** Heute gültige Musterversion (größtes gueltig_ab <= heute, null = seit immer); undefined = gar kein Muster. */
+export function aktuelleVersion(zeilen, heute) {
+  let version;
+  for (const z of Array.isArray(zeilen) ? zeilen : []) {
+    if (!istWoche(z)) continue;
+    const g = gueltigAb(z.gueltig_ab);
+    if (g !== null && g > heute) continue;
+    if (version === undefined || aelter(version, g)) version = g;
+  }
+  return version;
+}
+
+/** Künftige Versionen (gueltig_ab > heute), aufsteigend. */
+export function kuenftigeVersionen(zeilen, heute) {
+  const set = new Set();
+  for (const z of Array.isArray(zeilen) ? zeilen : []) {
+    const g = istWoche(z) ? gueltigAb(z.gueltig_ab) : null;
+    if (g !== null && g > heute) set.add(g);
+  }
+  return [...set].sort();
+}
+
+/** Wochenmuster-Zeilen einer Version -> Set "weekday|business_id". Ohne Version: alle mit gueltig_ab null. */
+export function musterAusZeilen(zeilen, version = null) {
   const muster = new Set();
   for (const z of Array.isArray(zeilen) ? zeilen : []) {
-    if (z && z.datum == null && z.weekday != null && z.business_id) muster.add(musterSchluessel(Number(z.weekday), z.business_id));
+    if (istWoche(z) && gueltigAb(z.gueltig_ab) === (version ?? null)) muster.add(musterSchluessel(Number(z.weekday), z.business_id));
   }
   return muster;
 }
@@ -69,32 +102,50 @@ export function tageImZeitraum(von, bis, max = MAX_VERSETZEN_TAGE) {
 }
 
 /**
- * Soll-Zustand -> Zeilen für employee_standort_plan. Vergangene Einzeltage gehören nicht zum Soll und
- * werden von planAenderung nie gelöscht (Nachvollziehbarkeit, wer wann wo war).
+ * Soll-Zustand -> Zeilen für employee_standort_plan. Wochenzeilen tragen die bearbeitete Version (gueltig_ab).
+ * Vergangene Einzeltage gehören nicht zum Soll und werden von planAenderung nie gelöscht.
  */
-export function sollZeilen({ muster, einzeltage }, { ownerId, empId }) {
+export function sollZeilen({ muster, einzeltage }, { ownerId, empId }, version = null) {
   const zeilen = [];
   for (const schluessel of muster || []) {
     const [weekday, businessId] = schluessel.split('|');
-    zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: Number(weekday), datum: null });
+    zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: Number(weekday), datum: null, gueltig_ab: version ?? null });
   }
   for (const [datum, ids] of einzeltage || []) {
-    for (const businessId of ids) zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: null, datum });
+    for (const businessId of ids) zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: null, datum, gueltig_ab: null });
   }
   return zeilen;
 }
 
-const zeilenSchluessel = z => `${z.business_id}|${z.weekday ?? ''}|${z.datum ? String(z.datum).slice(0, 10) : ''}`;
+const zeilenSchluessel = z => `${z.business_id}|${z.weekday ?? ''}|${z.datum ? String(z.datum).slice(0, 10) : ''}|${istWoche(z) ? gueltigAb(z.gueltig_ab) ?? '' : ''}`;
 
-/** Unterschied alt -> soll: was löschen (ids), was neu anlegen. Vergangene Einzeltage bleiben. */
-export function planAenderung(alteZeilen, soll, heute) {
+/**
+ * Unterschied alt -> soll: was löschen (ids), was neu anlegen.
+ * Betrachtet nur: künftige Einzeltage, die bearbeitete Version, ausdrücklich entfernte Versionen und — wenn
+ * die heute gültige Version bearbeitet wird (aufraeumen) — ältere, abgelöste Versionen. Sonst würde eine leer
+ * gespeicherte aktuelle Version eine alte wieder in Kraft setzen. Andere künftige Versionen bleiben unberührt.
+ */
+export function planAenderung(alteZeilen, soll, heute, { version = null, entfernteVersionen = [], aufraeumen = false } = {}) {
+  const entfernt = new Set(entfernteVersionen);
+  const relevant = (Array.isArray(alteZeilen) ? alteZeilen : []).filter((z) => {
+    if (!z) return false;
+    if (typeof z.datum === 'string') return !(heute && z.datum.slice(0, 10) < heute);
+    if (!istWoche(z)) return false;
+    const g = gueltigAb(z.gueltig_ab);
+    return g === (version ?? null) || entfernt.has(g) || (aufraeumen && aelter(g, version ?? null));
+  });
   const sollMap = new Map(soll.map(z => [zeilenSchluessel(z), z]));
-  const alt = (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !(typeof z.datum === 'string' && heute && z.datum.slice(0, 10) < heute));
-  const altSchluessel = new Set(alt.map(zeilenSchluessel));
+  const altSchluessel = new Set(relevant.map(zeilenSchluessel));
   return {
-    loeschen: alt.filter(z => !sollMap.has(zeilenSchluessel(z))).map(z => z.id).filter(Boolean),
+    loeschen: relevant.filter(z => !sollMap.has(zeilenSchluessel(z))).map(z => z.id).filter(Boolean),
     neu: soll.filter(z => !altSchluessel.has(zeilenSchluessel(z))),
   };
+}
+
+/** Planzeilen nach der Änderung (für die Warnliste über alle Versionen). */
+export function planNachher(alteZeilen, { loeschen, neu }) {
+  const weg = new Set(loeschen);
+  return (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !weg.has(z.id)).concat(neu);
 }
 
 /**
@@ -129,14 +180,21 @@ export function warnlisteHtml(liste, standortName) {
     <ul>${zeilen}</ul></div>`;
 }
 
-export function standortPlanHtml({ standorte, muster, einzeltage, heute }) {
+const datumDe = tag => new Date(`${tag}T12:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+/** Kurzbeschreibung eines Musters: "Mo Nord · Mi Süd". */
+export function musterText(muster, name) {
+  return WOCHENTAGE.flatMap(w => [...muster].filter(k => k.startsWith(`${w.weekday}|`)).map(k => `${w.kurz} ${name(k.split('|')[1])}`)).join(' · ') || 'kein Muster (alle Standorte)';
+}
+
+export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuellSeit = null, versionen = [] }) {
   const name = id => standorte.find(s => s.id === id)?.business_name || 'Standort';
   const kopf = WOCHENTAGE.map(w => `<th scope="col">${w.kurz}</th>`).join('');
   const reihen = standorte.map(s => `<tr><th scope="row">${escapeHtml(s.business_name)}</th>${WOCHENTAGE.map(w => `
     <td><input type="checkbox" class="sp-muster" data-weekday="${w.weekday}" data-standort="${escapeHtml(s.id)}"
       aria-label="${w.kurz} ${escapeHtml(s.business_name)}" ${muster.has(musterSchluessel(w.weekday, s.id)) ? 'checked' : ''}></td>`).join('')}</tr>`).join('');
   const tage = [...einzeltage.entries()].map(([datum, ids]) => `
-    <li><span>${escapeHtml(new Date(`${datum}T12:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }))}</span>
+    <li><span>${escapeHtml(datumDe(datum))}</span>
       <span>${ids.map(id => escapeHtml(name(id))).join(', ')}</span>
       <button type="button" class="btn-ghost-sm sp-tag-weg" data-datum="${escapeHtml(datum)}" aria-label="Einzeltag ${escapeHtml(datum)} entfernen">Entfernen</button></li>`).join('');
   const auswahl = standorte.map(s => `<label class="sp-ziel"><input type="checkbox" class="sp-versetzen-ziel" value="${escapeHtml(s.id)}"> ${escapeHtml(s.business_name)}</label>`).join('');
@@ -144,7 +202,15 @@ export function standortPlanHtml({ standorte, muster, einzeltage, heute }) {
   <h4>Wochenmuster</h4>
   <p class="form-hint">Häkchen = an diesem Wochentag an diesem Standort. Ein Tag ohne Häkchen: wie bisher an allen Standorten.
     Ob an einem Tag gearbeitet wird, regeln die Arbeitszeiten.</p>
+  <p class="form-hint">Angezeigt: heute gültiges Muster${aktuellSeit ? ` (gilt seit ${escapeHtml(datumDe(aktuellSeit))})` : ''}.</p>
   <div class="sp-tabelle-wrap"><table class="sp-tabelle"><thead><tr><th></th>${kopf}</tr></thead><tbody>${reihen}</tbody></table></div>
+  <div class="sp-ab">
+    <label>Änderung gilt ab <input type="date" class="form-input" id="spAb" min="${escapeHtml(naechsterTag(heute))}"></label>
+    <span class="form-hint">Leer = sofort. Mit Datum wird das Raster als geplante Umstellung gespeichert, das heutige Muster gilt bis dahin weiter. Gleiches Datum erneut speichern ersetzt die Umstellung.</span>
+  </div>
+  ${versionen.length ? `<ul class="sp-tage sp-versionen">${versionen.map(v => `
+    <li><span>ab ${escapeHtml(datumDe(v.ab))}</span><span>${escapeHtml(musterText(v.muster, name))}</span>
+      <button type="button" class="btn-ghost-sm sp-version-weg" data-version="${escapeHtml(v.ab)}" aria-label="Umstellung ab ${escapeHtml(v.ab)} entfernen">Entfernen</button></li>`).join('')}</ul>` : ''}
 
   <h4>Versetzen (einzelne Tage)</h4>
   <p class="form-hint">Für einen Tag oder Zeitraum an anderen Standort(en). Gilt vor dem Wochenmuster.</p>
@@ -161,7 +227,13 @@ export function standortPlanHtml({ standorte, muster, einzeltage, heute }) {
 </div>`;
 }
 
-const PLAN_SPALTEN = 'id,employee_id,business_id,weekday,datum';
+const PLAN_SPALTEN = 'id,employee_id,business_id,weekday,datum,gueltig_ab';
+
+/** Folgetag als 'YYYY-MM-DD' (UTC-Rechnung, sommerzeitfest). */
+export function naechsterTag(tag) {
+  if (!DATUM_RE.test(tag || '')) return '';
+  return new Date(new Date(`${tag}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10);
+}
 const TERMIN_SPALTEN = 'id,start_time,customer_name,business_id,status,hausbesuch,services(title)';
 
 /**
@@ -188,19 +260,21 @@ export async function mountStandortPlan(container, deps = {}) {
     return;
   }
 
-  const zustand = { muster: musterAusZeilen(alt), einzeltage: einzeltageAusZeilen(alt, heute) };
+  const version = aktuelleVersion(alt, heute) ?? null;
+  const zustand = { muster: musterAusZeilen(alt, version), einzeltage: einzeltageAusZeilen(alt, heute), entfernt: new Set() };
   const zeichnen = () => {
-    container.innerHTML = standortPlanHtml({ standorte, muster: zustand.muster, einzeltage: zustand.einzeltage, heute });
+    const versionen = kuenftigeVersionen(alt, heute).filter(ab => !zustand.entfernt.has(ab)).map(ab => ({ ab, muster: musterAusZeilen(alt, ab) }));
+    container.innerHTML = standortPlanHtml({ standorte, muster: zustand.muster, einzeltage: zustand.einzeltage, heute, aktuellSeit: version, versionen });
     verdrahten();
   };
 
-  async function warnungPruefen(soll) {
+  async function warnungPruefen(nachher) {
     const bis = new Date(Date.now() + WARN_TAGE * 86400000).toISOString();
     const { data, error: e } = await supabase.from('bookings').select(TERMIN_SPALTEN)
       .eq('owner_id', ownerId).eq('user_id', empId).gte('start_time', new Date().toISOString()).lte('start_time', bis)
       .neq('status', 'cancelled').order('start_time').limit(500);
     if (e) return null;
-    return konflikte(data, soll.map(z => ({ ...z })), empId, alleIds);
+    return konflikte(data, nachher, empId, alleIds);
   }
 
   function warnungZeigen(liste) {
@@ -218,6 +292,11 @@ export async function mountStandortPlan(container, deps = {}) {
     container.querySelectorAll('.sp-tag-weg').forEach(b => b.addEventListener('click', () => {
       zustand.einzeltage.delete(b.dataset.datum);
       zeichnen();
+    }));
+    container.querySelectorAll('.sp-version-weg').forEach(b => b.addEventListener('click', () => {
+      zustand.entfernt.add(b.dataset.version);
+      zeichnen();
+      showToast('Umstellung entfernt – noch speichern.');
     }));
     container.querySelector('#spVersetzenBtn')?.addEventListener('click', () => {
       const von = container.querySelector('#spVon')?.value;
@@ -239,10 +318,17 @@ export async function mountStandortPlan(container, deps = {}) {
     const btn = container.querySelector('#spSpeichernBtn');
     if (btn) btn.disabled = true;
     try {
-      const soll = sollZeilen(zustand, { ownerId, empId });
-      const { loeschen, neu } = planAenderung(alt, soll, heute);
+      const ab = container.querySelector('#spAb')?.value || '';
+      if (ab && (!DATUM_RE.test(ab) || ab <= heute)) { showToast('„Gilt ab" muss in der Zukunft liegen – für sofort leer lassen.', 'error'); return; }
+      const ziel = ab || version;
+      const soll = sollZeilen(zustand, { ownerId, empId }, ziel);
+      // Mit Datum: nur die geplante Version (+ Einzeltage) ändern, das heutige Muster bleibt unberührt.
+      const aenderung = ab
+        ? planAenderung(alt, soll, heute, { version: ab, entfernteVersionen: [...zustand.entfernt] })
+        : planAenderung(alt, soll, heute, { version, entfernteVersionen: [...zustand.entfernt], aufraeumen: true });
+      const { loeschen, neu } = aenderung;
       if (!loeschen.length && !neu.length) { showToast('Keine Änderung.'); return; }
-      const liste = await warnungPruefen(soll);
+      const liste = await warnungPruefen(planNachher(alt, aenderung));
       if (liste === null) { showToast('Termine konnten nicht geprüft werden – nicht gespeichert.', 'error'); return; }
       warnungZeigen(liste);
       if (liste.length && showConfirmModal) {

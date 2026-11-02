@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0097_employee_standort_plan (SaaS, Management-API 01.11.2026)
--- EXPORTED AT:        2026-11-01T18:00:00Z
--- ERZEUGT AM:         2026-11-01
+-- LAST MIGRATION:     0098_standort_plan_gueltig_ab_austritt (SaaS, Management-API 02.11.2026)
+-- EXPORTED AT:        2026-11-02T08:00:00Z
+-- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       104
---   table_columns:       1516
+--   table_columns:       1518
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        191
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_29, realtime.messages_2026_10_30, realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_30, realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -6838,7 +6838,7 @@ CREATE INDEX idx_employee_services_service ON employee_services USING btree (ser
 CREATE INDEX employee_standort_plan_business_idx ON employee_standort_plan USING btree (business_id);
 
 -- Index employee_standort_plan_eindeutig ON public.employee_standort_plan is enforced by constraint
--- DDL: CREATE UNIQUE INDEX employee_standort_plan_eindeutig ON employee_standort_plan USING btree (employee_id, business_id, weekday, datum) NULLS NOT DISTINCT;
+-- DDL: CREATE UNIQUE INDEX employee_standort_plan_eindeutig ON employee_standort_plan USING btree (employee_id, business_id, weekday, datum, gueltig_ab) NULLS NOT DISTINCT;
 
 CREATE INDEX employee_standort_plan_owner_idx ON employee_standort_plan USING btree (owner_id);
 

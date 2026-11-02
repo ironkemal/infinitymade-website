@@ -335,6 +335,29 @@ export async function standortplanAufraeumen(db, { ownerId, employeeId }) {
   }
 }
 
+/**
+ * Austrittsdatum in mitarbeiter_anstellung vermerken (0098) — Basis der Loeschfrist fuer Anstellung und
+ * time_offs (31.12. des dritten Jahres nach Austritt, legal-de; Ansicht module/ehemalige-mitarbeiter.js).
+ * Ein vorhandenes Datum wird nie verschoben (wiederholtes Entfernen darf die Frist nicht verlaengern).
+ * Ohne Anstellungszeile wird eine angelegt (Standardwerte), damit auch reine time_offs eine Frist haben.
+ * @returns {Promise<boolean>}
+ */
+export async function austrittVermerken(db, { ownerId, employeeId, heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }) }) {
+  try {
+    const { data, error } = await db.from('mitarbeiter_anstellung').select('austritt_am')
+      .eq('owner_id', ownerId).eq('employee_id', employeeId).maybeSingle();
+    if (error) throw error;
+    if (data?.austritt_am) return true;
+    const { error: e2 } = await db.from('mitarbeiter_anstellung')
+      .upsert({ employee_id: employeeId, owner_id: ownerId, austritt_am: heute }, { onConflict: 'employee_id' });
+    if (e2) throw e2;
+    return true;
+  } catch (e) {
+    console.error('[mitarbeiter-zugang] Austritt nicht vermerkt:', e?.code || e?.message);
+    return false;
+  }
+}
+
 // ── POST /team/mitarbeiter/:id/entfernen ──────────────────────────────────────
 // Mitarbeiter entfernen: Das Auth-Konto wird für 100 Jahre gesperrt (ban_duration)
 // und aktive Sitzungen werden beendet, aber der Datensatz bleibt in profiles erhalten.
@@ -384,7 +407,8 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
     if (targetProfile.is_active === false) {
       // Nachholen, falls das Aufraeumen beim ersten Entfernen scheiterte (idempotent).
       const planGeloescht = await standortplanAufraeumen(supabase, { ownerId, employeeId: targetId });
-      return res.status(200).json({ ok: true, bereits_entfernt: true, ...(planGeloescht ? {} : { aufraeumen_offen: true }) });
+      const austritt = await austrittVermerken(supabase, { ownerId, employeeId: targetId });
+      return res.status(200).json({ ok: true, bereits_entfernt: true, ...(planGeloescht && austritt ? {} : { aufraeumen_offen: true }) });
     }
 
     // 3. Auth-Konto sperren und Einrichtungscode entwerten
@@ -420,6 +444,7 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
 
     // 6. Einsatzplan aufraeumen (nach der Sperre: die Sperre ist die Schutzmassnahme, das hier nur Ordnung)
     const planGeloescht = await standortplanAufraeumen(supabase, { ownerId, employeeId: targetId });
+    const austritt = await austrittVermerken(supabase, { ownerId, employeeId: targetId });
 
     // 7. Audit-Log & Antwort
     logAccess(supabase, {
@@ -434,7 +459,7 @@ router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, as
       ip: req.ip,
     });
 
-    return res.status(200).json({ ok: true, ...(planGeloescht ? {} : { aufraeumen_offen: true }) });
+    return res.status(200).json({ ok: true, ...(planGeloescht && austritt ? {} : { aufraeumen_offen: true }) });
 
   } catch (err) {
     console.error('[mitarbeiter-zugang] Unerwarteter Fehler beim Entfernen des Mitarbeiters:', err);

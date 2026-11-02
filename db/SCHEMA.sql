@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0097_employee_standort_plan (SaaS, Management-API 01.11.2026)
--- EXPORTED AT:        2026-11-01T18:00:00Z
--- ERZEUGT AM:         2026-11-01
+-- LAST MIGRATION:     0098_standort_plan_gueltig_ab_austritt (SaaS, Management-API 02.11.2026)
+-- EXPORTED AT:        2026-11-02T08:00:00Z
+-- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       104
---   table_columns:       1516
+--   table_columns:       1518
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        191
@@ -1672,7 +1672,8 @@ CREATE TABLE public.employee_standort_plan (
   weekday smallint,
   datum date,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  gueltig_ab date
 );
 --   FK business_id -> businesses(id)
 --   FK employee_id -> profiles(id)
@@ -1686,10 +1687,13 @@ ALTER TABLE ONLY public.employee_standort_plan
   ADD CONSTRAINT employee_standort_plan_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.employee_standort_plan
-  ADD CONSTRAINT employee_standort_plan_eindeutig UNIQUE NULLS NOT DISTINCT (employee_id, business_id, weekday, datum);
+  ADD CONSTRAINT employee_standort_plan_eindeutig UNIQUE NULLS NOT DISTINCT (employee_id, business_id, weekday, datum, gueltig_ab);
 
 ALTER TABLE ONLY public.employee_standort_plan
   ADD CONSTRAINT employee_standort_plan_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_gueltig_check CHECK (datum IS NULL OR gueltig_ab IS NULL);
 
 ALTER TABLE ONLY public.employee_standort_plan
   ADD CONSTRAINT employee_standort_plan_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
@@ -2398,7 +2402,8 @@ CREATE TABLE public.mitarbeiter_anstellung (
   wochenstunden numeric(3,1),
   urlaub_jahrestage integer DEFAULT 30 NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  austritt_am date
 );
 --   FK employee_id -> profiles(id)
 --   FK owner_id -> profiles(id)
