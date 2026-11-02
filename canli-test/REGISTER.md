@@ -2067,3 +2067,12 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - Beide früheren Befunde lokal behoben: Dedup berücksichtigt Buchung und Beginn; SMTP-Fehler mit fehlgeschlagenem Protokoll-Update hinterlässt `IN_ARBEIT`, keinen falschen Status `gesendet`. Unklarer Zustand wird nicht automatisch erneut versendet.
 - Route-Datei-Tests prüfen `ladeLage` und `sendeLauf` direkt mit Stubs. Kein HTTP-End-to-End-Nachweis für Auth/Rate-Limits, kein echter Versand, keine Live-UI-Abnahme.
 - Git nach Fetch: `main` = `origin/main` bei `38c73d9b`, keine Konflikte/kein Rebase. Fremde unversionierte Dateien unverändert belassen.
+
+### S8 HTTP-Integration 02.11.2026 — ausschließlich lokal
+
+- Ergänzt in `api-backend/routes/sondertag-mitteilung.test.js`: echter Express-Router und `requireAuth` über Loopback-HTTP; Supabase-Auth, Tabellen und Mailtransport ausschließlich synthetisch. Unerwartete Auth-Ziele werden im Stub abgewiesen.
+- Sieben HTTP-Fälle: fehlendes/Query-Token; ungültiges Token/deaktivierter Mitarbeiter; Mitarbeiter-Mandant aus Auth trotz fremdem Mandant/Empfänger im Body; fremde Buchungs-ID ohne Versand; ungültige/leere/zu große IDs und Zeitraum; vierter Versandlauf → 429 bei gemeinsamem Owner/Mitarbeiter-Zähler; 31. Vorschau → 429, anderer Mandant weiterhin 200. Vorschau und Versand haben getrennte Limits.
+- Erster Lauf: Teststub verwechselte Service-Role-Header der Profilabfrage mit Benutzer-Token. Stub korrigiert: Profil anhand abgefragter synthetischer User-ID. Kein Produktfehler aus diesem Befund.
+- Danach `node --test api-backend/routes/sondertag-mitteilung.test.js api-backend/lib/sondertag-mitteilung.test.js module/sondertag-mitteilung.test.js module/sondertag-mitteilung-waechter.test.js api-backend/ai/auth.test.js` → **39/39 PASS**, einschließlich HTTP-Elterntest und sieben Untertests.
+- Frühere zwei Backend-Befunde und UI-Anschlussfehler (`cd8b8331`) lokal geschlossen. Dieser Lauf bestätigt auch den vorhandenen UI-Test zum unklaren Status; weitere UI-Arbeit bleibt beim anderen Eigentümer. Keine Änderung an Produktionscode oder Backend-Quota.
+- Weiter ungeprüft: echter Mailversand und Live-UI. Kein Push, keine Live-Aktion. S5/S5b-Zugang und F11-Produktentscheidung bleiben außerhalb dieses lokalen Prüfschritts.

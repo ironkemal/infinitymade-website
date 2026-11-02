@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-process.env.SUPABASE_URL ||= 'http://127.0.0.1:9';
-process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'test-key';
-const { ladeLage, sendeLauf } = await import('./sondertag-mitteilung.js');
+process.env.SUPABASE_URL = 'http://127.0.0.1:9';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-test-key';
+const { ladeLage, sendeLauf, createSondertagMitteilungRouter } = await import('./sondertag-mitteilung.js');
 const { MITTEILUNG_OPTION_TEXT } = await import('../lib/sondertag-mitteilung.js');
 
 const T = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -54,6 +54,115 @@ const basis = () => ({
 });
 
 const jetzt = new Date('2026-12-01T00:00:00Z');
+
+// Echter HTTP-Router inklusive requireAuth; ausschließlich synthetische Auth/DB und Stub-Mail.
+test('HTTP: Auth, Mandant, Eingaben und getrennte Rate-Limits', async t => {
+  const { default: express } = await import('express');
+  const { createServer } = await import('node:http');
+  const originalFetch = globalThis.fetch;
+  const employee = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+  const inactive = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  const other = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+  let authCalls = 0;
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(typeof input === 'string' ? input : input.url || String(input));
+    assert.equal(url.origin, 'http://127.0.0.1:9', 'Kein externer Auth-Aufruf erlaubt');
+    const token = new Headers(init?.headers || input.headers).get('authorization')?.replace('Bearer ', '');
+    if (url.pathname === '/auth/v1/user') {
+      authCalls++;
+      if (token === 'invalid') return Response.json({ message: 'invalid token' }, { status: 401 });
+      return Response.json({ id: token === 'owner' ? T : token === 'inactive' ? inactive : token === 'other' ? other : employee });
+    }
+    assert.equal(url.pathname, '/rest/v1/profiles');
+    const id = url.searchParams.get('id').replace('eq.', '');
+    return Response.json({ id, role: [T, other].includes(id) ? 'owner' : 'employee',
+      owner_id: T, is_active: id !== inactive, plan_status: 'active' });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  async function harness() {
+    const tables = basis();
+    tables.bookings[0].id = ID1;
+    const db = schreibDb(tables);
+    const tr = transport();
+    const queries = [];
+    const from = db.from.bind(db);
+    db.from = name => {
+      const q = from(name); const eq = q.eq;
+      q.eq = (key, value) => { queries.push({ name, key, value }); return eq(key, value); };
+      return q;
+    };
+    const app = express(); app.use(express.json());
+    app.use('/api', createSondertagMitteilungRouter({ supabase: db, transportFabrik: tr.fabrik,
+      env: { SMTP_HOST: 'synthetic.invalid' }, kutu: () => true, jetzt: () => jetzt }));
+    const server = createServer(app);
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise((resolve, reject) => {
+      server.close(error => error ? reject(error) : resolve()); server.closeAllConnections();
+    }));
+    return { db, tr, queries, post: async (route, body = {}, token = 'owner') => {
+      const response = await originalFetch(`http://127.0.0.1:${server.address().port}/api/sondertag/mitteilung/${route}`, {
+        method: 'POST', headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(body),
+      });
+      return { status: response.status, body: await response.json() };
+    } };
+  }
+  const period = { von: '2026-12-24', bis: '2026-12-24' };
+  await t.test('fehlendes Token und Query-Token werden vor DB abgewiesen', async () => {
+    const h = await harness(); const before = authCalls;
+    assert.equal((await h.post('vorschau', period, null)).status, 401);
+    assert.equal((await h.post('senden?token=owner', { ...period, bookingIds: [ID1] }, null)).status, 401);
+    assert.equal(authCalls, before); assert.equal(h.queries.length, 0); assert.equal(h.tr.log.length, 0);
+  });
+  await t.test('ungültiges Token und deaktivierter Mitarbeiter gesperrt', async () => {
+    const h = await harness();
+    assert.equal((await h.post('vorschau', period, 'invalid')).status, 401);
+    assert.equal((await h.post('senden', { ...period, bookingIds: [ID1] }, 'inactive')).status, 403);
+    assert.equal(h.queries.length, 0); assert.equal(h.tr.log.length, 0);
+  });
+  await t.test('Mitarbeiter verwendet Owner-Mandant; Body kann Mandant und Empfänger nicht ersetzen', async () => {
+    const h = await harness();
+    const preview = await h.post('vorschau', { ...period, tenantId: 'fremd' }, 'employee');
+    assert.equal(preview.status, 200); assert.deepEqual(preview.body.mail.map(x => x.bookingId), [ID1]);
+    const result = await h.post('senden', { ...period, bookingIds: [ID1], tenantId: 'fremd', email: 'attacker@example.invalid' }, 'employee');
+    assert.equal(result.status, 200); assert.equal(result.body.gesendet, 1);
+    assert.equal(h.tr.log[0].to, 'a@b.de');
+    assert.equal(h.db.tabellen.termin_mitteilungen[0].owner_id, T);
+    assert.equal(h.db.tabellen.termin_mitteilungen[0].freigegeben_von, employee);
+    assert.ok(h.queries.filter(q => q.key === 'owner_id').every(q => q.value === T));
+  });
+  await t.test('fremde Buchungs-ID bewirkt keinen Versand', async () => {
+    const h = await harness();
+    const r = await h.post('senden', { ...period, bookingIds: ['22222222-2222-4222-8222-222222222222'] });
+    assert.equal(r.status, 200); assert.equal(r.body.abgelehnt, 1); assert.equal(h.tr.log.length, 0);
+  });
+  await t.test('ungültige IDs, leere/zu große Liste und Zeitraum liefern 400', async () => {
+    for (const bookingIds of [[], ['invalid'], Array(201).fill(ID1), 'invalid']) {
+      const h = await harness();
+      assert.equal((await h.post('senden', { ...period, bookingIds })).status, 400);
+      assert.equal(h.queries.length, 0); assert.equal(h.tr.log.length, 0);
+    }
+    const h = await harness();
+    assert.equal((await h.post('vorschau', { von: 'invalid' })).status, 400);
+    assert.equal((await h.post('senden', { von: 'invalid', bookingIds: [ID1] })).status, 400);
+  });
+  await t.test('Senden: vierter Lauf desselben Mandanten liefert 429; Vorschau bleibt nutzbar', async () => {
+    const h = await harness();
+    for (const token of ['owner', 'employee', 'owner'])
+      assert.equal((await h.post('senden', { ...period, bookingIds: [ID1] }, token)).status, 200);
+    assert.equal((await h.post('senden', { ...period, bookingIds: [ID1] }, 'employee')).status, 429);
+    assert.equal(h.tr.log.length, 1);
+    assert.equal((await h.post('vorschau', period)).status, 200);
+  });
+  await t.test('Vorschau: Request 31 liefert 429; anderer Mandant hat eigenen Zähler', async () => {
+    const h = await harness();
+    for (let i = 0; i < 30; i++) assert.equal((await h.post('vorschau', period)).status, 200);
+    assert.equal((await h.post('vorschau', period)).status, 429);
+    assert.equal((await h.post('vorschau', period, 'other')).status, 200);
+    assert.equal(h.tr.log.length, 0);
+  });
+});
 
 test('Lage: nur eigener Mandant; v6 -> Mail, v5 -> Anrufliste; Box mit SMTP', async () => {
   const db = fakeDb(basis());
