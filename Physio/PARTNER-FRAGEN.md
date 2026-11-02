@@ -134,3 +134,10 @@
 - **Cevap "hayır" ise değişen:** Mehrwöchige Vertretung sıksa ayrı "Zeitraum mit eigenem Wochenmuster" (gültig von–bis, sonra eski desene dönüş) gerekir — tabloya `gueltig_bis` + UI'da "befristet versetzen".
 - **Öncelik:** 🟠 her gün sürtünme
 - **Eklendi:** 2026-11-01 (P1, M4) · **Cevap:** —
+
+### #17 — Doppelbehandlung: pro Heilmittel oder pro Rezept?
+- **Soru (Almanca, partnere aynen):** „Wenn auf einem Rezept KG und MT stehen — kreuzt der Arzt „Doppelbehandlung" einmal fürs ganze Rezept an, oder meinen Sie damit je Heilmittel etwas anderes? Und wie nennen Ihre Mitarbeiterinnen am Empfang das Feld?"
+- **Varsayımımız:** Muster 13'te Doppelbehandlung tek kutu (Rezept başına); Zeile başına „D" yalnız Termin-Planlama için. Etiket „D" Empfang için belirsiz → „Doppelb." önerildi.
+- **Cevap "hayır" ise değişen:** Rezept başına ise satır başı D kalkar, tek kutu kalır.
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-02 (P1 ekran incelemesi) · **Cevap:** —

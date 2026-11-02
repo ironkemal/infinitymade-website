@@ -22,6 +22,9 @@
 ## Warteschlange
 
 Status: `offen` · `läuft` · `wartet-GO` · `blockiert` · `fertig`. Reihenfolge = Priorität; blockierte überspringen.
+| F8 | **Live-Test 02.11. (Kemal-Sitzung, canli-test, QA-Tenant):** Terminkalender Woche, ‹/› 3× schnell → Kopf 16.–22.11., Spalten zeigen noch Termine 30.11.–6.12. Langsam sauber. Verdacht: Async-Render-Rennen `module/kalender-woche.js` (alte Antwort überschreibt neue). Register: `canli-test/REGISTER.md` Tour 02.11. | offen | — | fonksiyon-ustasi | Schnelles Blättern zeigt nur Termine der angezeigten Woche |
+| F9 | **Live-Test 02.11.:** Team → Urlaub/Abwesenheit: `.emp-urlaub-body` 230 px in 163 px-Karte, ragt in die Seitenleiste, Art-Auswahl abgeschnitten („Ur“). | offen | — | mobil-ui | Karte umschließt Inhalt, Auswahl lesbar |
+| F10 | **Live-Test 02.11. (niedrig):** Termin-Seitenpanel bleibt beim Wechsel auf Team/Startseite/Verordnungen offen. | offen | — | — | Panel schließt beim Panelwechsel |
 
 | # | Scheibe | Status | Abhängig | Agenten (Pflicht fett) | Fertig wenn |
 |---|---|---|---|---|---|

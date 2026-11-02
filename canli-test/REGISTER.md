@@ -2028,3 +2028,19 @@ Neue Testdaten im QA-Tenant: Serie 10./17./24.11. (14:00, 10.11. auf 15:00 versc
 - [x] Hinweis „Praxura ist kein Lohn- oder Arbeitszeiterfassungssystem …“ in der Anstellungs-Karte sichtbar.
 - [ ] **S5 Standortplan-UI NICHT geprüft:** Das QA-Tenant hat nur 1 Standort, und „Geschäfte/Standorte“ in den Einstellungen gibt es nur im Enterprise-Tarif (`isEnterprise()`, `renderBusinessesSection`). Reiter „Standorte“ ist erwartungsgemäß nicht sichtbar. Voraussetzung für Schritte 2–9: QA-Tenant auf Enterprise stellen (Entscheidung Melih, Tarifänderung) und 2. Standort anlegen.
 - [ ] Team-Aufräumen (Entfernen eines Mitarbeiters löscht Standortplan, Anstellung bleibt): NICHT geprüft, braucht Test-Mitarbeiter und Entfernen (Löschen) = GO von Melih.
+
+### Live-Test 2026-11-02 (Commit affb807a: Faz D Regression, Muster-13, Einwilligung, CSV-Import) — QA-Tenant Podologie, 1440 + 390 px
+Kapılar: Backend 200, dashboard.js?v=20261101st (yerel = canlı, ilk bakışta canlı hâlâ k10b, ~2 dk sonra indi), Oturum TEST-Podologie QA.
+- [x] Terminkalender Tag/Woche/Monat rendern, Konsol 0 Fehler. Neuer Termin (Patient + Leistung + Von) speichert, „Gespeichert.“, nach Neuladen im Monats-/Wochenblick da, Übersicht „Letzte Aktivität“ zeigt ihn.
+- [x] Woche: Drag&Drop gibt es nicht (Klick öffnet Aktions-Panel, „Verschieben“-Knopf) — Beobachtung, kein Fehler.
+- [x] Team → Urlaub/Abwesenheit: Eintrag 28.–29.12.2026 gespeichert, Resttage 30 → 28.
+- [x] Geburtsdatum TT.MM.JJJJ in Termin-Patientensuche, Startseite-Aufgaben (Patient verknüpfen), Patienten-Tabelle. Auswahl im Termin-Modal übernimmt richtigen Patienten (Name + Geb. im Feld).
+- [x] Muster-13 (Podologie): „+ weiteres Heilmittel“ nicht sichtbar (im DOM vorhanden, hidden). Bestehende Podologie-/BG-VO öffnen + „Als Entwurf speichern“ ok.
+- [x] Termin ↔ VO: Start 01.10. + VO vom 15.10. → „Dieser Termin liegt vor dem Ausstellungsdatum der Verordnung und ist nicht abrechenbar.“, VO nicht gewählt; Start 25.11. → „Noch 6 von 6 Einheiten offen.“. Im VO-Detail „Termine ohne Verordnung“: Vor-Ausstellung-Termine grau, ohne „zuordnen“.
+- [x] /api/config (Vercel + Backend): diktat_verfuegbar=false; Diktat-Knopf in „Neue Mail“ nicht sichtbar.
+- [x] CSV-Import: Spaltenzuordnung, Vorschau (1 ok / 1 gelb / 1 rot, Zusammenfassung, Einwilligungs-Hinweis wörtlich), nicht importiert, Modal geschlossen.
+- [x] Einwilligung: Schritt 2 „Die Praxis darf mich per E-Mail an Termine erinnern und über Terminänderungen oder -absagen … informieren“ — kein SMS.
+- [x] Podologie: „Einheiten korrigieren“ im VO-Detail nicht vorhanden.
+- [ ] NICHT geprüft: Gruppentermin (QA hat keinen Gruppen-Service), Mail-Entwurf (Google-Konto nicht verbunden), Einrichtungscode PRX-/INF- (in Einstellungen keine Anzeige; nur `ensureCompanyCode`), Zuzahlung-Kasse-Betrag (kein Vergleichswert), Physio-Akzente (Mehrfach-Heilmittel, Einheiten korrigieren, Physio-VO-Import) — QA = Podologie.
+- Findings (siehe Übergabe): Woche-Navigation schnell (3 Klicks) = Spaltenreste anderer Wochen; Urlaub-Body läuft aus der schmalen Team-Karte; Termin-Panel bleibt über Panelwechsel offen; Geburtsdatum in Patientenkopf „2.2.1942“; Touch-Ziele <44 px mobil.
+- Nebenwirkung: Test-Termin TEST-Hilde 24.11.2026 10:00, Urlaub 28.–29.12., Behandlungsvertrag-Unterschrift (Schritt 1) für TEST-Hanna ggf. gespeichert.
