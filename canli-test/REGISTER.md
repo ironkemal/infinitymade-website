@@ -2085,3 +2085,12 @@ Kapılar: backend 200 JSON, deploy indi (dashboard.js içinde `w10`, ~1 dk), otu
 - Danach `node --test api-backend/routes/sondertag-mitteilung.test.js api-backend/lib/sondertag-mitteilung.test.js module/sondertag-mitteilung.test.js module/sondertag-mitteilung-waechter.test.js api-backend/ai/auth.test.js` → **39/39 PASS**, einschließlich HTTP-Elterntest und sieben Untertests.
 - Frühere zwei Backend-Befunde und UI-Anschlussfehler (`cd8b8331`) lokal geschlossen. Dieser Lauf bestätigt auch den vorhandenen UI-Test zum unklaren Status; weitere UI-Arbeit bleibt beim anderen Eigentümer. Keine Änderung an Produktionscode oder Backend-Quota.
 - Weiter ungeprüft: echter Mailversand und Live-UI. Kein Push, keine Live-Aktion. S5/S5b-Zugang und F11-Produktentscheidung bleiben außerhalb dieses lokalen Prüfschritts.
+
+### Unterstützung: ergänzende Live-Nachprüfung 02.11.2026
+
+- Nutzer hat QA-Sitzung ausdrücklich geöffnet. Ausschließlich bestehende UI gelesen/navigiert, keine neuen Datensätze oder Mails. Live geladen weiterhin dashboard.js?v=20261102f8; neue F11/F9-Arbeit ist nur lokal.
+- F8 erneut: Woche gewählt, dreimal schnell vor. Label 23.11.–29.11.; exakt sieben Spalten und Datumswerte 2026-11-23 bis 2026-11-29. Ein vorhandener Testtermin sichtbar. Kein alter Spaltenrest. Termine in diesem Zusatzlauf nicht einzeln gegen Zeitstempel abgeglichen; ausführlicherer Rückwärtsnachweis steht oben.
+- F10 Ergänzung: vorhandenen Wochen-Testtermin geöffnet, bkActionModal sichtbar (display:flex); zu Verordnungen navigiert → panel-verordnungen aktiv, Modal hidden=true/display:none. Schließt die im früheren Nachweis offene Zielseite.
+- Standortplan: Mehrstandort-Vorbereitung in dieser Sitzung nicht bestätigt; Nutzer nach QA-Tarif/zwei Teststandorten gefragt. Keine Tarifänderung vorgenommen.
+- Echtmail: eigene Empfängeradresse bestätigt und genau ein Versand freigegeben. Versand bleibt ausschließlich beim QA-Live-Chat reserviert. Laut dessen aktueller UI-Prüfung QA-Gmail „Kein Konto verbunden“; Nutzer um Verbindung gebeten. Null Mails durch Unterstützung.
+- F2 Browser-Transportprobe: fünf GETs von praxura.de zur öffentlichen Praxisroute mit ungültiger synthetischer ID → fünf lesbare HTTP400 ohne CORS-Fehler. Keine vollständige Formular-/Cache-/Dauerabnahme; sporadischer Erstfehler bleibt nicht reproduziert.
