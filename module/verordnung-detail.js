@@ -277,6 +277,7 @@ const _LEER = (text, esc) => `<div style="font-size:12px;color:var(--text-muted)
  */
 function _summeHtml(summe, esc, ohneZuzahlung = false) {
   if (!summe) return '';
+  if (summe.ladefehler) return `<div role="status" style="font-size:12px;color:var(--text-muted);margin-top:6px;">${esc(summe.ladefehler.message)} Gesamtbetrag und Zuzahlung sind derzeit nicht berechenbar.</div>`;
   const zeile = (label, wert, fett) =>
     `<div style="display:flex;justify-content:space-between;gap:8px;${fett ? 'font-weight:700;' : ''}">
        <span style="font-size:${fett ? 12 : 11}px;color:${fett ? 'var(--text-main)' : 'var(--text-muted)'};">${esc(label)}</span>
@@ -325,7 +326,7 @@ function _verschreibung(rx, esc, quelle, summe) {
           ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);">${esc(b.lokalisation)}</div>` : ''}
         </div>
         <div style="text-align:right;white-space:nowrap;">
-          <div style="font-size:12px;color:var(--text-main);">${esc(_euro(b._betrag ?? b.betrag_gkv))}</div>
+          <div style="font-size:12px;color:var(--text-main);">${summe?.ladefehler && b._betrag == null ? '—' : esc(_euro(b._betrag ?? b.betrag_gkv))}</div>
           ${berechnet}
         </div>
       </div>`;
@@ -1242,10 +1243,12 @@ export async function zeigeVerordnungDetail(ctx) {
       try {
         const finde = await podoPositionsFinder(supabase, behs);
         summe = zuzahlungFuerPodoVerordnung(rx, behs, finde);
+        summe.ladefehler = finde.ladefehler;
         for (const b of behs) {
           const codes = Array.isArray(b.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
           if (!codes.length) continue;
-          b._betrag = codes.reduce((s, c) => s + (Number(finde(c, b.behandlungsdatum)?.preis) || 0), 0);
+          b._betrag = finde.ladefehler && codes.some(c => !finde(c, b.behandlungsdatum)) ? null
+            : codes.reduce((s, c) => s + (Number(finde(c, b.behandlungsdatum)?.preis) || 0), 0);
         }
       } catch (e) {
         // Ohne Preise bleibt die Ansicht stehen — sie ist in erster Linie die

@@ -281,7 +281,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `bindeSitzungenAnTermin()` — [module/sitzung-bindung.js:49](module/sitzung-bindung.js#L49-L114) · 66 satır · prescription_sessions:update
 
 **Yol 6 — `_verdrahteSitzungsHeilmittelTausch()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `_verdrahteSitzungsHeilmittelTausch()` — [module/verordnung-detail.js:1073](module/verordnung-detail.js#L1073-L1143) · 71 satır · prescription_sessions:update
+- `_verdrahteSitzungsHeilmittelTausch()` — [module/verordnung-detail.js:1074](module/verordnung-detail.js#L1074-L1144) · 71 satır · prescription_sessions:update
 
 ### `services` — 6 bağımsız yazma yolu
 
@@ -587,9 +587,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `cleanup` — dashboard.js:5933 · dashboard.js:6020 · dashboard.js:17649 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:81 · module/bestaetigungs-dialog.js:20 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · api-backend/ai/tasks/transkribieren.js:11 · merkez/db.js:125
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:24 · api-backend/billing/api/zuzahlung.routes.js:47
-- `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:317 · module/verordnung-detail.js:920
+- `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:317 · module/verordnung-detail.js:921
 - `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:350 · module/praxis-standort.js:115 · module/raum-auswahl.js:192 · module/rezeptinfo-geld.js:461
-- `zeile` — api-backend/lib/therapiebericht.js:299 · module/branding-ui.js:39 · module/fax-deckblatt.js:62 · module/rechnung-druck.js:33 · module/verordnung-detail.js:280 · module/verordnung-detail.js:409 · module/verordnung-detail.js:477 · module/verordnung-pruefen-knopf.js:122
+- `zeile` — api-backend/lib/therapiebericht.js:299 · module/branding-ui.js:39 · module/fax-deckblatt.js:62 · module/rechnung-druck.js:33 · module/verordnung-detail.js:281 · module/verordnung-detail.js:410 · module/verordnung-detail.js:478 · module/verordnung-pruefen-knopf.js:122
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `init` — attendance.js:299 · booking-request.js:1420 · booking.js:64 · cookie-consent.js:205 · dashboard.js:14230 · onboarding.js:77 · setup.js:221
 - `onEsc` — dashboard.js:6027 · module/rechnung-leistung-picker.js:46 · module/verordnung-einheiten.js:291 · module/verordnung-einheiten.js:359 · module/verordnung-einheiten.js:553 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214

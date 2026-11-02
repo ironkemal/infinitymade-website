@@ -14683,26 +14683,26 @@ function populateKkDatalist() {
 // Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
 async function loadPhysioPositions() {
   if (_abState.positionsLoaded) return _abState.positions;
-  try {
+  if (_abState.positionsPromise) return _abState.positionsPromise;
+  _abState.positionsPromise = (async () => { try {
     const { data: { session: s } } = await supabase.auth.getSession();
     if (!s?.access_token) throw new Error('Nicht angemeldet');
-    const res = await fetch(`${API}/billing/positions`, {
-      headers: { 'Authorization': 'Bearer ' + s.access_token },
-    });
+    const res = await fetch(`${API}/billing/positions`, { headers: { 'Authorization': 'Bearer ' + s.access_token } });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
-    _abState.positions = json.positions || [];
-    _abState.positionsLoaded = true;
+    if (!res.ok) throw Object.assign(new Error(res.status === 503 && json.code === 'AUTH_UNAVAILABLE' ? json.error || 'Authentifizierungsdienst vorübergehend nicht verfügbar. Bitte später erneut versuchen.' : `Preiskatalog konnte nicht geladen werden (HTTP ${res.status}). Bitte später erneut versuchen.`), { status: res.status, code: json.code || null });
+    _abState.positions = json.positions || []; _abState.positionsLoaded = true;
   } catch (e) {
     console.warn('[positions/load]', e);
-    _abState.positions = [];
-  }
-  return _abState.positions;
+    _abState.positions = Object.assign([], { ladefehler: { status: e.status || 0, code: e.code || null, message: e.message || 'Preiskatalog konnte nicht geladen werden. Bitte später erneut versuchen.' } });
+    showToast(_abState.positions.ladefehler.message, 'error');
+  } finally { _abState.positionsPromise = null; }
+  return _abState.positions; })();
+  return _abState.positionsPromise;
 }
 
 function buildPositionOptionsHtml(currentValue) {
-  // Group by kat (category). Current value is either an X-template or a 5-digit resolved code.
   const positions = _abState.positions || [];
+  if (positions.ladefehler) return `<option value="${escapeHtml(currentValue || '')}" selected disabled>${escapeHtml(positions.ladefehler.message)}</option>`;
   const normalizedCurrent = (() => {
     if (!currentValue) return '';
     if (/^X\d{4}$/.test(currentValue)) return currentValue;
