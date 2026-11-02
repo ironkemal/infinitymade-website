@@ -9,6 +9,8 @@
 
 ## Steuerung (Melih schreibt hier)
 
+> **Aktuelle Anweisung Melih (02.11.2026, nach F11/F9):** Echter Mailtest vorerst zurückgestellt. Gmail-Verbindung soll anders gelöst werden; jetzt weder verbinden noch senden oder Ersatzversand einrichten. Frühere Einmal-Mailfreigabe derzeit nicht ausführen. Erst nach erneuter Aufnahme fortsetzen. Standortplanung live: QA-Tarif und zwei synthetische Standorte noch nicht vorbereitet; Live-Abnahme offen. Lokale Tests sind davon unabhängig.
+
 - Autopilot: **AUS** (bis Blocker unten gelöst; zum Starten auf `AN` setzen) ← auf `AUS` setzen stoppt jeden weiteren Lauf
 - GO Live-Migrationen (Melih setzt `[x]`, Autopilot wendet dann per MCP an):
   - [x] GO 0096 `mitarbeiter_anstellung` (S1) — Melih 01.11.2026 („ohne meine Zustimmung weiterführen“), live 01.11.2026
