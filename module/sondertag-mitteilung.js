@@ -48,12 +48,13 @@ async function anfrage(deps, pfad, body) {
 export async function mountMitteilung(host, deps = {}) {
   if (!host || !deps.apiBase) return;
   const { von, bis, showToast = () => {}, showConfirmModal } = deps;
+  const vorschauFehler = '<p class="form-hint" role="status">E-Mail-Vorschau konnte nicht geladen werden. Bitte später erneut versuchen oder telefonisch informieren.</p>';
   let v;
   try {
     const r = await anfrage(deps, '/sondertag/mitteilung/vorschau', { von, bis });
-    if (!r.ok) { host.innerHTML = ''; return; }
+    if (!r.ok) { host.innerHTML = vorschauFehler; return; }
     v = r.daten;
-  } catch { host.innerHTML = ''; return; }
+  } catch { host.innerHTML = vorschauFehler; return; }
   host.innerHTML = mitteilungHtml(v);
   const knopf = host.querySelector('#stmSenden');
   const ergebnis = host.querySelector('.stm-ergebnis');
@@ -74,17 +75,18 @@ export async function mountMitteilung(host, deps = {}) {
     try {
       const r = await anfrage(deps, '/sondertag/mitteilung/senden', { von, bis, bookingIds: ids });
       const d = r.daten || {};
-      if (!r.ok) {
-        ergebnis.textContent = d.error || 'Versand fehlgeschlagen.';
-        showToast(d.error || 'Versand fehlgeschlagen.', 'error');
-        knopf.disabled = false;
-        return;
-      }
-      const teile = [`${d.gesendet} gesendet`];
+      const teile = [];
+      if (d.gesendet != null) teile.push(`${d.gesendet} gesendet`);
       if (d.doppelt) teile.push(`${d.doppelt} bereits informiert`);
       if (d.abgelehnt) teile.push(`${d.abgelehnt} nicht mehr zulässig (bitte anrufen)`);
       if (d.fehler) teile.push(`${d.fehler} fehlgeschlagen (bitte anrufen)`);
       if (d.unklar) teile.push(`${d.unklar} Versandstatus unklar (bitte anrufen)`);
+      if (!r.ok) {
+        ergebnis.textContent = [d.error || 'Versand fehlgeschlagen.', ...teile].join(' · ');
+        showToast(d.unklar ? 'Versandstatus unklar. Bitte telefonisch informieren.' : d.error || 'Versand fehlgeschlagen.', 'error');
+        knopf.disabled = false;
+        return;
+      }
       ergebnis.textContent = teile.join(' · ');
       showToast(d.unklar ? 'Versandstatus unklar. Bitte telefonisch informieren.' : d.fehler ? 'Teilweise gesendet.' : 'E-Mails gesendet ✓', d.fehler || d.unklar ? 'error' : undefined);
       host.querySelectorAll('.stm-wahl').forEach(c => { c.disabled = true; });

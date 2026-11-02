@@ -25,6 +25,8 @@ test('Versandergebnis: unklaren Status mit Telefonhinweis melden, niemals als re
     { gesendet: 1, fehler: 0, unklar: 1 },
     { gesendet: 0, fehler: 1, unklar: 1 },
     { gesendet: 1, fehler: 0, unklar: 0 },
+    { gesendet: 0, fehler: 1, unklar: 1, httpStatus: 409, error: 'Mailserver nicht erreichbar.' },
+    { gesendet: 1, fehler: 1, unklar: 0, httpStatus: 409, error: 'Mailserver nicht erreichbar.' },
   ]) {
     let senden;
     const toast = [];
@@ -37,12 +39,15 @@ test('Versandergebnis: unklaren Status mit Telefonhinweis melden, niemals als re
       querySelectorAll() { return [wahl]; },
     };
     let aufrufe = 0;
-    const mock = t.mock.method(globalThis, 'fetch', async () => ({
-      ok: true, status: 200,
-      json: async () => ++aufrufe === 1
-        ? { weg: 'smtp', mail: [{ bookingId: 'b1', start: '2026-12-24T09:00:00Z' }] }
-        : daten,
-    }));
+    const mock = t.mock.method(globalThis, 'fetch', async () => {
+      const vorschau = ++aufrufe === 1;
+      return {
+        ok: vorschau || !daten.httpStatus, status: vorschau ? 200 : daten.httpStatus || 200,
+        json: async () => vorschau
+          ? { weg: 'smtp', mail: [{ bookingId: 'b1', start: '2026-12-24T09:00:00Z' }] }
+          : daten,
+      };
+    });
     try {
       await mountMitteilung(host, {
         apiBase: 'https://example.invalid', von: '2026-12-24',
@@ -52,16 +57,42 @@ test('Versandergebnis: unklaren Status mit Telefonhinweis melden, niemals als re
       await senden();
       if (daten.unklar) {
         assert.match(ergebnis.textContent, /1 Versandstatus unklar \(bitte anrufen\)/);
-        assert.deepEqual(toast.at(-1), ['Versandstatus unklar. Bitte telefonisch informieren.', 'error']);
+        assert.match(toast.at(-1)[0], /Versandstatus unklar/);
+        assert.equal(toast.at(-1)[1], 'error');
+      } else if (daten.httpStatus) {
+        assert.match(ergebnis.textContent, /1 gesendet/);
+        assert.match(ergebnis.textContent, /1 fehlgeschlagen/);
+        assert.deepEqual(toast.at(-1), [daten.error, 'error']);
       } else {
         assert.equal(ergebnis.textContent, '1 gesendet');
         assert.deepEqual(toast.at(-1), ['E-Mails gesendet ✓', undefined]);
       }
-      assert.equal(knopf.disabled, true);
-      assert.equal(wahl.disabled, true);
+      if (daten.httpStatus) assert.match(ergebnis.textContent, /Mailserver nicht erreichbar/);
+      assert.equal(knopf.disabled, !daten.httpStatus);
+      assert.equal(wahl.disabled, !daten.httpStatus);
       assert.equal(aufrufe, 2);
     } finally {
       mock.mock.restore();
     }
+  }
+});
+
+test('Vorschau: HTTP- und Netzwerkfehler bleiben sichtbar, ohne Versand auszulösen', async (t) => {
+  for (const status of [401, 503, 'offline']) {
+    const host = { innerHTML: 'alter Inhalt' };
+    let calls = 0;
+    const mock = t.mock.method(globalThis, 'fetch', async () => {
+      calls++;
+      if (status === 'offline') throw new TypeError('offline');
+      return { ok: false, status, json: async () => ({ error: '<b>Vorschau nicht verfügbar</b>' }) };
+    });
+    try {
+      await mountMitteilung(host, { apiBase: 'https://example.invalid', von: '2026-12-24' });
+      assert.match(host.innerHTML, /role="status"/);
+      assert.match(host.innerHTML, /telefonisch informieren/);
+      assert.ok(!host.innerHTML.includes('<b>'));
+      assert.ok(!host.innerHTML.includes('stmSenden'));
+      assert.equal(calls, 1);
+    } finally { mock.mock.restore(); }
   }
 });
