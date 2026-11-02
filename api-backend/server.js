@@ -35,6 +35,7 @@ import dsgvoRouter from './routes/dsgvo.js';
 import ueberRouter from './routes/ueber.js';
 import { createManifestRouter } from './routes/manifest.js';
 import { createDokumentMailRouter } from './routes/dokument-mail.js';
+import { createSondertagMitteilungRouter } from './routes/sondertag-mitteilung.js';
 import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
@@ -633,6 +634,8 @@ app.use('/api', dsgvoRouter);
 app.use('/api', ueberRouter);
 // Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
 app.use('/api', createDokumentMailRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
+// M6b/S8: Terminabsage per Mail bei geschlossenem Sondertag — nie automatisch, Vorschau -> Freigabe -> Versand.
+app.use('/api', createSondertagMitteilungRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 app.use('/api', createFormularSignierenRouter({ supabase }));
 
 // 1. Google OAuth Routes

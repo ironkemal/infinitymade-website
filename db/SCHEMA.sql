@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0100_einheiten_korrekturen (SaaS, MCP 02.11.2026)
--- EXPORTED AT:        2026-11-02T11:59:24Z
+-- LAST MIGRATION:     0101_termin_mitteilungen (SaaS, Management-API 02.11.2026)
+-- EXPORTED AT:        2026-11-02T14:00:00Z
 -- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       105
---   table_columns:       1528
+--   public_tables:       106
+--   table_columns:       1539
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        193
+--   rls_policies:        194
 --   functions:           127
 --   triggers:            123
---   indexes:             372
+--   indexes:             375
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -3756,6 +3756,52 @@ ALTER TABLE ONLY public.terapeut_zertifikat
 
 ALTER TABLE ONLY public.terapeut_zertifikat
   ADD CONSTRAINT terapeut_zertifikat_pkey PRIMARY KEY (owner_id);
+
+CREATE TABLE public.termin_mitteilungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  booking_id uuid NOT NULL,
+  custom_day_id uuid,
+  anlass text NOT NULL,
+  termin_beginn timestamp with time zone NOT NULL,
+  status text NOT NULL,
+  fehler_code text,
+  freigegeben_von uuid,
+  gesendet_am timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK booking_id -> bookings(id)
+--   FK custom_day_id -> custom_days(id)
+--   FK freigegeben_von -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.termin_mitteilungen OWNER TO postgres;
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_anlass_check CHECK (anlass = 'sondertag_geschlossen'::text);
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_custom_day_id_fkey FOREIGN KEY (custom_day_id) REFERENCES custom_days(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_eindeutig UNIQUE (booking_id, anlass, termin_beginn);
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_fehler_code_check CHECK (fehler_code IS NULL OR length(fehler_code) <= 64);
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_freigegeben_von_fkey FOREIGN KEY (freigegeben_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.termin_mitteilungen
+  ADD CONSTRAINT termin_mitteilungen_status_check CHECK (status = ANY (ARRAY['gesendet'::text, 'fehler'::text]));
 
 CREATE TABLE public.therapieberichte (
   id uuid DEFAULT gen_random_uuid() NOT NULL,

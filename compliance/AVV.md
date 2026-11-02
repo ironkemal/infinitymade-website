@@ -45,6 +45,7 @@ Der Auftragnehmer erbringt für den Auftraggeber Leistungen im Rahmen der SaaS-P
 - KI-gestützte OCR-Erkennung von Heilmittelverordnungen
 - Erstellung von § 302 SGB V Abrechnungsdateien (EDIFACT) für Datenannahmestellen
 - Personalverwaltung (Mitarbeiterzugänge, Dienstpläne)
+- Versand von Mitteilungen an Patienten (z. B. Terminabsage, Dokumente) über das Mailkonto des Auftraggebers (verbundenes Gmail-Konto bzw. SMTP der Praxis), nur nach Freigabe durch den Auftraggeber
 
 Der Auftragnehmer verarbeitet hierfür personenbezogene Daten ausschließlich im Auftrag und nach dokumentierter Weisung des Auftraggebers.
 

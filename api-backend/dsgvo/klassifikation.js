@@ -426,6 +426,14 @@ export const TABELLEN = [
     mitarbeiterFilter: 'employee_id',
     anmerkung: 'Mitarbeiter-Leistungszuordnung',
   },
+  // 0101_termin_mitteilungen (M6b/S8, 02.11.2026): Versandprotokoll Terminabsage, keine Adresse, kein lead_id.
+  // Kategorie 'loeschen' (Nachweis der Mitteilung, keine Abrechnungsrelevanz); faellt mit der Buchung (CASCADE).
+  {
+    table: 'termin_mitteilungen',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Protokoll versandter Terminabsagen (Sondertag geschlossen): Buchung, Zeitpunkt, Status, wer freigab — ohne E-Mail-Adresse',
+  },
   // 0096_mitarbeiter_anstellung (db-ustasi 01.11.2026, SaaS live 01.11.2026). Kategorie 'loeschen' wie time_offs:
   // Vertragsrahmen fuer Planung und Urlaubsrechnung, kein Lohnkonto, keine eigene gesetzliche Frist in Praxura.
   {

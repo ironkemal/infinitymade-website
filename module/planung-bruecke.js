@@ -19,6 +19,7 @@ import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, ar
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261102a';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
+import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
@@ -167,7 +168,12 @@ export async function zeigeAnrufliste({ von, bis, type, startTime, endTime }) {
   dialog.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
   const karte = document.createElement('div');
   karte.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:560px;width:100%;max-height:80vh;overflow:auto';
-  karte.innerHTML = `${abschnitte.map(a => anruflisteHtml(a.liste, a.tag)).join('')}<p class="form-hint" style="margin:12px 0">Diese Patienten bitte informieren. Termine werden nicht automatisch verschoben.</p>`;
+  karte.innerHTML = `<div id="sondertagMitteilung"></div>${abschnitte.map(a => anruflisteHtml(a.liste, a.tag)).join('')}<p class="form-hint" style="margin:12px 0">Diese Patienten bitte informieren. Termine werden nicht automatisch verschoben. Wer per E-Mail informiert wurde, muss nicht angerufen werden.</p>`;
+  // M6c/S9: Mail-Abschnitt nur als Angebot; ohne Einwilligung/Versandweg bleibt die Anrufliste allein.
+  mountMitteilung(karte.querySelector('#sondertagMitteilung'), {
+    apiBase: verdrahtet.apiBase, getToken: verdrahtet.getToken, von, bis,
+    showToast: verdrahtet.showToast, showConfirmModal: verdrahtet.showConfirmModal,
+  }).catch(() => {});
   const zu = document.createElement('button');
   zu.type = 'button';
   zu.className = 'btn-primary';

@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0100_einheiten_korrekturen (SaaS, MCP 02.11.2026)
--- EXPORTED AT:        2026-11-02T11:59:24Z
+-- LAST MIGRATION:     0101_termin_mitteilungen (SaaS, Management-API 02.11.2026)
+-- EXPORTED AT:        2026-11-02T14:00:00Z
 -- ERZEUGT AM:         2026-11-02
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       105
---   table_columns:       1528
+--   public_tables:       106
+--   table_columns:       1539
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        193
+--   rls_policies:        194
 --   functions:           127
 --   triggers:            123
---   indexes:             372
+--   indexes:             375
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -278,6 +278,8 @@ ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 -- [EXTENSION OWNED] Table public.spatial_ref_sys RLS (rowsecurity: false, force: false)
 ALTER TABLE public.terapeut_zertifikat ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.termin_mitteilungen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.therapieberichte ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -1548,6 +1550,12 @@ CREATE POLICY zertifikat_owner_all ON public.terapeut_zertifikat
   USING (((auth.uid() = owner_id) OR (auth.uid() IN ( SELECT profiles.id
    FROM profiles
   WHERE (profiles.owner_id = terapeut_zertifikat.owner_id)))));
+
+CREATE POLICY termin_mitteilungen_select ON public.termin_mitteilungen
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)));
 
 CREATE POLICY therapieberichte_select_policy ON public.therapieberichte
   AS PERMISSIVE
@@ -7454,6 +7462,14 @@ CREATE INDEX idx_zertifikat_expiring ON terapeut_zertifikat USING btree (cert_va
 -- Index terapeut_zertifikat_pkey ON public.terapeut_zertifikat is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX terapeut_zertifikat_pkey ON terapeut_zertifikat USING btree (owner_id);
 
+-- Index termin_mitteilungen_eindeutig ON public.termin_mitteilungen is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX termin_mitteilungen_eindeutig ON termin_mitteilungen USING btree (booking_id, anlass, termin_beginn);
+
+CREATE INDEX termin_mitteilungen_owner_zeit_idx ON termin_mitteilungen USING btree (owner_id, created_at);
+
+-- Index termin_mitteilungen_pkey ON public.termin_mitteilungen is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX termin_mitteilungen_pkey ON termin_mitteilungen USING btree (id);
+
 CREATE INDEX therapieberichte_lead_idx ON therapieberichte USING btree (lead_id);
 
 CREATE INDEX therapieberichte_owner_idx ON therapieberichte USING btree (owner_id, versendet_am DESC);
@@ -8137,9 +8153,9 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=dropgeometrytable(table_name character varying) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=einheiten_korrekturen_mandant_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=einheiten_korrekturen_mandant_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
--- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p_heilmittel_index integer) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=einheiten_korrigieren(p_id uuid, p_neu integer, p_grund text, p column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=authenticated privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=enablelongtransactions() column=- grantee=postgres privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -16432,6 +16448,23 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=terapeut_zertifikat column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=termin_mitteilungen column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=MAINTAIN grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=REFERENCES grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=therapieberichte column=- grantee=authenticated privilege=SELECT grantor=postgres grantable=NO
@@ -17121,6 +17154,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_spheroid column=- grantee=supabase_admin privilege=USAGE grantor=supabase_admin grantable=NO
 -- ACL: type=TYPE schema=public object=_terapeut_zertifikat column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_terapeut_zertifikat column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_termin_mitteilungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_termin_mitteilungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_therapieberichte column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_therapieberichte column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_therapist_certificates column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17373,6 +17408,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=spheroid column=- grantee=supabase_admin privilege=USAGE grantor=supabase_admin grantable=NO
 -- ACL: type=TYPE schema=public object=terapeut_zertifikat column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=terapeut_zertifikat column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=termin_mitteilungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=termin_mitteilungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=therapieberichte column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=therapieberichte column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=therapist_certificates column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO

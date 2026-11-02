@@ -538,6 +538,7 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     { table: 'feedbacks', filter: 'user_id' },
     { table: 'ai_audit_log', filter: 'tenant_id' },
     { table: 'warteliste', filter: 'owner_id' },
+    { table: 'termin_mitteilungen', filter: 'owner_id' },
     { table: 'booking_requests', filter: 'owner_id' },
     { table: 'patients', filter: 'owner_id' },
     { table: 'referral_drafts', filter: 'owner_id' },
