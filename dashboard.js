@@ -13673,7 +13673,7 @@ async function saveRezept() {
     // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
     // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
     if (!entwurf && fuehrtSitzungsbuch(getSector())) {
-      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!g('rzDoppel')?.checked, items: rx.items });
+      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!document.getElementById('rzDoppel')?.checked, items: rx.items });
     }
 
     const nw = await ladeLhbNachweisHoch(supabase, {
