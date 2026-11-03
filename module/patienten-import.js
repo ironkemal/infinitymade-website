@@ -449,6 +449,15 @@ export function zuordnungsSchritt(o) {
  *   Rückruf, damit die beiden Module sich nicht gegenseitig importieren.
  */
 export function oeffnePatientenImport(d) {
+  const b = String(d?.bereich || '').trim().toLowerCase();
+  const bereichLabel = (b.startsWith('physio') || b === 'physiotherapy')
+    ? 'Physiotherapie'
+    : (b.startsWith('ergo') || b === 'ergotherapy')
+      ? 'Ergotherapie'
+      : (b.startsWith('logo') || b.startsWith('sprach') || b.startsWith('stimm'))
+        ? 'Logopädie'
+        : 'Podologie';
+
   document.getElementById('patientenImportModal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'patientenImportModal';
@@ -486,7 +495,7 @@ export function oeffnePatientenImport(d) {
         <span style="font-weight:600;">CSV-Datei auswählen</span>
       </label>
       <p style="margin:12px 0 16px;font-size:13px;"><a href="#" data-pi="vorlage">Vorlage herunterladen</a>${d.zuVerordnungen
-        ? ' · <a href="#" data-pi="vo">Offene Verordnungen importieren (Podologie) →</a>' : ''}</p>`;
+        ? ` · <a href="#" data-pi="vo">Offene Verordnungen importieren (${esc(bereichLabel)}) →</a>` : ''}</p>`;
     fuss.innerHTML = `<button type="button" class="btn-ghost" data-pi="abbr" style="${BTN}">Abbrechen</button>`;
     fuss.querySelector('[data-pi="abbr"]').addEventListener('click', schliessen);
     inhalt.querySelector('[data-pi="vo"]')?.addEventListener('click', (e) => { e.preventDefault(); schliessen(); d.zuVerordnungen(); });
@@ -549,11 +558,11 @@ export function oeffnePatientenImport(d) {
     const anzahlGruen = erg.zeilen.filter(z => !z.fehler.length && !z.hinweise.length && !z.dublette).length;
 
     inhalt.innerHTML = `
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;font-weight:600;">
-        <span style="color:var(--success,#027a48);">${anzahlGruen} ok</span>
-        <span style="color:var(--warning,#b54708);">${anzahlGelb} Hinweis</span>
-        <span style="color:${anzahlRot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${anzahlRot} Fehler</span>
-        <span style="color:var(--text-muted);font-weight:400;margin-left:auto;">(${erg.neu} neu · ${erg.dubletten} vorhanden)</span>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 12px;font-size:13px;line-height:1.4;font-weight:600;">
+        <span style="color:var(--success,#027a48);white-space:nowrap;">${anzahlGruen} ok</span>
+        <span style="color:var(--warning,#b54708);white-space:nowrap;">${anzahlGelb} Hinweis</span>
+        <span style="color:${anzahlRot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};white-space:nowrap;">${anzahlRot} Fehler</span>
+        <span style="color:var(--text-muted);font-weight:400;white-space:nowrap;">(${erg.neu} neu · ${erg.dubletten} vorhanden)</span>
       </div>
       <div style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-main);">
         <b>Hinweis:</b> Einwilligungen (E-Mail-Erinnerung, Arztberichte) werden nicht übernommen. Diese Funktionen sind für importierte Patienten erst nach neuer Einwilligung aktiv.

@@ -59,7 +59,7 @@ import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './modu
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261103a'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261103a';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261103s'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261103s';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261027p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
@@ -8010,7 +8010,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
 // Patienten-Import aus CSV (Praxiswechsel) → module/patienten-import.js. Ersetzt den
 // Google-Maps-Lead-Import, der hier bis 20.10.2026 hing.
 document.getElementById('csvImportBtn').addEventListener('click', () => oeffnePatientenImport({
-  supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bereich: getSector(), katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
+  bereich: getSector(), supabase, ownerId: getOwnerId(), bestehende: () => leadsCache, showToast, zuVerordnungen: () => oeffneVerordnungImport({ supabase, ownerId: getOwnerId(), apiBasis: API_BASE, bereich: getSector(), katalog: GKV_LEISTUNGSKATALOG[getSector()] || [], bestehende: () => leadsCache, showToast, nachImport: (anzahl) => emit('verordnungen:changed', { anzahl }) }),
   nachImport: async (anzahl) => { verwerfeKassenCache(); emit('leads:changed', { anzahl }); await loadLeads(); },
 }));
 

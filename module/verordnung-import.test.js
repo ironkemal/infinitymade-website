@@ -11,6 +11,9 @@ import {
   leseNagel,
   janein,
   setzeDefaultPhysioKatalog,
+  voImportSchluessel,
+  normalizeVoCode,
+  codesAusVerordnung,
 } from './verordnung-import.js';
 import { PHYSIO_POSITIONS } from '../api-backend/billing/codes/physio_positions.js';
 
@@ -305,4 +308,108 @@ test('Physio: voRumpf trägt therapie_bereich physio und heilmittel_items', () =
   assert.equal(r.parsed.rezept.heilmittel_items.length, 2);
   assert.equal(r.parsed.rezept.heilmittel_items[0].code, 'X0501');
   assert.equal(r.parsed.rezept.heilmittel_items[1].code, 'X1201');
+});
+
+test('voImportSchluessel: X0501 und 20501 sind aequivalent (Positionen-Normalisierung)', () => {
+  const k1 = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: ['X0501'] });
+  const k2 = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: ['20501'] });
+  const k3 = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '15.10.2026', codes: ['10501'] });
+  assert.equal(k1, 'p1|2026-10-15|X0501');
+  assert.equal(k2, 'p1|2026-10-15|X0501');
+  assert.equal(k3, 'p1|2026-10-15|X0501');
+  assert.equal(k1, k2);
+  assert.equal(k2, k3);
+});
+
+test('voImportSchluessel: Mehrfach-Codes sortiert und reihenfolgeunabhaengig', () => {
+  const kA = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: ['21201', 'X0501'] });
+  const kB = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: ['20501', 'X1201'] });
+  const kC = voImportSchluessel({ patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: [{ code: 'X0501' }, { code: '21201' }] });
+  assert.equal(kA, 'p1|2026-10-15|X0501+X1201');
+  assert.equal(kA, kB);
+  assert.equal(kB, kC);
+});
+
+test('voImportSchluessel: DB-Zeile mit heilmittel_items + heilmittel_position erzeugt gleichen Schluessel wie CSV-Zeile', () => {
+  const dbRow = {
+    patient_id: 'p1',
+    ausstellungsdatum: '2026-10-15',
+    heilmittel_position: '20501',
+    heilmittel_items: [{ code: '20501', einheiten: 6 }, { code: '21201', einheiten: 6 }],
+    ergaenzend_position: null,
+    therapie_bereich: 'physio',
+  };
+  const dbCodes = codesAusVerordnung(dbRow);
+  const dbKey = voImportSchluessel({
+    patientId: dbRow.patient_id,
+    ausstellungsdatum: dbRow.ausstellungsdatum,
+    codes: dbCodes,
+    bereich: dbRow.therapie_bereich,
+  });
+
+  const csvCodes = ['X0501', 'X1201'];
+  const csvKey = voImportSchluessel({
+    patientId: 'p1',
+    ausstellungsdatum: '15.10.2026',
+    codes: csvCodes,
+    bereich: 'physio',
+  });
+
+  assert.equal(dbKey, 'p1|2026-10-15|X0501+X1201');
+  assert.equal(csvKey, dbKey);
+});
+
+test('W15 P1: Gleiche Datei zweimal importiert -> beim 2. Mal 0 uebernommen, alle Zeilen „bereits vorhanden"', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;ja;0;nein\n'
+    + 'Şahin;Çağlar;15.06.1985;16.10.2026;123456601;123456700;WS;M54.5;X0501;6;ja;0;nein\n';
+
+  // 1. Import: saubere DB -> 2 werden übernommen
+  const import1 = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio', vorhandeneVo: new Set() }));
+  assert.equal(import1.ok, 2);
+  assert.equal(import1.rot, 0);
+  const uebernehmbar1 = import1.zeilen.filter(z => !z.fehler.length && !z.istDublette);
+  assert.equal(uebernehmbar1.length, 2);
+
+  // Simulation: Server hat die Rezepte gespeichert (Backend speichert 20501)
+  const dbRows = [
+    { patient_id: 'p1', ausstellungsdatum: '2026-10-15', heilmittel_position: '20501', heilmittel_items: [{ code: '20501' }], therapie_bereich: 'physio' },
+    { patient_id: 'p2', ausstellungsdatum: '2026-10-16', heilmittel_position: '20501', heilmittel_items: [{ code: '20501' }], therapie_bereich: 'physio' },
+  ];
+  const vorhandeneVo = new Set();
+  for (const r of dbRows) {
+    vorhandeneVo.add(voImportSchluessel({
+      patientId: r.patient_id,
+      ausstellungsdatum: r.ausstellungsdatum,
+      codes: codesAusVerordnung(r),
+      bereich: r.therapie_bereich,
+    }));
+  }
+
+  // 2. Import: dieselbe Datei erneut importiert
+  const import2 = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio', vorhandeneVo }));
+  const uebernehmbar2 = import2.zeilen.filter(z => !z.fehler.length && !z.istDublette);
+  assert.equal(uebernehmbar2.length, 0, 'Beim 2. Import duerfen 0 Verordnungen uebernommen werden');
+  assert.equal(import2.zeilen[0].istDublette, true);
+  assert.equal(import2.zeilen[1].istDublette, true);
+  assert.ok(import2.zeilen[0].hinweise.some(h => /bereits vorhanden|existiert bereits/.test(h)));
+  assert.ok(import2.zeilen[1].hinweise.some(h => /bereits vorhanden|existiert bereits/.test(h)));
+});
+
+test('W15 P2: Ueberschreitung der Hoechstmenge in Physio (WS2: 12 > 6) zeigt gelb mit „wird als Entwurf übernommen"', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS2;M54.5;X0501;12;ja;0;nein\n';
+
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen.length, 1);
+  const z = e.zeilen[0];
+  assert.equal(z.fehler.length, 0, 'Kein harter Fehler');
+  assert.equal(z.istDublette, false);
+  assert.equal(z.istEntwurf, true, 'Muss als Entwurf gekennzeichnet sein');
+  assert.ok(z.hinweise.some(h => h.startsWith('wird als Entwurf übernommen:')), 'Hinweis mit „wird als Entwurf übernommen"');
+  assert.ok(z.hinweise.some(h => /Höchstmenge überschritten/i.test(h)), 'Grund Höchstmenge genannt');
+  assert.equal(e.gelb, 1, 'In gelb/Hinweis gezaehlt');
+  assert.equal(e.rot, 0, 'Kein Blocker');
 });

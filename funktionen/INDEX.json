@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-03",
  "dateien": 537,
- "funktionen": 4350,
+ "funktionen": 4354,
  "module": [
   "abrechnung",
   "anamnese",
@@ -7164,6 +7164,7 @@
     "renderWoche",
     "run",
     "selectDate",
+    "senden",
     "setFreqValue",
     "setSideHead",
     "setUnavailable",
@@ -7679,6 +7680,7 @@
     "nurZiffern",
     "oeffneArztDetail",
     "oeffneDb",
+    "oeffneVerordnungImport",
     "oeffneZahlungseingang",
     "openGkvEditForm",
     "openServiceEdit",
@@ -7740,6 +7742,7 @@
     "scanneRezeptLokal",
     "schluessel",
     "sendeLauf",
+    "senden",
     "sollZeilen",
     "spaltenModell",
     "spaltenNachPlan",
@@ -8388,6 +8391,7 @@
     "nurZiffern",
     "oeffneArztDetail",
     "oeffneDb",
+    "oeffneVerordnungImport",
     "oeffneZahlungseingang",
     "openGkvEditForm",
     "openServiceEdit",
@@ -8449,6 +8453,7 @@
     "scanneRezeptLokal",
     "schluessel",
     "sendeLauf",
+    "senden",
     "sollZeilen",
     "spaltenModell",
     "spaltenNachPlan",
@@ -31104,6 +31109,7 @@
     "buildSummary",
     "c",
     "chat",
+    "codesAusVerordnung",
     "computeRxDeadlineAlerts",
     "createBookingsFromRequestFactory",
     "createZuzahlungsforderungRouter",
@@ -32867,6 +32873,7 @@
     "searchHeilmittel",
     "strictNow",
     "voFehlendePflicht",
+    "voImportSchluessel",
     "w",
     "zeileZuVerordnung"
    ],
@@ -38798,6 +38805,7 @@
     "renderWoche",
     "run",
     "selectDate",
+    "senden",
     "setFreqValue",
     "setSideHead",
     "setUnavailable",
@@ -84340,6 +84348,7 @@
     "searchHeilmittel",
     "strictNow",
     "voFehlendePflicht",
+    "voImportSchluessel",
     "w",
     "zeileZuVerordnung"
    ],
@@ -113175,6 +113184,7 @@
     "heute",
     "insertDatensatz",
     "neuerBefundZustand",
+    "normalizeVoDatum",
     "nurZiffern",
     "renderMonat",
     "starteFormular",
@@ -133398,6 +133408,7 @@
     "searchHeilmittel",
     "strictNow",
     "voFehlendePflicht",
+    "voImportSchluessel",
     "w",
     "zeileZuVerordnung"
    ],
@@ -152961,6 +152972,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "normalizeVoDatum",
     "w",
     "zeileZuPatient",
     "zeileZuVerordnung"
@@ -154103,8 +154115,8 @@
    "lang": "js",
    "file": "module/patienten-import.js",
    "start": 451,
-   "end": 640,
-   "lines": 190,
+   "end": 649,
+   "lines": 199,
    "spiegelHinweis": null,
    "tables": [
     "leads"
@@ -154147,8 +154159,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 470,
-   "end": 470,
+   "start": 479,
+   "end": 479,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -154238,8 +154250,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 471,
-   "end": 471,
+   "start": 480,
+   "end": 480,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -154260,8 +154272,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 476,
-   "end": 507,
+   "start": 485,
+   "end": 516,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -154271,6 +154283,7 @@
    "storage": [],
    "calls": [
     "dekodiereDateiText",
+    "esc",
     "schliessen",
     "zuordnen"
    ],
@@ -154329,8 +154342,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 509,
-   "end": 520,
+   "start": 518,
+   "end": 529,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -154398,8 +154411,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 522,
-   "end": 588,
+   "start": 531,
+   "end": 597,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [],
@@ -154466,8 +154479,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 531,
-   "end": 553,
+   "start": 540,
+   "end": 562,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
@@ -154588,8 +154601,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 590,
-   "end": 609,
+   "start": 599,
+   "end": 618,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -154662,8 +154675,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/patienten-import.js",
-   "start": 611,
-   "end": 637,
+   "start": 620,
+   "end": 646,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -166051,6 +166064,7 @@
     "renderWoche",
     "run",
     "selectDate",
+    "senden",
     "setFreqValue",
     "setSideHead",
     "setUnavailable",
@@ -214431,8 +214445,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 107,
-   "end": 122,
+   "start": 109,
+   "end": 124,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -214495,12 +214509,238 @@
    ]
   },
   {
+   "name": "normalizeVoCode",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-import.js",
+   "start": 147,
+   "end": 158,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "codesAusVerordnung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-import.js",
+   "start": 161,
+   "end": 175,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "push"
+   ],
+   "calledBy": [
+    "oeffneVerordnungImport",
+    "senden",
+    "voImportSchluessel",
+    "vorschau",
+    "w"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "normalizeVoDatum",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-import.js",
+   "start": 178,
+   "end": 189,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "alsBerlinDatum",
+    "leseDatum"
+   ],
+   "calledBy": [
+    "voImportSchluessel"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "voImportSchluessel",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/verordnung-import.js",
+   "start": 196,
+   "end": 232,
+   "lines": 37,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "codesAusVerordnung",
+    "normalizeBereich",
+    "normalizeVoDatum"
+   ],
+   "calledBy": [
+    "oeffneVerordnungImport",
+    "senden",
+    "vorschau",
+    "w",
+    "zeileZuVerordnung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "setzeDefaultPhysioKatalog",
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 134,
-   "end": 136,
+   "start": 237,
+   "end": 239,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -214519,8 +214759,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 139,
-   "end": 145,
+   "start": 242,
+   "end": 248,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -214585,8 +214825,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 148,
-   "end": 151,
+   "start": 251,
+   "end": 254,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -214649,8 +214889,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 154,
-   "end": 167,
+   "start": 257,
+   "end": 270,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -214715,8 +214955,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 177,
-   "end": 230,
+   "start": 280,
+   "end": 333,
    "lines": 54,
    "spiegelHinweis": null,
    "tables": [],
@@ -214781,9 +215021,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 238,
-   "end": 458,
-   "lines": 221,
+   "start": 341,
+   "end": 613,
+   "lines": 273,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -214805,9 +215045,12 @@
     "normalizeBereich",
     "pruefeHeilmittelZeilen",
     "pruefeKvnr",
+    "pruefeVerordnung",
     "push",
+    "regelnFuerBereich",
     "round",
     "teileName",
+    "voImportSchluessel",
     "w"
    ],
    "calledBy": [
@@ -214864,9 +215107,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 240,
-   "end": 780,
-   "lines": 541,
+   "start": 343,
+   "end": 992,
+   "lines": 650,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -214882,6 +215125,7 @@
     "alsBerlinDatum",
     "behandlungsbeginnFrist",
     "berlinHeute",
+    "codesAusVerordnung",
     "dekodiereDateiText",
     "esc",
     "get",
@@ -214901,8 +215145,11 @@
     "oeffneVerordnungImport",
     "pruefeHeilmittelZeilen",
     "pruefeKvnr",
+    "pruefeVerordnung",
     "pruefeVerordnungen",
     "push",
+    "regelnFuerBereich",
+    "regelsatzLaden",
     "round",
     "schliessen",
     "schritt1",
@@ -214916,6 +215163,7 @@
     "verordnungFuerBackend",
     "verordnungPatientenAbgleich",
     "voFehlendePflicht",
+    "voImportSchluessel",
     "voRumpf",
     "vorschau",
     "zeileZuVerordnung",
@@ -214975,8 +215223,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 461,
-   "end": 488,
+   "start": 616,
+   "end": 643,
    "lines": 28,
    "spiegelHinweis": null,
    "tables": [],
@@ -215048,8 +215296,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 491,
-   "end": 532,
+   "start": 646,
+   "end": 687,
    "lines": 42,
    "spiegelHinweis": null,
    "tables": [],
@@ -215115,8 +215363,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 542,
-   "end": 545,
+   "start": 697,
+   "end": 700,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -215200,9 +215448,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 547,
-   "end": 779,
-   "lines": 233,
+   "start": 702,
+   "end": 991,
+   "lines": 290,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -215216,13 +215464,16 @@
    "calls": [
     "add",
     "berlinHeute",
+    "codesAusVerordnung",
     "dekodiereDateiText",
     "esc",
     "gleicheSitzungenAb",
+    "has",
     "leseCsv",
     "normalizeBereich",
     "pruefeVerordnungen",
     "push",
+    "regelsatzLaden",
     "schliessen",
     "schritt1",
     "sendeAnServer",
@@ -215232,6 +215483,7 @@
     "update",
     "verordnungPatientenAbgleich",
     "voFehlendePflicht",
+    "voImportSchluessel",
     "voRumpf",
     "vorschau",
     "zuordnungsSchritt"
@@ -215290,8 +215542,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 572,
-   "end": 572,
+   "start": 727,
+   "end": 727,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -215381,8 +215633,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 573,
-   "end": 573,
+   "start": 728,
+   "end": 728,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -215403,8 +215655,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 578,
-   "end": 622,
+   "start": 733,
+   "end": 777,
    "lines": 45,
    "spiegelHinweis": null,
    "tables": [],
@@ -215476,9 +215728,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 624,
-   "end": 724,
-   "lines": 101,
+   "start": 779,
+   "end": 903,
+   "lines": 125,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -215490,11 +215742,14 @@
    "calls": [
     "add",
     "berlinHeute",
+    "codesAusVerordnung",
     "esc",
     "pruefeVerordnungen",
+    "regelsatzLaden",
     "senden",
     "showToast",
-    "status"
+    "status",
+    "voImportSchluessel"
    ],
    "calledBy": [
     "mountMailSignaturen",
@@ -215554,9 +215809,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 650,
-   "end": 675,
-   "lines": 26,
+   "start": 819,
+   "end": 833,
+   "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -215676,9 +215931,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-import.js",
-   "start": 726,
-   "end": 776,
-   "lines": 51,
+   "start": 905,
+   "end": 988,
+   "lines": 84,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -215690,12 +215945,16 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
+    "codesAusVerordnung",
     "esc",
     "gleicheSitzungenAb",
+    "has",
     "push",
     "sendeAnServer",
     "update",
     "verordnungPatientenAbgleich",
+    "voImportSchluessel",
     "voRumpf"
    ],
    "calledBy": [
@@ -222573,7 +222832,9 @@
     "ladeAktiveVerordnungen",
     "pruefeMaske",
     "pruefeZeile",
-    "zeigeVerordnungDetail"
+    "w",
+    "zeigeVerordnungDetail",
+    "zeileZuVerordnung"
    ],
    "modules": [
     "abrechnung",
@@ -223184,7 +223445,9 @@
    "calledBy": [
     "(datei) module/diagnosegruppen-regeln.js",
     "(datei) module/verordnung-pruefung.js",
-    "regelsatzLaden"
+    "regelsatzLaden",
+    "w",
+    "zeileZuVerordnung"
    ],
    "modules": [
     "abrechnung",
@@ -223257,7 +223520,10 @@
    "calledBy": [
     "icdSpeicherHinweise",
     "ladeAktiveVerordnungen",
+    "oeffneVerordnungImport",
     "pruefeMaske",
+    "vorschau",
+    "w",
     "zeigeVerordnungDetail"
    ],
    "modules": [
@@ -249374,9 +249640,9 @@
       {
        "name": "w",
        "file": "module/verordnung-import.js",
-       "start": 240,
-       "end": 780,
-       "lines": 541,
+       "start": 343,
+       "end": 992,
+       "lines": 650,
        "writes": [
         "prescriptions:update"
        ],
@@ -249427,9 +249693,9 @@
       {
        "name": "oeffneVerordnungImport",
        "file": "module/verordnung-import.js",
-       "start": 547,
-       "end": 779,
-       "lines": 233,
+       "start": 702,
+       "end": 991,
+       "lines": 290,
        "writes": [
         "prescriptions:update"
        ],
@@ -249480,9 +249746,9 @@
       {
        "name": "senden",
        "file": "module/verordnung-import.js",
-       "start": 726,
-       "end": 776,
-       "lines": 51,
+       "start": 905,
+       "end": 988,
+       "lines": 84,
        "writes": [
         "prescriptions:update"
        ],
@@ -249689,8 +249955,8 @@
        "name": "oeffnePatientenImport",
        "file": "module/patienten-import.js",
        "start": 451,
-       "end": 640,
-       "lines": 190,
+       "end": 649,
+       "lines": 199,
        "writes": [
         "leads:insert",
         "leads:delete"
@@ -249701,8 +249967,8 @@
       {
        "name": "importiere",
        "file": "module/patienten-import.js",
-       "start": 590,
-       "end": 609,
+       "start": 599,
+       "end": 618,
        "lines": 20,
        "writes": [
         "leads:insert"
@@ -249754,8 +250020,8 @@
       {
        "name": "schritt3",
        "file": "module/patienten-import.js",
-       "start": 611,
-       "end": 637,
+       "start": 620,
+       "end": 646,
        "lines": 27,
        "writes": [
         "leads:delete"
@@ -253885,13 +254151,13 @@
     "module/abrechnungsstatus.js:596",
     "module/arzt-register.js:278",
     "module/formular-editor.js:427",
-    "module/patienten-import.js:470",
+    "module/patienten-import.js:479",
     "module/rechnung-zahlungseingang.js:555",
     "module/verordnung-einheiten.js:300",
     "module/verordnung-einheiten.js:398",
     "module/verordnung-einheiten.js:591",
     "module/verordnung-feldmarker.js:240",
-    "module/verordnung-import.js:572",
+    "module/verordnung-import.js:727",
     "module/zuzahlung-befreiung.js:151",
     "module/zuzahlung-korrektur.js:209"
    ],
@@ -254737,7 +255003,7 @@
    "orte": [
     "module/abrechnungsstatus.js:634",
     "module/rechnung-mail.js:84",
-    "module/verordnung-import.js:726"
+    "module/verordnung-import.js:905"
    ],
    "aynalar": []
   },
@@ -254808,7 +255074,7 @@
    "name": "vorschau",
    "orte": [
     "module/mail-signatur-editor.js:30",
-    "module/verordnung-import.js:624",
+    "module/verordnung-import.js:779",
     "module/zuzahlung-korrektur.js:238"
    ],
    "aynalar": []
@@ -254941,7 +255207,7 @@
    "name": "berlinHeute",
    "orte": [
     "api-backend/lib/berlin-tag.js:14",
-    "module/verordnung-import.js:542"
+    "module/verordnung-import.js:697"
    ],
    "aynalar": []
   },
@@ -255160,7 +255426,7 @@
   {
    "name": "esc_",
    "orte": [
-    "module/patienten-import.js:471",
+    "module/patienten-import.js:480",
     "module/therapiebericht.js:186"
    ],
    "aynalar": []
@@ -255775,8 +256041,8 @@
   {
    "name": "schritt1",
    "orte": [
-    "module/patienten-import.js:476",
-    "module/verordnung-import.js:578"
+    "module/patienten-import.js:485",
+    "module/verordnung-import.js:733"
    ],
    "aynalar": []
   },
@@ -255911,8 +256177,8 @@
   {
    "name": "status",
    "orte": [
-    "module/patienten-import.js:531",
-    "module/verordnung-import.js:650"
+    "module/patienten-import.js:540",
+    "module/verordnung-import.js:819"
    ],
    "aynalar": []
   },
@@ -256016,7 +256282,7 @@
    "name": "w",
    "orte": [
     "module/patienten-import.js:230",
-    "module/verordnung-import.js:240"
+    "module/verordnung-import.js:343"
    ],
    "aynalar": []
   },
