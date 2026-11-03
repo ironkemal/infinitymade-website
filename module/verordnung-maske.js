@@ -42,7 +42,7 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261027p';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261103a';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261102w10';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
@@ -162,6 +162,7 @@ export function maskeHeimschicken() {
   _scanHerkunft = null;
   _patientNeu = false;
   entferneBarcodeBestaetigung();
+  leereHeilmittelZeilen();
   // Neuanlage ist über dieses Formular immer GKV — ein von der vorherigen
   // Bearbeitung stehengebliebenes `rezeptart=privat` darf für die nächste,
   // per „+ Neue Verordnung" geöffnete Maske nicht mehr gelten
@@ -824,6 +825,10 @@ export async function sendeAnServer(supabase, { methode, pfad, rumpf, apiBasis =
 }
 
 export async function schreibeVerordnung(supabase, v) {
+  const sertFehler = pruefeSertHeilmittelFehler({ istEntwurf: !!v.overridden });
+  if (sertFehler.length > 0) {
+    throw new Error(sertFehler[0]);
+  }
   const erfassung = pruefeBarcodeBestaetigung();
   const nutzlast = nutzlastAusMaske(v);
   // `proceed_anyway` merkt sich, dass jemand über Lücken hinweg gespeichert
@@ -860,4 +865,42 @@ export async function schreibeVerordnung(supabase, v) {
   // ein Neuzeichnen von aussen darf jetzt wieder durch (siehe `istVeraendert`).
   _bearbeitung.veraendert = false;
   return { id: editId, aktualisiert: true, patientId: json.patient_id || null, status: json.status, items: nutzlast.heilmittel_items || null };
+}
+
+/**
+ * Prueft harte Formfehler der Heilmittelzeilen (doppelter Code, Einheit 0,
+ * Ergänzend > Summe vorrangig), die auch das Speichern als Entwurf sperren.
+ *
+ * @param {object} [opts]
+ * @param {boolean} [opts.istEntwurf=false]
+ * @returns {string[]} Liste der Fehlermeldungen (leer wenn gueltig)
+ */
+export function pruefeSertHeilmittelFehler({ istEntwurf = false } = {}) {
+  const hmZeilen = liesHeilmittelZeilenAusMaske();
+  const bereich = document.getElementById('rzTherapieBereich')?.value || (_bruecke?.bereich ? _bruecke.bereich() : 'physio');
+  const ergHm = (document.getElementById('rzHmErg')?.value || '').trim();
+  const ergAnz = (document.getElementById('rzAnzahlErg')?.value || '').trim();
+  const ergPos = (document.getElementById('rzHmErgPosition')?.value || '').trim();
+  const ergZeile = (ergHm || ergAnz || ergPos) ? {
+    code: ergPos,
+    bezeichnung: ergHm,
+    einheiten: ergAnz,
+    doppelbehandlung: false,
+  } : null;
+
+  const spiegel = hmZeilen.spiegel;
+  const vorrangige = hmZeilen.items || (spiegel?.heilmittel || spiegel?.vorrangig_einheiten ? [{
+    code: spiegel.heilmittel_position || '',
+    bezeichnung: spiegel.heilmittel || '',
+    einheiten: spiegel.vorrangig_einheiten ?? '',
+    doppelbehandlung: !!spiegel.doppelbehandlung,
+  }] : []);
+
+  const res = pruefeHeilmittelZeilen({
+    bereich,
+    zeilen: vorrangige,
+    ergaenzend: ergZeile,
+    istEntwurf,
+  });
+  return res.fehler;
 }

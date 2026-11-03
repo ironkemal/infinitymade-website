@@ -251,3 +251,23 @@ test('Podologie, Privat/Selbstzahler/BG: Gesamtbetrag ja, Kassenzuzahlung nein (
   const kasse = verordnungDetailHtml({ ...PODO, rezeptart: 'kassen' }, { escapeHtml: esc, quelle: 'podologie', summe });
   assert.match(kasse, /Zuzahlung \(/);
 });
+
+test('Multi-Heilmittel Zähler zeigt Kurznamen und erledigte Einheiten (KG 0/5 · MT 0/5)', () => {
+  const rxMulti = {
+    ...PHYSIO,
+    therapie_bereich: 'physio',
+    heilmittel_items: [
+      { code: 'X0501', einheiten: 5 },
+      { code: 'X1201', einheiten: 5 },
+    ],
+    prescription_sessions: [],
+  };
+  const mockKatalog = {
+    physiotherapy: [
+      { code: 'X0501', kuerzel: 'KG' },
+      { code: 'X1201', kuerzel: 'MT' },
+    ],
+  };
+  const html = verordnungDetailHtml(rxMulti, { escapeHtml: esc, quelle: 'physio', katalog: mockKatalog });
+  assert.match(html, /KG 0\/5 · MT 0\/5/);
+});

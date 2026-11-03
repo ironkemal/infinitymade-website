@@ -23,9 +23,10 @@ export function normalizeBereich(bereich) {
  * @param {string} [opts.bereich]
  * @param {Array<{code?:string, bezeichnung?:string, einheiten?:number|string, doppelbehandlung?:boolean}>} [opts.zeilen]
  * @param {object|Array|null} [opts.ergaenzend]  {code?:string, bezeichnung?:string, einheiten?:number|string, doppelbehandlung?:boolean}
+ * @param {boolean} [opts.istEntwurf]  Wenn true, bleiben leere Einheitenfelder für Entwürfe zulässig (harte Formfehler wie doppelte Codes, Einheit 0, Ergänzend > Summe sperren weiterhin).
  * @returns {{ fehler: string[], warnungen: string[] }}
  */
-export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null } = {}) {
+export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null, istEntwurf = false } = {}) {
   const fehler = [];
   const warnungen = [];
   const normBereich = normalizeBereich(bereich);
@@ -67,7 +68,11 @@ export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null
     }
 
     // Einheit <= 0 oder leer
-    if (einhRoh === '' || isNaN(einh) || einh <= 0) {
+    if (einhRoh === '') {
+      if (!istEntwurf) {
+        fehler.push('Die Anzahl der Behandlungseinheiten muss größer als 0 sein.');
+      }
+    } else if (isNaN(einh) || einh <= 0) {
       fehler.push('Die Anzahl der Behandlungseinheiten muss größer als 0 sein.');
     } else {
       summeVorrangigEinheiten += einh;
@@ -102,7 +107,9 @@ export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null
         fehler.push('Ein ergänzendes Heilmittel erfordert mindestens ein vorrangiges Heilmittel.');
       }
 
-      if (ergEinhRoh !== '' && !isNaN(ergEinh) && ergEinh > 0) {
+      if (ergEinhRoh !== '' && (isNaN(ergEinh) || ergEinh <= 0)) {
+        fehler.push('Die Anzahl der ergänzenden Behandlungseinheiten muss größer als 0 sein.');
+      } else if (ergEinhRoh !== '' && !isNaN(ergEinh) && ergEinh > 0) {
         if (aktiveZeilen.length > 0 && ergEinh > summeVorrangigEinheiten) {
           fehler.push('Die Einheiten des ergänzenden Heilmittels dürfen die Summe der vorrangigen Heilmittel nicht übersteigen.');
         }

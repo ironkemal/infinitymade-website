@@ -66,6 +66,7 @@ const {
   initialisiereHeilmittelZeilen,
   fuegeHeilmittelZeilenHinzu,
   leseHeilmittelZeilenPayload,
+  leereHeilmittelZeilen,
 } = await import('./heilmittel-zeilen-ui.js');
 
 test('Doppelbehandlung-Sichtbarkeit und Konsistenz bei Umschalten zwischen 1 und mehreren Zeilen', () => {
@@ -116,3 +117,21 @@ test('Doppelbehandlung-Sichtbarkeit und Konsistenz bei Umschalten zwischen 1 und
   assert.equal(d1Wrap.style.display, 'none');
   assert.equal(rzDoppel.checked, true);
 });
+
+test('leereHeilmittelZeilen leert extraZeilen und setzt Doppel-Haken zurueck', () => {
+  const extraWrap = getOrCreate('rzHmExtraLines');
+  const d1 = getOrCreate('rzDoppelRow1', 'input');
+  const dGlobal = getOrCreate('rzDoppel', 'input');
+
+  const extraLine = new FakeElement('div');
+  extraWrap.appendChild(extraLine);
+  d1.checked = true;
+  dGlobal.checked = true;
+
+  leereHeilmittelZeilen();
+
+  assert.equal(extraWrap.innerHTML, '');
+  assert.equal(d1.checked, false);
+  assert.equal(dGlobal.checked, false);
+});
+

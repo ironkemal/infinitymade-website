@@ -57,13 +57,13 @@ import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './modu
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261014five1';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261021v';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261102w10'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261102w10';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e'; import { oeffnePatientenImport } from './module/patienten-import.js?v=20261103a'; import { oeffneVerordnungImport } from './module/verordnung-import.js?v=20261103a';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261026p';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20261027p';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
-import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261027p'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
+  from './module/verordnung-maske.js?v=20261103a'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -71,7 +71,7 @@ import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=202
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261102c';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261102b';
+import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261103a';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
@@ -94,7 +94,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261102a';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103a';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
@@ -138,7 +138,7 @@ import {
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
-import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20261027p';
+import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20261103a';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261102a';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
@@ -7140,7 +7140,7 @@ async function loadPatientDetailRezepte(leadId) {
     return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
         <div>
-          <strong>${escapeHtml(rx.heilmittel || '—')}</strong>
+          <strong>${escapeHtml(multiHeilmittelTitel(rx, GKV_LEISTUNGSKATALOG))}</strong>
           ${rx.heilmittel_position ? `<span style="font-family:monospace;font-size:11px;color:#666;margin-left:6px;">${escapeHtml(rx.heilmittel_position)}</span>` : ''}
           <span style="color:#888;margin-left:8px;font-size:13px;">${escapeHtml(rx.icd10 || '')}${rx.diagnosegruppe ? ' · ' + escapeHtml(rx.diagnosegruppe) : ''}</span>
         </div>
@@ -8187,7 +8187,7 @@ const GKV_LEISTUNGSKATALOG = {
   ergotherapie: [],
   logopaedie: [],
 };
-GKV_LEISTUNGSKATALOG.physiotherapy.push(...PHYSIO_KATALOG_ERGAENZUNG); GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy; // K11 Ergänzung
+GKV_LEISTUNGSKATALOG.physiotherapy.push(...PHYSIO_KATALOG_ERGAENZUNG); GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy; if (typeof window !== 'undefined') window.GKV_LEISTUNGSKATALOG = GKV_LEISTUNGSKATALOG; // K11 Ergänzung
 
 // Vergütungsvereinbarungen haben ein Gültigkeitsdatum — die Podologie-Preise
 // steigen z. B. zum 01.07.2026. Statt die Zahlen jedes Mal von Hand zu ändern
@@ -13512,7 +13512,7 @@ async function openRezeptModal(phone, leadId) {
   g('rzDringend').checked = false;
   g('rzHausbesuch').checked = false;
   g('rzBlanko').checked = false;
-  g('rzLhbBvb').checked = false; { const d = g('rzDoppel'); if (d) d.checked = false; }
+  g('rzLhbBvb').checked = false; { const d = g('rzDoppel'); if (d) d.checked = false; const ex = g('rzHmExtraLines'); if (ex) ex.innerHTML = ''; const d1 = g('rzDoppelRow1'); if (d1) d1.checked = false; document.querySelectorAll('[id^="rzDoppelRow"]').forEach(cb => { cb.checked = false; }); }
   g('rzZuzahlungBefreit').checked = false;
   g('rzBerichtAngefordert').checked = false;
   g('rzBerichtStatus').value = 'offen';
@@ -13635,7 +13635,7 @@ async function saveRezept() {
     const pruefung = await pruefeMaske(supabase, 'muster13');
     if (!pruefung) formatErrors.push('Vollständige Prüfung derzeit nicht möglich.');
     else formatErrors.push(...pruefung.befunde.filter(b => b.schwere !== 'hinweis').map(b => b.text));
-    let overridden = false;
+    const sertFehler = typeof pruefeSertHeilmittelFehler === 'function' ? pruefeSertHeilmittelFehler({ istEntwurf: true }) : []; if (sertFehler.length) { showToast(sertFehler[0], 'error'); btn.disabled = false; return; } let overridden = false;
     if (missing.length || formatErrors.length) {
       const lines = [];
       if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
@@ -13712,14 +13712,14 @@ async function saveRezept() {
         const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
         window._physioFlow = vorgabe;
         sessionStorage.setItem('rxPreset', JSON.stringify(vorgabe));
-        if (typeof showPanel === 'function') showPanel('calendar');
+        if (typeof switchPanel === 'function') switchPanel('calendar');
         setTimeout(() => openBookingFromRxPreset(vorgabe), 400);
       }
     }
 
-    if (typeof loadBkVerordnungen === 'function' && patId) {
-      loadBkVerordnungen(patId);
-    }
+    // verordnungen:changed aktualisiert offene Listen und Buchungsmasken.
+    if (typeof window !== 'undefined' && typeof window._bkLoadVerordnungen === 'function' && patId) window._bkLoadVerordnungen(patId);
+    // (loadBkVerordnungen ist veraltet und durch Signale abgeloest)
     if (!editId) emit('verordnungen:changed', { id: rx.id });   // Liste + Patientenakte ziehen über das Signal nach
   } catch (e) {
     console.error('[saveRezept]', e);

@@ -6,7 +6,7 @@
 // jemand auch nur die Notiz aenderte. Diese Tests halten beide Richtungen fest.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, ladeTerminVerordnungen, resetVerordnungFelder, aktualisiereBindungBeimSpeichern, rxGeschlossen } from './termin-verordnung.js';
+import { setzeRezeptartInMaske, rezeptartAusMaske, waehleVerordnung, zeigeVerordnungenFuerTermin, ladeTerminVerordnungen, resetVerordnungFelder, aktualisiereBindungBeimSpeichern, rxGeschlossen, rendereVeroKarten } from './termin-verordnung.js';
 
 /** Minimales DOM: nur das eine versteckte Feld, an dem alles haengt. */
 function mitFeld(startwert = '') {
@@ -492,4 +492,69 @@ test('waehleVerordnung #339: Termin vor Ausstellungsdatum blockiert Auswahl mit 
   assert.equal(window._pendingRxSession, null);
 
   document.getElementById = origGetElementById;
+});
+
+test('rendereVeroKarten: multi-Heilmittel zeigt alle Kurznamen und Einheiten (KG 5 · MT 5)', () => {
+  const origCreate = document.createElement;
+  document.createElement = () => ({ innerHTML: '', style: {}, dataset: {}, addEventListener: () => {} });
+
+  const rx = {
+    id: 'rx-multi-1',
+    therapie_bereich: 'physio',
+    ausstellungsdatum: '2026-10-10',
+    anzahl_einheiten: 10,
+    heilmittel: 'Krankengymnastik',
+    heilmittel_items: [
+      { code: 'X0501', einheiten: 5 },
+      { code: 'X1201', einheiten: 5 },
+    ],
+  };
+
+  const mockKatalog = {
+    physiotherapy: [
+      { code: 'X0501', kuerzel: 'KG' },
+      { code: 'X1201', kuerzel: 'MT' },
+    ],
+  };
+
+  let renderedHtml = '';
+  rendereVeroKarten({
+    container: { appendChild: (c) => { renderedHtml = c.innerHTML; } },
+    rxs: [rx],
+    onSelect: () => {},
+    escapeHtml: (s) => s,
+    katalog: mockKatalog,
+  });
+
+  assert.match(renderedHtml, /KG 5 · MT 5/);
+  document.createElement = origCreate;
+});
+
+test('waehleVerordnung: zeigt gewähltes Heilmittel in infoEl und auf Dots', async () => {
+  const el = setupWaehleDom();
+  const rx = {
+    id: 'rx-multi-1',
+    therapie_bereich: 'physio',
+    anzahl_einheiten: 10,
+    heilmittel: 'Krankengymnastik',
+    heilmittel_items: [
+      { code: 'X0501', einheiten: 5 },
+      { code: 'X1201', einheiten: 5 },
+    ],
+  };
+  const sessions = [
+    { id: 's1', session_number: 1, status: 'planned', booking_id: null, heilmittel_index: 0 },
+    { id: 's2', session_number: 2, status: 'planned', booking_id: null, heilmittel_index: 1 },
+  ];
+  const mockKatalog = {
+    physiotherapy: [
+      { code: 'X0501', kuerzel: 'KG' },
+      { code: 'X1201', kuerzel: 'MT' },
+    ],
+  };
+
+  await waehleVerordnung(rx, sessions, { katalog: mockKatalog });
+
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Nächste: Sitzung 1 von 10 (KG)');
+  assert.equal(el.bkSelectedSessionId.value, 's1');
 });

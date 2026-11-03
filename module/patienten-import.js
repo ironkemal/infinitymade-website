@@ -21,12 +21,56 @@
 import { normalisiereGeschlecht } from './geschlecht.js?v=20260816';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
 import { pruefeKvnr } from './kvnr.js?v=20260814';
-import { trennePlzOrt } from './verordnung-an-backend.js?v=20261027p';
+import { trennePlzOrt } from './verordnung-an-backend.js?v=20261103a';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { pruefeVorgeschichte } from './podo-vorgeschichte.js?v=20261021v';
 import { findePatientDublette, nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 
-// ── CSV lesen ───────────────────────────────────────────────────────────
+// ── CSV & Text lesen ────────────────────────────────────────────────────
+
+/**
+ * Liest eine Text- oder CSV-Datei aus (File, Blob, ArrayBuffer oder Buffer).
+ * Beruecksichtigt UTF-8 mit/ohne BOM sowie Windows-1252 (Ersatzzeichen \uFFFD).
+ *
+ * @param {Blob|File|ArrayBuffer|Uint8Array} quelle
+ * @returns {Promise<string>}
+ */
+export async function dekodiereDateiText(quelle) {
+  if (!quelle) return '';
+  let buf;
+  if (quelle instanceof ArrayBuffer) {
+    buf = quelle;
+  } else if (quelle?.buffer instanceof ArrayBuffer && quelle.byteOffset !== undefined) {
+    buf = quelle.buffer.slice(quelle.byteOffset, quelle.byteOffset + quelle.byteLength);
+  } else if (typeof quelle.arrayBuffer === 'function') {
+    buf = await quelle.arrayBuffer();
+  } else {
+    return String(quelle);
+  }
+
+  // 1. Zuerst als UTF-8 dekodieren
+  let text = new TextDecoder('utf-8').decode(buf);
+
+  // BOM entfernen falls vorhanden
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+
+  // 2. Enthaelt der Text das Unicode-Ersatzzeichen \uFFFD, war es wahrscheinlich Windows-1252
+  if (text.includes('\uFFFD')) {
+    try {
+      const w1252 = new TextDecoder('windows-1252').decode(buf);
+      if (w1252 && !w1252.includes('\uFFFD')) {
+        text = w1252;
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      }
+    } catch {
+      /* bleibt bei UTF-8 */
+    }
+  }
+
+  return text;
+}
 
 /** Trennzeichen aus der Kopfzeile raten (außerhalb von Anführungszeichen). */
 function trennzeichen(text) {
@@ -457,11 +501,7 @@ export function oeffnePatientenImport(d) {
     inhalt.querySelector('[data-pi="datei"]').addEventListener('change', async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
-      let text = await f.text();
-      // Ältere Praxissoftware exportiert Windows-1252 — dann stehen Ersatzzeichen statt Umlauten.
-      if (text.includes('�')) {
-        try { text = new TextDecoder('windows-1252').decode(await f.arrayBuffer()); } catch { /* bleibt UTF-8 */ }
-      }
+      const text = await dekodiereDateiText(f);
       zuordnen(text);
     });
   };

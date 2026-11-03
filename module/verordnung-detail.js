@@ -90,11 +90,14 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261027p';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261103a';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103a';
 // Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
 import { mountTherapiebericht } from './therapiebericht.js?v=20261031a';
+
+export { formatMultiHeilmittelTitel as multiHeilmittelTitel };
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -462,7 +465,7 @@ function _terminePodo(rx, esc, termine) {
   return _spaltenKasten('Termine', inhalt, esc);
 }
 
-function _termine(rx, esc, quelle, termine) {
+function _termine(rx, esc, quelle, termine, katalog = null) {
   if (quelle === 'podologie') return _terminePodo(rx, esc, termine);
 
   const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [])
@@ -478,7 +481,7 @@ function _termine(rx, esc, quelle, termine) {
   const zeile = (s, mitDatum) => {
     const itIdx = s.heilmittel_index ?? 0;
     const it = multiItems ? multiItems[itIdx] : null;
-    const itName = it ? (it.bezeichnung || it.code) : '';
+    const itName = it ? kuerzelAusKatalog(it, katalog) : '';
     const istErledigt = s.status === 'done' || s.status === 'completed';
 
     let hmWidget = '';
@@ -487,7 +490,7 @@ function _termine(rx, esc, quelle, termine) {
         hmWidget = `<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg-hover,#2d3748);color:var(--text-main);">${esc(itName)}</span>`;
       } else {
         const optionsHtml = multiItems.map((item, idx) =>
-          `<option value="${idx}" ${idx === itIdx ? 'selected' : ''}>${esc(item.bezeichnung || item.code)}</option>`
+          `<option value="${idx}" ${idx === itIdx ? 'selected' : ''}>${esc(kuerzelAusKatalog(item, katalog))}</option>`
         ).join('');
         hmWidget = `<select class="vord-session-hm-swap form-select" data-session-id="${s.id}" data-current-index="${itIdx}" data-rx-id="${rx.id}" style="font-size:11px;padding:1px 4px;max-width:140px;height:24px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-main);">${optionsHtml}</select>`;
       }
@@ -828,8 +831,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
     const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
     const texte = multiItems.map((item, idx) => {
       const erledigt = sitzungen.filter(s => (s.heilmittel_index ?? 0) === idx && (s.status === 'done' || s.status === 'completed')).length;
-      const bezeichnung = item.bezeichnung || item.code || `HM ${idx + 1}`;
-      const kuerzel = bezeichnung.includes(' – ') ? bezeichnung.split(' – ')[0] : bezeichnung;
+      const kuerzel = kuerzelAusKatalog(item, opt.katalog);
       return `${esc(kuerzel)} ${erledigt}/${item.einheiten || '?'}`;
     });
     kalemSayaclariHtml = `<span title="Erledigte Sitzungen je Heilmittel" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);">${texte.join(' · ')}</span>`;
@@ -860,7 +862,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
       </div>
       <div style="flex:0 1 260px;min-width:230px;display:flex;flex-direction:column;gap:12px;margin-top:14px;">
         ${_verschreibung(rx, esc, quelle, opt.summe)}
-        ${_termine(rx, esc, quelle, opt.termine)}
+        ${_termine(rx, esc, quelle, opt.termine, opt.katalog)}
       </div>
     </div>
 
@@ -1274,6 +1276,7 @@ export async function zeigeVerordnungDetail(ctx) {
       escapeHtml, quelle, summe, termine, pruefung, bearbeitbar,
       leadId: p.id || ctx.leadId || '',
       rolle,
+      katalog: ctx.katalog || (typeof window !== 'undefined' ? window.GKV_LEISTUNGSKATALOG : null),
     });
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';

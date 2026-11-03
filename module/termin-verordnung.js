@@ -26,6 +26,7 @@
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261102a';
 import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { alsBerlinDatum } from './berlin-datum.js';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103a';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
 import { RX_FELDER } from './termin-laden.js?v=20261021s';
 
@@ -89,7 +90,7 @@ function anlegenKnopf(onAnlegen, leer) {
  * `sb`/`ownerId` (Aufrufer reicht sie nicht) läuft nur der bisherige,
  * synchrone Zweig.
  */
-export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml, sb = null, ownerId = null, leadId = null }) {
+export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml, sb = null, ownerId = null, leadId = null, katalog = null }) {
   if (!container) return;
   container.innerHTML = '';
 
@@ -125,9 +126,10 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
     // Geschlossene (nur als Termin-Bindung sichtbare) Verordnung: markiert und
     // nicht wählbar — sonst bindet man neue Termine an eine abgerechnete VO (podoloji).
     const geschlossen = rxGeschlossen(rx);
+    const hmTitel = formatMultiHeilmittelTitel(rx, katalog);
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}${geschlossen ? ` <span data-vero-geschlossen style="font-size:10px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);padding:0 6px;border-radius:8px;">${geschlossen}</span>` : ''}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(hmTitel)}${geschlossen ? ` <span data-vero-geschlossen style="font-size:10px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);padding:0 6px;border-radius:8px;">${geschlossen}</span>` : ''}</div>
         <span data-vero-zaehler="${escapeHtml(rx.id)}" style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
       </div>
       <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(diag)} · ${escapeHtml(issued)}${freq}</div>${geschlossen ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Termin gehört zu dieser Verordnung — für neue Behandlungen andere aktive Verordnung wählen.</div>' : ''}`;
@@ -222,8 +224,10 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
   if (!pickerBlock || !dotsEl) return;
 
   const total = rx.anzahl_einheiten || sessions?.length || 0;
+  const multiItems = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1 ? rx.heilmittel_items : null;
+  const hmTitel = formatMultiHeilmittelTitel(rx, deps?.katalog);
   if (titleEl) {
-    titleEl.textContent = `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''} · ${total} Einh.`
+    titleEl.textContent = `${hmTitel}${rx.icd10 ? ' · ' + rx.icd10 : ''} · ${total} Einh.`
       + (rx.frequenz ? ` · ${rx.frequenz}` : '');
   }
 
@@ -259,6 +263,11 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
       .sort((a, b) => a.session_number - b.session_number);
     const naechste = offeneSessions[0] || null;
 
+    const hmKuerzelFuerSitzung = (s) => {
+      const it = multiItems ? multiItems[s?.heilmittel_index ?? 0] : null;
+      return it ? kuerzelAusKatalog(it, deps?.katalog) : '';
+    };
+
     dotsEl.innerHTML = (sessions || [])
       .slice()
       .sort((a, b) => a.session_number - b.session_number)
@@ -267,8 +276,10 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
         const geplant = !!s.booking_id && !erledigt;
         const stil = erledigt ? PUNKT_STIL.done : geplant ? PUNKT_STIL.planned : PUNKT_STIL.offen;
         const waehlbar = !erledigt;
-        return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-pending="${waehlbar ? '1' : '0'}"
-        title="Sitzung ${s.session_number}: ${stil.titel}"
+        const k = hmKuerzelFuerSitzung(s);
+        const kZusatz = k ? ` (${k})` : '';
+        return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-sess-hm="${k}" data-pending="${waehlbar ? '1' : '0'}"
+        title="Sitzung ${s.session_number}${kZusatz}: ${stil.titel}"
         style="width:32px;height:32px;border-radius:50%;border:2px ${stil.art} ${stil.rand};background:${stil.fuell};cursor:${waehlbar ? 'pointer' : 'default'};font-size:13px;font-weight:700;color:${stil.text};display:flex;align-items:center;justify-content:center;line-height:1;">
         ${s.session_number}
       </button>`;
@@ -280,14 +291,17 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
         markiereGewaehltenPunkt(dotsEl, dot);
         setzeWert('bkSelectedSessionId', dot.dataset.sessId);
         window._pendingRxSession = { sessionId: dot.dataset.sessId, prescriptionId: rx.id };
-        if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt`;
+        const k = dot.dataset.sessHm ? ` (${dot.dataset.sessHm})` : '';
+        if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt${k}`;
       });
     });
 
     if (naechste) {
       setzeWert('bkSelectedSessionId', naechste.id);
       window._pendingRxSession = { sessionId: naechste.id, prescriptionId: rx.id };
-      if (infoEl) infoEl.textContent = `Nächste: Sitzung ${naechste.session_number} von ${total}`;
+      const k = hmKuerzelFuerSitzung(naechste);
+      const kZusatz = k ? ` (${k})` : '';
+      if (infoEl) infoEl.textContent = `Nächste: Sitzung ${naechste.session_number} von ${total}${kZusatz}`;
       const standardPunkt = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${naechste.id}"]`);
       if (standardPunkt) markiereGewaehltenPunkt(dotsEl, standardPunkt);
     } else {

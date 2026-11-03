@@ -205,11 +205,17 @@ export function entferneHeilmittelZeile(zeileEl) {
 }
 
 export function leereHeilmittelZeilen() {
-  if (_extraLinesWrap) {
-    _extraLinesWrap.innerHTML = '';
+  const wrap = _extraLinesWrap || $('rzHmExtraLines');
+  if (wrap) {
+    wrap.innerHTML = '';
   }
   const d1 = $('rzDoppelRow1');
   if (d1) d1.checked = false;
+  const d = $('rzDoppel');
+  if (d) d.checked = false;
+  if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+    document.querySelectorAll('[id^="rzDoppelRow"]').forEach(cb => { cb.checked = false; });
+  }
   aktualisiereAddBtnSichtbarkeit();
 }
 

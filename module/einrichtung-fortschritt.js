@@ -21,6 +21,16 @@ const SOLL_ANZAHL = 3;
 const GESAMT = PFLICHT_ANZAHL * GEWICHT.pflicht + SOLL_ANZAHL * GEWICHT.soll;
 
 /**
+ * @typedef {object} Aufgabe
+ * @property {string} schluessel
+ * @property {string} label
+ * @property {string} zielAnsicht
+ * @property {string} feld
+ * @property {'pflicht'|'soll'} stufe
+ * @property {number} punkte
+ */
+
+/**
  * @param {?object} profil  Profilzeile der PRAXIS (`ownerProfile || currentProfile`)
  * @returns {{prozent:number, erfuellt:number, gesamt:number, fehlend:Aufgabe[], erledigt:Aufgabe[]}}
  *   Aufgabe = {schluessel, label, zielAnsicht, feld, stufe:'pflicht'|'soll', punkte}

@@ -16,4 +16,8 @@ interface Window {
     captureException: (err: unknown, ctx?: Record<string, unknown>) => void;
     captureMessage?: (msg: string, ctx?: Record<string, unknown>) => void;
   };
+  Cropper?: any;
 }
+
+declare var Cropper: any;
+

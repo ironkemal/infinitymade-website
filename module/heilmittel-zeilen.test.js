@@ -204,3 +204,42 @@ test('Doppelbehandlung bei ergänzendem Heilmittel wird sert abgewiesen', () => 
   });
   assert.ok(r.fehler.some(f => f.includes('Doppelbehandlung ist für ergänzende Heilmittel nicht zulässig')));
 });
+
+test('istEntwurf: leere Einheit ist frei, aber Einheit 0, doppelter Code und Ergänzend > Summe sperren', () => {
+  // Leere Einheit im Entwurf erlaubt
+  const rLeer = pruefeHeilmittelZeilen({
+    bereich: 'physio',
+    zeilen: [{ code: 'X0501', bezeichnung: 'KG', einheiten: '' }],
+    istEntwurf: true,
+  });
+  assert.deepEqual(rLeer.fehler, []);
+
+  // Einheit 0 sperrt auch im Entwurf
+  const rNull = pruefeHeilmittelZeilen({
+    bereich: 'physio',
+    zeilen: [{ code: 'X0501', bezeichnung: 'KG', einheiten: 0 }],
+    istEntwurf: true,
+  });
+  assert.ok(rNull.fehler.some(f => f.includes('größer als 0')));
+
+  // Doppelter Code sperrt auch im Entwurf
+  const rDoppelt = pruefeHeilmittelZeilen({
+    bereich: 'physio',
+    zeilen: [
+      { code: 'X0501', bezeichnung: 'KG', einheiten: 6 },
+      { code: 'X0501', bezeichnung: 'KG', einheiten: 6 },
+    ],
+    istEntwurf: true,
+  });
+  assert.ok(rDoppelt.fehler.some(f => f.includes('nicht mehrfach')));
+
+  // Ergänzend > Summe sperrt auch im Entwurf
+  const rErg = pruefeHeilmittelZeilen({
+    bereich: 'physio',
+    zeilen: [{ code: 'X0501', bezeichnung: 'KG', einheiten: 6 }],
+    ergaenzend: { code: 'X1301', einheiten: 10 },
+    istEntwurf: true,
+  });
+  assert.ok(rErg.fehler.some(f => f.includes('nicht übersteigen')));
+});
+

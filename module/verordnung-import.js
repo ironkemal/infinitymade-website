@@ -20,7 +20,7 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt } from './patienten-import.js?v=20261102w10';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt, dekodiereDateiText } from './patienten-import.js?v=20261103a';
 import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
@@ -29,8 +29,9 @@ import { behandlungsbeginnFrist } from './heilmittel-fristen.js?v=20261004m113';
 import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20261031k3';
-import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261027p';
-import { sendeAnServer } from './verordnung-maske.js?v=20261027p';
+import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261103a';
+import { sendeAnServer } from './verordnung-maske.js?v=20261103a';
+import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103a';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { normalizeBereich, pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
 
@@ -372,6 +373,11 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
     }
   }
 
+  // Frequenz: Pflichtangabe vor der Abrechnung. Fehlt sie, ist die Zeile gelb (Hinweis).
+  if (!w('frequenz')) {
+    hinweise.push('Frequenz fehlt — bitte vor der Abrechnung ergänzen');
+  }
+
   // Erbracht / Abgerechnet
   const dringlich = janein(w('dringlich')) === true;
   const erbrachtRoh = Number.parseInt(w('erbracht'), 10);
@@ -413,8 +419,12 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
   let schluessel = null;
   let istDublette = false;
   if (normBereich === 'physio' || normBereich === 'ergo') {
-    // Çift import: aynı hasta + aynı Ausstellungsdatum + aynı Position varsa sarı/atla, çift kayıt açma.
-    const posSchluessel = items[0]?.code || w('heilmittel_position') || w('heilmittel');
+    // Dublettenprüfung: Patient + Ausstellungsdatum + alle Codes (sortiert, Reihenfolge unabhängig).
+    const alleCodes = [
+      ...(Array.isArray(items) && items.length > 0 ? items.map(it => it.code) : [w('heilmittel_position') || w('heilmittel')]),
+      ergaenzendPosition
+    ].filter(Boolean).map(c => String(c).trim().toUpperCase()).sort().join('+');
+    const posSchluessel = alleCodes || '';
     schluessel = patient && ausstellungsdatum && posSchluessel ? `${patient.id}|${ausstellungsdatum}|${posSchluessel}` : null;
     if (schluessel && k.vorhandeneVo && k.vorhandeneVo.has(schluessel)) {
       hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits – wird übersprungen');
@@ -595,10 +605,7 @@ export function oeffneVerordnungImport(d) {
     inhalt.querySelector('[data-pi="datei"]').addEventListener('change', async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
-      let text = await f.text();
-      if (text.includes('')) {
-        try { text = new TextDecoder('windows-1252').decode(await f.arrayBuffer()); } catch { /* bleibt UTF-8 */ }
-      }
+      const text = await dekodiereDateiText(f);
       const [kopf = [], ...daten] = leseCsv(text);
       if (!kopf.length || !daten.length) { d.showToast('Die Datei enthält keine Zeilen.', 'error'); return; }
       zuordnungsSchritt({
@@ -726,6 +733,18 @@ export function oeffneVerordnungImport(d) {
       try {
         const antwort = await sendeAnServer(d.supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf: voRumpf(z.verordnung, heute), apiBasis: d.apiBasis });
         ok++;
+        const rxId = antwort?.prescription_id || antwort?.id;
+        // Sitzungszeilen anlegen (wie in der Maske saveRezept) — Podologie führt kein Einheiten-Hauptbuch (dashboard.js:5226)
+        const istPodo = (z.verordnung.therapieBereich || 'podo') === 'podo';
+        if (!istPodo && d.supabase && rxId) {
+          await gleicheSitzungenAb({
+            supabase: d.supabase,
+            prescriptionId: rxId,
+            anzahlEinheiten: z.verordnung.anzahl || 0,
+            doppelbehandlung: !!z.verordnung.doppelbehandlung,
+            items: z.verordnung.heilmittel_items || [],
+          });
+        }
         // Im Altsystem schon kassierte Zuzahlung als Vermerk (Migration 0086) — Praxura kassiert nur den Rest.
         if (z.verordnung.zuzahlungAlt != null && antwort?.prescription_id) {
           await d.supabase.from('prescriptions').update({

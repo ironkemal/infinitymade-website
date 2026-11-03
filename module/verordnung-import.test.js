@@ -153,14 +153,14 @@ test('Physio: Vorlage CSV wird erkannt und ist übernehmbar', () => {
 });
 
 test('Physio: Zeilenfarben (grün ok / gelb Hinweis / rot Fehler)', () => {
-  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Frequenz;Unterschrift;Erbracht;Abgerechnet\n';
   const csv = kopf
     // Zeile 1: Grün (alles vollständig und gültig)
-    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;ja;0;nein\n'
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;1-2x wtl.;ja;0;nein\n'
     // Zeile 2: Gelb (BSNR fehlt -> Hinweis, aber übernehmbar)
-    + 'Muster;Erika;01.02.1950;16.10.2026;123456601;;WS;M54.5;X0501;6;ja;0;nein\n'
+    + 'Muster;Erika;01.02.1950;16.10.2026;123456601;;WS;M54.5;X0501;6;1-2x wtl.;ja;0;nein\n'
     // Zeile 3: Rot (LANR fehlt -> Pflichtfehler)
-    + 'Muster;Erika;01.02.1950;17.10.2026;;123456700;WS;M54.5;X0501;6;ja;0;nein\n';
+    + 'Muster;Erika;01.02.1950;17.10.2026;;123456700;WS;M54.5;X0501;6;1-2x wtl.;ja;0;nein\n';
   const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
   assert.equal(e.zeilen.length, 3);
   // Zeile 1: grün
@@ -175,6 +175,17 @@ test('Physio: Zeilenfarben (grün ok / gelb Hinweis / rot Fehler)', () => {
   assert.equal(e.ok, 2);
   assert.equal(e.gelb, 1);
   assert.equal(e.rot, 1);
+});
+
+test('Physio: Zeile ohne Frequenz ist GELB (Hinweis), nicht grün', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Frequenz;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;6;;ja;0;nein\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen.length, 1);
+  assert.equal(e.zeilen[0].fehler.length, 0);
+  assert.ok(e.zeilen[0].hinweise.some(h => h.includes('Frequenz fehlt')));
+  assert.equal(e.gelb, 1);
 });
 
 test('Physio: Bereits begonnene VO ist ROT („Bereits begonnene Verordnungen bitte von Hand anlegen.")', () => {
@@ -248,6 +259,26 @@ test('Physio: Dublette (gleicher Patient, gleiches Datum, gleiche Position) -> g
 
   assert.equal(e.ok, 1); // Nur Zeile 0 wird übernommen
   assert.equal(e.rot, 0); // Keine roten Fehler
+});
+
+test('Physio: 2 Heilmittel Dublette berücksichtigt ALLE Codes unabhängig von der Reihenfolge', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;Diagnosegruppe;Heilmittel;Anzahl;Heilmittel 2;Anzahl Einheiten 2;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    // Zeile 1: X0501 + X1201
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;X1201;6;ja;0;nein\n'
+    // Zeile 2: Nur X0501 (darf NICHT als Dublette von Zeile 1 markiert werden!)
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X0501;6;;;ja;0;nein\n'
+    // Zeile 3: X1201 + X0501 (gleiche Codes in umgekehrter Reihenfolge -> echte Dublette von Zeile 1!)
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;WS;X1201;6;X0501;6;ja;0;nein\n';
+  const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(e.zeilen.length, 3);
+  // Zeile 1: ok
+  assert.equal(e.zeilen[0].istDublette, false);
+  // Zeile 2: nur 1 HM, keine Dublette von Zeile 1!
+  assert.equal(e.zeilen[1].istDublette, false);
+  // Zeile 3: echte Dublette von Zeile 1 (Reihenfolge X1201 + X0501 ist egal)
+  assert.equal(e.zeilen[2].istDublette, true);
+  assert.match(e.zeilen[2].hinweise.join(), /doppelt in Datei/);
 });
 
 test('Physio: Türkische und deutsche Sonderzeichen + UTF-8 BOM', () => {

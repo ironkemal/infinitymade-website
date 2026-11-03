@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, fehlendePflicht, VORLAGE_CSV } from './patienten-import.js';
+import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, fehlendePflicht, VORLAGE_CSV, dekodiereDateiText } from './patienten-import.js';
 import { findePatientDublette } from './patient-dublette.js';
 
 test('leseCsv: Semikolon, Anführungszeichen, BOM, CRLF, Umbruch im Feld', () => {
@@ -110,3 +110,32 @@ test('Vorgeschichte-Spalten (0086) landen geprüft im Datensatz', () => {
   assert.equal(d.podo_vorgeschichte_erste_beh_am, '2024-03-01');
   assert.ok(d.podo_vorgeschichte_erfasst_am);
 });
+
+test('dekodiereDateiText: UTF-8 mit BOM und Umlauten ä/ö/ü dekodiert sauber ohne BOM', async () => {
+  const utf8MitBom = Buffer.concat([
+    Buffer.from([0xEF, 0xBB, 0xBF]),
+    Buffer.from('Nachname;Vorname\nMüller;Bärbel\nJäger;Jörg', 'utf8')
+  ]);
+  const text = await dekodiereDateiText(utf8MitBom);
+  assert.ok(!text.startsWith('\uFEFF'));
+  assert.ok(!text.includes('ï»¿'));
+  assert.ok(text.includes('Müller;Bärbel'));
+  assert.ok(text.includes('Jäger;Jörg'));
+});
+
+test('dekodiereDateiText: Windows-1252 Datei mit Umlauten ä/ö/ü/ß dekodiert sauber', async () => {
+  // In Windows-1252:
+  // ä = 0xE4, ö = 0xF6, ü = 0xFC, ß = 0xDF
+  // "Nachname;Müller;Bärbel;Groß"
+  const bytes = [
+    0x4E, 0x61, 0x63, 0x68, 0x6E, 0x61, 0x6D, 0x65, 0x3B, // Nachname;
+    0x4D, 0xFC, 0x6C, 0x6C, 0x65, 0x72, 0x3B,             // Müller;
+    0x42, 0xE4, 0x72, 0x62, 0x65, 0x6C, 0x3B,             // Bärbel;
+    0x47, 0x72, 0x6F, 0xDF                                 // Groß
+  ];
+  const w1252Buf = Buffer.from(bytes);
+  const text = await dekodiereDateiText(w1252Buf);
+  assert.ok(!text.includes('\uFFFD'));
+  assert.equal(text, 'Nachname;Müller;Bärbel;Groß');
+});
+
