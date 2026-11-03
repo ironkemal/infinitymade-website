@@ -93,3 +93,9 @@ test('personal balance shares annual clipping and counts overlapping leave only 
   assert.match(h.host.innerHTML,/20 Tage übrig/);
   assert.match(h.host.innerHTML,/5 Tage eingetragen/);
 });
+
+for (const hours of [[{day_of_week:7,is_active:true}], [{day_of_week:'1',is_active:true}], [null]]) test(`invalid working days do not fabricate personal balance: ${JSON.stringify(hours)}`, async () => {
+ const h=setup({hours}); await h.api.laden();
+ assert.doesNotMatch(h.host.innerHTML,/Tage übrig/);
+ assert.match(h.host.innerHTML,/Urlaubssaldo gerade nicht verfügbar/);
+});

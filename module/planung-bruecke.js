@@ -21,7 +21,7 @@ import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261102a';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
 import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
-import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung';
+import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };

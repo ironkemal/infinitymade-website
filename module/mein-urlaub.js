@@ -1,5 +1,5 @@
 /** Read-only personal employment summary; never accepts another employee's ID. */
-import { ladeAnstellung, anstellungHtml, urlaubsKennzahlen } from './anstellung.js?v=20261103planung';
+import { ladeAnstellung, ladeArbeitstage, anstellungHtml, urlaubsKennzahlen } from './anstellung.js?v=20261103planung';
 
 export function mountMeinUrlaub(host, { supabase, getProfil, jetzt = () => new Date() }) {
   let generation = 0;
@@ -16,7 +16,7 @@ export function mountMeinUrlaub(host, { supabase, getProfil, jetzt = () => new D
     try {
       const [anstellung, zeiten, urlaub] = await Promise.all([
         ladeAnstellung({ supabase, empId: profil.id }),
-        supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', profil.id),
+        ladeArbeitstage({ supabase, empId: profil.id, mitStatus: true }),
         supabase.from('time_offs').select('start_date,end_date,type').eq('employee_id', profil.id)
           .eq('type', 'urlaub').lte('start_date', `${bis}T23:59:59.999+01:00`).gte('end_date', `${von}T00:00:00+01:00`),
       ]);
@@ -27,8 +27,8 @@ export function mountMeinUrlaub(host, { supabase, getProfil, jetzt = () => new D
         return;
       }
       host.innerHTML = `<h3>Mein Urlaub · ${jahr}</h3>${anstellungHtml(anstellung, { istInhaber: false })}`;
-      const arbeitstage = new Set((zeiten.data || []).filter(z => z.is_active).map(z => z.day_of_week));
-      if (zeiten.error || urlaub.error || !arbeitstage.size || !Number.isFinite(anstellung.urlaub_jahrestage)) {
+      const arbeitstage = zeiten.arbeitstage;
+      if (zeiten.fehler || !zeiten.vorhanden || urlaub.error || !arbeitstage.size || !Number.isFinite(anstellung.urlaub_jahrestage)) {
         host.innerHTML += '<p role="status">Urlaubssaldo gerade nicht verfügbar. Bitte Arbeitszeiten und Urlaubseinträge mit dem Praxisinhaber prüfen.</p>';
         return;
       }

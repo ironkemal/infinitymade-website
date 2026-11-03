@@ -150,3 +150,9 @@ Der Chat „Live-Test" trägt gefundene Fehler hier als neue Scheibe `F1`, `F2`,
 - M5: Jahresüberhänge und überlappende Urlaubseinträge zentral begrenzt/dedupliziert. Fehler oder fehlende Arbeitszeiten ergeben keinen erfundenen Saldo; geladene Abwesenheiten bleiben sichtbar und löschbar. Inhaber und Mitarbeiter nutzen dieselbe Rechnung. Lokal getestet, noch nicht live abgenommen.
 - M7: spätere Entscheidung `17a966c2` gilt: Support-Hinweis statt eigenem Einbettungscode-UI; vorhandener Generator bleibt Team-Werkzeug. Synthetische Widget-Probe 55/55, Generator/Serverguards 14/14. Keine echte QA-Anfrageverarbeitung behauptet.
 - Separates reines QA-Konto vom Nutzer freigegeben; Zuordnung laut Release-Chat bestätigt. Mitarbeiteranmeldung und funktionale Live-Abnahme bleiben getrennte Schritte. Keine Prüfung in Yanniks Konto. Isolierte Box-Installation zuletzt.
+
+### Vertiefung M4/M5 — lokal, noch keine Live-Abnahme
+
+Tagesansicht verwirft ältere Antworten nach allen drei Wartepunkten sowie bei Standort-/Filter-/Ansichtswechsel; neues leeres Team kann nicht vom alten Lauf wieder gefüllt werden. Sieben neue Regressionen zuerst rot, danach grün. „Mein Urlaub“ nutzt gemeinsamen validierten Arbeitszeitloader (drei Randfälle zuerst rot, danach grün). Unabhängiger Jahressaldovergleich mit 21 Schaltjahr-/Schichtkombinationen grün. Gesamtfrontend2659/2659 und Bundle grün. Kein Push/DB/Mail in dieser Nachprüfung; isolierte Box bleibt letzter Schritt.
+
+Echte isolierte Browserprobe `node tools/browser-probe/kalender-tag-antwort.mjs`:22/22 PASS bei390/1280px; tatsächlicher Tagesrenderer und persönlicher Urlaubsbaustein, alle Netzwerkanfragen abgefangen. Keine Konten, Live-DB oder Mails.

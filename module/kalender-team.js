@@ -13,7 +13,7 @@
  *      an, waehrend der erste noch auf Supabase wartete, hingen am Ende beide
  *      Ergebnisse im selben Container. Die Spalten werden deshalb jetzt in
  *      einem Fragment aufgebaut und am Stueck eingehaengt (`replaceChildren`)
- *      — der letzte Lauf gewinnt, statt sich an den vorigen anzuhaengen.
+ *      — der Generationstest in renderDayView verwirft veraltete Antworten.
  *      `teamReihenfolge()` deckt zusaetzlich den Datenfall ab: eine doppelt
  *      gelieferte Profilzeile ergibt trotzdem nur eine Spalte.
  *   2. Der eigene Zugang stand irgendwo in der Reihe. Man sucht aber immer

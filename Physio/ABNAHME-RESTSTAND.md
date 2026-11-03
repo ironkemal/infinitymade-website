@@ -47,3 +47,11 @@ Freigegebener Push/Frontend-Release bis `8d8f7c0a` ausgeführt. Keine neuen Live
 ## Neue lokale Planungskorrekturen 03.11.2026
 
 M4: Standortfilter Tag/Woche/Monat einschließlich NULL-Altbestand, Einzelmitarbeiter und verifiziert leerer Pläne; alte Monatsantworten verworfen. M5: Jahresbegrenzung und Deduplizierung beider Urlaubsansichten, Fehlersaldo gesperrt, vorhandene Abwesenheiten trotzdem sichtbar/löschbar. M7 folgt Support-Entscheidung `17a966c2`. Noch keine neue Live-Abnahme; isolierte Box zuletzt. Separates QA-Konto ist freigegeben und laut Release-Chat zugeordnet; Mitarbeiterzugang wird dort koordiniert.
+
+## Vertiefte lokale Nachprüfung 03.11.2026
+
+- Tatsächliche Tagesansicht mit verzögerten Buchungs-, Einsatzplan- und Abwesenheitsantworten geprüft. Sieben Regressionen zuerst rot: alter Tag überschreibt neuen, alter Lauf füllt neues leeres Team, geänderter Standort/Filter/Ansicht bleibt unbeachtet. Startgeneration und Kontextprüfung verhindern jetzt veraltete DOM-Updates. Nach Fix sieben grün. Keine Aussage über neue Live-Abnahme.
+- „Mein Urlaub“ verwendete abweichende Arbeitszeitprüfung: ungültige aktive Wochentage ergaben einen vollen Saldo. Drei synthetische Randfälle zuerst rot; gemeinsamer `ladeArbeitstage`-Loader behebt sie, ohne zusätzliche Query.
+- Unabhängige Tageszählung prüft Jahreswechsel, Schaltjahr und sieben Schichtmuster über drei Jahre (21 Vergleiche). Frontend insgesamt2659/2659, null Fehler/Skips; Dashboard-Bundle grün.
+
+Echte isolierte Browserprobe `node tools/browser-probe/kalender-tag-antwort.mjs`:22/22 PASS bei390/1280px; tatsächlicher Tagesrenderer und persönlicher Urlaubsbaustein, alle Netzwerkanfragen abgefangen. Keine Konten, Live-DB oder Mails.

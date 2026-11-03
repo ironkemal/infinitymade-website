@@ -346,3 +346,24 @@ test('Arbeitszeit-Status unterscheidet Fehler, fehlende Tage und verifizierte Ta
   const gut = await ladeArbeitstage({supabase:sb({data:[{day_of_week:2,is_active:true}]}),empId:'e',mitStatus:true});
   assert.equal(gut.vorhanden,true); assert.deepEqual(gut.arbeitstage,new Set([2]));
 });
+
+test('Jahressaldo stimmt mit unabhängiger Tageszählung für Schaltjahr und Schichtmuster überein', () => {
+  for (const jahr of [2024, 2025, 2026]) for (let tag=0;tag<7;tag++) {
+    const arbeitstage=new Set([tag,(tag+2)%7]);
+    const abwesenheiten=[
+      {type:'urlaub',start_date:`${jahr-1}-12-20`,end_date:`${jahr}-01-08`},
+      {type:'urlaub',start_date:`${jahr}-02-27`,end_date:`${jahr}-03-03`},
+      {type:'urlaub',start_date:`${jahr}-03-01`,end_date:`${jahr}-03-09`},
+      {type:'krank',start_date:`${jahr}-06-01`,end_date:`${jahr}-07-01`},
+      {type:'urlaub',start_date:`${jahr}-12-20`,end_date:`${jahr+1}-01-08`},
+    ];
+    let expected=0;
+    for(let day=0;day<366;day++) {
+      const date=new Date(Date.UTC(jahr,0,1+day));
+      if(date.getUTCFullYear()!==jahr)break;
+      const iso=date.toISOString().slice(0,10);
+      if(arbeitstage.has(date.getUTCDay())&&abwesenheiten.some(a=>a.type==='urlaub'&&a.start_date<=iso&&a.end_date>=iso))expected++;
+    }
+    assert.equal(urlaubsKennzahlen({abwesenheiten,arbeitstage,jahr,anspruch:60}).verbraucht,expected,`${jahr}/${tag}`);
+  }
+});

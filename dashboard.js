@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103planung';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103planung2';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -1957,9 +1957,9 @@ function setCalendarView(view) {
   });
   renderCalendarView();
 }
-
+let tagesAufbau = 0;
 async function renderDayView(dateStr) {
-  document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr + 'T12:00:00'));
+  const lauf = ++tagesAufbau, filter = calEmpFilter, businessId = currentBusiness?.id || null; const aktuell = () => lauf === tagesAufbau && filter === calEmpFilter && businessId === (currentBusiness?.id || null) && calendarView === 'day'; document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr + 'T12:00:00'));
   const timeCol = document.getElementById('dvTimeCol');
   const colsWrap = document.getElementById('dvColsWrap');
   // Erst am Ende einhaengen: waehrend der Abfragen unten kann ein zweiter
@@ -1980,15 +1980,15 @@ async function renderDayView(dateStr) {
   const dStart = new Date(dateStr + 'T00:00:00').toISOString();
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
-  const businessId = currentBusiness?.id || null; const { data: geladeneTermine } = await supabase.from('bookings')
+  const { data: geladeneTermine } = await supabase.from('bookings')
     .select(TERMIN_SELECT)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
 
-  const bookings = termineDesStandorts(geladeneTermine || [], businessId); emps = await planSpalten(supabase, { team: emps, bookings, datum: dateStr, businessId, ownerId }); const empIds = emps.map(e => e.id);
-  const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
-  const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
+  if (!aktuell()) return; const bookings = termineDesStandorts(geladeneTermine || [], businessId); emps = await planSpalten(supabase, { team: emps, bookings, datum: dateStr, businessId, ownerId }); const empIds = emps.map(e => e.id);
+  if (!aktuell()) return; const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
+  if (!aktuell()) return; const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
   for (let h = DV_VON; h < DV_BIS; h++) {
     for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');

@@ -58828,6 +58828,7 @@
    "calls": [
     "abwesenheitsGrund",
     "add",
+    "aktuell",
     "formatDateDE",
     "getOwnerId",
     "handleRxSessionDropToModal",
@@ -108353,7 +108354,10 @@
     "ersatz"
    ],
    "calledBy": [
-    "anstellungFuerUrlaub"
+    "aktuell",
+    "anstellungFuerUrlaub",
+    "laden",
+    "mountMeinUrlaub"
    ],
    "modules": [
     "abrechnung",
@@ -146354,7 +146358,6 @@
    "lines": 39,
    "spiegelHinweis": null,
    "tables": [
-    "working_hours",
     "time_offs"
    ],
    "rpcs": [],
@@ -146366,6 +146369,7 @@
     "all",
     "anstellungHtml",
     "ladeAnstellung",
+    "ladeArbeitstage",
     "laden",
     "urlaubsKennzahlen"
    ],
@@ -146386,7 +146390,6 @@
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [
-    "working_hours",
     "time_offs"
    ],
    "rpcs": [],
@@ -146398,6 +146401,7 @@
     "all",
     "anstellungHtml",
     "ladeAnstellung",
+    "ladeArbeitstage",
     "urlaubsKennzahlen"
    ],
    "calledBy": [
@@ -146474,7 +146478,6 @@
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [
-    "working_hours",
     "time_offs"
    ],
    "rpcs": [],
@@ -146485,12 +146488,14 @@
     "all",
     "anstellungHtml",
     "ladeAnstellung",
+    "ladeArbeitstage",
     "urlaubsKennzahlen"
    ],
    "calledBy": [
     "baueMessreihenZeilen",
     "laden",
     "mountMeinUrlaub",
+    "renderDayView",
     "zeichneRegionenBereich"
    ],
    "modules": [
