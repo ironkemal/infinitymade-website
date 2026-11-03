@@ -2143,3 +2143,8 @@ Kapılar: Backend 200 JSON, deploy indi (lokal 20261101st, canlı 20261102f8 —
 **Offen/KALDI:** Kurzname zeigt X-Code (Zähler, Sitzungszeilen, Termin-Karte, Seitenbereich) — module/heilmittel-kuerzel.js ` – `-Split vor Katalog-Lookup; Termin-Modal "Nächste Sitzung" zeigt bereits gebundene Sitzung 1 (module/termin-verordnung.js ~L248 Filter `|| status==='planned'`), Sitzung 6 (MT) trägt Label (X0501) und Leistung bleibt KG; Entwurf (Warnung, z. B. Höchstmenge) legt keine Sitzungen an (dashboard.js ~L13672 `!entwurf`), KG6+MT6 ist wegen Höchstmenge ≤10 nie bestätigbar; Einzel-KG-VO (WS2, 1-4) wurde ohne sichtbaren Grund Entwurf.
 **Nicht getestet:** D, E, F, §302-Positionen (IK fehlt, keine abrechnungsbereite VO), Tour-2-Fixes ac56ea7d (Deploy nicht gelandet).
 **Nebenwirkungen:** TEST-Verordnungen 2-4, 1-3, 1-4, 1-5; 2 Termine (06.11. 15:20, 09.11. 10:00) + 1 Termin 04.11. 10:00 (Bernd, erledigt: 2); Arzt-Register-Einträge "TEST-Dr. Muster" (Dubletten); Patient Bernd unverändert (KVNR-Übernahme abgelehnt).
+
+
+### Raumrelease und erneute lesende Verifikation — 03.11.2026
+
+Eigene Management-API-Katalogprüfung bestätigt0103/0104 live, fünf Spalten, vier validierte Constraints, aktivierte Raumtrigger und gesperrtes öffentliches EXECUTE der internen Definer-Triggerfunktionen. Historischer Abschnitt „nur lokal“ oben ist damit überholt. Frontenddateien bytegleichddfa3cc9, Workflow erfolgreich. Erneut171 gezielte Tests,29 isolierte PG-Prüfungen,50 synthetische Browserchecks PASS; gesamte npm-Suite erfolgreich. Ops342/343 abgehakt,344–348 offen. Keine funktionale Kontoabnahme; Kundenkonto unberührt, MailSTOP. Wissensfassung: wissensbank/sitzungen/2026-11-03_raumplanung-release-und-pruefung.md.

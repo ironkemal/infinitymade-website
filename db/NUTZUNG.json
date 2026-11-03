@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-03",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-11-02)",
+  "schema": "db/SCHEMA.sql (Stand 2026-11-03)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-11-03)",
   "register": "db/REGISTER.md"
  },
@@ -2700,7 +2700,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 45,
+   "sqlTreffer": 47,
    "codeStumm": false
   },
   {
@@ -2799,7 +2799,7 @@
   },
   {
    "name": "bookings",
-   "spalten": 38,
+   "spalten": 40,
    "fkRaus": [
     "businesses",
     "bookings",
@@ -5905,7 +5905,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 89,
+   "sqlTreffer": 97,
    "codeStumm": false
   },
   {
@@ -22817,7 +22817,7 @@
   },
   {
    "name": "rooms",
-   "spalten": 9,
+   "spalten": 11,
    "fkRaus": [
     "businesses",
     "profiles"
@@ -23037,7 +23037,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 37,
+   "sqlTreffer": 39,
    "codeStumm": false
   },
   {
@@ -23169,7 +23169,7 @@
   },
   {
    "name": "services",
-   "spalten": 19,
+   "spalten": 20,
    "fkRaus": [
     "businesses",
     "auth.users"
@@ -23894,7 +23894,7 @@
     "vorlagen",
     "warteliste"
    ],
-   "sqlTreffer": 58,
+   "sqlTreffer": 59,
    "codeStumm": false
   },
   {

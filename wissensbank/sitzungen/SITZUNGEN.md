@@ -36,6 +36,7 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-03 | Ops #342/#343 / Raumplanung | [[2026-11-03_raumplanung-release-und-pruefung]] | Raumdetails und Ausstattung veröffentlicht;0103/0104 live kataloggeprüft;4940 lokale Tests,29 PG,50 Browserchecks PASS; separate Kontoabnahme offen |
 | 2026-10-30 | Ops #341 / M1–M7 | [[2026-10-30_kemal-uebergabe-physio-pilot-planung]] | Kemals Übergabe übersetzt + gegen Repo 01.11. geprüft: M1/M3/M7 gebaut · M5-Tabelle fehlt (0096) · M4 offen · M6-Mail widersprüchlich · M2b verschoben |
 | 2026-10-22 | Ops Gesamtbestand / #34 / Billing-Auth | [[2026-10-22_ops-statusabgleich-und-billing-auth]] | 336 IDs erfasst, #34 neu abgeschlossen, 16 Teilnotizen; 53 Einzelpunkte offen · historische Haken keine neue Liveabnahme · Auth-Klassifikation lokal getestet, Liveursache offen |
 | 2026-10-22 | Verordnung / Entwurf | [[2026-10-22_verordnung-entwurf]] | Unvollständig als `parsed`/Entwurf speichern, Abrechnungsfreigabe gesperrt · 4039 lokale Tests, Maskenprobe61/61, Module93/93 · Produkt `ff58303e`, Belege `7c36bdce` gepusht · Live-Speichern und Ursache `Invalid token` ungeprüft |

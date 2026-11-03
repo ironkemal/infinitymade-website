@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-11-03 · 106 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-02), funktionen/INDEX.json (erzeugt 2026-11-03)
+**Erzeugt:** 2026-11-03 · 106 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-11-03), funktionen/INDEX.json (erzeugt 2026-11-03)
 
 ## Kayıt durumu
 
@@ -301,7 +301,7 @@ Warum: Beta-2 (05.09.2026, Ops #270): der Status eines vergangenen Termins (v.a.
 
 ### `bookings`
 
-38 Spalten · Status: aktiv
+40 Spalten · Status: aktiv
 Warum: Der Termin selbst. Alles andere im Kalender hängt daran.
 
 **Schreibt (20):** `bindeTermin()` [update] — module/verordnung-termine.js:196 · `cancelRequestBookings()` [update] — api-backend/booking/cancel-request.js:3 · `createBookingsFromRequestFactory()` [insert] — api-backend/booking/from-request.js:17 · `doMoveBooking()` [update] — dashboard.js:4381 · `handleSessionDrop()` [insert] — dashboard.js:2981 · `handleTerminStarten()` [update] — dashboard.js:3436 · `initBkGroupPatientAutocomplete()` [insert] — dashboard.js:3926 · `insertBooking()` [insert] — api-backend/booking/from-request.js:42 · `kontoLoeschenIntern()` [delete] — api-backend/dsgvo/loeschen.js:106 · `korrigiereNoShow()` [update] — module/booking-status-korrektur.js:94 · `loadGroupParticipants()` [update] — dashboard.js:3811 · `loeseTermin()` [update] — module/verordnung-termine.js:232 · `markArrivedHandler()` [update] — dashboard.js:3302 · `markiereNichtErschienen()` [update] — module/termin-nicht-erschienen.js:105 · `mitAkte()` [insert] — api-backend/booking/from-request.js:41 · `mountAktionspanel()` [update] — module/raum-auswahl.js:319 · `openBookingActionModal()` [update] — dashboard.js:2484 · `saveFahrtEndHandler()` [update] — dashboard.js:3346 · `saveFahrtStartHandler()` [update] — dashboard.js:3224 · `uebernimmSlot()` [insert] — module/warteliste-nachruecker.js:198
@@ -961,7 +961,7 @@ Warum: Erster Rezept-Fluss: Foto einer Verordnung → KI-Auszug (`raw_ai_data`, 
 
 ### `rooms`
 
-9 Spalten · Status: aktiv
+11 Spalten · Status: aktiv
 Warum: Physio-Praxen planen Räume mit. Erste Frage des Pilotkunden: „Welcher Therapeut ist gerade in welchem Raum?" Ein Termin trägt optional einen Raum (`bookings.room_id`).
 
 **Schreibt (3):** `loescheRaum()` [delete] — module/raum-verwaltung.js:293 · `setzeRaumAktiv()` [update] — module/raum-verwaltung.js:271 · `speichereRaum()` [insert/update] — module/raum-verwaltung.js:188
@@ -987,7 +987,7 @@ Warum: Ergebnisse der Apify-Suche (Google-Maps-Praxen) als Akquiseliste — die 
 
 ### `services`
 
-19 Spalten · Status: aktiv
+20 Spalten · Status: aktiv
 Warum: Was die Praxis anbietet, mit Dauer und Preis. Grundlage für Slot-Berechnung und Abrechnung.
 
 **Schreibt (8):** `autoSeedGkvServices()` [insert] — dashboard.js:8042 · `ensureBlankoBonusServices()` [insert/update] — dashboard.js:6416 · `migratePodologieLegacyServices()` [update] — dashboard.js:8229 · `migrierePhysioAltlast()` [update] — module/physio-katalog-migration.js:85 · `normName()` [delete/insert/update] — onboarding.js:606 · `renderServices()` [delete] — dashboard.js:8418 · `syncServices()` [delete/insert/update] — onboarding.js:625 · `wireBusinessModal()` [insert] — dashboard.js:14005
