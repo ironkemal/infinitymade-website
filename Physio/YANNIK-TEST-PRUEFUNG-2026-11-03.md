@@ -1,5 +1,9 @@
 # Yannik Test — Browserprüfung 03.11.2026
 
+## Verbindliche Nutzerkorrektur nach dieser Zustandsaufnahme
+
+Im vom Nutzer „Janik Test“ genannten Konto alle benötigten entwickelten Funktionen bereitstellen. Dort keine neuen Daten anlegen und keine weiteren Tests durchführen. Sämtliche Tests ausschließlich in einem anderen Testkonto. Die folgenden offenen Testfälle sind keine Aufforderung, Mitarbeiter, Termine oder sonstige Testdaten in diesem Konto anzulegen, und keine Voraussetzung für dessen Funktionsbereitstellung. Release-Chat über diese Grenze informiert. Veröffentlichung weiterhin durch fehlenden Live-Schemaexport bei gesperrtem Supabase-Zugang blockiert; bestehendes Veröffentlichungs-GO gilt.
+
 Anlass: Melih bittet um Prüfung der Änderungen aus diesem und den verbundenen Planungschats im Konto „Yannick Test“. Geöffnete Sitzung zeigt „Yannik Test“, Praxis „Physiotherapie Testpraxis“. Keine neue Anmeldung, keine Patientendetails für Prüfung benötigt.
 
 ## Aktuell live geprüft
