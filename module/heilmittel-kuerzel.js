@@ -60,7 +60,15 @@ export function kuerzelAusKatalog(itemOderCode, katalog) {
     : [];
 
   // 1. Zuerst Code im Katalog / bekannte Kürzel prüfen (auch wenn Bezeichnung "X0501 – Krankengymnastik" lautet)
-  const kandidaten = [code, bezeichnungVorne].filter(Boolean);
+  // Bei 5-stelligen Abrechnungsnummern (z. B. 20501, 10501, 60501, 80501) Vorlage-X-Code (X0501) als Kandidat ergänzen
+  const kandidaten = [];
+  for (const c of [code, bezeichnungVorne].filter(Boolean)) {
+    kandidaten.push(c);
+    const clean = c.toUpperCase().replace(/\s+/g, '');
+    if (/^[1268]\d{4}$/.test(clean)) {
+      kandidaten.push('X' + clean.slice(1));
+    }
+  }
   for (const c of kandidaten) {
     const clean = c.toUpperCase().replace(/\s+/g, '');
     if (eintraege.length > 0) {
@@ -116,3 +124,30 @@ export function formatMultiHeilmittelTitel(rx, katalog) {
   const k = kuerzelAusKatalog(single, katalog);
   return k || rx.heilmittel || rx.heilmittel_position || '—';
 }
+
+/**
+ * Ermittelt das Kürzel für eine Sitzung (unter Beachtung von heilmittel_index).
+ *
+ * @param {object} sess  Sitzungsobjekt (z.B. { heilmittel_index: 1 })
+ * @param {object} rx    Verordnungsobjekt (mit heilmittel_items oder heilmittel/heilmittel_position)
+ * @param {string} [fallbackCode] Fallback, falls weder sess noch rx vorhanden
+ * @param {object|Array} [katalog]
+ * @returns {string} Kurzcode (z.B. 'MT', 'KG')
+ */
+export function ermittleSitzungKuerzel(sess, rx, fallbackCode = '', katalog) {
+  if (sess && rx) {
+    const multi = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 0;
+    if (multi && sess.heilmittel_index != null && rx.heilmittel_items[sess.heilmittel_index]) {
+      return kuerzelAusKatalog(rx.heilmittel_items[sess.heilmittel_index], katalog);
+    }
+    if (rx.heilmittel_position || rx.heilmittel) {
+      return kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel, katalog);
+    }
+  } else if (rx) {
+    if (rx.heilmittel_position || rx.heilmittel) {
+      return kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel, katalog);
+    }
+  }
+  return fallbackCode ? kuerzelAusKatalog(fallbackCode, katalog) : '';
+}
+

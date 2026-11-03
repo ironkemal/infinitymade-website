@@ -238,7 +238,14 @@ export async function korrigierePhysioEinheiten(supabase, { rxId, neu, grund, he
     }
     return { ok: false, fehler, code: error.code };
   }
-  return { ok: true, data };
+  let parsed = data;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch (_) {}
+  }
+  if (parsed && typeof parsed.termin_offen === 'string') {
+    try { parsed.termin_offen = JSON.parse(parsed.termin_offen); } catch (_) {}
+  }
+  return { ok: true, data: parsed };
 }
 
 /**
@@ -254,8 +261,14 @@ export async function oeffneTerminBearbeiten(supabase, bookingId) {
     console.error('[verordnung-einheiten] Termin laden:', error);
     return;
   }
-  if (typeof window !== 'undefined' && typeof window.openBookingModal === 'function') {
-    window.openBookingModal(data);
+  if (typeof window !== 'undefined') {
+    if (typeof window.openBookingActionModal === 'function') {
+      window.openBookingActionModal(data);
+    } else if (typeof window.openBookingModal === 'function') {
+      window.openBookingModal(data);
+    } else if (typeof window.oeffneTermin === 'function') {
+      window.oeffneTermin(data);
+    }
   }
 }
 
@@ -311,15 +324,39 @@ function zeigeZuzahlungPromptDialog({ supabase, rx, apiBase, toast }) {
 /**
  * Ergebnisdialog, wenn Termine an überzähligen Einheiten hängen.
  */
-function zeigeTerminOffenDialog({ supabase, rx, terminOffen, apiBase, toast }) {
+export async function zeigeTerminOffenDialog({ supabase, rx, terminOffen, apiBase, toast }) {
   document.getElementById('_peOffenModal')?.remove();
 
   const overlay = document.createElement('div');
   overlay.id = '_peOffenModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10002;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
 
-  const n = terminOffen.length;
-  const hatZuzahlung = (rx.zuzahlung_kassiert_am || Number(rx.zuzahlung_eur) > 0) && !rx.belegnummer;
+  const n = (terminOffen || []).length;
+  const hatZuzahlung = (rx?.zuzahlung_kassiert_am || Number(rx?.zuzahlung_eur) > 0) && !rx?.belegnummer;
+
+  // Lade Datum/Uhrzeit für die überzähligen Buchungen
+  const bookingMap = new Map();
+  const bIds = (terminOffen || []).map(t => t.booking_id).filter(Boolean);
+  if (bIds.length && supabase && typeof supabase.from === 'function') {
+    try {
+      const { data: bRows } = await supabase.from('bookings').select('id, start_time').in('id', bIds);
+      (bRows || []).forEach(b => { if (b?.id) bookingMap.set(b.id, b.start_time); });
+    } catch (_) {}
+  }
+  (rx?.prescription_sessions || []).forEach(s => {
+    if (s.booking_id && s.bookings?.start_time && !bookingMap.has(s.booking_id)) {
+      bookingMap.set(s.booking_id, s.bookings.start_time);
+    }
+  });
+
+  function formatiereZeit(start) {
+    if (!start) return '';
+    const dt = new Date(start);
+    if (isNaN(dt.getTime())) return String(start);
+    const tag = dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const zeit = dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `${tag} um ${zeit} Uhr`;
+  }
 
   overlay.innerHTML = `
     <div role="dialog" aria-modal="true" style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:380px;width:100%;color:var(--text-main);font-family:inherit;box-sizing:border-box;max-height:90vh;overflow-y:auto;">
@@ -329,12 +366,18 @@ function zeigeTerminOffenDialog({ supabase, rx, terminOffen, apiBase, toast }) {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-        ${terminOffen.map(item => `
+        ${terminOffen.map(item => {
+          const start = item.start_time || bookingMap.get(item.booking_id);
+          const zeitStr = formatiereZeit(start);
+          return `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-main,#111827);border-radius:6px;border:1px solid var(--border);">
-            <span style="font-size:13px;font-weight:600;">Sitzung ${item.session_number}</span>
+            <div style="min-width:0;">
+              <span style="font-size:13px;font-weight:600;display:block;">Sitzung ${item.session_number}</span>
+              ${zeitStr ? `<span style="font-size:11px;color:var(--text-muted);display:block;">${esc(zeitStr)}</span>` : ''}
+            </div>
             <button type="button" data-pe-open-booking="${esc(item.booking_id)}" style="min-height:44px;min-width:44px;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);cursor:pointer;display:inline-flex;align-items:center;">Termin öffnen →</button>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>
 
       ${hatZuzahlung ? `
@@ -616,7 +659,7 @@ export async function oeffnePhysioEinheitenDialog({
 
     const terminOffen = Array.isArray(res.data?.termin_offen) ? res.data.termin_offen : [];
     if (terminOffen.length > 0) {
-      zeigeTerminOffenDialog({ supabase, rx, terminOffen, apiBase, toast });
+      await zeigeTerminOffenDialog({ supabase, rx, terminOffen, apiBase, toast });
     } else if ((rx.zuzahlung_kassiert_am || Number(rx.zuzahlung_eur) > 0) && !rx.belegnummer) {
       zeigeZuzahlungPromptDialog({ supabase, rx, apiBase, toast });
     }

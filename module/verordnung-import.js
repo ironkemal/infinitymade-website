@@ -30,8 +30,8 @@ import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
 import { POD_KATALOG } from './verordnung-regeln.js?v=20261031k3';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261103a';
-import { sendeAnServer } from './verordnung-maske.js?v=20261103b';
-import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103b';
+import { sendeAnServer } from './verordnung-maske.js?v=20261103q';
+import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103q';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { normalizeBereich, pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
 

@@ -34,7 +34,7 @@ import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAb
 import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261102w10';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20261027p'; import { ermittleSitzungKuerzel, kuerzelAusKatalog } from './module/heilmittel-kuerzel.js?v=20261103q';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (archive/rapor/ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
@@ -65,7 +65,7 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261103b'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261103q'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -73,7 +73,7 @@ import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=202
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261102c';
-import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261103a';
+import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261103q';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
@@ -126,7 +126,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
-import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103planung';
+import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103r';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -140,8 +140,8 @@ import {
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
-import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103b';
-import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261102a';
+import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103q';
+import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261103q';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
@@ -1460,7 +1460,7 @@ async function loadScheduleBookings(date) {
       const timeStr = `${startStr} - ${endStr}`;
       const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
       const rx   = sess?.prescriptions || null;
-      const heilmittel = rx?.heilmittel || b.services?.code || '';
+      const heilmittel = ermittleSitzungKuerzel(sess, rx, b.services?.code);
       const dg = rx?.diagnosegruppe || '';
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
@@ -2114,7 +2114,7 @@ async function renderDayView(dateStr) {
       const timeStr = `${startStr} - ${endStr}`;
       const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
       const rx   = sess?.prescriptions || null;
-      const heilmittel = rx?.heilmittel || b.services?.code || '';
+      const heilmittel = ermittleSitzungKuerzel(sess, rx, b.services?.code);
       const dg = rx?.diagnosegruppe || '';
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
@@ -5251,8 +5251,8 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   zeigeSitzungenArbeit();   // ab hier die echte Liste
 
   const heilmittelItems = rx.heilmittel_items || [];
-  const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
-  const getHmKuerzel = (idx) => heilmittelItems[idx]?.kuerzel || (heilmittelItems[idx]?.name?.substring(0,3).toUpperCase()) || String(idx + 1);
+  const getHmName = (idx) => kuerzelAusKatalog(heilmittelItems[idx] || (idx === 0 ? (rx.heilmittel_position || rx.heilmittel) : null)) || heilmittelItems[idx]?.bezeichnung || '—';
+  const getHmKuerzel = (idx) => kuerzelAusKatalog(heilmittelItems[idx] || (idx === 0 ? (rx.heilmittel_position || rx.heilmittel) : null)) || String(idx + 1);
 
   const aktiveSessions = aktiveSitzungszeilen(allSessions);
   const unvergebene = aktiveSessions.filter(s => !s.booking_id);

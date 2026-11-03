@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261103a';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
-import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261103b';
+import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261103q';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
@@ -215,6 +215,9 @@ export async function maskeEinbetten({ host, rx }) {
     erbracht: erbrachteEinheiten(rx),
     anzahl: rx.anzahl_einheiten ?? null,
     riegel: schreibRiegel(rx),
+    heilmittel: rx.heilmittel || '',
+    heilmittel_position: rx.heilmittel_position || '',
+    vorrangigesHeilmittel: rx.heilmittel_position || rx.heilmittel || '',
     items: Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 0
       ? rx.heilmittel_items
       : (rx.heilmittel_position || rx.heilmittel ? [{ code: rx.heilmittel_position || '', bezeichnung: rx.heilmittel || '', einheiten: rx.anzahl_einheiten, doppelbehandlung: !!rx.doppelbehandlung }] : []),
@@ -660,13 +663,33 @@ export function pruefeAenderungErlaubt() {
     return pruefeNeueMenge(neu, _bearbeitung.erbracht);
   }
 
-  const altItems = _bearbeitung.items || [];
-  const neuItems = hmZeilen.items || (spiegel?.heilmittel_position || spiegel?.heilmittel ? [{
-    code: spiegel.heilmittel_position || '',
-    bezeichnung: spiegel.heilmittel || '',
-    einheiten: spiegel.vorrangig_einheiten ?? spiegel.anzahl_einheiten ?? '',
-    doppelbehandlung: !!spiegel.doppelbehandlung,
-  }] : []);
+  let altItems = _bearbeitung.items;
+  if (!altItems || !altItems.length) {
+    const altCode = _bearbeitung.heilmittel_position || _bearbeitung.vorrangigesHeilmittel || '';
+    const altBez = _bearbeitung.heilmittel || '';
+    if (altCode || altBez) {
+      altItems = [{
+        code: altCode,
+        bezeichnung: altBez,
+        einheiten: _bearbeitung.anzahl ?? '',
+      }];
+    } else {
+      altItems = [];
+    }
+  }
+
+  const rzHmPos = typeof document !== 'undefined' ? document.getElementById('rzHeilmittelPosition')?.value : '';
+  const rzHm = typeof document !== 'undefined' ? document.getElementById('rzHeilmittel')?.value : '';
+  const rzAnz = typeof document !== 'undefined' ? document.getElementById('rzAnzahl')?.value : '';
+
+  const neuItems = (hmZeilen.items && hmZeilen.items.length > 0)
+    ? hmZeilen.items
+    : (spiegel?.heilmittel_position || spiegel?.heilmittel || rzHmPos || rzHm ? [{
+        code: spiegel?.heilmittel_position || rzHmPos || '',
+        bezeichnung: spiegel?.heilmittel || rzHm || '',
+        einheiten: spiegel?.vorrangig_einheiten ?? spiegel?.anzahl_einheiten ?? rzAnz ?? '',
+        doppelbehandlung: !!spiegel?.doppelbehandlung,
+      }] : []);
   const sitzungen = _bearbeitung.sitzungen || [];
   const itemsFehler = pruefeItemsAenderung(altItems, neuItems, sitzungen);
   if (itemsFehler) return itemsFehler;
@@ -844,6 +867,11 @@ export async function sendeAnServer(supabase, { methode, pfad, rumpf, apiBasis =
 }
 
 export async function schreibeVerordnung(supabase, v) {
+  const editId = _bearbeitung?.id || null;
+  if (editId) {
+    const verboten = pruefeAenderungErlaubt();
+    if (verboten) throw new Error(verboten);
+  }
   const sertFehler = pruefeSertHeilmittelFehler({ istEntwurf: !!v.overridden });
   if (sertFehler.length > 0) {
     throw new Error(sertFehler[0]);
@@ -853,7 +881,6 @@ export async function schreibeVerordnung(supabase, v) {
   // `proceed_anyway` merkt sich, dass jemand über Lücken hinweg gespeichert
   // hat. Beim Zurückschreiben darf ein sauberer Durchlauf diese Spur nicht
   // löschen — sie gehört zum Vorgang, nicht zum letzten Klick.
-  const editId = _bearbeitung?.id || null;
   if (v.overridden || !editId) nutzlast.proceed_anyway = !!v.overridden;
 
   if (!editId) {

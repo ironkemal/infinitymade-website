@@ -128,3 +128,78 @@ test('bindeSitzungenAnTermin #339: Termin am selben Tag wie Ausstellung ist zul�
   assert.equal(r.ok, true);
   assert.equal(r.gebunden, 1);
 });
+
+test('bindeSitzungenAnTermin: Seans sayısı Einheit aşınca (MT 6. seans, 5 verilmiş) bağlama engellenir', async () => {
+  let updateAufgerufen = false;
+  const sb = {
+    from(tab) {
+      if (tab === 'prescription_sessions') {
+        return {
+          select() {
+            return {
+              in(col, vals) {
+                return Promise.resolve({
+                  data: [{
+                    id: 's6',
+                    prescription_id: 'rx1',
+                    session_number: 6,
+                    heilmittel_index: 1,
+                    status: 'planned',
+                    booking_id: null,
+                  }],
+                });
+              },
+              eq(col, val) {
+                return Promise.resolve({
+                  data: [
+                    { id: 's1', session_number: 1, heilmittel_index: 1, status: 'done', booking_id: 'b1' },
+                    { id: 's2', session_number: 2, heilmittel_index: 1, status: 'done', booking_id: 'b2' },
+                    { id: 's3', session_number: 3, heilmittel_index: 1, status: 'planned', booking_id: 'b3' },
+                    { id: 's4', session_number: 4, heilmittel_index: 1, status: 'planned', booking_id: 'b4' },
+                    { id: 's5', session_number: 5, heilmittel_index: 1, status: 'planned', booking_id: 'b5' },
+                    { id: 's6', session_number: 6, heilmittel_index: 1, status: 'planned', booking_id: null },
+                  ],
+                });
+              },
+            };
+          },
+          update() {
+            updateAufgerufen = true;
+            return { in() { return { select: async () => ({ data: [{ id: 's6' }], error: null }) }; } };
+          },
+        };
+      }
+      if (tab === 'prescriptions') {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  maybeSingle: async () => ({
+                    data: {
+                      id: 'rx1',
+                      anzahl_einheiten: 11,
+                      heilmittel_items: [
+                        { code: 'X0501', einheiten: 6 },
+                        { code: 'X1201', einheiten: 5 }, // MT: nur 5 verordnet!
+                      ],
+                    },
+                  }),
+                };
+              },
+            };
+          },
+        };
+      }
+      return {};
+    },
+  };
+
+  const r = await bindeSitzungenAnTermin(sb, 'bNew', ['s6']);
+  assert.equal(r.ok, false);
+  assert.equal(r.gebunden, 0);
+  assert.match(r.meldung, /alle 5 Einheiten vergeben/);
+  assert.match(r.meldung, /Keine offene Einheit mehr verfügbar/);
+  assert.equal(updateAufgerufen, false, 'UPDATE darf bei Überschreitung nicht laufen');
+});
+

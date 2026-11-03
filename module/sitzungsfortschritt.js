@@ -76,7 +76,7 @@
  * auseinander.
  */
 
-import { terminZiel } from './sitzung-abgleich.js?v=20261103b';
+import { terminZiel } from './sitzung-abgleich.js?v=20261103q';
 
 /**
  * Die Regel allein — ohne Datenbank, damit sie prüfbar bleibt.

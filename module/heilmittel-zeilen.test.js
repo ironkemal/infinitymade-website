@@ -336,3 +336,22 @@ test('pruefeItemsAenderung: Gekürzte Zeilen verbieten, wenn Folge-Positionen ge
   assert.match(pruefeItemsAenderung(alt, neu, sitzungen), /kann nicht gelöscht werden/);
 });
 
+test('pruefeItemsAenderung: Einzelne Verordnung (20501 -> MT) mit gebundenen Terminen wird gesperrt', () => {
+  const alt = [{ code: '20501', bezeichnung: 'Allgemeine Krankengymnastik (KG)' }];
+  const neu = [{ code: 'X1201', bezeichnung: 'Manuelle Therapie (MT)' }];
+  const sitzungen = [
+    { session_number: 1, status: 'planned', booking_id: 'b1', heilmittel_index: 0 },
+  ];
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungen), /kann nicht geändert werden/);
+});
+
+test('pruefeItemsAenderung: Einzelne Verordnung 20501 -> X0501 (selbes Heilmittel) ist erlaubt', () => {
+  const alt = [{ code: '20501', bezeichnung: 'Krankengymnastik' }];
+  const neu = [{ code: 'X0501', bezeichnung: 'Krankengymnastik' }];
+  const sitzungen = [
+    { session_number: 1, status: 'done', booking_id: 'b1', heilmittel_index: 0 },
+  ];
+  assert.equal(pruefeItemsAenderung(alt, neu, sitzungen), null);
+});
+
+

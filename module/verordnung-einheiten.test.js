@@ -239,6 +239,96 @@ test('korrigierePhysioEinheiten: Meldet termin_offen zurueck, wenn Termine dranh
   assert.equal(res.data.termin_offen[0].booking_id, 'bk-6');
 });
 
+test('korrigierePhysioEinheiten: parst stringified RPC-Response sauber (JSONB als String)', async () => {
+  const mockSupabaseJsonString = {
+    rpc: async () => ({
+      data: JSON.stringify({
+        alt: 6,
+        neu: 4,
+        abgesagt: 1,
+        termin_offen: [{ session_id: 's-6', session_number: 6, booking_id: 'bk-6' }],
+      }),
+      error: null,
+    }),
+  };
+
+  const res = await korrigierePhysioEinheiten(mockSupabaseJsonString, {
+    rxId: 'rx-1',
+    neu: 4,
+    grund: 'Uebertragungsfehler korrigieren',
+  });
+  assert.equal(res.ok, true);
+  assert.equal(Array.isArray(res.data.termin_offen), true);
+  assert.equal(res.data.termin_offen.length, 1);
+  assert.equal(res.data.termin_offen[0].session_number, 6);
+});
+
+test('zeigeTerminOffenDialog: rendert Modal mit Warnung, Datum/Uhrzeit und Termin öffnen', async () => {
+  const { zeigeTerminOffenDialog } = await import('./verordnung-einheiten.js');
+
+  const nodes = new Map();
+  let createdOverlay = null;
+  const mockDoc = {
+    getElementById: (id) => nodes.get(id) || null,
+    createElement: (tag) => {
+      const el = {
+        tagName: tag,
+        id: '',
+        style: {},
+        innerHTML: '',
+        querySelector: (sel) => {
+          if (sel === '[data-pe-offen-schliessen]') return { onclick: null };
+          return null;
+        },
+        querySelectorAll: (sel) => {
+          if (sel === '[data-pe-open-booking]') return [{ dataset: { peOpenBooking: 'bk-6' }, onclick: null }];
+          return [];
+        },
+        remove: () => { nodes.delete(el.id); },
+      };
+      return el;
+    },
+    body: {
+      appendChild: (el) => {
+        createdOverlay = el;
+        if (el.id) nodes.set(el.id, el);
+      },
+    },
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  };
+
+  const origDoc = globalThis.document;
+  globalThis.document = mockDoc;
+  try {
+    const mockSb = {
+      from: () => ({
+        select: () => ({
+          in: async () => ({
+            data: [{ id: 'bk-6', start_time: '2026-11-10T14:30:00Z' }],
+            error: null,
+          }),
+        }),
+      }),
+    };
+
+    await zeigeTerminOffenDialog({
+      supabase: mockSb,
+      rx: { id: 'rx-1' },
+      terminOffen: [{ session_id: 's-6', session_number: 6, booking_id: 'bk-6' }],
+    });
+
+    assert.ok(createdOverlay);
+    assert.match(createdOverlay.innerHTML, /Es hängen noch 1 Termine an überzähligen Einheiten/);
+    assert.match(createdOverlay.innerHTML, /Sitzung 6/);
+    assert.match(createdOverlay.innerHTML, /Termin öffnen →/);
+    assert.match(createdOverlay.innerHTML, /data-pe-open-booking="bk-6"/);
+  } finally {
+    if (origDoc !== undefined) globalThis.document = origDoc;
+    else delete globalThis.document;
+  }
+});
+
 /* ── 6. Podologie Rueckwaertskompatibilitaet ───────────────────────────────── */
 
 test('Podologie-Zweig bleibt unberuehrt (einheitenAenderungErlaubt, pruefeNeueMenge)', () => {

@@ -2143,3 +2143,29 @@ Kapılar: Backend 200 JSON, deploy indi (lokal 20261101st, canlı 20261102f8 —
 **Offen/KALDI:** Kurzname zeigt X-Code (Zähler, Sitzungszeilen, Termin-Karte, Seitenbereich) — module/heilmittel-kuerzel.js ` – `-Split vor Katalog-Lookup; Termin-Modal "Nächste Sitzung" zeigt bereits gebundene Sitzung 1 (module/termin-verordnung.js ~L248 Filter `|| status==='planned'`), Sitzung 6 (MT) trägt Label (X0501) und Leistung bleibt KG; Entwurf (Warnung, z. B. Höchstmenge) legt keine Sitzungen an (dashboard.js ~L13672 `!entwurf`), KG6+MT6 ist wegen Höchstmenge ≤10 nie bestätigbar; Einzel-KG-VO (WS2, 1-4) wurde ohne sichtbaren Grund Entwurf.
 **Nicht getestet:** D, E, F, §302-Positionen (IK fehlt, keine abrechnungsbereite VO), Tour-2-Fixes ac56ea7d (Deploy nicht gelandet).
 **Nebenwirkungen:** TEST-Verordnungen 2-4, 1-3, 1-4, 1-5; 2 Termine (06.11. 15:20, 09.11. 10:00) + 1 Termin 04.11. 10:00 (Bernd, erledigt: 2); Arzt-Register-Einträge "TEST-Dr. Muster" (Dubletten); Patient Bernd unverändert (KVNR-Übernahme abgelehnt).
+
+### Physio Tour 3 (dashboard.js v=20261103p2 / 4c95adbc) — Abschnitt C Rechnungskette — Teilstand 03.11.2026
+**Gate:** Deploy kam erst ca. 12 Min nach Push (p2/css n live). Sitzung praxura-physio-qa war geschlossen; mit --persistent neu geöffnet, Login hielt.
+**Neu-VO (TEST- Anna, Nr. 1-6):** GKV, LANR 9-stellig mit gültiger Prüfziffer, BSNR 9, Unterschrift, M17.1/EX3, 2x pro Woche, KG 5 + MT 5 → "Bestätigt" ohne Entwurf-Dialog; nach Reload erhalten. (Falsche LANR-Prüfziffer / WS2-Höchstmenge 6 lösten den Entwurf-Dialog korrekt aus.)
+**GEÇTİ C:** Termin-Modal: "Nächste: Sitzung 1 von 10 (KG)"; Klick auf Sitzung 6 → "(MT)" + "Leistung aus der Verordnung: Manuelle Therapie". 1 KG + 1 MT abgeschlossen → Zähler "KG 1/5 · MT 1/5", VO "2 von 10", Termine-Liste mit KG/MT-Chips.
+**KALDI/P2:** Termin-Tooltip (title) "Info:" zeigt bei der MT-Sitzung "X0501 – Allgemeine Krankengymnastik (KG)" (erste Heilmittelzeile) — Karte selbst zeigt "Manuelle Therapie".
+**KALDI/P2:** Seitenpanel "Unvergebene": #7–#10 (MT) zeigen "X0501 – Allgemeine Krankengymnastik (KG) Einzel" (falsches Heilmittel + lange Form statt Kurzname).
+**P3:** Verordnungs-Picker zeigt bei Alt-VOs nur Code "20501" statt Kurzname; "Verschreibung"-Zeilen "1. Sitzung"/"6. Sitzung" ohne KG/MT.
+**Nebenwirkungen:** VO 1-6; Termine 05.11. 16:00 (MT) + 17:00 (KG), beide erledigt; Qualifikationswarnung (MT) und "kein Arbeitstag" je per "Trotzdem". 04.11. 10:00 war bereits durch Alt-Termin belegt (no_overlapping_bookings → deutsche Fehlermeldung, ok).
+**C Rest (03.11.2026):** Offene Sitzung #2 KG→MT per Dropdown gespeichert (Reload ok), erledigte Sitzungen nur als statischer Chip (nicht änderbar) = GEÇTİ. P2: Tausch erlaubt MT 6 bei verordneten MT 5 ohne Warnung (zurückgetauscht). §302/Belegliste/Rechnungen: "Keine abrechnungsbereiten Verordnungen" (IK fehlt, Banner) — Panel nennt den Grund selbst nicht (P3); zwei Positionen NICHT prüfbar. Gesendet wurde nichts.
+
+### Physio Tour 3 — Abschnitt D (Einheiten korrigieren) — Teilstand 03.11.2026
+**Test:** VO 1-5 (1 Heilmittel, 6 Einh.) mit zwei Terminen (06.11. 11:00 = Sitzung 1, 06.11. 12:00 = Sitzung 6), dann „Einheiten korrigieren" 6→4 mit Begründung.
+**GEÇTİ:** Dialog (nur Reduzierung, Begründung Pflicht, Hinweis Original-Rezept), Liste „0 / 4", Detail „Behandlungseinheiten 4", Rezeptinfo „4 Einheit(en)", Summe 118,52 / Zuzahlung 21,84 (neu gerechnet), Reload erhalten.
+**KALDI P1 (Geld/§302):** Termin an Sitzung 6 bleibt hängen — Kalenderkarte zeigt „6/4"; der Dialog warnt nicht vor verknüpften Terminen und löste sie nicht. Sitzung 4/5 (frei) verschwanden, 6 (mit Termin) blieb.
+**KALDI P2:** Detail „Sitzungen: 0 von 6 erledigt" bleibt 6 neben „Behandlungseinheiten 4".
+**KALDI P2:** Einzel-Heilmittel-VO zeigt Kurzname als Code „20501" (Picker, „Sitzung 6 von 6 (20501)", Rezeptinfo „4x 20501"); module/heilmittel-kuerzel.js BEKANNTE_KUERZEL kennt 20501 nicht.
+**Nebenwirkungen:** VO 1-5 jetzt 4 Einheiten; 2 Termine 06.11. 11:00/12:00 (Anna).
+
+### Physio Tour 3 — D Rest, B, Touch — 03.11.2026
+**D mehrfach (VO 1-6, KG5+MT5):** Dialog hat Heilmittel-Auswahl; MT 5→4 → Liste „2 / 9", Chip „KG 1/5 · MT 1/4", Einheiten 9. GEÇTİ. P2: „Sitzungen: 2 von 10 erledigt" bleibt 10.
+**P2:** Einzel-VO 1-5 (2 Termine gebunden): Heilmittel KG→MT per Maske gespeichert („Verordnung aktualisiert ✓"), keine Sperre; zurückgesetzt auf KG (Einzel-VO, Regel gilt laut Auftrag nur mehrfach — zur Klärung).
+**B GEÇTİ:** „+ Neue Verordnung" bei 390/768/1440 leer (rzHm leer), kein Horizontalscroll.
+**Nicht messbar:** Headless meldet pointer:coarse=false → 44-px-Touchregeln greifen nicht; im Modal „+ Arzt anlegen" 26 px (Nicht-Touch, vermutlich beabsichtigt).
+**NICHT getestet:** E (Import BOM/Win-1252), F (Serie Standort Nord/Raum), D Zuzahlung-Link, Einheit-erhöhen.
+Nebenwirkungen: VO 1-5 (4 Einh.), 1-6 (KG5/MT4), Termine 05.11. 16:00/17:00, 06.11. 11:00/12:00.
