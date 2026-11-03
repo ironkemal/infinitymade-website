@@ -77,3 +77,19 @@ test('older pending request cannot overwrite newer identity result', async () =>
   resolveOld({ data: { beschaeftigung: 'vollzeit', urlaub_jahrestage: 60 } }); await first;
   assert.equal(host.innerHTML, latest); assert.match(latest, /Noch keine Anstellungsdaten/);
 });
+
+
+test('personal balance shares annual clipping and counts overlapping leave only once', async () => {
+  const h = setup({
+    hours: [1,2,3,4,5].map(day_of_week => ({day_of_week,is_active:true})),
+    leaves: [
+      {type:'urlaub',start_date:'2025-12-29',end_date:'2026-01-05'},
+      {type:'urlaub',start_date:'2026-01-02',end_date:'2026-01-05'},
+      {type:'urlaub',start_date:'2026-12-30T12:00:00+01:00',end_date:'2027-01-04'},
+      {type:'urlaub',start_date:'2026-12-31T12:00:00+01:00',end_date:'2026-12-31T20:00:00+01:00'},
+    ],
+  });
+  await h.api.laden();
+  assert.match(h.host.innerHTML,/20 Tage übrig/);
+  assert.match(h.host.innerHTML,/5 Tage eingetragen/);
+});

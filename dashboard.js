@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103raum';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103planung';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -116,8 +116,8 @@ import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschl
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, moveVersatzMinuten, zeitPlusMinuten, rasterStunden } from './module/kalender-raster.js?v=20261021p';
 import { blockInhalt } from './module/kalender-block.js?v=20261021p';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20261102f8';
-import { renderMonat } from './module/kalender-monat.js?v=20261031';
+import { renderWoche } from './module/kalender-woche.js?v=20261103planung';
+import { renderMonat } from './module/kalender-monat.js?v=20261103planung';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld, datumDe } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
@@ -126,7 +126,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
-import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261021s';
+import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103planung';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -149,7 +149,7 @@ import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261102w10'; import { planSpalten } from './module/standort-plan-laden.js?v=20261102a';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261102w10'; import { planSpalten, termineDesStandorts } from './module/standort-plan-laden.js?v=20261103planung';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261031a';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1980,13 +1980,13 @@ async function renderDayView(dateStr) {
   const dStart = new Date(dateStr + 'T00:00:00').toISOString();
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
-  const { data: bookings } = await supabase.from('bookings')
+  const businessId = currentBusiness?.id || null; const { data: geladeneTermine } = await supabase.from('bookings')
     .select(TERMIN_SELECT)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
 
-  emps = await planSpalten(supabase, { team: emps, bookings, datum: dateStr, businessId: currentBusiness?.id || null, ownerId }); const empIds = emps.map(e => e.id);
+  const bookings = termineDesStandorts(geladeneTermine || [], businessId); emps = await planSpalten(supabase, { team: emps, bookings, datum: dateStr, businessId, ownerId }); const empIds = emps.map(e => e.id);
   const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
   const { von: DV_VON, bis: DV_BIS } = rasterStunden(bookings); const _grid = timeCol.closest('.day-view-grid'); if (_grid) Object.assign(_grid.dataset, { von: DV_VON, bis: DV_BIS });
   for (let h = DV_VON; h < DV_BIS; h++) {
@@ -2149,7 +2149,7 @@ async function renderWeekView(dateStr) {
   await renderWoche({
     supabase,
     dateStr,
-    ownerId: getOwnerId(),
+    ownerId: getOwnerId(), businessId: currentBusiness?.id || null,
     teamMembers,
     calEmpFilter,
     moveAktiv: !!moveBooking,
@@ -2177,7 +2177,7 @@ async function renderMonthView(year, month) {
   await renderMonat({
     supabase,
     year, month,
-    ownerId: getOwnerId(),
+    ownerId: getOwnerId(), businessId: currentBusiness?.id || null,
     teamMembers,
     calEmpFilter,
     farbeFuer: (b) => terminFarben(b, { teamMembers, empFarben: EMP_COLORS }),
@@ -9260,18 +9260,18 @@ async function loadEmpUrlaubSection(empId, container) {
   const { anspruch: jahrestage, arbeitstage } = urlaubBasis;
 
   // Bu yılki time_offs
-  const year = new Date().getFullYear();
-  const { data: offs } = await supabase.from('time_offs')
+  const year = Number(new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', year: 'numeric' }).format(new Date()));
+  const { data: offs, error: urlaubFehler } = await supabase.from('time_offs')
     .select('id, start_date, end_date, type, note')
     .eq('employee_id', empId)
-    .gte('start_date', `${year}-01-01`)
-    .lte('end_date', `${year}-12-31`)
+    .lte('start_date', `${year}-12-31T23:59:59.999+01:00`)
+    .gte('end_date', `${year}-01-01T00:00:00+01:00`)
     .order('start_date', { ascending: false });
 
   // Die alte Rechnung las Zeitstempel als ungültiges Datum und zählte immer 0 Tage.
-  const { verbraucht: urlaubDays, rest: remaining } = urlaubsKennzahlen({ abwesenheiten: offs || [], anspruch: jahrestage, arbeitstage });
+  const saldoVerfuegbar = !urlaubFehler && !urlaubBasis.fehler && urlaubBasis.vorhanden; if (!saldoVerfuegbar) kpi.textContent = urlaubBasis.vorhanden === false && !urlaubBasis.fehler ? 'Noch keine Anstellungsdaten hinterlegt. Bitte Jahresanspruch speichern.' : 'Urlaubssaldo gerade nicht verfügbar. Bitte Arbeitszeiten und Urlaubseinträge prüfen.'; const { verbraucht: urlaubDays, rest: remaining } = saldoVerfuegbar ? urlaubsKennzahlen({ abwesenheiten: offs || [], anspruch: jahrestage, arbeitstage, jahr: year }) : {};
 
-  kpi.innerHTML = `
+  if (saldoVerfuegbar) kpi.innerHTML = `
     <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:6px 10px;text-align:center;">
       <div style="font-size:18px;font-weight:700;color:#22c55e;">${remaining}</div>
       <div style="font-size:10px;color:var(--text-muted);">Tage übrig</div>
@@ -9286,7 +9286,7 @@ async function loadEmpUrlaubSection(empId, container) {
     </div>
   `;
 
-  if (!offs || offs.length === 0) {
+  if (urlaubFehler) { listEl.textContent = 'Urlaubseinträge konnten nicht geladen werden. Bitte erneut öffnen.'; return; } if (!offs || offs.length === 0) {
     listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Noch kein Eintrag.</div>';
     return;
   }
@@ -9299,7 +9299,7 @@ async function loadEmpUrlaubSection(empId, container) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);gap:8px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;color:var(--text-main);">${fmt(o.start_date)} – ${fmt(o.end_date)}</div>
-        <div style="font-size:11px;color:var(--text-muted);">${typeLabels[o.type] || o.type} · ${days} AT</div>
+        <div style="font-size:11px;color:var(--text-muted);">${typeLabels[o.type] || o.type}${saldoVerfuegbar ? ` · ${days} AT` : ''}</div>
       </div>
       <button onclick="deleteEmpTimeOff('${o.id}','${empId}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px;flex-shrink:0;">×</button>
     </div>`;

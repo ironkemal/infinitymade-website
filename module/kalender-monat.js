@@ -28,6 +28,7 @@ import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=2
 import { alsBerlinDatum } from './berlin-datum.js';
 import { anzeigeName } from './kalender-block.js?v=20261021p';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
+import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 
 const MONATE_DE = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -79,6 +80,7 @@ export function monatsKacheln(year, month) {
 let sprungTimer = null;
 let langdruckVerdrahtet = false;
 let letzterStand = { onTagDoppelklick: null };
+let laufendeAbfrage = 0;
 
 /** Bricht einen wartenden Sprung ab — der Doppelklick hat gewonnen. */
 function sprungAbbrechen() {
@@ -93,6 +95,7 @@ function sprungAbbrechen() {
  * @param {number}   o.year
  * @param {number}   o.month           0-basiert, wie bei Date
  * @param {string}   o.ownerId
+ * @param {string|null} [o.businessId] Gespeicherter Terminstandort; null erhält die Praxisansicht.
  * @param {Array}    o.teamMembers
  * @param {string}   o.calEmpFilter
  * @param {function} o.farbeFuer       (booking) => { flaeche, rand }
@@ -106,6 +109,7 @@ export async function renderMonat({
   year,
   month,
   ownerId,
+  businessId = null,
   teamMembers = [],
   calEmpFilter = 'all',
   farbeFuer,
@@ -114,6 +118,7 @@ export async function renderMonat({
   onTerminKlick,
   setzeDatumsLabel,
 }) {
+  const meins = ++laufendeAbfrage;
   const header = document.getElementById('monthGridHeader');
   const grid = document.getElementById('monthGrid');
   if (!header || !grid) return;
@@ -144,14 +149,16 @@ export async function renderMonat({
     : teamMembers.filter(e => e.id === calEmpFilter);
   const empIds = mitarbeiter.map(e => e.id);
 
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,customer_name,status,is_group,group_parent_id,services(title,color)')
+  const { data: geladeneTermine } = await supabase.from('bookings')
+    .select('id,user_id,business_id,service_id,start_time,customer_name,status,is_group,group_parent_id,services(title,color)')
     .eq('owner_id', ownerId)
     .gte('start_time', new Date(year, month, 1).toISOString())
     .lte('start_time', new Date(year, month + 1, 0, 23, 59, 59).toISOString())
     // Leere Liste würde zu einem ungültigen in.() werden.
     .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
+  if (meins !== laufendeAbfrage) return;
+  const bookings = termineDesStandorts(geladeneTermine || [], businessId);
 
   const monatsStart = new Date(year, month, 1);
   const monatsEnd = new Date(year, month + 1, 0, 23, 59, 59);
@@ -160,6 +167,7 @@ export async function renderMonat({
     vonISO: monatsStart.toISOString(),
     bisISO: monatsEnd.toISOString(),
   });
+  if (meins !== laufendeAbfrage) return;
 
   if (setzeDatumsLabel) setzeDatumsLabel(`${MONATE_DE[month]} ${year}`);
 

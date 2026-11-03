@@ -15,25 +15,21 @@ import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
 import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261103raum';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
-import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261101h';
+import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
+import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261102a';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
 import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
-import { mountMeinUrlaub } from './mein-urlaub.js?v=20261102a';
+import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung';
 import { ladeSondertage, markiereSondertage, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js';
 
 export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
+export { termineDesStandorts };
 
 let verdrahtet = null;
 
 const STREIFEN_SPALTEN = 'id,room_id,user_id,business_id,status,start_time,end_time,group_parent_id';
-
-/** Termine ohne Standort sind Altzeilen und zählen überall mit. */
-export function termineDesStandorts(termine, businessId) {
-  if (!businessId) return termine;
-  return termine.filter(t => !t.business_id || t.business_id === businessId);
-}
 
 function beiAktivemPanel(panel, { an, aus = () => {} }) {
   let aktiv = false;
@@ -104,8 +100,8 @@ export async function anstellungFuerUrlaub(empId, container, nachSpeichern) {
     container.querySelector('.emp-urlaub-kpi')?.before(host);
   }
   mountAnstellung(host, { supabase, ownerId: getOwnerId(), empId, istInhaber: istInhaber(), showToast, nachSpeichern });
-  const [anstellung, arbeitstage] = await Promise.all([ladeAnstellung({ supabase, empId }), ladeArbeitstage({ supabase, empId })]);
-  return { anspruch: anstellung.urlaub_jahrestage, arbeitstage };
+  const [anstellung, zeiten] = await Promise.all([ladeAnstellung({ supabase, empId }), ladeArbeitstage({ supabase, empId, mitStatus: true })]);
+  return { anspruch: anstellung.urlaub_jahrestage, arbeitstage: zeiten.arbeitstage, vorhanden: anstellung.vorhanden, fehler: anstellung.fehler || zeiten.fehler || !zeiten.vorhanden };
 }
 
 /** Etiketten folgen jedem Neuzeichnen des Kalenders, egal welcher Weg es ausgelöst hat. */

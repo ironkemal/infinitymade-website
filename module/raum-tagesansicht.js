@@ -11,7 +11,7 @@
  * Blockdarstellung (`blockHtml` kommt aus dashboard.js).
  */
 import { DV_SLOT_MIN, DV_SLOT_PX, rasterStunden } from './kalender-raster.js?v=20261021p';
-import { TERMIN_SELECT } from './termin-laden.js?v=20261021s';
+import { TERMIN_SELECT } from './termin-laden.js?v=20261103planung';
 
 // TERMIN_SELECT (Tagesliste) enthält room_id nicht; ohne sie landen alle Termine in „Ohne Raum“ (F5).
 export const RAUM_TAGES_SELECT = `${TERMIN_SELECT},room_id`;

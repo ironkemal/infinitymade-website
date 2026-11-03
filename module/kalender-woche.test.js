@@ -7,6 +7,38 @@ import { WV_SLOT_PX } from './kalender-raster.js';
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+test('M4: Woche zeigt nur gespeicherten Standort und Alttermine, ohne Standort alle', async (t) => {
+  const vorher = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  t.after(() => { if (vorher) Object.defineProperty(globalThis, 'document', vorher); else delete globalThis.document; });
+  const element = () => ({ children: [], dataset: {}, style: {}, classList: { add() {} },
+    appendChild(child) { this.children.push(child); }, addEventListener() {},
+    set innerHTML(value) { this.children = []; },
+  });
+  const timeCol = element();
+  const colsWrap = element();
+  globalThis.document = { getElementById: id => id === 'wvTimeCol' ? timeCol : colsWrap, createElement: element };
+  const rows = ['A', 'B', null].map((business_id, i) => ({ id: String(i), user_id: 'e', business_id,
+    start_time: '2026-11-09T10:00:00Z', end_time: '2026-11-09T10:30:00Z' }));
+  const supabase = { from(table) {
+    let selected = '';
+    const query = { select(value) { selected = value; return query; },
+      then(resolve) { return Promise.resolve({ data: table === 'bookings' ? rows.map(row => {
+        const copy = { ...row }; if (!selected.split(',').includes('business_id')) delete copy.business_id; return copy;
+      }) : [] }).then(resolve); } };
+    for (const method of ['eq', 'gte', 'lte', 'in', 'neq']) query[method] = () => query;
+    return query;
+  } };
+  const ids = () => colsWrap.children.flatMap(col => col.children.flatMap(inner => inner.children || []))
+    .filter(node => node._termin).map(node => node._termin.id);
+  const options = { supabase, ownerId: 'o', dateStr: '2026-11-09', teamMembers: [{ id: 'e' }] };
+  await renderWoche({ ...options, businessId: 'A' });
+  assert.deepEqual(ids(), ['0', '2']);
+  await renderWoche({ ...options, businessId: 'B' });
+  assert.deepEqual(ids(), ['1', '2']);
+  await renderWoche(options);
+  assert.deepEqual(ids(), ['0', '1', '2']);
+});
+
 test('F8: langsame Termin- oder Abwesenheitsantwort darf neuere Woche nicht ergaenzen', async (t) => {
   const vorher = Object.getOwnPropertyDescriptor(globalThis, 'document');
   t.after(() => { if (vorher) Object.defineProperty(globalThis, 'document', vorher); else delete globalThis.document; });

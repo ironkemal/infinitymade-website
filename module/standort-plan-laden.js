@@ -10,6 +10,12 @@ const SPERRE_FEHLT_MS = 10 * 60 * 1000;
 const SPERRE_FEHLER_MS = 60 * 1000;
 let gesperrtBis = 0;
 
+/** Gespeicherter Terminstandort, unabhängig vom später geänderten Einsatzplan. NULL bleibt praxisweit. */
+export function termineDesStandorts(termine, businessId) {
+  if (!businessId) return termine;
+  return termine.filter(t => !t.business_id || t.business_id === businessId);
+}
+
 export function _planSperreZuruecksetzen() { gesperrtBis = 0; }
 
 function tabelleFehlt(error) {
@@ -39,19 +45,19 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
 /**
  * Rein: Teamspalten fuer einen Tag am Standort. Ein Mitarbeiter bleibt sichtbar, wenn der Plan ihn dort
  * vorsieht ODER er an dem Tag dort schon einen Termin hat (nichts Gebuchtes verschwindet).
- * Kein Plan, kein Standort oder am Ende leer -> unveraenderte Liste.
+ * Kein Plan oder kein Standort -> unveraenderte Liste. Ein verifizierter Plan darf alle Spalten ausblenden.
  */
 export function spaltenNachPlan(team, zeilen, datum, standortId, bookings = []) {
   if (!Array.isArray(team) || !standortId || !Array.isArray(zeilen) || !zeilen.length) return team;
-  const mitTermin = new Set((bookings || []).map((b) => b && b.user_id));
+  const mitTermin = new Set(termineDesStandorts(bookings || [], standortId).map((b) => b && b.user_id));
   const alle = [standortId];
   const sicht = team.filter((e) => mitTermin.has(e.id) || istAmStandort(zeilen, e.id, datum, standortId, alle));
-  return sicht.length ? sicht : team;
+  return sicht;
 }
 
 /** Einzeiler fuer dashboard.js: laedt den Plan und filtert die Spalten. */
 export async function planSpalten(supabase, { team, bookings, datum, businessId, ownerId }) {
-  if (!businessId || !Array.isArray(team) || team.length < 2) return team;
+  if (!businessId || !Array.isArray(team) || !team.length) return team;
   const zeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: team.map((e) => e.id) });
   return spaltenNachPlan(team, zeilen, datum, businessId, bookings);
 }

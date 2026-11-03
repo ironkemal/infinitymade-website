@@ -38,6 +38,7 @@ import { alsISODatum } from './datum.js?v=20261001a';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
 import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20261031';
+import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -103,6 +104,7 @@ export function pixelFuerMinute(minuteDesTages) {
  * @param {object}   o.supabase
  * @param {string}   o.dateStr        Irgendein Tag der gewünschten Woche
  * @param {string}   o.ownerId
+ * @param {string|null} [o.businessId] Gespeicherter Terminstandort; null erhält die Praxisansicht.
  * @param {Array}    o.teamMembers
  * @param {string}   o.calEmpFilter   Mitarbeiter-Id oder 'all'
  * @param {function} o.farbeFuer      (booking) => { flaeche, rand }
@@ -119,6 +121,7 @@ export async function renderWoche({
   supabase,
   dateStr,
   ownerId,
+  businessId = null,
   teamMembers = [],
   calEmpFilter = 'all',
   farbeFuer,
@@ -183,8 +186,8 @@ export async function renderWoche({
     : teamMembers.filter(e => e.id === calEmpFilter);
   const empIds = mitarbeiter.map(e => e.id);
 
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,is_group,group_parent_id,services(title,color,code,is_internal)')
+  const { data: geladeneTermine } = await supabase.from('bookings')
+    .select('id,user_id,business_id,service_id,start_time,end_time,customer_name,status,is_group,group_parent_id,services(title,color,code,is_internal)')
     .eq('owner_id', ownerId)
     .gte('start_time', vonDatum.toISOString())
     .lte('start_time', bisDatum.toISOString())
@@ -192,6 +195,7 @@ export async function renderWoche({
     .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
   if (meins !== laufendeAbfrage) return;
+  const bookings = termineDesStandorts(geladeneTermine || [], businessId);
 
   // Bei genau einem gewählten Mitarbeiter ist die Zuordnung eindeutig und der
   // Doppelklick kann ihn vorbelegen. Bei „Alle" bleibt das Feld in der Maske

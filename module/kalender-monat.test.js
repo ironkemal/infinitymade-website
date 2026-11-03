@@ -1,9 +1,67 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { monatsKacheln, SPRUNG_VERZOEGERUNG_MS } from './kalender-monat.js';
+import { monatsKacheln, SPRUNG_VERZOEGERUNG_MS, renderMonat } from './kalender-monat.js';
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+function rendererUmgebung(t, antwort) {
+  const vorher = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  t.after(() => { if (vorher) Object.defineProperty(globalThis, 'document', vorher); else delete globalThis.document; });
+  const element = () => ({ children: [], dataset: {}, style: {}, appendChild(child) { this.children.push(child); },
+    addEventListener() {}, set innerHTML(value) { this.children = []; } });
+  const header = element();
+  const grid = element();
+  globalThis.document = { getElementById: id => id === 'monthGridHeader' ? header : grid, createElement: element };
+  const supabase = { from(table) {
+    let selected = '';
+    const query = { select(value) { selected = value; return query; }, then(resolve) { return Promise.resolve(antwort(table, selected)).then(resolve); } };
+    for (const method of ['eq', 'gte', 'lte', 'in', 'neq']) query[method] = () => query;
+    return query;
+  } };
+  return { grid, supabase, ids: () => grid.children.flatMap(cell => cell.children.flatMap(child => child.children || []))
+    .filter(node => node._termin).map(node => node._termin.id) };
+}
+
+test('M4: Monat zeigt Standort A/B und NULL-Alttermine, ohne Standort alle', async (t) => {
+  const rows = ['A', 'B', null].map((business_id, i) => ({ id: String(i), business_id, user_id: 'e', start_time: '2026-11-09T10:00:00Z' }));
+  const env = rendererUmgebung(t, (table, selected) => ({ data: table === 'bookings' ? rows.map(row => {
+    const copy = { ...row }; if (!selected.split(',').includes('business_id')) delete copy.business_id; return copy;
+  }) : [] }));
+  const options = { supabase: env.supabase, year: 2026, month: 10, ownerId: 'o', teamMembers: [{ id: 'e' }] };
+  await renderMonat({ ...options, businessId: 'A' });
+  assert.deepEqual(env.ids(), ['0', '2']);
+  await renderMonat({ ...options, businessId: 'B' });
+  assert.deepEqual(env.ids(), ['1', '2']);
+  await renderMonat(options);
+  assert.deepEqual(env.ids(), ['0', '1', '2']);
+});
+
+test('M4: langsame Termin-/Abwesenheitsantwort überschreibt neueren Monatsstandort nicht', async (t) => {
+  for (const langsam of ['bookings', 'time_offs']) {
+    await t.test(langsam, async (t) => {
+      let freigeben;
+      let erreicht;
+      const wartet = new Promise(resolve => { erreicht = resolve; });
+      const spaet = new Promise(resolve => { freigeben = resolve; });
+      let erster = true;
+      const rows = [{ id: 'A', business_id: 'A', user_id: 'e', start_time: '2026-11-09T10:00:00Z' },
+        { id: 'B', business_id: 'B', user_id: 'e', start_time: '2026-11-09T11:00:00Z' }];
+      const env = rendererUmgebung(t, table => {
+        if (table === langsam && erster) { erster = false; erreicht(); return spaet; }
+        return { data: table === 'bookings' ? rows : [] };
+      });
+      const options = { supabase: env.supabase, year: 2026, month: 10, ownerId: 'o', teamMembers: [{ id: 'e' }] };
+      const alt = renderMonat({ ...options, businessId: 'A' });
+      await wartet;
+      await renderMonat({ ...options, businessId: 'B' });
+      freigeben({ data: langsam === 'bookings' ? rows : [] });
+      await alt;
+      assert.deepEqual(env.ids(), ['B'], langsam);
+      assert.equal(env.grid.children.length, monatsKacheln(2026, 10).length);
+    });
+  }
+});
 
 test('immer volle Wochen', () => {
   for (let m = 0; m < 12; m++) {

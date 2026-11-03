@@ -1,5 +1,5 @@
 /** Read-only personal employment summary; never accepts another employee's ID. */
-import { ladeAnstellung, anstellungHtml, urlaubsKennzahlen } from './anstellung.js?v=20261101h';
+import { ladeAnstellung, anstellungHtml, urlaubsKennzahlen } from './anstellung.js?v=20261103planung';
 
 export function mountMeinUrlaub(host, { supabase, getProfil, jetzt = () => new Date() }) {
   let generation = 0;
@@ -32,8 +32,7 @@ export function mountMeinUrlaub(host, { supabase, getProfil, jetzt = () => new D
         host.innerHTML += '<p role="status">Urlaubssaldo gerade nicht verfügbar. Bitte Arbeitszeiten und Urlaubseinträge mit dem Praxisinhaber prüfen.</p>';
         return;
       }
-      const abwesenheiten = (urlaub.data || []).map(u => ({ ...u, start_date: String(u.start_date).slice(0, 10) < von ? von : u.start_date, end_date: String(u.end_date).slice(0, 10) > bis ? bis : u.end_date }));
-      const { verbraucht, rest } = urlaubsKennzahlen({ abwesenheiten, anspruch: anstellung.urlaub_jahrestage, arbeitstage });
+      const { verbraucht, rest } = urlaubsKennzahlen({ abwesenheiten: urlaub.data || [], anspruch: anstellung.urlaub_jahrestage, arbeitstage, jahr });
       host.innerHTML += `<p><strong>${rest} ${rest === 1 ? 'Tag' : 'Tage'} übrig</strong> · ${verbraucht} ${verbraucht === 1 ? 'Tag' : 'Tage'} eingetragen</p><p class="form-hint">Enthält bereits eingetragenen künftigen Urlaub. Bei Fragen bitte Praxisinhaber kontaktieren.</p>`;
     } catch {
       if (aktuell()) host.innerHTML = '<h3>Mein Urlaub</h3><p role="status">Anstellung und Urlaub sind gerade nicht verfügbar. Bitte später erneut öffnen.</p>';

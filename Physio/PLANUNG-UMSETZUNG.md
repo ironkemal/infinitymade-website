@@ -53,7 +53,7 @@ Diese Punkte gehen §3 vor.
 6. **M2b-Raumspalten später**, weicht von der DoD in `PILOT-PLAN.md` ab: Der Streifen beantwortet die Kundenfrage, die Spalten sind die teuerste Einzelposition.
    Freie Räume im Formular bleiben, das kostet kaum etwas.
 7. **M5 kleiner:** Beschäftigung, Wochenstunden, Anspruch, keine Übertragsrechnung. Resturlaub zählt nur Arbeitstage laut Verfügbarkeit, nicht fest Mo–Fr.
-8. **M7 und M4 kleiner:** M7 bleibt Generator, aber nach M3. M4 zuerst nur Wochenmuster und Filter, Einzeltag folgt.
+8. **M7 und M4 kleiner:** M7 nach M3; spätere Entscheidung Kemal 01.11.2026 (`17a966c2`) ersetzt den Praxis-Generator durch gemeinsame Einrichtung mit Support. Generator bleibt Team-Werkzeug. M4 zuerst nur Wochenmuster und Filter, Einzeltag folgt.
 9. **Fragen an P1 sofort über Kemal:** gleiche Rechtsperson, eigenes IK je Standort, feste Räume. Antwort „zwei Rechtspersonen" kippt M3/M4 (legal-de-Sperre).
 
 ## 3. Arbeitspakete
@@ -80,7 +80,7 @@ Jede Zeile ist einzeln lieferbar. „Verantw." = wer schreibt. Migrationen und I
 | **M6a** | Sondertage in Tag/Woche/Monat, Warnung beim Speichern | `module/kalender-sondertag.js` | Worker | Sichtbar in allen drei Ansichten |
 | **M6b** | Migration Protokoll, Route Vorschau + Senden | Migration, `api-backend/routes/sondertag.js` + Test | Haupt | Nur Inhaber, Dedup vor Versand, Deckel je Lauf |
 | **M6c** | Dialog Vorschau, Abwahl, Anrufliste | `module/sondertag-mitteilung.js` | Worker | Ablauf vollständig, Box ohne SMTP liefert Liste |
-| **M7** | Generator im Panel Termin-Anfragen, Hinweis an Praxis | `module/widget-einbettung.js` + Test | Worker | Code kopierbar, Box-Regeln greifen |
+| **M7** | Support-Einrichtung statt Praxis-Codefeld (Kemal 01.11.2026, `17a966c2`); Generator bleibt Team-Werkzeug | `module/widget-einbettung.js` + Test | Worker | Supportweg sichtbar; Team-Code und Box-Hostregeln geprüft; externe Einbettung und vollständige QA-Anfrageverarbeitung abgenommen |
 
 Nummern: Migrationen ab 0092, vor jedem Schreiben `git fetch` (Kemal arbeitet parallel).
 

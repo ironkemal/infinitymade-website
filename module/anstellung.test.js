@@ -314,3 +314,35 @@ test('Hinweis: kein Lohn-/Arbeitszeiterfassungssystem (legal-de), nur im Inhaber
   assert.match(anstellungHtml({}, { istInhaber: true }), /kein Lohn- oder Arbeitszeiterfassungssystem/);
   assert.doesNotMatch(anstellungHtml({}, { istInhaber: false }), /Lohnbuchhaltung/);
 });
+
+
+test('Urlaub zählt überlappende Intervalle und Doppelzeilen je Arbeitstag nur einmal', () => {
+  const a = { type: 'urlaub', start_date: '2026-11-02', end_date: '2026-11-04' };
+  const b = { type: 'urlaub', start_date: '2026-11-04', end_date: '2026-11-06' };
+  assert.equal(urlaubsKennzahlen({ abwesenheiten: [a, b, a], anspruch: 25 }).verbraucht, 5);
+});
+
+test('Urlaub begrenzt beide Jahresüberläufe inklusive 31.12 nach Mitternacht', () => {
+  const abwesenheiten = [
+    { type: 'urlaub', start_date: '2025-12-29', end_date: '2026-01-05' },
+    { type: 'urlaub', start_date: '2026-12-30T12:00:00+01:00', end_date: '2027-01-04' },
+  ];
+  assert.equal(urlaubsKennzahlen({ abwesenheiten, anspruch: 25, jahr: 2026 }).verbraucht, 5);
+  assert.equal(urlaubsKennzahlen({ abwesenheiten: [{type:'urlaub', start_date:'2026-12-31T12:00:00+01:00',end_date:'2026-12-31T20:00:00+01:00'}], jahr:2026 }).verbraucht,1);
+});
+
+test('Urlaub ignoriert ungültige Datumsintervalle statt normalisierte Kalendertage zu zählen', () => {
+  assert.equal(urlaubsKennzahlen({abwesenheiten:[{type:'urlaub', start_date:'2026-02-30',end_date:'2026-03-03'}]}).verbraucht,0);
+});
+
+test('Arbeitszeit-Status unterscheidet Fehler, fehlende Tage und verifizierte Tage', async () => {
+  const sb = result => ({ from: () => ({ select: () => ({ eq: async () => result }) }) });
+  const fehler = await ladeArbeitstage({supabase:sb({error:{message:'offline'}}),empId:'e',mitStatus:true});
+  assert.equal(fehler.fehler,true); assert.equal(fehler.vorhanden,false); assert.equal(fehler.arbeitstage.size,0);
+  for (const data of [[],[{day_of_week:1,is_active:false}]]) {
+    const leer = await ladeArbeitstage({supabase:sb({data}),empId:'e',mitStatus:true});
+    assert.equal(leer.fehler,false); assert.equal(leer.vorhanden,false); assert.equal(leer.arbeitstage.size,0);
+  }
+  const gut = await ladeArbeitstage({supabase:sb({data:[{day_of_week:2,is_active:true}]}),empId:'e',mitStatus:true});
+  assert.equal(gut.vorhanden,true); assert.deepEqual(gut.arbeitstage,new Set([2]));
+});

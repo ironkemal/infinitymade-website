@@ -41,7 +41,7 @@ büyümez). Ortak dosyalara dokunma kuralları §3'te.
 | M4 | **Çalışanı Standort'a atama** — haftalık desen (Mo A / Di B) + tek günlük değişiklik, takvimde görünür; "Mitarbeiter zum anderen Standort versetzen" yüzeyde tek akış | Pazartesi A'da çalışan B'nin takviminde Pazartesi görünmez; tek gün değişince iki takvim de doğru |
 | M5 | **Team** — Teilzeit/Vollzeit, Urlaubsanspruch girişi (bugün sabit 30, yazan UI yok), izinli güne Termin verilince uyarı | Alanlar kaydedilir; Resturlaub doğru; izinli güne Termin'de uyarı |
 | M6 | **Sondertage** — Kemal 31.10.2026: o gün bloklanır (yeni Termin verilmez), var olan Termin'ler **kırmızı** görünür, çalışan kendisi başka güne taşır ve hastaya kendisi haber verir — **otomatik mail yok** | Sondertag iç takvimde görünür, yeni Termin engellenir, eski Termin'ler kırmızı |
-| M7 | **Buchungs-Widget** — dashboard'da gömme kodu üreteci (iframe snippet kopyala) | Einstellungen'den kod kopyalanır, harici sayfada çalışır |
+| M7 | **Buchungs-Widget** — Kemal 01.11.2026 (`17a966c2`): Praxis sieht Support-Hinweis statt Codegenerator; Team richtet die Einbindung gemeinsam ein. Vorhandener Generator bleibt Team-Werkzeug. | Supportkontakt im Termin-Anfragen-Panel erreichbar; Team-Code verwendet korrekten SaaS-/Box-Host, Widget funktioniert auf fremder HTTPS-Seite. Vollständige Anfrageverarbeitung im bestätigten QA-Mandanten separat abnehmen. |
 
 ### 🟩 Kemal (+ Claude) — "Dokumentation · Akte · Versand · KI · Verordnung"
 

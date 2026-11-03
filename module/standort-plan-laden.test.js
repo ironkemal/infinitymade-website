@@ -52,9 +52,11 @@ test('Spalten: Plan darf nicht erweitern, Standort A bleibt fuer e1 aus am Monta
   assert.deepEqual(spaltenNachPlan(team, plan, '2026-11-02', 'A').map((e) => e.id), ['e2']);
 });
 
-test('Spalten: alle ausgeblendet -> unveraendert', () => {
+test('Spalten: alle nach verifiziertem Plan am anderen Standort -> leer', () => {
   const p = [{ employee_id: 'e1', business_id: 'A', weekday: 2, datum: null }, { employee_id: 'e2', business_id: 'A', weekday: 2, datum: null }];
-  assert.equal(spaltenNachPlan(team, p, '2026-11-03', 'B'), team);
+  assert.deepEqual(spaltenNachPlan(team, p, '2026-11-03', 'B'), []);
+  assert.deepEqual(spaltenNachPlan(team, p, '2026-11-03', 'B', [{ user_id: 'e1', business_id: 'B' }]), [team[0]]);
+  assert.deepEqual(spaltenNachPlan(team, p, '2026-11-03', 'B', [{ user_id: 'e1', business_id: 'A' }]), []);
 });
 
 test('planSpalten: Fehler -> Team unveraendert, eine Anfrage', async () => {
@@ -66,11 +68,29 @@ test('planSpalten: Fehler -> Team unveraendert, eine Anfrage', async () => {
   assert.equal(z.n, 1);
 });
 
-test('planSpalten: ein Mitarbeiter oder kein Standort -> keine Anfrage', async () => {
+test('planSpalten: ein Mitarbeiter wird nach Tagesplan ebenfalls ausgeblendet', async () => {
   _planSperreZuruecksetzen();
   const z = { n: 0 };
   const sb = fake({ data: plan }, z);
-  await planSpalten(sb, { team: [team[0]], datum: '2026-11-03', businessId: 'B', ownerId: 'o' });
+  assert.deepEqual(await planSpalten(sb, { team: [team[0]], datum: '2026-11-03', businessId: 'B', ownerId: 'o' }), []);
+  assert.deepEqual(await planSpalten(sb, { team: [team[0]], datum: '2026-11-02', businessId: 'B', ownerId: 'o' }), [team[0]]);
+  assert.deepEqual(await planSpalten(sb, { team: [team[0]], bookings: [{ user_id: 'e1', business_id: 'B' }], datum: '2026-11-03', businessId: 'B', ownerId: 'o' }), [team[0]]);
+  assert.equal(z.n, 3);
+});
+
+test('planSpalten: leerer Plan oder Lesefehler lässt auch ein Einzelteam unverändert', async () => {
+  const einzel = [team[0]];
+  for (const antwort of [{ data: [] }, { data: null }, { data: null, error: { code: 'PGRST205' } }, new Error('Lesefehler')]) {
+    _planSperreZuruecksetzen();
+    assert.equal(await planSpalten(fake(antwort, { n: 0 }), { team: einzel, datum: '2026-11-03', businessId: 'B', ownerId: 'o' }), einzel);
+  }
+});
+
+test('planSpalten: kein Team oder kein Standort -> keine Anfrage', async () => {
+  _planSperreZuruecksetzen();
+  const z = { n: 0 };
+  const sb = fake({ data: plan }, z);
+  await planSpalten(sb, { team: [], datum: '2026-11-03', businessId: 'B', ownerId: 'o' });
   await planSpalten(sb, { team, datum: '2026-11-03', businessId: null, ownerId: 'o' });
   assert.equal(z.n, 0);
 });

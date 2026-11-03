@@ -26,6 +26,10 @@ test('payment_method wird mitgeladen — openBookingModal stellt es wieder her',
   assert.ok(oberflaeche(TERMIN_SELECT).includes('payment_method'));
 });
 
+test('business_id wird mitgeladen — Raum- und Tagesfilter können echte Altzeilen unterscheiden', () => {
+  assert.ok(oberflaeche(TERMIN_SELECT).includes('business_id'));
+});
+
 test('die Felder, die der Speicherpfad ueberschreibt, sind alle dabei', () => {
   // Jedes Feld aus dem payload in dashboard.js, das aus der Maske kommt und
   // beim Bearbeiten aus `b` vorbelegt wird. Fehlt eins, wird es genullt.

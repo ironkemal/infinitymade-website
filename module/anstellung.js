@@ -77,28 +77,27 @@ export function arbeitstageImZeitraum(von, bis, arbeitstage) {
  * Liest working_hours (day_of_week, is_active) des Mitarbeiters, liefert Set der aktiven Tage.
  * Keine Zeilen oder Fehler: Montag bis Freitag. Wirft nie.
  *
- * @param {{ supabase: object, empId: string }} params
- * @returns {Promise<Set<number>>}
+ * Mit mitStatus=true keine erfundene Mo–Fr-Vorgabe: { arbeitstage, fehler, vorhanden }.
+ * @param {{ supabase: object, empId: string, mitStatus?: boolean }} params
+ * @returns {Promise<Set<number>|{arbeitstage:Set<number>,fehler:boolean,vorhanden:boolean}>}
  */
-export async function ladeArbeitstage({ supabase, empId }) {
-  const STANDARD = new Set([1, 2, 3, 4, 5]);
+export async function ladeArbeitstage({ supabase, empId, mitStatus = false }) {
+  const ergebnis = (arbeitstage, fehler = false) => mitStatus
+    ? { arbeitstage, fehler, vorhanden: !fehler && arbeitstage.size > 0 }
+    : arbeitstage;
+  const ersatz = (fehler = false) => ergebnis(mitStatus ? new Set() : new Set(STANDARD_ARBEITSTAGE), fehler);
   try {
-    if (!supabase || !empId) {
-      return new Set(STANDARD);
-    }
+    if (!supabase || !empId) return ersatz(true);
     const { data, error } = await supabase
       .from('working_hours')
       .select('day_of_week, is_active')
       .eq('user_id', empId);
-
-    if (error || !data || data.length === 0) {
-      return new Set(STANDARD);
-    }
-
-    const aktive = data.filter(w => w && w.is_active);
-    return new Set(aktive.map(w => w.day_of_week));
+    if (error) return ersatz(true);
+    if (!Array.isArray(data) || data.length === 0) return ersatz();
+    const aktive = data.filter(w => w && w.is_active && Number.isInteger(w.day_of_week) && w.day_of_week >= 0 && w.day_of_week <= 6);
+    return ergebnis(new Set(aktive.map(w => w.day_of_week)));
   } catch {
-    return new Set(STANDARD);
+    return ersatz(true);
   }
 }
 
@@ -106,10 +105,11 @@ export async function ladeArbeitstage({ supabase, empId }) {
  * Rein. Zählt nur Einträge mit type === 'urlaub'.
  * Liefert { anspruch, verbraucht, rest }, rest nie negativ.
  *
- * @param {{ abwesenheiten?: Array<object>, anspruch?: number, arbeitstage?: Set<number> }} params
+ * Optional jahr begrenzt auf das Kalenderjahr; jeder Arbeitstag zählt höchstens einmal.
+ * @param {{ abwesenheiten?: Array<object>, anspruch?: number, arbeitstage?: Set<number>, jahr?: number }} params
  * @returns {{ anspruch: number, verbraucht: number, rest: number }}
  */
-export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage } = {}) {
+export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage, jahr } = {}) {
   const normierterAnspruch = (typeof anspruch === 'number' && !isNaN(anspruch))
     ? anspruch
     : 30;
@@ -118,10 +118,30 @@ export function urlaubsKennzahlen({ abwesenheiten, anspruch, arbeitstage } = {})
     ? abwesenheiten.filter(a => a && a.type === 'urlaub')
     : [];
 
-  let verbraucht = 0;
+  // Datumsfelder zählen als Kalendertage wie arbeitstageImZeitraum; doppelte
+  // oder überlappende Einträge dürfen keinen Arbeitstag mehrfach verbrauchen.
+  const verbrauchteTage = new Set();
+  const tage = arbeitstage instanceof Set && arbeitstage.size ? arbeitstage
+    : Array.isArray(arbeitstage) && arbeitstage.length ? new Set(arbeitstage) : STANDARD_ARBEITSTAGE;
+  const begrenzt = Number.isInteger(jahr) && jahr >= 1000 && jahr <= 9999;
+  const jahresVon = `${jahr}-01-01`, jahresBis = `${jahr}-12-31`;
   for (const eintrag of urlaubListe) {
-    verbraucht += arbeitstageImZeitraum(eintrag.start_date, eintrag.end_date, arbeitstage);
+    // Vor dem Clipping validieren, damit ungültige Grenzdaten nicht gültig werden.
+    if (!arbeitstageImZeitraum(eintrag.start_date, eintrag.end_date, new Set([0, 1, 2, 3, 4, 5, 6]))) continue;
+    let von = String(eintrag.start_date).slice(0, 10);
+    let bis = String(eintrag.end_date).slice(0, 10);
+    if (begrenzt) {
+      if (von < jahresVon) von = jahresVon;
+      if (bis > jahresBis) bis = jahresBis;
+    }
+    const cur = new Date(`${von}T00:00:00Z`);
+    const ende = new Date(`${bis}T00:00:00Z`);
+    while (cur <= ende) {
+      if (tage.has(cur.getUTCDay())) verbrauchteTage.add(cur.toISOString().slice(0, 10));
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
   }
+  const verbraucht = verbrauchteTage.size;
 
   const rest = Math.max(0, normierterAnspruch - verbraucht);
 

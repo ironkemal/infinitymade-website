@@ -79,6 +79,9 @@
             not(k) { filter.push(r => r[k] != null); return q; },
             gte(k, v) { filter.push(r => r[k] >= v); return q; },
             lte(k, v) { filter.push(r => r[k] <= v); return q; },
+            // Die Belegungsabfrage prüft seit der Raumautomatik das offene Zeitintervall.
+            lt(k, v) { filter.push(r => r[k] < v); return q; },
+            gt(k, v) { filter.push(r => r[k] > v); return q; },
             in(k, v) { filter.push(r => v.includes(r[k])); return q; },
             insert(w) { q.art = 'insert'; q.werte = w; return q; },
             update(w) { q.art = 'update'; q.werte = w; return q; },
