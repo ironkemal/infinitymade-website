@@ -15,6 +15,8 @@ import {
   RAUM_NAME_MAX,
 } from "./raum-plan.js";
 
+import { raumDetails } from "./raum-details.js";
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;",
@@ -25,11 +27,52 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function detailsHtml(raum = {}, verfuegbar = true) {
+  if (!verfuegbar) return '<p class="form-hint">Beschreibung und Ausstattung sind derzeit nicht verfügbar.</p>';
+  return `<div class="raum-details" style="flex-basis:100%;min-width:0;">
+    <label style="display:block;">Beschreibung<textarea class="form-input raum-beschreibung" maxlength="2000" rows="3" style="display:block;width:100%;box-sizing:border-box;">${escapeHtml(raum.beschreibung)}</textarea></label>
+    <fieldset style="min-width:0;margin:12px 0;padding:8px;border:1px solid var(--border);"><legend>Ausstattung</legend>
+    <div class="raum-ausstattung-liste">${(raum.ausstattung || []).map(text => ausstattungHtml(text)).join('')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"><label style="flex:1;min-width:0;">Weiterer Ausstattungspunkt<input class="form-input raum-ausstattung-neu" maxlength="80" style="width:100%;box-sizing:border-box;"></label><button type="button" class="btn-ghost raum-ausstattung-hinzufuegen">Hinzufügen</button></div>
+    <p class="form-hint" aria-live="polite">Angehakt = im Raum vorhanden. Änderungen anschließend speichern.</p></fieldset>
+  </div>`;
+}
+
+function ausstattungHtml(text) {
+  return `<div class="raum-ausstattung-punkt" style="display:flex;gap:8px;align-items:center;overflow-wrap:anywhere;"><label style="flex:1;min-width:0;"><input type="checkbox" class="raum-ausstattung-check" value="${escapeHtml(text)}" checked> ${escapeHtml(text)}</label><button type="button" class="btn-ghost raum-ausstattung-entfernen" aria-label="${escapeHtml(text)} entfernen">Entfernen</button></div>`;
+}
+
+function leseDetails(root) {
+  if (!root?.querySelector('.raum-details')) return {};
+  return {
+    beschreibung: root.querySelector('.raum-beschreibung').value,
+    ausstattung: Array.from(root.querySelectorAll('.raum-ausstattung-check')).filter(el => el.checked).map(el => el.value),
+  };
+}
+
+function verdrahteDetails(root, showToast) {
+  for (const editor of root.querySelectorAll('.raum-details')) {
+    editor.addEventListener('click', event => {
+      const entfernen = event.target.closest('.raum-ausstattung-entfernen');
+      if (entfernen) { entfernen.closest('.raum-ausstattung-punkt').remove(); return; }
+      if (!event.target.closest('.raum-ausstattung-hinzufuegen')) return;
+      const eingabe = editor.querySelector('.raum-ausstattung-neu');
+      const vorhanden = Array.from(editor.querySelectorAll('.raum-ausstattung-check')).map(el => el.value);
+      try {
+        const details = raumDetails('', [...vorhanden, eingabe.value]);
+        editor.querySelector('.raum-ausstattung-liste').insertAdjacentHTML('beforeend', ausstattungHtml(details.ausstattung.at(-1)));
+        eingabe.value = '';
+        eingabe.focus();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  }
+}
+
 /**
  * Reine Funktion: Formular zum Anlegen eines neuen Raums.
  * @returns {string} HTML
  */
-export function formularHtml() {
+export function formularHtml({ detailsVerfuegbar = true } = {}) {
   return `
     <div class="card" style="padding:16px;margin-bottom:16px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;">
       <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
@@ -41,8 +84,9 @@ export function formularHtml() {
           <label class="form-label" for="raumNeuPlaetze" style="display:block;margin-bottom:4px;color:var(--text-main);font-size:13px;font-weight:500;">Plätze</label>
           <input type="number" id="raumNeuPlaetze" class="form-input" value="1" min="1" max="99" style="width:100%;">
         </div>
-        <button type="button" id="raumNeuBtn" class="btn-primary" style="height:36px;white-space:nowrap;">Raum anlegen</button>
       </div>
+      ${detailsHtml({}, detailsVerfuegbar)}
+        <button type="button" id="raumNeuBtn" class="btn-primary" style="height:36px;white-space:nowrap;">Raum anlegen</button>
       <div class="form-hint" style="margin-top:6px;font-size:12px;color:var(--text-muted);">Mehrere Plätze zum Beispiel für Wärme oder Fango</div>
     </div>
   `.trim();
@@ -54,7 +98,7 @@ export function formularHtml() {
  * @param {{ istInhaber?: boolean }} optionen
  * @returns {string} HTML
  */
-export function raumZeilenHtml(raeume, { istInhaber = false } = {}) {
+export function raumZeilenHtml(raeume, { istInhaber = false, detailsVerfuegbar = true } = {}) {
   if (!raeume || raeume.length === 0) {
     return "<p class=\"form-hint\" style=\"margin:8px 0;color:var(--text-muted);\">Noch keine Räume angelegt.</p>";
   }
@@ -71,6 +115,8 @@ export function raumZeilenHtml(raeume, { istInhaber = false } = {}) {
           <div>
             <strong style="color:var(--text-main);font-size:14px;">${escName}</strong>
             ${!aktiv ? " <span class=\"form-hint\" style=\"margin-left:6px;\">(inaktiv)</span>" : ""}
+            ${r.beschreibung ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere;">${escapeHtml(r.beschreibung)}</p>` : ""}
+            ${(r.ausstattung || []).length ? `<ul>${r.ausstattung.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : ""}
           </div>
           <div style="color:var(--text-muted);font-size:13px;">
             ${plaetze} ${plaetze === 1 ? "Platz" : "Plätze"}
@@ -89,7 +135,8 @@ export function raumZeilenHtml(raeume, { istInhaber = false } = {}) {
           <label class="form-label" style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Plätze</label>
           <input type="number" class="form-input raum-edit-plaetze" value="${plaetze}" min="1" max="99" style="width:100%;">
         </div>
-        <div style="display:flex;align-items:flex-end;gap:8px;margin-top:auto;">
+        ${detailsHtml(r, detailsVerfuegbar)}
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;margin-top:auto;">
           <button type="button" class="btn-ghost raum-btn-save" data-action="speichern" data-id="${escId}">Speichern</button>
           <button type="button" class="btn-ghost raum-btn-toggle" data-action="toggle-aktiv" data-id="${escId}" data-aktiv="${aktiv ? "true" : "false"}">${aktiv ? "Deaktivieren" : "Aktivieren"}</button>
           <button type="button" class="btn-ghost raum-btn-delete" data-action="loeschen" data-id="${escId}" style="color:var(--danger, #ef4444);">Löschen</button>
@@ -109,15 +156,18 @@ export async function ladeRaeume({ supabase, ownerId }) {
     if (!supabase || !ownerId) {
       return { raeume: [], fehler: true };
     }
-    const { data, error } = await supabase
-      .from("rooms")
-      .select("id,owner_id,business_id,name,plaetze,aktiv,sort")
-      .eq("owner_id", ownerId);
+    let { data, error } = await supabase.from("rooms")
+      .select("id,owner_id,business_id,name,plaetze,aktiv,sort,beschreibung,ausstattung").eq("owner_id", ownerId);
+    let detailsVerfuegbar = true;
+    if (error && ['42703', 'PGRST204'].includes(String(error.code))) {
+      const alt = await supabase.from("rooms").select("id,owner_id,business_id,name,plaetze,aktiv,sort").eq("owner_id", ownerId);
+      data = alt.data; error = alt.error; detailsVerfuegbar = false;
+    }
 
     if (error) {
       return { raeume: [], fehler: true };
     }
-    return { raeume: data || [], fehler: false };
+    return { raeume: data || [], fehler: false, detailsVerfuegbar };
   } catch {
     return { raeume: [], fehler: true };
   }
@@ -143,7 +193,16 @@ export async function speichereRaum({
   id = null,
   name,
   plaetze,
+  beschreibung,
+  ausstattung,
 }) {
+  let details = {};
+  try {
+    if (beschreibung !== undefined || ausstattung !== undefined) {
+      if (beschreibung === undefined || ausstattung === undefined) throw new Error('Beschreibung und Ausstattung müssen gemeinsam gespeichert werden.');
+      details = raumDetails(beschreibung, ausstattung);
+    }
+  } catch (err) { return { ok: false, meldung: err.message }; }
   let cleanName;
   try {
     cleanName = raumName(name);
@@ -166,7 +225,7 @@ export async function speichereRaum({
     if (id) {
       const { error } = await supabase
         .from("rooms")
-        .update({ name: cleanName, plaetze: cleanPlaetze })
+        .update({ name: cleanName, plaetze: cleanPlaetze, ...details })
         .eq("id", id)
         .eq("owner_id", ownerId);
 
@@ -185,6 +244,7 @@ export async function speichereRaum({
           business_id: businessId ?? null,
           name: cleanName,
           plaetze: cleanPlaetze,
+          ...details,
         });
 
       if (error) {
@@ -275,7 +335,7 @@ export async function mountRaumVerwaltung(container, deps = {}) {
       container.innerHTML = `
         <div class="raum-verwaltung">
           <h3 class="raum-titel" style="margin:0 0 6px;font-size:16px;color:var(--text-main);">Räume</h3>
-          <p class="raum-hinweis form-hint" style="margin:0 0 12px;font-size:13px;color:var(--text-muted);">Räume dieses Standorts. Der Raum wird im Termin ausgewählt.</p>
+          <p class="raum-hinweis form-hint" style="margin:0 0 12px;font-size:13px;color:var(--text-muted);">Räume dieses Standorts mit Beschreibung und Ausstattung. Passende freie Räume werden bei der Terminplanung vorgeschlagen.</p>
           <p class="raum-fehler form-hint" style="color:var(--text-muted);font-size:13px;margin:0;">Räume sind gerade nicht verfügbar.</p>
         </div>
       `.trim();
@@ -295,13 +355,14 @@ export async function mountRaumVerwaltung(container, deps = {}) {
       gefilterteRaeume = raeumeDesStandorts(alleRaeume, businessId);
     }
 
-    const formular = istInhaber ? formularHtml() : "";
-    const zeilen = raumZeilenHtml(gefilterteRaeume, { istInhaber });
+    const detailsVerfuegbar = ergebnis.detailsVerfuegbar !== false;
+    const formular = istInhaber ? formularHtml({ detailsVerfuegbar }) : "";
+    const zeilen = raumZeilenHtml(gefilterteRaeume, { istInhaber, detailsVerfuegbar });
 
     container.innerHTML = `
       <div class="raum-verwaltung">
         <h3 class="raum-titel" style="margin:0 0 6px;font-size:16px;color:var(--text-main);">Räume</h3>
-        <p class="raum-hinweis form-hint" style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Räume dieses Standorts. Der Raum wird im Termin ausgewählt.</p>
+        <p class="raum-hinweis form-hint" style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Räume dieses Standorts mit Beschreibung und Ausstattung. Passende freie Räume werden bei der Terminplanung vorgeschlagen.</p>
         ${formular}
         <div class="raum-liste">
           ${zeilen}
@@ -310,6 +371,7 @@ export async function mountRaumVerwaltung(container, deps = {}) {
     `.trim();
 
     if (!istInhaber) return;
+    if (typeof container.querySelectorAll === "function") verdrahteDetails(container, showToast);
 
     const neuBtn = typeof container.querySelector === "function" ? container.querySelector("#raumNeuBtn") : null;
     const neuNameInput = typeof container.querySelector === "function" ? container.querySelector("#raumNeuName") : null;
@@ -328,6 +390,7 @@ export async function mountRaumVerwaltung(container, deps = {}) {
             raeume: alleRaeume,
             name,
             plaetze,
+            ...leseDetails(neuBtn.closest?.(".card")),
           });
           if (!res.ok) {
             showToast(res.meldung, "error");
@@ -365,6 +428,7 @@ export async function mountRaumVerwaltung(container, deps = {}) {
               id,
               name: nameInput.value,
               plaetze: plaetzeInput.value,
+              ...leseDetails(zeile),
             });
             if (!res.ok) {
               showToast(res.meldung, "error");

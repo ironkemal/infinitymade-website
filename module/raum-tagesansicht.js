@@ -16,7 +16,7 @@ import { TERMIN_SELECT } from './termin-laden.js?v=20261021s';
 // TERMIN_SELECT (Tagesliste) enthält room_id nicht; ohne sie landen alle Termine in „Ohne Raum“ (F5).
 export const RAUM_TAGES_SELECT = `${TERMIN_SELECT},room_id`;
 import { raeumeDesStandorts } from './raum-plan.js';
-import { ladeRaumliste } from './raum-auswahl.js';
+import { ladeRaumliste } from './raum-auswahl.js?v=20261103raum';
 import { mitarbeiterKuerzel } from './raum-streifen.js';
 
 export const OHNE_RAUM_ID = '__ohne_raum__';

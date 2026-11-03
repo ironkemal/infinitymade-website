@@ -7,6 +7,7 @@ import * as authGuards from './auth-guards.js';
 import * as backendSeries from './series.js';
 import * as frontendSeries from '../../module/serien-termine.js';
 import { raumFelderFuerTermin } from '../lib/raum-zuordnung.js';
+import { raumLeistungenFelder, raumBuchungsFehler } from '../lib/raum-automatik.js';
 // server.js ruft seit S6 (8e239319) ladeStandortPlan/planErlaubt auf; ohne sie im vm-Kontext ReferenceError (F6).
 import { ladeStandortPlan, planErlaubt } from '../lib/standort-plan-laden.js';
 
@@ -110,6 +111,7 @@ const mockSupabase = {
 
 const ctx = vm.createContext({
   raumFelderFuerTermin,
+  raumLeistungenFelder, raumBuchungsFehler,
   ladeStandortPlan,
   planErlaubt,
   ...guards,
@@ -198,6 +200,32 @@ const authReq = (body = {}, tenantId = 'O', params = {}) => ({
 
 describe('Authenticated Booking Security Guards Suite (K4)', () => {
   beforeEach(() => resetDb());
+
+  describe('Room requirement snapshot before booking insert', () => {
+    const id = '00000000-0000-4000-8000-000000000001';
+    it('rejects malformed snapshots on all authenticated create routes without writes', async () => {
+      for (const handler of [manualHandler, batchCreateHandler, explicitHandler]) {
+        const res = mockRes();
+        await handler(authReq({ raumServiceIds: ['invalid'] }), res);
+        assert.equal(res.statusCode, 400);
+        assert.match(res.body.error, /höchstens 30 gültige Leistungen/);
+      }
+      assert.equal(currentDb.writes.length, 0);
+    });
+    it('forwards snapshot on regular series before first insert with selected business', async () => {
+      const res = mockRes();
+      await batchCreateHandler(authReq({ userId: 'T', serviceId: 'S', startDate: '2026-10-20', time: '10:00', count: 1, businessId: 'BIZ1', raumServiceIds: [id] }), res);
+      assert.equal(res.statusCode, 200);
+      assert.deepEqual(currentDb.writes[0].data.raum_service_ids, [id]);
+      assert.equal(currentDb.writes[0].data.business_id, 'BIZ1');
+    });
+    it('forwards snapshot on explicit series and manual create', async () => {
+      await explicitHandler(authReq({ slots: [{ date: '2026-10-20', time: '10:00', employeeId: 'T' }], raumServiceIds: [id] }), mockRes());
+      await manualHandler(authReq({ employeeId: 'T', serviceId: 'S', start_time: '2026-10-20T11:00:00Z', end_time: '2026-10-20T11:30:00Z', raumServiceIds: [id] }), mockRes());
+      assert.equal(currentDb.writes.length, 2);
+      for (const write of currentDb.writes) assert.deepEqual(write.data.raum_service_ids, [id]);
+    });
+  });
 
   describe('Foreign and Inactive Therapist Validation', () => {
     it('manual-create rejects foreign therapist with 400 and zero writes', async () => {

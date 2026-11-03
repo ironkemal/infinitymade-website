@@ -208,7 +208,7 @@ test("E. ladeRaeume mit Fehler liefert { raeume: [], fehler: true }", async () =
       assert.equal(tabelle, "rooms");
       return {
         select(spalten) {
-          assert.equal(spalten, "id,owner_id,business_id,name,plaetze,aktiv,sort");
+          assert.equal(spalten, "id,owner_id,business_id,name,plaetze,aktiv,sort,beschreibung,ausstattung");
           return {
             eq(spalte, wert) {
               assert.equal(spalte, "owner_id");
@@ -402,4 +402,66 @@ test("raumZeilenHtml ohne Räume zeigt Leermeldung", () => {
   assert.ok(raumZeilenHtml([], { istInhaber: true }).includes("Noch keine Räume angelegt."));
   assert.ok(raumZeilenHtml([], { istInhaber: false }).includes("Noch keine Räume angelegt."));
   assert.ok(raumZeilenHtml(null, { istInhaber: false }).includes("Noch keine Räume angelegt."));
+});
+
+
+test('Raumdetails werden mit Mandantenfilter gespeichert; Schreibfehler bleibt Fehler', async () => {
+  let payload;
+  const filter = [];
+  const db = { from: () => ({ update(value) { payload = value; const query = { eq(k, v) { filter.push([k, v]); return query; }, then(resolve) { return Promise.resolve({ error: { code: 'PGRST204' } }).then(resolve); } }; return query; } }) };
+  const result = await speichereRaum({ supabase: db, ownerId: 'o', id: 'r', name: 'Raum', plaetze: 1, beschreibung: ' Hell ', ausstattung: [' Liege '] });
+  assert.equal(result.ok, false);
+  assert.deepEqual(payload, { name: 'Raum', plaetze: 1, beschreibung: 'Hell', ausstattung: ['Liege'] });
+  assert.deepEqual(filter, [['id', 'r'], ['owner_id', 'o']]);
+});
+
+test('Alter Datenbankstand lädt Räume weiter und blendet neue Eingaben aus', async () => {
+  const selects = [];
+  const db = { from: () => ({ select(columns) { selects.push(columns); return { eq: async () => columns.includes('beschreibung') ? { error: { code: '42703' } } : { data: [{ id: 'r', name: 'Alt' }], error: null } }; } }) };
+  const result = await ladeRaeume({ supabase: db, ownerId: 'o' });
+  assert.equal(result.fehler, false);
+  assert.equal(result.detailsVerfuegbar, false);
+  assert.equal(result.raeume[0].name, 'Alt');
+  assert.equal(selects.length, 2);
+  const html = formularHtml({ detailsVerfuegbar: false });
+  assert.ok(html.includes('derzeit nicht verfügbar'));
+  assert.ok(!html.includes('raum-beschreibung'));
+  assert.ok(html.includes('raumNeuName'));
+});
+
+test('Beschreibung und Checkliste sind sicher escapet, vorhandene Punkte echte Checkboxen', () => {
+  const raum = { id: 'r', name: 'Raum', beschreibung: '</textarea><script>x</script>', ausstattung: ['<img src=x>'] };
+  const edit = raumZeilenHtml([raum], { istInhaber: true });
+  assert.ok(!edit.includes('<script>'));
+  assert.ok(!edit.includes('<img src=x>'));
+  assert.ok(edit.includes('type="checkbox"'));
+  assert.ok(edit.includes(' checked'));
+  const read = raumZeilenHtml([raum]);
+  assert.ok(read.includes('&lt;script&gt;'));
+  assert.ok(read.includes('&lt;img src=x&gt;'));
+  assert.ok(!read.includes('<button'));
+});
+
+
+test('Raum mit Beschreibung und ausgewählter Ausstattung anlegen; ungültige Details schreiben nichts', async () => {
+  let payload;
+  let writes = 0;
+  const db = { from: () => ({ insert: async value => { writes++; payload = value; return { error: null }; } }) };
+  const grund = { supabase: db, ownerId: 'o', businessId: 'b', name: 'Raum', plaetze: 2 };
+  assert.deepEqual(await speichereRaum({ ...grund, beschreibung: ' Ruhig ', ausstattung: ['Liege', ' Waschbecken '] }), { ok: true });
+  assert.deepEqual(payload, { owner_id: 'o', business_id: 'b', name: 'Raum', plaetze: 2, beschreibung: 'Ruhig', ausstattung: ['Liege', 'Waschbecken'] });
+  assert.equal((await speichereRaum({ ...grund, ausstattung: ['Liege', 'Liege'] })).ok, false);
+  assert.equal(writes, 1);
+  assert.deepEqual(await speichereRaum({ ...grund, beschreibung: '', ausstattung: [] }), { ok: true });
+  assert.deepEqual(payload.ausstattung, []);
+});
+
+
+test('Teilweise Details überschreiben keine vorhandene Beschreibung oder Ausstattung', async () => {
+  const db = { from() { assert.fail('Teilweise Details dürfen keine Daten schreiben'); } };
+  for (const details of [{ beschreibung: 'Neu' }, { ausstattung: ['Liege'] }]) {
+    const result = await speichereRaum({ supabase: db, ownerId: 'o', id: 'r', name: 'Raum', plaetze: 1, ...details });
+    assert.equal(result.ok, false);
+    assert.match(result.meldung, /gemeinsam/);
+  }
 });

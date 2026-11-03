@@ -117,6 +117,9 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 03.11.2026 · Raumdetails und ausstattungsbasierte Raumzuordnung
+- `module/raum-details.js`, `module/leistungs-raum.js`, Raumverwaltung/-auswahl und `api-backend/lib/raum-automatik.js`: Beschreibung und vorhandene Ausstattung je Raum erfassen, benötigte Ausstattung in beiden Leistungseditoren pflegen, manuelle Vorschläge und Vorabprüfung sämtlicher Leistungs-IDs bereitstellen. Erste Nutzung: Verfügbarkeit → Räume, Leistungen und Terminplanung. Die zentrale DB-Automatik in Migration0104 weist neue Buchungen standort-/mandantgerecht zu; lokale Migrationen sind keine Live-Freigabe. Bestehende manuelle Auswahl bleibt möglich.
+
 ### 01.11.2026 · K10 Standort + Spalten-Kapi
 - `standortAuswahl`, `fremderStandortName` (`module/start-aufgaben.js`). Niye: Aufgaben waren standortuebergreifend gemischt; Kemal: standortgebunden, bei Mehrstandort zuweisbar. Nerede: Aufgaben auf der Übersicht. Kein gemeinsamer Standort-Picker vorhanden (fonksiyon-ustasi), Kandidat fuer spaeter neben den Dropdowns in `dashboard.js`.
 - `tools/check-select-spalten.mjs` + `.sh`. Niye: K10-Abfrage auf nicht vorhandene Spalte blieb unbemerkt. Nerede: `.githooks/pre-commit`; `--alle` prueft das ganze Repo.

@@ -45,25 +45,25 @@
   "_hinweis_0098": "0098_standort_plan_gueltig_ab_austritt (db-ustasi/onprem O-236, 01.11.2026): employee_standort_plan.gueltig_ab + CHECK + UNIQUE ersetzt, mitarbeiter_anstellung.austritt_am. Zaehler unveraendert (CHECK wird nicht gezaehlt, UNIQUE-Index 1:1 ersetzt). Gemessen auf lokaler frischer Kette 0000-0098.",
   "_hinweis_0099_0100": "0099 (CHECK + CREATE OR REPLACE) zaehlerneutral; 0100 einheiten_korrekturen: tablo +1, policy +2, fonksiyon +3 (prevent_mod, mandant_pruefen, einheiten_korrigieren), trigger +3, index +3 (pkey + 2) — NACHGERECHNET, NICHT physisch gemessen (Docker lokal nicht verfuegbar 02.11.2026); gemessen_am unveraendert. SaaS: angewandt 02.11.2026 (MCP; Live-Katalog danach 105 Tabellen/193 Policies/127 Funktionen/123 Trigger/372 Indizes = Dump-Delta +1/+2/+3/+3/+3).",
   "_hinweis_0101": "0101_termin_mitteilungen (M6b/S8, db-ustasi/guvenlik/onprem O-240, 02.11.2026; zuerst als 0099 entworfen, Nummer an Kemals 0099/0100 abgegeben): +1 Tabelle, +1 Policy (nur SELECT), +0 Funktionen, +0 Trigger, +3 Indizes (PK, UNIQUE eindeutig, owner_zeit). Gemessen auf lokaler frischer Kette 0000-0098 + 0101 (zweimal angewandt, vor Kemals 0099/0100): Delta +1/+1/+0/+0/+3. SaaS: angewandt 02.11.2026 (Management-API, Melih GO).",
-  "bis_version": "0102",
-  "gemessen_am": "2026-11-02",
+  "bis_version": "0104",
+  "gemessen_am": "2026-11-03",
   "zaehler": {
     "public_tablo": 96,
     "rls_policy": 185,
-    "fonksiyon": 120,
-    "trigger": 120,
+    "fonksiyon": 124,
+    "trigger": 123,
     "index": 353,
     "auth_trigger": 1,
     "storage_bucket": 6,
     "publication_uye_tablo": 1,
     "extension": 9,
-    "rls_kapali_tablolar": [
-      "spatial_ref_sys"
-    ],
     "anon_profiles_tablo_hakki": false,
     "anon_profiles_kolon": 11,
     "anon_businesses_tablo_hakki": false,
-    "anon_businesses_kolon": 6
+    "anon_businesses_kolon": 6,
+    "rls_kapali_tablolar": [
+      "spatial_ref_sys"
+    ]
   },
   "_hinweis_0058": "0058_abrechnung_zuzahlungsforderung (M1.1): +3 nullable Spalten, +3 CHECK, +1 FK, +1 UNIQUE-Index, +1 SECURITY INVOKER-Funktion, +1 Trigger. Keine neue Tabelle/Policy. Alle zehn Zaehler am 03.10.2026 physisch auf frischer isolierter lokaler Box (auth/storage + Migrationen0000–0057 + finalem0058-Kandidat) gemessen; Baseline0057 ohne Abweichung. Bericht /tmp/praxura-m1-report-199e549c, fortschritte/2026-10-03.md. SaaS am03.10angewandt, SaaS-Zaehlung getrennt in db/. Keine Schaetzung aus SaaS-Dump.",
   "_hinweis_0059": "0059_podologie_empfangsnachweise (M1.9): additive append-only Papier-Prüfvermerke für78040. Alle zehn Werte physisch auf frischer isolierter lokaler Box0058→0059 gemessen; Bericht /tmp/praxura-m19-report-862bfc35. SaaS20261003193551 angewandt; SaaS-Counts getrennt in db/. Keine technischeDAS-Quittung; keine Patientenunterschrift ersetzt.",
@@ -90,5 +90,6 @@
   "_hinweis_0079": "0079_kommentar_verordnung_id (db-ustasi 11.10.2026): nur zwei COMMENT ON COLUMN (bookings.verordnung_id, invoices.verordnung_id). pg_description liest keiner der zehn Zaehler -> COUNTER-NEUTRAL. Nachgerechnet, nicht gemessen. SaaS angewandt 11.10.2026 (MCP 20261011142626).",
   "_hinweis_0080": "0080_drop_verordnung_festschreibung (db-ustasi 11.10.2026): DROP FUNCTION IF EXISTS public.verordnung_festschreibung() — verwaiste Triggerfunktion aus 0000_baseline, an keinen Trigger gebunden. Rechnerisch: fonksiyon 101 -> 100, alle anderen Zaehler unveraendert. NACHGERECHNET, nicht gemessen — gemessen_am bleibt 2026-10-10. SaaS angewandt 11.10.2026 (MCP 20261011142627).",
   "_hinweis_0081_0082": "PHYSISCH gemessen 16.10.2026 in isoliertem PostgreSQL 17.6.1.136 mit offizieller Storage-DDL 0001-0069: frische Kette 0000-0080 (fonksiyon 100), Upgrade 0081/0082 (fonksiyon 102), unveraenderte restliche Zaehler. Originale Migrationen 0079/0080 bleiben erhalten. Wiederholung, RPC-Rollbacks, ACL und parallele Sessions: Claude outputs/2026-10-16-release/POSTGRES-NACHWEIS.md. Kein SaaS-Zugriff.",
-  "_hinweis_0102": "0102_termin_mitteilungen_tagesdeckel (F12): lokal PHYSISCH auf frischer Supabase-PostgreSQL17.6.1.136-Kette mit upstream GoTrue2.196.0/Storage1.74.0 gemessen; echter migrate.js,103 Migrationen0000-0102, Wiederholung0, SHA-Ledger geprüft. Delta0102:+1 Funktion/+1 Trigger; übrige Werte unverändert. Vorbestehende Erwartungsabweichung extension8->9 korrigiert: offizielles vendor webhooks.sql installiert pg_net bereits VOR0102. Keine SaaS-Anwendung; Live-GO und Live-Schemaexport separat offen. SaaS: angewandt 02.11.2026 (Management-API, Melih GO), REVOKE anon/authenticated ergaenzt (Zaehler unveraendert)."
+  "_hinweis_0102": "0102_termin_mitteilungen_tagesdeckel (F12): lokal PHYSISCH auf frischer Supabase-PostgreSQL17.6.1.136-Kette mit upstream GoTrue2.196.0/Storage1.74.0 gemessen; echter migrate.js,103 Migrationen0000-0102, Wiederholung0, SHA-Ledger geprüft. Delta0102:+1 Funktion/+1 Trigger; übrige Werte unverändert. Vorbestehende Erwartungsabweichung extension8->9 korrigiert: offizielles vendor webhooks.sql installiert pg_net bereits VOR0102. Keine SaaS-Anwendung; Live-GO und Live-Schemaexport separat offen. SaaS: angewandt 02.11.2026 (Management-API, Melih GO), REVOKE anon/authenticated ergaenzt (Zaehler unveraendert).",
+  "_hinweis_0103_0104": "PHYSISCH gemessen 03.11.2026 auf frischer isolierter Supabase-PostgreSQL17.6.1.136/GoTrue2.196.0/Storage1.74.0-Kette: echter migrate.js zuerst103 Migrationen0000–0102, danach0103/0104,105 SHA-Ledgerwerte, Wiederholung0; finaler Zaehlerabgleich mit0104-Erwartung statusok ohne Abweichungen.0103:+1 Funktion;0104:+3 Funktionen/+3 Trigger. Uebrige Werte unveraendert. Lokale Vorbereitung, nicht SaaS-angewandt; Live-Anwendung und kanonischer Export bleiben gesondert. Reproduktion/Messartefakte:/tmp/praxura-raum-runner.py,/tmp/praxura-raum-fullchain-measured.json,/tmp/praxura-raum-runner-0104-counter-proof.json."
 }

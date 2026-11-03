@@ -15,6 +15,33 @@ const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';
 const BELEGUNG_SPALTEN = 'id,room_id,status,start_time,end_time,group_parent_id';
 
+/** Union der Anforderungen aller Haupt- und Zusatzleistungen; null bei unbekannter Leistung. */
+export function terminRaumAnforderungen(zeilen, services) {
+  const ids = [...new Set((zeilen || []).map(z => z.serviceId).filter(Boolean))];
+  if (!ids.length) return null;
+  const erforderlich = [];
+  for (const id of ids) {
+    const service = (services || []).find(s => s.id === id);
+    if (!service || !Array.isArray(service.raum_ausstattung)) return null;
+    erforderlich.push(...service.raum_ausstattung);
+  }
+  return [...new Set(erforderlich)];
+}
+
+export function keinPraxisraumNoetig(zeilen, services, hausbesuch = false) {
+  if (hausbesuch) return true;
+  const ids = [...new Set((zeilen || []).map(z => z.serviceId).filter(Boolean))];
+  return ids.length > 0 && ids.every(id => (services || []).find(s => s.id === id)?.is_online_meeting === true);
+}
+
+export function raumVorschlag(raeume, termine, start, ende, { businessId = null, anforderungen, ohneTerminId = null } = {}) {
+  if (!Array.isArray(anforderungen) || !start || !ende || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(ende)) || Date.parse(ende) <= Date.parse(start)) return null;
+  const geeignet = (raeume || []).filter(r => r.aktiv !== false && (r.business_id ?? null) === (businessId ?? null)
+    && Array.isArray(r.ausstattung) && anforderungen.every(text => r.ausstattung.includes(text)));
+  geeignet.sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || a.name.localeCompare(b.name, 'de') || String(a.id).localeCompare(String(b.id)));
+  return raumAuswahl(geeignet, termine, start, ende, { ohneTerminId }).find(e => !e.voll)?.raum || null;
+}
+
 export function optionenFuerAuswahl(raeume, termine, start, ende, optionen = {}) {
   const liste = start && ende
     ? raumAuswahl(raeume, termine, start, ende, optionen)
@@ -49,21 +76,24 @@ export function felderAusWahl(wahl, raeume) {
 
 export async function ladeRaumliste(supabase, ownerId) {
   try {
-    const { data, error } = await supabase.from('rooms').select(RAUM_SPALTEN).eq('owner_id', ownerId);
+    let { data, error } = await supabase.from('rooms').select(`${RAUM_SPALTEN},ausstattung`).eq('owner_id', ownerId);
+    if (error && ['42703', 'PGRST204'].includes(String(error.code))) ({ data, error } = await supabase.from('rooms').select(RAUM_SPALTEN).eq('owner_id', ownerId));
     return error ? [] : data || [];
   } catch {
     return [];
   }
 }
 
-export async function ladeBelegungen(supabase, ownerId, vonISO, bisISO) {
+export async function ladeBelegungsstand(supabase, ownerId, vonISO, bisISO) {
   try {
     const { data, error } = await supabase.from('bookings').select(BELEGUNG_SPALTEN)
-      .eq('owner_id', ownerId).not('room_id', 'is', null).gte('start_time', vonISO).lte('start_time', bisISO);
-    return error ? [] : data || [];
-  } catch {
-    return [];
-  }
+      .eq('owner_id', ownerId).not('room_id', 'is', null).lt('start_time', bisISO).gt('end_time', vonISO);
+    return { termine: error ? [] : data || [], fehler: !!error };
+  } catch { return { termine: [], fehler: true }; }
+}
+
+export async function ladeBelegungen(supabase, ownerId, vonISO, bisISO) {
+  return (await ladeBelegungsstand(supabase, ownerId, vonISO, bisISO)).termine;
 }
 
 export function tagesgrenzen(zeitpunkt) {
@@ -94,10 +124,20 @@ function ladezustand() {
 /** Zum Einfrieren vor dem ersten await im Speichern: {} heißt „Raum nicht anfassen". */
 export function raumFelder() {
   const modal = ladezustand();
-  if (!modal?.bereit || modal.huelle.hidden) return {};
-  // Unverändert heißt: nicht anfassen. Sonst löschte jedes Speichern den Raum, sobald er nicht in der Liste steht.
-  if (modal.auswahl.value === modal.anfang) return {};
-  return felderAusWahl(modal.auswahl.value, modal.raeume);
+  const id = typeof document === 'undefined' ? null : document.getElementById('bk-id')?.value || null;
+  if (!kontext) return {};
+  const zeilen = kontext?.getLeistungen?.() || [{ serviceId: document.getElementById('bkService')?.value }];
+  const services = kontext?.getServices?.() || [];
+  const snapshot = terminRaumAnforderungen(zeilen, services) !== null
+    ? { raum_service_ids: [...new Set(zeilen.map(z => z.serviceId).filter(Boolean))] } : {};
+  if (!modal?.bereit || modal.huelle.hidden) return snapshot;
+  if (!id && Object.hasOwn(snapshot, 'raum_service_ids')) {
+    if (keinPraxisraumNoetig(zeilen, services, document.getElementById('bkHausbesuch')?.checked)) return { ...snapshot, room_id: null };
+    return { ...snapshot, ...felderAusWahl(modal.manuell ? modal.auswahl.value : '', modal.raeume), ...(modal.manuell ? { room_automatisch: false } : {}) };
+  }
+  const schemaDa = terminRaumAnforderungen(zeilen, services) !== null;
+  if (modal.auswahl.value === modal.anfang && !modal.manuell) return snapshot;
+  return { ...snapshot, ...felderAusWahl(modal.auswahl.value, modal.raeume), ...(schemaDa ? { room_automatisch: false } : {}) };
 }
 
 /**
@@ -178,7 +218,8 @@ function mountTerminmaske() {
   gruppe.after(huelle);
   const auswahl = huelle.querySelector('select');
   const hinweis = huelle.querySelector('#bkRaumFrei');
-  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0, anfang: '', tag: '' };
+  const stand = { huelle, auswahl, raeume: [], termine: [], bereit: false, lauf: 0, rechnen: 0, manuell: false, anfang: '', tag: '' };
+  auswahl.addEventListener('change', () => { stand.manuell = true; zeichne(auswahl.value); });
 
   function zeitraum() {
     const startText = document.getElementById('bkStart')?.value;
@@ -192,13 +233,29 @@ function mountTerminmaske() {
   function zeichne(wert) {
     const { startIso, endIso } = zeitraum();
     const id = document.getElementById('bk-id')?.value || null;
-    fuelleAuswahl(auswahl, optionenFuerAuswahl(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id }), wert);
-    hinweis.textContent = freieRaeumeHinweis(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id });
+    const zeilen = kontext.getLeistungen?.() || [{ serviceId: document.getElementById('bkService')?.value }];
+    const anforderungen = terminRaumAnforderungen(zeilen, kontext.getServices?.() || []);
+    const ohneRaum = keinPraxisraumNoetig(zeilen, kontext.getServices?.() || [], document.getElementById('bkHausbesuch')?.checked);
+    auswahl.disabled = ohneRaum;
+    const vorschlag = stand.belegungsFehler ? null : raumVorschlag(stand.raeume, stand.termine, startIso, endIso, { businessId: kontext.getBusinessId(), anforderungen, ohneTerminId: id });
+    if (!id && !stand.manuell && anforderungen !== null) wert = ohneRaum ? '' : vorschlag?.id || '';
+    const optionen = optionenFuerAuswahl(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id });
+    if (!id && anforderungen !== null) optionen[0].text = 'Automatisch zuweisen';
+    fuelleAuswahl(auswahl, optionen, wert);
+    const gewaehlt = stand.raeume.find(r => r.id === auswahl.value);
+    if (ohneRaum) hinweis.textContent = 'Kein Praxisraum erforderlich.';
+    else if (stand.belegungsFehler) hinweis.textContent = 'Raumbelegung konnte nicht geladen werden. Beim Speichern wird erneut geprüft.';
+    else if (anforderungen === null) hinweis.textContent = freieRaeumeHinweis(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id });
+    else if (gewaehlt && !anforderungen.every(text => (gewaehlt.ausstattung || []).includes(text))) hinweis.textContent = 'Gewählter Raum besitzt nicht alle benötigten Ausstattungen.';
+    else if (!vorschlag) hinweis.textContent = 'Kein freier geeigneter Raum zu dieser Zeit. Bitte Raum oder Terminzeit prüfen.';
+    else hinweis.textContent = `Raumvorschlag: ${vorschlag.name}${anforderungen.length ? ` · Benötigt: ${anforderungen.join(', ')}` : ''}`;
   }
 
   async function oeffnen() {
     const lauf = ++stand.lauf;
     stand.bereit = false;
+    stand.manuell = false;
+    stand.rechnen++;
     huelle.hidden = true;
     const ownerId = kontext.getOwnerId();
     const id = document.getElementById('bk-id')?.value || null;
@@ -214,14 +271,17 @@ function mountTerminmaske() {
     }
     const { startIso } = zeitraum();
     const { vonISO, bisISO } = tagesgrenzen(startIso || Date.now());
-    const termine = await ladeBelegungen(kontext.supabase, ownerId, vonISO, bisISO);
+    const belegung = await ladeBelegungsstand(kontext.supabase, ownerId, vonISO, bisISO);
     if (lauf !== stand.lauf) return;
+    if (tagesgrenzen(zeitraum().startIso || Date.now()).vonISO !== vonISO) return oeffnen();
+    const termine = belegung.termine;
+    stand.belegungsFehler = belegung.fehler;
     stand.raeume = raeume;
     stand.termine = termine;
     stand.tag = vonISO;
     if (!raeume.length) return;
+    stand.anfang = wert;
     zeichne(wert);
-    stand.anfang = auswahl.value;
     huelle.hidden = false;
     stand.bereit = true;
   }
@@ -234,19 +294,25 @@ function mountTerminmaske() {
   const neuRechnen = async () => {
     if (!stand.bereit) return;
     const lauf = stand.lauf;
+    const rechnen = ++stand.rechnen;
     const { startIso } = zeitraum();
     if (startIso) {
       const { vonISO, bisISO } = tagesgrenzen(startIso);
       if (vonISO !== stand.tag) {
-        const termine = await ladeBelegungen(kontext.supabase, kontext.getOwnerId(), vonISO, bisISO);
-        if (lauf !== stand.lauf) return;
-        stand.termine = termine;
+        const belegung = await ladeBelegungsstand(kontext.supabase, kontext.getOwnerId(), vonISO, bisISO);
+        if (lauf !== stand.lauf || rechnen !== stand.rechnen) return;
+        stand.termine = belegung.termine;
+        stand.belegungsFehler = belegung.fehler;
         stand.tag = vonISO;
       }
     }
     zeichne(auswahl.value);
   };
-  for (const feld of ['bkStart', 'bkService']) document.getElementById(feld)?.addEventListener('change', () => { neuRechnen().catch(() => {}); });
+  const planen = () => { queueMicrotask(() => { neuRechnen().catch(() => {}); }); };
+  modal.addEventListener('change', event => { if (event.target.id !== 'bkRaum') planen(); });
+  modal.addEventListener('input', event => { if (event.target.id !== 'bkRaum') planen(); });
+  const extra = document.getElementById('bkLeistungExtra');
+  if (extra) new MutationObserver(planen).observe(extra, { childList: true, subtree: true });
   return stand;
 }
 

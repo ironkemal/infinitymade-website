@@ -1,5 +1,6 @@
+import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261102c';
+import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103raum';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
@@ -4804,7 +4805,7 @@ document.getElementById('bkAnzahl')?.addEventListener('input', () => {
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
   loescheTerminFehler();
-  const id = document.getElementById('bk-id').value; const raumWahl = raumFelder(); // Raumwahl vor dem ersten await einfrieren
+  const id = document.getElementById('bk-id').value; const raumWahl = raumFelder(); if (raumWahl.raum_service_ids?.length > 30) { terminFehler('Höchstens 30 verschiedene Leistungen pro Termin möglich.'); return; } // Raumwahl vor await einfrieren
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
   const startV = document.getElementById('bkStart').value;
@@ -4962,7 +4963,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       leadId: custId || null,
       customerPhone: phone || null,
       notes: notes || null,
-      duration: durMin, roomId: raumWahl.room_id || null,
+      duration: durMin, roomId: raumWahl.room_id || null, raumServiceIds: raumWahl.raum_service_ids, businessId: currentBusiness?.id || null,
       hausbesuch: document.getElementById('bkHausbesuch').checked || false
     };
     const res = await fetch(API + '/booking/batch-create', {
@@ -5859,7 +5860,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     leadId: custIdAtConfirm || window._physioFlow?.patient_id || null,
     customerPhone: phone || null,
     notes: notes || null,
-    hausbesuch, roomId: raumFelder()?.room_id || null, businessId: currentBusiness?.id || null
+    hausbesuch, roomId: raumFelder()?.room_id || null, raumServiceIds: raumFelder()?.raum_service_ids, businessId: currentBusiness?.id || null
   };
 
   const batchToken = (await supabase.auth.getSession()).data.session?.access_token;
@@ -8330,6 +8331,7 @@ function openGkvEditForm(catalogCode) {
     });
   }
 
+  oeffneLeistungsRaum({ form, supabase, ownerId: getOwnerId(), anforderungen: existing?.raum_ausstattung || [] });
   document.getElementById('gkvFormDelete').hidden = !existing;
   form.hidden = false;
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -8380,7 +8382,8 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
   const empAll = document.getElementById('gkvEmpAll').checked;
   const empIds = empAll ? [] : [...document.querySelectorAll('input[name="gkv_emp"]:checked')].map(cb => cb.value);
 
-  const payload = {
+  const raum = await leistungsRaumPayload(document.getElementById('gkvServiceForm')); if (!raum.ok) { showToast(raum.meldung, 'error'); return; }
+  const payload = { ...raum.felder,
     title: entry.title,
     code: entry.kuerzel,
     gkv_position_nr: catalogCode,
@@ -8442,6 +8445,7 @@ function renderServices() {
 function resetServiceForm() {
   const form = document.getElementById('addServiceForm');
   form.dataset.mode = 'add';
+  oeffneLeistungsRaum({ form, supabase, ownerId: getOwnerId() });
   document.getElementById('srvFormTitle').textContent = t('lbl_add_service') || 'Neue Leistung';
   document.getElementById('srvEditId').value = '';
   document.getElementById('srvTitle').value = '';
@@ -8454,13 +8458,11 @@ function resetServiceForm() {
   document.getElementById('srvEmpAll').checked = true;
   renderSrvEmpCheckboxes();
   toggleEmpCheckboxes(true);
-  // Unified: always use duration cards for every sector
   document.getElementById('srvStandardFields').hidden = true;
   document.getElementById('srvPhysioFields').hidden = false;
   srvFarbwahl().setze('#22c55e');
   renderPhysioServiceCards();
 }
-
 const gkvFarbwahl = () => farbwahlFuer('gkv', { behaelter: document.getElementById('gkvFarbfelder'), eingabe: document.getElementById('gkvFormColor'), farben: LEISTUNG_FARBEN });
 
 // Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
@@ -8472,16 +8474,15 @@ function openServiceEdit(id) {
   resetServiceForm();
   const form = document.getElementById('addServiceForm');
   form.dataset.mode = 'edit';
+  oeffneLeistungsRaum({ form, supabase, ownerId: getOwnerId(), anforderungen: s.raum_ausstattung || [] });
   document.getElementById('srvFormTitle').textContent = 'Leistung bearbeiten';
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
   srvFarbwahl().setze(s.color);
-  // Interne Leistungen tragen keine Abrechnungsart — das entscheidet is_internal.
   document.getElementById('srvKostentraegerTyp').value = s.is_internal ? '' : (s.kostentraeger_typ || '');
   if (s.is_internal) document.getElementById('srvKostentraegerRow').hidden = true;
 
-  // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
   let durations = s.price_config?.durations;
   if (!durations || !Object.keys(durations).length) {
     if (s.duration_minutes) {
@@ -8579,7 +8580,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
 
   const code = document.getElementById('srvCode').value.trim().toUpperCase() || null;
 
-  // Always save price_config.durations (unified across sectors)
   const durations = {};
   const activeDurs = [];
   document.querySelectorAll('.srv-dur-card').forEach(card => {
@@ -8594,8 +8594,8 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     return;
   }
   activeDurs.sort((a, b) => a.minutes - b.minutes);
-  // Backward-compat fields use the smallest active duration
-  const payload = {
+  const raum = await leistungsRaumPayload(document.getElementById('addServiceForm')); if (!raum.ok) { showToast(raum.meldung, 'error'); return; }
+  const payload = { ...raum.felder,
     title, code,
     gkv_position_nr: document.getElementById('srvGkvPosition').value || null,
     price_config: { durations },
@@ -11739,7 +11739,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
-planungVerdrahten({ supabase, getOwnerId, apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, getEigeneId: () => currentProfile?.id, getRolle: () => currentProfile?.role, getDetailEmpId: () => detailEmpId, getStandorte: () => myBusinesses, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, blockHtml: b => renderBookingSlotInner(b, []) + terminHinweiseHtml(b), farbeFuer: b => { const f = terminFarben(b, { teamMembers, empFarben: EMP_COLORS }); return { ...f, hintergrund: mitDeckkraft(f.flaeche, '25', '15%') }; }, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
+planungVerdrahten({ supabase, getOwnerId, apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, getEigeneId: () => currentProfile?.id, getRolle: () => currentProfile?.role, getDetailEmpId: () => detailEmpId, getStandorte: () => myBusinesses, getTagDatum: () => toISODate(dayViewDate), getBusinessId: () => currentBusiness?.id || null, istInhaber: () => currentProfile?.role === 'owner', getTeam: () => teamMembers, blockHtml: b => renderBookingSlotInner(b, []) + terminHinweiseHtml(b), farbeFuer: b => { const f = terminFarben(b, { teamMembers, empFarben: EMP_COLORS }); return { ...f, hintergrund: mitDeckkraft(f.flaeche, '25', '15%') }; }, oeffneTermin: async id => openBookingActionModal(await ladeTerminVollstaendig(supabase, { id })), getServices: () => servicesCache, getLeistungen: () => leseLeistungen(), getDauerMin: () => leseDauer() || ownerServices.find(s => s.id === document.getElementById('bkService')?.value)?.duration_minutes, showToast, showConfirmModal });
 // DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
 dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 

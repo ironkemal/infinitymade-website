@@ -67,6 +67,7 @@ import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
+import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
@@ -1235,6 +1236,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     const { data: booking, error: dbErr } = await supabase.from('bookings').insert(insertPayload).select().single();
 
     if (dbErr) {
+      if (raumBuchungsFehler(dbErr)) return res.status(409).json({ error: raumBuchungsFehler(dbErr) });
       if (dbErr.code === '23P01') {
         return res.status(409).json({ error: 'Dieser Termin wurde gerade von jemand anderem gebucht. Bitte wählen Sie einen anderen Slot.' });
       }
@@ -1392,7 +1394,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       metadata: { source: 'public_booking_page', service_id: service?.id },
     });
 
-    res.json({ success: true, booking });
+    res.json({ success: true, booking: { ...booking, room_name: await raumNameFuerBuchung(supabase, booking, canonicalOwnerId) } });
   } catch (err) {
     console.error('Booking create error:', err);
     res.status(500).json({ error: 'Interner Serverfehler' });
@@ -1474,6 +1476,8 @@ async function pruefeLeadId(leadId, ownerId) {
 app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   const { userId, serviceId, startDate, time, recurrence, intervalDays, weekdays, count, customerName, customerPhone, notes, duration, leadId } = req.body;
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
+  const raumLeistungen = raumLeistungenFelder(req.body.raumServiceIds);
+  if (!raumLeistungen.ok) return res.status(400).json({ error: raumLeistungen.error });
   const bezugLeadId = await pruefeLeadId(leadId, ownerId);
 
   if (!userId || !ownerId || !startDate || !time || !isValidCalendarDate(startDate) || !isStrictInteger(count) || count < 1 || count > 52) {
@@ -1494,6 +1498,14 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   }
   const raum = await raumFelderFuerTermin(supabase, req.body.roomId, ownerId);
   if (!raum.ok) return res.status(400).json({ error: 'Raum nicht gefunden' });
+
+  const rawBusinessId = req.body.businessId || req.body.business_id;
+  if (rawBusinessId) {
+    const { data: biz, error: bizErr } = await supabase.from('businesses').select('id').eq('id', rawBusinessId).eq('owner_id', ownerId).maybeSingle();
+    if (bizErr || !biz) return res.status(400).json({ error: 'Standort nicht gefunden' });
+    if (raum.felder.business_id && raum.felder.business_id !== biz.id) return res.status(400).json({ error: 'Raum gehört nicht zum gewählten Standort' });
+    raum.felder.business_id = biz.id;
+  }
 
   let svc = null;
   if (serviceId) {
@@ -1563,6 +1575,7 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
         hausbesuch: req.body.hausbesuch || false,
         status: 'confirmed',
         lead_id: bezugLeadId,
+        ...raumLeistungen.felder,
         ...raum.felder
       }).select().single();
 
@@ -1570,7 +1583,7 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
         if (dbErr.code === '23P01') {
           conflicts.push({ date: dateStr, reason: 'Slot bereits belegt' });
         } else {
-          conflicts.push({ date: dateStr, reason: 'Datenbankfehler' });
+          conflicts.push({ date: dateStr, reason: raumBuchungsFehler(dbErr) || 'Datenbankfehler' });
         }
       } else {
         created.push({ id: booking.id, date: dateStr, start_time: booking.start_time });
@@ -2304,6 +2317,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
 app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) => {
   const { serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration, leadId } = req.body;
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
+  const raumLeistungen = raumLeistungenFelder(req.body.raumServiceIds);
+  if (!raumLeistungen.ok) return res.status(400).json({ error: raumLeistungen.error });
   if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
     return res.status(400).json({ error: 'ownerId and slots[] required' });
   }
@@ -2390,11 +2405,12 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
         hausbesuch: !!hausbesuch,
         status: 'confirmed',
         lead_id: bezugLeadId,
+        ...raumLeistungen.felder,
         ...(validatedBusinessId ? { business_id: validatedBusinessId } : {}),
         ...raum.felder
       }).select().single();
       if (error) {
-        conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : 'Datenbankfehler' });
+        conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : raumBuchungsFehler(error) || 'Datenbankfehler' });
       } else {
         created.push({ id: bk.id, date: s.date, time: s.time, employeeId: s.employeeId });
       }
@@ -2410,6 +2426,8 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   try {
     const { employeeId, title, start_time, end_time, customerName, customerPhone, leadId, serviceId } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
+    const raumLeistungen = raumLeistungenFelder(req.body.raumServiceIds);
+    if (!raumLeistungen.ok) return res.status(400).json({ error: raumLeistungen.error });
 
     const therapistGuard = await validateTherapist(supabase, employeeId, ownerId);
     if (!therapistGuard.ok) {
@@ -2436,13 +2454,15 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
       // Der einzige Aufrufer war kalender.js (seit 31.10.2026 archiviert) — heute ruft kein
       // Frontend diesen Endpunkt. Er tippte den Namen ohne Patientenauswahl. Der Endpunkt nimmt den Bezug trotzdem entgegen, damit
       // dieser Weg nicht die nächste Quelle beziehungsloser Termine wird.
-      lead_id: await pruefeLeadId(leadId, ownerId)
+      lead_id: await pruefeLeadId(leadId, ownerId),
+      ...raumLeistungen.felder
     };
     if (resolvedServiceId) insertData.service_id = resolvedServiceId;
 
     const { data, error } = await supabase.from('bookings').insert(insertData).select().single();
 
     if (error) {
+      if (raumBuchungsFehler(error)) return res.status(409).json({ error: raumBuchungsFehler(error) });
       if (error.code === '23P01') {
         return res.status(409).json({ error: 'Slot bereits belegt — bitte einen anderen Zeitpunkt wählen.' });
       }

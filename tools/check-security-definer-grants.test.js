@@ -199,7 +199,7 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (29) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (32) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 4 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
   assert.equal(AUSNAHMEN.length, 5);
   const erwarteteAusnahmen = [
@@ -214,9 +214,12 @@ test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (29) und BEKANNTE_ALTLASTEN (6
     assert.ok(typeof eintrag.grund === 'string' && eintrag.grund.length > 10, 'Begruendung fehlt fuer Ausnahme: ' + name);
   }
 
-  // 27 bestehende Funktionen + zwei Referenzprüfungen aus 0081.
-  assert.equal(PROTECTED.length, 29);
+  // 29 bestehende Funktionen + drei interne Raumtrigger aus 0104.
+  assert.equal(PROTECTED.length, 32);
   const erwarteteProtected = [
+    'booking_raum_automatisch',
+    'booking_leistung_raum_nachpruefen',
+    'booking_gruppe_raum_nachziehen',
     'get_gmail_token',
     'set_gmail_token',
     'clear_gmail_token',

@@ -9,11 +9,11 @@
  */
 import {
   raumAuswahlVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
-} from './raum-auswahl.js';
+} from './raum-auswahl.js?v=20261103raum';
 import { raeumeDesStandorts } from './raum-plan.js';
-import { mountRaumVerwaltung } from './raum-verwaltung.js';
+import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261101b';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261103raum';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261101h';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';

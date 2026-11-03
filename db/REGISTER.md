@@ -299,6 +299,8 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Wer:** `module/raum-plan.js` (Logik), Raumverwaltung, Terminmaske, Raum-Streifen.
 - **Warum keine Sperre:** Wärme und Fango laufen parallel, deshalb `plaetze` und nur Warnung (Ops #307). Der Trigger `bookings_room_mandant` hält Mandant und Standort dicht, nicht die Belegung.
 - **`business_id` NULL** nur bei Inhabern ohne `businesses`-Zeile. Ein Raum steht an genau einem Ort, „NULL = praxisweit" gilt ausdrücklich nicht.
+- **Lokale Erweiterung 03.11.2026, noch nicht SaaS-angewandt:** `0103_raum_details.sql` ergänzt Beschreibung (bis 2000 Zeichen) und vorhandene Ausstattung (bis 30 eindeutige Punkte à 80 Zeichen). Pflege über dieselbe Raumverwaltung, Team liest mit. Grundlage für benötigte Ausstattung je Leistung; Freitextbeschreibung steuert keine automatische Zuordnung. Kanonischer Schemaexport bleibt bis Live-Anwendung unverändert.
+- **Lokale Automatik 03.11.2026, noch nicht SaaS-angewandt:** `0104_raum_automatik.sql` ergänzt `services.raum_ausstattung` und technische Herkunft/Vorabprüfung `bookings.room_automatisch` / `raum_service_ids`. Benötigte Ausstattung aller geplanten Leistungen muss vor erster Buchung passen. Automatische Auswahl nimmt einen freien aktiven Raum exakt am Terminstandort; Transaktionslock schützt automatische Parallelbuchungen. Explizite manuelle Raumwahl bleibt bestehender Warn-/Override-Weg. Hausbesuche und rein online benötigen keinen Praxisraum; Gruppen teilen den Elternraum. Keine Bestandsbuchungen nachgetragen.
 
 ### `time_offs`
 - **Warum:** Urlaub, Krankheit, Fortbildung. Anders als `custom_days` personenbezogen und mehrtägig.

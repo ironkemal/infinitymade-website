@@ -7,6 +7,7 @@ import { requestToken } from './status.js';
 import { escHtml, mailBetreff } from './html-escape.js';
 import { pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz } from './widget-guards.js';
 import { patientenNameMuster } from './patienten-namensabgleich.js';
+import { raumBuchungsFehler, raumNameFuerBuchung } from '../lib/raum-automatik.js';
 
 const serverSrc = fs.readFileSync(new URL('../server.js', import.meta.url), 'utf8');
 const extract = (s, e) => serverSrc.slice(serverSrc.indexOf(s), serverSrc.indexOf(e));
@@ -57,6 +58,7 @@ const mockSupabase = {
 
 const ctx = vm.createContext({
   ...guards,
+  raumBuchungsFehler, raumNameFuerBuchung,
   requestToken, escHtml, mailBetreff, pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz, patientenNameMuster, ANFRAGEN_TAGESDECKEL: 100,
   app: {
     post(path, ...m) {

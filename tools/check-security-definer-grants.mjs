@@ -56,6 +56,10 @@ export const PROTECTED = [
   // 0078 (10.10.2026, db-ustasi): Nummern-Trigger der invoices, zieht naechste_nummer() (seit 0002 ohne
   // EXECUTE fuer authenticated) -> muss DEFINER bleiben; seit 0078 per CREATE OR REPLACE in der Kette, drei REVOKEs.
   'set_invoice_nummer',
+  // 0104: interne Raumzuordnungs-Trigger, keine direkt aufrufbaren RPCs.
+  'booking_raum_automatisch',
+  'booking_leistung_raum_nachpruefen',
+  'booking_gruppe_raum_nachziehen',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

@@ -463,11 +463,11 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
         website: document.getElementById('bookingWebsite')?.value || ''
       })
     });
-    if (!res.ok) throw new Error('Buchung fehlgeschlagen');
     const data = await res.json();
+    if (!res.ok) throw new Error(res.status === 409 && typeof data.error === 'string' ? data.error : 'Buchung fehlgeschlagen');
     if (data?.booking?.id) {
       document.querySelector('.success-title').textContent = 'Termin bestätigt!';
-      document.querySelector('.success-sub').textContent = 'Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.';
+      document.querySelector('.success-sub').textContent = `${data.booking.room_name ? `Bitte kommen Sie in Raum „${data.booking.room_name}“. ` : ''}Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.`;
       goStep('success');
     } else {
       const title = document.querySelector('.success-title');
