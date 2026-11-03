@@ -5,6 +5,27 @@
  * Unbekannte Codes bleiben als Code unverändert stehen.
  */
 
+const BEKANNTE_KUERZEL = {
+  'X0501': 'KG',
+  'X1201': 'MT',
+  'X0201': 'MLD45',
+  'X0202': 'MLD60',
+  'X0507': 'KGG',
+  'X0710': 'BOB',
+  'X0711': 'VOJ',
+  'X0712': 'PNF',
+  'X0702': 'Muko',
+  'X0106': 'KMT',
+  'X1104': 'TRK',
+  '78010': 'pod. Beh. kl.',
+  '78020': 'pod. Beh. gr.',
+  '78030': 'Hornhautbeh.',
+  '78040': 'Nagelbeh.',
+  '78100': 'Spange',
+  '78110': 'Spange',
+  '78610': 'Spange',
+};
+
 /**
  * Ermittelt das Kürzel für ein Heilmittel-Item oder einen Code anhand des Katalogs.
  *
@@ -19,31 +40,46 @@ export function kuerzelAusKatalog(itemOderCode, katalog) {
     return String(itemOderCode.kuerzel).trim();
   }
 
-  const roh = typeof itemOderCode === 'string'
+  const codeDirekt = typeof itemOderCode === 'string'
     ? itemOderCode
-    : (itemOderCode.code || itemOderCode.heilmittel_position || itemOderCode.bezeichnung || '');
-  const code = String(roh || '').trim();
-  if (!code) return '';
+    : (itemOderCode.code || itemOderCode.heilmittel_position || '');
 
-  // Wenn Bezeichnung im Format "KG – Krankengymnastik" vorliegt
-  if (typeof itemOderCode === 'object' && itemOderCode.bezeichnung && itemOderCode.bezeichnung.includes(' – ')) {
-    const kuerzelVorne = itemOderCode.bezeichnung.split(' – ')[0].trim();
-    if (kuerzelVorne) return kuerzelVorne;
+  const code = String(codeDirekt || '').trim();
+
+  let bezeichnungVorne = '';
+  const bez = typeof itemOderCode === 'object' ? String(itemOderCode.bezeichnung || '').trim() : '';
+  if (bez && bez.includes(' – ')) {
+    bezeichnungVorne = bez.split(' – ')[0].trim();
+  } else if (typeof itemOderCode === 'string' && itemOderCode.includes(' – ')) {
+    bezeichnungVorne = itemOderCode.split(' – ')[0].trim();
   }
 
   const kat = katalog || (typeof window !== 'undefined' ? window.GKV_LEISTUNGSKATALOG : null);
-  if (kat) {
-    const clean = code.toUpperCase().replace(/\s+/g, '');
-    const eintraege = Array.isArray(kat)
-      ? kat
-      : Object.values(kat).filter(Boolean).flat();
-    const gefunden = eintraege.find(e => e && e.code && String(e.code).trim().toUpperCase().replace(/\s+/g, '') === clean);
-    if (gefunden && gefunden.kuerzel) {
-      return gefunden.kuerzel;
+  const eintraege = kat
+    ? (Array.isArray(kat) ? kat : Object.values(kat).filter(Boolean).flat())
+    : [];
+
+  // 1. Zuerst Code im Katalog / bekannte Kürzel prüfen (auch wenn Bezeichnung "X0501 – Krankengymnastik" lautet)
+  const kandidaten = [code, bezeichnungVorne].filter(Boolean);
+  for (const c of kandidaten) {
+    const clean = c.toUpperCase().replace(/\s+/g, '');
+    if (eintraege.length > 0) {
+      const gefunden = eintraege.find(e => e && e.code && String(e.code).trim().toUpperCase().replace(/\s+/g, '') === clean);
+      if (gefunden && gefunden.kuerzel) {
+        return gefunden.kuerzel;
+      }
+    }
+    if (BEKANNTE_KUERZEL[clean]) {
+      return BEKANNTE_KUERZEL[clean];
     }
   }
 
-  return code;
+  // 2. Falls kein Katalogtreffer für Code: bezeichnungVorne als Kürzel nutzen (z.B. "MT – Manuelle Therapie" ohne Code)
+  if (bezeichnungVorne) {
+    return bezeichnungVorne;
+  }
+
+  return code || bez || (typeof itemOderCode === 'string' ? itemOderCode : '');
 }
 
 /**
@@ -68,5 +104,15 @@ export function formatMultiHeilmittelTitel(rx, katalog) {
     }).join(' · ');
   }
 
-  return rx.heilmittel || rx.heilmittel_position || '—';
+  // Wenn bereits lesbarer Titel vorhanden (kein X-Code / HPNR am Anfang)
+  const hm = String(rx.heilmittel || '').trim();
+  if (hm && !/^[X0-9][0-9]{4}/i.test(hm)) {
+    return hm;
+  }
+
+  const single = (Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length === 1)
+    ? rx.heilmittel_items[0]
+    : rx;
+  const k = kuerzelAusKatalog(single, katalog);
+  return k || rx.heilmittel || rx.heilmittel_position || '—';
 }

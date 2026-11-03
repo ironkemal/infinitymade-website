@@ -26,7 +26,7 @@
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261102a';
 import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103a';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103n';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
 import { RX_FELDER } from './termin-laden.js?v=20261021s';
 
@@ -258,14 +258,19 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
       if (infoEl) infoEl.textContent = 'Termin wird der Verordnung zugeordnet.';
     }
   } else {
+    const currentBookingId = deps?.bookingId || (typeof document !== 'undefined' ? document.getElementById('bk-id')?.value : null) || null;
+    const eigeneSession = currentBookingId
+      ? (sessions || []).find(s => s.booking_id && s.booking_id === currentBookingId)
+      : null;
+
     const offeneSessions = (sessions || [])
-      .filter(s => !s.booking_id || s.status === 'planned')
+      .filter(s => (s.status === 'planned' || !s.status) && !s.booking_id)
       .sort((a, b) => a.session_number - b.session_number);
-    const naechste = offeneSessions[0] || null;
+    const naechste = eigeneSession || offeneSessions[0] || null;
 
     const hmKuerzelFuerSitzung = (s) => {
       const it = multiItems ? multiItems[s?.heilmittel_index ?? 0] : null;
-      return it ? kuerzelAusKatalog(it, deps?.katalog) : '';
+      return it ? kuerzelAusKatalog(it, deps?.katalog) : (multiItems ? '' : kuerzelAusKatalog(rx, deps?.katalog));
     };
 
     dotsEl.innerHTML = (sessions || [])
@@ -285,38 +290,77 @@ export async function waehleVerordnung(rx, sessions, deps = {}) {
       </button>`;
       }).join('');
 
+    const waehleSitzung = (s, { istInit = false } = {}) => {
+      if (!s) return;
+      setzeWert('bkSelectedSessionId', s.id);
+      window._pendingRxSession = { sessionId: s.id, prescriptionId: rx.id };
+      const k = hmKuerzelFuerSitzung(s);
+      const kZusatz = k ? ` (${k})` : '';
+      if (infoEl) {
+        if (istInit && !eigeneSession) {
+          infoEl.textContent = `Nächste: Sitzung ${s.session_number} von ${total}${kZusatz}`;
+        } else if (istInit && eigeneSession && s.id === eigeneSession.id) {
+          infoEl.textContent = `Sitzung ${s.session_number} von ${total}${kZusatz}`;
+        } else {
+          infoEl.textContent = `Sitzung ${s.session_number} von ${total} ausgewählt${kZusatz}`;
+        }
+      }
+      const punkt = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${s.id}"]`);
+      if (punkt) markiereGewaehltenPunkt(dotsEl, punkt);
+
+      const it = multiItems ? multiItems[s?.heilmittel_index ?? 0] : null;
+      const zielObj = it ? {
+        ...rx,
+        heilmittel: it.bezeichnung || it.code || rx.heilmittel,
+        heilmittel_position: it.code || rx.heilmittel_position,
+      } : rx;
+
+      if (typeof aufDienstleistung === 'function') {
+        aufDienstleistung(zielObj);
+      }
+    };
+
     dotsEl.querySelectorAll('.bk-sess-dot').forEach(dot => {
       dot.addEventListener('click', () => {
         if (dot.dataset.pending !== '1') return;
-        markiereGewaehltenPunkt(dotsEl, dot);
-        setzeWert('bkSelectedSessionId', dot.dataset.sessId);
-        window._pendingRxSession = { sessionId: dot.dataset.sessId, prescriptionId: rx.id };
-        const k = dot.dataset.sessHm ? ` (${dot.dataset.sessHm})` : '';
-        if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt${k}`;
+        const targetSess = (sessions || []).find(s => s.id === dot.dataset.sessId);
+        if (targetSess) {
+          waehleSitzung(targetSess, { istInit: false });
+        }
       });
     });
 
     if (naechste) {
-      setzeWert('bkSelectedSessionId', naechste.id);
-      window._pendingRxSession = { sessionId: naechste.id, prescriptionId: rx.id };
-      const k = hmKuerzelFuerSitzung(naechste);
-      const kZusatz = k ? ` (${k})` : '';
-      if (infoEl) infoEl.textContent = `Nächste: Sitzung ${naechste.session_number} von ${total}${kZusatz}`;
-      const standardPunkt = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${naechste.id}"]`);
-      if (standardPunkt) markiereGewaehltenPunkt(dotsEl, standardPunkt);
+      waehleSitzung(naechste, { istInit: true });
     } else {
       if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
       setzeWert('bkSelectedSessionId', '');
       window._pendingRxSession = null;
+      if (typeof aufDienstleistung === 'function') aufDienstleistung(rx);
     }
   }
 
   pickerBlock.hidden = false;
+  verdrahteServiceAbweichungWarnung(deps?.toast);
+}
 
-  // Die Verordnung enthält die Leistung bereits — danach noch einmal zu fragen
-  // ist ein Klick, den die Praxis dutzendfach am Tag machen müsste
-  // (Beta-2, 12.08.2026: „das werde ich jetzt entfernen").
-  if (typeof aufDienstleistung === 'function') aufDienstleistung(rx);
+export function verdrahteServiceAbweichungWarnung(toastFn) {
+  const el = typeof document !== 'undefined' ? document.getElementById('bkService') : null;
+  if (!el || el.dataset.abwVerdrahtet === '1') return;
+  el.dataset.abwVerdrahtet = '1';
+  el.addEventListener('change', (e) => {
+    if (typeof window !== 'undefined' && window._pendingRxSession && window._bkErwarteteServiceId && e.target.value !== window._bkErwarteteServiceId) {
+      const toast = toastFn || (typeof window !== 'undefined' ? window.showToast : null);
+      if (typeof toast === 'function') {
+        toast('Achtung: Gewählte Leistung weicht vom Heilmittel der Verordnung ab.', 'warning');
+      }
+      const hinweis = document.getElementById('bkServiceAusVerordnung');
+      if (hinweis) {
+        hinweis.textContent = 'Achtung: Gewählte Leistung weicht vom Heilmittel der Verordnung ab.';
+        hinweis.hidden = false;
+      }
+    }
+  });
 }
 
 function markiereGewaehltenPunkt(dotsEl, dot) {
@@ -352,6 +396,7 @@ export function resetVerordnungFelder() {
     window._pendingRxSession = null;
     window._bkGewaehlteRx = null;
     window._bkUrspruenglicheVordId = null;
+    window._bkErwarteteServiceId = null;
   }
   const pickerBlock = typeof document !== 'undefined' ? document.getElementById('bkSessionPickerBlock') : null;
   if (pickerBlock) pickerBlock.hidden = true;

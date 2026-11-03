@@ -93,7 +93,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261103b';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
-import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103a';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103n';
 // Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
 import { mountTherapiebericht } from './therapiebericht.js?v=20261031a';
 

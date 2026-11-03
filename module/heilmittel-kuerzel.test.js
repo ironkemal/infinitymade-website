@@ -51,3 +51,23 @@ test('formatMultiHeilmittelTitel: einfache Verordnung nutzt regulären Titel', (
   };
   assert.equal(formatMultiHeilmittelTitel(rxSingle, MOCK_KATALOG), 'Krankengymnastik Einzel');
 });
+
+test('kuerzelAusKatalog: X0501 – Krankengymnastik liefert KG, nicht den Code vor dem Bindestrich', () => {
+  assert.equal(kuerzelAusKatalog({ code: 'X0501', bezeichnung: 'X0501 – Krankengymnastik' }, MOCK_KATALOG), 'KG');
+  assert.equal(kuerzelAusKatalog({ bezeichnung: 'X0501 – Krankengymnastik' }, MOCK_KATALOG), 'KG');
+  assert.equal(kuerzelAusKatalog('X0501 – Krankengymnastik', MOCK_KATALOG), 'KG');
+});
+
+test('kuerzelAusKatalog: synchroner Fallback ohne Katalog-Parameter', () => {
+  assert.equal(kuerzelAusKatalog('X0501'), 'KG');
+  assert.equal(kuerzelAusKatalog('X1201'), 'MT');
+  assert.equal(kuerzelAusKatalog({ code: 'X0501', bezeichnung: 'X0501 – Krankengymnastik' }), 'KG');
+});
+
+test('formatMultiHeilmittelTitel: X-Code-Titel wird zum Kurznamen aufgelöst', () => {
+  const rxCode = {
+    heilmittel: 'X0501 – Krankengymnastik',
+    heilmittel_position: 'X0501',
+  };
+  assert.equal(formatMultiHeilmittelTitel(rxCode, MOCK_KATALOG), 'KG');
+});

@@ -8814,6 +8814,10 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   /* font-size steht inline (14/13 px) -> !important, sonst iOS-Zoom beim Fokus */
   input[data-pe-neu], textarea[data-pe-grund] { font-size: 16px !important; }
 
+  /* Sitzung-Zeile Heilmittel-Auswahl (module/verordnung-detail.js) Touch >=44px */
+  select.vord-session-hm-swap,
+  .vord-session-hm-swap { min-height: 44px !important; }
+
   /* Verordnung-Detail: Einheiten und Terminzuordnung (Stile inline) */
   button[data-einheiten-aendern],
   button[data-einheiten-speichern],

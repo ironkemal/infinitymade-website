@@ -95,7 +95,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103b';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103n';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
@@ -2613,9 +2613,9 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     bkGeldNeuZeichnen = (lead) => geldZeile.patientGesetzt(lead);
     const verordnungEl = document.getElementById('bkRxVerordnung');
     if (verordnungEl) {
-      const hm = rx.heilmittel_feld_text || rx.heilmittel || '—';
+      const hm = multiHeilmittelTitel(rx, GKV_LEISTUNGSKATALOG); const isMulti = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 1;
       const typ = rx.rezept_typ ? ` · ${rx.rezept_typ}` : '';
-      verordnungEl.textContent = `${rx.anzahl_einheiten}x ${hm}${typ}`;
+      verordnungEl.textContent = `${isMulti ? '' : (rx.anzahl_einheiten ? rx.anzahl_einheiten + 'x ' : '')}${hm}${typ}`;
     }
 
     const mandantEl = document.getElementById('bkRxMandant');
@@ -2945,7 +2945,7 @@ async function uebernehmeDienstleistungAusRx(rx) {
   const heilmittel = rx.heilmittel || rx.heilmittel_position || '';
   const srvId = await findMatchingServiceId(rx);
   const hinweis = document.getElementById('bkServiceAusVerordnung');
-  zeigeDienstleistungsfeld(!srvId);
+  zeigeDienstleistungsfeld(!srvId); if (typeof window !== 'undefined') window._bkErwarteteServiceId = srvId || null;
   if (srvId) {
     if (!srvSel.querySelector(`option[value="${srvId}"]`)) await populateSrvSelect(srvId);
     srvSel.value = srvId;
@@ -13614,31 +13614,26 @@ async function saveRezept() {
     const rzBsnr = document.getElementById('rzBsnr').value.trim() || null;
     const val = id => (document.getElementById(id)?.value || '').trim();
 
+    const sertFehler = typeof pruefeSertHeilmittelFehler === 'function' ? pruefeSertHeilmittelFehler({ istEntwurf: false }) : []; if (sertFehler.length) { showToast(sertFehler[0], 'error'); btn.disabled = false; return; }
     // --- Pflichtfeld-Prüfung: warnt, lässt aber „trotzdem speichern" zu ---
-    const missing = bgHinweiseAusMaske();   // nur bei BG (module/bg-angaben.js), sonst leer
-    if (!ausstDate) missing.push('Ausstellungsdatum');
-    if (!icd10 && maskeIstKasse()) missing.push('ICD-10-Code');   // bei Privat/Selbstzahler/BG kein Kassen-Pflichtfeld (Live-Nachtest N5-a)
-    if (!val('rzDg') && maskeIstKasse()) missing.push('Diagnosegruppe');
-    if (!val('rzHm')) missing.push('Heilmittel');
-    if (!anzahl) missing.push('Behandlungseinheiten');
-    if (!rzLanr && maskeIstKasse()) missing.push('Arzt-Nr. (LANR)');   // Arztangaben nur bei Kasse Pflicht (podoloji 10.10.2026)
-    if (!rzBsnr && val('rzTherapieBereich') !== 'podo') missing.push('Betriebsstätten-Nr. (BSNR)'); // podo: steht schon in den Hinweisen (podoArztHinweise)
+    const missing = bgHinweiseAusMaske(); if (!ausstDate) missing.push('Ausstellungsdatum'); if (!icd10 && maskeIstKasse()) missing.push('ICD-10-Code');
+    if (!val('rzDg') && maskeIstKasse()) missing.push('Diagnosegruppe'); if (!val('rzHm')) missing.push('Heilmittel'); if (!anzahl) missing.push('Behandlungseinheiten');
+    if (!rzLanr && maskeIstKasse()) missing.push('Arzt-Nr. (LANR)'); if (!rzBsnr && val('rzTherapieBereich') !== 'podo') missing.push('Betriebsstätten-Nr. (BSNR)');
     if (!document.getElementById('rzUnterschrift').checked && maskeIstKasse()) missing.push('Unterschrift des Arztes');
 
     // Format-Fehler (nur wenn ausgefüllt)
     const arzt = maskeIstKasse() ? podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked }) : { hinweise: [], satz: '' };   // Arztangaben des Podologie-Vertrags: nur Kasse
     const formatErrors = [...arzt.hinweise, ...(maskeIstKasse() ? kartenIkHinweise(val('rzPatKasseIk')) : []), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
-    if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
-    if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
+    if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben'); if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));
 
     const pruefung = await pruefeMaske(supabase, 'muster13');
     if (!pruefung) formatErrors.push('Vollständige Prüfung derzeit nicht möglich.');
     else formatErrors.push(...pruefung.befunde.filter(b => b.schwere !== 'hinweis').map(b => b.text));
-    const sertFehler = typeof pruefeSertHeilmittelFehler === 'function' ? pruefeSertHeilmittelFehler({ istEntwurf: true }) : []; if (sertFehler.length) { showToast(sertFehler[0], 'error'); btn.disabled = false; return; } let overridden = false;
+    let overridden = false;
     if (missing.length || formatErrors.length) {
       const lines = [];
-      if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
+      if (missing.length) lines.push('Folgende Pflichtfelder sind noch leer:\n  • ' + missing.join('\n  • '));
       if (formatErrors.length) lines.push('Hinweise:\n  • ' + formatErrors.join('\n  • '));
       const ok = await showConfirmModal({ title: 'Als Entwurf speichern?', message: lines.join('\n\n') + (arzt.satz ? '\n\n' + arzt.satz : '') + '\n\nDie Verordnung wird als Entwurf gespeichert. Bitte Angaben später ergänzen und erneut prüfen. Bis dahin ist keine Abrechnungsfreigabe möglich.', confirmText: 'Als Entwurf speichern', cancelText: 'Weiter bearbeiten', variant: 'warning' });
       if (!ok) { btn.disabled = false; return; }

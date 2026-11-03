@@ -60,13 +60,36 @@ test('fehlendes Feld wirft nicht — die Maske kann geschlossen sein', () => {
 // ── waehleVerordnung ────────────────────────────────────────────────────────
 
 function setupWaehleDom() {
+  const dotsMap = new Map();
   const elements = {
     bkIsSelbstzahler: { value: '', style: {} },
     bkSelectedRxId: { value: '', style: {} },
     bkSelectedSessionId: { value: '', style: {} },
     bkSelbstzahlerBtn: { style: {} },
     bkSessionPickerBlock: { hidden: true },
-    bkSessionDots: { innerHTML: '', querySelectorAll: () => [], querySelector: () => null },
+    bkSessionDots: {
+      get innerHTML() { return this._html || ''; },
+      set innerHTML(html) {
+        this._html = html;
+        dotsMap.clear();
+        const matches = [...html.matchAll(/data-sess-id="([^"]+)"\s+data-sess-num="([^"]+)"\s+data-sess-hm="([^"]*)"\s+data-pending="([^"]+)"/g)];
+        for (const m of matches) {
+          const listeners = {};
+          const dot = {
+            dataset: { sessId: m[1], sessNum: m[2], sessHm: m[3], pending: m[4] },
+            style: {},
+            addEventListener: (ev, fn) => { listeners[ev] = fn; },
+            click: () => { listeners['click']?.(); }
+          };
+          dotsMap.set(m[1], dot);
+        }
+      },
+      querySelectorAll: () => Array.from(dotsMap.values()),
+      querySelector: (sel) => {
+        const idMatch = sel.match(/data-sess-id="([^"]+)"/);
+        return idMatch ? (dotsMap.get(idMatch[1]) || null) : (Array.from(dotsMap.values())[0] || null);
+      }
+    },
     bkSessionPickerTitle: { textContent: '' },
     bkSessionPickerInfo: { textContent: '' },
   };
@@ -557,4 +580,87 @@ test('waehleVerordnung: zeigt gewähltes Heilmittel in infoEl und auf Dots', asy
 
   assert.equal(el.bkSessionPickerInfo.textContent, 'Nächste: Sitzung 1 von 10 (KG)');
   assert.equal(el.bkSelectedSessionId.value, 's1');
+});
+
+test('waehleVerordnung P1: S1 an anderen Termin gebunden, S2 frei -> S2 wird als naechste gewaehlt', async () => {
+  const el = setupWaehleDom();
+  const rx = {
+    id: 'rx-physio-p1',
+    therapie_bereich: 'physio',
+    anzahl_einheiten: 6,
+    heilmittel: 'Krankengymnastik',
+  };
+  const sessions = [
+    { id: 'sess-1', session_number: 1, status: 'planned', booking_id: 'bk-other' },
+    { id: 'sess-2', session_number: 2, status: 'planned', booking_id: null },
+  ];
+
+  await waehleVerordnung(rx, sessions);
+
+  assert.deepEqual(window._pendingRxSession, { sessionId: 'sess-2', prescriptionId: 'rx-physio-p1' });
+  assert.equal(el.bkSelectedSessionId.value, 'sess-2');
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Nächste: Sitzung 2 von 6');
+});
+
+test('waehleVerordnung P1: Bearbeiten eines gebundenen Termins zeigt eigene Sitzung', async () => {
+  const el = setupWaehleDom();
+  const rx = {
+    id: 'rx-physio-eigen',
+    therapie_bereich: 'physio',
+    anzahl_einheiten: 6,
+    heilmittel: 'Krankengymnastik',
+  };
+  const sessions = [
+    { id: 'sess-1', session_number: 1, status: 'planned', booking_id: 'bk-cur' },
+    { id: 'sess-2', session_number: 2, status: 'planned', booking_id: null },
+  ];
+
+  await waehleVerordnung(rx, sessions, { bookingId: 'bk-cur' });
+
+  assert.deepEqual(window._pendingRxSession, { sessionId: 'sess-1', prescriptionId: 'rx-physio-eigen' });
+  assert.equal(el.bkSelectedSessionId.value, 'sess-1');
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Sitzung 1 von 6');
+});
+
+test('waehleVerordnung P1: MT-Sitzung (index 1) Auswahl setzt Leistung auf MT und Etikett auf MT', async () => {
+  const el = setupWaehleDom();
+  const rx = {
+    id: 'rx-multi-p1',
+    therapie_bereich: 'physio',
+    anzahl_einheiten: 12,
+    heilmittel_items: [
+      { code: 'X0501', bezeichnung: 'Krankengymnastik', einheiten: 6 },
+      { code: 'X1201', bezeichnung: 'Manuelle Therapie', einheiten: 6 },
+    ],
+  };
+  const sessions = [
+    { id: 's1', session_number: 1, status: 'planned', booking_id: null, heilmittel_index: 0 },
+    { id: 's2', session_number: 2, status: 'planned', booking_id: null, heilmittel_index: 1 },
+  ];
+  const mockKatalog = {
+    physiotherapy: [
+      { code: 'X0501', kuerzel: 'KG' },
+      { code: 'X1201', kuerzel: 'MT' },
+    ],
+  };
+
+  let serviceSetRx = null;
+  await waehleVerordnung(rx, sessions, {
+    katalog: mockKatalog,
+    aufDienstleistung: (itemRx) => { serviceSetRx = itemRx; },
+  });
+
+  // Initiale Auswahl ist s1 (KG)
+  assert.equal(serviceSetRx.heilmittel_position, 'X0501');
+
+  // Klick auf Dot 2 (MT, heilmittel_index: 1)
+  const dot2 = el.bkSessionDots.querySelector('.bk-sess-dot[data-sess-id="s2"]');
+  assert.ok(dot2);
+  assert.equal(dot2.dataset.sessHm, 'MT');
+  dot2.click();
+
+  assert.equal(el.bkSelectedSessionId.value, 's2');
+  assert.equal(serviceSetRx.heilmittel_position, 'X1201');
+  assert.equal(serviceSetRx.heilmittel, 'Manuelle Therapie');
+  assert.equal(el.bkSessionPickerInfo.textContent, 'Sitzung 2 von 12 ausgewählt (MT)');
 });

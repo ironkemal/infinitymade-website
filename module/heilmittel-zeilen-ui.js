@@ -271,10 +271,11 @@ export function liesHeilmittelZeilenAusMaske() {
   // Zeile 1
   const t1 = v('rzHm');
   const p1 = v('rzHmPosition');
-  const a1 = parseInt(v('rzAnzahl'), 10) || null;
+  const raw1 = v('rzAnzahl');
+  const a1 = raw1 !== '' && Number.isFinite(parseInt(raw1, 10)) ? parseInt(raw1, 10) : null;
   const d1 = isMulti ? c('rzDoppelRow1') : c('rzDoppel');
 
-  if (t1 || p1 || a1) {
+  if (t1 || p1 || a1 != null) {
     zeilen.push({
       bezeichnung: t1,
       code: p1 || t1,
@@ -290,9 +291,10 @@ export function liesHeilmittelZeilenAusMaske() {
       const num = el.dataset.zeile;
       const t = v(`rzHm${num}`);
       const p = v(`rzHmPosition${num}`);
-      const a = parseInt(v(`rzAnzahl${num}`), 10) || null;
+      const rawA = v(`rzAnzahl${num}`);
+      const a = rawA !== '' && Number.isFinite(parseInt(rawA, 10)) ? parseInt(rawA, 10) : null;
       const d = c(`rzDoppelRow${num}`);
-      if (t || p || a) {
+      if (t || p || a != null) {
         zeilen.push({
           bezeichnung: t,
           code: p || t,
