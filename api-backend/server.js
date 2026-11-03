@@ -1210,7 +1210,11 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
           .select()
           .single();
         
-        if (parentErr) throw parentErr;
+        if (parentErr) {
+          const roomError = raumBuchungsFehler(parentErr);
+          if (roomError) return res.status(409).json({ error: roomError });
+          throw parentErr;
+        }
         parentBooking = newParent;
       }
     }

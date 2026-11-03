@@ -24,6 +24,7 @@ const mockSupabase = {
     const b = {
       select: () => b,
       eq: (col, val) => { filters[col] = val; return b; },
+      is: (col, val) => { filters[col] = val; return b; },
       insert: (p) => {
         write = p;
         for (const r of (Array.isArray(p) ? p : [p])) {
@@ -36,6 +37,10 @@ const mockSupabase = {
       maybeSingle: () => b.then(),
       single: () => b.then(),
       then: (res) => {
+        if (write && currentDb.bookingInsertError && table === 'bookings') {
+          const out = { data: null, error: currentDb.bookingInsertError };
+          return res ? res(out) : Promise.resolve(out);
+        }
         if (currentDb.error) {
           const out = { data: null, error: currentDb.error };
           return res ? res(out) : Promise.resolve(out);
@@ -115,6 +120,7 @@ function resetDb(overrides = {}) {
     },
     writes: [],
     reads: 0,
+    bookingInsertError: overrides.bookingInsertError || null,
     error: overrides.error || null
   };
 }
@@ -341,6 +347,37 @@ describe('Public Booking Handlers Guard & Honeypot Suite', () => {
     } }, res);
     assert.equal(res.statusCode, 400);
     assert.equal(currentDb.writes.length, 0);
+  });
+
+  it('Group parent room exhaustion returns 409 before participant, mail or calendar work', async () => {
+    resetDb({
+      tables: { services: [{ ...F.service, is_group: true }] },
+      bookingInsertError: { code: 'P0001', message: 'Kein freier Raum mit der benötigten Ausstattung' }
+    });
+    const res = mockRes();
+    await bookingHandler({ body: { userId: 'T', serviceId: 'S', date: '2099-01-01', time: '10:00' } }, res);
+    assert.equal(res.statusCode, 409);
+    assert.equal(res.body.error, raumBuchungsFehler(currentDb.bookingInsertError));
+    assert.equal(currentDb.writes.length, 1);
+    assert.equal(currentDb.writes[0].data.is_group, true);
+    assert.equal(currentDb.writes[0].data.group_parent_id, undefined);
+    assert.equal(mailCounter, 0);
+    assert.equal(calendarCounter, 0);
+    assert.equal(logAccessCounter, 0);
+  });
+
+  it('Unrelated group parent insert errors remain generic 500 without downstream work', async () => {
+    resetDb({
+      tables: { services: [{ ...F.service, is_group: true }] },
+      bookingInsertError: { code: 'XX000', message: 'private database detail' }
+    });
+    const res = mockRes();
+    await bookingHandler({ body: { userId: 'T', serviceId: 'S', date: '2099-01-01', time: '10:00' } }, res);
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.error, 'Interner Serverfehler');
+    assert.equal(currentDb.writes.length, 1);
+    assert.equal(mailCounter, 0);
+    assert.equal(calendarCounter, 0);
   });
 
   it('Database error 500 returns Interner Serverfehler with no effects on both routes', async () => {
