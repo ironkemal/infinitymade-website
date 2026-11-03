@@ -89,7 +89,7 @@ test('die alte Verordnungs-Spaltenliste am Termin kommt nicht zurueck', () => {
     // dashboard.js laedt seit 10.10.2026 (10. Runde) ueber ladeTerminVerordnungen().
     const ok = d === 'dashboard.js'
       ? text.includes('ladeTerminVerordnungen(supabase')
-      : text.includes('${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)');
+      : (text.includes('${RX_FELDER},prescription_sessions(id,session_number,heilmittel_index,status,booking_id)') || text.includes('${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)'));
     assert.ok(ok, `${d}: RX_FELDER fehlt`);
   }
 });

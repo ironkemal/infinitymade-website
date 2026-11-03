@@ -393,7 +393,7 @@ export function rxGeschlossen(rx) {
  */
 export async function ladeTerminVerordnungen(sb, { leadId, vordId = null } = {}) {
   if (!sb || !leadId) return [];
-  const felder = `${RX_FELDER},prescription_sessions(id,session_number,status,booking_id)`;
+  const felder = `${RX_FELDER},prescription_sessions(id,session_number,heilmittel_index,status,booking_id)`;
   const { data } = await sb
     .from('prescriptions')
     .select(felder)

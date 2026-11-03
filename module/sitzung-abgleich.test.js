@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fehlendeSitzungsnummern, gleicheSitzungenAb } from './sitzung-abgleich.js';
+import { fehlendeSitzungsnummern, gleicheSitzungenAb, terminZiel, terminZielToplam } from './sitzung-abgleich.js';
 
 // Der Fund vom 16.08.2026: Verordnung über 18 Einheiten, 13 Sitzungszeilen.
 test('der Echtfall — 18 verordnet, 13 vorhanden', () => {
@@ -128,8 +128,6 @@ test('ohne prescriptionId passiert nichts', async () => {
 
 // ── Doppelbehandlung (0089, gkv-302 27.10.2026): ein Termin = zwei Einheiten ──
 
-import { terminZiel } from './sitzung-abgleich.js';
-
 test('terminZiel: Doppelbehandlung halbiert, ungerade rundet auf', () => {
   assert.equal(terminZiel(6, false), 6);
   assert.equal(terminZiel(6, true), 3);
@@ -194,4 +192,59 @@ test('gleicheSitzungenAb: Vorhandene Zeilen werden bei Items nicht überschriebe
     [3, 0], [4, 0], [5, 0], [6, 0],
     [8, 1], [9, 1], [10, 1]
   ]);
+});
+
+// P0-1: KG 3 + MT 3 registriert, KG auf 5 erhöht -> 2 neue mit index 0, MT bleibt unberührt
+test('gleicheSitzungenAb: KG 3 + MT 3 registriert, KG auf 5 erhöht -> 2 neue mit index 0, MT unverändert', async () => {
+  const vorhandene = [
+    { session_number: 1, status: 'planned', heilmittel_index: 0 },
+    { session_number: 2, status: 'done',    heilmittel_index: 0 },
+    { session_number: 3, status: 'planned', heilmittel_index: 0 },
+    { session_number: 4, status: 'planned', heilmittel_index: 1 },
+    { session_number: 5, status: 'done',    heilmittel_index: 1 },
+    { session_number: 6, status: 'planned', heilmittel_index: 1 },
+  ];
+  const { supabase, geschrieben } = supabaseDoppel({ vorhandene });
+  const items = [
+    { code: 'KG', einheiten: 5, doppelbehandlung: false },
+    { code: 'MT', einheiten: 3, doppelbehandlung: false },
+  ];
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'rx-1', items });
+  assert.equal(r.ergaenzt, 2);
+  assert.equal(geschrieben.length, 1);
+  const zeilen = geschrieben[0].zeilen;
+  assert.deepEqual(zeilen.map(z => ({ num: z.session_number, idx: z.heilmittel_index })), [
+    { num: 7, idx: 0 },
+    { num: 8, idx: 0 },
+  ]);
+});
+
+test('terminZielToplam: Mehrere Items summieren Terminziele unter Berücksichtigung von Doppelbehandlung', () => {
+  const rxMulti = {
+    heilmittel_items: [
+      { code: 'KG', einheiten: 6, doppelbehandlung: false },
+      { code: 'MT', einheiten: 6, doppelbehandlung: true },
+    ],
+  };
+  assert.equal(terminZielToplam(rxMulti), 9); // 6 + 3 = 9
+});
+
+test('terminZielToplam: Einzelne Verordnung mit und ohne Doppelbehandlung', () => {
+  assert.equal(terminZielToplam({ anzahl_einheiten: 6, doppelbehandlung: true }), 3);
+  assert.equal(terminZielToplam({ anzahl_einheiten: 6, doppelbehandlung: false }), 6);
+  assert.equal(terminZielToplam(null), 0);
+});
+
+test('Altbestand heilmittel_items ohne einheiten: Kapazität und Sitzungen laufen über anzahl_einheiten', async () => {
+  const alt = [{ code: 'X0501', bezeichnung: 'KG' }];
+  assert.equal(terminZielToplam({ heilmittel_items: alt, anzahl_einheiten: 6 }), 6);
+  assert.equal(terminZielToplam({ heilmittel_items: ['KG'], anzahl_einheiten: 6, doppelbehandlung: true }), 3);
+  const geschrieben = [];
+  const supabase = { from: () => ({
+    select: () => ({ eq: async () => ({ data: [], error: null }) }),
+    upsert: async (z) => { geschrieben.push(...z); return { error: null }; },
+  }) };
+  const r = await gleicheSitzungenAb({ supabase, prescriptionId: 'p', anzahlEinheiten: 6, items: alt });
+  assert.equal(r.ergaenzt, 6);
+  assert.ok(geschrieben.every(z => z.heilmittel_index === 0));
 });

@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261103a';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
-import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261102w10';
+import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261103b';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
@@ -52,7 +52,7 @@ import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezept
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261010zd';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010zc';
 import { initialisiereHeilmittelZeilen, fuelleHeilmittelZeilen, liesHeilmittelZeilenAusMaske, leereHeilmittelZeilen, aktualisiereAddBtnSichtbarkeit } from './heilmittel-zeilen-ui.js';
-import { pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
+import { pruefeHeilmittelZeilen, pruefeItemsAenderung } from './heilmittel-zeilen.js';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -215,6 +215,10 @@ export async function maskeEinbetten({ host, rx }) {
     erbracht: erbrachteEinheiten(rx),
     anzahl: rx.anzahl_einheiten ?? null,
     riegel: schreibRiegel(rx),
+    items: Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 0
+      ? rx.heilmittel_items
+      : (rx.heilmittel_position || rx.heilmittel ? [{ code: rx.heilmittel_position || '', bezeichnung: rx.heilmittel || '', einheiten: rx.anzahl_einheiten, doppelbehandlung: !!rx.doppelbehandlung }] : []),
+    sitzungen: rx.prescription_sessions || [],
   };
   const lauf = _bearbeitung;
 
@@ -647,12 +651,27 @@ export function pruefeAenderungErlaubt() {
   if (!_bearbeitung) return null;                 // Anlegen ist immer erlaubt
   if (_bearbeitung.riegel) return _bearbeitung.riegel;
 
-  const roh = document.getElementById('rzAnzahl')?.value;
+  const hmZeilen = liesHeilmittelZeilenAusMaske();
+  const spiegel = hmZeilen.spiegel;
+  const roh = spiegel?.anzahl_einheiten ?? document.getElementById('rzAnzahl')?.value;
   const neu = parseInt(roh, 10);
+
+  if (Number.isFinite(neu) && _bearbeitung.erbracht && neu < _bearbeitung.erbracht) {
+    return pruefeNeueMenge(neu, _bearbeitung.erbracht);
+  }
+
+  const altItems = _bearbeitung.items || [];
+  const neuItems = hmZeilen.items || (spiegel?.heilmittel_position || spiegel?.heilmittel ? [{
+    code: spiegel.heilmittel_position || '',
+    bezeichnung: spiegel.heilmittel || '',
+    einheiten: spiegel.vorrangig_einheiten ?? spiegel.anzahl_einheiten ?? '',
+    doppelbehandlung: !!spiegel.doppelbehandlung,
+  }] : []);
+  const sitzungen = _bearbeitung.sitzungen || [];
+  const itemsFehler = pruefeItemsAenderung(altItems, neuItems, sitzungen);
+  if (itemsFehler) return itemsFehler;
+
   if (!Number.isFinite(neu) || neu === _bearbeitung.anzahl) return null;
-  // Weniger verordnen als schon erbracht wurde, ergäbe eine Verordnung, die
-  // mehr geleistet hat als verordnet war — in der Abrechnung eine Absetzung.
-  // Derselbe Riegel wie beim Ändern der Menge in der Leseansicht.
   return pruefeNeueMenge(neu, _bearbeitung.erbracht);
 }
 
@@ -849,6 +868,19 @@ export async function schreibeVerordnung(supabase, v) {
     });
     if(erfassung) rumpf.erfassung=erfassung;
     const json = await sendeAnServer(supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf });
+    _bearbeitung = {
+      id: json.prescription_id,
+      therapieBereich: nutzlast.therapie_bereich || '',
+      hatItems: Array.isArray(nutzlast.heilmittel_items) && nutzlast.heilmittel_items.length > 0,
+      belegnummer: null,
+      abrechnungStatus: json.status || 'parsed',
+      erbracht: 0,
+      anzahl: nutzlast.anzahl_einheiten ?? null,
+      riegel: null,
+      items: nutzlast.heilmittel_items || null,
+      sitzungen: [],
+      veraendert: false,
+    };
     return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null, status: json.status, items: nutzlast.heilmittel_items || null };
   }
 
@@ -861,9 +893,31 @@ export async function schreibeVerordnung(supabase, v) {
   if (erfassung) rumpf.erfassung = erfassung;
   const json = await sendeAnServer(supabase, { methode: 'PATCH', pfad: `/rezept/${editId}`, rumpf });
   _bearbeitung.anzahl = nutzlast.anzahl_einheiten;
+  _bearbeitung.items = nutzlast.heilmittel_items || null;
   // Gespeichert heisst: die Maske und die Datenbank sagen wieder dasselbe —
   // ein Neuzeichnen von aussen darf jetzt wieder durch (siehe `istVeraendert`).
   _bearbeitung.veraendert = false;
+
+  // Açık-bağsız seanslı son kalem silinirse o seanslar cancelled (silme yok)
+  const neuItemsLen = Array.isArray(nutzlast.heilmittel_items) && nutzlast.heilmittel_items.length > 0
+    ? nutzlast.heilmittel_items.length
+    : 1;
+  if (supabase && typeof supabase.from === 'function') {
+    try {
+      await supabase
+        .from('prescription_sessions')
+        .update({ status: 'cancelled' })
+        .eq('prescription_id', editId)
+        .gte('heilmittel_index', neuItemsLen)
+        .is('booking_id', null)
+        .neq('status', 'cancelled')
+        .neq('status', 'done')
+        .neq('status', 'completed');
+    } catch (errCanc) {
+      console.warn('[schreibeVerordnung] Sitzungen stornieren:', errCanc);
+    }
+  }
+
   return { id: editId, aktualisiert: true, patientId: json.patient_id || null, status: json.status, items: nutzlast.heilmittel_items || null };
 }
 

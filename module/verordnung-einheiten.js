@@ -49,7 +49,7 @@
  */
 
 import { emit } from './signal.js?v=20260813';
-import { oeffneZuzahlungKorrektur } from './zuzahlung-korrektur.js?v=20260901';
+import { oeffneZuzahlungKorrektur } from './zuzahlung-korrektur.js?v=20261103b';
 
 const ABGESCHLOSSEN = ['abgerechnet', 'archiviert', 'storniert'];
 
@@ -595,7 +595,19 @@ export async function oeffnePhysioEinheitenDialog({
     schliessen(true);
     toast('Einheiten erfolgreich korrigiert.', 'success');
 
-    emit('verordnungen:changed', { id: rx.id, anzahl_einheiten: res.data?.neu });
+    let gesamtEinheiten = res.data?.neu;
+    if (multi && supabase && typeof supabase.from === 'function') {
+      try {
+        const { data: frisch } = await supabase
+          .from('prescriptions')
+          .select('anzahl_einheiten')
+          .eq('id', rx.id)
+          .maybeSingle();
+        if (frisch?.anzahl_einheiten != null) gesamtEinheiten = frisch.anzahl_einheiten;
+      } catch (_) {}
+    }
+
+    emit('verordnungen:changed', { id: rx.id, anzahl_einheiten: gesamtEinheiten });
     emit('bookings:changed', { verordnungId: rx.id });
 
     if (typeof onFertig === 'function') {

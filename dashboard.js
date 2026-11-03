@@ -64,7 +64,7 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261103a'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261103b'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -77,7 +77,7 @@ import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
-import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
+import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20261021zd';
 import { druckenMenueHtml, verdrahteDruckenMenue, oeffneRechnungZurVerordnung, bgSperreBeimSpeichern } from './module/rechnung-zur-verordnung.js?v=20261010zc';
@@ -95,7 +95,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20261101u
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261021f';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261031a';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261016patient2'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
-import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103a';
+import { rendereVeroKarten, ladeTerminVerordnungen, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20261103b';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl, bindeAnTerminNachAnlage } from './module/verordnung-anlegen.js?v=20261021v';
 import { terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261021v';
@@ -139,7 +139,7 @@ import {
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261021w';
 import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261021w'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
-import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20261103a';
+import { gleicheSitzungenAb, terminZielToplam } from './module/sitzung-abgleich.js?v=20261103b';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20261102a';
 import { letzterKmStand, startKmFehler, vorbelegeStartKm } from './module/fahrt-km.js?v=20261021m'; import { terminHinweiseHtml } from './module/termin-hinweise.js?v=20261021s'; import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText, verdrahteSerienStarttag } from './module/serien-termine.js?v=20261021k'; verdrahteSerienStarttag();
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
@@ -5232,7 +5232,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   // lassen sich nicht auf den Kalender ziehen. Begründung und Fundstelle:
   // module/sitzung-abgleich.js.
   const abgleich = await gleicheSitzungenAb({
-    supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status, doppelbehandlung: rx.doppelbehandlung,
+    supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status, doppelbehandlung: rx.doppelbehandlung, items: rx?.heilmittel_items,
   });
   if (abgleich.fehler) console.warn('[sitzung-abgleich]', abgleich.fehler);
   // Wurden Zeilen ergänzt, zeigen die übrigen Bereiche (Verordnungskarten,
@@ -6234,7 +6234,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     // Fetch prescription cap
     const { data: rx } = await supabase
       .from('prescriptions')
-      .select('anzahl_einheiten, heilmittel, status, doppelbehandlung')
+      .select('anzahl_einheiten, heilmittel, status, doppelbehandlung, heilmittel_items')
       .eq('id', prescriptionId)
       .maybeSingle();
 
@@ -6243,7 +6243,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     // je *Termin* an — und die Verordnung hatte am Ende so viele Sitzungen, wie zufällig gebucht
     // wurden, statt so viele wie verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
     const _abgl = await gleicheSitzungenAb({
-      supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status, doppelbehandlung: rx?.doppelbehandlung,
+      supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status, doppelbehandlung: rx?.doppelbehandlung, items: rx?.heilmittel_items,
     });
     if (_abgl.fehler) console.warn('[sitzung-abgleich/link]', _abgl.fehler);
 
@@ -6254,7 +6254,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .eq('prescription_id', prescriptionId)
       .not('booking_id', 'is', null);
 
-    const cap = rx?.anzahl_einheiten;
+    const cap = terminZielToplam(rx);
     const used = existingCount || 0;
     const adding = bookingIds.length;
 
@@ -13672,8 +13672,8 @@ async function saveRezept() {
     // `bookings.verordnung_id` (module/verordnung-termine.js), nicht über ein
     // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
     // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
-    if (!entwurf && fuehrtSitzungsbuch(getSector())) {
-      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!document.getElementById('rzDoppel')?.checked, items: rx.items });
+    let sitzAbgl = null; if (!entwurf && fuehrtSitzungsbuch(getSector())) {
+      sitzAbgl = await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl, doppelbehandlung: !!document.getElementById('rzDoppel')?.checked, items: rx.items });
     }
 
     const nw = await ladeLhbNachweisHoch(supabase, {
@@ -13701,13 +13701,13 @@ async function saveRezept() {
       // steht dort und würde beim Neuzeichnen umziehen — sichtbar als
       // Aufblitzen, und der Cursor wäre weg. Die Liste oben zieht über das
       // Signal nach, die Markierungen an den Feldern über die Nachprüfung.
-      showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : 'Verordnung aktualisiert ✓', 'success');
+      if (sitzAbgl?.fehler) showToast('Verordnung gespeichert, aber Sitzungen konnten nicht angelegt werden. Bitte erneut öffnen und speichern.', 'warning', 10000); else showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : 'Verordnung aktualisiert ✓', 'success');
       emit('verordnungen:changed', { id: editId });
       pruefeMaske(supabase, 'muster13').catch(() => {});
     } else {
       const warScan = !!scanHerkunft(); closeModal('rezeptModal');
       const tb = entwurf ? null : await bindeAnTerminNachAnlage(supabase, { ownerId, rxId: rx.id, patientId: patId, emit });
-      showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
+      if (sitzAbgl?.fehler) showToast('Verordnung gespeichert, aber Sitzungen konnten nicht angelegt werden. Bitte erneut öffnen und speichern.', 'warning', 10000); else showToast(entwurf ? 'Verordnung als Entwurf gespeichert — bitte ergänzen und erneut prüfen.' : tb?.meldung ? 'Verordnung gespeichert ✓ · ' + tb.meldung : 'Verordnung gespeichert ✓', tb?.warnung ? 'warning' : 'success');
       if (!entwurf && warScan && !tb?.podo) {
         const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
         window._physioFlow = vorgabe;

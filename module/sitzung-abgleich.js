@@ -94,56 +94,121 @@ export function terminZiel(anzahlEinheiten, doppelbehandlung = false) {
   return doppelbehandlung ? Math.ceil(n / 2) : n;
 }
 
+/**
+ * Nur die neue Form { code, einheiten, … } meint mehrere Heilmittel. Altbestand
+ * (Strings oder Objekte ohne `einheiten`) läuft über anzahl_einheiten — sonst
+ * entstünden null Sitzungen und eine Kapazität von null.
+ */
+export function istMehrfachItems(items) {
+  return Array.isArray(items) && items.some(it => it && typeof it === 'object' && it.einheiten != null);
+}
+
+/**
+ * Gesamt-Terminziel einer Verordnung (bei mehreren Heilmittel-Items: Summe
+ * der Terminziele je Item; sonst: terminZiel(anzahl_einheiten, doppelbehandlung)).
+ *
+ * @param {object} rx
+ * @returns {number}
+ */
+export function terminZielToplam(rx) {
+  if (!rx) return 0;
+  if (istMehrfachItems(rx.heilmittel_items)) {
+    let sum = 0;
+    for (const it of rx.heilmittel_items) {
+      const z = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
+      const n = Number.parseInt(z, 10);
+      if (Number.isFinite(n) && n > 0) sum += n;
+    }
+    return sum;
+  }
+  const z = terminZiel(rx.anzahl_einheiten, Boolean(rx.doppelbehandlung));
+  const n = Number.parseInt(z, 10);
+  return (Number.isFinite(n) && n > 0) ? n : (Number.parseInt(rx.anzahl_einheiten, 10) || 0);
+}
+
 export async function gleicheSitzungenAb({ supabase, prescriptionId, anzahlEinheiten, status = null, heilmittelIndex = 0, doppelbehandlung = false, items = null }) {
   if (!supabase || !prescriptionId) return { ergaenzt: 0, fehler: null };
   if (status && ABGESCHLOSSEN.includes(status)) return { ergaenzt: 0, fehler: null };
 
   const { data: vorhandene, error: leseFehler } = await supabase
     .from('prescription_sessions')
-    .select('session_number')
+    .select('session_number, status, heilmittel_index')
     .eq('prescription_id', prescriptionId);
   if (leseFehler) return { ergaenzt: 0, fehler: leseFehler.message };
 
-  let soll = 0;
-  const itemSlots = [];
+  const benutzte = new Set((vorhandene || []).map(s => Number(s.session_number)).filter(n => Number.isFinite(n) && n > 0));
+  let naechsteNummer = 1;
+  function naechsteFreieNummer() {
+    while (benutzte.has(naechsteNummer)) {
+      naechsteNummer++;
+    }
+    benutzte.add(naechsteNummer);
+    return naechsteNummer;
+  }
 
-  if (Array.isArray(items) && items.length > 0) {
+  const zeilen = [];
+
+  if (istMehrfachItems(items)) {
+    const itemSlots = [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       const count = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
       if (Number.isFinite(count) && count > 0) {
         itemSlots.push({ index: i, count });
-        soll += count;
+      }
+    }
+
+    function getSessionIndex(s) {
+      if (s.heilmittel_index !== undefined && s.heilmittel_index !== null) return s.heilmittel_index;
+      if (itemSlots.length > 0) {
+        let offset = 0;
+        for (const slot of itemSlots) {
+          if (s.session_number <= offset + slot.count) return slot.index;
+          offset += slot.count;
+        }
+        return itemSlots[itemSlots.length - 1].index;
+      }
+      return 0;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const ziel = terminZiel(it?.einheiten, Boolean(it?.doppelbehandlung));
+      if (!Number.isFinite(ziel) || ziel <= 0) continue;
+
+      const vorhandenFuerItem = (vorhandene || []).filter(s =>
+        s.status !== 'cancelled' && getSessionIndex(s) === i
+      ).length;
+
+      const bedarf = Math.max(0, ziel - vorhandenFuerItem);
+      for (let k = 0; k < bedarf; k++) {
+        zeilen.push({
+          prescription_id: prescriptionId,
+          session_number: naechsteFreieNummer(),
+          status: 'planned',
+          heilmittel_index: i,
+        });
       }
     }
   } else {
-    soll = terminZiel(anzahlEinheiten, doppelbehandlung);
-  }
-
-  const fehlt = fehlendeSitzungsnummern(vorhandene, soll);
-  if (!fehlt.length) return { ergaenzt: 0, fehler: null };
-
-  function indexFuerNummer(num) {
-    if (!itemSlots.length) return heilmittelIndex;
-    let offset = 0;
-    for (const slot of itemSlots) {
-      if (num <= offset + slot.count) return slot.index;
-      offset += slot.count;
+    const soll = terminZiel(anzahlEinheiten, doppelbehandlung);
+    const fehlt = fehlendeSitzungsnummern(vorhandene, soll);
+    for (const n of fehlt) {
+      zeilen.push({
+        prescription_id: prescriptionId,
+        session_number: n,
+        status: 'planned',
+        heilmittel_index: heilmittelIndex,
+      });
     }
-    return itemSlots[itemSlots.length - 1].index;
   }
 
-  const zeilen = fehlt.map(n => ({
-    prescription_id: prescriptionId,
-    session_number: n,
-    status: 'planned',
-    heilmittel_index: indexFuerNummer(n),
-  }));
+  if (!zeilen.length) return { ergaenzt: 0, fehler: null };
 
   const { error: schreibFehler } = await supabase
     .from('prescription_sessions')
     .upsert(zeilen, { onConflict: 'prescription_id,session_number', ignoreDuplicates: true });
   if (schreibFehler) return { ergaenzt: 0, fehler: schreibFehler.message };
 
-  return { ergaenzt: fehlt.length, fehler: null };
+  return { ergaenzt: zeilen.length, fehler: null };
 }

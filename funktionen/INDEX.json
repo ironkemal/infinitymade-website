@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-03",
  "dateien": 532,
- "funktionen": 4308,
+ "funktionen": 4313,
  "module": [
   "abrechnung",
   "anamnese",
@@ -7080,6 +7080,7 @@
     "findPiiSpans",
     "getKnownCatalogLabels",
     "getUmlautVariants",
+    "gleicheSitzungenAb",
     "goStep",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -7106,6 +7107,7 @@
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
+    "naechsteFreieNummer",
     "newTodo",
     "normName",
     "normalisiereKonten",
@@ -7601,6 +7603,7 @@
     "getRegExp",
     "getTenantJetonClient",
     "gkvFarbwahl",
+    "gleicheSitzungenAb",
     "gruppeHtml",
     "gruppiereBefunde",
     "gruppiereNachDatei",
@@ -7652,6 +7655,7 @@
     "mountCalendar",
     "mountEinrichtungRing",
     "mountStandortPlan",
+    "naechsteFreieNummer",
     "name",
     "nichts",
     "norm",
@@ -8304,6 +8308,7 @@
     "getRegExp",
     "getTenantJetonClient",
     "gkvFarbwahl",
+    "gleicheSitzungenAb",
     "gruppeHtml",
     "gruppiereBefunde",
     "gruppiereNachDatei",
@@ -8355,6 +8360,7 @@
     "mountCalendar",
     "mountEinrichtungRing",
     "mountStandortPlan",
+    "naechsteFreieNummer",
     "name",
     "nichts",
     "norm",
@@ -38062,6 +38068,7 @@
     "findPiiSpans",
     "getKnownCatalogLabels",
     "getUmlautVariants",
+    "gleicheSitzungenAb",
     "goStep",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -38088,6 +38095,7 @@
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
+    "naechsteFreieNummer",
     "newTodo",
     "normName",
     "normalisiereKonten",
@@ -42359,8 +42367,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1469,
-   "end": 1474,
+   "start": 1473,
+   "end": 1478,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -42383,8 +42391,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1612,
-   "end": 1730,
+   "start": 1616,
+   "end": 1734,
    "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
@@ -42413,8 +42421,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1614,
-   "end": 1730,
+   "start": 1618,
+   "end": 1734,
    "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
@@ -42444,8 +42452,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1629,
-   "end": 1644,
+   "start": 1633,
+   "end": 1648,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -42470,8 +42478,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1630,
-   "end": 1644,
+   "start": 1634,
+   "end": 1648,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -42496,8 +42504,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1851,
-   "end": 1899,
+   "start": 1855,
+   "end": 1903,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [
@@ -42531,8 +42539,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1899,
-   "end": 1899,
+   "start": 1903,
+   "end": 1903,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -42556,8 +42564,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1900,
-   "end": 1900,
+   "start": 1904,
+   "end": 1904,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -42579,8 +42587,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1911,
-   "end": 1915,
+   "start": 1915,
+   "end": 1919,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -42601,8 +42609,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1960,
-   "end": 2038,
+   "start": 1964,
+   "end": 2042,
    "lines": 79,
    "spiegelHinweis": null,
    "tables": [],
@@ -42634,8 +42642,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2049,
-   "end": 2096,
+   "start": 2053,
+   "end": 2100,
    "lines": 48,
    "spiegelHinweis": null,
    "tables": [],
@@ -42667,8 +42675,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2217,
-   "end": 2233,
+   "start": 2221,
+   "end": 2237,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -42693,8 +42701,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2544,
-   "end": 2548,
+   "start": 2548,
+   "end": 2552,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -42713,8 +42721,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3475,
-   "end": 3483,
+   "start": 3479,
+   "end": 3487,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -42738,8 +42746,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3485,
-   "end": 3489,
+   "start": 3489,
+   "end": 3493,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -42762,8 +42770,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3491,
-   "end": 3503,
+   "start": 3495,
+   "end": 3507,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -42786,8 +42794,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3524,
-   "end": 3538,
+   "start": 3528,
+   "end": 3542,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -42810,8 +42818,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3705,
-   "end": 3714,
+   "start": 3709,
+   "end": 3718,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -42832,8 +42840,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3707,
-   "end": 3720,
+   "start": 3711,
+   "end": 3724,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -42856,8 +42864,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3720,
-   "end": 3722,
+   "start": 3724,
+   "end": 3726,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -42881,8 +42889,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3984,
-   "end": 3994,
+   "start": 3988,
+   "end": 3998,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -42953,8 +42961,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3996,
-   "end": 4010,
+   "start": 4000,
+   "end": 4014,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -42978,8 +42986,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4134,
-   "end": 4140,
+   "start": 4138,
+   "end": 4144,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -43002,8 +43010,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4159,
-   "end": 4177,
+   "start": 4163,
+   "end": 4181,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [
@@ -43036,8 +43044,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4196,
-   "end": 4210,
+   "start": 4200,
+   "end": 4214,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -43187,8 +43195,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4197,
-   "end": 4210,
+   "start": 4201,
+   "end": 4214,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -43255,8 +43263,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4446,
-   "end": 4500,
+   "start": 4450,
+   "end": 4504,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -43281,8 +43289,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4448,
-   "end": 4448,
+   "start": 4452,
+   "end": 4452,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -43354,8 +43362,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4686,
-   "end": 4689,
+   "start": 4690,
+   "end": 4693,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -56990,6 +56998,7 @@
     "physioLeistungszeilen",
     "positioniertPopover",
     "preflight",
+    "pruefeItemsAenderung",
     "pruefeTrustAnchorFrische",
     "r2",
     "rasterStunden",
@@ -63452,7 +63461,8 @@
     "getOwnerId",
     "gleicheSitzungenAb",
     "meldePodoSerienBindung",
-    "showConfirmModal"
+    "showConfirmModal",
+    "terminZielToplam"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -132037,6 +132047,7 @@
     "el",
     "lesenMuster13",
     "nutzlastAusMaske",
+    "pruefeAenderungErlaubt",
     "pruefeSertHeilmittelFehler",
     "txt"
    ],
@@ -132513,6 +132524,54 @@
    "uiPfad": [
     "ortak yardımcı — 38 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "pruefeItemsAenderung",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/heilmittel-zeilen.js",
+   "start": 140,
+   "end": 191,
+   "lines": 52,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "getGenutzt",
+    "min"
+   ],
+   "calledBy": [
+    "bereichFn",
+    "pruefeAenderungErlaubt"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "getGenutzt",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/heilmittel-zeilen.js",
+   "start": 145,
+   "end": 151,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "pruefeItemsAenderung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "icdKodesAusFeld",
@@ -163163,6 +163222,7 @@
     "findPiiSpans",
     "getKnownCatalogLabels",
     "getUmlautVariants",
+    "gleicheSitzungenAb",
     "goStep",
     "gueltigBestaetigteIds",
     "handleAcceptFlow",
@@ -163189,6 +163249,7 @@
     "mountStandortPlan",
     "moveTo",
     "musterAusZeilen",
+    "naechsteFreieNummer",
     "newTodo",
     "normName",
     "normalisiereKonten",
@@ -187281,8 +187342,10 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "(datei) module/sitzung-abgleich.js",
     "gleicheSitzungenAb",
     "pruefeVerordnungsfortschritt",
+    "terminZielToplam",
     "zaehler"
    ],
    "modules": [
@@ -187331,13 +187394,102 @@
    ]
   },
   {
+   "name": "istMehrfachItems",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/sitzung-abgleich.js",
+   "start": 102,
+   "end": 104,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "gleicheSitzungenAb",
+    "terminZielToplam"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "terminZielToplam",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/sitzung-abgleich.js",
+   "start": 113,
+   "end": 127,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istMehrfachItems",
+    "terminZiel"
+   ],
+   "calledBy": [
+    "linkBookingsToPrescriptionSessions"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "gleicheSitzungenAb",
    "kind": "function",
    "lang": "js",
    "file": "module/sitzung-abgleich.js",
-   "start": 97,
-   "end": 149,
-   "lines": 53,
+   "start": 129,
+   "end": 214,
+   "lines": 86,
    "spiegelHinweis": null,
    "tables": [
     "prescription_sessions"
@@ -187349,8 +187501,12 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "fehlendeSitzungsnummern",
-    "indexFuerNummer",
+    "getSessionIndex",
+    "has",
+    "istMehrfachItems",
+    "naechsteFreieNummer",
     "push",
     "terminZiel"
    ],
@@ -187411,13 +187567,79 @@
    ]
   },
   {
-   "name": "indexFuerNummer",
+   "name": "naechsteFreieNummer",
    "kind": "function",
    "lang": "js",
    "file": "module/sitzung-abgleich.js",
-   "start": 126,
-   "end": 134,
-   "lines": 9,
+   "start": 141,
+   "end": 147,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "add",
+    "has"
+   ],
+   "calledBy": [
+    "gleicheSitzungenAb"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "getSessionIndex",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/sitzung-abgleich.js",
+   "start": 161,
+   "end": 172,
+   "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -209659,11 +209881,12 @@
    "lang": "js",
    "file": "module/verordnung-einheiten.js",
    "start": 396,
-   "end": 612,
-   "lines": 217,
+   "end": 624,
+   "lines": 229,
    "spiegelHinweis": null,
    "tables": [
-    "prescription_sessions"
+    "prescription_sessions",
+    "prescriptions"
    ],
    "rpcs": [],
    "writes": [],
@@ -213201,8 +213424,8 @@
    "lang": "js",
    "file": "module/verordnung-maske.js",
    "start": 201,
-   "end": 313,
-   "lines": 113,
+   "end": 317,
+   "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -213280,8 +213503,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 303,
-   "end": 303,
+   "start": 307,
+   "end": 307,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -213300,8 +213523,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 319,
-   "end": 326,
+   "start": 323,
+   "end": 330,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -213365,8 +213588,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 329,
-   "end": 331,
+   "start": 333,
+   "end": 335,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -213431,8 +213654,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 337,
-   "end": 340,
+   "start": 341,
+   "end": 344,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -213498,8 +213721,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 346,
-   "end": 350,
+   "start": 350,
+   "end": 354,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -213565,8 +213788,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 381,
-   "end": 394,
+   "start": 385,
+   "end": 398,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -213629,8 +213852,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 397,
-   "end": 403,
+   "start": 401,
+   "end": 407,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -213692,8 +213915,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 416,
-   "end": 422,
+   "start": 420,
+   "end": 426,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -213756,8 +213979,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 424,
-   "end": 428,
+   "start": 428,
+   "end": 432,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -213823,8 +214046,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 445,
-   "end": 574,
+   "start": 449,
+   "end": 578,
    "lines": 130,
    "spiegelHinweis": null,
    "tables": [],
@@ -213911,8 +214134,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 449,
-   "end": 480,
+   "start": 453,
+   "end": 484,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -214021,8 +214244,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 484,
-   "end": 489,
+   "start": 488,
+   "end": 493,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -214088,8 +214311,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 490,
-   "end": 490,
+   "start": 494,
+   "end": 494,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -214155,13 +214378,17 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 544,
-   "end": 907,
-   "lines": 364,
+   "start": 548,
+   "end": 961,
+   "lines": 414,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "prescription_sessions"
+   ],
    "rpcs": [],
-   "writes": [],
+   "writes": [
+    "prescription_sessions:update"
+   ],
    "endpoints": [
     "${basis}${pfad}"
    ],
@@ -214189,6 +214416,7 @@
     "pruefeAenderungErlaubt",
     "pruefeBarcodeBestaetigung",
     "pruefeHeilmittelZeilen",
+    "pruefeItemsAenderung",
     "pruefeNeueMenge",
     "pruefeSertHeilmittelFehler",
     "rezeptartFuerSpeichern",
@@ -214213,8 +214441,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 582,
-   "end": 584,
+   "start": 586,
+   "end": 588,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -214278,8 +214506,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 593,
-   "end": 631,
+   "start": 597,
+   "end": 635,
    "lines": 39,
    "spiegelHinweis": null,
    "tables": [],
@@ -214344,9 +214572,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 646,
-   "end": 657,
-   "lines": 12,
+   "start": 650,
+   "end": 676,
+   "lines": 27,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -214354,6 +214582,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "liesHeilmittelZeilenAusMaske",
+    "pruefeItemsAenderung",
     "pruefeNeueMenge"
    ],
    "calledBy": [
@@ -214369,8 +214599,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 684,
-   "end": 691,
+   "start": 703,
+   "end": 710,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -214392,8 +214622,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 707,
-   "end": 713,
+   "start": 726,
+   "end": 732,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -214462,8 +214692,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 715,
-   "end": 784,
+   "start": 734,
+   "end": 803,
    "lines": 70,
    "spiegelHinweis": null,
    "tables": [],
@@ -214540,8 +214770,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 716,
-   "end": 783,
+   "start": 735,
+   "end": 802,
    "lines": 68,
    "spiegelHinweis": null,
    "tables": [],
@@ -214656,8 +214886,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 717,
-   "end": 783,
+   "start": 736,
+   "end": 802,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [],
@@ -214733,8 +214963,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 718,
-   "end": 783,
+   "start": 737,
+   "end": 802,
    "lines": 66,
    "spiegelHinweis": null,
    "tables": [],
@@ -214823,8 +215053,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 807,
-   "end": 825,
+   "start": 826,
+   "end": 844,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -214895,13 +215125,17 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 827,
-   "end": 868,
-   "lines": 42,
+   "start": 846,
+   "end": 922,
+   "lines": 77,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "prescription_sessions"
+   ],
    "rpcs": [],
-   "writes": [],
+   "writes": [
+    "prescription_sessions:update"
+   ],
    "endpoints": [],
    "storage": [],
    "calls": [
@@ -214928,8 +215162,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/verordnung-maske.js",
-   "start": 878,
-   "end": 906,
+   "start": 932,
+   "end": 960,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -246995,6 +247229,315 @@
    ]
   },
   {
+   "tabelle": "prescription_sessions",
+   "anzahl": 7,
+   "pfade": [
+    {
+     "leitfunktion": "handleSessionDrop",
+     "funktionen": [
+      {
+       "name": "handleSessionDrop",
+       "file": "dashboard.js",
+       "start": 2981,
+       "end": 3076,
+       "lines": 96,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 38 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "markPrescriptionSession",
+     "funktionen": [
+      {
+       "name": "markPrescriptionSession",
+       "file": "dashboard.js",
+       "start": 6195,
+       "end": 6212,
+       "lines": 18,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "bucheErgaenzendMit",
+       "file": "module/ergaenzend-mitbuchen.js",
+       "start": 23,
+       "end": 37,
+       "lines": 15,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "linkBookingsToPrescriptionSessions",
+     "funktionen": [
+      {
+       "name": "linkBookingsToPrescriptionSessions",
+       "file": "dashboard.js",
+       "start": 6227,
+       "end": 6317,
+       "lines": 91,
+       "writes": [
+        "prescription_sessions:update",
+        "prescription_sessions:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "gleicheSitzungenAb",
+       "file": "module/sitzung-abgleich.js",
+       "start": 129,
+       "end": 214,
+       "lines": 86,
+       "writes": [
+        "prescription_sessions:upsert"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 38 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "markiereNichtErschienen",
+     "funktionen": [
+      {
+       "name": "korrigiereNoShow",
+       "file": "module/booking-status-korrektur.js",
+       "start": 94,
+       "end": 151,
+       "lines": 58,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "markiereNichtErschienen",
+       "file": "module/termin-nicht-erschienen.js",
+       "start": 105,
+       "end": 198,
+       "lines": 94,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "rebindeNoShowSitzungen",
+       "file": "module/termin-nicht-erschienen.js",
+       "start": 283,
+       "end": 319,
+       "lines": 37,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "bindeSitzungenAnTermin",
+     "funktionen": [
+      {
+       "name": "bindeSitzungenAnTermin",
+       "file": "module/sitzung-bindung.js",
+       "start": 49,
+       "end": 114,
+       "lines": 66,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "_verdrahteSitzungsHeilmittelTausch",
+     "funktionen": [
+      {
+       "name": "_verdrahteSitzungsHeilmittelTausch",
+       "file": "module/verordnung-detail.js",
+       "start": 1076,
+       "end": 1146,
+       "lines": 71,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "anfragen",
+        "b2b",
+        "b2c",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fahrtenbuch",
+        "fbFahrtenExportCsv",
+        "fbFahrtenExportProt",
+        "fbFahrtenExportVerz",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "patientDetailModal",
+        "podologie-billing",
+        "rechnungen",
+        "rezeptModal",
+        "services",
+        "settings",
+        "statistik",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen",
+        "vorlagen",
+        "warteliste"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 38 modülden çağrılıyor"
+       ]
+      }
+     ]
+    },
+    {
+     "leitfunktion": "bereichFn",
+     "funktionen": [
+      {
+       "name": "bereichFn",
+       "file": "module/verordnung-maske.js",
+       "start": 548,
+       "end": 961,
+       "lines": 414,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "schreibeVerordnung",
+       "file": "module/verordnung-maske.js",
+       "start": 846,
+       "end": 922,
+       "lines": 77,
+       "writes": [
+        "prescription_sessions:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "businesses",
    "anzahl": 6,
    "pfade": [
@@ -247234,286 +247777,6 @@
        ],
        "modules": [],
        "uiPfad": []
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "tabelle": "prescription_sessions",
-   "anzahl": 6,
-   "pfade": [
-    {
-     "leitfunktion": "handleSessionDrop",
-     "funktionen": [
-      {
-       "name": "handleSessionDrop",
-       "file": "dashboard.js",
-       "start": 2981,
-       "end": 3076,
-       "lines": 96,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "statistik",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 38 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "markPrescriptionSession",
-     "funktionen": [
-      {
-       "name": "markPrescriptionSession",
-       "file": "dashboard.js",
-       "start": 6195,
-       "end": 6212,
-       "lines": 18,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "bucheErgaenzendMit",
-       "file": "module/ergaenzend-mitbuchen.js",
-       "start": 23,
-       "end": 37,
-       "lines": 15,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "linkBookingsToPrescriptionSessions",
-     "funktionen": [
-      {
-       "name": "linkBookingsToPrescriptionSessions",
-       "file": "dashboard.js",
-       "start": 6227,
-       "end": 6317,
-       "lines": 91,
-       "writes": [
-        "prescription_sessions:update",
-        "prescription_sessions:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "gleicheSitzungenAb",
-       "file": "module/sitzung-abgleich.js",
-       "start": 97,
-       "end": 149,
-       "lines": 53,
-       "writes": [
-        "prescription_sessions:upsert"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "statistik",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 38 modülden çağrılıyor"
-       ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "markiereNichtErschienen",
-     "funktionen": [
-      {
-       "name": "korrigiereNoShow",
-       "file": "module/booking-status-korrektur.js",
-       "start": 94,
-       "end": 151,
-       "lines": 58,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "markiereNichtErschienen",
-       "file": "module/termin-nicht-erschienen.js",
-       "start": 105,
-       "end": 198,
-       "lines": 94,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      },
-      {
-       "name": "rebindeNoShowSitzungen",
-       "file": "module/termin-nicht-erschienen.js",
-       "start": 283,
-       "end": 319,
-       "lines": 37,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "bindeSitzungenAnTermin",
-     "funktionen": [
-      {
-       "name": "bindeSitzungenAnTermin",
-       "file": "module/sitzung-bindung.js",
-       "start": 49,
-       "end": 114,
-       "lines": 66,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "_verdrahteSitzungsHeilmittelTausch",
-     "funktionen": [
-      {
-       "name": "_verdrahteSitzungsHeilmittelTausch",
-       "file": "module/verordnung-detail.js",
-       "start": 1076,
-       "end": 1146,
-       "lines": 71,
-       "writes": [
-        "prescription_sessions:update"
-       ],
-       "modules": [
-        "abrechnung",
-        "anamnese",
-        "anfragen",
-        "b2b",
-        "b2c",
-        "bkActionArrivedBtn",
-        "bkActionFahrtEndBtn",
-        "bkActionFahrtStartBtn",
-        "bkActionHbCopyBtn",
-        "doctors",
-        "fahrtenbuch",
-        "fbFahrtenExportCsv",
-        "fbFahrtenExportProt",
-        "fbFahrtenExportVerz",
-        "fbFahrtenRefresh",
-        "fbReportRefresh",
-        "fbVehicleAddBtn",
-        "feSaveBtn",
-        "fsAddVehicleBtn",
-        "fsSaveBtn",
-        "fussstatus",
-        "hours",
-        "kunden",
-        "mahnwesen",
-        "notizen",
-        "patientDetailModal",
-        "podologie-billing",
-        "rechnungen",
-        "rezeptModal",
-        "services",
-        "settings",
-        "statistik",
-        "team",
-        "ueberblick",
-        "vehEditSaveBtn",
-        "verordnungen",
-        "vorlagen",
-        "warteliste"
-       ],
-       "uiPfad": [
-        "ortak yardımcı — 38 modülden çağrılıyor"
-       ]
       }
      ]
     }
@@ -250483,7 +250746,7 @@
     "module/rezept-in-maske.js:40",
     "module/rezept-patientenkopf.js:4",
     "module/verordnung-anlegen.js:32",
-    "module/verordnung-maske.js:449",
+    "module/verordnung-maske.js:453",
     "module/verordnung-nachweis.js:28"
    ],
    "aynalar": []
@@ -250527,7 +250790,7 @@
     "api-backend/lib/rechnung-pdf.js:16",
     "api-backend/lib/rechnung-snapshot.js:14",
     "api-backend/lib/therapiebericht.js:40",
-    "api-backend/server.js:4196",
+    "api-backend/server.js:4200",
     "dashboard.js:524",
     "module/anamnese.js:386",
     "module/bg-angaben.js:36",
@@ -250684,7 +250947,7 @@
     "module/patient-notizen.js:3",
     "module/termin-aktionsleiste.js:49",
     "module/termin-panel.js:39",
-    "module/verordnung-maske.js:716"
+    "module/verordnung-maske.js:735"
    ],
    "aynalar": []
   },
@@ -250993,7 +251256,7 @@
    "orte": [
     "api-backend/dsgvo/fristen.js:97",
     "api-backend/merkez-istemci/ip-abgleich.js:257",
-    "api-backend/server.js:3996",
+    "api-backend/server.js:4000",
     "dashboard.js:12670"
    ],
    "aynalar": []
@@ -251271,7 +251534,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4448",
+    "api-backend/server.js:4452",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:115"
    ],
@@ -251376,7 +251639,7 @@
    "name": "an",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:45",
-    "module/verordnung-maske.js:718"
+    "module/verordnung-maske.js:737"
    ],
    "aynalar": []
   },
@@ -251661,7 +251924,7 @@
   {
    "name": "erstePositionAusItems",
    "orte": [
-    "module/verordnung-maske.js:424",
+    "module/verordnung-maske.js:428",
     "module/verordnung-pruefung.js:468"
    ],
    "aynalar": []
@@ -251808,7 +252071,7 @@
   {
    "name": "haken",
    "orte": [
-    "module/verordnung-maske.js:490",
+    "module/verordnung-maske.js:494",
     "module/verordnung-pruefen-knopf.js:45"
    ],
    "aynalar": []
@@ -251832,7 +252095,7 @@
   {
    "name": "heilmittelAusItems",
    "orte": [
-    "module/verordnung-maske.js:416",
+    "module/verordnung-maske.js:420",
     "module/verordnung-pruefung.js:483"
    ],
    "aynalar": []
@@ -252244,7 +252507,7 @@
   {
    "name": "schliesse",
    "orte": [
-    "api-backend/server.js:3984",
+    "api-backend/server.js:3988",
     "module/kalender-kontextmenue.js:92"
    ],
    "aynalar": []
@@ -252461,7 +252724,7 @@
    "name": "txt",
    "orte": [
     "module/abrechnung-verlauf.js:71",
-    "module/verordnung-maske.js:717"
+    "module/verordnung-maske.js:736"
    ],
    "aynalar": []
   },

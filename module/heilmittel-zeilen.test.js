@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pruefeHeilmittelZeilen, normalizeBereich } from './heilmittel-zeilen.js';
+import { pruefeHeilmittelZeilen, normalizeBereich, pruefeItemsAenderung } from './heilmittel-zeilen.js';
 
 test('normalizeBereich normalisiert Fachbereiche korrekt', () => {
   // Physio-Varianten
@@ -241,5 +241,98 @@ test('istEntwurf: leere Einheit ist frei, aber Einheit 0, doppelter Code und Erg
     istEntwurf: true,
   });
   assert.ok(rErg.fehler.some(f => f.includes('nicht übersteigen')));
+});
+
+// ── P0-2: pruefeItemsAenderung (Mehrfach-VO Bearbeitungsregeln) ─────────────
+
+test('pruefeItemsAenderung: Erlaubt Änderungen wenn keine Behandlungen erbracht oder Termine gebunden sind', () => {
+  const alt = [
+    { code: 'X0501', einheiten: 6 },
+    { code: 'X1201', einheiten: 6 },
+  ];
+  const neu = [
+    { code: 'X0502', einheiten: 10 },
+    { code: 'X1201', einheiten: 4 },
+  ];
+  const sitzungen = [
+    { session_number: 1, status: 'planned', booking_id: null, heilmittel_index: 0 },
+    { session_number: 2, status: 'planned', booking_id: null, heilmittel_index: 1 },
+  ];
+  assert.equal(pruefeItemsAenderung(alt, neu, sitzungen), null);
+});
+
+test('pruefeItemsAenderung: Code darf nicht geändert werden wenn Sitzungen erbracht oder Termine gebunden sind', () => {
+  const alt = [{ code: 'X0501', einheiten: 6 }];
+  const neu = [{ code: 'X0502', einheiten: 6 }];
+  const sitzungenErledigt = [
+    { session_number: 1, status: 'done', booking_id: null, heilmittel_index: 0 },
+  ];
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungenErledigt), /kann nicht geändert werden/);
+
+  const sitzungenGebunden = [
+    { session_number: 1, status: 'planned', booking_id: 'b-123', heilmittel_index: 0 },
+  ];
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungenGebunden), /kann nicht geändert werden/);
+});
+
+test('pruefeItemsAenderung: Position darf nicht gelöscht werden wenn Sitzungen erbracht oder Termine gebunden sind', () => {
+  const alt = [
+    { code: 'X0501', einheiten: 6 },
+    { code: 'X1201', einheiten: 6 },
+  ];
+  const neu = [
+    { code: 'X0501', einheiten: 6 },
+  ];
+  const sitzungen = [
+    { session_number: 1, status: 'planned', booking_id: null, heilmittel_index: 0 },
+    { session_number: 7, status: 'done', booking_id: null, heilmittel_index: 1 },
+  ];
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungen), /Position 2 kann nicht gelöscht werden/);
+});
+
+test('pruefeItemsAenderung: Einheiten dürfen nicht unter die Zahl der genutzten Termine fallen', () => {
+  const alt = [{ code: 'X0501', einheiten: 6 }];
+  const neu = [{ code: 'X0501', einheiten: 2 }];
+  const sitzungen = [
+    { session_number: 1, status: 'done', booking_id: null, heilmittel_index: 0 },
+    { session_number: 2, status: 'done', booking_id: null, heilmittel_index: 0 },
+    { session_number: 3, status: 'planned', booking_id: 'bk-1', heilmittel_index: 0 },
+  ]; // 3 genutzt
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungen), /nicht weniger als 3 Einheiten/);
+});
+
+test('pruefeItemsAenderung: Letzte Position darf gelöscht werden wenn nur offene, ungebundene Sitzungen existieren', () => {
+  const alt = [
+    { code: 'X0501', einheiten: 6 },
+    { code: 'X1201', einheiten: 6 },
+  ];
+  const neu = [
+    { code: 'X0501', einheiten: 6 },
+  ];
+  const sitzungen = [
+    { session_number: 1, status: 'done', booking_id: null, heilmittel_index: 0 },
+    { session_number: 7, status: 'planned', booking_id: null, heilmittel_index: 1 },
+    { session_number: 8, status: 'cancelled', booking_id: null, heilmittel_index: 1 },
+  ];
+  assert.equal(pruefeItemsAenderung(alt, neu, sitzungen), null);
+});
+
+test('pruefeItemsAenderung: Gekürzte Zeilen verbieten, wenn Folge-Positionen genutzte Sitzungen haben', () => {
+  const alt = [
+    { code: 'X0501', einheiten: 6 },
+    { code: 'X1201', einheiten: 6 },
+    { code: 'X1301', einheiten: 6 },
+  ];
+  // 3 auf 2 gekürzt, aber Index 2 hat done-Sitzungen
+  const neu = [
+    { code: 'X0501', einheiten: 6 },
+    { code: 'X1201', einheiten: 6 },
+  ];
+  const sitzungen = [
+    { session_number: 1, status: 'planned', booking_id: null, heilmittel_index: 0 },
+    { session_number: 7, status: 'planned', booking_id: null, heilmittel_index: 1 },
+    { session_number: 13, status: 'done', booking_id: null, heilmittel_index: 2 },
+  ];
+  assert.match(pruefeItemsAenderung(alt, neu, sitzungen), /kann nicht gelöscht werden/);
 });
 

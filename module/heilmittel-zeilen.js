@@ -123,3 +123,69 @@ export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null
 
   return { fehler, warnungen };
 }
+
+/**
+ * Prüft Änderungen an Heilmittel-Positionen einer Verordnung (P0-2).
+ * Kalem-Index ist Identität.
+ * - Yapılmış VEYA termine bağlı seansı olan index'te: code değiştirilemez,
+ *   kalem silinemez, Einheit < o kalemin kullanılanı olamaz.
+ * - Satır silinince sonraki index'lerde yapılmış/bağlı seans varsa reddet.
+ * - Açık-bağsız seanslı son kalem silinirse izin ver (o seanslar cancelled olur).
+ *
+ * @param {Array|object} altItems
+ * @param {Array|object} neuItems
+ * @param {Array} sitzungen
+ * @returns {string|null} Fehlermeldung auf Deutsch oder null wenn erlaubt.
+ */
+export function pruefeItemsAenderung(altItems, neuItems, sitzungen) {
+  const alt = Array.isArray(altItems) ? altItems : (altItems ? [altItems] : []);
+  const neu = Array.isArray(neuItems) ? neuItems : (neuItems ? [neuItems] : []);
+  const sess = Array.isArray(sitzungen) ? sitzungen : [];
+
+  function getGenutzt(idx) {
+    return sess.filter(s =>
+      (s.heilmittel_index ?? 0) === idx &&
+      s.status !== 'cancelled' &&
+      (s.status === 'done' || s.status === 'completed' || Boolean(s.booking_id))
+    );
+  }
+
+  const minLen = Math.min(alt.length, neu.length);
+  for (let i = 0; i < minLen; i++) {
+    const genutzt = getGenutzt(i);
+    if (!genutzt.length) continue;
+
+    const altCode = String(alt[i]?.code || alt[i]?.heilmittel_position || '').trim().toUpperCase();
+    const neuCode = String(neu[i]?.code || neu[i]?.heilmittel_position || '').trim().toUpperCase();
+    if (altCode && neuCode && altCode !== neuCode) {
+      return `Heilmittel-Position ${i + 1} (${altCode}) kann nicht geändert werden, da bereits Behandlungen dokumentiert oder Termine gebunden sind.`;
+    }
+
+    const neuEinh = parseInt(neu[i]?.einheiten ?? neu[i]?.anzahl_einheiten, 10);
+    if (Number.isFinite(neuEinh)) {
+      const zielTermine = neu[i]?.doppelbehandlung ? Math.ceil(neuEinh / 2) : neuEinh;
+      if (neuEinh < genutzt.length || zielTermine < genutzt.length) {
+        return `Für Position ${i + 1} können nicht weniger als ${genutzt.length} Einheiten angegeben werden, da bereits ${genutzt.length} Behandlung${genutzt.length > 1 ? 'en dokumentiert oder Termine gebunden sind' : ' dokumentiert oder ein Termin gebunden ist'}.`;
+      }
+    }
+  }
+
+  if (alt.length > neu.length) {
+    for (let k = neu.length; k < alt.length; k++) {
+      const genutzt = getGenutzt(k);
+      if (genutzt.length > 0) {
+        return `Position ${k + 1} kann nicht gelöscht werden, da bereits Behandlungen dokumentiert oder Termine gebunden sind.`;
+      }
+    }
+    const restGenutzt = sess.filter(s =>
+      (s.heilmittel_index ?? 0) >= neu.length &&
+      s.status !== 'cancelled' &&
+      (s.status === 'done' || s.status === 'completed' || Boolean(s.booking_id))
+    );
+    if (restGenutzt.length > 0) {
+      return 'Position kann nicht gelöscht werden, solange nachfolgende Positionen bereits erbrachte Behandlungen oder gebundene Termine haben.';
+    }
+  }
+
+  return null;
+}

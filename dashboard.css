@@ -8763,3 +8763,79 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .stm-text { margin: 0 0 10px; font-size: 13px; }
 .stm-text pre { white-space: pre-wrap; font-family: inherit; margin: 6px 0 0; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
 .stm-ergebnis { margin-top: 8px; font-size: 13px; }
+
+/* ============================================================
+   Physio Touch-Ziele und iOS-Zoom (03.11.2026, mobil-ui)
+   Gilt nur auf Touch-Geraeten oder bis 1024 px — Desktop-Dichte und das
+   Muster-13-Papierlayout bleiben ab 1025 px mit Maus unveraendert.
+   Gemessen: Muster-13-Felder 21-25 px hoch, Speichern 35, Einwilligungs-
+   Kaestchen 26, Standort-Menue 28-35, Telefon: Standort-Chip auf 47 px
+   Textbreite gequetscht. Ziel: >= 44 px Hoehe, >= 16 px Schrift im Feld.
+   Die #rezeptModal-Praefixe heben die Spezifitaet ueber die <style>-Bloecke
+   in dashboard.html, die nach diesem Stylesheet geladen werden.
+   ============================================================ */
+@media (pointer: coarse), (max-width: 1024px) {
+  /* Muster 13: Felder gleich hoch -> Zeilen und Unterstriche bleiben buendig */
+  #rezeptModal .m13-sheet .m13-v,
+  #rezeptModal .m13-sheet .m13-v.m13-sm,
+  #rezeptModal .m13-sheet input[type=date].m13-v,
+  #rezeptModal .m13-sheet input[type=date].m13-v.m13-sm {
+    min-height: 44px;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+  #rezeptModal .m13-sheet .m13-ta { font-size: 16px; }
+  #rezeptModal .m13-sheet select,
+  #rezeptModal .m13-sheet .form-select,
+  #rezeptModal .m13-sheet .m13-inline-sel,
+  #rezeptModal .m13-picker select,
+  #rezeptModal .form-input,
+  #rezeptModal .form-select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  #rezeptModal .m13-th { min-height: 44px; align-items: center; }
+  #rezeptModal .m13-art-btns button { min-height: 44px; }
+  #rezeptModal .m13-art-toggle { min-height: 44px; }
+  #rezeptModal .rz-aktionen button,
+  #rezeptModal #rzSaveBtn,
+  #rezeptModal #rzAbbrechenBtn { min-height: 44px; padding-left: 18px; padding-right: 18px; }
+  .diktat-textarea { font-size: 16px; }
+
+  /* Import-Vorschau (module/verordnung-import.js, Stile inline -> Datenattribute) */
+  button[data-pi],
+  select[data-pi],
+  input[data-pi]:not([type="checkbox"]) { min-height: 44px; }
+  button[data-pi="zu"] { min-width: 44px; }
+  select[data-pi], input[data-pi]:not([type="checkbox"]) { font-size: 16px; }
+  input[data-pi="bestaetigt"] { width: 24px; height: 24px; flex: 0 0 auto; } /* Etikett drumherum ist das 44-px-Ziel */
+
+  /* Einheiten-Dialog (module/verordnung-einheiten-ui): Felder bis 1024 px ohne iOS-Zoom */
+  /* font-size steht inline (14/13 px) -> !important, sonst iOS-Zoom beim Fokus */
+  input[data-pe-neu], textarea[data-pe-grund] { font-size: 16px !important; }
+
+  /* Verordnung-Detail: Einheiten und Terminzuordnung (Stile inline) */
+  button[data-einheiten-aendern],
+  button[data-einheiten-speichern],
+  button[data-einheiten-abbrechen],
+  button[data-termin-bearbeiten],
+  button[data-termin-loesen],
+  button[data-termin-binden],
+  input[data-einheiten-eingabe] { min-height: 44px; min-width: 44px; }
+  input[data-einheiten-eingabe] { font-size: 16px; }
+
+  /* Einwilligungs-Kaestchen (module/patienten-einwilligung.js): Breite/Hoehe stehen inline
+     -> !important ist hier die einzige CSS-Moeglichkeit, ohne JS anzufassen */
+  input.ew-option { width: 44px !important; height: 44px !important; }
+
+  /* Standort-Menue */
+  .biz-switcher-btn { min-height: 44px; }
+  .biz-switcher-item,
+  .biz-switcher-add { min-height: 44px; }
+  .biz-switcher-menu { max-width: calc(100vw - 16px); }
+}
+
+/* Telefon: Marke weicht dem Standort-Chip (Hamburger + Chip tragen die Orientierung) */
+@media (max-width: 480px) {
+  .topbar .brand { display: none; }
+}

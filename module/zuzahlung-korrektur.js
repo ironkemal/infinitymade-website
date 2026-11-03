@@ -85,7 +85,7 @@ export async function oeffneZuzahlungKorrektur({
   const { data: rx } = await supabase
     .from('prescriptions')
     .select('id, anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, abrechnung_status, '
-      + 'belegnummer, prescription_sessions(id, status)')
+      + 'belegnummer, heilmittel_items, prescription_sessions(id, status, heilmittel_index)')
     .eq('id', prescriptionId)
     .maybeSingle();
 
