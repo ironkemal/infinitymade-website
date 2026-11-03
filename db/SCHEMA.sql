@@ -2,20 +2,20 @@
 -- SCHEMA.sql — Database Structural Schema Definition
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
--- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0102_termin_mitteilungen_tagesdeckel (SaaS, Management-API 02.11.2026)
--- EXPORTED AT:        2026-11-02T18:00:00Z
--- ERZEUGT AM:         2026-11-02
+-- ENVIRONMENT:        saas
+-- LAST MIGRATION:     20261103135621 0104_raum_automatik
+-- EXPORTED AT:        2026-11-03T16:58:00.727761+00:00
+-- ERZEUGT AM:         2026-11-03
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1539
+--   table_columns:       1544
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        194
---   functions:           128
---   triggers:            124
+--   functions:           132
+--   triggers:            127
 --   indexes:             375
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -1110,7 +1110,9 @@ CREATE TABLE public.bookings (
   cancelled_at timestamp with time zone,
   cancelled_session_links jsonb DEFAULT '[]'::jsonb NOT NULL,
   no_show_session_links jsonb DEFAULT '[]'::jsonb NOT NULL,
-  room_id uuid
+  room_id uuid,
+  room_automatisch boolean DEFAULT false NOT NULL,
+  raum_service_ids uuid[]
 );
 --   FK business_id -> businesses(id)
 --   FK group_parent_id -> bookings(id)
@@ -1149,6 +1151,9 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.bookings
   ADD CONSTRAINT bookings_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_raum_service_ids_gueltig CHECK (raum_service_ids IS NULL OR cardinality(raum_service_ids) <= 30 AND COALESCE(array_ndims(raum_service_ids), 1) = 1 AND array_position(raum_service_ids, NULL::uuid) IS NULL);
 
 ALTER TABLE ONLY public.bookings
   ADD CONSTRAINT bookings_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL;
@@ -3600,11 +3605,19 @@ CREATE TABLE public.rooms (
   aktiv boolean DEFAULT true NOT NULL,
   sort integer DEFAULT 0 NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  beschreibung text DEFAULT ''::text NOT NULL,
+  ausstattung text[] DEFAULT '{}'::text[] NOT NULL
 );
 --   FK business_id -> businesses(id)
 --   FK owner_id -> profiles(id)
 ALTER TABLE ONLY public.rooms OWNER TO postgres;
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_ausstattung_gueltig CHECK (raum_ausstattung_gueltig(ausstattung));
+
+ALTER TABLE ONLY public.rooms
+  ADD CONSTRAINT rooms_beschreibung_laenge CHECK (char_length(beschreibung) <= 2000);
 
 ALTER TABLE ONLY public.rooms
   ADD CONSTRAINT rooms_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
@@ -3669,7 +3682,8 @@ CREATE TABLE public.services (
   group_capacity integer DEFAULT 5,
   required_certificate text,
   gkv_position_nr text,
-  kostentraeger_typ text
+  kostentraeger_typ text,
+  raum_ausstattung text[] DEFAULT '{}'::text[] NOT NULL
 );
 --   FK business_id -> businesses(id)
 --   FK owner_id -> auth.users(id)
@@ -3689,6 +3703,9 @@ ALTER TABLE ONLY public.services
 
 ALTER TABLE ONLY public.services
   ADD CONSTRAINT services_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_raum_ausstattung_gueltig CHECK (raum_ausstattung_gueltig(raum_ausstattung));
 
 ALTER TABLE ONLY public.services
   ADD CONSTRAINT services_required_certificate_check CHECK (required_certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text, 'ZNS-BOBATH'::text, 'ZNS-VOJTA'::text, 'ZNS-PNF'::text, 'ZNS-K-BOBATH'::text, 'ZNS-K-VOJTA'::text]));

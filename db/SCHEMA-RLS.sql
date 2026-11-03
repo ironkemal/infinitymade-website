@@ -2,20 +2,20 @@
 -- SCHEMA-RLS.sql — Row Level Security, Policies, Functions, Triggers & ACLs
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
--- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     0102_termin_mitteilungen_tagesdeckel (SaaS, Management-API 02.11.2026)
--- EXPORTED AT:        2026-11-02T18:00:00Z
--- ERZEUGT AM:         2026-11-02
+-- ENVIRONMENT:        saas
+-- LAST MIGRATION:     20261103135621 0104_raum_automatik
+-- EXPORTED AT:        2026-11-03T16:58:00.727761+00:00
+-- ERZEUGT AM:         2026-11-03
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1539
+--   table_columns:       1544
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        194
---   functions:           128
---   triggers:            124
+--   functions:           132
+--   triggers:            127
 --   indexes:             375
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_30, realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05, realtime.messages_2026_11_06])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -2626,6 +2626,140 @@ END;
 $function$
 ;
 ALTER FUNCTION public.belegliste_storno_pruefen() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.booking_gruppe_raum_nachziehen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+BEGIN
+  IF NEW.group_parent_id IS NULL AND NEW.room_id IS DISTINCT FROM OLD.room_id THEN
+    UPDATE public.bookings SET room_id = NEW.room_id
+      WHERE group_parent_id = NEW.id AND owner_id = NEW.owner_id;
+  END IF;
+  RETURN NULL;
+END;
+$function$
+;
+ALTER FUNCTION public.booking_gruppe_raum_nachziehen() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.booking_leistung_raum_nachpruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+DECLARE b_id uuid;
+BEGIN
+  b_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.booking_id ELSE NEW.booking_id END;
+  -- Eine manuelle Raumwahl bleibt bewusst manuell. Bei automatischer Wahl
+  -- berücksichtigen wir die Vereinigungsmenge aller inzwischen gespeicherten Leistungen.
+  UPDATE public.bookings SET
+    room_id = CASE WHEN room_automatisch THEN NULL ELSE room_id END,
+    raum_service_ids = CASE
+      WHEN raum_service_ids IS NULL OR TG_OP = 'DELETE' THEN raum_service_ids
+      WHEN NEW.service_id = service_id OR NEW.service_id = ANY(raum_service_ids) THEN raum_service_ids
+      ELSE array_append(raum_service_ids, NEW.service_id) END
+    WHERE id = b_id;
+  IF TG_OP = 'UPDATE' AND OLD.booking_id IS DISTINCT FROM NEW.booking_id THEN
+    UPDATE public.bookings SET room_id = NULL WHERE id = OLD.booking_id AND room_automatisch;
+  END IF;
+  RETURN NULL;
+END;
+$function$
+;
+ALTER FUNCTION public.booking_leistung_raum_nachpruefen() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.booking_raum_automatisch()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+DECLARE
+  erforderlich text[] := '{}';
+  geeignet uuid;
+  eltern public.bookings%ROWTYPE;
+  leistung record;
+  automatisch boolean;
+  online boolean := true;
+  hat_leistung boolean := false;
+BEGIN
+  -- Alle Schreibwege serialisieren ihre Raumentscheidung am selben Standort. Eine
+  -- explizite manuelle Wahl prüft trotzdem keine Kapazität (bestehende Warnregel).
+  PERFORM pg_advisory_xact_lock(hashtextextended('raum:' || NEW.owner_id::text || ':' || COALESCE(NEW.business_id::text, '-'), 0));
+  automatisch := NEW.room_id IS NULL;
+  IF TG_OP = 'UPDATE' THEN
+    automatisch := automatisch OR (OLD.room_automatisch AND NEW.room_automatisch AND NEW.room_id IS NOT DISTINCT FROM OLD.room_id);
+  END IF;
+  IF NEW.raum_service_ids IS NOT NULL THEN
+    IF COALESCE(array_ndims(NEW.raum_service_ids), 1) <> 1
+       OR cardinality(NEW.raum_service_ids) > 30
+       OR array_position(NEW.raum_service_ids, NULL) IS NOT NULL THEN
+      RAISE EXCEPTION 'Für die Raumzuordnung sind höchstens 30 gültige Leistungen erlaubt.' USING ERRCODE = '23514';
+    END IF;
+    NEW.raum_service_ids := array_remove(NEW.raum_service_ids, NEW.service_id);
+  END IF;
+  FOR leistung IN
+    SELECT s.*, ids.id AS requested_id FROM (
+      SELECT NEW.service_id AS id WHERE NEW.service_id IS NOT NULL
+      UNION SELECT unnest(NEW.raum_service_ids)
+      UNION SELECT bl.service_id FROM public.booking_leistungen bl WHERE bl.booking_id = NEW.id AND NEW.raum_service_ids IS NULL
+    ) ids LEFT JOIN public.services s ON s.id = ids.id
+  LOOP
+    IF leistung.id IS NULL OR COALESCE(leistung.owner_id, leistung.user_id) IS DISTINCT FROM NEW.owner_id
+       OR leistung.business_id IS DISTINCT FROM NEW.business_id THEN
+      RAISE EXCEPTION 'Leistung gehört nicht zu diesem Mandanten oder Standort.' USING ERRCODE = '23514';
+    END IF;
+    erforderlich := erforderlich || leistung.raum_ausstattung;
+    hat_leistung := true;
+    online := online AND COALESCE(leistung.is_online_meeting, false);
+  END LOOP;
+  IF NEW.group_parent_id IS NOT NULL THEN
+    SELECT * INTO eltern FROM public.bookings WHERE id = NEW.group_parent_id;
+    IF NOT FOUND OR eltern.owner_id IS DISTINCT FROM NEW.owner_id OR eltern.business_id IS DISTINCT FROM NEW.business_id THEN
+      RAISE EXCEPTION 'Gruppentermin gehört nicht zu diesem Mandanten oder Standort.' USING ERRCODE = '23514';
+    END IF;
+    NEW.room_id := eltern.room_id;
+    NEW.room_automatisch := eltern.room_automatisch;
+    RETURN NEW;
+  END IF;
+  IF NOT automatisch THEN
+    NEW.room_automatisch := false;
+    RETURN NEW;
+  END IF;
+  NEW.room_id := NULL;
+  NEW.room_automatisch := false;
+  IF NEW.hausbesuch IS TRUE OR NEW.status IN ('cancelled', 'no_show') THEN RETURN NEW; END IF;
+  IF hat_leistung AND online THEN RETURN NEW; END IF;
+  SELECT COALESCE(array_agg(DISTINCT e ORDER BY e), '{}') INTO erforderlich FROM unnest(erforderlich) e;
+  IF cardinality(erforderlich) = 0 AND NOT EXISTS (
+    SELECT 1 FROM public.rooms r WHERE r.owner_id = NEW.owner_id
+      AND r.business_id IS NOT DISTINCT FROM NEW.business_id AND r.aktiv
+  ) THEN RETURN NEW; END IF;
+  IF NEW.start_time IS NULL OR NEW.end_time IS NULL OR NEW.end_time <= NEW.start_time THEN
+    RAISE EXCEPTION 'Für die Raumzuordnung werden Beginn und Ende des Termins benötigt.' USING ERRCODE = '23514';
+  END IF;
+  SELECT r.id INTO geeignet FROM public.rooms r
+  WHERE r.owner_id = NEW.owner_id AND r.business_id IS NOT DISTINCT FROM NEW.business_id
+    AND r.aktiv AND r.ausstattung @> erforderlich
+    AND r.plaetze > (
+      SELECT count(*) FROM public.bookings b WHERE b.owner_id = NEW.owner_id AND b.room_id = r.id
+        AND b.id IS DISTINCT FROM NEW.id AND b.group_parent_id IS NULL
+        AND b.status IS DISTINCT FROM 'cancelled' AND b.status IS DISTINCT FROM 'no_show'
+        AND b.start_time < NEW.end_time AND b.end_time > NEW.start_time
+    ) ORDER BY r.sort, r.name, r.id LIMIT 1;
+  IF geeignet IS NULL THEN
+    RAISE EXCEPTION 'Kein freier Raum mit der benötigten Ausstattung am Terminstandort verfügbar. Bitte Zeit oder Raumwahl prüfen.' USING ERRCODE = 'P0001';
+  END IF;
+  NEW.room_id := geeignet;
+  NEW.room_automatisch := true;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.booking_raum_automatisch() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.bookings_room_mandant()
  RETURNS trigger
@@ -5499,6 +5633,25 @@ $function$
 ;
 ALTER FUNCTION public.public_praxis_sector(p_owner_id uuid) OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.raum_ausstattung_gueltig(punkte text[])
+ RETURNS boolean
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO 'pg_catalog'
+AS $function$
+  SELECT punkte IS NOT NULL
+    AND COALESCE(array_ndims(punkte), 1) = 1
+    AND cardinality(punkte) <= 30
+    AND NOT EXISTS (
+      SELECT 1 FROM unnest(punkte) punkt
+      WHERE punkt IS NULL OR char_length(punkt) NOT BETWEEN 1 AND 80
+        OR punkt <> btrim(punkt, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF')
+    )
+    AND cardinality(punkte) = (SELECT count(DISTINCT punkt) FROM unnest(punkte) punkt);
+$function$
+;
+ALTER FUNCTION public.raum_ausstattung_gueltig(punkte text[]) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_created_by uuid, p_betrag_eur numeric, p_zahlungsdatum date, p_gegenkonto_code text, p_gegenkonto_label text, p_restbetrag_modus text, p_ausbuchungskonto_code text DEFAULT NULL::text, p_ausbuchungskonto_label text DEFAULT NULL::text, p_bemerkung text DEFAULT NULL::text, p_zahlart text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -6523,6 +6676,8 @@ CREATE TRIGGER trg_booking_hauptleistung AFTER INSERT OR DELETE OR UPDATE ON boo
 
 CREATE TRIGGER trg_booking_leistung_owner BEFORE INSERT OR UPDATE OF booking_id, owner_id ON booking_leistungen FOR EACH ROW EXECUTE FUNCTION pruefe_booking_leistung_owner();
 
+CREATE TRIGGER trg_booking_raum_leistungen AFTER INSERT OR DELETE OR UPDATE ON booking_leistungen FOR EACH ROW EXECUTE FUNCTION booking_leistung_raum_nachpruefen();
+
 CREATE TRIGGER trg_prevent_booking_status_korrekturen_mod BEFORE DELETE OR UPDATE ON booking_status_korrekturen FOR EACH ROW EXECUTE FUNCTION prevent_booking_status_korrekturen_mod();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON booking_status_korrekturen FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -6531,6 +6686,8 @@ CREATE TRIGGER codex_192_booking_after_cancel AFTER UPDATE OF status ON bookings
 
 CREATE TRIGGER codex_192_booking_before_write BEFORE INSERT OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION codex_192_booking_before_write();
 
+CREATE TRIGGER trg_booking_gruppe_raum AFTER UPDATE OF room_id ON bookings FOR EACH ROW EXECUTE FUNCTION booking_gruppe_raum_nachziehen();
+
 CREATE TRIGGER trg_booking_verordnung_owner BEFORE INSERT OR UPDATE OF verordnung_id, owner_id ON bookings FOR EACH ROW EXECUTE FUNCTION pruefe_booking_verordnung_owner();
 
 CREATE TRIGGER trg_check_booking_closed_day BEFORE INSERT OR UPDATE OF start_time, business_id ON bookings FOR EACH ROW EXECUTE FUNCTION fn_check_booking_closed_day();
@@ -6538,6 +6695,8 @@ CREATE TRIGGER trg_check_booking_closed_day BEFORE INSERT OR UPDATE OF start_tim
 CREATE TRIGGER trg_normalize_booking_phone BEFORE INSERT OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION trg_normalize_booking_phone_fn();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON bookings FOR EACH ROW EXECUTE FUNCTION set_bookings_business_id_default();
+
+CREATE TRIGGER trg_zy_booking_room_auto BEFORE INSERT OR UPDATE OF room_id, service_id, raum_service_ids, start_time, end_time, business_id, owner_id, group_parent_id, hausbesuch, status ON bookings FOR EACH ROW EXECUTE FUNCTION booking_raum_automatisch();
 
 CREATE TRIGGER trg_zz_booking_room BEFORE INSERT OR UPDATE OF room_id, owner_id, user_id, business_id ON bookings FOR EACH ROW EXECUTE FUNCTION bookings_room_mandant();
 
@@ -7984,6 +8143,12 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=auth_tenant_id() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=belegliste_storno_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_gruppe_raum_nachziehen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_gruppe_raum_nachziehen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_leistung_raum_nachpruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_leistung_raum_nachpruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_raum_automatisch() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=booking_raum_automatisch() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=bookings_room_mandant() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=bookings_room_mandant() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=box(box3d) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -10845,6 +11010,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_c column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_c column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=search_diagnosen(p_q text, p_bereich text, p_kind text, p_limit column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
