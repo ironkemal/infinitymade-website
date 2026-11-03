@@ -23,7 +23,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261103n" />
+  <link rel="stylesheet" href="dashboard.css?v=20261103mail2" />
   <link rel="stylesheet" href="dashboard-feinschliff.css?v=20261021q" />
   <link rel="stylesheet" href="praxura-design.css?v=20261025v104" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
@@ -4610,7 +4610,7 @@
 
   <!-- ===== MODAL: B2B CONFIG ===== -->
   <div class="modal-overlay" id="b2bConfigModal" hidden>
-    <div class="modal" style="max-width:460px;">
+    <div class="modal mail-konfiguration">
       <div class="modal-header">
         <span class="modal-title">E-Mail Konfiguration</span>
         <button class="modal-close" data-modal="b2bConfigModal">✕</button>
@@ -4631,15 +4631,16 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">System-Prompt für alle Nachrichten</label>
+          <label class="form-label">KI-Schreibanweisung</label>
           <textarea class="form-input" id="cfgSystemPrompt" rows="4"
             placeholder="z. B. Antworte immer freundlich und professionell. Erwähne am Ende jedes E-Mails den Datenschutzhinweis..."></textarea>
-          <div class="form-hint">Dieser Prompt wird jeder ausgehenden E-Mail vorangestellt.</div>
+          <div class="form-hint">Diese Anweisung steuert nur KI-Entwürfe und wird nicht an Empfänger angehängt.</div>
         </div>
       </div>
+      <div class="mail-signatur-editor" id="mailSignaturEditor"></div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="b2bConfigModal">Abbrechen</button>
-        <button class="btn-primary" id="b2bConfigSaveBtn">Speichern</button>
+        <button class="btn-primary" id="b2bConfigSaveBtn">Absender &amp; KI speichern</button>
       </div>
     </div>
   </div>
@@ -4672,6 +4673,7 @@
         <textarea class="compose-body" id="composeBody" placeholder="E-Mail-Inhalt..."></textarea>
         <button class="copy-btn copy-body-btn" id="copyBodyBtn" title="Text kopieren">⎘ Text kopieren</button>
       </div>
+      <div class="mail-signatur-compose" id="mailSignaturCompose"></div>
       <div class="compose-footer">
         <button class="btn-ghost" id="composeDiscardBtn">Verwerfen</button>
         <button class="btn-primary" id="composeSendBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg> Senden</button>
@@ -5867,7 +5869,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261103p2"></script>
+  <script type="module" src="dashboard.js?v=20261103mail2"></script>
 </body>
 
 </html>

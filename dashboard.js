@@ -1,10 +1,11 @@
+import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
 import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261103raum';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
-import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261030k4';
-import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261102w3';
+import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
+import { runMailDraftInUi, requestKiTask, makeKiUiDependencies, refreshKiControls } from './module/ki-client.js?v=20261103mail1';
 import { zeigeKiRueckfrageDialog } from './module/ki-rueckfrage.js?v=20261030k4';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261005a';
@@ -17,7 +18,7 @@ import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261030k4';
-import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
+import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261103mail1'; // Box-Anpassungen (K2b.15)
 import { attachDiagnoseSearch, attachHeilmittelSearch } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
@@ -10305,6 +10306,7 @@ document.getElementById('b2cComposeBtn').addEventListener('click', () => {
 });
 
 async function checkB2cSetup() {
+  refreshKiControls({apiBase: API + '/ai', getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token, isOwner: () => currentProfile?.role === 'owner'});
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
   const setupDone = IST_KUTU || (currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email); // Box: kein Gmail, Versand per mailto (K4)
   document.getElementById('b2cSetupCard').hidden = !!setupDone;
@@ -10353,9 +10355,10 @@ document.getElementById('b2cConfigBtn').addEventListener('click', () => {
     document.getElementById('cfgGmailDot'),
     document.getElementById('cfgGmailLabel'),
     document.getElementById('cfgGmailBtn'));
-  openModal('b2bConfigModal');
+  getMailSignaturen().oeffnen(); openModal('b2bConfigModal');
 });
 
+let mailSignaturen; const getMailSignaturen = () => mailSignaturen ||= verbindeMailSignaturen({supabase,getProfil:()=>currentProfile,getUserId:()=>currentSession.user.id,showToast});
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 let mailPreviewLeadId = null;
@@ -10428,7 +10431,7 @@ document.getElementById('b2bConfigBtn').addEventListener('click', () => {
     document.getElementById('cfgGmailDot'),
     document.getElementById('cfgGmailLabel'),
     document.getElementById('cfgGmailBtn'));
-  openModal('b2bConfigModal');
+  getMailSignaturen().oeffnen(); openModal('b2bConfigModal');
 });
 
 document.getElementById('cfgGmailBtn').addEventListener('click', () => startGmailOAuth('config'));
@@ -10457,7 +10460,7 @@ function openComposeModal(draft) {
   document.getElementById('composeSubject').value = draft.subject || '';
   document.getElementById('composeBody').value = draft.body || '';
   document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail || currentSession.user.email;
-  openModal('emailComposeModal');
+  getMailSignaturen().entwurf(); openModal('emailComposeModal');
 }
 
 document.getElementById('composeDiscardBtn').addEventListener('click', () => {
@@ -10484,7 +10487,7 @@ document.getElementById('copySubjectBtn').addEventListener('click', () => {
   copyWithFeedback(document.getElementById('copySubjectBtn'), document.getElementById('composeSubject').value);
 });
 document.getElementById('copyBodyBtn').addEventListener('click', () => {
-  copyWithFeedback(document.getElementById('copyBodyBtn'), document.getElementById('composeBody').value);
+  copyWithFeedback(document.getElementById('copyBodyBtn'), [document.getElementById('composeBody').value,getMailSignaturen().text()].filter(Boolean).join('\n\n'));
 });
 
 document.getElementById('composeSendBtn').addEventListener('click', async () => {
@@ -10494,8 +10497,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   const body = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
 
-  const systemPrompt = currentProfile.system_prompt?.trim();
-  const fullBody = systemPrompt ? body + '\n\n---\n' + systemPrompt : body;
+  const signatur = getMailSignaturen().auswahl();
 
   const btn = document.getElementById('composeSendBtn');
   btn.disabled = true; btn.textContent = '⏳';
@@ -10507,7 +10509,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
       body: JSON.stringify({
         userId: currentSession.user.id,
         to_email: toEmail, to_name: toName,
-        subject, body: fullBody,
+        subject, body, signatur,
         sender_name: currentProfile.b2b_sender_name || ''
       })
     });
@@ -10757,10 +10759,6 @@ document.getElementById('setBrandingLogo')?.addEventListener('input', e => updat
 // ---------------------------------------------------------------------------
 // Praxis-Logo hochladen + zuschneiden (Konsey 2026-08-12)
 //
-// Vorher gab es hier nur ein URL-Feld — der Nutzer musste sein Logo erst
-// irgendwo anders hosten. Jetzt: einmal hochladen, danach steht das Logo auf
-// jeder Rechnung und Quittung (die Vorlagen lesen praxis_logo_url bereits).
-//
 // Seitenverhältnis ist bewusst standardmäßig FREI, nicht rund: Praxis-Logos
 // sind meist Wortmarken, ein Kreis schneidet den Schriftzug ab. Rund bleibt
 // als Preset verfügbar.
@@ -10860,15 +10858,9 @@ document.getElementById('setBrandingLogo')?.addEventListener('input', e => updat
     if (!blob) { showToast('Bildverarbeitung fehlgeschlagen', 'error'); return; }
 
     const userId = currentSession.user.id;
-    const path = `${userId}/praxis-logo-${Date.now()}.png`;
     showToast('Logo wird hochgeladen…');
     try {
-      const { error: upErr } = await supabase.storage
-        .from('avatars').upload(path, blob, { upsert: true, contentType: 'image/png' });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-      const logoUrl = urlData?.publicUrl;
-      if (!logoUrl) throw new Error('URL fehlgeschlagen');
+      const logoUrl = await ladePraxisLogoHoch(supabase, userId, blob);
 
       const { error: dbErr } = await supabase.from('profiles')
         .update({ praxis_logo_url: logoUrl }).eq('id', userId);

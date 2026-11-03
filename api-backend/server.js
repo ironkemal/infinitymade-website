@@ -1,3 +1,4 @@
+import { mailMitSignatur, pruefeSignatur } from './lib/mail-signatur.js';
 // Sentry MUST be initialised before any other import so it can instrument them.
 import './instrument.js';
 import * as Sentry from '@sentry/node';
@@ -727,11 +728,11 @@ app.get('/api/calendar/google-callback', async (req, res) => {
 
 app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
   const userId = req.auth.userId;  // pin to authenticated user, never trust body
-  const { to_email, to_name, subject, body, sender_name } = req.body;
-  if (!to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
+  const { to_email, to_name, subject, body, sender_name, signatur } = req.body;
+  if (typeof body !== 'string' || body.length > 50000 || !to_email || !subject || !body || !pruefeSignatur(signatur)) return res.status(400).json({ error: 'Ungültige E-Mail oder Fußzeile' });
   try {
     const to = to_name ? `${to_name} <${to_email}>` : to_email;
-    const { messageId } = await sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, text: body, senderName: sender_name });
+    const { messageId } = await sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, ...mailMitSignatur(body, signatur), senderName: sender_name });
     res.json({ success: true, messageId });
   } catch (e) {
     // "Gmail token" wording is what the front-end matches to surface the reconnect toast.

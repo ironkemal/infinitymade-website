@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getKiConfig,updateOwnerOptIn,requestKiTask,createKiSourceGuard,validateKiChallenge} from './ki-client.js';
+import {getKiConfig,updateOwnerOptIn,requestKiTask,createKiSourceGuard,validateKiChallenge,refreshKiControls} from './ki-client.js';
 const state={effective:true,mode:'direkt',mailReady:true,capabilities:{freeText:true,mailDraft:true,appointmentDraft:true}};
 const wire={success:true,active:true,mode:'direkt',operatorReady:true,ownerActive:true,mailReady:true,capabilities:state.capabilities,optIn:{informationVersion:'2026-10-30-v1',decidedAt:'2026-10-08T12:00:00Z'}};
 const response=(data,status=200)=>({ok:status>=200&&status<300,status,json:async()=>data});
@@ -26,3 +26,79 @@ test('edit while getting fresh token blocks retry',async()=>{let n=0,t=0,dirty=f
 test('jeton opens the same masking challenge as direkt',async()=>{let opened=0;await assert.rejects(()=>requestKiTask('b2c-draft',{},taskDeps({getKiConfig:async()=>({...state,mode:'jeton'}),fetchImpl:async()=>response({code:'KI_RUECKFRAGE',challenge:challenge()},409),zeigeKiRueckfrageDialog:async()=>{opened++;return null;}})),{code:'KI_RUECKFRAGE_ABGEBROCHEN'});assert.equal(opened,1);});
 test('source guard remembers edit then undo and programmatic changes, cleans listeners',()=>{const field=new EventTarget();field.value='first';const guard=createKiSourceGuard([field]);field.value='next';assert.equal(guard.isSourceEdited(),true);field.value='first';field.dispatchEvent(new Event('input'));assert.equal(guard.isSourceEdited(),true);guard.dispose();});
 test('challenge strict bounds and expiry',()=>{const c=challenge();assert.equal(validateKiChallenge(c),true);for(const patch of [{expiresAt:Date.now()-1},{expiresAt:Date.now()+600000},{candidates:[...c.candidates,...c.candidates]},{challengeId:null}])assert.equal(validateKiChallenge({...c,...patch}),false);});
+
+for (const [patch, code] of [
+  [{mode:'aus'}, 'KI_DEAKTIVIERT'],
+  [{operatorReady:false,active:false}, 'KI_BETREIBER_FREIGABE_FEHLT'],
+  [{ownerActive:false,active:false}, 'KI_EINWILLIGUNG_FEHLT'],
+  [{mailReady:false,capabilities:{freeText:true,mailDraft:false}}, 'KI_MAIL_NICHT_FREIGEGEBEN'],
+  [{capabilities:{freeText:false,mailDraft:true}}, 'KI_FREITEXT_NICHT_FREIGEGEBEN'],
+]) test(`mail status explains gate without exposing server reason: ${code}`,async()=>{
+  const cfg=await getKiConfig({getToken:async()=>'synthetic',fetchImpl:async()=>response({...wire,...patch,disabledReason:'PRIVATE_SENTINEL'})});
+  assert.equal(cfg.disabledReason,code);
+  assert.ok(cfg.disabledReasonText.length>20);
+  assert.ok(!JSON.stringify(cfg).includes('PRIVATE_SENTINEL'));
+  assert.equal(cfg.capabilities.mailDraft,false);
+});
+test('invalid success response cannot advertise active mail',async()=>{
+  const cfg=await getKiConfig({getToken:async()=>'synthetic',fetchImpl:async()=>response({...wire,success:false,disabledReason:'PRIVATE_SENTINEL'})});
+  assert.equal(cfg.effective,false);
+  assert.equal(cfg.capabilities.mailDraft,false);
+  assert.ok(!JSON.stringify(cfg).includes('PRIVATE_SENTINEL'));
+});
+
+function controlsFixture() {
+  const nodes=[];
+  function node() {
+    const el={id:'',style:{},children:[],listeners:{},attrs:{},disabled:false,
+      setAttribute(k,v){this.attrs[k]=v;},
+      addEventListener(k,fn){this.listeners[k]=fn;},
+      appendChild(child){this.children.push(child);},
+      insertBefore(child){this.children.push(child);},
+      click(){this.listeners.click?.();},
+    };
+    Object.defineProperty(el,'textContent',{get(){return this.text || '';},set(v){this.text=v;this.children=[];}});
+    nodes.push(el);return el;
+  }
+  const doc={getElementById:id=>nodes.find(n=>n.id===id),createElement:node,querySelector:()=>settings};
+  const settings=node();let opened=0;settings.listeners.click=()=>opened++;
+  for(const prefix of ['', 'b2c']) {
+    const parent=node(), row=node();row.parentElement=parent;
+    for(const suffix of ['Input','SendBtn','VoiceBtn']) {
+      const el=node();el.id=prefix ? `${prefix}Ai${suffix}` : `ai${suffix}`;el.parentElement=row;
+    }
+  }
+  return {doc,opened:()=>opened};
+}
+test('controls show accessible gate reason, settings action and clear stale status when ready',async()=>{
+  const {doc,opened}=controlsFixture();
+  const deps={document:doc,getToken:async()=>'synthetic',fetchImpl:async()=>response({...wire,ownerActive:false,active:false})};
+  await refreshKiControls(deps);
+  for(const id of ['aiInput','b2cAiInput']) {
+    const input=doc.getElementById(id),status=doc.getElementById(`${id}Status`);
+    assert.equal(input.disabled,true);
+    assert.equal(status.attrs.role,'status');
+    assert.equal(input.attrs['aria-describedby'],status.id);
+    assert.match(status.textContent,/Einwilligung/);
+    status.children[0].click();
+  }
+  assert.equal(opened(),2);
+  await refreshKiControls({...deps,fetchImpl:async()=>response(wire)});
+  for(const id of ['aiInput','b2cAiInput']) {
+    assert.equal(doc.getElementById(id).disabled,false);
+    const status=doc.getElementById(`${id}Status`);
+    assert.match(status.textContent,/bereit/);
+    assert.equal(status.children.length,0);
+  }
+});
+test('late refresh cannot re-enable controls after newer disabled result',async()=>{
+  const {doc}=controlsFixture();let finish,started;
+  const waiting=new Promise(r=>{started=r;});
+  const deps={document:doc,getToken:async()=>'synthetic'};
+  const old=refreshKiControls({...deps,fetchImpl:async()=>{started();return new Promise(r=>{finish=r;});}});
+  await waiting;
+  await refreshKiControls({...deps,fetchImpl:async()=>response({...wire,ownerActive:false,active:false})});
+  finish(response(wire));await old;
+  assert.equal(doc.getElementById('aiInput').disabled,true);
+  assert.match(doc.getElementById('aiInputStatus').textContent,/Einwilligung/);
+});

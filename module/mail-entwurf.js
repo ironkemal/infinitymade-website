@@ -39,7 +39,7 @@ export function composeMailVorbereiten(doc = globalThis.document) {
   knopf.textContent = 'Mail vorbereiten';
   knopf.addEventListener('click', () => {
     const wert = id => (doc.getElementById(id)?.value || '').trim();
-    const offen = mailEntwurfOeffnen({ to: wert('composeToEmail'), subject: wert('composeSubject'), text: wert('composeBody') });
+    const offen = mailEntwurfOeffnen({ to: wert('composeToEmail'), subject: wert('composeSubject'), text: [wert('composeBody'), doc.getElementById('mailSignaturCompose')?.dataset?.signaturText || ''].filter(Boolean).join('\n\n') });
     if (!offen) { doc.getElementById('composeToEmail')?.focus(); return; }
     doc.querySelector('.modal-close[data-modal="emailComposeModal"]')?.click();
     const danach = globalThis._composePostFlow;

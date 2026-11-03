@@ -10,6 +10,18 @@ const offline = () => ({ effective:false, mode:'aus', operatorReady:false, owner
   capabilities:{mailDraft:false,appointmentDraft:false,freeText:false}, disabledReason:'KI_DEAKTIVIERT',
   disabledReasonText:'KI-Unterstützung ist deaktiviert oder derzeit nicht erreichbar.', informationVersion:null, decidedAt:null });
 
+// Only our own constant messages reach the UI, never server/provider error text.
+function mailDisabledReason({mode, effective, operatorReady, ownerActive, mailReady, capabilities}, employee) {
+  if (mode === 'aus') return ['KI_DEAKTIVIERT', 'KI-Dienst ist ausgeschaltet oder nicht eingerichtet. Bitte technische Freigabe prüfen lassen.'];
+  if (!employee && !operatorReady) return ['KI_BETREIBER_FREIGABE_FEHLT', 'Technische KI-Freigabe fehlt. Bitte Praxisadministrator kontaktieren.'];
+  if (!employee && !ownerActive) return ['KI_EINWILLIGUNG_FEHLT', 'KI-Einwilligung fehlt. Praxisinhaber kann sie unter Einstellungen prüfen.'];
+  if (!effective) return ['KI_NICHT_BEREIT', 'KI-Dienst ist derzeit nicht bereit. Manuelles Schreiben bleibt verfügbar.'];
+  if (!mailReady) return ['KI_MAIL_NICHT_FREIGEGEBEN', 'KI-Mail-Assistent ist technisch noch nicht freigegeben. Eine Gmail-Verbindung allein genügt nicht.'];
+  if (!capabilities.freeText) return ['KI_FREITEXT_NICHT_FREIGEGEBEN', 'KI-Textentwürfe sind technisch noch nicht freigegeben. Bitte Praxisadministrator kontaktieren.'];
+  if (!capabilities.mailDraft) return ['KI_MAIL_NICHT_FREIGEGEBEN', 'KI-Mail-Assistent ist technisch noch nicht freigegeben. Manuelles Schreiben bleibt verfügbar.'];
+  return [null, null];
+}
+
 export async function getKiConfig(deps = {}) {
   try {
     const token = await deps.getToken?.();
@@ -20,6 +32,7 @@ export async function getKiConfig(deps = {}) {
     });
     if (!res.ok) return offline();
     const data = await res.json();
+    if (!data || (employee ? data.ok !== true : data.success !== true)) return offline();
     const mode = ['aus','direkt','jeton'].includes(data.mode) ? data.mode : 'aus';
     const valid = (employee ? data.ok === true : data.success === true) && ['direkt','jeton'].includes(mode);
     const effective = valid && data.active === true && (employee || (data.operatorReady === true && data.ownerActive === true));
@@ -29,12 +42,13 @@ export async function getKiConfig(deps = {}) {
       mailDraft:effective && data.capabilities?.freeText === true && data.capabilities?.mailDraft === true,
       appointmentDraft:effective && data.capabilities?.appointmentDraft === true
     };
-    return { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
+    const config = { ...offline(), mode,effective,operatorReady:data.operatorReady === true,ownerActive:data.ownerActive === true,
       mailReady:data.mailReady === true || (employee && capabilities.appointmentDraft),freeText:capabilities.freeText,capabilities,
       diktat_verfuegbar,
-      disabledReason:effective ? null : 'KI_DEAKTIVIERT',disabledReasonText:effective ? null : offline().disabledReasonText,
       informationVersion:typeof data.optIn?.informationVersion === 'string' ? data.optIn.informationVersion : null,
       decidedAt:typeof data.optIn?.decidedAt === 'string' && Number.isFinite(Date.parse(data.optIn.decidedAt)) ? data.optIn.decidedAt : null };
+    [config.disabledReason, config.disabledReasonText] = mailDisabledReason(config, employee);
+    return config;
   } catch { return offline(); }
 }
 export async function isKiEffectivelyEnabled(deps = {}) { return (await getKiConfig(deps)).effective === true; }
@@ -149,12 +163,45 @@ export function makeKiUiDependencies(deps, sourceId, getSource = () => null) {
   const guard = createKiSourceGuard(source ? [source] : [], () => [source?.value,getSource()]);
   return {...deps,...guard};
 }
+const controlRefreshes = new WeakMap();
 export async function refreshKiControls(deps = {}) {
   const doc = deps.document || globalThis.document;
+  const generation = doc ? (controlRefreshes.get(doc) || 0) + 1 : 0;
+  if (doc) controlRefreshes.set(doc, generation);
   const ids = ['aiInput','aiSendBtn','aiVoiceBtn','b2cAiInput','b2cAiSendBtn','b2cAiVoiceBtn'];
   ids.forEach(id=>{const el=doc?.getElementById(id);if(el) el.disabled=true;});
   const cfg = await getKiConfig(deps);
-  ids.forEach(id=>{const el=doc?.getElementById(id);if(el) {el.disabled=id.endsWith('VoiceBtn') || cfg.capabilities.mailDraft !== true;el.title=el.disabled ? 'KI-E-Mail-Assistent derzeit deaktiviert. Manuelles Schreiben bleibt verfügbar.' : '';}});
+  if (doc && controlRefreshes.get(doc) !== generation) return cfg;
+  ids.forEach(id=>{const el=doc?.getElementById(id);if(el) {el.disabled=id.endsWith('VoiceBtn') || cfg.capabilities.mailDraft !== true;el.title=el.disabled ? cfg.disabledReasonText || 'KI-E-Mail-Assistent derzeit deaktiviert. Manuelles Schreiben bleibt verfügbar.' : '';}});
+  for (const inputId of ['aiInput', 'b2cAiInput']) {
+    const input = doc?.getElementById(inputId);
+    if (!input?.parentElement?.parentElement) continue;
+    const statusId = `${inputId}Status`;
+    let status = doc.getElementById(statusId);
+    if (!status) {
+      status = doc.createElement('div');
+      status.id = statusId;
+      status.className = 'form-hint';
+      status.setAttribute('role', 'status');
+      status.style.cssText = 'padding:10px 16px;line-height:1.5;';
+      input.parentElement.parentElement.insertBefore(status, input.parentElement);
+    }
+    input.setAttribute('aria-describedby', statusId);
+    status.textContent = cfg.capabilities.mailDraft === true
+      ? 'KI-Mail-Assistent bereit. Entwürfe werden vor dem Versand von Ihnen geprüft.'
+      : `${cfg.disabledReasonText || offline().disabledReasonText} `;
+    if (cfg.capabilities.mailDraft !== true) {
+      const button = doc.createElement('button');
+      button.type = 'button';
+      button.className = 'btn-outline-sm';
+      button.textContent = 'KI-Einstellungen';
+      button.addEventListener('click', () => {
+        if (deps.openSettings) deps.openSettings();
+        else doc.querySelector('[data-panel="settings"]')?.click();
+      });
+      status.appendChild(button);
+    }
+  }
   try { attachDiktatToMailInputs({ ...deps, diktat_verfuegbar: cfg.diktat_verfuegbar }); } catch {}
   return cfg;
 }

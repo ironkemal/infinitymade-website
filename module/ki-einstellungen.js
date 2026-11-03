@@ -1,4 +1,4 @@
-import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261102w3';
+import { getKiConfig, updateOwnerOptIn, CURRENT_EINWILLIGUNG_VERSION, refreshKiControls } from './ki-client.js?v=20261103mail1';
 
 export async function mountKiEinstellungen(container, deps = {}) {
   if (!container) return;

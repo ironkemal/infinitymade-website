@@ -52,6 +52,7 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 ## 1. Kern: Mandanten, Rollen, Zugang
 
 ### `profiles`
+- **Lokal geplant, Migration 0105 (nicht live):** `mail_signatur_einstellungen jsonb` hält bis zu zehn strukturierte Mail-Fußzeilen und `standard_id` auf der Owner-Zeile. Kontaktdaten/Logo werden aus bestehendem Branding vorbelegt; kein beliebiges HTML, kein Patientendatum. Leser/Schreiber: `module/mail-signatur-anbindung.js`, bestehende eigene-Profil-RLS; Mailrenderer escaped alle Felder. `system_prompt` bleibt KI-Anweisung und wird nicht mehr als Fußzeile versendet. Bestehender DSGVO-Kontoexport umfasst Profilspalten, keine neue Tabelle oder Storage-Klasse. Live-Schemaexport bleibt unverändert bis autorisierter Anwendung.
 - **Warum:** Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.
 - **Seit:** spätestens 06.05.2026 · `extend_profiles_for_multi_tenant` (die Tabelle ist älter als die Migrationshistorie; `create_core_tables_safe` vom 18.06. ist nur ein `IF NOT EXISTS`-Netz)
 - **Status:** aktiv

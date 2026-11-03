@@ -21,7 +21,7 @@
  * die Tabelle `therapieberichte` (Migration 0087) ist für den Browser nur lesbar.
  */
 import { API_BASE } from '../supabase-config.js';
-import { mailtoLink } from './mail-entwurf.js?v=20261007a';
+import { mailtoLink } from './mail-entwurf.js?v=20261103mail1';
 import { druckeFaxDeckblatt } from './fax-deckblatt.js?v=20261031a';
 
 'use strict';

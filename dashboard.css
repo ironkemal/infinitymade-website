@@ -8764,7 +8764,8 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .stm-text pre { white-space: pre-wrap; font-family: inherit; margin: 6px 0 0; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
 .stm-ergebnis { margin-top: 8px; font-size: 13px; }
 
-/* ============================================================
+/* =====================================================}
+
    Physio Touch-Ziele und iOS-Zoom (03.11.2026, mobil-ui)
    Gilt nur auf Touch-Geraeten oder bis 1024 px — Desktop-Dichte und das
    Muster-13-Papierlayout bleiben ab 1025 px mit Maus unveraendert.
@@ -8842,4 +8843,24 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 /* Telefon: Marke weicht dem Standort-Chip (Hamburger + Chip tragen die Orientierung) */
 @media (max-width: 480px) {
   .topbar .brand { display: none; }
+=======
+/* Structured mail footers share the existing form and compose surfaces. */
+.mail-konfiguration { width: min(760px, calc(100vw - 32px)); max-width: 760px; }
+.mail-signatur-editor { padding: 0 24px 20px; }
+.mail-signatur-editor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.mail-signatur-editor h3 { margin: 12px 0 8px; }
+.mail-signatur-felder { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.mail-signatur-felder label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; min-width: 0; }
+.mail-signatur-aktionen { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
+.mail-signatur-aktionen select { flex: 1; min-width: 140px; }
+.mail-signatur-aktionen > label { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.mail-signatur-aktionen input[type=file] { display: block; width: 100%; min-width: 0; max-width: 100%; margin-top: 6px; box-sizing: border-box; }
+.mail-signatur-vorschau { background: #fff; color: #333; border: 1px solid var(--border); padding: 16px; margin: 12px 0; overflow-wrap: anywhere; }
+.mail-signatur-vorschau table { width: auto; max-width: 100%; }
+.mail-signatur-compose { padding: 12px 20px; border-top: 1px solid var(--border); max-height: 260px; overflow-y: auto; }
+.mail-signatur-editor :is(input:not([type=checkbox]),select,button), .mail-signatur-compose select { min-height: 44px; }
+@media (max-width: 600px) {
+  .mail-signatur-felder { grid-template-columns: minmax(0,1fr); }
+  .mail-signatur-editor { padding-inline: 16px; }
+  .mail-signatur-compose { padding-inline: 12px; }
 }

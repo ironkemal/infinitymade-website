@@ -25,7 +25,7 @@ function b64Zeilen(buf) {
  * @param {{from:string,to:string,subject:string,text:string,replyTo?:string,
  *          attachments?:Array<{filename:string,content:Buffer,contentType?:string}>}} m
  */
-export function baueMimeNachricht({ from, to, subject, text, replyTo, attachments = [] }) {
+export function baueMimeNachricht({ from, to, subject, text, html, replyTo, attachments = [] }) {
   const kopf = [
     `From: ${ohneZeilenumbruch(from)}`,
     `To: ${ohneZeilenumbruch(to)}`,
@@ -34,12 +34,15 @@ export function baueMimeNachricht({ from, to, subject, text, replyTo, attachment
     'MIME-Version: 1.0',
   ];
   const textTeil = Buffer.from(String(text || ''), 'utf8');
-  if (!attachments.length) {
-    return [...kopf, 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', b64Zeilen(textTeil)].join(CRLF);
-  }
+  const textPart = ['Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', b64Zeilen(textTeil)].join(CRLF);
+  const alternative = `praxura-alt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  const inhalt = html ? [`Content-Type: multipart/alternative; boundary="${alternative}"`, '',
+    `--${alternative}`, textPart, `--${alternative}`, 'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64', '', b64Zeilen(Buffer.from(String(html),'utf8')), `--${alternative}--`, ''].join(CRLF) : textPart;
+  if (!attachments.length) return [...kopf, inhalt].join(CRLF);
   const grenze = `praxura-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   const teile = [
-    [`--${grenze}`, 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', b64Zeilen(textTeil)].join(CRLF),
+    [`--${grenze}`, inhalt].join(CRLF),
     ...attachments.map((a) => {
       const name = ohneZeilenumbruch(a.filename).replace(/"/g, '');
       return [`--${grenze}`, `Content-Type: ${a.contentType || 'application/octet-stream'}; name="${name}"`,
@@ -63,7 +66,7 @@ function fehler(code, status, text) {
  *   gmail_reauth_required — Token tot (wird gelöscht, Dashboard fordert Neuverbindung)
  *   GMAIL_FEHLER          — Gmail-API hat abgelehnt
  */
-export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, text, attachments = [], senderName, replyTo }) {
+export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeout, userId, to, subject, text, html, attachments = [], senderName, replyTo }) {
   const [{ data: profile, error: pErr }, { data: gmailToken }] = await Promise.all([
     supabase.from('profiles').select('b2b_from_email').eq('id', userId).single(),
     supabase.rpc('get_gmail_token', { p_user_id: userId }),
@@ -85,7 +88,7 @@ export async function sendeUeberGmail({ supabase, newOAuthClient, fetchWithTimeo
     throw fehler('gmail_reauth_required', 401, 'Gmail token expired — please reconnect Gmail in B2B setup');
   }
   const from = senderName ? `${b64Wort(senderName)} <${profile.b2b_from_email}>` : profile.b2b_from_email;
-  const raw = baueMimeNachricht({ from, to, subject, text, replyTo, attachments });
+  const raw = baueMimeNachricht({ from, to, subject, text, html, replyTo, attachments });
   const encoded = Buffer.from(raw).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const res = await fetchWithTimeout('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
