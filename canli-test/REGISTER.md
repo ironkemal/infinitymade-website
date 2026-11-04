@@ -2187,3 +2187,8 @@ Nebenwirkung: TEST-Patienten Müller/Größer/Übel/Ößle, VO 5-1, 6-1.
 ### Planung: gezielte Abschlussabnahme — 04.11.2026
 
 115 gezielte Tests und8 lokale Box-Adaptertests PASS. Integrierter UTC-Fix jetzt in fünf öffentlichen Dateien bytegleich zum aktuellen Produktcode bestätigt. Zwei unabhängige Agenten konkretisierten fehlende M3–M7-Konto-/Boxnachweise. Kein neuer Produktfehler belegt. Abnahmeplan und Zugangshürden: canli-test/2026-11-04-planung-abnahme.md. Connector -32600, keine verfügbare QA-Browsersitzung, keine bestätigte installierte Testbox; keine Ops-Haken geändert. MailSTOP/Kundenkonto-Testverbot gelten.
+
+
+### Planung: bestätigte QA-Inhabersitzung und Live-Teilabnahme — 04.11.2026
+
+Separate Physio-QA-Praxis und Inhaberrolle per Oberfläche bestätigt. Standortwochenmuster und Teilzeit-Anstellung gespeichert und nach vollem Reload wiedergefunden. Urlaub07.–13.12. mit Mo–Fr5AT/13Rest, nach Umstellung Mo–Mi3AT/15Rest,18Anspruch; Reload erhält Daten.390px kein Seitenüberlauf, Eingaben vollständig sichtbar. Herkunft zusätzlich auftauchenden31.12.-Eintrags ungeklärt, keine weiteren Schreibtests bis Koordinationsklärung. Kein Gesamtabschluss M4/M5; M6/M7 und Mitarbeitersicht offen. Details: canli-test/2026-11-04-planung-abnahme.md.

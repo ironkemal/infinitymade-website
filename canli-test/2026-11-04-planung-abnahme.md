@@ -27,3 +27,17 @@ Vorab Produkt-SHA, Ziel-URL, QA-Zuordnung und Rollen bestätigen, keine Geheimni
 ## Nächster Schritt
 
 Nutzer wurde nach Kontobezeichnung oder geöffneter autorisierter QA-Sitzung sowie vorhandener synthetischer Testbox gefragt. Support-Chat wurde nur zur Koordination vorhandener Zugänge/Reservierungen kontaktiert. Bis dahin keine Kontotests, keine Accountanlage oder Testdaten im Kundenkonto. Mail-/KI-Aktivierung bleibt eigener abgegrenzter Auftrag, keine Aufhebung des Mail-STOP durch allgemeine Autonomie.
+
+## Live-Teilabnahme nach bereitgestellter QA-Inhabersitzung
+
+QA-Zuordnung im Browser bestätigt: separate Physio-QA-Praxis, Inhaberrolle, zwei ausdrücklich benannte Teststandorte und synthetischer Testtherapeut vorhanden. Kundenkonto nicht geöffnet. Gemeinsamer Browser für diese Planungstests mit Support reserviert.
+
+Eigene persistente QA-Änderungen ausschließlich über UI:
+- Wochenmuster des vorhandenen Testtherapeuten: Montag Mitte, Dienstag Nord; vorher alle Kästchen leer. Nach vollständigem Dashboard-Neuladen und erneutem Öffnen dieselben zwei Kästchen gesetzt.
+- Anstellung erstmals gespeichert: Teilzeit,20 Wochenstunden,18 Urlaubstage. Nach vollständigem Neuladen identische Werte vorhanden.
+- Urlaub07.–13.12.2026 angelegt: zunächst bei Arbeitswoche Mo–Fr fünf Arbeitstage und13 Resttage angezeigt. Danach Arbeitswoche auf Mo–Mi reduziert (Do/Fr deaktiviert und gespeichert): derselbe Urlaub korrekt mit drei Arbeitstagen und15 Resttagen. Nach Neuladen Datum07.–13.12. und Saldo15/3/18 erhalten. Keine Datumsverschiebung beobachtet.
+- Bei tatsächlicher Viewportbreite390px: documentElement.scrollWidth390; Anstellungsfelder vollständig im Viewport (Beschäftigung x54–321, Stunden54–174, Jahresanspruch186–306). Kein horizontaler Seitenüberlauf. Screenshot im lokalen Browser-Artefaktspeicher, keine Kundendaten.
+
+Während erneuter Anzeige erschien zusätzlich Urlaub31.12.2026 mit0 Arbeitstagen. Dieser Eintrag wurde nicht von diesem Prüfer erzeugt; Herkunft nicht geklärt. Nicht als Produktfehler oder eigener Schreibnachweis verbucht. Weitere Schreibtests zur Vermeidung möglicher Paralleländerungen angehalten, Support zur Klärung benachrichtigt. Keine Löschung eigener oder fremder Testdaten.
+
+Damit nur Teilkriterien von M4/M5 live belegt, kein Gesamt-Haken: Kalenderfilter/Einzeltage/Stichtagsversion, Mitarbeiter-Nur-Lesen-/Fremdzugriff, Jahresgrenze und Sondertag bleiben offen. Kein Mailversand, keine Mailkonfiguration, keine Schemaänderung. Installierte Box weiterhin nicht nachgewiesen; laut Support auf Nutzerwunsch später.
