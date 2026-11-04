@@ -65,7 +65,7 @@ export const RX_FELDER = 'id,rezeptart,heilmittel,heilmittel_feld_text,heilmitte
   + 'heilmittel_typ_blanko,bericht_angefordert,pat_leitsymptomatik';
 
 /** Der Join vom Termin ueber die Sitzung zur Verordnung — in jede Terminabfrage einzusetzen. */
-export const RX_JOIN = `prescription_sessions(id,session_number,prescriptions(${RX_FELDER}))`;
+export const RX_JOIN = `prescription_sessions(id,session_number,heilmittel_index,prescriptions(${RX_FELDER}))`;
 
 export const TERMIN_SELECT = 'id,user_id,business_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,rezeptart,payment_method,no_show_session_links,verordnung_id,services(title,code,color,is_internal),' + RX_JOIN;
 

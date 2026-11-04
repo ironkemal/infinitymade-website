@@ -79,7 +79,7 @@ import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261021f';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20261101u';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
-import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten, physioKorrekturErlaubt, oeffnePhysioEinheitenDialog } from './verordnung-einheiten.js?v=20261103b';
+import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten, physioKorrekturErlaubt, oeffnePhysioEinheitenDialog } from './verordnung-einheiten.js?v=20261103q';
 import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20261102a';
 import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { emit } from './signal.js?v=20260813';
@@ -90,14 +90,23 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261103b';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261103q';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
-import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103n';
+import { terminZielToplam } from './sitzung-abgleich.js?v=20261103q';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103q';
 // Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
 import { mountTherapiebericht } from './therapiebericht.js?v=20261031a';
 
 export { formatMultiHeilmittelTitel as multiHeilmittelTitel };
+
+export function sitzungZielZahl(rx) {
+  if (!rx) return 0;
+  const ziel = terminZielToplam(rx);
+  if (ziel > 0) return ziel;
+  const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : []);
+  return sitzungen.length;
+}
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -307,7 +316,7 @@ function _summeHtml(summe, esc, ohneZuzahlung = false) {
  * Podologie: eine Zeile je `podologie_behandlungen` mit ihren HPNR-Positionen.
  * Physio: die erledigten Sitzungen.
  */
-function _verschreibung(rx, esc, quelle, summe) {
+function _verschreibung(rx, esc, quelle, summe, katalog) {
   if (quelle === 'podologie') {
     const behs = (Array.isArray(rx.podologie_behandlungen) ? rx.podologie_behandlungen : [])
       .slice()
@@ -345,10 +354,16 @@ function _verschreibung(rx, esc, quelle, summe) {
     .sort((a, b) => (a.session_number || 0) - (b.session_number || 0));
   if (!sitzungen.length) return _spaltenKasten('Verschreibung', _LEER('Noch keine erbrachte Sitzung.', esc), esc);
 
-  const zeilen = sitzungen.map(s => `<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--border);">
-      <span style="font-size:12px;color:var(--text-main);">${s.session_number ? `${s.session_number}. Sitzung` : 'Sitzung'}</span>
+  const zeilen = sitzungen.map(s => {
+    const itIdx = s.heilmittel_index ?? 0;
+    const it = Array.isArray(rx.heilmittel_items) ? rx.heilmittel_items[itIdx] : null;
+    const kuerzel = it ? kuerzelAusKatalog(it, katalog) : (rx.heilmittel_position || rx.heilmittel ? kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel, katalog) : '');
+    const kZusatz = kuerzel ? ` · ${kuerzel}` : '';
+    return `<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--border);">
+      <span style="font-size:12px;color:var(--text-main);">${s.session_number ? `${s.session_number}. Sitzung` : 'Sitzung'}${kZusatz}</span>
       <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${esc(s.bookings?.start_time ? _datum(s.bookings.start_time) : '—')}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   return _spaltenKasten('Verschreibung', zeilen, esc);
 }
@@ -480,9 +495,22 @@ function _termine(rx, esc, quelle, termine, katalog = null) {
 
   const zeile = (s, mitDatum) => {
     const itIdx = s.heilmittel_index ?? 0;
-    const it = multiItems ? multiItems[itIdx] : null;
-    const itName = it ? kuerzelAusKatalog(it, katalog) : '';
+    const it = multiItems ? multiItems[itIdx] : (Array.isArray(rx.heilmittel_items) ? rx.heilmittel_items[itIdx] : null);
+    const itName = it ? kuerzelAusKatalog(it, katalog) : (rx.heilmittel_position || rx.heilmittel ? kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel, katalog) : '');
     const istErledigt = s.status === 'done' || s.status === 'completed';
+
+    // Überzählige Sitzung: hängt an Termin, liegt aber über der verordneten Menge
+    let istUeberzaehlig = false;
+    if (s.booking_id && !istErledigt) {
+      if (multiItems && it) {
+        const itemZiel = it.doppelbehandlung ? Math.ceil((Number(it.einheiten) || 0) / 2) : (Number(it.einheiten) || 0);
+        const bisherigeItemSitzungen = sitzungen.filter(prev => (prev.heilmittel_index ?? 0) === itIdx && (prev.session_number || 0) <= (s.session_number || 0));
+        if (bisherigeItemSitzungen.length > itemZiel) istUeberzaehlig = true;
+      } else {
+        const gesamtZiel = rx.doppelbehandlung ? Math.ceil((Number(rx.anzahl_einheiten) || 0) / 2) : (Number(rx.anzahl_einheiten) || 0);
+        if ((s.session_number || 0) > gesamtZiel) istUeberzaehlig = true;
+      }
+    }
 
     let hmWidget = '';
     if (multiItems) {
@@ -494,14 +522,20 @@ function _termine(rx, esc, quelle, termine, katalog = null) {
         ).join('');
         hmWidget = `<select class="vord-session-hm-swap form-select" data-session-id="${s.id}" data-current-index="${itIdx}" data-rx-id="${rx.id}" style="font-size:11px;padding:1px 4px;max-width:140px;height:24px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-main);">${optionsHtml}</select>`;
       }
+    } else if (itName) {
+      hmWidget = `<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg-hover,#2d3748);color:var(--text-main);">${esc(itName)}</span>`;
     }
+
+    const datumOderWarnung = istUeberzaehlig
+      ? `<span class="badge-ueberzaehlig" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.15);color:var(--danger,#ef4444);font-weight:600;" title="Termin absagen oder verschieben">überzählig – Termin absagen oder verschieben</span>`
+      : `<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${mitDatum ? esc(_datumZeit(s.bookings?.start_time)) : 'ohne Termin'}</span>`;
 
     return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;">
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:12px;color:var(--text-main);font-weight:600;">${s.session_number ? `${s.session_number}.` : '·'}</span>
         ${hmWidget}
       </div>
-      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">${mitDatum ? esc(_datumZeit(s.bookings?.start_time)) : 'ohne Termin'}</span>
+      ${datumOderWarnung}
     </div>`;
   };
 
@@ -527,10 +561,11 @@ function _felderPhysio(rx, esc, opt = {}) {
   const arzt = rx.aerzte || {};
   const nummer = belegnummerText(rx, { patientennummer: p.patientennummer });
 
-  const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
+  const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : []);
   // CHECK status IN (planned, done, cancelled, no_show) — nur `done` zählt.
-  const erledigt = sitzungen.filter(s => s.status === 'done').length;
-  const sitzungText = sitzungen.length ? `${erledigt} von ${sitzungen.length} erledigt` : '—';
+  const erledigt = sitzungen.filter(s => s.status === 'done' || s.status === 'completed').length;
+  const gesamt = sitzungZielZahl(rx);
+  const sitzungText = gesamt ? `${erledigt} von ${gesamt} erledigt` : '—';
 
   const icd = [rx.icd10, rx.icd10_2].filter(Boolean).join(' · ');
   const leit = [rx.leitsymptomatik, rx.pat_leitsymptomatik].filter(Boolean).join(' · ');
@@ -774,8 +809,9 @@ function _nichtAufDemPapier(rx, esc, quelle, opt = {}) {
       ${_freitextBlock('Notizen', rx.notizen, esc)}`;
   }
 
-  const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
-  const erledigt = sitzungen.filter(s => s.status === 'done').length;
+  const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : []);
+  const erledigt = sitzungen.filter(s => s.status === 'done' || s.status === 'completed').length;
+  const gesamt = sitzungZielZahl(rx);
   return `
     ${_block('Nicht auf dem Formular', [
       _feld('Belegnummer', nummer, esc, { mono: true }),
@@ -783,7 +819,7 @@ function _nichtAufDemPapier(rx, esc, quelle, opt = {}) {
       _feld('Behandlungsbeginn', _datum(rx.behandlungsbeginn), esc),
       _feld('Rezept-Typ', rx.rezept_typ, esc),
       _feldEinheiten(rx, esc, erledigt, { quelle: 'physio', rolle: opt.rolle }),
-      _feld('Sitzungen', sitzungen.length ? `${erledigt} von ${sitzungen.length} erledigt` : '', esc),
+      _feld('Sitzungen', gesamt ? `${erledigt} von ${gesamt} erledigt` : '', esc),
       _feld('Zuzahlung kassiert am', _datum(rx.zuzahlung_kassiert_am), esc),
       _feld('Quelle', rx.quelle, esc),
       _feld('Angelegt am', _datum(rx.created_at), esc),
@@ -861,7 +897,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
           : (quelle === 'podologie' ? _felderPodo(rx, esc) : _felderPhysio(rx, esc, opt))}
       </div>
       <div style="flex:0 1 260px;min-width:230px;display:flex;flex-direction:column;gap:12px;margin-top:14px;">
-        ${_verschreibung(rx, esc, quelle, opt.summe)}
+        ${_verschreibung(rx, esc, quelle, opt.summe, opt.katalog)}
         ${_termine(rx, esc, quelle, opt.termine, opt.katalog)}
       </div>
     </div>

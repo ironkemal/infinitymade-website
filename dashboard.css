@@ -8838,6 +8838,15 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   .biz-switcher-item,
   .biz-switcher-add { min-height: 44px; }
   .biz-switcher-menu { max-width: calc(100vw - 16px); }
+
+  /* "+ Arzt anlegen"-Knopf (module/arzt-register.js): Touch-Ziel min. 44px */
+  .arzt-plus-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 22px;
+  }
 }
 
 /* Telefon: Marke weicht dem Standort-Chip (Hamburger + Chip tragen die Orientierung) */

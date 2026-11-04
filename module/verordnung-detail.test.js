@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { verordnungDetailHtml } from './verordnung-detail.js';
+import { verordnungDetailHtml, sitzungZielZahl } from './verordnung-detail.js';
 
 // Warum es diese Datei gibt:
 // `verordnungDetailHtml` ist absichtlich eine reine Funktion — Zeile rein,
@@ -271,3 +271,72 @@ test('Multi-Heilmittel Zähler zeigt Kurznamen und erledigte Einheiten (KG 0/5 �
   const html = verordnungDetailHtml(rxMulti, { escapeHtml: esc, quelle: 'physio', katalog: mockKatalog });
   assert.match(html, /KG 0\/5 · MT 0\/5/);
 });
+
+test('Sitzungen: x von N schließt stornierte Sitzungen (status: cancelled) aus', () => {
+  const rx = {
+    ...PHYSIO,
+    anzahl_einheiten: 4,
+    prescription_sessions: [
+      { id: 's1', session_number: 1, status: 'done', booking_id: 'b1' },
+      { id: 's2', session_number: 2, status: 'planned', booking_id: 'b2' },
+      { id: 's3', session_number: 3, status: 'planned', booking_id: 'b3' },
+      { id: 's4', session_number: 4, status: 'planned', booking_id: 'b4' },
+      { id: 's5', session_number: 5, status: 'cancelled', booking_id: null },
+      { id: 's6', session_number: 6, status: 'cancelled', booking_id: null },
+    ],
+  };
+  const html = verordnungDetailHtml(rx, { escapeHtml: esc, quelle: 'physio' });
+  assert.match(html, /1 von 4 erledigt/);
+});
+
+test('Sitzung satırı überzählig: Warn-Badge wenn Sitzung über Soll an Termin hängt', () => {
+  const rx = {
+    ...PHYSIO,
+    anzahl_einheiten: 4,
+    prescription_sessions: [
+      { id: 's1', session_number: 1, status: 'done', booking_id: 'b1', bookings: { start_time: '2026-08-01T09:00:00Z' } },
+      { id: 's2', session_number: 2, status: 'planned', booking_id: 'b2', bookings: { start_time: '2026-08-02T09:00:00Z' } },
+      { id: 's3', session_number: 3, status: 'planned', booking_id: 'b3', bookings: { start_time: '2026-08-03T09:00:00Z' } },
+      { id: 's4', session_number: 4, status: 'planned', booking_id: 'b4', bookings: { start_time: '2026-08-04T09:00:00Z' } },
+      { id: 's5', session_number: 5, status: 'planned', booking_id: 'b5', bookings: { start_time: '2026-08-05T09:00:00Z' } },
+    ],
+  };
+  const html = verordnungDetailHtml(rx, { escapeHtml: esc, quelle: 'physio' });
+  assert.match(html, /überzählig – Termin absagen oder verschieben/);
+});
+
+test('sitzungZielZahl: liefert terminZielToplam als verlässliche Quelle für Gesamtmenge', () => {
+  const rx = {
+    anzahl_einheiten: 4,
+    prescription_sessions: [
+      { id: 's1', session_number: 1, status: 'done' },
+      { id: 's2', session_number: 2, status: 'planned' },
+      { id: 's3', session_number: 3, status: 'planned' },
+      { id: 's4', session_number: 4, status: 'planned' },
+      { id: 's5', session_number: 5, status: 'planned' },
+      { id: 's6', session_number: 6, status: 'planned' },
+    ],
+  };
+  // Obwohl noch 6 Sessions im Array hängen, ist das verordnete Ziel 4
+  assert.equal(sitzungZielZahl(rx), 4);
+});
+
+test('Sitzung satırı heilmittel_index: Sitzung 7 (Index 1, MT) zeigt MT als Kürzel', () => {
+  const rx = {
+    ...PHYSIO,
+    anzahl_einheiten: 10,
+    heilmittel: 'X0501 – Allgemeine Krankengymnastik (KG) Einzel',
+    heilmittel_position: '20501',
+    heilmittel_items: [
+      { code: 'X0501', bezeichnung: 'Allgemeine Krankengymnastik (KG) Einzel', einheiten: 6 },
+      { code: 'X1201', bezeichnung: 'Manuelle Therapie (MT)', einheiten: 4 },
+    ],
+    prescription_sessions: [
+      { id: 's7', session_number: 7, heilmittel_index: 1, status: 'planned', booking_id: null },
+    ],
+  };
+  const html = verordnungDetailHtml(rx, { escapeHtml: esc, quelle: 'physio' });
+  // In der Zeile der Sitzung 7 soll MT ausgewählt sein
+  assert.match(html, /<option value="1" selected>MT<\/option>/);
+});
+

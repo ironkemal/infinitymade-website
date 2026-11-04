@@ -26,9 +26,9 @@
 import { ladePodoTermine, loeseTermin, podoBelegung, ladeVerordnungsBehandlungen } from './verordnung-termine.js?v=20261102a';
 import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103n';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103q';
 import { ausTopf, statusAusTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260930c';
-import { RX_FELDER } from './termin-laden.js?v=20261103planung';
+import { RX_FELDER } from './termin-laden.js?v=20261103r';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 

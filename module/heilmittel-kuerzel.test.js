@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js';
+import { kuerzelAusKatalog, formatMultiHeilmittelTitel, ermittleSitzungKuerzel } from './heilmittel-kuerzel.js';
 
 const MOCK_KATALOG = {
   physiotherapy: [
@@ -64,6 +64,16 @@ test('kuerzelAusKatalog: synchroner Fallback ohne Katalog-Parameter', () => {
   assert.equal(kuerzelAusKatalog({ code: 'X0501', bezeichnung: 'X0501 – Krankengymnastik' }), 'KG');
 });
 
+test('kuerzelAusKatalog: 5-stellige Abrechnungspositionen (20501 -> KG, X1201 -> MT, unbekannt -> unverändert)', () => {
+  assert.equal(kuerzelAusKatalog('20501', MOCK_KATALOG), 'KG');
+  assert.equal(kuerzelAusKatalog('20501'), 'KG');
+  assert.equal(kuerzelAusKatalog('10501'), 'KG');
+  assert.equal(kuerzelAusKatalog('21201'), 'MT');
+  assert.equal(kuerzelAusKatalog('X1201'), 'MT');
+  assert.equal(kuerzelAusKatalog('99999'), '99999');
+  assert.equal(kuerzelAusKatalog({ heilmittel_position: '20501' }), 'KG');
+});
+
 test('formatMultiHeilmittelTitel: X-Code-Titel wird zum Kurznamen aufgelöst', () => {
   const rxCode = {
     heilmittel: 'X0501 – Krankengymnastik',
@@ -71,3 +81,30 @@ test('formatMultiHeilmittelTitel: X-Code-Titel wird zum Kurznamen aufgelöst', (
   };
   assert.equal(formatMultiHeilmittelTitel(rxCode, MOCK_KATALOG), 'KG');
 });
+
+test('ermittleSitzungKuerzel: nimmt Heilmittel aus heilmittel_index für Sitzung', () => {
+  const rx = {
+    heilmittel: 'X0501 – Allgemeine Krankengymnastik (KG) Einzel',
+    heilmittel_position: '20501',
+    heilmittel_items: [
+      { code: 'X0501', bezeichnung: 'Krankengymnastik (KG)' },
+      { code: 'X1201', bezeichnung: 'Manuelle Therapie (MT)' },
+    ],
+  };
+  const sess0 = { session_number: 1, heilmittel_index: 0 };
+  const sess1 = { session_number: 7, heilmittel_index: 1 };
+  assert.equal(ermittleSitzungKuerzel(sess0, rx, '', MOCK_KATALOG), 'KG');
+  assert.equal(ermittleSitzungKuerzel(sess1, rx, '', MOCK_KATALOG), 'MT');
+
+  // Single VO
+  const rxSingle = {
+    heilmittel: 'X0501 – Allgemeine Krankengymnastik (KG) Einzel',
+    heilmittel_position: '20501',
+  };
+  assert.equal(ermittleSitzungKuerzel(null, rxSingle, '', MOCK_KATALOG), 'KG');
+  assert.equal(ermittleSitzungKuerzel({}, rxSingle, '', MOCK_KATALOG), 'KG');
+
+  // Fallback Service Code
+  assert.equal(ermittleSitzungKuerzel(null, null, 'X1201', MOCK_KATALOG), 'MT');
+});
+

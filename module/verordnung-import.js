@@ -20,7 +20,7 @@
  * Zuordnung der Spalten: `zuordnungsSchritt()` aus patienten-import.js.
  */
 
-import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt, dekodiereDateiText } from './patienten-import.js?v=20261103a';
+import { leseCsv, leseDatum, norm, teileName, esc, BTN, SPALTEN, zuordnungsSchritt, dekodiereDateiText } from './patienten-import.js?v=20261103s';
 import { nameGeburtSchluessel } from './patient-dublette.js?v=20261021b';
 import { verordnungPatientenAbgleich } from './verordnung-patient-abgleich.js?v=20261003e';
 import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261003e';
@@ -28,10 +28,12 @@ import { pruefeKvnr } from './kvnr.js?v=20260814';
 import { behandlungsbeginnFrist } from './heilmittel-fristen.js?v=20261004m113';
 import { normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { isValidLanr, LANR_ERSATZWERT } from './lanr-pruefung.js?v=20260929r';
-import { POD_KATALOG } from './verordnung-regeln.js?v=20261031k3';
+import { POD_KATALOG, regelnFuerBereich } from './verordnung-regeln.js?v=20261031k3';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
+import { pruefeVerordnung } from './verordnung-pruefung.js?v=20261031k3';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261103a';
-import { sendeAnServer } from './verordnung-maske.js?v=20261103b';
-import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103b';
+import { sendeAnServer } from './verordnung-maske.js?v=20261103q';
+import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103q';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { normalizeBereich, pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';
 
@@ -127,6 +129,107 @@ const DG_ERLAUBT = new Set(['DF', 'NF', 'QF', 'UI1', 'UI2']);
 /** Höchstmenge je Verordnung (verordnung-regeln.js, [Q1]: UI2 = 4). */
 const HOECHSTMENGE = { DF: 6, NF: 6, QF: 6, UI1: 8, UI2: 4 };
 const LS_CODE = { a: '1000', b: '0100', c: '0010' };
+
+/** Standard-Höchstmengen für Physiotherapie nach Heilmittel-Richtlinie (Fallback wenn DB offline/Test). */
+export const PHYSIO_FALLBACK_HOECHSTMENGE = {
+  WS1: 6, WS2: 6, WS: 6,
+  EX1: 6, EX2: 6, EX3: 10, EX: 6,
+  ZN1: 10, ZN2: 10, ZN: 10,
+  PN: 10,
+  AT1: 6, AT2: 6, AT3: 6, AT: 6,
+  LY1: 6, LY2: 6, LY3: 10, LY: 6,
+  CS: 6, GE: 6,
+  SO1: 6, SO2: 6, SO3: 6,
+  PS1: 10, PS2: 10, SB1: 10, SB2: 10,
+};
+
+/** Normalisiert Heilmittel-Positionsnummer (z. B. X0501 ↔ 20501). */
+export function normalizeVoCode(code) {
+  const raw = typeof code === 'object' && code !== null
+    ? (code.code || code.position || code.positionsnummer || code.x || code.bezeichnung || '')
+    : code;
+  const s = String(raw || '').trim().toUpperCase();
+  if (!s) return '';
+  // 5-stellige GKV-Positionsnummern (z. B. 20501, 10501, 60501, 80501, X0501 -> X0501)
+  if (/^[0-9X]\d{4}$/.test(s)) {
+    return 'X' + s.slice(1);
+  }
+  return s;
+}
+
+/** Extrahiert alle relevanten Heilmittel-Positionskodes aus einer Verordnung (DB-Zeile oder Objekt). */
+export function codesAusVerordnung(v = {}) {
+  const c = [];
+  if (Array.isArray(v.heilmittel_items)) {
+    for (const it of v.heilmittel_items) {
+      if (!it) continue;
+      const code = typeof it === 'object' ? (it.code || it.position || it.positionsnummer || it.bezeichnung) : it;
+      if (code) c.push(code);
+    }
+  }
+  if (v.heilmittel_position) c.push(v.heilmittel_position);
+  if (v.ergaenzend_position) c.push(v.ergaenzend_position);
+  if (v.ergaenzendes_heilmittel) c.push(v.ergaenzendes_heilmittel);
+  if (!c.length && v.heilmittel) c.push(v.heilmittel);
+  return c;
+}
+
+/** Normalisiert Datum auf ISO YYYY-MM-DD (Berlin-Tag). */
+export function normalizeVoDatum(ausstellungsdatum) {
+  if (!ausstellungsdatum) return '';
+  if (typeof ausstellungsdatum === 'string') {
+    const s = ausstellungsdatum.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const d = leseDatum(s);
+    if (d) return d;
+  }
+  const berlin = alsBerlinDatum(ausstellungsdatum);
+  if (berlin) return berlin;
+  return '';
+}
+
+/**
+ * Eindeutiger Dubletten-Schlüssel für eine Verordnung beim Import.
+ * Erkennt Dubletten konsistent über CSV-Zeilen und DB-Abfragen hinweg.
+ * Berücksichtigt X0501 ↔ 20501 Äquivalenz und sortierte Codes.
+ */
+export function voImportSchluessel({
+  patientId,
+  nameGeburt,
+  ausstellungsdatum,
+  codes = [],
+  lanr = '',
+  dg = '',
+  bereich = '',
+} = {}) {
+  const pat = String(patientId || (nameGeburt ? `name:${nameGeburt}` : '')).trim();
+  if (!pat) return null;
+  const datum = normalizeVoDatum(ausstellungsdatum);
+  if (!datum) return null;
+
+  const rawCodes = (Array.isArray(codes) ? codes : [codes])
+    .filter(Boolean)
+    .flatMap(c => {
+      if (Array.isArray(c)) return c;
+      if (typeof c === 'object' && c !== null && Array.isArray(c.heilmittel_items)) {
+        return codesAusVerordnung(c);
+      }
+      return [c];
+    });
+
+  const normCodes = Array.from(new Set(rawCodes.map(normalizeVoCode).filter(Boolean))).sort().join('+');
+
+  const b = normalizeBereich(bereich);
+  if (b === 'physio' || b === 'ergo' || normCodes) {
+    if (!normCodes) return null;
+    return `${pat}|${datum}|${normCodes}`;
+  }
+
+  // Podologie / Fallback wenn keine Codes: lanr + dg
+  const l = String(lanr || '').trim();
+  const d = String(dg || '').trim().toUpperCase();
+  return `${pat}|${datum}|${l}|${d}`;
+}
 
 let _defaultPhysioKatalog = null;
 
@@ -298,7 +401,6 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
 
     anzahl = Number.parseInt(w('anzahl'), 10);
     if (!Number.isInteger(anzahl) || anzahl < 1) fehler.push('Anzahl Einheiten fehlt');
-    else if (HOECHSTMENGE[dg] && anzahl > HOECHSTMENGE[dg]) hinweise.push(`Mehr als ${HOECHSTMENGE[dg]} Einheiten — nur bis zur Höchstmenge abrechenbar`);
 
     const nagelRoh = w('nagel');
     nagel = leseNagel(nagelRoh);
@@ -415,25 +517,78 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
     hinweise.push('Im Altsystem kassierte Zuzahlung fehlt — sonst fordert Praxura sie erneut');
   }
 
-  // Schon vorhanden? (Dublettenprüfung)
-  let schluessel = null;
-  let istDublette = false;
-  if (normBereich === 'physio' || normBereich === 'ergo') {
-    // Dublettenprüfung: Patient + Ausstellungsdatum + alle Codes (sortiert, Reihenfolge unabhängig).
-    const alleCodes = [
-      ...(Array.isArray(items) && items.length > 0 ? items.map(it => it.code) : [w('heilmittel_position') || w('heilmittel')]),
-      ergaenzendPosition
-    ].filter(Boolean).map(c => String(c).trim().toUpperCase()).sort().join('+');
-    const posSchluessel = alleCodes || '';
-    schluessel = patient && ausstellungsdatum && posSchluessel ? `${patient.id}|${ausstellungsdatum}|${posSchluessel}` : null;
-    if (schluessel && k.vorhandeneVo && k.vorhandeneVo.has(schluessel)) {
-      hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits – wird übersprungen');
-      istDublette = true;
+  // Regelsatz-Validierung (Entwurf-Erkennung: Höchstmenge, Befunde aus pruefeVerordnung)
+  let regelsatz = k.regelsatz || null;
+  if (!regelsatz) {
+    const fallbackDb = (normBereich === 'physio')
+      ? Object.entries(PHYSIO_FALLBACK_HOECHSTMENGE).map(([code, hoechstmenge]) => ({ code, hoechstmenge }))
+      : (normBereich === 'podo')
+        ? Object.entries(HOECHSTMENGE).map(([code, hoechstmenge]) => ({ code, hoechstmenge }))
+        : [];
+    regelsatz = regelnFuerBereich(normBereich, fallbackDb);
+  }
+
+  let istEntwurf = false;
+  let entwurfGrund = '';
+
+  if (regelsatz && dg && Number.isFinite(anzahl) && anzahl > 0) {
+    const pruefVo = {
+      bereich: normBereich === 'physio' ? 'physiotherapy' : normBereich,
+      diagnosegruppe: dg,
+      heilmittel: heilmittel || items[0]?.bezeichnung,
+      heilmittelPosition: items[0]?.code,
+      anzahl,
+      frequenz: w('frequenz') || null,
+      ausstellungsdatum,
+      versichertennummer: kvnr.normalisiert,
+      kasseIk: ik,
+      arztLanr: lanr,
+      arztBsnr: bsnr,
+      icd: [icd10, icd10_2].filter(Boolean),
+      rezeptart: 'kassen',
+    };
+    const res = pruefeVerordnung(pruefVo, regelsatz, { heute: k.heute });
+    const warnungen = (res?.befunde || []).filter(b => b.schwere === 'warnung');
+    for (const wBefund of warnungen) {
+      if (wBefund.code === 'PRUEFZIFFER_LANR' && hinweise.some(h => h.includes('LANR'))) continue;
+      if (wBefund.code === 'PRUEFZIFFER_KVNR' && hinweise.some(h => h.includes('Versichertennummer'))) continue;
+      istEntwurf = true;
+      let grund = wBefund.text;
+      if (wBefund.code === 'UEBER_HOECHSTMENGE') {
+        const hMax = regelsatz?.gruppen?.[dg]?.hoechstmenge || (normBereich === 'podo' ? HOECHSTMENGE[dg] : 6);
+        grund = `Höchstmenge überschritten (${dg}: ${anzahl} statt max. ${hMax} Einheiten)`;
+      }
+      if (!entwurfGrund) entwurfGrund = grund;
+      hinweise.push(`wird als Entwurf übernommen: ${grund}`);
     }
-  } else {
-    // Podologie: patient.id|ausstellungsdatum|lanr|dg
-    schluessel = patient && ausstellungsdatum ? `${patient.id}|${ausstellungsdatum}|${lanr}|${dg}` : null;
-    if (schluessel && k.vorhandeneVo && k.vorhandeneVo.has(schluessel)) fehler.push('Verordnung ist schon in Praxura');
+  }
+
+  // Schon vorhanden? (Dublettenprüfung)
+  const rowCodes = (normBereich === 'physio' || normBereich === 'ergo')
+    ? [
+        ...(Array.isArray(items) && items.length > 0 ? items.map(it => it.code) : [w('heilmittel_position') || w('heilmittel')]),
+        ergaenzendPosition
+      ].filter(Boolean)
+    : [];
+
+  const schluessel = voImportSchluessel({
+    patientId: patient?.id,
+    nameGeburt: sNeu,
+    ausstellungsdatum,
+    codes: rowCodes,
+    lanr,
+    dg,
+    bereich: normBereich,
+  });
+
+  let istDublette = false;
+  if (schluessel && k.vorhandeneVo && k.vorhandeneVo.has(schluessel)) {
+    if (normBereich === 'physio' || normBereich === 'ergo') {
+      hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits (bereits vorhanden) – wird übersprungen');
+      istDublette = true;
+    } else {
+      fehler.push('Verordnung ist schon in Praxura (bereits vorhanden)');
+    }
   }
 
   const verordnung = {
@@ -454,7 +609,7 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
     ergaenzend_einheiten: ergaenzendEinheiten,
   };
 
-  return { verordnung, fehler, hinweise, schluessel, istDublette };
+  return { verordnung, fehler, hinweise, schluessel, istDublette, istEntwurf, entwurfGrund };
 }
 
 /** Ganze Datei prüfen. */
@@ -623,21 +778,34 @@ export function oeffneVerordnungImport(d) {
 
   const vorschau = async (text, zu, zurZuordnung) => {
     inhalt.innerHTML = '<p style="font-size:14px;color:var(--text-muted);">Vorhandene Verordnungen werden abgeglichen …</p>';
-    const { data: vorhanden, error } = await d.supabase.from('prescriptions')
-      .select('patient_id, ausstellungsdatum, doctor_lanr, diagnosegruppe, heilmittel_position, heilmittel')
-      .eq('owner_id', d.ownerId).eq('therapie_bereich', normBereich);
+    let q = d.supabase.from('prescriptions')
+      .select('patient_id, ausstellungsdatum, doctor_lanr, diagnosegruppe, heilmittel_position, ergaenzend_position, heilmittel_items, heilmittel, therapie_bereich')
+      .eq('owner_id', d.ownerId);
+    if (normBereich) q = q.eq('therapie_bereich', normBereich);
+    const { data: vorhanden, error } = await q;
     if (error) { d.showToast('Vorhandene Verordnungen konnten nicht geladen werden.', 'error'); zurZuordnung(); return; }
 
     const vorhandeneVo = new Set();
     for (const r of vorhanden || []) {
-      if (normBereich === 'physio' || normBereich === 'ergo') {
-        const pos = r.heilmittel_position || r.heilmittel || '';
-        if (r.patient_id && r.ausstellungsdatum && pos) vorhandeneVo.add(`${r.patient_id}|${r.ausstellungsdatum}|${pos}`);
-      } else {
-        vorhandeneVo.add(`${r.patient_id}|${r.ausstellungsdatum}|${r.doctor_lanr || ''}|${r.diagnosegruppe || ''}`);
-      }
+      const key = voImportSchluessel({
+        patientId: r.patient_id,
+        ausstellungsdatum: r.ausstellungsdatum,
+        codes: codesAusVerordnung(r),
+        lanr: r.doctor_lanr,
+        dg: r.diagnosegruppe,
+        bereich: r.therapie_bereich || normBereich,
+      });
+      if (key) vorhandeneVo.add(key);
     }
 
+    let regelsatz = null;
+    if (d.supabase) {
+      try {
+        regelsatz = await regelsatzLaden(d.supabase, normBereich);
+      } catch {
+        // Fallback wenn Supabase-Mock in Tests/Probes kein .order() besitzt
+      }
+    }
     const heute = berlinHeute();
     const erg = pruefeVerordnungen(text, zu, {
       patienten: d.bestehende() || [],
@@ -645,18 +813,29 @@ export function oeffneVerordnungImport(d) {
       heute,
       bereich: normBereich,
       katalog: d.katalog || null,
+      regelsatz,
     });
 
-    const status = (z) => z.fehler.length
-      ? `<span style="color:var(--danger,#b42318);font-weight:600;">✕ ${esc(z.fehler.join(' · '))}</span>`
-      : z.istDublette ? `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ übersprungen · ${esc(z.hinweise.join(' · '))}</span>`
-      : z.hinweise.length ? `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ übernehmen · ${esc(z.hinweise.join(' · '))}</span>`
-      : '<span style="color:var(--success,#027a48);font-weight:600;">✓ übernehmen</span>';
+    const status = (z) => {
+      if (z.fehler.length) {
+        return `<span style="color:var(--danger,#b42318);font-weight:600;">✕ ${esc(z.fehler.join(' · '))}</span>`;
+      }
+      if (z.istDublette) {
+        return `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ übersprungen · ${esc(z.hinweise.join(' · '))}</span>`;
+      }
+      if (z.istEntwurf) {
+        return `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ ${esc(z.hinweise.join(' · '))}</span>`;
+      }
+      if (z.hinweise.length) {
+        return `<span style="color:var(--warning,#b54708);font-weight:600;">⚠ übernehmen · ${esc(z.hinweise.join(' · '))}</span>`;
+      }
+      return '<span style="color:var(--success,#027a48);font-weight:600;">✓ übernehmen</span>';
+    };
 
     const reihen = erg.zeilen.slice(0, 200).map(z => {
       const v = z.verordnung;
       const name = v.patient ? `${v.patient.last_name}, ${v.patient.first_name}` : (v.csvName || '—');
-      const farbe = z.fehler.length ? 'var(--danger,#b42318)' : ((z.hinweise.length || z.istDublette) ? 'var(--warning,#b54708)' : 'var(--success,#027a48)');
+      const farbe = z.fehler.length ? 'var(--danger,#b42318)' : ((z.hinweise.length || z.istDublette || z.istEntwurf) ? 'var(--warning,#b54708)' : 'var(--success,#027a48)');
       const hmDetails = v.heilmittel_items?.length > 1
         ? v.heilmittel_items.map(it => `${it.code || it.bezeichnung} (${it.einheiten})`).join(', ')
         : (v.heilmittel_position || v.heilmittel || '');
@@ -671,11 +850,11 @@ export function oeffneVerordnungImport(d) {
     const uebernehmbar = erg.zeilen.filter(z => !z.fehler.length && !z.istDublette);
 
     inhalt.innerHTML = `
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:0 0 12px;font-size:14px;font-weight:600;">
-        <span style="color:var(--success,#027a48);">${erg.ok} ok</span>
-        <span style="color:var(--warning,#b54708);">${erg.gelb} Hinweis</span>
-        <span style="color:${erg.rot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};">${erg.rot} Fehler</span>
-        <span style="color:var(--text-muted);font-weight:400;margin-left:auto;">(${uebernehmbar.length} werden übernommen)</span>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 12px;font-size:13px;line-height:1.4;font-weight:600;">
+        <span style="color:var(--success,#027a48);white-space:nowrap;">${erg.ok} ok</span>
+        <span style="color:var(--warning,#b54708);white-space:nowrap;">${erg.gelb} Hinweis</span>
+        <span style="color:${erg.rot ? 'var(--danger,#b42318)' : 'var(--text-muted)'};white-space:nowrap;">${erg.rot} Fehler</span>
+        <span style="color:var(--text-muted);font-weight:400;white-space:nowrap;">(${uebernehmbar.length} werden übernommen)</span>
       </div>
       <div style="margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--text-main);">
         <b>Hinweis:</b> Einwilligungen (E-Mail-Erinnerung, Arztberichte) werden nicht übernommen. Diese Funktionen sind für importierte Patienten erst nach neuer Einwilligung aktiv.
@@ -727,12 +906,45 @@ export function oeffneVerordnungImport(d) {
     laeuft = true;
     let ok = 0;
     const fehlgeschlagen = [];
+    const uebersprungen = [];
+    const bereitsGesendet = new Set();
     fuss.innerHTML = '';
     for (const [i, z] of zeilen.entries()) {
       inhalt.innerHTML = `<p style="font-size:15px;margin:0 0 16px;">Übernehme Verordnung ${i + 1} von ${zeilen.length} …</p>`;
       try {
+        const v = z.verordnung;
+        const p = v.patient;
+        if (z.schluessel && bereitsGesendet.has(z.schluessel)) {
+          uebersprungen.push({ nr: z.nr, grund: 'Bereits im aktuellen Durchlauf übernommen' });
+          continue;
+        }
+        // Sicherheitsnetz: Unmittelbar vor dem Senden prüfen, ob identische VO bereits in der DB existiert
+        if (d.supabase && p?.id && v.ausstellungsdatum) {
+          const { data: dbCheck } = await d.supabase.from('prescriptions')
+            .select('patient_id, ausstellungsdatum, doctor_lanr, diagnosegruppe, heilmittel_position, ergaenzend_position, heilmittel_items, heilmittel, therapie_bereich')
+            .eq('owner_id', d.ownerId)
+            .eq('patient_id', p.id)
+            .eq('ausstellungsdatum', v.ausstellungsdatum);
+          const schonDa = (dbCheck || []).some(r => {
+            const dbKey = voImportSchluessel({
+              patientId: r.patient_id,
+              ausstellungsdatum: r.ausstellungsdatum,
+              codes: codesAusVerordnung(r),
+              lanr: r.doctor_lanr,
+              dg: r.diagnosegruppe,
+              bereich: r.therapie_bereich || normBereich,
+            });
+            return dbKey && dbKey === z.schluessel;
+          });
+          if (schonDa) {
+            uebersprungen.push({ nr: z.nr, grund: 'Bereits in Praxura vorhanden' });
+            continue;
+          }
+        }
+
         const antwort = await sendeAnServer(d.supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf: voRumpf(z.verordnung, heute), apiBasis: d.apiBasis });
         ok++;
+        if (z.schluessel) bereitsGesendet.add(z.schluessel);
         const rxId = antwort?.prescription_id || antwort?.id;
         // Sitzungszeilen anlegen (wie in der Maske saveRezept) — Podologie führt kein Einheiten-Hauptbuch (dashboard.js:5226)
         const istPodo = (z.verordnung.therapieBereich || 'podo') === 'podo';
@@ -754,7 +966,6 @@ export function oeffneVerordnungImport(d) {
           }).eq('id', antwort.prescription_id).eq('owner_id', d.ownerId);
         }
         // Leere Akten-Felder (KVNR, Kasse, IK, Status) aus der Zeile nachtragen
-        const v = z.verordnung, p = v.patient;
         await verordnungPatientenAbgleich({ supabase: d.supabase, showConfirmModal: async () => false }, {
           ownerId: d.ownerId, patientId: p.id, lead: p, vorname: p.first_name, nachname: p.last_name,
           versichertennummer: v.kvnr, krankenkasse: v.kasse, versichertenstatus: v.versichertenstatus,
@@ -768,6 +979,7 @@ export function oeffneVerordnungImport(d) {
     if (ok) await d.nachImport(ok);
     inhalt.innerHTML = `
       <p style="margin:0 0 12px;font-size:15px;"><b>${ok}</b> Verordnung${ok === 1 ? '' : 'en'} übernommen.</p>
+      ${uebersprungen.length ? `<p style="margin:0 0 8px;font-size:14px;color:var(--warning,#b54708);">${uebersprungen.length} bereits vorhanden (übersprungen): ${uebersprungen.map(u => `Zeile ${u.nr}`).join(', ')}</p>` : ''}
       ${fehlgeschlagen.length ? `<p style="margin:0 0 8px;font-size:14px;color:var(--danger,#b42318);">${fehlgeschlagen.length} nicht übernommen:</p>
         <ul style="margin:0 0 12px;padding-left:18px;font-size:13px;">${fehlgeschlagen.map(f => `<li>Zeile ${f.nr}: ${esc(f.grund)}</li>`).join('')}</ul>` : ''}
       <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Übernommene Verordnungen tragen den Hinweis „Aus Altsystem übernommen". Bitte vor dem ersten Termin kurz gegen das Papier prüfen.</p>`;

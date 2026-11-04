@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { pruefeVerordnung } from './verordnung-pruefung.js?v=20261021v';
-import { pruefeHeilmittelZeilen } from './heilmittel-zeilen.js?v=20261102a';
+import { pruefeHeilmittelZeilen } from './heilmittel-zeilen.js?v=20261103q';
 import { validateRezept } from '../api-backend/ai/validators/validate.js';
 
 const PHYSIO_PROFIL = {

@@ -34,6 +34,7 @@
  */
 
 import { pruefeTerminVoDatum } from './termin-vo-datum.js?v=20261102a';
+import { kuerzelAusKatalog } from './heilmittel-kuerzel.js?v=20261103q';
 
 /**
  * Bindet Sitzungszeilen an einen Termin.
@@ -85,6 +86,103 @@ export async function bindeSitzungenAnTermin(supabase, bookingId, sessionIds, { 
       fehlend: ids,
       meldung: check.fehler,
     };
+  }
+
+  let gefundeneSess = [];
+  try {
+    const qSess = supabase.from('prescription_sessions')
+      .select('id, prescription_id, session_number, heilmittel_index, status, booking_id')
+      .in('id', ids);
+    const resSess = typeof qSess?.maybeSingle === 'function' ? await qSess : (typeof qSess?.then === 'function' ? await qSess : await qSess);
+    gefundeneSess = resSess?.data || [];
+  } catch (_e) { /* mock / fallback */ }
+
+  if (gefundeneSess.length > 0) {
+    for (const s of gefundeneSess) {
+      if (s.status === 'done' || s.status === 'completed') {
+        return {
+          ok: false,
+          gebunden: 0,
+          erwartet,
+          fehlend: ids,
+          meldung: 'Bereits erbrachte Sitzungen können keinem neuen Termin zugeordnet werden.',
+        };
+      }
+      if (s.booking_id && s.booking_id !== bookingId) {
+        return {
+          ok: false,
+          gebunden: 0,
+          erwartet,
+          fehlend: ids,
+          meldung: 'Diese Sitzung ist bereits einem anderen Termin zugeordnet.',
+        };
+      }
+    }
+
+    const rxId = gefundeneSess[0].prescription_id;
+    if (rxId) {
+      let rx = null;
+      try {
+        const qRx = supabase.from('prescriptions')
+          .select('id, anzahl_einheiten, heilmittel_position, heilmittel, heilmittel_items, doppelbehandlung, ausstellungsdatum')
+          .eq('id', rxId);
+        const resRx = typeof qRx?.maybeSingle === 'function' ? await qRx.maybeSingle() : await qRx;
+        rx = resRx?.data || null;
+      } catch (_e) { /* mock / fallback */ }
+
+      if (rx) {
+        let alleSess = [];
+        try {
+          const qAll = supabase.from('prescription_sessions')
+            .select('id, session_number, heilmittel_index, status, booking_id')
+            .eq('prescription_id', rxId);
+          const resAll = typeof qAll?.maybeSingle === 'function' ? await qAll : await qAll;
+          alleSess = resAll?.data || [];
+        } catch (_e) { /* mock / fallback */ }
+
+        for (const s of gefundeneSess) {
+          const itIdx = s.heilmittel_index ?? 0;
+          const multi = Array.isArray(rx.heilmittel_items) && rx.heilmittel_items.length > 0;
+          const item = multi ? rx.heilmittel_items[itIdx] : null;
+          const einhRaw = item ? (item.einheiten ?? item.anzahl_einheiten) : rx.anzahl_einheiten;
+          const doppel = item ? !!item.doppelbehandlung : !!rx.doppelbehandlung;
+          const nEinheiten = parseInt(einhRaw, 10);
+          const maxTermine = Number.isFinite(nEinheiten)
+            ? (doppel ? Math.ceil(nEinheiten / 2) : nEinheiten)
+            : null;
+          const kuerzel = item ? kuerzelAusKatalog(item) : (kuerzelAusKatalog(rx.heilmittel_position || rx.heilmittel) || 'Heilmittel');
+
+          if (maxTermine !== null) {
+            if ((s.session_number || 0) > maxTermine) {
+              return {
+                ok: false,
+                gebunden: 0,
+                erwartet,
+                fehlend: ids,
+                meldung: `Für dieses Heilmittel (${kuerzel}) sind alle ${maxTermine} Einheiten vergeben. Keine offene Einheit mehr verfügbar.`,
+              };
+            }
+            if (alleSess.length > 0) {
+              const belegt = alleSess.filter(other =>
+                (other.heilmittel_index ?? 0) === itIdx &&
+                other.id !== s.id &&
+                other.status !== 'cancelled' &&
+                (Boolean(other.booking_id && other.booking_id !== bookingId) || other.status === 'done' || other.status === 'completed')
+              ).length;
+              if (belegt >= maxTermine) {
+                return {
+                  ok: false,
+                  gebunden: 0,
+                  erwartet,
+                  fehlend: ids,
+                  meldung: `Für dieses Heilmittel (${kuerzel}) sind alle ${maxTermine} Einheiten vergeben. Keine offene Einheit mehr verfügbar.`,
+                };
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   const { data, error } = await supabase

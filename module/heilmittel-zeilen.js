@@ -6,6 +6,8 @@
  * nur für Physiotherapie und Ergotherapie.
  */
 
+import { kuerzelAusKatalog } from './heilmittel-kuerzel.js?v=20261103q';
+
 export function normalizeBereich(bereich) {
   const b = String(bereich || '').trim().toLowerCase();
   if (['physio', 'physiotherapie', 'physiotherapy'].includes(b)) return 'physio';
@@ -137,6 +139,25 @@ export function pruefeHeilmittelZeilen({ bereich, zeilen = [], ergaenzend = null
  * @param {Array} sitzungen
  * @returns {string|null} Fehlermeldung auf Deutsch oder null wenn erlaubt.
  */
+function extrahiereCodeOderKuerzel(item) {
+  if (!item) return { code: '', kuerzel: '' };
+  let c = String(item.code || item.heilmittel_position || '').trim().toUpperCase();
+  if (/^[1268]\d{4}$/.test(c)) {
+    c = 'X' + c.slice(1);
+  }
+  if (!c) {
+    const text = String(item.bezeichnung || item.heilmittel || '').trim();
+    const m = text.match(/^(X\d{4}|\d{5})/i);
+    if (m) {
+      let cm = m[1].toUpperCase();
+      if (/^[1268]\d{4}$/.test(cm)) cm = 'X' + cm.slice(1);
+      c = cm;
+    }
+  }
+  const k = kuerzelAusKatalog(item);
+  return { code: c, kuerzel: k ? String(k).trim().toUpperCase() : '' };
+}
+
 export function pruefeItemsAenderung(altItems, neuItems, sitzungen) {
   const alt = Array.isArray(altItems) ? altItems : (altItems ? [altItems] : []);
   const neu = Array.isArray(neuItems) ? neuItems : (neuItems ? [neuItems] : []);
@@ -155,10 +176,15 @@ export function pruefeItemsAenderung(altItems, neuItems, sitzungen) {
     const genutzt = getGenutzt(i);
     if (!genutzt.length) continue;
 
-    const altCode = String(alt[i]?.code || alt[i]?.heilmittel_position || '').trim().toUpperCase();
-    const neuCode = String(neu[i]?.code || neu[i]?.heilmittel_position || '').trim().toUpperCase();
-    if (altCode && neuCode && altCode !== neuCode) {
-      return `Heilmittel-Position ${i + 1} (${altCode}) kann nicht geändert werden, da bereits Behandlungen dokumentiert oder Termine gebunden sind.`;
+    const altInfo = extrahiereCodeOderKuerzel(alt[i]);
+    const neuInfo = extrahiereCodeOderKuerzel(neu[i]);
+
+    const codeWechsel = altInfo.code && neuInfo.code && altInfo.code !== neuInfo.code;
+    const kuerzelWechsel = altInfo.kuerzel && neuInfo.kuerzel && altInfo.kuerzel !== neuInfo.kuerzel;
+
+    if (codeWechsel || kuerzelWechsel) {
+      const label = altInfo.kuerzel || altInfo.code || `Position ${i + 1}`;
+      return `Heilmittel-Position ${i + 1} (${label}) kann nicht geändert werden, da bereits Behandlungen dokumentiert oder Termine gebunden sind.`;
     }
 
     const neuEinh = parseInt(neu[i]?.einheiten ?? neu[i]?.anzahl_einheiten, 10);

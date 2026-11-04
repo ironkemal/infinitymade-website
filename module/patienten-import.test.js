@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, fehlendePflicht, VORLAGE_CSV, dekodiereDateiText } from './patienten-import.js';
+import { leseCsv, ordneSpaltenZu, leseDatum, zeileZuPatient, pruefeImport, insertDatensatz, fehlendePflicht, VORLAGE_CSV, dekodiereDateiText, oeffnePatientenImport } from './patienten-import.js';
 import { findePatientDublette } from './patient-dublette.js';
 
 test('leseCsv: Semikolon, Anführungszeichen, BOM, CRLF, Umbruch im Feld', () => {
@@ -137,5 +137,68 @@ test('dekodiereDateiText: Windows-1252 Datei mit Umlauten ä/ö/ü/ß dekodiert 
   const text = await dekodiereDateiText(w1252Buf);
   assert.ok(!text.includes('\uFFFD'));
   assert.equal(text, 'Nachname;Müller;Bärbel;Groß');
+});
+
+test('W15 P3: oeffnePatientenImport Link „Offene Verordnungen importieren (Bereich)" abhaengig vom Fachbereich', () => {
+  const origDoc = globalThis.document;
+  let inhaltHtml = '';
+  let fussHtml = '';
+  const makeElem = () => ({
+    addEventListener() {},
+    removeEventListener() {},
+    remove() {},
+    click() {},
+    style: {},
+    querySelector(sel) {
+      if (sel === '[data-pi="vo"]') {
+        const m = inhaltHtml.match(/<a[^>]+data-pi="vo"[^>]*>(.*?)<\/a>/);
+        return m ? { textContent: m[1], addEventListener() {} } : null;
+      }
+      return makeElem();
+    },
+  });
+  const inhalt = makeElem();
+  Object.defineProperty(inhalt, 'innerHTML', { set(v) { inhaltHtml = v; }, get() { return inhaltHtml; } });
+  const fuss = makeElem();
+  Object.defineProperty(fuss, 'innerHTML', { set(v) { fussHtml = v; }, get() { return fussHtml; } });
+
+  const modal = makeElem();
+  modal.querySelector = (sel) => {
+    if (sel === '[data-pi="inhalt"]') return inhalt;
+    if (sel === '[data-pi="fuss"]') return fuss;
+    if (sel === '[data-pi="vo"]') {
+      const m = inhaltHtml.match(/<a[^>]+data-pi="vo"[^>]*>(.*?)<\/a>/);
+      return m ? { textContent: m[1], addEventListener() {} } : null;
+    }
+    return makeElem();
+  };
+
+  globalThis.document = {
+    getElementById: (id) => (id === 'patientenImportModal' ? modal : null),
+    createElement: () => modal,
+    body: { appendChild() {} },
+    addEventListener() {},
+    removeEventListener() {},
+  };
+
+  try {
+    // 1. Physio
+    oeffnePatientenImport({ bereich: 'physio', zuVerordnungen: () => {} });
+    let link = inhalt.querySelector('[data-pi="vo"]');
+    assert.ok(link);
+    assert.equal(link.textContent.trim(), 'Offene Verordnungen importieren (Physiotherapie) →');
+
+    // 2. Ergo
+    oeffnePatientenImport({ bereich: 'ergo', zuVerordnungen: () => {} });
+    link = inhalt.querySelector('[data-pi="vo"]');
+    assert.equal(link.textContent.trim(), 'Offene Verordnungen importieren (Ergotherapie) →');
+
+    // 3. Podologie (Standard / Fallback)
+    oeffnePatientenImport({ bereich: 'podo', zuVerordnungen: () => {} });
+    link = inhalt.querySelector('[data-pi="vo"]');
+    assert.equal(link.textContent.trim(), 'Offene Verordnungen importieren (Podologie) →');
+  } finally {
+    globalThis.document = origDoc;
+  }
 });
 
