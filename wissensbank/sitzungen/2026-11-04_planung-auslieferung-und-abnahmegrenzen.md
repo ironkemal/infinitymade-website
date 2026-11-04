@@ -34,3 +34,7 @@ Browserprüfung in neuem eigenen Preview-Tab: `dashboard.html` leitete zu `login
 Konkrete Hetzner-Zielserver-ID/IP und Ausgangsinstallation noch nicht bestätigt. Nutzer um Zielangabe gebeten; keine kostenpflichtige Bestellung, Installation oder Migration ausgeführt.
 
 Mail/KI-Abnahme exklusiv beim anderen Bearbeiter: bearbeitbarer KI-Mailentwurf, Fußzeile speichern und Vorschau; kein Versand. Keine parallelen Mailänderungen/-tests hier. Migration0105 nicht automatisch angewandt. Keine neue Suite, keine DB-Schreibaktion, kein Mailversand in diesem Nachweislauf.
+
+## Nachtrag: QA-Inhabersitzung verfügbar
+
+Nutzer öffnete anschließend TEST-Physio QA. Alle drei tatsächlichen UTC-Browserwriter live mit POST201 und anschließendem GET200 nachgewiesen; Winter-/Sommerdatum unverändert, Kalender und Dezemberliste auch nach Reload gelesen. Vollständiger enger Nachweis: `Physio/URLAUB-UTC-LIVE-NACHWEIS-2026-11-04.md`. Drei synthetische QA-Abwesenheiten angelegt und erhalten. Gleichzeitige Änderung Mo–Fr→Mo–Mi durch anderen QA-Bearbeiter erklärt beobachteten Saldo6→3; kein Cachefehler daraus behauptet. Mitarbeiter-/negative RLS-Abnahme noch offen. Hetzner laut Nutzer ausdrücklich zuletzt.

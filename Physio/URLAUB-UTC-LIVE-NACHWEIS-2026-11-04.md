@@ -12,7 +12,7 @@
 
 Eingabe und Speichern über tatsächliche UI-Handler, keine direkten API-Schreibaufrufe. Temporäre Fetch-Beobachtung erfasste ausschließlich Methode, Status, Start-/Enddatum und Typ der time_offs-Anfragen/-Antworten; keine Header, Tokens oder Kontaktinformationen. Nach vollem Neuladen entfernt.
 
-Mitarbeiterkalender am 01.01.2027 zeigt Ganztags-Abwesenheit. Am 01.07.2027 zeigt er Ganztags-Abwesenheit mit synthetischem Grund TEST UTC Kalender Sommer. Dezemberdatum erscheint nach vollständigem Dashboard-Reload unverändert als 31.12.2026 in der Jahresliste. Drei neue synthetische Abwesenheiten bleiben nachvollziehbar im QA-Konto erhalten; keine Löschung. Vorhandene Termine und andere Abwesenheiten nicht geändert.
+Mitarbeiterkalender am 01.01.2027 zeigt Ganztags-Abwesenheit. Am 01.07.2027 zeigt er Ganztags-Abwesenheit mit synthetischem Grund TEST UTC Kalender Sommer, auch nach vollständigem Reload und erneutem Tageswechsel (GET200 mit UTC-Datum). Dezemberdatum erscheint nach vollständigem Dashboard-Reload unverändert als 31.12.2026 in der Jahresliste. Drei neue synthetische Abwesenheiten bleiben nachvollziehbar im QA-Konto erhalten; keine Löschung. Vorhandene Termine und andere Abwesenheiten nicht geändert.
 
 ## Jahresanzeige und parallele Änderung
 
