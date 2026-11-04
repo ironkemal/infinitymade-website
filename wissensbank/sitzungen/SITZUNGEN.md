@@ -36,6 +36,8 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-04 | Physio-Anfrage / Vorbereitung | [[2026-11-04_physio-anfrage-gespraechsvorbereitung]] | Historische Analyse, Recherche, Leitfaden und private HTML-Mappe gesichert; keine Ops-Karten geändert; Commit/Push durch parallelen Merge blockiert |
+| 2026-11-04 | Planung M4/M5/M7 / Urlaub UTC | [[2026-11-04_planung-urlaub-utc-abschluss]] | Konsolidierte Korrekturen und Grenzen;ddfa3cc laut Übergabe veröffentlicht;UTC-Fix82cc618 lokal,7 PG/30 Roundtrips+55 Regressionen+Build grün;Live-QA und installierte Box offen,Mail STOP |
 | 2026-11-03 | Ops #342/#343 / Raumplanung | [[2026-11-03_raumplanung-release-und-pruefung]] | Raumdetails und Ausstattung veröffentlicht;0103/0104 live kataloggeprüft;4940 lokale Tests,29 PG,50 Browserchecks PASS; separate Kontoabnahme offen |
 | 2026-10-30 | Ops #341 / M1–M7 | [[2026-10-30_kemal-uebergabe-physio-pilot-planung]] | Kemals Übergabe übersetzt + gegen Repo 01.11. geprüft: M1/M3/M7 gebaut · M5-Tabelle fehlt (0096) · M4 offen · M6-Mail widersprüchlich · M2b verschoben |
 | 2026-10-22 | Ops Gesamtbestand / #34 / Billing-Auth | [[2026-10-22_ops-statusabgleich-und-billing-auth]] | 336 IDs erfasst, #34 neu abgeschlossen, 16 Teilnotizen; 53 Einzelpunkte offen · historische Haken keine neue Liveabnahme · Auth-Klassifikation lokal getestet, Liveursache offen |
