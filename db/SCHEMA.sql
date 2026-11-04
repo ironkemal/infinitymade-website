@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261104221334 0108_raumloeschung_ohne_automatik
--- EXPORTED AT:        2026-11-04T22:14:17Z
+-- LAST MIGRATION:     20261104223416 0109_standort_plan_zeitfenster
+-- EXPORTED AT:        2026-11-04T22:34:30Z
 -- ERZEUGT AM:         2026-11-04
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1544
+--   table_columns:       1546
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -1718,12 +1718,16 @@ CREATE TABLE public.employee_standort_plan (
   datum date,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL,
-  gueltig_ab date
+  gueltig_ab date,
+  von time without time zone,
+  bis time without time zone
 );
 --   FK business_id -> businesses(id)
 --   FK employee_id -> profiles(id)
 --   FK owner_id -> profiles(id)
 ALTER TABLE ONLY public.employee_standort_plan OWNER TO postgres;
+COMMENT ON COLUMN public.employee_standort_plan.von IS 'Beginn des Zeitfensters (Berlin), NULL = ganzer Tag (0109)';
+COMMENT ON COLUMN public.employee_standort_plan.bis IS 'Ende des Zeitfensters (Berlin), NULL = ganzer Tag (0109)';
 
 ALTER TABLE ONLY public.employee_standort_plan
   ADD CONSTRAINT employee_standort_plan_art_check CHECK ((weekday IS NULL) <> (datum IS NULL));
@@ -1748,6 +1752,9 @@ ALTER TABLE ONLY public.employee_standort_plan
 
 ALTER TABLE ONLY public.employee_standort_plan
   ADD CONSTRAINT employee_standort_plan_weekday_check CHECK (weekday IS NULL OR weekday >= 0 AND weekday <= 6);
+
+ALTER TABLE ONLY public.employee_standort_plan
+  ADD CONSTRAINT employee_standort_plan_zeitfenster_check CHECK ((von IS NULL) = (bis IS NULL) AND (von IS NULL OR von < bis));
 
 CREATE TABLE public.fahrten (
   id uuid DEFAULT gen_random_uuid() NOT NULL,

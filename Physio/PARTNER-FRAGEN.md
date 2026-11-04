@@ -141,3 +141,31 @@
 - **Cevap "hayır" ise değişen:** Rezept başına ise satır başı D kalkar, tek kutu kalır.
 - **Öncelik:** 🟠 her gün sürtünme
 - **Eklendi:** 2026-11-02 (P1 ekran incelemesi) · **Cevap:** —
+
+### #18 — Räume: welche, wie viele Plätze?
+- **Soru (Almanca, partnere aynen):** „Welche Räume gibt es an jedem Standort, und wie viele Patienten können darin gleichzeitig behandelt werden (Liegen, Wärme/Fango parallel)? Gibt es Räume, die nur für bestimmte Leistungen taugen (z. B. KGG-Gerät)?"
+- **Varsayımımız:** Standort başına 4–7 oda, çoğu 1 Platz, Wärme/Fango odası 2+. Model hazır: `rooms.plaetze`, `rooms.ausstattung` + `services.raum_ausstattung` (0092/0103/0104), çakışma uyarır, engellemez.
+- **Cevap "hayır" ise değişen:** Liegen/Wärmephasen ayrı kapasite olarak sayılmalıysa (bir Termin iki aşama, iki oda) Termin başına tek `room_id` yetmez → aşamalı rezervasyon.
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-04 (physio-Prüfung M1–M7) · **Cevap:** —
+
+### #19 — Standortwechsel innerhalb eines Tages
+- **Soru (Almanca, partnere aynen):** „Arbeitet jemand am selben Tag an beiden Standorten (z. B. vormittags hier, nachmittags dort)? Wenn ja: wie viel Fahrzeit planen Sie dazwischen ein?"
+- **Varsayımımız:** Evet, ara sıra. 04.11.2026'dan beri Wochenmuster'da Zeitfenster var (0109: „Mo 8–12 A, 14–18 B"); Fahrzeit = iki pencere arasındaki boşluk, ayrıca hesaplanmaz.
+- **Cevap "hayır" ise değişen:** Hiç olmuyorsa Zeitfenster boş kalır (ganzer Tag, eski davranış). Aynı Standort'ta günde iki pencere gerekiyorsa UNIQUE'e `von` eklenir (yeni migration).
+- **Öncelik:** 🟠 her gün sürtünme
+- **Eklendi:** 2026-11-04 (physio-Prüfung, Melih-Entscheid Zeitfenster) · **Cevap:** —
+
+### #20 — Schließtag: wer informiert die Patienten?
+- **Soru (Almanca, partnere aynen):** „Wenn ein Standort an einem Tag schließt: Wer informiert die betroffenen Patienten — Empfang per Telefon, oder soll Praxura nach Ihrer Freigabe E-Mails verschicken? Wer darf diese Freigabe geben?"
+- **Varsayımımız:** Kemal 31.10.: neue Termine gesperrt, bestehende rot, keine automatische Mail. Vorschau + Freigabe + Anrufliste existieren (M6b/c, 0101/0102); Versand nur mit ausdrücklichem Klick, Einwilligung E13.
+- **Cevap "hayır" ise değişen:** Nur Telefon → Mail-Knopf ausblenden, Anrufliste genügt. Freigabe durch Empfang statt Inhaber → Rechte der Route `sondertag/mitteilung` erweitern (guvenlik).
+- **Öncelik:** 🟡 selten
+- **Eklendi:** 2026-11-04 (physio-Prüfung M6) · **Cevap:** —
+
+### #21 — Online-Termine: für wen?
+- **Soru (Almanca, partnere aynen):** „Sollen über Ihre Webseite nur Bestandspatienten Folgetermine anfragen, oder auch Neupatienten mit Rezept — und Selbstzahler (z. B. Massage) getrennt davon?"
+- **Varsayımımız:** Başlangıçta Terminanfrage (Empfang onaylar), Neupatient dahil; Selbstzahler ayrı Leistung olarak. Widget: `widget/booking-widget.html` (M7).
+- **Cevap "hayır" ise değişen:** Yalnız Bestandspatient ise widget'ta Telefon/Geburtsdatum ile eşleştirme zorunlu olur; Selbstzahler ayrı ise ikinci widget/sekme.
+- **Öncelik:** 🟡 selten
+- **Eklendi:** 2026-11-04 (physio-Prüfung M7) · **Cevap:** —

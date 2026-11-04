@@ -33,15 +33,16 @@ function eindeutig(zeilen) {
   return aus;
 }
 
-export function standorteFuerTag(zeilen, employeeId, datum, alleStandortIds) {
-  const alle = Array.isArray(alleStandortIds) ? alleStandortIds.slice() : [];
+// Zeilen, die fuer (Mitarbeiter, Tag) gelten: Einzeltag-Zeilen, sonst Wochenmuster der geltenden Version.
+// null = kein Eintrag -> alle Standorte, ganzer Tag (altes Verhalten).
+function geltendeZeilen(zeilen, employeeId, datum) {
   const t = wochentagVon(datum);
-  if (!Array.isArray(zeilen) || employeeId == null || !t) return alle;
+  if (!Array.isArray(zeilen) || employeeId == null || !t) return null;
   const eigene = zeilen.filter((z) => z && typeof z === 'object' && z.employee_id === employeeId);
-  if (!eigene.length) return alle;
+  if (!eigene.length) return null;
 
   const einzel = eigene.filter((z) => typeof z.datum === 'string' && z.datum.slice(0, 10) === t.tag);
-  if (einzel.length) return eindeutig(einzel);
+  if (einzel.length) return einzel;
 
   // Wochenmuster in Versionen (gueltig_ab, 0098): je Mitarbeiter gilt die Version mit dem groessten
   // gueltig_ab <= Tag, NULL = seit immer. Eine neue Version erbt keine Wochentage der alten.
@@ -53,11 +54,46 @@ export function standorteFuerTag(zeilen, employeeId, datum, alleStandortIds) {
     if (g !== null && g > t.tag) continue;
     if (!gefunden || (g !== null && (version === null || g > version))) { version = g; gefunden = true; }
   }
-  if (!gefunden) return alle;
+  if (!gefunden) return null;
   const woche = muster.filter((z) => gueltigAb(z.gueltig_ab) === version && Number(z.weekday) === t.wochentag);
-  return woche.length ? eindeutig(woche) : alle;
+  return woche.length ? woche : null;
+}
+
+export function standorteFuerTag(zeilen, employeeId, datum, alleStandortIds) {
+  const alle = Array.isArray(alleStandortIds) ? alleStandortIds.slice() : [];
+  const gelten = geltendeZeilen(zeilen, employeeId, datum);
+  return gelten ? eindeutig(gelten) : alle;
 }
 
 export function istAmStandort(zeilen, employeeId, datum, standortId, alleStandortIds) {
   return standorteFuerTag(zeilen, employeeId, datum, alleStandortIds).includes(standortId);
+}
+
+// Zeitfenster (0109, Melih 04.11.2026: „Mo 8–12 Standort A, 14–18 Standort B“). von/bis 'HH:MM[:SS]' an der
+// Planzeile; beide leer = ganzer Tag (Bestand, Einzeltage). Ob ueberhaupt gearbeitet wird, regeln weiter
+// working_hours — die Fenster schraenken nur ein (Schnittmenge).
+const ZEIT_RE = /^([01]\d|2[0-3]):[0-5]\d/;
+
+/** 'HH:MM[:SS]' -> Minuten seit Mitternacht, sonst null. */
+export function zeitInMinuten(wert) {
+  if (typeof wert !== 'string' || !ZEIT_RE.test(wert)) return null;
+  return Number(wert.slice(0, 2)) * 60 + Number(wert.slice(3, 5));
+}
+
+/**
+ * true = der Termin [vonMin, bisMin) (Minuten, Berliner Ortszeit) passt in den Plan dieses Standorts.
+ * Kein Eintrag fuer den Tag -> wie istAmStandort (alle Standorte, ganzer Tag). Ohne Zeitangabe nur Tagespruefung.
+ */
+export function imZeitfenster(zeilen, employeeId, datum, standortId, vonMin, bisMin, alleStandortIds) {
+  const gelten = geltendeZeilen(zeilen, employeeId, datum);
+  if (!gelten) return (Array.isArray(alleStandortIds) ? alleStandortIds : []).includes(standortId);
+  const amOrt = gelten.filter((z) => z.business_id === standortId);
+  if (!amOrt.length) return false;
+  if (!Number.isFinite(vonMin) || !Number.isFinite(bisMin)) return true;
+  return amOrt.some((z) => {
+    const v = zeitInMinuten(z.von);
+    const b = zeitInMinuten(z.bis);
+    if (v === null || b === null) return true;
+    return v <= vonMin && bisMin <= b;
+  });
 }

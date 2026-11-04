@@ -885,8 +885,10 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 
   // 1.45 Standort-Plan (S6/M4d): nur wenn ein Plan fuer diesen Mitarbeiter existiert und ihn an diesem Tag
   // nicht am Standort vorsieht. Tabelle fehlt/Fehler/leer -> ladeStandortPlan liefert [] = altes Verhalten.
+  let planFuerSlots = null; // 0109: Zeitfenster schneiden die Slots unten zusaetzlich zu (Schnittmenge mit working_hours)
   if (activeBiz?.id) {
     const planZeilen = await ladeStandortPlan(supabase, { ownerId, employeeIds: [userId] });
+    planFuerSlots = planZeilen;
     if (!planErlaubt(planZeilen, userId, date, activeBiz.id)) return { slots: [], reason: 'working_hours_inactive' }; // bewusst kein eigener Grund: öffentlich nicht vom freien Tag unterscheidbar (S-59)
   }
 
@@ -1064,7 +1066,8 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
     // Skip slots in the past (today only) + enforce 30-min lead time
     const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
-    if (!hasOverlap && !tooSoon) slots.push(minsToTime(currentMins));
+    const imFenster = !planFuerSlots || planErlaubt(planFuerSlots, userId, date, activeBiz.id, { vonMin: currentMins, dauerMin: parseInt(duration) });
+    if (!hasOverlap && !tooSoon && imFenster) slots.push(minsToTime(currentMins));
     currentMins += step;
   }
 
@@ -1562,7 +1565,7 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   }
 
   for (const dateStr of targetDates.slice(0, count)) {
-    if (!planErlaubt(planZeilen, userId, dateStr, planStandortId)) { conflicts.push({ date: dateStr, reason: 'Mitarbeiter an diesem Tag nicht an diesem Standort eingeplant' }); continue; }
+    if (!planErlaubt(planZeilen, userId, dateStr, planStandortId, { start: time, dauerMin: dur })) { conflicts.push({ date: dateStr, reason: 'Mitarbeiter zu dieser Zeit nicht an diesem Standort eingeplant' }); continue; }
     try {
       const start_time = berlinLocalToUTC(dateStr, time);
       const end_time = new Date(start_time.getTime() + dur * 60000);
@@ -2019,6 +2022,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
           const slotEnd = m + dur;
           const overlap = busy.some(b => m < b.end && slotEnd > b.start);
           if (overlap) continue;
+          if (!planErlaubt(planZeilen, emp.id, dateStr, planStandortId, { vonMin: m, dauerMin: dur })) continue;
 
           let score = 0;
           if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
@@ -2090,6 +2094,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         if (offHit) continue;
         for (let m = startMins; m + dur <= endMins; m += step) {
           if (busy.some(b => m < b.end && m + dur > b.start)) continue;
+          if (!planErlaubt(planZeilen, emp.id, dateStr, planStandortId, { vonMin: m, dauerMin: dur })) continue;
           let score = 0;
           if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
           if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
@@ -2390,8 +2395,8 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
       conflicts.push({ slot: s, reason: 'Ungültiger Slot' });
       continue;
     }
-    if (!planErlaubt(planZeilen, s.employeeId, s.date, planStandortId)) {
-      conflicts.push({ slot: s, reason: 'Mitarbeiter an diesem Tag nicht an diesem Standort eingeplant' });
+    if (!planErlaubt(planZeilen, s.employeeId, s.date, planStandortId, { start: s.time, dauerMin: dur })) {
+      conflicts.push({ slot: s, reason: 'Mitarbeiter zu dieser Zeit nicht an diesem Standort eingeplant' });
       continue;
     }
     try {

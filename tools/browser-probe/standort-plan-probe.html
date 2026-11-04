@@ -18,7 +18,7 @@ const probe = window.__probe = [];
 const pruefe = (name, ok) => probe.push({ name, ok: !!ok });
 const warte = ms => new Promise(r => setTimeout(r, ms));
 
-const protokoll = { insert: [], delete: [] };
+const protokoll = { insert: [], delete: [], update: [] };
 let plan = [
   { id: 'w1', employee_id: 'e1', business_id: 'A', weekday: 1, datum: null },
 ];
@@ -35,6 +35,7 @@ function abfrage(tabelle) {
     in(k, v) { stand.filter[k] = v; return b; },
     insert(zeilen) { stand.op = 'insert'; stand.zeilen = zeilen; return b; },
     delete() { stand.op = 'delete'; return b; },
+    update(felder) { stand.op = 'update'; stand.felder = felder; return b; },
     then(ok, fehl) {
       let res;
       if (tabelle === 'employee_standort_plan' && stand.op === 'select') res = { data: plan.map(z => ({ ...z })), error: null };
@@ -45,6 +46,10 @@ function abfrage(tabelle) {
       } else if (tabelle === 'employee_standort_plan' && stand.op === 'delete') {
         protokoll.delete.push(...stand.filter.id);
         plan = plan.filter(z => !stand.filter.id.includes(z.id));
+        res = { data: null, error: null };
+      } else if (tabelle === 'employee_standort_plan' && stand.op === 'update') {
+        protokoll.update.push({ id: stand.filter.id, ...stand.felder });
+        plan = plan.map(z => (z.id === stand.filter.id ? { ...z, ...stand.felder } : z));
         res = { data: null, error: null };
       } else if (tabelle === 'bookings') res = { data: termine, error: null };
       else res = { data: [], error: null };
@@ -146,6 +151,29 @@ try {
   host.querySelector('#spSpeichernBtn').click();
   await warte(200);
   pruefe('Umstellung entfernen löscht genau ihre Zeilen', protokoll.delete.length - vorWeg === abNeu.length && !host.querySelector('.sp-versionen'));
+
+  // Zeitfenster (0109): Mo Nord 08–12 setzen -> UPDATE derselben Zeile, kein Insert; Mo-Termin 09:00 Süd bleibt Konflikt.
+  await mountStandortPlan(host, deps);
+  pruefe('Zeitfenster-Liste: je Häkchen zwei Zeitfelder', host.querySelectorAll('#spFenster .sp-von').length === host.querySelectorAll('.sp-muster:checked').length);
+  const vonFeld = host.querySelector('#spFenster .sp-von[data-key="1|A"]');
+  const bisFeld = host.querySelector('#spFenster .sp-bis[data-key="1|A"]');
+  vonFeld.value = '08:00'; vonFeld.dispatchEvent(new Event('change'));
+  bisFeld.value = '12:00'; bisFeld.dispatchEvent(new Event('change'));
+  const vorFenster = { ins: protokoll.insert.length, upd: protokoll.update.length };
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(200);
+  pruefe('Zeitfenster: nur Update, kein Insert', protokoll.insert.length === vorFenster.ins && protokoll.update.length === vorFenster.upd + 1
+    && protokoll.update.at(-1).von === '08:00' && protokoll.update.at(-1).bis === '12:00');
+  // Halbes Fenster wird abgelehnt
+  const bis2 = host.querySelector('#spFenster .sp-bis[data-key="1|A"]');
+  bis2.value = ''; bis2.dispatchEvent(new Event('change'));
+  const vorHalb = protokoll.update.length;
+  host.querySelector('#spSpeichernBtn').click();
+  await warte(150);
+  pruefe('Zeitfenster: nur Beginn ohne Ende abgelehnt', protokoll.update.length === vorHalb && toasts.at(-1)?.t === 'error');
+  // Häkchen neu -> Feldpaar erscheint ohne Neuladen
+  host.querySelector('.sp-muster[data-weekday="5"][data-standort="B"]').click();
+  pruefe('Neues Häkchen bekommt sofort Zeitfelder', !!host.querySelector('#spFenster .sp-von[data-key="5|B"]'));
 } catch (e) {
   pruefe(`Ausnahme: ${e.message}`, false);
 }

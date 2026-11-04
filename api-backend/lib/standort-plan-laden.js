@@ -5,7 +5,7 @@
 // Der Plan darf die Zuordnung (employee_business_assignments) nie ERWEITERN: Aufrufer pruefen nur
 // "Plan erlaubt es" und lassen alles andere wie bisher; alleStandortIds = [angefragter Standort].
 
-import { istAmStandort } from './standort-plan.js';
+import { imZeitfenster, zeitInMinuten } from './standort-plan.js';
 
 const SPERRE_FEHLT_MS = 10 * 60 * 1000;
 const SPERRE_FEHLER_MS = 60 * 1000;
@@ -25,7 +25,7 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
   try {
     const { data, error } = await supabase
       .from('employee_standort_plan')
-      .select('employee_id,business_id,weekday,datum,gueltig_ab')
+      .select('employee_id,business_id,weekday,datum,gueltig_ab,von,bis')
       .eq('owner_id', ownerId)
       .in('employee_id', employeeIds);
     if (error) {
@@ -39,8 +39,14 @@ export async function ladeStandortPlan(supabase, { ownerId, employeeIds }, jetzt
   }
 }
 
-/** true = Mitarbeiter darf an diesem Tag an diesem Standort eingeplant werden. Ohne Plan/Standort immer true. */
-export function planErlaubt(zeilen, employeeId, datum, standortId) {
+/**
+ * true = Mitarbeiter darf an diesem Tag (und, mit `zeit`, in diesem Zeitraum) an diesem Standort eingeplant werden.
+ * Ohne Plan/Standort immer true. `zeit` = { start: 'HH:MM' | vonMin, dauerMin } in Berliner Ortszeit (0109 Zeitfenster).
+ */
+export function planErlaubt(zeilen, employeeId, datum, standortId, zeit = null) {
   if (!standortId || !Array.isArray(zeilen) || !zeilen.length) return true;
-  return istAmStandort(zeilen, employeeId, datum, standortId, [standortId]);
+  const von = !zeit ? null : Number.isFinite(zeit.vonMin) ? zeit.vonMin : zeitInMinuten(zeit.start);
+  const bis = von !== null && Number.isFinite(Number(zeit.dauerMin)) ? von + Number(zeit.dauerMin) : null;
+  return imZeitfenster(zeilen, employeeId, datum, standortId, von, bis, [standortId]);
 }
+

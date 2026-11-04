@@ -8525,6 +8525,9 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 .sp-tage li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .sp-tage li > span:first-child { min-width: 110px; font-variant-numeric: tabular-nums; }
 .sp-tage .sp-tag-weg { margin-left: auto; }
+.sp-fenster li { gap: 6px; } /* 0109: zwei Zeitfelder je Zeile */
+.sp-fenster input[type=time] { width: 8.5rem; min-width: 0; flex: 0 0 auto; }
+@media (max-width: 600px) { .sp-fenster li > span:first-child { flex: 1 1 100%; } }
 .sp-warnung { border: 1px solid var(--danger); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text-main); }
 .sp-warnung p { margin: 0 0 8px; }
 .sp-warnung ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }

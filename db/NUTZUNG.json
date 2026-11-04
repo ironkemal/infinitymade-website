@@ -1813,7 +1813,7 @@
     {
      "name": "schliesse",
      "file": "api-backend/server.js",
-     "start": 3989,
+     "start": 3994,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2730,7 +2730,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4164,
+     "start": 4169,
      "module": [],
      "uiPfad": []
     }
@@ -3271,7 +3271,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1856,
+     "start": 1859,
      "module": [],
      "uiPfad": []
     },
@@ -4115,7 +4115,7 @@
     {
      "name": "mountStandortPlan",
      "file": "module/standort-plan.js",
-     "start": 244,
+     "start": 313,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4973,7 +4973,7 @@
     {
      "name": "unbekannt",
      "file": "api-backend/server.js",
-     "start": 4164,
+     "start": 4169,
      "module": [],
      "uiPfad": []
     },
@@ -5035,7 +5035,7 @@
     {
      "name": "warnungPruefen",
      "file": "module/standort-plan.js",
-     "start": 271,
+     "start": 340,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5973,7 +5973,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1856,
+     "start": 1859,
      "module": [],
      "uiPfad": []
     }
@@ -6757,7 +6757,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1856,
+     "start": 1859,
      "module": [],
      "uiPfad": []
     },
@@ -9180,7 +9180,7 @@
   },
   {
    "name": "employee_standort_plan",
-   "spalten": 9,
+   "spalten": 11,
    "fkRaus": [
     "businesses",
     "profiles"
@@ -9198,7 +9198,7 @@
    ],
    "register": true,
    "status": "aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt",
-   "warum": "An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A\") und Einzeltag („am 09.11. in B\") in **einer** Tabelle, Tag-Granularität, keine Halbtage. Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.",
+   "warum": "An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A\") und Einzeltag („am 09.11. in B\") in **einer** Tabelle. Seit 0109 (04.11.2026) optional mit **Zeitfenster** je Wochenmuster-Zeile („Mo 8–12 A, 14–18 B“, Melih). Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.",
    "seit": "01.11.2026 · `0097_employee_standort_plan` (SaaS live 01.11.2026).",
    "ungeklaert": false,
    "leser": [
@@ -9301,7 +9301,7 @@
     {
      "name": "name",
      "file": "module/standort-plan.js",
-     "start": 252,
+     "start": 321,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9351,7 +9351,7 @@
     {
      "name": "mountStandortPlan",
      "file": "module/standort-plan.js",
-     "start": 244,
+     "start": 313,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9397,13 +9397,14 @@
      ],
      "ops": [
       "delete",
-      "insert"
+      "insert",
+      "update"
      ]
     },
     {
      "name": "speichern",
      "file": "module/standort-plan.js",
-     "start": 317,
+     "start": 397,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9449,7 +9450,8 @@
      ],
      "ops": [
       "delete",
-      "insert"
+      "insert",
+      "update"
      ]
     },
     {
@@ -12970,7 +12972,7 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1474,
+     "start": 1477,
      "module": [],
      "uiPfad": []
     },
@@ -20648,7 +20650,7 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 4139,
+     "start": 4144,
      "module": [],
      "uiPfad": []
     },
@@ -23311,7 +23313,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4451,
+     "start": 4456,
      "module": [],
      "uiPfad": []
     },
@@ -24898,7 +24900,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1856,
+     "start": 1859,
      "module": [],
      "uiPfad": []
     },
@@ -26188,7 +26190,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1856,
+     "start": 1859,
      "module": [],
      "uiPfad": []
     },
