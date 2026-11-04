@@ -63,3 +63,5 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 | 2026-10-26 | Katalog | [[2026-10-26_katalog-physio-ergo-logo]] | GKV_LEISTUNGSKATALOG Physio/Ergo/Logo denetimi · 9 sahte kod (Ergo 4, Logo 5), 9 yanlış fiyat, Physio X0102 etiketi yanlış · Ergo arşivi eskimiş (geçerli: Stand 01.07.2026) · kod yazılmadı |
 | 2026-10-30 | Physio-Pilot P1 | [[2026-10-30_p1-erstgespraech-physio-demo]] | Erstgespräch + Demo ausgewertet (Aufzeichnung gelesen) · Zusagen: Raum auf einen Blick, DATEV bis 2. Standort, Sandbox 3–4 Wochen · offen: ITSG, gemeinsame DB, Foto-OCR-Erwartung · nichts gebaut |
 | 2026-10-31 | Physio-Pilot P1 | [[2026-10-31_physio-planung-umsetzung]] | M1, M2a, M3, M5, M6a, M7 lokal gebaut und getestet, nicht live · Altfehler Resturlaub, Sondertag-Upsert, O-224 · offen: M2b, M4, Mail nach E13, GO für Live-Migration |
+
+| 2026-11-04 | Planung / Release | [[2026-11-04_planung-auslieferung-und-abnahmegrenzen]] | UTC-Fix öffentlich bytegleich nachgewiesen; echte QA-Sitzung und Hetzner-Ziel fehlen; Mail separat reserviert |
