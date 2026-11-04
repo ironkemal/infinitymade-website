@@ -6755,16 +6755,16 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const end = document.getElementById('leaveEnd').value;
   const reason = document.getElementById('leaveReason').value.trim();
   if (!start || !end) { showToast(t('err_generic'), 'error'); return; }
-  // Reines Datum, kein lokal gebautes ISO: `new Date(start+'T00:00:00').toISOString()`
+  // Datum explizit als UTC-Mitternacht speichern, unabhängig von der DB-Zeitzone.
   // verschob den gespeicherten Zeitpunkt um die Zeitzonen-Offsetstunden und liess
   // eine Abwesenheit im Kalender einen Tag zu frueh beginnen (Sommerzeit-Praxis).
-  // Postgres legt ein reines Datum als 00:00 UTC ab — genau das, was die
+  // Explizites Z verhindert die Auslegung als lokale DB-Mitternacht — was die
   // Abwesend-Anzeige (module/abwesenheit.js) beim Lesen erwartet.
   const { error } = await supabase.from('time_offs').insert({
     employee_id: empId,
     owner_id: getOwnerId(),
-    start_date: start,
-    end_date: end,
+    start_date: `${start}T00:00:00Z`,
+    end_date: `${end}T00:00:00Z`,
     reason
   });
   if (error) { showToast(t('err_generic'), 'error'); return; }
@@ -9217,8 +9217,8 @@ async function loadTeam() {
       const { error } = await supabase.from('time_offs').insert({
         employee_id: empId,
         owner_id: getOwnerId(),
-        start_date: fromVal,
-        end_date: toVal,
+        start_date: `${fromVal}T00:00:00Z`,
+        end_date: `${toVal}T00:00:00Z`,
         type: typeVal,
         note: `${workDays} Arbeitstage`
       });
@@ -9820,8 +9820,8 @@ function openEmpDetail(empId) {
       const { error } = await supabase.from('time_offs').insert({
         employee_id: empId,
         owner_id: getOwnerId(),
-        start_date: fromVal,
-        end_date: toVal,
+        start_date: `${fromVal}T00:00:00Z`,
+        end_date: `${toVal}T00:00:00Z`,
         type: typeVal,
         note: `${workDays} Arbeitstage`
       });
