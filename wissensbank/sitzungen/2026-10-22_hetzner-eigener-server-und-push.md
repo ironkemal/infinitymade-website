@@ -80,3 +80,9 @@ prüfen. Parallele Sitzungen im selben Arbeitsverzeichnis vergeben sonst dieselb
 
 - `konsey/tutanak/2026-10-22-ops-statusabgleich.md` wird weiter verändert (vermutlich parallele Sitzung), nicht committet.
 - Eintrag in [[conflict]] unter K10 (Migration 0081 Warteliste).
+
+## Nachtrag 04.11.2026
+
+Die obigen offenen Punkte und Versionsangaben beschreiben den damaligen Stand, keine aktuelle Prüfung.
+Fortsetzung mit Praxisserver-Beratung, Quellen-/Testgrenzen und live gelesenem Ops-Status vom 03.11.:
+[[2026-11-04_hetzner-praxisserver-und-ops-abgleich]].
