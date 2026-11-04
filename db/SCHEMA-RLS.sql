@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261103135621 0104_raum_automatik
--- EXPORTED AT:        2026-11-03T16:58:00.727761+00:00
--- ERZEUGT AM:         2026-11-03
+-- LAST MIGRATION:     20261104221334 0108_raumloeschung_ohne_automatik
+-- EXPORTED AT:        2026-11-04T22:14:17Z
+-- ERZEUGT AM:         2026-11-04
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -13,7 +13,7 @@
 --   table_columns:       1544
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        194
+--   rls_policies:        197
 --   functions:           132
 --   triggers:            127
 --   indexes:             375
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_10_31, realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05, realtime.messages_2026_11_06])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05, realtime.messages_2026_11_06, realtime.messages_2026_11_07])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -872,23 +872,47 @@ CREATE POLICY eba_write_owner_only ON public.employee_business_assignments
    FROM profiles p
   WHERE ((p.id = employee_business_assignments.employee_id) AND (p.owner_id = auth.uid()))))));
 
-CREATE POLICY employee_groups_owner_all ON public.employee_groups
+CREATE POLICY employee_groups_inhaber ON public.employee_groups
   AS PERMISSIVE
   FOR ALL
-  TO PUBLIC
+  TO authenticated
   USING ((EXISTS ( SELECT 1
    FROM businesses b
-  WHERE ((b.id = employee_groups.business_id) AND ((b.owner_id = auth.uid()) OR (auth.uid() IN ( SELECT profiles.id
-           FROM profiles
-          WHERE (profiles.owner_id = b.owner_id))))))));
+  WHERE ((b.id = employee_groups.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))
+  WITH CHECK ((EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_groups.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))));
 
-CREATE POLICY eso_owner_or_self ON public.employee_scope_overrides
+CREATE POLICY employee_groups_lesen ON public.employee_groups
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_groups.business_id) AND ((b.owner_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM profiles p
+          WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.owner_id = b.owner_id)))))))));
+
+CREATE POLICY eso_inhaber ON public.employee_scope_overrides
   AS PERMISSIVE
   FOR ALL
-  TO PUBLIC
-  USING (((employee_id = auth.uid()) OR (EXISTS ( SELECT 1
+  TO authenticated
+  USING ((EXISTS ( SELECT 1
    FROM businesses b
-  WHERE ((b.id = employee_scope_overrides.business_id) AND (b.owner_id = auth.uid()))))));
+  WHERE ((b.id = employee_scope_overrides.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))
+  WITH CHECK (((EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_scope_overrides.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))) AND (EXISTS ( SELECT 1
+   FROM profiles p
+  WHERE ((p.id = employee_scope_overrides.employee_id) AND (COALESCE(p.owner_id, p.id) = ( SELECT auth.uid() AS uid)))))));
+
+CREATE POLICY eso_lesen ON public.employee_scope_overrides
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING (((employee_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM businesses b
+  WHERE ((b.id = employee_scope_overrides.business_id) AND (b.owner_id = ( SELECT auth.uid() AS uid)))))));
 
 CREATE POLICY employee_services_mandant ON public.employee_services
   AS PERMISSIVE
@@ -995,16 +1019,29 @@ CREATE POLICY feedbacks_update_own ON public.feedbacks
   TO PUBLIC
   USING ((auth.uid() = user_id));
 
-CREATE POLICY group_scopes_via_group ON public.group_scopes
+CREATE POLICY group_scopes_inhaber ON public.group_scopes
   AS PERMISSIVE
   FOR ALL
-  TO PUBLIC
-  USING ((group_id IN ( SELECT eg.id
+  TO authenticated
+  USING ((EXISTS ( SELECT 1
    FROM (employee_groups eg
      JOIN businesses b ON ((b.id = eg.business_id)))
-  WHERE ((b.owner_id = auth.uid()) OR (auth.uid() IN ( SELECT profiles.id
-           FROM profiles
-          WHERE (profiles.owner_id = b.owner_id)))))));
+  WHERE ((eg.id = group_scopes.group_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))))
+  WITH CHECK ((EXISTS ( SELECT 1
+   FROM (employee_groups eg
+     JOIN businesses b ON ((b.id = eg.business_id)))
+  WHERE ((eg.id = group_scopes.group_id) AND (b.owner_id = ( SELECT auth.uid() AS uid))))));
+
+CREATE POLICY group_scopes_lesen ON public.group_scopes
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((EXISTS ( SELECT 1
+   FROM (employee_groups eg
+     JOIN businesses b ON ((b.id = eg.business_id)))
+  WHERE ((eg.id = group_scopes.group_id) AND ((b.owner_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+           FROM profiles p
+          WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.owner_id = b.owner_id)))))))));
 
 CREATE POLICY read_only_reference ON public.heilmittel_catalog
   AS PERMISSIVE
@@ -2689,6 +2726,13 @@ BEGIN
   -- Alle Schreibwege serialisieren ihre Raumentscheidung am selben Standort. Eine
   -- explizite manuelle Wahl prüft trotzdem keine Kapazität (bestehende Warnregel).
   PERFORM pg_advisory_xact_lock(hashtextextended('raum:' || NEW.owner_id::text || ':' || COALESCE(NEW.business_id::text, '-'), 0));
+  -- 0108: Raum gelöscht (FK ON DELETE SET NULL). Der alte Raum ist im selben Statement schon weg; nicht
+  -- neu zuteilen, sonst scheitert das Löschen, wenn kein Ersatzraum frei ist (auch bei vergangenen Terminen).
+  IF TG_OP = 'UPDATE' AND NEW.room_id IS NULL AND OLD.room_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM public.rooms r WHERE r.id = OLD.room_id) THEN
+    NEW.room_automatisch := false;
+    RETURN NEW;
+  END IF;
   automatisch := NEW.room_id IS NULL;
   IF TG_OP = 'UPDATE' THEN
     automatisch := automatisch OR (OLD.room_automatisch AND NEW.room_automatisch AND NEW.room_id IS NOT DISTINCT FROM OLD.room_id);
@@ -3476,13 +3520,32 @@ AS $function$
 DECLARE
   v_closed_days INTEGER[];
   v_dow INTEGER;
+  v_tag date;
 BEGIN
+  IF NEW.status = 'cancelled' THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE'
+     AND NEW.start_time IS NOT DISTINCT FROM OLD.start_time
+     AND NEW.business_id IS NOT DISTINCT FROM OLD.business_id THEN
+    RETURN NEW;
+  END IF;
+
+  v_tag := (NEW.start_time AT TIME ZONE 'Europe/Berlin')::date;
+
+  IF EXISTS (
+    SELECT 1 FROM public.custom_days cd
+     WHERE cd.owner_id = COALESCE(NEW.owner_id, NEW.user_id)
+       AND cd.date = v_tag
+       AND cd.type IN ('closed', 'holiday')
+       AND cd.start_time IS NULL AND cd.end_time IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Praxis geschlossen (Sondertag) am %', to_char(v_tag, 'DD.MM.YYYY') USING ERRCODE = 'P0001';
+  END IF;
+
   IF NEW.business_id IS NULL THEN RETURN NEW; END IF;
   SELECT closed_days INTO v_closed_days FROM public.businesses WHERE id = NEW.business_id;
   IF v_closed_days IS NULL OR array_length(v_closed_days, 1) IS NULL THEN
     RETURN NEW;
   END IF;
-  -- Berlin saatine göre gün hesapla
   v_dow := EXTRACT(DOW FROM (NEW.start_time AT TIME ZONE 'Europe/Berlin'))::INTEGER;
   IF v_dow = ANY (v_closed_days) THEN
     RAISE EXCEPTION 'Geschäft ist an diesem Tag geschlossen (closed_days check)' USING ERRCODE = 'P0001';

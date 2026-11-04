@@ -3,9 +3,9 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261103135621 0104_raum_automatik
--- EXPORTED AT:        2026-11-03T16:58:00.727761+00:00
--- ERZEUGT AM:         2026-11-03
+-- LAST MIGRATION:     20261104221334 0108_raumloeschung_ohne_automatik
+-- EXPORTED AT:        2026-11-04T22:14:17Z
+-- ERZEUGT AM:         2026-11-04
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
@@ -13,7 +13,7 @@
 --   table_columns:       1544
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        194
+--   rls_policies:        197
 --   functions:           132
 --   triggers:            127
 --   indexes:             375

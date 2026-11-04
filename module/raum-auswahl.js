@@ -9,7 +9,7 @@
  */
 import { raeumeDesStandorts, raumAuswahl, raumKonflikt } from './raum-plan.js';
 import { ladeAbwesenheiten } from './abwesenheit.js?v=20261031';
-import { ladeSondertage, warnungFuerTag } from './sondertag.js';
+import { ladeSondertage, warnungFuerTag } from './sondertag.js?v=20261104sondertag';
 
 const NICHT_VERFUEGBAR = 'Therapeut:in ist an diesem Tag nicht verfügbar.';
 const RAUM_SPALTEN = 'id,owner_id,business_id,name,plaetze,aktiv,sort';
@@ -141,7 +141,7 @@ export function raumFelder() {
 }
 
 /**
- * Warnt vor Abwesenheit und Raumüberschneidung. true = weiter speichern.
+ * Sperrt am geschlossenen Sondertag, warnt vor Abwesenheit und Raumüberschneidung. true = weiter speichern.
  * `raumId` undefined: Raum aus dem gespeicherten Termin (Verschieben), sonst der gewählte.
  */
 export async function terminWarnungen({ id = null, empId, startIso, endIso, raumId }) {
@@ -154,7 +154,7 @@ export async function terminWarnungen({ id = null, empId, startIso, endIso, raum
     const { vonDatum, bisDatum } = lokaleTage(startIso);
     const tage = await ladeSondertage({ supabase, ownerId: getOwnerId(), von: vonDatum, bis: bisDatum });
     const geschlossen = warnungFuerTag(tage, vonDatum);
-    if (geschlossen && !await frage(geschlossen)) return false;
+    if (geschlossen) { kontext.showToast(geschlossen, 'error'); return false; } // 0106: Sperre, die DB lehnt ohnehin ab (Kemal 31.10.)
     const abwesend = await ladeAbwesenheiten(supabase, { empIds: [empId], vonISO: startIso, bisISO: endIso });
     if (abwesend.length && !await frage(NICHT_VERFUEGBAR)) return false;
   } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }

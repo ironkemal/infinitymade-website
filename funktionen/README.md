@@ -117,6 +117,12 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 04.11.2026 · Physio-Pilot M6: Termine am Sondertag (`module/sondertag.js`)
+- Niye (Kemal): bestehende Termine am ganztägig geschlossenen Sondertag rot zeigen, neue sperren.
+- Neu: `terminAmSondertag(termin, tage)` (gilt, wenn nicht cancelled/no_show) · `markiereSondertagTermine({wurzel, tage})` (färbt `.dv-booking-block`/`.month-event-pill` über `_termin`). Nerede: zuerst `module/planung-bruecke.js` → `mountSondertagAnzeige`.
+- ~~`berlinTag(zeitpunkt)`~~: Doppel zu `alsBerlinDatum` (`module/berlin-datum.js`) → am 04.11.2026 vor dem Commit durch Import ersetzt, nicht eingeführt.
+- Geändert: `terminWarnungen()` (`module/raum-auswahl.js`) sperrt am Sondertag (Toast) statt Rückfrage; `raumBuchungsFehler()` (`api-backend/lib/raum-automatik.js`) übersetzt den DB-Fehler „Praxis geschlossen (Sondertag)“ (Migration 0106).
+
 ### 03.11.2026 · Raumdetails und ausstattungsbasierte Raumzuordnung
 - `module/raum-details.js`, `module/leistungs-raum.js`, Raumverwaltung/-auswahl und `api-backend/lib/raum-automatik.js`: Beschreibung und vorhandene Ausstattung je Raum erfassen, benötigte Ausstattung in beiden Leistungseditoren pflegen, manuelle Vorschläge und Vorabprüfung sämtlicher Leistungs-IDs bereitstellen. Erste Nutzung: Verfügbarkeit → Räume, Leistungen und Terminplanung. Die zentrale DB-Automatik in Migration0104 weist neue Buchungen standort-/mandantgerecht zu; lokale Migrationen sind keine Live-Freigabe. Bestehende manuelle Auswahl bleibt möglich.
 

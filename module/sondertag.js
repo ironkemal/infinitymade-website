@@ -18,6 +18,8 @@
  * - Jede Eingabe im HTML wird konsequent escaped.
  */
 
+import { alsBerlinDatum } from './berlin-datum.js';
+
 /**
  * Escaped HTML-Sonderzeichen zur Vermeidung von XSS.
  *
@@ -186,7 +188,7 @@ export function sondertagText(tag) {
 /**
  * 4. Liefert eine Warnung beim Anlegen eines Termins an einem geschlossenen Sondertag.
  * datum ist YYYY-MM-DD oder ISO-Zeit. Geschlossen:
- * "Die Praxis ist an diesem Tag geschlossen. Möchten Sie den Termin trotzdem eintragen?".
+ * "Die Praxis ist an diesem Tag geschlossen (Sondertag). Neue Termine sind gesperrt.".
  * Sonst null.
  *
  * @param {Array<object>|Map|object} tage
@@ -213,7 +215,7 @@ export function warnungFuerTag(tage, datum) {
 
   if (!tag) return null;
   if (sondertagArt(tag) === "geschlossen") {
-    return "Die Praxis ist an diesem Tag geschlossen. Möchten Sie den Termin trotzdem eintragen?";
+    return "Die Praxis ist an diesem Tag geschlossen (Sondertag). Neue Termine sind gesperrt.";
   }
   return null;
 }
@@ -520,4 +522,34 @@ export async function ladeBetroffene({ supabase, ownerId, von, bis } = {}) {
   } catch {
     return [];
   }
+}
+
+/** true, wenn der Termin an einem ganztägig geschlossenen Sondertag liegt und noch gilt (nicht abgesagt). */
+export function terminAmSondertag(termin, tage) {
+  if (!termin?.start_time || !Array.isArray(tage)) return false;
+  if (["cancelled", "canceled", "no_show"].includes(termin.status)) return false;
+  const tag = alsBerlinDatum(new Date(termin.start_time));
+  if (!tag) return false;
+  return tage.some(t => t?.date === tag && sondertagArt(t) === "geschlossen");
+}
+
+export const SONDERTAG_TERMIN_HINWEIS = "Praxis an diesem Tag geschlossen (Sondertag). Termin bitte absagen oder verschieben.";
+
+/**
+ * Kemal 31.10.: Bestehende Termine am geschlossenen Sondertag rot zeigen (nicht verstecken, nicht verschieben).
+ * Liest den Termin aus `el._termin` (Tag-, Wochen-, Monatsansicht setzen ihn). Rot = Ring + Tönung,
+ * die Mitarbeiterfarbe am linken Rand bleibt. Zeichnet der Kalender neu, sind die Elemente frisch.
+ */
+export function markiereSondertagTermine({ wurzel, tage } = {}) {
+  if (!wurzel || typeof wurzel.querySelectorAll !== "function") return 0;
+  let anzahl = 0;
+  for (const el of wurzel.querySelectorAll(".dv-booking-block, .month-event-pill")) {
+    if (!terminAmSondertag(el._termin, tage)) continue;
+    el.dataset.sondertag = "geschlossen";
+    el.style.boxShadow = "inset 0 0 0 2px var(--danger, #dc2626)";
+    el.style.backgroundImage = "linear-gradient(rgba(220, 38, 38, 0.22), rgba(220, 38, 38, 0.22))";
+    el.title = el.title ? `${SONDERTAG_TERMIN_HINWEIS}\n${el.title}` : SONDERTAG_TERMIN_HINWEIS;
+    anzahl += 1;
+  }
+  return anzahl;
 }

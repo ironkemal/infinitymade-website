@@ -11,6 +11,10 @@ export function raumBuchungsFehler(error) {
   if (error?.code === 'P0001' && String(error.message).startsWith('Kein freier Raum mit der benötigten Ausstattung')) {
     return 'Kein freier Raum mit der benötigten Ausstattung am Terminstandort verfügbar. Bitte Zeit oder Raumwahl prüfen.';
   }
+  // 0106: Sondertag sperrt neue Termine in der DB (fn_check_booking_closed_day).
+  if (error?.code === 'P0001' && String(error.message).startsWith('Praxis geschlossen (Sondertag)')) {
+    return 'Praxis an diesem Tag geschlossen (Sondertag)';
+  }
   return null;
 }
 

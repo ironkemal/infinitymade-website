@@ -226,7 +226,7 @@ test("C. warnungFuerTag akzeptiert '2026-12-24' und '2026-12-24T09:00:00.000Z' u
     { date: "2026-12-25", type: "special", start_time: "09:00", end_time: "13:00" },
   ];
 
-  const erwarteterText = "Die Praxis ist an diesem Tag geschlossen. Möchten Sie den Termin trotzdem eintragen?";
+  const erwarteterText = "Die Praxis ist an diesem Tag geschlossen (Sondertag). Neue Termine sind gesperrt.";
 
   // Datum als YYYY-MM-DD
   assert.equal(warnungFuerTag(tage, "2026-12-24"), erwarteterText);

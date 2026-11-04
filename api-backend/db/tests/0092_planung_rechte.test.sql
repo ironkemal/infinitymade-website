@@ -99,7 +99,7 @@ EXCEPTION WHEN check_violation THEN NULL; END $$;
 INSERT INTO public.bookings(id,user_id,owner_id,customer_name,start_time,end_time,status,room_id) VALUES
   ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2','11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111111','QA',
    '2026-12-01T11:00:00Z','2026-12-01T11:30:00Z','confirmed','cccccccc-cccc-4ccc-8ccc-ccccccccccc1');
--- Statusänderung erhält den Raum, Raumlöschung leert ihn.
+-- Statusänderung erhält den Raum, Raumlöschung leert ihn (0108: auch mit Raum-Automatik aus 0104).
 UPDATE public.bookings SET status='cancelled' WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1';
 DO $$ BEGIN
   IF (SELECT room_id FROM public.bookings WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1')

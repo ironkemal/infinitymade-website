@@ -10,6 +10,7 @@ test('API-Snapshot fehlt bei Altaufrufern; gültige IDs begrenzt und deduplizier
 test('Raumfehler wird verständlich gemeldet, sonst keine internen DB-Meldungen', () => {
   assert.match(raumBuchungsFehler({ code: 'P0001', message: 'Kein freier Raum mit der benötigten Ausstattung xyz' }), /Bitte Zeit/);
   assert.equal(raumBuchungsFehler({ code: 'P0001', message: 'interne Information' }), null);
+  assert.equal(raumBuchungsFehler({ code: 'P0001', message: 'Praxis geschlossen (Sondertag) am 24.12.2026' }), 'Praxis an diesem Tag geschlossen (Sondertag)');
 });
 test('Bestätigung liest nur zugeordneten Raumname im selben Mandanten und Standort', async () => {
   const calls = [];

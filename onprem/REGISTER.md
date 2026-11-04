@@ -6914,3 +6914,14 @@ Yeni madde yok, mevcut maddelerde durum değişikliği yok.
 
 - Lokaler Commit bewusst mit `SKIP_SAAS_ZEILE_GATE=1` gemäß `tools/check-onprem.sh:399`: fehlendes SaaS-GO, vollständig lokal getestet; alle übrigen Gates aktiv. Kein Push/Release. Wahrheitsgemäßer Status NICHT ANGEWANDT bleibt in 0102 unverändert. Ausnahme mit Onprem-Berater geprüft.
 - **SaaS angewandt 02.11.2026 (Melih GO):** Management-API, BEGIN/COMMIT. Live gemessen: Supabase-Default-Privilegien gaben `anon`/`authenticated` zusätzlich EXECUTE auf die Trigger-Funktion → in der Datei (noch ungepusht) `REVOKE … FROM anon, authenticated` ergänzt und live angewandt; danach nur service_role. Frische Kette 0000–0102 erneut grün (0102 doppelt), Advisors ohne Befund, `db/SCHEMA*` aus dem Live-Katalog neu. SaaS-Marker in der Datei gesetzt, Gate-Ausnahme damit hinfällig.
+
+### O-241 — 0106/0107/0108: Sondertag-Sperre im Trigger · Modulrechte nur Inhaber · Raumlöschung ohne Automatik (ön kontrol 04.11.2026) ✅ **GEÇER**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | 0106: `fn_check_booking_closed_day()` sperrt neue Termine an ganztägigen `custom_days` (closed/holiday) des Inhabers. 0107: `employee_scope_overrides`/`employee_groups`/`group_scopes` — FOR-ALL für Team ersetzt durch Team-SELECT + Inhaber-ALL. 0108: `booking_raum_automatisch()` teilt bei FK-SET-NULL (Raum gelöscht) nicht neu zu |
+| **Nerede** | `api-backend/db/migrations/0106_sondertag_sperre.sql` · `0107_modulrechte_nur_inhaber.sql` · `0108_raumloeschung_ohne_automatik.sql` · `erwartete-zaehler.json` (`bis_version` 0108, rls_policy 185→188) |
+| **Tip** | D (nur Funktionskörper + Policies, kein neues Objekt/Kolon) · F nicht neu (bestehende Trigger) |
+| **Kutuda ne olur** | **Box ohne `businesses`-Zeile:** 0106 prüft `custom_days` per `owner_id` *vor* dem `business_id IS NULL`-Ausstieg → Sperre greift auch ohne Standort. 0107: die drei Tabellen haben `business_id NOT NULL` → ohne Standort ohnehin leer; alte Policies joinedten schon `businesses`, keine neue Abhängigkeit; Backend (`routes/mitarbeiter-zugang.js:260`) liest per service_role, unberührt. **`:stable`/`:beta` parallel:** alle drei abwärtskompatibel; `:stable`-Code bekommt bei Termin am Sondertag nur einen P0001 mehr (Text evtl. nicht erkannt → generische Fehlermeldung, fail-closed, kein Datenschaden). Absagen/Bearbeiten ohne Zeitänderung laufen durch. **migrate.js:** reine `CREATE OR REPLACE`/`DROP POLICY IF EXISTS` → idempotent auf frischer Kette (0000–0108 grün gemeldet). G1/G2/G3/G8 nicht berührt: kein Host, kein Env, kein Secret, kein Cloud-Dienst |
+| **Çözüm** | Keine Folgearbeit. Auflage: 0106–0108 sind SaaS-angewandt → Dateien ab jetzt unveränderlich (SHA-256 im Ledger); Korrektur nur per neuer Datei. `db/SCHEMA*` im selben Commit aus Live-Katalog tazelen |
+| **Durum** | `unkritisch` — gerekçe oben; Nachweis lokal/synthetisch (frische Kette + DB-Tests 0092/0097/0106), kein Kundenbox-Test (gleiche Klasse wie O-233/O-240) |

@@ -272,10 +272,12 @@
     await warte(250);
     pruefe('Neuzeichnen doppelt nichts', document.querySelectorAll('#weekViewGrid .sondertag-etikett').length === 2);
 
-    // Warnung am Schließtag
+    // Sperre am Schließtag (0106, Kemal 31.10.): kein „Trotzdem eintragen“, Fehlermeldung, Speichern bricht ab
     fragen.length = 0;
-    await terminWarnungen({ empId: 'm1', startIso: '2026-12-24T09:00:00+01:00', endIso: '2026-12-24T09:30:00+01:00', raumId: null });
-    pruefe('Termin am Schließtag warnt', /geschlossen/.test(fragen[0]?.message || ''));
+    toasts.length = 0;
+    const weiter = await terminWarnungen({ empId: 'm1', startIso: '2026-12-24T09:00:00+01:00', endIso: '2026-12-24T09:30:00+01:00', raumId: null });
+    pruefe('Termin am Schließtag wird gesperrt', weiter === false && fragen.length === 0
+      && toasts.some(t => t.art === 'error' && /gesperrt/.test(t.text)));
 
     // Anrufliste: kein Grund, nur Zeit, Patient, Telefon
     tabellen.bookings.push({ id: 's1', owner_id: OWNER, user_id: 'm1', status: 'confirmed', customer_name: 'Klara <b>Fett</b>', customer_phone: '0151 000', start_time: '2026-12-24T08:00:00+00:00', end_time: '2026-12-24T08:30:00+00:00', group_parent_id: null });
