@@ -1,5 +1,19 @@
 # Planung: Abschlussaudit und verbleibende Abnahmen
 
+## Koordinierter Restabschluss 05.11.2026
+
+Diese Ergänzung präzisiert die älteren Stände unten; historische Nachweise bleiben erhalten.
+
+- **Aufteilung:** Planungs-Chat übernimmt F11 mit separater autorisierter QA-Mitarbeitersitzung und koordiniert restliche Standort-/Raumfälle mit canli-test. Unterstützungs-Chat besitzt Mail/KI und Matrix/AUTOPILOT. Keine parallelen Browser- oder QA-Datenänderungen; Reservierungen und Schreibpausen vor Zugriff abgleichen.
+- **Urlaub:** Planungs-Chat meldet drei authentifizierte Live-Schreibwege mit korrektem UTC-Roundtrip und Reload-Nachweis (`0d1f4e4c`, `5b03a0c2`). Hier nicht wiederholt. Saldoänderung 6→3 wurde dort auf parallel geänderte Arbeitstage zurückgeführt; kein daraus belegter Cachefehler.
+- **Mail-Ziel:** Fußzeile mit Logo/Kontaktdaten speichern, nach Neuladen auswählen und Vorschau sehen; aus synthetischer Anweisung echten KI-Mailentwurf erzeugen, Betreff/Text bearbeiten und kombinierten Text kopieren. Kein Versand/Gmail-Ersatzsetup, Janik/Yannik ausgeschlossen.
+- **Voraussetzungen offen:** Live-Spalte `profiles.mail_signatur_einstellungen` und wirksame KI-Konfiguration samt Owner-Einwilligung. `api-backend/db/migrations/0105_mail_signaturen.sql` kennzeichnet sich lokal als nicht auf SaaS angewandt; kein Beweis des aktuellen Livezustands. Struktureller Connector-Read am 05.11. mit `MCP error -32600: You do not have permission to perform this action` gescheitert. Keine Migration ausgeführt.
+- **KI-Gates laut Code:** `AI_ACTIVATION_READY=1`, `AI_MAIL_READY=1`, `AI_ALLOW_FREETEXT=1`, gültige Providerkonfiguration im Modus direkt/jeton sowie Owner-Freigabe. Gmail ist für Entwurfserzeugung nicht Voraussetzung. Gates nicht für Tests umgehen.
+- **Abnahmefolge nach exklusiver QA-Übernahme:** synthetische Vorlage und Logo speichern → vollständig neu laden → Inhalt/Auswahl vergleichen → KI-Entwurf erzeugen → Betreff/Text ändern → „Text kopieren“ einschließlich Fußzeile prüfen. Versandknopf unbetätigt. Simulierte Tests ersetzen weder echte Speicherung noch Provideraufruf.
+- **Hetzner/Box:** auf ausdrücklichen Nutzerwunsch später; keine Installation oder Serverauswahl hier.
+- **Nutzerentscheidung im Anschluss:** echte Fußzeilen-Speicherprüfung ausdrücklich vorerst zurückgestellt. Keine erneute Zugriffsanforderung oder Migration dafür; Aufgabe bleibt offen, nicht bestanden.
+- **Gezielter lokaler Nachtest:** `module/mail-signatur.test.js`, `module/ki-client.test.js`, `api-backend/lib/mail-signatur.test.js`, `module/ki-dashboard-contract.test.js` und `api-backend/ai/tasks.test.js`: zusammen 62 PASS, 0 FAIL/0 SKIP am Produktstand `2b52d4c7`. Keine Konten, DB-Zugriffe, Mails oder echten KI-Aufrufe. Neue Probe `node tools/browser-probe/mail-entwurf-bearbeiten-isoliert.mjs` prüft tatsächliche Compose-/Kopierhandler aus `dashboard.js` und echten Fußzeileneditor mit synthetischer KI-Antwort: nachträglich geänderter Betreff/Text und ausgewählte Fußzeile korrekt kopiert; drei Mutationen (alter Text, alter Betreff, fehlende Fußzeile) werden abgelehnt. Kein Nachweis echter Speicherung oder Provideranbindung.
+
 Stand: 03.11.2026, nach freigegebenem Push und Frontend-Veröffentlichungsprüfung bis `8d8f7c0a`. Kein pauschaler Abschluss des Gesamtziels.
 
 | Anforderung | Nachweis | Status / nächster notwendiger Schritt |
