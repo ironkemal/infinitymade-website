@@ -118,6 +118,14 @@ geçti (21.09.2026), Physio henüz koşmadı. **Süre hiçbir resmî belgede yaz
 cevabına bağlı. AZE'ye sorulacak iki soru: (1) ne kadar sürer, (2) Selbstabrechner praxis
 yazılım değiştirince Testverfahren'i yeniden koşar mı. Plan: `ABRECHNUNG_ECHTBETRIEB_PLAN.md`.
 
+**AZE yazılı cevabı (03.11.2026, Team Datenlogistik):** (2) Hayır — Freigabe IK'ye bağlı,
+yazılıma değil; zaten elektronik abrechnen eden praxis yeniden Erprobung yapmaz. (1) Yeni
+praxis: genelde tek tam Abrechnung (DALE + kâğıt belgeler) Prüfstufe 1-4'ten geçerse IK Echt'e
+açılır; süre belgelerin tamamlanmasına bağlı. Erprobung dosyası (Testindikator 1) ödeme
+tetikleyebilir. Test kanalı: `inbox@tp5.arz-emmendingen.de`, mail başına bir TSOL + .AUF çifti,
+Betreff'te Absender-IK; sahte veriyle şifresiz test bizim Klass-68 IK'mızla serbest.
+Set: `node api-backend/billing/dta/ta-validator-satz.mjs --aze <klasör>`.
+
 ## 6. Durum
 
 Ops-Dashboard'da üst kart: **"Physio-Pilot P1"** (alt kartlar = bu tablodaki numaralar).
