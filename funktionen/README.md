@@ -117,6 +117,12 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 04.11.2026 · Physio-Pilot M4: Zeitfenster am Standort (Migration 0109)
+- Niye (Melih 04.11.): „Mo 8–12 A, 14–18 B“, der Standortplan galt bisher nur tageweise.
+- Neu: `imZeitfenster()` + `zeitInMinuten()` (interner Helfer `geltendeZeilen()`), absichtlich identische Kopien in `module/standort-plan-regel.js` und `api-backend/lib/standort-plan.js` (Frontend/Backend; nicht zusammenlegen, gemeinsam ändern, Vektoren `module/standort-plan-vektoren.json`). `planErlaubt(…, zeit)` (`api-backend/lib/standort-plan-laden.js`) nimmt optional `{start|vonMin, dauerMin}`. Nerede: `server.js` getAvailableSlots · batch-create · batch-create-explicit · KI-Serie.
+- `module/standort-plan.js`: `fensterAusZeilen`, `fensterFehler`, `fensterListeHtml`. `planAenderung` liefert zusätzlich `aendern`, d. h. UPDATE statt Insert, wenn sich nur die Zeit ändert.
+- Doppel: `minutenVon()` in `standort-plan-laden.js` macht dasselbe wie `zeitInMinuten` aus `./standort-plan.js` (schon importiert), ist aber lockerer (einstellige Stunde, keine Bereichsprüfung) → ersetzen. Ältere Zeit→Minuten-Helfer (`timeToMins`/`timeToMinsLocal` in `server.js`, `min` in `dashboard.js`) sind älter und ohne Prüfung; nicht Teil dieser Änderung.
+
 ### 04.11.2026 · Physio-Pilot M6: Termine am Sondertag (`module/sondertag.js`)
 - Niye (Kemal): bestehende Termine am ganztägig geschlossenen Sondertag rot zeigen, neue sperren.
 - Neu: `terminAmSondertag(termin, tage)` (gilt, wenn nicht cancelled/no_show) · `markiereSondertagTermine({wurzel, tage})` (färbt `.dv-booking-block`/`.month-event-pill` über `_termin`). Nerede: zuerst `module/planung-bruecke.js` → `mountSondertagAnzeige`.

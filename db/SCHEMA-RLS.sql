@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261104221334 0108_raumloeschung_ohne_automatik
--- EXPORTED AT:        2026-11-04T22:14:17Z
+-- LAST MIGRATION:     20261104223416 0109_standort_plan_zeitfenster
+-- EXPORTED AT:        2026-11-04T22:34:30Z
 -- ERZEUGT AM:         2026-11-04
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1544
+--   table_columns:       1546
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197

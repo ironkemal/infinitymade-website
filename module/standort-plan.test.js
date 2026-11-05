@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   musterAusZeilen, einzeltageAusZeilen, tageImZeitraum, sollZeilen, planAenderung, konflikte, standortPlanHtml, warnlisteHtml,
-  MAX_VERSETZEN_TAGE,
+  MAX_VERSETZEN_TAGE, fensterAusZeilen, fensterFehler, fensterListeHtml,
 } from './standort-plan.js';
 
 const HEUTE = '2026-11-02';
@@ -40,12 +40,12 @@ test('Aenderung: Muster umstellen loescht alte Zeile, legt neue an, vergangene E
   const soll = sollZeilen({ muster: new Set(['1|A', '3|B']), einzeltage: new Map([['2026-11-10', ['A']]]) }, { ownerId: 'o', empId: 'e1' });
   const { loeschen, neu } = planAenderung(alt, soll, HEUTE);
   assert.deepEqual(loeschen, ['w2']);
-  assert.deepEqual(neu, [{ owner_id: 'o', employee_id: 'e1', business_id: 'B', weekday: 3, datum: null, gueltig_ab: null }]);
+  assert.deepEqual(neu, [{ owner_id: 'o', employee_id: 'e1', business_id: 'B', weekday: 3, datum: null, gueltig_ab: null, von: null, bis: null }]);
 });
 
 test('Aenderung: unveraendert -> nichts zu tun', () => {
   const soll = sollZeilen({ muster: musterAusZeilen(alt), einzeltage: einzeltageAusZeilen(alt, HEUTE) }, { ownerId: 'o', empId: 'e1' });
-  assert.deepEqual(planAenderung(alt, soll, HEUTE), { loeschen: [], neu: [] });
+  assert.deepEqual(planAenderung(alt, soll, HEUTE), { loeschen: [], neu: [], aendern: [] });
 });
 
 test('Aenderung: Einzeltag entfernen loescht genau diese Zeile', () => {
@@ -147,4 +147,60 @@ test('Helfer: naechsterTag ueber Jahreswechsel, musterText', () => {
   assert.equal(naechsterTag('kaputt'), '');
   assert.equal(musterText(new Set(['3|B', '1|A']), id => ({ A: 'Nord', B: 'Süd' })[id]), 'Mo Nord · Mi Süd');
   assert.equal(musterText(new Set(), () => ''), 'kein Muster (alle Standorte)');
+});
+
+// ── Zeitfenster (0109) ──────────────────────────────────────────────────────
+const mitFenster = [
+  { id: 'f1', employee_id: 'e1', business_id: 'A', weekday: 1, datum: null, von: '08:00:00', bis: '12:00:00' },
+  { id: 'f2', employee_id: 'e1', business_id: 'B', weekday: 1, datum: null, von: '14:00:00', bis: '18:00:00' },
+  { id: 'f3', employee_id: 'e1', business_id: 'A', weekday: 2, datum: null, von: null, bis: null },
+];
+
+test('Fenster: aus Zeilen lesen, ganzer Tag ohne Eintrag', () => {
+  const f = fensterAusZeilen(mitFenster);
+  assert.deepEqual(f.get('1|A'), { von: '08:00', bis: '12:00' });
+  assert.deepEqual(f.get('1|B'), { von: '14:00', bis: '18:00' });
+  assert.equal(f.has('2|A'), false);
+});
+
+test('Fenster: nur Uhrzeit geändert -> UPDATE derselben Zeile, kein Insert (UNIQUE)', () => {
+  const fenster = fensterAusZeilen(mitFenster);
+  fenster.set('1|A', { von: '07:30', bis: '12:30' });
+  const soll = sollZeilen({ muster: musterAusZeilen(mitFenster), fenster, einzeltage: new Map() }, { ownerId: 'o', empId: 'e1' });
+  const aenderung = planAenderung(mitFenster, soll, HEUTE);
+  assert.deepEqual(aenderung.neu, []);
+  assert.deepEqual(aenderung.loeschen, []);
+  assert.deepEqual(aenderung.aendern, [{ id: 'f1', von: '07:30', bis: '12:30' }]);
+  assert.equal(planNachher(mitFenster, aenderung).find(z => z.id === 'f1').von, '07:30');
+});
+
+test('Fenster: Uhrzeit leeren -> ganzer Tag (UPDATE auf null)', () => {
+  const soll = sollZeilen({ muster: musterAusZeilen(mitFenster), fenster: new Map([['1|B', { von: '14:00', bis: '18:00' }]]), einzeltage: new Map() }, { ownerId: 'o', empId: 'e1' });
+  assert.deepEqual(planAenderung(mitFenster, soll, HEUTE).aendern, [{ id: 'f1', von: null, bis: null }]);
+});
+
+test('Fenster: Prüfung halb leer / rückwärts', () => {
+  assert.equal(fensterFehler(new Map([['1|A', { von: '', bis: '' }]])), null);
+  assert.match(fensterFehler(new Map([['1|A', { von: '08:00', bis: '' }]])), /Beginn und Ende/);
+  assert.match(fensterFehler(new Map([['1|A', { von: '12:00', bis: '08:00' }]])), /vor dem Ende/);
+  assert.equal(fensterFehler(new Map([['1|A', { von: '08:00', bis: '12:00' }]])), null);
+});
+
+test('Konflikte: Termin Mo 15:00 an A liegt außerhalb des Vormittagsfensters', () => {
+  const termine = [
+    { id: 'in', start_time: '2026-11-09T09:00:00+01:00', end_time: '2026-11-09T09:30:00+01:00', business_id: 'A' },
+    { id: 'aus', start_time: '2026-11-09T15:00:00+01:00', end_time: '2026-11-09T15:30:00+01:00', business_id: 'A' },
+    { id: 'rand', start_time: '2026-11-09T11:40:00+01:00', end_time: '2026-11-09T12:10:00+01:00', business_id: 'A' },
+    { id: 'b', start_time: '2026-11-09T15:00:00+01:00', end_time: '2026-11-09T15:30:00+01:00', business_id: 'B' },
+    { id: 'di', start_time: '2026-11-10T17:00:00+01:00', end_time: '2026-11-10T17:30:00+01:00', business_id: 'A' },
+  ];
+  assert.deepEqual(konflikte(termine, mitFenster, 'e1', ['A', 'B']).map(t => t.id), ['aus', 'rand']);
+});
+
+test('Fenster-Liste: je Häkchen zwei Zeitfelder, escaped, sonst Hinweis', () => {
+  const standorte = [{ id: 'A', business_name: 'Nord <b>' }, { id: 'B', business_name: 'Süd' }];
+  const html = fensterListeHtml({ standorte, muster: new Set(['1|A']), fenster: new Map([['1|A', { von: '08:00', bis: '12:00' }]]) });
+  assert.match(html, /class="form-input sp-von" data-key="1\|A" value="08:00"/);
+  assert.match(html, /Mo Nord &lt;b&gt;/);
+  assert.match(fensterListeHtml({ standorte, muster: new Set(), fenster: new Map() }), /Erst Häkchen/);
 });

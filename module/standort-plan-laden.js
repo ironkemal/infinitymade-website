@@ -4,7 +4,7 @@
 // leeres Ergebnis -> Spalten unveraendert (altes Verhalten), ohne Toast und ohne Konsolenmeldung.
 // Nach einem Fehler wird nicht erneut angefragt (kein Request je Kalender-Aufbau).
 // Der Plan blendet nur AUS, er fuegt nie Spalten hinzu (Zuordnung bleibt Obergrenze).
-import { istAmStandort } from './standort-plan-regel.js?v=20261102a';
+import { istAmStandort } from './standort-plan-regel.js?v=20261104zeit';
 
 const SPERRE_FEHLT_MS = 10 * 60 * 1000;
 const SPERRE_FEHLER_MS = 60 * 1000;

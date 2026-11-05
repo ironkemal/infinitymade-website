@@ -203,7 +203,7 @@ Warum: Fremdprojekt (Bewerbungen). Nie Teil von Praxura.
 12 Spalten · Status: aktiv
 Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
 
-**Schreibt (1):** `schliesse()` [update] — api-backend/server.js:3989
+**Schreibt (1):** `schliesse()` [update] — api-backend/server.js:3994
 
 **Liest (1):** `fetchHistory()`
 
@@ -522,10 +522,10 @@ Warum: Nicht jeder Therapeut macht jede Leistung. Ohne diese Zuordnung bietet di
 
 ### `employee_standort_plan`
 
-9 Spalten · Status: aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt
-Warum: An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A") und Einzeltag („am 09.11. in B") in **einer** Tabelle, Tag-Granularität, keine Halbtage. Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.
+11 Spalten · Status: aktiv · Regel/Filter (S4/S6) lesen, Pflege-UI (S5) folgt
+Warum: An welchem Standort ein Mitarbeiter an welchem Tag arbeitet (Physio-Pilot M4, zweiter Standort). Wochenmuster („montags A") und Einzeltag („am 09.11. in B") in **einer** Tabelle. Seit 0109 (04.11.2026) optional mit **Zeitfenster** je Wochenmuster-Zeile („Mo 8–12 A, 14–18 B“, Melih). Bewusst **nicht** `working_hours.business_id`: `working_hours` ist anonym lesbar (guvenlik-Veto, Physio/PLANUNG-UMSETZUNG.md Entscheidung 5). Abgrenzung zu `employee_business_assignments`: dort steht, an welchen Standorten jemand **überhaupt** arbeiten darf (statisch, Rechte/Gruppe); hier, **an welchem Tag** wo (Einsatzplan). Kein zweiter Begriff desselben Dings.
 
-**Schreibt (3):** `mountStandortPlan()` [delete/insert] — module/standort-plan.js:244 · `speichern()` [delete/insert] — module/standort-plan.js:317 · `standortplanAufraeumen()` [delete] — api-backend/routes/mitarbeiter-zugang.js:323
+**Schreibt (3):** `mountStandortPlan()` [delete/insert/update] — module/standort-plan.js:313 · `speichern()` [delete/insert/update] — module/standort-plan.js:397 · `standortplanAufraeumen()` [delete] — api-backend/routes/mitarbeiter-zugang.js:323
 
 **Liest (3):** `ladeStandortPlan()`, `ladeStandortPlan()`, `name()`
 

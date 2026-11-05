@@ -18,7 +18,7 @@ import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
-import { mountStandortPlan } from './standort-plan.js?v=20261102a';
+import { mountStandortPlan } from './standort-plan.js?v=20261104zeit';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
 import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
 import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';

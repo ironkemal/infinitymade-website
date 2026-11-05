@@ -10,8 +10,10 @@
  * automatisch verschoben: vor dem Speichern zeigt eine Warnliste die künftigen Termine, die danach am
  * falschen Standort lägen; jede Zeile öffnet den Termin zum Umbuchen (physio 01.11.2026).
  * Wochenmuster in Versionen (gueltig_ab, 0098): „Änderung gilt ab" legt eine geplante Umstellung an.
+ * Zeitfenster (0109): je Häkchen optional von–bis (z. B. Mo 8–12 A, 14–18 B). Leer = ganzer Tag. Einzeltage
+ * bleiben ganztägig. Nur die Uhrzeit geändert -> UPDATE derselben Zeile (Insert scheiterte am UNIQUE).
  */
-import { istAmStandort } from './standort-plan-regel.js?v=20261102a';
+import { imZeitfenster, zeitInMinuten } from './standort-plan-regel.js?v=20261104zeit';
 
 /** Anzeige Mo..So, gespeichert wie JS getDay (0 = Sonntag). */
 export const WOCHENTAGE = [
@@ -74,6 +76,34 @@ export function musterAusZeilen(zeilen, version = null) {
   return muster;
 }
 
+const hhmm = wert => (typeof wert === 'string' && /^\d{2}:\d{2}/.test(wert) ? wert.slice(0, 5) : '');
+
+/** Zeitfenster der Wochenmuster-Zeilen einer Version -> Map "weekday|business_id" -> {von, bis} ('HH:MM' oder ''). */
+export function fensterAusZeilen(zeilen, version = null) {
+  const fenster = new Map();
+  for (const z of Array.isArray(zeilen) ? zeilen : []) {
+    if (!istWoche(z) || gueltigAb(z.gueltig_ab) !== (version ?? null)) continue;
+    const von = hhmm(z.von);
+    const bis = hhmm(z.bis);
+    if (von && bis) fenster.set(musterSchluessel(Number(z.weekday), z.business_id), { von, bis });
+  }
+  return fenster;
+}
+
+/** Fehlertext für ein ungültiges Fenster, sonst null. Beide leer = ganzer Tag. */
+export function fensterFehler(fenster) {
+  for (const [, f] of fenster || []) {
+    const von = f?.von || '';
+    const bis = f?.bis || '';
+    if (!von && !bis) continue;
+    if (!von || !bis) return 'Bitte bei einem Zeitfenster Beginn und Ende angeben (oder beide leer lassen = ganzer Tag).';
+    if (zeitInMinuten(von) === null || zeitInMinuten(bis) === null || zeitInMinuten(von) >= zeitInMinuten(bis)) {
+      return 'Das Zeitfenster muss vor dem Ende beginnen.';
+    }
+  }
+  return null;
+}
+
 /** Einzeltage ab heute -> Map datum -> [business_id], nach Datum sortiert. Vergangene bleiben unangetastet. */
 export function einzeltageAusZeilen(zeilen, heute) {
   const tage = new Map();
@@ -105,11 +135,14 @@ export function tageImZeitraum(von, bis, max = MAX_VERSETZEN_TAGE) {
  * Soll-Zustand -> Zeilen für employee_standort_plan. Wochenzeilen tragen die bearbeitete Version (gueltig_ab).
  * Vergangene Einzeltage gehören nicht zum Soll und werden von planAenderung nie gelöscht.
  */
-export function sollZeilen({ muster, einzeltage }, { ownerId, empId }, version = null) {
+export function sollZeilen({ muster, einzeltage, fenster }, { ownerId, empId }, version = null) {
   const zeilen = [];
   for (const schluessel of muster || []) {
     const [weekday, businessId] = schluessel.split('|');
-    zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: Number(weekday), datum: null, gueltig_ab: version ?? null });
+    const f = fenster?.get?.(schluessel);
+    const mitFenster = f && f.von && f.bis;
+    zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: Number(weekday), datum: null, gueltig_ab: version ?? null,
+      von: mitFenster ? f.von : null, bis: mitFenster ? f.bis : null });
   }
   for (const [datum, ids] of einzeltage || []) {
     for (const businessId of ids) zeilen.push({ owner_id: ownerId, employee_id: empId, business_id: businessId, weekday: null, datum, gueltig_ab: null });
@@ -135,17 +168,27 @@ export function planAenderung(alteZeilen, soll, heute, { version = null, entfern
     return g === (version ?? null) || entfernt.has(g) || (aufraeumen && aelter(g, version ?? null));
   });
   const sollMap = new Map(soll.map(z => [zeilenSchluessel(z), z]));
-  const altSchluessel = new Set(relevant.map(zeilenSchluessel));
+  const altMap = new Map(relevant.map(z => [zeilenSchluessel(z), z]));
+  const aendern = [];
+  for (const [k, z] of sollMap) {
+    const a = altMap.get(k);
+    if (a?.id && (hhmm(a.von) !== hhmm(z.von ?? '') || hhmm(a.bis) !== hhmm(z.bis ?? ''))) {
+      aendern.push({ id: a.id, von: z.von ?? null, bis: z.bis ?? null });
+    }
+  }
   return {
     loeschen: relevant.filter(z => !sollMap.has(zeilenSchluessel(z))).map(z => z.id).filter(Boolean),
-    neu: soll.filter(z => !altSchluessel.has(zeilenSchluessel(z))),
+    neu: soll.filter(z => !altMap.has(zeilenSchluessel(z))),
+    aendern,
   };
 }
 
 /** Planzeilen nach der Änderung (für die Warnliste über alle Versionen). */
-export function planNachher(alteZeilen, { loeschen, neu }) {
+export function planNachher(alteZeilen, { loeschen, neu, aendern = [] }) {
   const weg = new Set(loeschen);
-  return (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !weg.has(z.id)).concat(neu);
+  const neuZeit = new Map(aendern.map(a => [a.id, a]));
+  return (Array.isArray(alteZeilen) ? alteZeilen : []).filter(z => z && !weg.has(z.id))
+    .map(z => (neuZeit.has(z.id) ? { ...z, von: neuZeit.get(z.id).von, bis: neuZeit.get(z.id).bis } : z)).concat(neu);
 }
 
 /**
@@ -155,8 +198,14 @@ export function planNachher(alteZeilen, { loeschen, neu }) {
  */
 export function konflikte(termine, zeilen, empId, alleStandortIds) {
   const tagBerlin = iso => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
-  return (Array.isArray(termine) ? termine : []).filter(t => t && t.business_id && !t.hausbesuch && t.status !== 'cancelled'
-    && !istAmStandort(zeilen, empId, tagBerlin(t.start_time), t.business_id, alleStandortIds));
+  const minBerlin = iso => zeitInMinuten(new Date(iso).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hour12: false }));
+  return (Array.isArray(termine) ? termine : []).filter((t) => {
+    if (!t || !t.business_id || t.hausbesuch || t.status === 'cancelled') return false;
+    const von = minBerlin(t.start_time);
+    const dauer = t.end_time ? Math.round((Date.parse(t.end_time) - Date.parse(t.start_time)) / 60000) : 0;
+    const bis = von !== null && dauer > 0 ? von + dauer : von;
+    return !imZeitfenster(zeilen, empId, tagBerlin(t.start_time), t.business_id, von, bis, alleStandortIds);
+  });
 }
 
 function zeitText(iso) {
@@ -187,7 +236,24 @@ export function musterText(muster, name) {
   return WOCHENTAGE.flatMap(w => [...muster].filter(k => k.startsWith(`${w.weekday}|`)).map(k => `${w.kurz} ${name(k.split('|')[1])}`)).join(' · ') || 'kein Muster (alle Standorte)';
 }
 
-export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuellSeit = null, versionen = [] }) {
+/** Liste „Zeitfenster (optional)" je Häkchen, in Wochentagsfolge. */
+export function fensterListeHtml({ standorte, muster, fenster }) {
+  const name = id => standorte.find(s => s.id === id)?.business_name || 'Standort';
+  const eintraege = WOCHENTAGE.flatMap(w => standorte.filter(s => muster.has(musterSchluessel(w.weekday, s.id))).map((s) => {
+    const k = musterSchluessel(w.weekday, s.id);
+    const f = fenster?.get?.(k) || { von: '', bis: '' };
+    const etikett = `${w.kurz} ${name(s.id)}`;
+    return `<li><span>${escapeHtml(etikett)}</span>
+      <input type="time" class="form-input sp-von" data-key="${escapeHtml(k)}" value="${escapeHtml(f.von)}" aria-label="${escapeHtml(etikett)} von">
+      <span aria-hidden="true">–</span>
+      <input type="time" class="form-input sp-bis" data-key="${escapeHtml(k)}" value="${escapeHtml(f.bis)}" aria-label="${escapeHtml(etikett)} bis"></li>`;
+  }));
+  return eintraege.length
+    ? `<ul class="sp-tage sp-fenster">${eintraege.join('')}</ul>`
+    : '<p class="form-hint">Erst Häkchen setzen, dann optional Uhrzeiten.</p>';
+}
+
+export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuellSeit = null, versionen = [], fenster = new Map() }) {
   const name = id => standorte.find(s => s.id === id)?.business_name || 'Standort';
   const kopf = WOCHENTAGE.map(w => `<th scope="col">${w.kurz}</th>`).join('');
   const reihen = standorte.map(s => `<tr><th scope="row">${escapeHtml(s.business_name)}</th>${WOCHENTAGE.map(w => `
@@ -204,6 +270,9 @@ export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuell
     Ob an einem Tag gearbeitet wird, regeln die Arbeitszeiten.</p>
   <p class="form-hint">Angezeigt: heute gültiges Muster${aktuellSeit ? ` (gilt seit ${escapeHtml(datumDe(aktuellSeit))})` : ''}.</p>
   <div class="sp-tabelle-wrap"><table class="sp-tabelle"><thead><tr><th></th>${kopf}</tr></thead><tbody>${reihen}</tbody></table></div>
+  <h4>Zeitfenster (optional)</h4>
+  <p class="form-hint">Leer = ganzer Tag. Beispiel: Mo vormittags am einen, nachmittags am anderen Standort. Online-Termine und Serien werden nur innerhalb des Fensters angeboten.</p>
+  <div id="spFenster">${fensterListeHtml({ standorte, muster, fenster })}</div>
   <div class="sp-ab">
     <label>Änderung gilt ab <input type="date" class="form-input" id="spAb" min="${escapeHtml(naechsterTag(heute))}"></label>
     <span class="form-hint">Leer = sofort. Mit Datum wird das Raster als geplante Umstellung gespeichert, das heutige Muster gilt bis dahin weiter. Gleiches Datum erneut speichern ersetzt die Umstellung.</span>
@@ -227,14 +296,14 @@ export function standortPlanHtml({ standorte, muster, einzeltage, heute, aktuell
 </div>`;
 }
 
-const PLAN_SPALTEN = 'id,employee_id,business_id,weekday,datum,gueltig_ab';
+const PLAN_SPALTEN = 'id,employee_id,business_id,weekday,datum,gueltig_ab,von,bis';
 
 /** Folgetag als 'YYYY-MM-DD' (UTC-Rechnung, sommerzeitfest). */
 export function naechsterTag(tag) {
   if (!DATUM_RE.test(tag || '')) return '';
   return new Date(new Date(`${tag}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10);
 }
-const TERMIN_SPALTEN = 'id,start_time,customer_name,business_id,status,hausbesuch,services(title)';
+const TERMIN_SPALTEN = 'id,start_time,end_time,customer_name,business_id,status,hausbesuch,services(title)';
 
 /**
  * @param {HTMLElement} container
@@ -261,10 +330,10 @@ export async function mountStandortPlan(container, deps = {}) {
   }
 
   const version = aktuelleVersion(alt, heute) ?? null;
-  const zustand = { muster: musterAusZeilen(alt, version), einzeltage: einzeltageAusZeilen(alt, heute), entfernt: new Set() };
+  const zustand = { muster: musterAusZeilen(alt, version), fenster: fensterAusZeilen(alt, version), einzeltage: einzeltageAusZeilen(alt, heute), entfernt: new Set() };
   const zeichnen = () => {
     const versionen = kuenftigeVersionen(alt, heute).filter(ab => !zustand.entfernt.has(ab)).map(ab => ({ ab, muster: musterAusZeilen(alt, ab) }));
-    container.innerHTML = standortPlanHtml({ standorte, muster: zustand.muster, einzeltage: zustand.einzeltage, heute, aktuellSeit: version, versionen });
+    container.innerHTML = standortPlanHtml({ standorte, muster: zustand.muster, fenster: zustand.fenster, einzeltage: zustand.einzeltage, heute, aktuellSeit: version, versionen });
     verdrahten();
   };
 
@@ -284,11 +353,22 @@ export async function mountStandortPlan(container, deps = {}) {
     host.querySelectorAll('.sp-warn-termin').forEach(b => b.addEventListener('click', () => oeffneTermin?.(b.dataset.termin)));
   }
 
+  function fensterVerdrahten() {
+    container.querySelectorAll('.sp-von, .sp-bis').forEach(inp => inp.addEventListener('change', () => {
+      const f = { ...(zustand.fenster.get(inp.dataset.key) || { von: '', bis: '' }) };
+      f[inp.classList.contains('sp-von') ? 'von' : 'bis'] = inp.value || '';
+      zustand.fenster.set(inp.dataset.key, f);
+    }));
+  }
+
   function verdrahten() {
     container.querySelectorAll('.sp-muster').forEach(cb => cb.addEventListener('change', () => {
       const k = musterSchluessel(Number(cb.dataset.weekday), cb.dataset.standort);
-      if (cb.checked) zustand.muster.add(k); else zustand.muster.delete(k);
+      if (cb.checked) zustand.muster.add(k); else { zustand.muster.delete(k); zustand.fenster.delete(k); }
+      const host = container.querySelector('#spFenster');
+      if (host) { host.innerHTML = fensterListeHtml({ standorte, muster: zustand.muster, fenster: zustand.fenster }); fensterVerdrahten(); }
     }));
+    fensterVerdrahten();
     container.querySelectorAll('.sp-tag-weg').forEach(b => b.addEventListener('click', () => {
       zustand.einzeltage.delete(b.dataset.datum);
       zeichnen();
@@ -321,13 +401,15 @@ export async function mountStandortPlan(container, deps = {}) {
       const ab = container.querySelector('#spAb')?.value || '';
       if (ab && (!DATUM_RE.test(ab) || ab <= heute)) { showToast('„Gilt ab" muss in der Zukunft liegen – für sofort leer lassen.', 'error'); return; }
       const ziel = ab || version;
+      const fehler = fensterFehler(zustand.fenster);
+      if (fehler) { showToast(fehler, 'error'); return; }
       const soll = sollZeilen(zustand, { ownerId, empId }, ziel);
       // Mit Datum: nur die geplante Version (+ Einzeltage) ändern, das heutige Muster bleibt unberührt.
       const aenderung = ab
         ? planAenderung(alt, soll, heute, { version: ab, entfernteVersionen: [...zustand.entfernt] })
         : planAenderung(alt, soll, heute, { version, entfernteVersionen: [...zustand.entfernt], aufraeumen: true });
-      const { loeschen, neu } = aenderung;
-      if (!loeschen.length && !neu.length) { showToast('Keine Änderung.'); return; }
+      const { loeschen, neu, aendern } = aenderung;
+      if (!loeschen.length && !neu.length && !aendern.length) { showToast('Keine Änderung.'); return; }
       const liste = await warnungPruefen(planNachher(alt, aenderung));
       if (liste === null) { showToast('Termine konnten nicht geprüft werden – nicht gespeichert.', 'error'); return; }
       warnungZeigen(liste);
@@ -343,6 +425,11 @@ export async function mountStandortPlan(container, deps = {}) {
       if (neu.length) {
         const { error: e } = await supabase.from('employee_standort_plan').insert(neu);
         if (e) { showToast('Standortplan konnte nicht gespeichert werden.', 'error'); return; }
+      }
+      for (const a of aendern) {
+        const { error: e } = await supabase.from('employee_standort_plan').update({ von: a.von, bis: a.bis })
+          .eq('owner_id', ownerId).eq('id', a.id);
+        if (e) { showToast('Zeitfenster konnte nicht gespeichert werden.', 'error'); return; }
       }
       if (loeschen.length) {
         const { error: e } = await supabase.from('employee_standort_plan').delete().eq('owner_id', ownerId).in('id', loeschen);
