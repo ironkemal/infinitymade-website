@@ -22,6 +22,7 @@ import { pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz 
 import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
 import { validateAuthenticatedService, validateExistingBookingTherapist } from './booking/auth-guards.js';
 import { serienDaten, isValidCalendarDate, isStrictInteger } from './booking/series.js';
+import { slotParameter } from './booking/slot-parameter.js';
 import { patientenNameMuster } from './booking/patienten-namensabgleich.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import { createDatevRouter } from './billing/api/datev.routes.js';
@@ -803,6 +804,9 @@ const SLOT_STEP_MINUTES = 15;
 
 // Helper to calculate available slots for a user and date
 async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = SLOT_STEP_MINUTES, serviceId = null) {
+  const parameter = slotParameter({ duration, buffer, step });
+  if (!parameter.ok) return { slots: [], reason: 'invalid_slot_params' };
+  ({ duration, buffer, step } = parameter);
   const dayOfWeek = berlinDayOfWeek(date);
   const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
@@ -1083,9 +1087,9 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   }
 
   try {
-    const buffer = parseInt(req.body.buffer) || 0;
-    const step   = parseInt(req.body.step)   || SLOT_STEP_MINUTES;
-    const result = await getAvailableSlots(userId, date, duration, businessId, buffer, step, serviceId);
+    const parameter = slotParameter({ duration, buffer: req.body.buffer, step: req.body.step === undefined ? SLOT_STEP_MINUTES : req.body.step });
+    if (!parameter.ok) return res.status(400).json({ error: 'Ungültige Dauer, Pufferzeit oder Schrittweite.' });
+    const result = await getAvailableSlots(userId, date, parameter.duration, businessId, parameter.buffer, parameter.step, serviceId);
     if (result.reason) {
       return res.json({ slots: [], reason: result.reason });
     }
@@ -1126,13 +1130,15 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     if (!leadRes.ok) return res.status(leadRes.status).json({ error: leadRes.error });
 
     // Closed-day and slot validation
+    const parameter = slotParameter({ duration: service.duration_minutes, buffer: req.body.buffer, step: req.body.step === undefined ? SLOT_STEP_MINUTES : req.body.step });
+    if (!parameter.ok) return res.status(400).json({ error: 'Ungültige Dauer, Pufferzeit oder Schrittweite.' });
     const slotValidation = await getAvailableSlots(
       userId,
       date,
       service.duration_minutes,
       businessId,
-      parseInt(req.body.buffer) || 0,
-      parseInt(req.body.step) || SLOT_STEP_MINUTES,
+      parameter.buffer,
+      parameter.step,
       serviceId
     );
     if (slotValidation.reason === 'business_closed_day') {

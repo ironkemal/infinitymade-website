@@ -2,6 +2,7 @@ import test, { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { slotParameter } from './slot-parameter.js';
 import * as guards from './public-guards.js';
 import { requestToken } from './status.js';
 import { escHtml, mailBetreff } from './html-escape.js';
@@ -62,7 +63,7 @@ const mockSupabase = {
 };
 
 const ctx = vm.createContext({
-  ...guards,
+  ...guards, slotParameter,
   raumBuchungsFehler, raumNameFuerBuchung,
   requestToken, escHtml, mailBetreff, pruefeWidgetAnfrage, pruefeOeffentlichePatientAngaben, baueWidgetNotiz, patientenNameMuster, ANFRAGEN_TAGESDECKEL: 100,
   app: {
@@ -378,6 +379,16 @@ describe('Public Booking Handlers Guard & Honeypot Suite', () => {
     assert.equal(currentDb.writes.length, 1);
     assert.equal(mailCounter, 0);
     assert.equal(calendarCounter, 0);
+  });
+
+  it('Invalid public booking slot controls stop before slot lookup, writes or mail', async () => {
+    for (const patch of [{step:-1},{step:0},{step:'junk'},{step:0.1},{buffer:-1},{buffer:'5junk'}]) {
+      resetDb(); const res=mockRes();
+      await bookingHandler({body:{userId:'T',serviceId:'S',date:'2099-01-01',time:'10:00',...patch}},res);
+      assert.equal(res.statusCode,400,JSON.stringify(patch));
+      assert.equal(slotsCounter,0); assert.equal(currentDb.writes.length,0);
+      assert.equal(mailCounter,0); assert.equal(calendarCounter,0);
+    }
   });
 
   it('Database error 500 returns Interner Serverfehler with no effects on both routes', async () => {

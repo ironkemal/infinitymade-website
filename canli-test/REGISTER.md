@@ -2208,3 +2208,7 @@ Separate Physio-QA-Praxis und Inhaberrolle per Oberfläche bestätigt. Standortw
 - **Konsole:** 0 Warnungen; 1 Fehler = der absichtliche Insert-Versuch aus A4 (400). §3-Gürültü #4/#6 diesmal nicht gesehen.
 - **P3 (UX, nicht devretmiş):** Bei neuem Termin am Sondertag kommt zuerst „kein Arbeitstag – trotzdem eintragen?“ und erst danach die Sperre (Nutzer bestätigt etwas, das ohnehin gesperrt ist). Absagegrund-Liste hat keinen Eintrag „Praxis geschlossen“. Domain-Frage an `physio`/`podoloji`.
 - **Nebenwirkungen:** keine (Termin und Sondertag entfernt, keine Mail/SMS).
+
+### Öffentliche Slot-Schleife: Parameterkorrektur — 05.11.2026
+
+Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Route-Regression vor Fix 9 FAIL/2 PASS. Gemeinsame strikte Minutenprüfung schützt Slot-Engine, öffentliche Abfrage und Buchungserstellung; ungültige Werte ergeben HTTP 400, gültige Slots bleiben erhalten. Danach 60/60 gezielte Tests, unabhängig wiederholt; Backend 1863 PASS/5 SKIP/0 FAIL. Review ohne blockierenden Befund. Nur lokal, keine DB/Mail/Live-Writes/Veröffentlichung. Nachweis: canli-test/2026-11-05-slot-parameter.md. Übrige Live-Restfälle unverändert offen.
