@@ -22,18 +22,27 @@ import { pruefeDatenstrom } from './preflight.js';
 import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../codes/legs.js';
 import { findPodologiePosition } from '../codes/podologie_positions.js';
 
-const ausgabe = resolve(process.argv[2] || 'ta-validator-satz');
+// `--aze`: Satz für das Abrechnungszentrum Emmendingen (E-Mail-Test, A. Kiss 03.11.2026):
+// Absender = unsere Softwarehersteller-IK (für Testlieferungen ausdrücklich erlaubt),
+// Empfänger = AZE 107436557, Kasse = mhplus BKK (VKG 03 → AZE), unverschlüsselt,
+// Auftragssatz 00/00. Je Fall ein Paar TSOL0nnn + TSOL0nnn.AUF — ein Paar pro E-Mail.
+const AZE_MODUS = process.argv.includes('--aze');
+const argOrdner = process.argv.slice(2).find(a => !a.startsWith('--'));
+const ausgabe = resolve(argOrdner || (AZE_MODUS ? 'aze-testsatz' : 'ta-validator-satz'));
 const RECHNUNGSDATUM = '2026-10-21';
 
 const legs = legsFuer('podologie');
 const TARIF = { abrechnungscode: abrechnungscodeAusLegs(legs), tarifkennzeichen: tarifkennzeichenAusLegs(legs) };
 
-const ABSENDER = { ik: '801234561', name: 'Podologie Teststadt' };
+const ABSENDER = AZE_MODUS
+  ? { ik: '590537440', name: 'Yavuz Kemal Demir Softwaretest' }
+  : { ik: '801234561', name: 'Podologie Teststadt' };
 const DAS = {
   iqvia: { ik: '661430035', name: 'IQVIA HSS' },
   ddg:   { ik: '660510336', name: 'DDG Essen' },
+  aze:   { ik: '107436557', name: 'Abrechnungszentrum Emmendingen' },
 };
-const KASSE = { tk: '101575519', barmer: '104940005' };
+const KASSE = { tk: '101575519', barmer: '104940005', mhplus: '108035612' };
 
 /** Preis + Zuzahlung der Position am Leistungstag — aus derselben Tabelle wie die App. */
 function pos(hpnr, datum, anzahl = 1) {
@@ -52,7 +61,7 @@ function patient(nachname, vorname, geburtsdatum, kvnr, versichertenstatus = '10
   };
 }
 
-function verordnung({ kasse = KASSE.tk, icd10, diagnosegruppe, leitsymptomatik = '1010',
+function verordnung({ kasse = AZE_MODUS ? KASSE.mhplus : KASSE.tk, icd10, diagnosegruppe, leitsymptomatik = '1010',
                       zuzahlungskennzeichen = '3', hausbesuch = false, ausstellungsdatum = '2026-09-22' }) {
   return {
     arztLanr: '999999900', arztBsnr: '999999999',
@@ -65,7 +74,7 @@ function verordnung({ kasse = KASSE.tk, icd10, diagnosegruppe, leitsymptomatik =
 const rx = (pat, vo, sessions) => ({ patient: pat, verordnung: vo, tarif: TARIF, sessions });
 
 // ── Die Fälle ───────────────────────────────────────────────────────────────
-const faelle = [
+const alleFaelle = [
   {
     name: '01_df_erstverordnung_zuzahlungspflichtig',
     hinweis: 'DF, Eingangsbefundung 78040 + 4× Behandlung groß 78020, zuzahlungspflichtig',
@@ -150,17 +159,20 @@ const faelle = [
   },
 ];
 
+// Fall 08 prüft eine fremde DAS — gehört nicht in den AZE-Satz.
+const faelle = AZE_MODUS ? alleFaelle.filter(f => !f.das) : alleFaelle;
+
 // ── Erzeugen ────────────────────────────────────────────────────────────────
 mkdirSync(ausgabe, { recursive: true });
 let fehler = 0;
 faelle.forEach((fall, i) => {
-  const das = fall.das || DAS.iqvia;
+  const das = AZE_MODUS ? DAS.aze : (fall.das || DAS.iqvia);
   try {
     const r = buildDtaFile({
       absender: ABSENDER,
       empfaenger: das,
       davIk: das.ik,
-      kassenart: 'EK',
+      kassenart: AZE_MODUS ? 'BK' : 'EK',
       rechnung: { sammelRechnungsnummer: `T2026-10-${String(i + 1).padStart(3, '0')}`, einzelRechnungsnummer: '0',
                   datum: RECHNUNGSDATUM, datennummer: i + 1, rechnungsart: '1' },
       kind: 'test',
@@ -169,11 +181,19 @@ faelle.forEach((fall, i) => {
       prescriptions: fall.prescriptions,
     });
     const check = pruefeDatenstrom(r.content);
-    const datei = join(ausgabe, `${fall.name}.edi`);
-    writeFileSync(datei, r.content, { encoding: 'latin1' });
+    if (AZE_MODUS) {
+      // Anlage 7 Prüfung 2: Nutzdatei und Auftragsdatei tragen dieselben ersten 8 Stellen.
+      const ordner = join(ausgabe, `${r.filename}_${fall.name}`);
+      mkdirSync(ordner, { recursive: true });
+      writeFileSync(join(ordner, r.filename), r.content, { encoding: 'latin1' });
+      writeFileSync(join(ordner, `${r.filename}.AUF`), r.auftragsdatei, { encoding: 'latin1' });
+      if (Buffer.byteLength(r.auftragsdatei, 'latin1') !== 348) throw new Error('Auftragssatz ≠ 348 Byte');
+    } else {
+      writeFileSync(join(ausgabe, `${fall.name}.edi`), r.content, { encoding: 'latin1' });
+    }
     const ok = check?.ok !== false;
     if (!ok) fehler += 1;
-    console.log(`${ok ? 'OK ' : 'ERR'} ${fall.name}.edi  ${r.byteLength} B, ${r.segmentCount} Seg., brutto ${r.totals.brutto} €, Zuzahlung ${r.totals.gesZuzahlung} €` +
+    console.log(`${ok ? 'OK ' : 'ERR'} ${AZE_MODUS ? r.filename + ' ' : ''}${fall.name}  ${r.byteLength} B, ${r.segmentCount} Seg., brutto ${r.totals.brutto} €, Zuzahlung ${r.totals.gesZuzahlung} €` +
       (r.preflightWarnings?.length ? `  [Warnungen: ${r.preflightWarnings.map(w => w.code).join(', ')}]` : '') +
       (ok ? '' : `  Selbstprüfung: ${JSON.stringify(check.errors || check).slice(0, 300)}`));
   } catch (e) {
