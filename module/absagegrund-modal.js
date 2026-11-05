@@ -20,6 +20,7 @@ export const ABSAGE_GRUENDE = [
   'Therapeut krank',
   'Therapeut verhindert',
   'Urlaub (Therapeut)',
+  'Praxis geschlossen (Sondertag)', // Kemal 31.10.: bestehende Termine am Schließtag werden abgesagt (canli-test 05.11.)
   'Notfall',
   'Terminkonflikt',
   'Sonstiges…',

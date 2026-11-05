@@ -28,7 +28,7 @@
   </div>
   <div id="bkActionModal"><div class="modal-body"></div></div>
   <script type="module">
-    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
+    import { planungVerdrahten, raumFelder, raumAktionsTermin, terminWarnungen, sondertagGesperrt, anstellungFuerUrlaub, zeigeAnrufliste, mountWidgetEinbettung } from '../../module/planung-bruecke.js';
 
     const ergebnisse = [];
     const pruefe = (name, ok) => ergebnisse.push({ name, ok: !!ok });
@@ -281,6 +281,12 @@
 
     // Anrufliste: kein Grund, nur Zeit, Patient, Telefon
     tabellen.bookings.push({ id: 's1', owner_id: OWNER, user_id: 'm1', status: 'confirmed', customer_name: 'Klara <b>Fett</b>', customer_phone: '0151 000', start_time: '2026-12-24T08:00:00+00:00', end_time: '2026-12-24T08:30:00+00:00', group_parent_id: null });
+    // Sperre vor allen Rückfragen (canli-test 05.11.): neu/verschoben gesperrt, Bestand mit gleicher Zeit frei (wie 0106)
+    fragen.length = 0;
+    pruefe('Neuer Termin am Schließtag: Vorabsperre', await sondertagGesperrt('2026-12-24T11:00:00+01:00') === true && fragen.length === 0);
+    pruefe('Bestand am Schließtag, Zeit unverändert: bearbeitbar', await sondertagGesperrt('2026-12-24T08:00:00.000Z', 's1') === false);
+    pruefe('Bestand am Schließtag verschoben: gesperrt', await sondertagGesperrt('2026-12-24T10:00:00+01:00', 's1') === true);
+    pruefe('Normaler Tag: keine Vorabsperre', await sondertagGesperrt('2026-12-23T09:00:00+01:00') === false);
     await zeigeAnrufliste({ von: '2026-12-24', bis: '2026-12-24', type: 'closed', startTime: '', endTime: '' });
     const liste = document.getElementById('sondertagAnrufliste');
     pruefe('Anrufliste nennt Uhrzeit in Ortszeit und Telefon', /09:00/.test(liste?.textContent || '') && /0151 000/.test(liste?.textContent || ''));

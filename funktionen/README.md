@@ -117,6 +117,11 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 05.11.2026 · Physio-Pilot M6: Sondertag-Sperre vor den Rückfragen (`module/raum-auswahl.js`)
+- Niye (canli-test 05.11., Melih GO): Erst wurde „kein Arbeitstag“ bestätigt, danach kam die Sondertag-Sperre. Die Sperre läuft jetzt VOR den „Trotzdem eintragen?“-Rückfragen (Vergangenheit, Arbeitszeit).
+- Neu: `sondertagGesperrt(startIso, id=null)`, aus `terminWarnungen()` herausgelöst, Export über `module/planung-bruecke.js`. Regel wie Migration 0106: Ein Bestandstermin mit unveränderter Startzeit bleibt frei. Nerede: `dashboard.js` Termin speichern (vor der Vergangenheitsprüfung) und `terminWarnungen()` selbst.
+- Geändert: `ABSAGE_GRUENDE` (`module/absagegrund-modal.js`) hat den neuen Eintrag „Praxis geschlossen (Sondertag)“.
+
 ### 04.11.2026 · Physio-Pilot M4: Zeitfenster am Standort (Migration 0109)
 - Niye (Melih 04.11.): „Mo 8–12 A, 14–18 B“, der Standortplan galt bisher nur tageweise.
 - Neu: `imZeitfenster()` + `zeitInMinuten()` (interner Helfer `geltendeZeilen()`), absichtlich identische Kopien in `module/standort-plan-regel.js` und `api-backend/lib/standort-plan.js` (Frontend/Backend; nicht zusammenlegen, gemeinsam ändern, Vektoren `module/standort-plan-vektoren.json`). `planErlaubt(…, zeit)` (`api-backend/lib/standort-plan-laden.js`) nimmt optional `{start|vonMin, dauerMin}`. Nerede: `server.js` getAvailableSlots · batch-create · batch-create-explicit · KI-Serie.

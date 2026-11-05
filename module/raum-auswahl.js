@@ -141,6 +141,27 @@ export function raumFelder() {
 }
 
 /**
+ * true = Tag von startIso ist ein ganztägig geschlossener Sondertag; zeigt die Sperrmeldung.
+ * Läuft vor allen „Trotzdem eintragen?"-Fragen, damit niemand etwas bestätigt, das ohnehin gesperrt wird
+ * (canli-test 05.11.2026, Melih GO). Lesefehler sperren nicht — die DB (0106) lehnt sicher ab.
+ * Wie 0106: Bestandstermin (`id`) mit unveränderter Startzeit bleibt bearbeitbar.
+ */
+export async function sondertagGesperrt(startIso, id = null) {
+  if (!kontext) return false;
+  try {
+    if (id) {
+      const { data: alt } = await kontext.supabase.from('bookings').select('start_time').eq('id', id).maybeSingle();
+      if (alt?.start_time && new Date(alt.start_time).getTime() === new Date(startIso).getTime()) return false;
+    }
+    const { vonDatum, bisDatum } = lokaleTage(startIso);
+    const tage = await ladeSondertage({ supabase: kontext.supabase, ownerId: kontext.getOwnerId(), von: vonDatum, bis: bisDatum });
+    const geschlossen = warnungFuerTag(tage, vonDatum);
+    if (geschlossen) { kontext.showToast(geschlossen, 'error'); return true; } // 0106: Sperre (Kemal 31.10.)
+  } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }
+  return false;
+}
+
+/**
  * Sperrt am geschlossenen Sondertag, warnt vor Abwesenheit und Raumüberschneidung. true = weiter speichern.
  * `raumId` undefined: Raum aus dem gespeicherten Termin (Verschieben), sonst der gewählte.
  */
@@ -150,11 +171,8 @@ export async function terminWarnungen({ id = null, empId, startIso, endIso, raum
   const frage = meldung => showConfirmModal({
     title: 'Hinweis zum Termin', message: meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning',
   });
+  if (await sondertagGesperrt(startIso, id)) return false;
   try {
-    const { vonDatum, bisDatum } = lokaleTage(startIso);
-    const tage = await ladeSondertage({ supabase, ownerId: getOwnerId(), von: vonDatum, bis: bisDatum });
-    const geschlossen = warnungFuerTag(tage, vonDatum);
-    if (geschlossen) { kontext.showToast(geschlossen, 'error'); return false; } // 0106: Sperre, die DB lehnt ohnehin ab (Kemal 31.10.)
     const abwesend = await ladeAbwesenheiten(supabase, { empIds: [empId], vonISO: startIso, bisISO: endIso });
     if (abwesend.length && !await frage(NICHT_VERFUEGBAR)) return false;
   } catch { /* Lesefehler darf das Speichern nicht aufhalten */ }

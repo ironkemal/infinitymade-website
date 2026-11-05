@@ -8,12 +8,12 @@
  * wäre eine zweite Instanz ohne Kontext.
  */
 import {
-  raumAuswahlVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
-} from './raum-auswahl.js?v=20261104sondertag';
+  raumAuswahlVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
+} from './raum-auswahl.js?v=20261105sperre';
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
-import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261104sondertag';
+import { mountRaumTagesansicht } from './raum-tagesansicht.js?v=20261105sperre';
 import { mountWidgetEinbettung } from './widget-einbettung.js';
 import { termineDesStandorts } from './standort-plan-laden.js?v=20261103planung';
 import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, arbeitstageImZeitraum } from './anstellung.js?v=20261103planung';
@@ -24,7 +24,7 @@ import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
 import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';
 import { ladeSondertage, markiereSondertage, markiereSondertagTermine, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js?v=20261104sondertag';
 
-export { raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
+export { raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, urlaubsKennzahlen, arbeitstageImZeitraum };
 export { termineDesStandorts };
 
 let verdrahtet = null;

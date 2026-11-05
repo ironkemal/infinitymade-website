@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261104zeit';
+import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261105sperre';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -128,7 +128,7 @@ import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kos
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20261020';
 import { TERMIN_SELECT, RX_JOIN, ladeTerminVollstaendig } from './module/termin-laden.js?v=20261103r';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
-import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
+import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20261105sperre';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { erstelleNotizenController } from './module/patient-notizen.js?v=20261014a';
 import { erstelleZahlungsjournalLader } from './module/zahlungsjournal-laden.js?v=20261021g';
@@ -4900,7 +4900,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  const now = new Date();
+  const now = new Date(); if (await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor allen Rückfragen (canli-test 05.11.)
   if (startDate < now) {
     const proceedPast = await showConfirmModal({
       title: 'Termin in der Vergangenheit',

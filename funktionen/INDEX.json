@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-11-04",
+ "erzeugt": "2026-11-05",
  "dateien": 537,
- "funktionen": 4369,
+ "funktionen": 4370,
  "module": [
   "abrechnung",
   "anamnese",
@@ -247,7 +247,6 @@
     "flipAbrechnungStatus",
     "formularHtml",
     "fragFolgetermin",
-    "frage",
     "fuegeAufgabeHinzu",
     "fuelleFormular",
     "get",
@@ -373,6 +372,7 @@
     "showMyBookingLink",
     "showPlanWall",
     "showZaaErrors",
+    "sondertagGesperrt",
     "speichere",
     "speichereKonten",
     "speichereStufen",
@@ -381,7 +381,6 @@
     "starteZahlungseingang",
     "storniereZuzahlung",
     "switchPanel",
-    "terminWarnungen",
     "therapeutName",
     "toastArztErgebnis",
     "toggleStandortDay",
@@ -55317,7 +55316,6 @@
     "fbExport",
     "findMatchingServiceId",
     "fragFolgetermin",
-    "frage",
     "fuegeAufgabeHinzu",
     "fuelleFormular",
     "gkvFarbwahl",
@@ -55434,6 +55432,7 @@
     "seedMissingVorlagen",
     "selectVerordnung",
     "serieNachpruefen",
+    "sondertagGesperrt",
     "speichere",
     "speichereLeistungen",
     "srvFarbwahl",
@@ -56917,7 +56916,6 @@
     "flipAbrechnungStatus",
     "formularHtml",
     "fragFolgetermin",
-    "frage",
     "fuegeAufgabeHinzu",
     "fuelleFormular",
     "get",
@@ -57043,6 +57041,7 @@
     "showMyBookingLink",
     "showPlanWall",
     "showZaaErrors",
+    "sondertagGesperrt",
     "speichere",
     "speichereKonten",
     "speichereStufen",
@@ -57051,7 +57050,6 @@
     "starteZahlungseingang",
     "storniereZuzahlung",
     "switchPanel",
-    "terminWarnungen",
     "therapeutName",
     "toastArztErgebnis",
     "toggleStandortDay",
@@ -101442,8 +101440,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/absagegrund-modal.js",
-   "start": 33,
-   "end": 97,
+   "start": 34,
+   "end": 98,
    "lines": 65,
    "spiegelHinweis": null,
    "tables": [],
@@ -101469,8 +101467,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/absagegrund-modal.js",
-   "start": 81,
-   "end": 88,
+   "start": 82,
+   "end": 89,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -138197,7 +138195,6 @@
     "flipAbrechnungStatus",
     "formularHtml",
     "fragFolgetermin",
-    "frage",
     "fuegeAufgabeHinzu",
     "fuelleFormular",
     "get",
@@ -138323,6 +138320,7 @@
     "showMyBookingLink",
     "showPlanWall",
     "showZaaErrors",
+    "sondertagGesperrt",
     "speichere",
     "speichereKonten",
     "speichereStufen",
@@ -138331,7 +138329,6 @@
     "starteZahlungseingang",
     "storniereZuzahlung",
     "switchPanel",
-    "terminWarnungen",
     "therapeutName",
     "toastArztErgebnis",
     "toggleStandortDay",
@@ -171392,8 +171389,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "frage",
-    "terminWarnungen"
+    "sondertagGesperrt"
    ],
    "modules": [
     "abrechnung",
@@ -171557,13 +171553,86 @@
    "uiPfad": []
   },
   {
+   "name": "sondertagGesperrt",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/raum-auswahl.js",
+   "start": 149,
+   "end": 162,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [
+    "bookings"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "getOwnerId",
+    "ladeSondertage",
+    "lokaleTage",
+    "showToast",
+    "warnungFuerTag"
+   ],
+   "calledBy": [
+    "(datei) dashboard.js",
+    "frage",
+    "terminWarnungen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "terminWarnungen",
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 147,
-   "end": 176,
-   "lines": 30,
+   "start": 168,
+   "end": 194,
+   "lines": 27,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -171578,13 +171647,10 @@
     "ladeAbwesenheiten",
     "ladeBelegungen",
     "ladeRaumliste",
-    "ladeSondertage",
-    "lokaleTage",
     "raumWarnung",
     "showConfirmModal",
-    "showToast",
-    "tagesgrenzen",
-    "warnungFuerTag"
+    "sondertagGesperrt",
+    "tagesgrenzen"
    ],
    "calledBy": [
     "(datei) dashboard.js",
@@ -171642,9 +171708,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 150,
-   "end": 160,
-   "lines": 11,
+   "start": 171,
+   "end": 178,
+   "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -171652,13 +171718,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "getOwnerId",
     "ladeAbwesenheiten",
-    "ladeSondertage",
-    "lokaleTage",
     "showConfirmModal",
-    "showToast",
-    "warnungFuerTag"
+    "sondertagGesperrt"
    ],
    "calledBy": [
     "aufEuro",
@@ -171717,8 +171779,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 179,
-   "end": 197,
+   "start": 197,
+   "end": 215,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -171746,8 +171808,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 199,
-   "end": 207,
+   "start": 217,
+   "end": 225,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -171811,8 +171873,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 209,
-   "end": 317,
+   "start": 227,
+   "end": 335,
    "lines": 109,
    "spiegelHinweis": null,
    "tables": [
@@ -171853,8 +171915,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 224,
-   "end": 231,
+   "start": 242,
+   "end": 249,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -171919,8 +171981,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 233,
-   "end": 252,
+   "start": 251,
+   "end": 270,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -172008,8 +172070,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 254,
-   "end": 287,
+   "start": 272,
+   "end": 305,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [
@@ -172089,8 +172151,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 294,
-   "end": 310,
+   "start": 312,
+   "end": 328,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -172159,8 +172221,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 311,
-   "end": 311,
+   "start": 329,
+   "end": 329,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -172226,8 +172288,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 319,
-   "end": 345,
+   "start": 337,
+   "end": 363,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -172257,8 +172319,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 348,
-   "end": 364,
+   "start": 366,
+   "end": 382,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [
@@ -172328,8 +172390,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 367,
-   "end": 371,
+   "start": 385,
+   "end": 389,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -192437,9 +192499,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "frage",
     "mountSondertagAnzeige",
-    "terminWarnungen",
+    "sondertagGesperrt",
     "zeichnen"
    ],
    "modules": [
@@ -192640,8 +192701,7 @@
     "sondertagArt"
    ],
    "calledBy": [
-    "frage",
-    "terminWarnungen"
+    "sondertagGesperrt"
    ],
    "modules": [
     "abrechnung",
@@ -250244,8 +250304,8 @@
       {
        "name": "mountAktionspanel",
        "file": "module/raum-auswahl.js",
-       "start": 319,
-       "end": 345,
+       "start": 337,
+       "end": 363,
        "lines": 27,
        "writes": [
         "bookings:update"
@@ -255419,7 +255479,7 @@
     "dashboard.js:6022",
     "dashboard.js:17636",
     "merkez/test/dev-server.js:84",
-    "module/absagegrund-modal.js:81",
+    "module/absagegrund-modal.js:82",
     "module/bestaetigungs-dialog.js:20",
     "module/formular-editor.js:565",
     "module/formular-unterschreiben.js:201",
@@ -255479,7 +255539,7 @@
     "module/patienten-einwilligung.js:540",
     "module/patienten-import.js:394",
     "module/praxis-standort.js:115",
-    "module/raum-auswahl.js:233",
+    "module/raum-auswahl.js:251",
     "module/rezeptinfo-geld.js:461"
    ],
    "aynalar": []
@@ -255856,7 +255916,7 @@
    "orte": [
     "dashboard.js:7291",
     "module/fussbefund.js:1078",
-    "module/raum-auswahl.js:254",
+    "module/raum-auswahl.js:272",
     "module/rechnung-mail.js:59"
    ],
    "aynalar": []
@@ -256679,7 +256739,7 @@
    "name": "frage",
    "orte": [
     "api-backend/merkez-istemci/kayit.js:198",
-    "module/raum-auswahl.js:150"
+    "module/raum-auswahl.js:171"
    ],
    "aynalar": []
   },
