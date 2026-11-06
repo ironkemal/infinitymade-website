@@ -1,6 +1,6 @@
 # Praxura Release-Übergabe — 06.11.2026
 
-Status: vorbereitet, nicht veröffentlicht. Zentraler Integrator: Planungschat 015ef4bb-99c9-40fa-84c8-bf7bbaacb4bc. Führende Nachweismatrix: Tagesübergabe 2026-11-06.md; keine zweite Restliste.
+Status: Veröffentlichung und synthetisches QA-Schreibpaket ausdrücklich freigegeben; `31eee2d4` auf origin/main veröffentlicht. CI sowie Frontend-/Backend-Auslieferung bestätigt, funktionale QA teilweise nachgewiesen. Zentraler Integrator: Planungschat 015ef4bb-99c9-40fa-84c8-bf7bbaacb4bc. Führende Nachweismatrix: Tagesübergabe 2026-11-06.md; keine zweite Restliste.
 
 ## Konkreter Releaseumfang
 
@@ -12,7 +12,7 @@ Produktziel `4370dcb4`; Dokumentationsnachträge `28dd142d` und `1478c475` sowie
 - Migration 0110 nur im Box-Paket. Keine SaaS-Migration, kein Einschalten, keine installierte Boxabnahme.
 - Karten-/Register-/Fortschrittsnachträge und README-Berichtigung auf vorhandenen Exportstand 0109.
 
-Ziele eines später freigegebenen Pushs: origin/main, damit Vercel-Frontend sowie GitHub-Actions-Builds für Backend- und Frontend-Images. Backend-Watchtower kann neues Image automatisch übernehmen. Kein stabiler Boxkanal wird manuell hochgestuft. Allgemeine Auslieferung ist keine Nutzung von Yannicks Konto.
+Freigegebene und ausgeführte Ziele: origin/main, damit Vercel-Frontend sowie GitHub-Actions-Builds für Backend- und Frontend-Images. Backend-Watchtower hat den neuen Stand übernommen, durch öffentliche Version bestätigt. Kein stabiler Boxkanal wurde manuell hochgestuft. Allgemeine Auslieferung ist keine Nutzung von Yannicks Konto.
 
 ## Prüfstand und Grenzen
 
@@ -51,7 +51,7 @@ KI separat: maximal drei Aufrufe / insgesamt 1 EUR, synthetische Inhalte, besteh
 
 ## Externe Voraussetzungen
 
-- Melih: konkretes Release-/QA-Paket bestätigen, sichere QA-Mitarbeitersitzung bereitstellen, offengelegte QA-Zugangsdaten sicher wechseln bzw. Wechsel bestätigen.
+- Melih: Release-/QA-Paket ist bestätigt; weiterhin sichere QA-Mitarbeitersitzung bereitstellen, offengelegte QA-Zugangsdaten sicher wechseln bzw. Wechsel bestätigen. KI-Freigabe bleibt separat.
 - Kemal: Mindestbuchungsalter fachlich bewerten, invoices/0081 und Sondertag-/Zeitfensterabnahme.
 - Praxis: eigener Wochenplan. Box/Hetzner bleibt zurückgestellt.
 
