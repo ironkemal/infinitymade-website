@@ -78,19 +78,23 @@ test('zuErinnern: Zeitumstellungstage (23 und 25 Stunden) werden vollstaendig un
 });
 
 // ── G-1 Wiederholung nur nach Transportfehler ─────────────────────────────────────────────────────
-test('G-1 protokollZustandErinnerung: gesendet/endgueltig/unklar nie erneut, nur Transportfehler wiederholbar', () => {
+test('G-1 protokollZustandErinnerung: gesendet/endgueltig/unklar nie erneut, nur sicher nicht angenommene Mails wiederholbar', () => {
   const beginn = '2026-12-11T09:00:00Z';
   const zeilen = [
     { booking_id: 'a', termin_beginn: beginn, status: 'gesendet', fehler_code: null },
     { booking_id: 'b', termin_beginn: beginn, status: 'fehler', fehler_code: IN_ARBEIT },
-    { booking_id: 'c', termin_beginn: beginn, status: 'fehler', fehler_code: 'EENVELOPE' },     // Empfaenger abgelehnt
-    { booking_id: 'd', termin_beginn: beginn, status: 'fehler', fehler_code: 'ETIMEDOUT' },     // Server nicht erreichbar
+    { booking_id: 'c', termin_beginn: beginn, status: 'fehler', fehler_code: 'EENVELOPE' },     // Empfaenger endgueltig abgelehnt
+    { booking_id: 'd', termin_beginn: beginn, status: 'fehler', fehler_code: 'ETIMEDOUT' },     // Timeout: Mail evtl. schon angenommen
     { booking_id: 'e', termin_beginn: beginn, status: 'fehler', fehler_code: 'VERSAND_FEHLER' }, // unbekannt -> sicher: nie erneut
+    { booking_id: 'f', termin_beginn: beginn, status: 'fehler', fehler_code: 'SMTP_4XX' },      // Greylisting: nicht angenommen
+    { booking_id: 'g', termin_beginn: beginn, status: 'fehler', fehler_code: 'ESOCKET' },       // wie ETIMEDOUT: unsicher
   ];
   const m = protokollZustandErinnerung(zeilen, protokollSchluessel, IN_ARBEIT);
   const z = id => m.get(protokollSchluessel(id, beginn));
   assert.equal(z('a'), 'gesendet'); assert.equal(z('b'), 'unklar'); assert.equal(z('c'), 'unklar');
-  assert.equal(z('e'), 'unklar'); assert.equal(z('d'), undefined); // einzig d wird wieder angeboten
+  assert.equal(z('d'), 'unklar'); assert.equal(z('e'), 'unklar'); assert.equal(z('g'), 'unklar');
+  assert.equal(z('f'), undefined); // einzig SMTP_4XX wird wieder angeboten
+  assert.deepEqual([...WIEDERHOLBAR].sort(), ['EAUTH', 'EDNS', 'SMTP_4XX']);
   for (const code of WIEDERHOLBAR) assert.equal(protokollZustandErinnerung(
     [{ booking_id: 'x', termin_beginn: beginn, status: 'fehler', fehler_code: code }], protokollSchluessel, IN_ARBEIT).size, 0);
 });

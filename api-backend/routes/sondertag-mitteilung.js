@@ -118,7 +118,9 @@ export async function sendeLauf(supabase, {
     } catch (e) {
       zaehler.fehler += 1;
       const code = String(e?.code || 'VERSAND_FEHLER').slice(0, 64);
-      await abschliessen(zeileId, { status: 'fehler', fehler_code: code === IN_ARBEIT ? 'VERSAND_FEHLER' : code });
+      // 4xx-Antwort des Mailservers (z. B. Greylisting): Mail nachweislich nicht angenommen -> eigener, wiederholbarer Code.
+      const gespeichert = e?.responseCode >= 400 && e?.responseCode < 500 ? 'SMTP_4XX' : code;
+      await abschliessen(zeileId, { status: 'fehler', fehler_code: gespeichert === IN_ARBEIT ? 'VERSAND_FEHLER' : gespeichert });
       // SMTP nicht erreichbar / Gmail getrennt: sofort abbrechen statt je Empfaenger auf den Timeout zu warten (onprem O-240).
       if (SMTP_ABBRUCH.has(code)) {
         console.error(`[${logTag}] SMTP abgebrochen`, code, zaehler);

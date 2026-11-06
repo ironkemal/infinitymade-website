@@ -18,6 +18,20 @@ import { sendeLauf, SMTP_ABBRUCH } from '../routes/sondertag-mitteilung.js';
 
 const leer = () => ({ mandanten: 0, gesendet: 0, fehler: 0, doppelt: 0, unklar: 0, abgelehnt: 0, anruf: 0, deckel: 0, abgebrochen: false, uebersprungen: null });
 
+/** Grosse IN-Listen in Bloecke teilen: eine URL mit hunderten UUIDs ueberschreitet die Header-Grenze von Kong/PostgREST. */
+const BLOCK = 50;
+async function ladeInBloecken(ids, abfrage) {
+  const daten = [];
+  for (let i = 0; i < ids.length; i += BLOCK) {
+    const r = await abfrage(ids.slice(i, i + BLOCK));
+    if (r.error) return { data: null, error: r.error };
+    daten.push(...(r.data || []));
+  }
+  return { data: daten, error: null };
+}
+/** PostgREST kappt Antworten stillschweigend (Standard 1000 Zeilen) – lieber laut scheitern als Termine auslassen. */
+const ZEILENGRENZE = 1000;
+
 const adresse = b => [b.business_name, [b.street, b.house_number].filter(Boolean).join(' '), [b.zip, b.city].filter(Boolean).join(' ')]
   .map(x => String(x || '').trim()).filter(Boolean).join(', ');
 
@@ -28,17 +42,18 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
     .select('id,start_time,status,group_parent_id,business_id,lead_id,created_at')
     .eq('owner_id', tenantId).gte('start_time', grenzen.von).lt('start_time', grenzen.bisExklusiv);
   if (e1) throw e1;
+  if ((termine || []).length >= ZEILENGRENZE) throw Object.assign(new Error('Zeilengrenze'), { code: 'ZEILENGRENZE' });
   const liste = zuErinnern(termine, { jetzt, morgen });
   if (!liste.length) return { ergebnis: leer() };
 
   const leadIds = [...new Set(liste.map(x => x.termin.lead_id).filter(Boolean))];
   const bookingIds = liste.map(x => x.termin.id);
   const [leadsR, einwR, protR, bizR] = await Promise.all([
-    leadIds.length ? supabase.from('leads').select('id,email').eq('owner_id', tenantId).in('id', leadIds) : { data: [] },
-    leadIds.length ? supabase.from('patient_consents').select('patient_id,consent_type,text_version,text_snapshot,consented_at,revoked_at')
-      .eq('owner_id', tenantId).eq('consent_type', 'datenschutz').in('patient_id', leadIds) : { data: [] },
-    supabase.from('termin_mitteilungen').select('booking_id,termin_beginn,status,fehler_code')
-      .eq('owner_id', tenantId).eq('anlass', ANLASS_ERINNERUNG).in('booking_id', bookingIds),
+    ladeInBloecken(leadIds, ids => supabase.from('leads').select('id,email').eq('owner_id', tenantId).in('id', ids)),
+    ladeInBloecken(leadIds, ids => supabase.from('patient_consents').select('patient_id,consent_type,text_version,text_snapshot,consented_at,revoked_at')
+      .eq('owner_id', tenantId).eq('consent_type', 'datenschutz').in('patient_id', ids)),
+    ladeInBloecken(bookingIds, ids => supabase.from('termin_mitteilungen').select('booking_id,termin_beginn,status,fehler_code')
+      .eq('owner_id', tenantId).eq('anlass', ANLASS_ERINNERUNG).in('booking_id', ids)),
     supabase.from('businesses').select('id,business_name,street,house_number,zip,city').eq('owner_id', tenantId),
   ]);
   for (const r of [leadsR, einwR, protR, bizR]) if (r.error) throw r.error;
@@ -54,6 +69,15 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
   const ergebnis = leer();
   ergebnis.anruf = teile.anruf.length;
   if (!teile.mail.length) return { ergebnis };
+
+  // Erreichbarkeit VOR der ersten Reservierung pruefen: faellt der Mailserver aus, entsteht keine Protokollzeile und
+  // der naechste Lauf versucht es erneut (ein Timeout waehrend des Sendens waere dagegen nie sicher wiederholbar).
+  try {
+    await transportFabrik({ requireTLS: true }).verify?.();
+  } catch (err) {
+    ergebnis.abgebrochen = true;
+    return { ergebnis, abbruch: true, serverCode: String(err?.code || 'VERIFY_FEHLER').slice(0, 64) };
+  }
 
   const lage = { weg: 'smtp', mail: teile.mail, profil: { business_name: profil.business_name, phone: profil.phone }, standort };
   const r = await sendeLauf(supabase, {
@@ -87,15 +111,15 @@ export async function erinnerungsLauf(supabase, {
   for (const profil of profile || []) {
     summe.mandanten += 1;
     try {
-      const { ergebnis, abbruch } = await mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik });
+      const { ergebnis, abbruch, serverCode } = await mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik });
       for (const k of ['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt', 'anruf', 'deckel']) summe[k] += ergebnis[k];
-      if (abbruch) { summe.abgebrochen = true; break; }
+      if (abbruch) { summe.abgebrochen = true; log.error?.(`[terminerinnerung] Mailserver nicht nutzbar: ${serverCode || 'SMTP'}`); break; }
     } catch (err) {
       summe.fehler += 1;
       log.error?.(`[terminerinnerung] Mandantenlauf fehlgeschlagen: ${String(err?.code || 'FEHLER').slice(0, 64)}`);
     }
   }
-  if (summe.gesendet || summe.fehler || summe.unklar || summe.abgebrochen || summe.deckel) log.log?.('[terminerinnerung]', JSON.stringify(summe));
+  if (summe.gesendet || summe.fehler || summe.unklar || summe.abgebrochen || summe.deckel || summe.anruf) log.log?.('[terminerinnerung]', JSON.stringify(summe));
   return summe;
 }
 

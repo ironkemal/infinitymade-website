@@ -20,10 +20,14 @@ export const FENSTER_BIS = 22;
 export const MIN_VORLAUF_STUNDEN = 12;
 
 /**
- * Fehlercodes, bei denen der Mailserver nicht erreichbar war – nur dann ist ein erneuter Versuch am selben
- * Abend sicher (die Mail ging nachweislich nicht raus). Jeder andere Fehlercode gilt als endgueltig.
+ * Fehlercodes, nach denen die Mail NACHWEISLICH nicht angenommen wurde – nur dann ist ein erneuter Versuch sicher:
+ * SMTP_4XX (Server lehnt voruebergehend ab, z. B. Greylisting; sendeLauf bildet responseCode 4xx darauf ab),
+ * EAUTH (Anmeldung scheitert vor dem Mailtext), EDNS (Servername nicht aufloesbar).
+ * NICHT dazu: ETIMEDOUT/ESOCKET/ECONNECTION. nodemailer meldet einen Timeout NACH der Datenuebertragung genauso
+ * (command 'CONN') wie beim Verbindungsaufbau (gemessen 06.11.2026) – ein Wiederholen koennte doppelt senden (G-1).
+ * Ob der Server grundsaetzlich erreichbar ist, prueft der Lauf VOR der ersten Reservierung (transport.verify()).
  */
-export const WIEDERHOLBAR = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'EAUTH', 'ECONNREFUSED']);
+export const WIEDERHOLBAR = new Set(['SMTP_4XX', 'EAUTH', 'EDNS']);
 
 const STUNDE = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', hourCycle: 'h23' });
 
@@ -71,7 +75,7 @@ export function zuErinnern(termine, { jetzt = new Date(), morgen = morgenBerlin(
 /**
  * Protokollzeilen (nur Anlass erinnerung_vortag) -> Map fuer einteilen():
  * gesendet -> 'gesendet'; Reservierung ohne Abschluss (IN_ARBEIT) -> 'unklar'; endgueltiger Fehler -> 'unklar'
- * (nie erneut senden); nur WIEDERHOLBARE Transportfehler fehlen in der Map und werden erneut versucht.
+ * (nie erneut senden); nur WIEDERHOLBARE Fehler (siehe oben) fehlen in der Map und werden erneut versucht.
  */
 export function protokollZustandErinnerung(zeilen, schluessel, inArbeit) {
   const m = new Map();

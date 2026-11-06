@@ -1,103 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { T, T2, MA, JA, jetzt, ENV, fakeDb, basis } from './terminerinnerung-testdaten.js';
 
 process.env.SUPABASE_URL ||= 'http://127.0.0.1:9';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'synthetic-test-key';
 const { erinnerungsLauf, starteTerminerinnerung } = await import('./terminerinnerung-job.js');
-const { MITTEILUNG_OPTION_TEXT } = await import('./sondertag-mitteilung.js');
 
-const T = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';   // Inhaber, Schalter AN
-const T2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';  // Inhaber, Schalter AUS
-const MA = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';  // Mitarbeiter-Zeile mit gesetztem Schalter (darf nicht zaehlen)
-const JA = `Kopf\n[X] ${MITTEILUNG_OPTION_TEXT}: JA`;
-const jetzt = new Date('2026-12-10T17:00:00Z');     // 18:00 MEZ, morgen = 11.12.2026
-const ENV = { SMTP_HOST: 'smtp.example.invalid' };
-
-/** PostgREST-Fake mit Schreiben, UNIQUE (booking_id, anlass, termin_beginn) und Zaehlabfrage (head). */
-function fakeDb(tabellen, { fehlerBei = null } = {}) {
-  let n = 0;
-  const aufrufe = [];
-  return {
-    tabellen, aufrufe,
-    from(name) {
-      aufrufe.push(name);
-      const f = []; let op = 'select'; let wert = null; let head = false;
-      const rows = () => (tabellen[name] ||= []);
-      const treffer = () => rows().filter(r => f.every(x => x(r)));
-      const b = {
-        select(_c, opt) { if (opt?.head) head = true; return b; },
-        eq(k, v) { f.push(r => r[k] === v); b.eqs = { ...b.eqs, [k]: v }; return b; },
-        neq(k, v) { f.push(r => r[k] !== v); return b; },
-        in(k, v) { f.push(r => v.includes(r[k])); return b; },
-        gte(k, v) { f.push(r => String(r[k]) >= v); return b; },
-        lt(k, v) { f.push(r => String(r[k]) < v); return b; },
-        lte(k, v) { f.push(r => String(r[k]) <= v); return b; },
-        insert(w) { op = 'insert'; wert = w; return b; },
-        update(w) { op = 'update'; wert = w; return b; },
-        maybeSingle() { return b.ausfuehren(true); },
-        then(ok, fehl) { return b.ausfuehren(false).then(ok, fehl); },
-        async ausfuehren(einzeln) {
-          await Promise.resolve(); // Verschachtelung paralleler Laeufe sichtbar machen
-          if (fehlerBei?.(name, b.eqs || {}, op)) return { data: null, error: { code: 'DB_TEST_FEHLER' } };
-          if (op === 'insert') {
-            const dup = rows().some(r => r.booking_id === wert.booking_id && r.anlass === wert.anlass
-              && new Date(r.termin_beginn).getTime() === new Date(wert.termin_beginn).getTime());
-            if (dup) return { data: null, error: { code: '23505' } };
-            const z = { id: `m${++n}`, created_at: jetzt.toISOString(), ...wert };
-            rows().push(z);
-            return { data: { id: z.id }, error: null };
-          }
-          if (op === 'update') {
-            const t = treffer(); t.forEach(r => Object.assign(r, wert));
-            return { data: einzeln ? (t[0] ? { id: t[0].id } : null) : t, error: null };
-          }
-          if (head) return { count: treffer().length, error: null };
-          const d = treffer();
-          return { data: einzeln ? d[0] || null : d, error: null };
-        },
-      };
-      return b;
-    },
-  };
-}
-
-const basis = () => ({
-  profiles: [
-    { id: T, role: 'owner', terminerinnerung_aktiv: true, business_name: 'Physio Test', phone: '0221 123' },
-    { id: T2, role: 'owner', terminerinnerung_aktiv: false, business_name: 'Aus', phone: '1' },
-    { id: MA, role: 'employee', terminerinnerung_aktiv: true, business_name: 'Mitarbeiter', phone: '2' },
-  ],
-  businesses: [{ id: 'biz1', owner_id: T, business_name: 'Physio Test', street: 'Weg', house_number: '1', zip: '50667', city: 'Köln' }],
-  bookings: [
-    { id: 'b1', owner_id: T, start_time: '2026-12-11T09:00:00Z', status: 'confirmed', lead_id: 'l1', business_id: 'biz1', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'b2', owner_id: T, start_time: '2026-12-11T10:00:00Z', status: 'confirmed', lead_id: 'l2', business_id: 'biz1', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'b3', owner_id: T, start_time: '2026-12-11T11:00:00Z', status: 'confirmed', lead_id: 'l3', business_id: 'biz1', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'b4', owner_id: T, start_time: '2026-12-11T12:00:00Z', status: 'confirmed', lead_id: null, business_id: 'biz1', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'b5', owner_id: T, start_time: '2026-12-11T13:00:00Z', status: 'cancelled', lead_id: 'l1', business_id: 'biz1', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'bx', owner_id: T2, start_time: '2026-12-11T09:00:00Z', status: 'confirmed', lead_id: 'lx', created_at: '2026-12-01T08:00:00Z' },
-    { id: 'bm', owner_id: MA, start_time: '2026-12-11T09:00:00Z', status: 'confirmed', lead_id: 'lm', created_at: '2026-12-01T08:00:00Z' },
-  ],
-  leads: [
-    { id: 'l1', owner_id: T, email: 'patient-eins@example.invalid' },
-    { id: 'l2', owner_id: T, email: 'patient-zwei@example.invalid' },
-    { id: 'l3', owner_id: T, email: 'keine adresse, a@b.de' },
-    { id: 'lx', owner_id: T2, email: 'fremd@example.invalid' },
-    { id: 'lm', owner_id: MA, email: 'ma@example.invalid' },
-  ],
-  patient_consents: [
-    { patient_id: 'l1', owner_id: T, consent_type: 'datenschutz', text_version: 'datenschutz-v6-2026-11-05', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null },
-    { patient_id: 'l2', owner_id: T, consent_type: 'datenschutz', text_version: 'datenschutz-v5-2026-10-30', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null },
-    { patient_id: 'l3', owner_id: T, consent_type: 'datenschutz', text_version: 'datenschutz-v6-2026-11-05', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null },
-    { patient_id: 'lx', owner_id: T2, consent_type: 'datenschutz', text_version: 'datenschutz-v6-2026-11-05', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null },
-    { patient_id: 'lm', owner_id: MA, consent_type: 'datenschutz', text_version: 'datenschutz-v6-2026-11-05', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null },
-  ],
-  termin_mitteilungen: [],
-});
 
 function umgebung(opt = {}) {
   const db = fakeDb(opt.tabellen || basis(), opt);
   const mails = []; const logs = [];
-  const transportFabrik = () => ({ async sendMail(m) { if (opt.sendFehler) { const e = new Error('x'); e.code = opt.sendFehler(); if (e.code) throw e; } mails.push(m); } });
+  const transportFabrik = () => ({
+    async verify() { const c = opt.verifyFehler?.(); if (c) throw Object.assign(new Error('verify'), { code: c }); },
+    async sendMail(m) {
+      const f = opt.sendFehler?.();
+      if (f) throw Object.assign(new Error('x'), typeof f === 'string' ? { code: f } : f);
+      mails.push(m);
+    },
+  });
   const log = { log: (...a) => logs.push(a.join(' ')), error: (...a) => logs.push(a.join(' ')), warn: (...a) => logs.push(a.join(' ')) };
   const lauf = (extra = {}) => erinnerungsLauf(db, { jetzt, env: ENV, kutu: true, transportFabrik, log, ...extra });
   return { db, mails, logs, lauf };
@@ -190,18 +110,38 @@ test('Verschobener Termin (neue Startzeit) bekommt eine neue Erinnerung', async 
 });
 
 // ── Fehlerpfade ──────────────────────────────────────────────────────────────────────────────────
-test('SMTP nicht erreichbar: Lauf bricht ab, spaeter am selben Abend wird nachgeholt – genau einmal', async () => {
+test('Mailserver nicht erreichbar (verify scheitert): keine Reservierung, Abbruch, spaeter am selben Abend genau einmal', async () => {
   const t = basis();
   let aus = true;
-  const u = umgebung({ tabellen: t, sendFehler: () => (aus ? 'ECONNREFUSED' : null) });
+  const u = umgebung({ tabellen: t, verifyFehler: () => (aus ? 'ECONNREFUSED' : null) });
   const r1 = await u.lauf();
   assert.equal(r1.abgebrochen, true); assert.equal(u.mails.length, 0);
-  assert.equal(t.termin_mitteilungen[0].fehler_code, 'ECONNREFUSED');
+  assert.equal(t.termin_mitteilungen.length, 0, 'nichts reserviert, nichts verloren');
   aus = false;
   const r2 = await u.lauf();
   assert.equal(r2.gesendet, 1); assert.equal(u.mails.length, 1);
-  assert.equal(t.termin_mitteilungen[0].status, 'gesendet');
   await u.lauf(); assert.equal(u.mails.length, 1);
+});
+
+test('Timeout beim Senden (Mail evtl. schon angenommen): nie erneut senden, auch nicht beim naechsten Tick (G-1)', async () => {
+  const t = basis();
+  let n = 0;
+  const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? { code: 'ETIMEDOUT', command: 'CONN' } : null) });
+  const r1 = await u.lauf();
+  assert.equal(r1.fehler, 1); assert.equal(t.termin_mitteilungen[0].fehler_code, 'ETIMEDOUT');
+  const r2 = await u.lauf();
+  assert.equal(r2.gesendet, 0); assert.equal(u.mails.length, 0);
+});
+
+test('Server lehnt voruebergehend ab (4xx, Greylisting): als SMTP_4XX gespeichert und am selben Abend erneut versucht', async () => {
+  const t = basis();
+  let n = 0;
+  const u = umgebung({ tabellen: t, sendFehler: () => (++n === 1 ? { code: 'EENVELOPE', responseCode: 450, command: 'RCPT TO' } : null) });
+  const r1 = await u.lauf();
+  assert.equal(r1.fehler, 1); assert.equal(t.termin_mitteilungen[0].fehler_code, 'SMTP_4XX');
+  const r2 = await u.lauf();
+  assert.equal(r2.gesendet, 1); assert.equal(u.mails.length, 1);
+  assert.equal(t.termin_mitteilungen[0].status, 'gesendet');
 });
 
 test('Endgueltiger Fehler (Empfaenger abgelehnt): kein erneuter Versuch, Lauf geht weiter', async () => {
@@ -291,4 +231,27 @@ test('G-4 echte MIME-Nachricht (nodemailer streamTransport): Header, Zeichensatz
   const koerper = rest.join('\r\n\r\n');
   assert.match(koerper, /Guten Tag,/);
   assert.doesNotMatch(mime, /Rezept|Diagnose|Behandlung|Herr |Frau /);
+});
+
+test('Grosser Mandant: IN-Listen in Bloecken <= 50 (URL-Laenge), alle 130 Termine werden erinnert', async () => {
+  const t = basis();
+  t.bookings = []; t.leads = []; t.patient_consents = [];
+  for (let i = 0; i < 130; i++) {
+    t.bookings.push({ id: `g${i}`, owner_id: T, start_time: `2026-12-11T${String(7 + (i % 12)).padStart(2, '0')}:${i % 2 ? '00' : '30'}:00Z`, status: 'confirmed', lead_id: `gl${i}`, created_at: '2026-12-01T08:00:00Z' });
+    t.leads.push({ id: `gl${i}`, owner_id: T, email: `p${i}@example.invalid` });
+    t.patient_consents.push({ patient_id: `gl${i}`, owner_id: T, consent_type: 'datenschutz', text_version: 'datenschutz-v6-2026-11-05', text_snapshot: JA, consented_at: '2026-11-06', revoked_at: null });
+  }
+  const u = umgebung({ tabellen: t });
+  const r = await u.lauf();
+  assert.equal(r.gesendet, 130); assert.equal(u.mails.length, 130);
+  assert.ok(u.db.stand.maxIn <= 50, `groesster IN-Block: ${u.db.stand.maxIn}`);
+});
+
+test('Antwort an der Zeilengrenze (>= 1000 Termine): laut abbrechen statt Termine stillschweigend auszulassen', async () => {
+  const t = basis();
+  t.bookings = Array.from({ length: 1000 }, (_, i) => ({ id: `z${i}`, owner_id: T, start_time: '2026-12-11T09:00:00Z', status: 'confirmed', lead_id: null, created_at: '2026-12-01T08:00:00Z' }));
+  const u = umgebung({ tabellen: t });
+  const r = await u.lauf();
+  assert.equal(r.fehler, 1); assert.equal(u.mails.length, 0);
+  assert.match(u.logs.join('\n'), /Mandantenlauf fehlgeschlagen: ZEILENGRENZE/);
 });
