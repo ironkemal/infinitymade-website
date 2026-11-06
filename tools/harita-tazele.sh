@@ -29,4 +29,7 @@ node tools/funktionskarte.mjs >/dev/null || {
 }
 git add funktionen/INDEX.json funktionen/INDEX.md
 echo "harita-tazele: funktionen/INDEX.* tazelendi ve commit'e eklendi"
+# Tuzak (06.11.2026 yasandi): `git commit -- <dosyalar>` (paralel oturum kurali)
+# yalniz sayilan yollari alir, buradaki `git add` o commit'e GIRMEZ.
+echo "  ! 'git commit -- <dosyalar>' kullaniyorsan funktionen/INDEX.json + INDEX.md'yi de listeye yaz"
 exit 0
