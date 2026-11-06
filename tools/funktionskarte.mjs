@@ -233,6 +233,16 @@ for (const fn of functions) {
 
   fn.storage = uniq([...b.matchAll(/\.storage\s*\.\s*from\(\s*['"`]([^'"`]+)['"`]/g)].map(m => m[1]));
 
+  // DOM hedefleri (06.11.2026): tabloya YAZMAYAN çift render yollarını görmek
+  // için. kopieKandidaten yalnız `writes` sayar; aynı ekranı iki ayrı fonksiyon
+  // çiziyorsa orada iz kalmıyordu. Yaklaşık sinyal: sabit dizeli id'ler, ve
+  // gövdede herhangi bir HTML basma işlemi var mı (hangi öğeye olduğu değil).
+  fn.domIds = uniq([
+    ...[...b.matchAll(/getElementById\(\s*['"`]([A-Za-z][\w-]*)['"`]\s*\)/g)].map(m => m[1]),
+    ...[...b.matchAll(/querySelector(?:All)?\(\s*['"`]#([A-Za-z][\w-]*)['"`]\s*\)/g)].map(m => m[1]),
+  ]).sort();
+  fn.domRender = /\.innerHTML\s*=(?!=)|insertAdjacentHTML\(|\.replaceChildren\(/.test(b);
+
   // Çağrı grafiği: gövdede geçen ve tanımlı olduğunu bildiğimiz isimler.
   const called = new Set();
   for (const m of b.matchAll(/\b([A-Za-z_$][\w$]*)\s*\(/g)) {
@@ -408,6 +418,31 @@ for (const [table, set] of tableWriters) {
 }
 clusters.sort((a, b) => b.anzahl - a.anzahl || a.tabelle.localeCompare(b.tabelle));
 
+// ── DOM render adayları (06.11.2026) ────────────────────────────────────────
+// Aynı mantık, tablo yerine ekran öğesi: aynı id'yi tutan VE HTML basan,
+// birbirini çağırmayan fonksiyon grupları. Yaklaşık — `domRender` öğeyi değil
+// gövdeyi işaretler; aday listesidir, karar insanın.
+const domRenderer = new Map(); // id -> [fn]
+for (const fn of functions) {
+  if (!fn.domRender || /\.test\.js$/.test(fn.file)) continue;
+  for (const id of fn.domIds) {
+    if (!domRenderer.has(id)) domRenderer.set(id, []);
+    domRenderer.get(id).push(fn);
+  }
+}
+const domKandidaten = [];
+for (const [id, fns] of domRenderer) {
+  if (fns.length < 2) continue;
+  const gruppen = bilesenler(fns);
+  if (gruppen.length < 2) continue;
+  domKandidaten.push({
+    id,
+    anzahl: gruppen.length,
+    pfade: gruppen.map(g => g.map(f => ({ name: f.name, file: f.file, start: f.start, end: f.end, uiPfad: f.uiPfad }))),
+  });
+}
+domKandidaten.sort((a, b) => b.anzahl - a.anzahl || a.id.localeCompare(b.id));
+
 // ── Kabuk fonksiyonları (onprem/ altı: bash + ps1) ──────────────────────────
 // JS isim alanından KESİNLİKLE ayrı: Shell fonksiyonları kendi haritalarında yaşar.
 const shellFunctions = [];
@@ -426,6 +461,8 @@ for (const sf of shellFiles) {
     fn.writes = [];
     fn.rpcs = [];
     fn.storage = [];
+    fn.domIds = [];
+    fn.domRender = false;
     fn.endpoints = [];
     fn.modules = [];
     fn.uiPfad = [];
@@ -554,6 +591,7 @@ const index = {
     .map(({ body, ...rest }) => rest)
     .sort((a, b) => a.file.localeCompare(b.file) || a.start - b.start),
   kopieKandidaten: clusters,
+  domKandidaten,
   doppelteNamen,
   bilinciAynalar,
 };
@@ -587,6 +625,17 @@ for (const c of clusters.slice(0, 30)) {
     }
     md.push('');
   });
+}
+if (domKandidaten.length) {
+  md.push('## Çift render adayları — aynı DOM id\'ye HTML basan, birbirini çağırmayan fonksiyonlar', '');
+  md.push('Tabloya yazmayan kopyaları yakalar (aynı ekranı iki yol çiziyor mu). Yaklaşık sinyal:');
+  md.push('fonksiyon id\'yi tutuyor ve gövdesinde bir yerde HTML basıyor. İnceleme kuyruğu, karar insanın.', '');
+  for (const d of domKandidaten.slice(0, 30)) {
+    md.push(`- \`#${d.id}\` — ${d.anzahl} yol: ` + d.pfade
+      .map(g => g.map(f => `[\`${f.name}()\`](${f.file}#L${f.start}-L${f.end})`).join(' + '))
+      .join(' · '));
+  }
+  md.push('');
 }
 md.push('## En çok yazılan tablolar', '');
 for (const [t, n] of topTables) md.push(`- \`${t}\` — ${n} ayrı fonksiyon yazıyor`);

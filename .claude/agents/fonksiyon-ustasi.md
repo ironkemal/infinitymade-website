@@ -194,7 +194,11 @@ Eski harita hiç haritadan **kötüdür**: okuyan ona inanır. `db/SCHEMA.sql` i
 - Harita **üretilir, elle düzenlenmez.** Yanlışsa düzeltilecek yer script'tir
   (`tools/funktionskarte.mjs`), çıktı değil.
 
-`node tools/funktionskarte.mjs --check` mevcut ("Harita taze" diye doğrular) ama pre-commit'e bağlı DEĞİL; disiplin elle.
+06.11.2026'dan beri pre-commit haritayı **kendisi tazeler**: JS/mjs/cjs/sh/ps1 staged ise `tools/harita-tazele.sh` `funktionskarte.mjs`'i koşar ve `funktionen/INDEX.*`'i commit'e ekler (atlamak: `SKIP_HARITA=1`). Yani commit edilmiş kodda harita taze; bayatlık yalnız commit edilmemiş işte olur.
+
+**Sorgu yolu (06.11.2026):** 257k satırlık INDEX.json'u okuma — `praxura-funktionskarte` MCP sunucusu (`tools/funktionskarte-mcp.mjs`) var: `fonksiyon_bul`, `fonksiyon_detay`, `cagiranlar`/`cagirdiklari` (derinlikli, blast radius), `tablo_kullanan`, `dom_hedefi`, `kopya_adaylari`, `dosya_fonksiyonlari`, `harita_durumu`. Araç yoksa (bulut oturumu) `node -e` ile JSON'dan hedefli çek.
+
+**DOM alanları (06.11.2026):** her kayıtta `domIds[]` (sabit dizeli getElementById/querySelector('#x')) ve `domRender` (gövde HTML basıyor mu). `domKandidaten[]` + INDEX.md "Çift render adayları" = tabloya yazmayan çift render yolları; yaklaşık sinyal, karar insanın.
 
 ---
 

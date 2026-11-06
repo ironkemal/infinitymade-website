@@ -531,6 +531,42 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 2 — `bindHours()`** · Ekran: _UI yolu çözülemedi_
 - `bindHours()` — [onboarding.js:820](onboarding.js#L820-L865) · 46 satır · working_hours:delete, working_hours:insert
 
+## Çift render adayları — aynı DOM id'ye HTML basan, birbirini çağırmayan fonksiyonlar
+
+Tabloya yazmayan kopyaları yakalar (aynı ekranı iki yol çiziyor mu). Yaklaşık sinyal:
+fonksiyon id'yi tutuyor ve gövdesinde bir yerde HTML basıyor. İnceleme kuyruğu, karar insanın.
+
+- `#invPatientSelect` — 4 yol: [`openBookingActionModal()`](dashboard.js#L2485-L2887) · [`loadInvPatients()`](dashboard.js#L12711-L12722) · [`resetInvEditor()`](dashboard.js#L12804-L12817) · [`bindInvEvents()`](dashboard.js#L12938-L13078)
+- `#bk-id` — 3 yol: [`initBkGroupPatientAutocomplete()`](dashboard.js#L3927-L4049) · [`mountTerminmaske()`](module/raum-auswahl.js#L227-L335) · [`waehleVerordnung()`](module/termin-verordnung.js#L182-L345)
+- `#bkService` — 3 yol: [`populateSrvSelect()`](dashboard.js#L4431-L4463) · [`mountTerminmaske()`](module/raum-auswahl.js#L227-L335) · [`zeichneZeilen()`](module/termin-leistungen.js#L524-L569)
+- `#scheduleDateLabel` — 3 yol: [`loadScheduleBookings()`](dashboard.js#L1305-L1481) · [`renderOverviewWeekly()`](dashboard.js#L12342-L12434) · [`renderOverviewMonthly()`](dashboard.js#L12437-L12521)
+- `#zaaErr` — 3 yol: [`openZaaModal()`](dashboard.js#L14819-L14831) · [`runZaaUpload()`](dashboard.js#L14833-L14878) · [`showZaaErrors()`](dashboard.js#L14880-L14935)
+- `#zaaFileInput` — 3 yol: [`openZaaModal()`](dashboard.js#L14819-L14831) · [`runZaaUpload()`](dashboard.js#L14833-L14878) · [`showZaaErrors()`](dashboard.js#L14880-L14935)
+- `#zaaResult` — 3 yol: [`openZaaModal()`](dashboard.js#L14819-L14831) · [`runZaaUpload()`](dashboard.js#L14833-L14878) · [`showZaaErrors()`](dashboard.js#L14880-L14935)
+- `#zaaRunBtn` — 3 yol: [`openZaaModal()`](dashboard.js#L14819-L14831) · [`runZaaUpload()`](dashboard.js#L14833-L14878) · [`showZaaErrors()`](dashboard.js#L14880-L14935)
+- `#bkEmployee` — 2 yol: [`renderDayView()`](dashboard.js#L1961-L2144) · [`populateEmpSelects()`](dashboard.js#L4412-L4429) + [`populateSrvSelect()`](dashboard.js#L4431-L4463)
+- `#bkGroupCount` — 2 yol: [`loadGroupParticipants()`](dashboard.js#L3812-L3889) · [`renderLocalGroupParticipants()`](dashboard.js#L3891-L3925)
+- `#bkGroupMaxDisplay` — 2 yol: [`loadGroupParticipants()`](dashboard.js#L3812-L3889) · [`renderLocalGroupParticipants()`](dashboard.js#L3891-L3925)
+- `#bkGroupParticipantsList` — 2 yol: [`loadGroupParticipants()`](dashboard.js#L3812-L3889) · [`renderLocalGroupParticipants()`](dashboard.js#L3891-L3925)
+- `#bkLeistungExtra` — 2 yol: [`mountTerminmaske()`](module/raum-auswahl.js#L227-L335) · [`zeichneZeilen()`](module/termin-leistungen.js#L524-L569)
+- `#bkStart` — 2 yol: [`mountTerminmaske()`](module/raum-auswahl.js#L227-L335) · [`waehleVerordnung()`](module/termin-verordnung.js#L182-L345)
+- `#blFilterFrom` — 2 yol: [`nur()`](module/datev-einstellungen.js#L36-L142) · [`erstelleZahlungsjournalLader()`](module/zahlungsjournal-laden.js#L5-L88)
+- `#blFilterTo` — 2 yol: [`nur()`](module/datev-einstellungen.js#L36-L142) · [`erstelleZahlungsjournalLader()`](module/zahlungsjournal-laden.js#L5-L88)
+- `#btnFormSpeichern` — 2 yol: [`renderFormular()`](module/physio-befund.js#L669-L1005) · [`speichern()`](module/physio-befund.js#L906-L1001)
+- `#btnFormSpeichernUnten` — 2 yol: [`renderFormular()`](module/physio-befund.js#L669-L1005) · [`speichern()`](module/physio-befund.js#L906-L1001)
+- `#dayViewDateLabel` — 2 yol: [`renderDayView()`](dashboard.js#L1961-L2144) · [`mountRaumTagesansicht()`](module/raum-tagesansicht.js#L245-L373)
+- `#fbFahrtenFrom` — 2 yol: [`loadFahrtenbuchPanel()`](dashboard.js#L15157-L15206) · [`loadFbFahrten()`](dashboard.js#L15209-L15282)
+- `#fbFahrtenTo` — 2 yol: [`loadFahrtenbuchPanel()`](dashboard.js#L15157-L15206) · [`loadFbFahrten()`](dashboard.js#L15209-L15282)
+- `#fbFahrtenUser` — 2 yol: [`loadFahrtenbuchPanel()`](dashboard.js#L15157-L15206) · [`loadFbFahrten()`](dashboard.js#L15209-L15282)
+- `#fbReportMonth` — 2 yol: [`loadFahrtenbuchPanel()`](dashboard.js#L15157-L15206) · [`loadFbReports()`](dashboard.js#L15511-L15579)
+- `#gapsList` — 2 yol: [`renderGaps()`](dashboard.js#L1149-L1227) · [`renderGapsForDate()`](dashboard.js#L1229-L1303)
+- `#gapsTotal` — 2 yol: [`renderGaps()`](dashboard.js#L1149-L1227) · [`renderGapsForDate()`](dashboard.js#L1229-L1303)
+- `#hoursGrid` — 2 yol: [`renderHoursGrid()`](dashboard.js#L8757-L8830) · [`renderHours()`](onboarding.js#L791-L818)
+- `#invDmrzBtn` — 2 yol: [`resetInvEditor()`](dashboard.js#L12804-L12817) · [`bindInvEvents()`](dashboard.js#L12938-L13078)
+- `#invEigenPct` — 2 yol: [`resetInvEditor()`](dashboard.js#L12804-L12817) · [`bindInvEvents()`](dashboard.js#L12938-L13078)
+- `#invKasse` — 2 yol: [`resetInvEditor()`](dashboard.js#L12804-L12817) · [`bindInvEvents()`](dashboard.js#L12938-L13078)
+- `#invLineBody` — 2 yol: [`renderInvLines()`](dashboard.js#L12724-L12754) · [`resetInvEditor()`](dashboard.js#L12804-L12817)
+
 ## En çok yazılan tablolar
 
 - `profiles` — 32 ayrı fonksiyon yazıyor
