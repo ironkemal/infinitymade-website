@@ -5,6 +5,12 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { createConfirmationService } from './ki-rueckfrage.js';
 
+// Windows kennt keine POSIX-Dateirechte (0700/0600): die Produktionspruefung lehnt dort jedes
+// Verzeichnis ab, und symlinkSync braucht Adminrechte. Diese Tests laufen auf Linux (CI
+// publish-calendar-api, Box, SaaS-Container) und macOS; unter Windows werden sie uebersprungen,
+// statt die Pruefung im Code aufzuweichen (06.11.2026).
+const POSIX_RECHTE_FEHLEN = process.platform === 'win32' && 'Windows: keine POSIX-Dateirechte';
+
 const TEST_TASK = 'b2c-draft';
 const TEST_USER = 'user-test-1';
 const TEST_TENANT = '44444444-4444-4444-8444-444444444444';
@@ -13,7 +19,7 @@ function getTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'ki-test-'));
 }
 
-test('creates challenge with HMAC and bounded candidates', () => {
+test('creates challenge with HMAC and bounded candidates', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   const service = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
   const payload = { intent: 'Nachricht an Dr. Müller' };
@@ -35,7 +41,7 @@ test('creates challenge with HMAC and bounded candidates', () => {
   assert.ok(challenge.expiresAt > Date.now());
 });
 
-test('successfully verifies confirmation with valid choices', () => {
+test('successfully verifies confirmation with valid choices', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   const service = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
   const payload = { intent: 'Nachricht an Dr. Müller' };
@@ -65,7 +71,7 @@ test('successfully verifies confirmation with valid choices', () => {
   assert.deepEqual(verification.choices, [{ id: 'c1', action: 'maskieren' }]);
 });
 
-test('payload tampering invalidates confirmation', () => {
+test('payload tampering invalidates confirmation', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   const service = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
   const originalPayload = { intent: 'Original Text' };
@@ -97,7 +103,7 @@ test('payload tampering invalidates confirmation', () => {
   assert.equal(verification.code, 'KI_CHALLENGE_TAMPERED');
 });
 
-test('replay protection: challenge cannot be reused', () => {
+test('replay protection: challenge cannot be reused', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   const service = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
   const payload = { intent: 'Replay Test' };
@@ -138,7 +144,7 @@ test('replay protection: challenge cannot be reused', () => {
   assert.equal(second.code, 'KI_CHALLENGE_REPLAY');
 });
 
-test('expired challenge is rejected', () => {
+test('expired challenge is rejected', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   let simulatedTime = 1000;
   const service = createConfirmationService({
@@ -177,7 +183,7 @@ test('expired challenge is rejected', () => {
   assert.equal(verification.code, 'KI_CHALLENGE_EXPIRED');
 });
 
-test('invalid action choice is rejected', () => {
+test('invalid action choice is rejected', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const tempDir = getTempDir();
   const service = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
   const payload = { intent: 'Test' };
@@ -208,7 +214,7 @@ test('invalid action choice is rejected', () => {
 });
 
 
-test('shared secret and directory enforce replay across independent workers', () => {
+test('shared secret and directory enforce replay across independent workers', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const directory = getTempDir(); const opts = { secret: Buffer.alloc(32, 8), directory };
   const one = createConfirmationService(opts); const two = createConfirmationService(opts);
   const args = { task: TEST_TASK, userId: TEST_USER, tenantId: TEST_TENANT, payload: { intent: 'Test' }, candidates: [{ id: 'one', text: 'MaybeName', type: 'FUZZY_NAME_REST' }] };
@@ -219,7 +225,7 @@ test('shared secret and directory enforce replay across independent workers', ()
   assert.match(files[0], /^\.challenge-[a-f0-9]{64}\.consumed$/);
   const stored = fs.readFileSync(path.join(directory, files[0]), 'utf8'); assert.ok(!stored.includes('MaybeName')); assert.deepEqual(Object.keys(JSON.parse(stored)), ['expiresAt']);
 });
-test('confirmation rejects duplicate, unknown, subset and malformed expiry without consuming', () => {
+test('confirmation rejects duplicate, unknown, subset and malformed expiry without consuming', { skip: POSIX_RECHTE_FEHLEN }, () => {
   const service = createConfirmationService({ secret: Buffer.alloc(32, 9), directory: getTempDir(), now: () => 1000 });
   const args = { task: TEST_TASK, userId: TEST_USER, tenantId: TEST_TENANT, payload: { intent: 'Test' }, candidates: [{ id: 'one', text: 'NameOne', type: 'NAME' }, { id: 'two', text: 'NameTwo', type: 'NAME' }] };
   const challenge = service.createChallenge(args);
