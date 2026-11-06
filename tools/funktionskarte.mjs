@@ -241,7 +241,24 @@ for (const fn of functions) {
     ...[...b.matchAll(/getElementById\(\s*['"`]([A-Za-z][\w-]*)['"`]\s*\)/g)].map(m => m[1]),
     ...[...b.matchAll(/querySelector(?:All)?\(\s*['"`]#([A-Za-z][\w-]*)['"`]\s*\)/g)].map(m => m[1]),
   ]).sort();
-  fn.domRender = /\.innerHTML\s*=(?!=)|insertAdjacentHTML\(|\.replaceChildren\(/.test(b);
+  // domRenderIds (06.11.2026, ilk turda 38 adayın 31'i yanlış alarm çıktı —
+  // funktionen/DOM-KANDIDATEN-2026-11-06.md): artık yalnız HTML'in GERÇEKTEN o
+  // id'nin öğesine basıldığı yerler sayılır — doğrudan `getElementById('x').innerHTML =`
+  // ya da `const v = getElementById('x')` + `v.innerHTML =`. Yalnız boşaltma
+  // (`innerHTML = ''`, argümansız `replaceChildren()`) çizim sayılmaz.
+  const yaziyor = (hedef) => new RegExp(
+    hedef + String.raw`\s*\.\s*(?:innerHTML\s*=(?!=)(?!\s*['"\x60]{2}\s*[;\n])|insertAdjacentHTML\(|replaceChildren\(\s*[^)\s])`
+  ).test(b);
+  const kacis = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const renderIds = new Set();
+  for (const id of fn.domIds) {
+    const sec = String.raw`(?:getElementById\(\s*['"\x60]${kacis(id)}['"\x60]\s*\)|querySelector\(\s*['"\x60]#${kacis(id)}['"\x60]\s*\))`;
+    if (yaziyor(sec + String.raw`\??`)) { renderIds.add(id); continue; }
+    const degiskenler = [...b.matchAll(new RegExp(String.raw`(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:document\s*\.\s*)?` + sec, 'g'))].map(m => m[1]);
+    if (degiskenler.some(v => yaziyor(String.raw`\b` + kacis(v) + String.raw`\??`))) renderIds.add(id);
+  }
+  fn.domRenderIds = [...renderIds].sort();
+  fn.domRender = fn.domRenderIds.length > 0;
 
   // Çağrı grafiği: gövdede geçen ve tanımlı olduğunu bildiğimiz isimler.
   const called = new Set();
@@ -422,16 +439,25 @@ clusters.sort((a, b) => b.anzahl - a.anzahl || a.tabelle.localeCompare(b.tabelle
 // Aynı mantık, tablo yerine ekran öğesi: aynı id'yi tutan VE HTML basan,
 // birbirini çağırmayan fonksiyon grupları. Yaklaşık — `domRender` öğeyi değil
 // gövdeyi işaretler; aday listesidir, karar insanın.
-const domRenderer = new Map(); // id -> [fn]
+// Sayfa: dashboard.js + module/* tek sayfa (dashboard.html); diğer kök JS'ler
+// kendi HTML'lerine ait. Aynı id iki ayrı sayfada (#hoursGrid: dashboard +
+// onboarding) aynı öğe değildir.
+const sayfa = (file) => (file === 'dashboard.js' || file.startsWith('module/')) ? 'dashboard' : file;
+const domRenderer = new Map(); // "sayfa#id" -> [fn]
 for (const fn of functions) {
   if (!fn.domRender || /\.test\.js$/.test(fn.file)) continue;
-  for (const id of fn.domIds) {
-    if (!domRenderer.has(id)) domRenderer.set(id, []);
-    domRenderer.get(id).push(fn);
+  for (const id of fn.domRenderIds) {
+    const key = sayfa(fn.file) + '#' + id;
+    if (!domRenderer.has(key)) domRenderer.set(key, []);
+    domRenderer.get(key).push(fn);
   }
 }
 const domKandidaten = [];
-for (const [id, fns] of domRenderer) {
+for (const [key, alle] of domRenderer) {
+  const id = key.slice(key.indexOf('#') + 1);
+  // İç içe tanım (`speichern` `renderFormular`'ın içinde): aynı satırlar iki kez
+  // sayılmasın — başka bir adayı kapsayan dış fonksiyon düşer.
+  const fns = alle.filter(o => !alle.some(i => i !== o && i.file === o.file && i.start >= o.start && i.end <= o.end));
   if (fns.length < 2) continue;
   const gruppen = bilesenler(fns);
   if (gruppen.length < 2) continue;
@@ -463,6 +489,7 @@ for (const sf of shellFiles) {
     fn.storage = [];
     fn.domIds = [];
     fn.domRender = false;
+    fn.domRenderIds = [];
     fn.endpoints = [];
     fn.modules = [];
     fn.uiPfad = [];

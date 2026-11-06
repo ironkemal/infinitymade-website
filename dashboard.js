@@ -52,7 +52,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906'; import { renderRechtslinksSettings } from './module/praxis-rechtslinks-einstellungen.js?v=20261031b'; import { renderMitarbeiterAppSettings } from './module/mitarbeiter-app-einstellungen.js?v=20261022';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20261010b';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261021y'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, ladePodVerordnung } from './module/podologie-abrechnung.js?v=20261106'; import { renderZaaUploadResult, renderZaaFehlerTabelle, ladeZaaZeilen, verdrahteZaaBeheben } from './module/zaa-fehler.js?v=20261106'; import { verdrahtePhysioBefund } from './module/physio-befund.js?v=20261101b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261031b'; import { montiereVorgeschichte } from './module/podo-vorgeschichte-form.js?v=20261021y'; import { verdrahteDokumente } from './module/patient-dokumente.js?v=20261031b';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261021n';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtZeilenReferenz } from './module/fahrtenbuch-regeln.js?v=20261014five1';
@@ -1144,86 +1144,6 @@ function findGaps(whStart, whEnd, bookings) {
     if (current < end) gaps.push({ start: fmt(current), end: fmt(end) });
     return gaps;
   } catch (e) { console.error('[findGaps]', e); return []; }
-}
-
-async function renderGaps() {
-  try {
-    const tz = 'Europe/Berlin';
-    const container = document.getElementById('gapsList');
-    if (!container) return;
-
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: tz });
-    const today = new Date(todayStr + 'T00:00:00');
-    const tomorrow = new Date(today.getTime() + 86400000);
-    const todayDow = today.getDay();
-    const tomorrowDow = tomorrow.getDay();
-
-    const ownerId = getOwnerId();
-    const { data: whAll } = await supabase.from('working_hours')
-      .select('day_of_week,start_time,end_time,is_active')
-      .eq('user_id', ownerId)
-      .eq('is_active', true);
-    const whMap = {};
-    whAll?.forEach(r => whMap[r.day_of_week] = r);
-
-    const todayEndIso = new Date(today.getTime() + 86399000).toISOString();
-    const tomorrowEndIso = new Date(tomorrow.getTime() + 86399000).toISOString();
-    let q = supabase.from('bookings')
-      .select('start_time,end_time,services(duration_minutes),status')
-      .eq('owner_id', ownerId)
-      .eq('user_id', currentSession.user.id)
-      .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
-      .neq('status', 'cancelled').order('start_time');
-    const { data: bookings } = await q;
-
-    const allGaps = [];
-    const whToday = whMap[todayDow];
-    if (whToday) {
-      const todayBookings = (bookings || []).filter(b => {
-        const d = new Date(b.start_time);
-        return d >= today && d < new Date(today.getTime() + 86400000);
-      });
-      findGaps(whToday.start_time, whToday.end_time, todayBookings).forEach(g =>
-        allGaps.push({ day: 'Heute', start: g.start, end: g.end })
-      );
-    }
-    const whTom = whMap[tomorrowDow];
-    if (whTom) {
-      const tomBookings = (bookings || []).filter(b => {
-        const d = new Date(b.start_time);
-        return d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000);
-      });
-      findGaps(whTom.start_time, whTom.end_time, tomBookings).forEach(g =>
-        allGaps.push({ day: 'Morgen', start: g.start, end: g.end })
-      );
-    }
-
-    const totalEl = document.getElementById('gapsTotal');
-    if (allGaps.length === 0) {
-      container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
-      if (totalEl) totalEl.textContent = '0 min';
-      return;
-    }
-    const totalFreeMin = allGaps.reduce((sum, g) => {
-      const s = parseInt(g.start.split(':')[0]) * 60 + parseInt(g.start.split(':')[1]);
-      const e = parseInt(g.end.split(':')[0]) * 60 + parseInt(g.end.split(':')[1]);
-      return sum + (e - s);
-    }, 0);
-    const totalH = Math.floor(totalFreeMin / 60);
-    const totalM = totalFreeMin % 60;
-    if (totalEl) totalEl.textContent = totalH > 0 ? `${totalH}h ${totalM}min` : `${totalM}min`;
-
-    container.innerHTML = allGaps.map(g => {
-      const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
-      return `<div class="gap-card">
-        <div class="gap-card-top">
-          <span class="gap-card-dur">${durMin} min</span>
-        </div>
-        <div class="gap-card-time">${g.start} - ${g.end}</div>
-      </div>`;
-    }).join('');
-  } catch (e) { console.error('[renderGaps]', e); }
 }
 
 async function renderGapsForDate(date) {
@@ -14253,7 +14173,6 @@ async function init() {
     console.log('[init] team ok');
     await renderOverview();
     console.log('[init] overview ok');
-    try { await renderGaps(); console.log('[init] gaps ok'); } catch (e) { console.error('[init] renderGaps error', e); }
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await bootScheduleViewToggle();
@@ -14863,7 +14782,9 @@ async function runZaaUpload() {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
 
-    out.innerHTML = renderZaaUploadResult(json, { escapeHtml });
+    const dbZeilen = await ladeZaaZeilen(supabase, ab).catch(() => []);
+    out.innerHTML = renderZaaUploadResult(json, { escapeHtml, dbZeilen });
+    verdrahteZaaBeheben(out, oeffneZaaVerordnung);
 
     showToast(`${json.errorCount} Fehler importiert.`);
     btn.disabled = false;
@@ -14877,56 +14798,30 @@ async function runZaaUpload() {
   }
 }
 
+async function oeffneZaaVerordnung(rxId) {
+  closeModal('zaaModal');
+  const { data: rx } = await supabase.from('prescriptions').select('patient_id').eq('id', rxId).maybeSingle();
+  if (!rx?.patient_id) return;
+  const { data: lead } = await supabase.from('leads').select('*').eq('id', rx.patient_id).maybeSingle();
+  if (!lead) return;
+  openPatientDetailModal(lead);
+  setTimeout(() => document.getElementById('pdTabRezepte')?.click(), 300);
+}
+
 async function showZaaErrors(abrechnungId) {
-  const { data, error } = await supabase
-    .from('zaa_fehler')
-    .select('fehler_code, fehler_text, uebersetzung, loesung_hint, status, prescription_id, created_at')
-    .eq('abrechnung_id', abrechnungId)
-    .order('created_at');
-  if (error) return showToast('Fehler: ' + error.message, 'error');
+  let zeilen;
+  try { zeilen = await ladeZaaZeilen(supabase, abrechnungId); }
+  catch (error) { return showToast('Fehler: ' + error.message, 'error'); }
 
   openModal('zaaModal');
   document.getElementById('zaaTitle').textContent = 'ZAA-Fehler dieser Abrechnung';
   document.getElementById('zaaFileInput').value = '';
   document.getElementById('zaaErr').textContent = '';
   const out = document.getElementById('zaaResult');
-  if (!data?.length) {
-    out.innerHTML = `<div style="padding:10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;color:var(--success);">Keine ZAA-Fehler erfasst (keine Annahmebestätigung).</div>`;
-  } else {
-    out.innerHTML = `<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Fehler</th><th>Lösung</th><th>Aktion</th></tr></thead><tbody>
-      ${data.map(e => {
-        const actionLink = e.prescription_id
-          ? `<a href="#" class="zaa-fix-link" data-rx="${escapeHtml(e.prescription_id)}" style="color:var(--primary);text-decoration:underline;font-weight:600;">Beheben</a>`
-          : '—';
-        return `<tr>
-          <td><code>${escapeHtml(e.fehler_code)}</code></td>
-          <td>${escapeHtml(e.status)}</td>
-          <td>${escapeHtml(e.uebersetzung || e.fehler_text || '')}</td>
-          <td style="color:var(--text-muted);">${escapeHtml(e.loesung_hint || '')}</td>
-          <td>${actionLink}</td>
-        </tr>`;
-      }).join('')}
-    </tbody></table>`;
-
-    out.querySelectorAll('.zaa-fix-link').forEach(link => {
-      link.addEventListener('click', async (evt) => {
-        evt.preventDefault();
-        const rxId = link.dataset.rx;
-        closeModal('zaaModal');
-        const { data: rx } = await supabase.from('prescriptions').select('patient_id').eq('id', rxId).single();
-        if (rx?.patient_id) {
-          const { data: lead } = await supabase.from('leads').select('*').eq('id', rx.patient_id).single();
-          if (lead) {
-            openPatientDetailModal(lead);
-            setTimeout(() => {
-              const tab = document.getElementById('pdTabRezepte');
-              if (tab) tab.click();
-            }, 300);
-          }
-        }
-      });
-    });
-  }
+  out.innerHTML = zeilen.length
+    ? renderZaaFehlerTabelle(zeilen, { escapeHtml })
+    : `<div style="padding:10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;color:var(--success);">Keine ZAA-Fehler erfasst (keine Annahmebestätigung).</div>`;
+  verdrahteZaaBeheben(out, oeffneZaaVerordnung);
   document.getElementById('zaaRunBtn').textContent = 'Schließen';
   document.getElementById('zaaRunBtn').onclick = () => {
     closeModal('zaaModal');

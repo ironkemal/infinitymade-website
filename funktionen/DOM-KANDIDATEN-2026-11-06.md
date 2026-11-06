@@ -94,3 +94,10 @@ C'lerin hepsi aşağıdaki beş kalıptan çıkıyor:
    kümesi yalnız aynı giriş sayfasının yüklediği dosyalar arasında kurulsun (#32).
 5. **`innerHTML = ''`'yi ayrı işaretle.** Tek başına boşaltma, sıfırlamadır (B).
    `renderIds` yerine `clearIds` alanına yazılsın (#5, #6).
+
+## Sonuç (06.11.2026, aynı gün uygulandı)
+
+- **A1 `#gapsList`: birleştirildi.** `renderGaps` (ölü kopya) ve açılıştaki çağrısı silindi; yalnız `renderGapsForDate` kaldı.
+- **A2 `#zaaResult`: birleştirildi.** Ortak renderer `module/zaa-fehler.js`. gkv-302'nin kolon kararı: Code · Beleg · Status · Fehler · Lösung · Aktion. Beleg, sonradan açılan görünümde `prescriptions(belegnummer)` join'inden geliyor. Yükleme sonrası "Beheben" Belegnummer eşleşmesiyle çalışıyor. Harita bu id'yi hâlâ 2 yol diye gösteriyor (`runZaaUpload` + `showZaaErrors`); iki giriş noktası aynı renderer'ı çağırıyor, kopya değil.
+- **Açık (gkv-302):** eşleşmeyen satırlarda kasanın ham Belegnummer'ı kaydedilmiyor, sonradan "—" görünüyor. Sonraki migration işinde `zaa_fehler.belegnummer_kasse` kolonu önerildi.
+- **Harita daraltıldı:** öneri 1, 2, 4 ve 5 uygulandı (hedef öğeye yazma, yalnız boşaltma sayılmaz, sayfa ayrımı); 3 için iç içe tanımda dış fonksiyon düşüyor. Sonuç: 38 aday 3'e indi (`#zaaResult`, `#bkGroupParticipantsList` = B, `#abDetailContent` = boş durum + çizim, B). Kayıp gerçek kopya yok.
