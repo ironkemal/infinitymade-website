@@ -7,6 +7,7 @@ import { zaaZeilenAusDb, zaaZeilenAusUpload, renderZaaFehlerTabelle, renderZaaUp
 const db = zaaZeilenAusDb([
   { fehler_code: 'E01', uebersetzung: 'IK falsch', loesung_hint: 'IK prüfen', status: 'offen', prescription_id: 'rx-1', prescriptions: { belegnummer: 'B-100' } },
   { fehler_code: 'E02', fehler_text: 'roh', status: 'offen', prescription_id: null, prescriptions: null },
+  { fehler_code: 'E04', fehler_text: 'roh', status: 'offen', prescription_id: null, prescriptions: null, belegnummer_kasse: 'K-7' },
 ]);
 
 test('DB-Zeilen: Beleg kommt per Join, ohne Zuordnung bleibt er leer', () => {
@@ -14,6 +15,7 @@ test('DB-Zeilen: Beleg kommt per Join, ohne Zuordnung bleibt er leer', () => {
   assert.equal(db[0].rxId, 'rx-1');
   assert.equal(db[1].beleg, null);
   assert.equal(db[1].fehler, 'roh');
+  assert.equal(db[2].beleg, 'K-7', 'ohne Zuordnung: Rohnummer der Kasse (0111)');
 });
 
 test('Upload-Zeilen: Beheben-Ziel über Belegnummer, Rohnummer bleibt ohne Treffer', () => {

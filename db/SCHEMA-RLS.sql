@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261104223416 0109_standort_plan_zeitfenster
--- EXPORTED AT:        2026-11-04T22:34:30Z
--- ERZEUGT AM:         2026-11-04
+-- LAST MIGRATION:     20261106191103 0111_zaa_fehler_belegnummer_kasse
+-- EXPORTED AT:        2026-11-06T19:12:34Z
+-- ERZEUGT AM:         2026-11-06
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1546
+--   table_columns:       1547
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -6657,9 +6657,9 @@ BEGIN
   END IF;
 
   DELETE FROM public.zaa_fehler WHERE abrechnung_id = p_abrechnung;
-  INSERT INTO public.zaa_fehler (abrechnung_id, prescription_id, fehler_code, fehler_text, uebersetzung, loesung_hint, status)
+  INSERT INTO public.zaa_fehler (abrechnung_id, prescription_id, fehler_code, fehler_text, uebersetzung, loesung_hint, status, belegnummer_kasse)
   SELECT p_abrechnung, NULLIF(e->>'prescription_id','')::uuid, e->>'fehler_code', e->>'fehler_text',
-         e->>'uebersetzung', e->>'loesung_hint', 'offen'
+         e->>'uebersetzung', e->>'loesung_hint', 'offen', left(NULLIF(e->>'belegnummer_kasse',''), 64)
     FROM jsonb_array_elements(p_fehler) e;
 
   UPDATE public.abrechnung

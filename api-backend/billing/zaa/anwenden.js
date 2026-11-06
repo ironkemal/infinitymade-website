@@ -51,6 +51,8 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
       fehler_text:     e.text || null,
       uebersetzung:    istEchteUebersetzung(e) ? e.uebersetzung : null,
       loesung_hint:    e.loesung || null,
+      // Rohnummer der Kasse — auch ohne Zuordnung nachverfolgbar (0111, gkv-302 06.11.2026)
+      belegnummer_kasse: e.belegnummer || null,
     };
   });
 

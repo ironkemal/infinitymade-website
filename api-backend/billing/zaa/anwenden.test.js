@@ -49,6 +49,8 @@ test('gueltige Fehlerliste: genau ein atomarer RPC mit Version, nie accepted', a
   assert.equal(calls.rpc[0].fn, 'zaa_fehler_anwenden');
   assert.equal(calls.rpc[0].args.p_expected_updated_at, basis.ab.updated_at);
   assert.equal(calls.rpc[0].args.p_gruende[0].prescription_id, 'aaaaaaaaaa-bbbb');
+  assert.ok('belegnummer_kasse' in calls.rpc[0].args.p_fehler[0], 'Rohnummer der Kasse geht mit (0111)');
+  assert.ok(calls.rpc[0].args.p_fehler[0].belegnummer_kasse, 'gueltige Fehlerliste traegt eine Belegnummer');
   assert.equal(calls.mutationen, 0, 'alle Mutationen nur innerhalb der RPC');
 });
 

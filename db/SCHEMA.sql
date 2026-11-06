@@ -3,14 +3,14 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261104223416 0109_standort_plan_zeitfenster
--- EXPORTED AT:        2026-11-04T22:34:30Z
--- ERZEUGT AM:         2026-11-04
+-- LAST MIGRATION:     20261106191103 0111_zaa_fehler_belegnummer_kasse
+-- EXPORTED AT:        2026-11-06T19:12:34Z
+-- ERZEUGT AM:         2026-11-06
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
 --   public_tables:       106
---   table_columns:       1546
+--   table_columns:       1547
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
@@ -4195,7 +4195,8 @@ CREATE TABLE public.zaa_fehler (
   loesung_hint text,
   status text DEFAULT 'offen'::text NOT NULL,
   resolved_at timestamp with time zone,
-  created_at timestamp with time zone DEFAULT now()
+  created_at timestamp with time zone DEFAULT now(),
+  belegnummer_kasse text
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK prescription_id -> prescriptions(id)

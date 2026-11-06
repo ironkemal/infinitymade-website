@@ -852,7 +852,9 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Warum:** Absetzungen und Fehlermeldungen der Kasse aus der ZAA-Rückmeldung, samt Übersetzung und Lösungshinweis. Roh sind die Codes für einen Therapeuten unlesbar.
 - **Seit:** spätestens 18.05.2026 · `v11_billing_a2_tables`
 - **Status:** aktiv
-- **Wer:** ZAA-Parser im Backend schreibt, Dashboard zeigt an.
+- **Wer:** ZAA-Parser im Backend schreibt (`api-backend/billing/zaa/anwenden.js` → RPC `zaa_fehler_anwenden()`), Dashboard zeigt an (`module/zaa-fehler.js`).
+- **Achtung (06.11.2026 · `0111_zaa_fehler_belegnummer_kasse`):** `belegnummer_kasse` = die **rohe Belegnummer der Kasse** aus der ZAA-Rückmeldung (auf 64 Zeichen gekürzt). Wird auch gespeichert, wenn die Zeile **keiner Verordnung** zugeordnet werden konnte — genau diese Fehler waren vorher nicht mehr nachverfolgbar. Die Korrekturrechnung braucht die ursprüngliche Belegnummer. **Nicht dasselbe wie `prescriptions.belegnummer`** (unsere Nummer); bei zugeordneten Zeilen können beide abweichen. Einziger Schreiber: `zaa_fehler_anwenden()`. Zeilen vor 0111 und Zeilen, die ein `:stable`-Backend schreibt, bleiben NULL.
+- **Quelle:** gkv-302, 06.11.2026 · Anlage 1 TP5 V21 Kap. 7 (Korrekturverfahren).
 
 ### `terapeut_zertifikat`
 - **Warum:** Das **Signaturzertifikat** für die §302-Einreichung (PKCS#7). Ohne gültiges Zertifikat lässt sich keine DTA-Datei signieren.

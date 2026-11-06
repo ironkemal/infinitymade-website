@@ -12,14 +12,14 @@
 // Herkunft der Belegnummer: Upload-Antwort = Rohwert der Kasse; gespeicherte
 // Zeilen (`zaa_fehler`) haben keine eigene Spalte, die Nummer kommt per Join aus
 // `prescriptions.belegnummer` (dort eingefroren, Zuordnung in
-// api-backend/billing/zaa/anwenden.js). Nicht zugeordnete Zeilen zeigen daher
-// beim späteren Öffnen „—" — offen: Spalte `belegnummer_kasse` (gkv-302).
+// api-backend/billing/zaa/anwenden.js). Ohne Zuordnung: Rohnummer der Kasse aus
+// `zaa_fehler.belegnummer_kasse` (Migration 0111, gkv-302 06.11.2026).
 
 /** Gespeicherte Zeilen (zaa_fehler + prescriptions(belegnummer)) → Tabellenzeilen. */
 export function zaaZeilenAusDb(data) {
   return (data || []).map(e => ({
     code: e.fehler_code,
-    beleg: e.prescriptions?.belegnummer || null,
+    beleg: e.prescriptions?.belegnummer || e.belegnummer_kasse || null,
     status: e.status || 'offen',
     fehler: e.uebersetzung || e.fehler_text || '',
     loesung: e.loesung_hint || '',
@@ -90,7 +90,7 @@ export function renderZaaUploadResult(json, { escapeHtml, dbZeilen = [] } = {}) 
 export async function ladeZaaZeilen(supabase, abrechnungId) {
   const { data, error } = await supabase
     .from('zaa_fehler')
-    .select('fehler_code, fehler_text, uebersetzung, loesung_hint, status, prescription_id, created_at, prescriptions(belegnummer)')
+    .select('fehler_code, fehler_text, uebersetzung, loesung_hint, status, prescription_id, belegnummer_kasse, created_at, prescriptions(belegnummer)')
     .eq('abrechnung_id', abrechnungId)
     .order('created_at');
   if (error) throw error;
