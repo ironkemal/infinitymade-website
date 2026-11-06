@@ -1212,3 +1212,16 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   physiotherapy/praxis. Physio-Zwilling von `migratePodologieLegacyServices` (gleiches Muster: existiert Ziel schon,
   verliert die Altkarte nur die GKV-Bindung) — bewusste Parallele je Fachbereich, keine Kopie zum Zusammenlegen;
   bei einem dritten Fall gemeinsamen Kern erwägen.
+
+### 06.11.2026 · O-206 Phase A — Terminerinnerung am Vortag (commits 1ed44c4a + c2f084a0)
+- `api-backend/lib/terminerinnerung.js` — reine Logik: `fensterOffen`, `morgenBerlin`, `zuErinnern`,
+  `protokollZustandErinnerung`, `erinnerungsText`. Niye: Berliner-Tag-/Fensterlogik und Wiederholungsregel
+  getrennt vom Versand testbar. Nerede: nur `terminerinnerung-job.js`.
+- `api-backend/lib/terminerinnerung-job.js` — `erinnerungsLauf`, `mandantLauf`, `starteTerminerinnerung`.
+  Niye: Zeitjob am Vorabend. Ruft die vorhandene `sendeLauf()` (`routes/sondertag-mitteilung.js`, dafür
+  parametrisiert mit `anlass`/`textFn`/`deckel`/`tag`) — keine zweite Versandschleife. Nerede: `server.js`
+  neben `starteFristen`.
+- `lib/sondertag-mitteilung.js`: `datumUhrDe()` aus `mitteilungsText` herausgezogen (gemeinsam genutzt),
+  `clean()` exportiert. Katmanlama, keine Kopie.
+- Bewusst unangetastet: Token-HMAC-Duplikate in `server.js` (~4386/4611/4684) — bekannter Kopie-Kandidat, nicht
+  Teil dieses Schritts. Status: lokal committet, nicht gepusht; Karte taze (4389 Funktionen).
