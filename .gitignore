@@ -143,3 +143,7 @@ sosyal/yayinci/.env
 # Redesign 2026-10: lizenzierte Referenzbilder (Mobbin) und Test-Screenshots — nie committen
 redesign/referenz/
 .redesign-shots/
+
+# Serena (LSP-MCP, 06.11.2026): Cache + Agenten-Memories, lokal pro Rechner.
+# Depo public — memories/ darf nicht hinaus.
+.serena/
