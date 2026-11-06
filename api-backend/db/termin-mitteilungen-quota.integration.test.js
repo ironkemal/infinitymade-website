@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 // Nur eigens erzeugter Container, keine Ports/Volumes, keine bestehende Datenbank.
 const enabled = process.env.PRAXURA_QUOTA_PG_TEST === '1';
 const migration = new URL('./migrations/0102_termin_mitteilungen_tagesdeckel.sql', import.meta.url);
+const migration110 = new URL('./migrations/0110_terminerinnerung_vortag.sql', import.meta.url);
 const owner = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const other = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const booking = n => `md5('booking-${n}')::uuid`;
@@ -50,6 +51,9 @@ test('F12 PostgreSQL: atomarer Tagesdeckel in getrennten Sessions', { skip: !ena
     await ok(await readFile(new URL('./migrations/0101_termin_mitteilungen.sql', import.meta.url), 'utf8'));
     await ok(await readFile(migration, 'utf8'));
     await ok(await readFile(migration, 'utf8')); // Wiederholung erzeugt keinen zweiten Trigger.
+    // 0110 (Terminerinnerung): Anlass-Liste + Deckel je Anlass + Praxis-Schalter. Zweimal = idempotent.
+    await ok(await readFile(migration110, 'utf8'));
+    await ok(await readFile(migration110, 'utf8'));
     await ok('GRANT SELECT,INSERT,UPDATE ON public.termin_mitteilungen TO service_role;');
     const reset = () => ok('TRUNCATE public.termin_mitteilungen;');
     const seed = count => ok(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status)
@@ -121,7 +125,39 @@ test('F12 PostgreSQL: atomarer Tagesdeckel in getrennten Sessions', { skip: !ena
       const r = await sql(`SET ROLE authenticated; ${insert(2)}`);
       assert.notEqual(r.code, 0); assert.match(r.err, /42501/);
     });
-    t.diagnostic('Nur 0101/0102 mit synthetischen Abhaengigkeiten getestet; keine volle 0000-0102-Ketten-/Zaehlerfreigabe.');
+    await t.test('0110: Deckel zaehlt je Anlass – volle Sondertag-Grenze sperrt Erinnerungen nicht (G-6)', async () => {
+      await reset(); await seed(500);
+      const erinnerung = n => `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(n)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`;
+      await ok(erinnerung(501));
+      const sondertag = await sql(insert(501));
+      assert.notEqual(sondertag.code, 0); assert.match(sondertag.err, /PT429/); // Sondertag bleibt bei 500
+    });
+    await t.test('0110: Erinnerungen haben eigene Grenze 1000; Sondertag unbeeinflusst', async () => {
+      await reset();
+      await ok(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status)
+        SELECT '${owner}', md5('booking-'||n)::uuid, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'gesendet' FROM generate_series(1,999) n;`);
+      await ok(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(1000)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`);
+      const zuviel = await sql(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(1001)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`);
+      assert.notEqual(zuviel.code, 0); assert.match(zuviel.err, /PT429/);
+      await ok(insert(1001)); // Sondertag-Zeile geht trotz 1000 Erinnerungen
+    });
+    await t.test('0110: gleicher Schluessel je Anlass eigenstaendig; Erinnerung zweimal = UNIQUE-Konflikt (G-1)', async () => {
+      await reset();
+      const erinnerung = `INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status,fehler_code) VALUES ('${owner}', ${booking(1)}, 'erinnerung_vortag', '2026-12-24T09:00:00Z', 'fehler', 'IN_ARBEIT');`;
+      await ok(erinnerung); await ok(insert(1)); // gleiche Buchung, anderer Anlass: erlaubt
+      const doppelt = await sql(erinnerung);
+      assert.notEqual(doppelt.code, 0); assert.match(doppelt.err, /23505/);
+      // verschobener Termin (neuer termin_beginn) = neue Erinnerung erlaubt
+      await ok(erinnerung.replace('2026-12-24T09:00:00Z', '2026-12-24T10:00:00Z'));
+      assert.equal(await ok("SELECT count(*) FROM public.termin_mitteilungen WHERE anlass='erinnerung_vortag';"), '2');
+    });
+    await t.test('0110: unbekannter Anlass wird abgelehnt; Schalter Standard AUS', async () => {
+      await reset();
+      const r = await sql(`INSERT INTO public.termin_mitteilungen(owner_id,booking_id,anlass,termin_beginn,status) VALUES ('${owner}', ${booking(1)}, 'werbung', now(), 'gesendet');`);
+      assert.notEqual(r.code, 0); assert.match(r.err, /23514/);
+      assert.equal(await ok(`SELECT terminerinnerung_aktiv FROM public.profiles WHERE id='${owner}';`), 'f');
+    });
+    t.diagnostic('Nur 0101/0102/0110 mit synthetischen Abhaengigkeiten getestet; keine volle 0000-0102-Ketten-/Zaehlerfreigabe.');
   } finally {
     const cleanup = await command(['rm', '--force', name]);
     assert.equal(cleanup.code, 0, cleanup.err);

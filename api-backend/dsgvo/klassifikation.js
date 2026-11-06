@@ -427,12 +427,13 @@ export const TABELLEN = [
     anmerkung: 'Mitarbeiter-Leistungszuordnung',
   },
   // 0101_termin_mitteilungen (M6b/S8, 02.11.2026): Versandprotokoll Terminabsage, keine Adresse, kein lead_id.
+  // 0110 (06.11.2026): zweiter Anlass erinnerung_vortag, gleiche Klassifikation.
   // Kategorie 'loeschen' (Nachweis der Mitteilung, keine Abrechnungsrelevanz); faellt mit der Buchung (CASCADE).
   {
     table: 'termin_mitteilungen',
     kategorie: 'loeschen',
     export: { filter: 'owner_id' },
-    anmerkung: 'Protokoll versandter Terminabsagen (Sondertag geschlossen): Buchung, Zeitpunkt, Status, wer freigab — ohne E-Mail-Adresse',
+    anmerkung: 'Protokoll versandter Terminabsagen (Sondertag geschlossen) und Terminerinnerungen (erinnerung_vortag, 0110): Buchung, Zeitpunkt, Status, wer freigab (bei Erinnerung NULL = Automatik) — ohne E-Mail-Adresse',
   },
   // 0096_mitarbeiter_anstellung (db-ustasi 01.11.2026, SaaS live 01.11.2026). Kategorie 'loeschen' wie time_offs:
   // Vertragsrahmen fuer Planung und Urlaubsrechnung, kein Lohnkonto, keine eigene gesetzliche Frist in Praxura.

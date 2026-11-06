@@ -73,6 +73,7 @@ import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from '.
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
 import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 import { starteFristen } from './dsgvo/fristen.js';
+import { starteTerminerinnerung } from './lib/terminerinnerung-job.js';
 
 dotenv.config();
 
@@ -4032,6 +4033,7 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
 starteIpAbgleich();
 // Löschfristen aus dsgvo/klassifikation.js (O-182/O-146): täglich, nur Instanz 0, holt nach.
 starteFristen({ supabase });
+starteTerminerinnerung({ supabase }); // O-206 Phase A: nur Worker 0, nur Box mit Praxis-SMTP, Schalter profiles.terminerinnerung_aktiv
 
 // ---- Gece 03:00 hesap temizliği — ABGESCHALTET (KHS K1.4, 02.10.2026) ----
 // delete_expired_accounts() lief seit Juli nie durch und hätte repariert Behandlungsdoku

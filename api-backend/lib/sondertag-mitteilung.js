@@ -152,13 +152,20 @@ export const GRUND_TEXT = {
   versand_unklar: 'Versandstatus unklar – bitte anrufen',
 };
 
-const clean = s => String(s || '').replace(/[\r\n]+/g, ' ').trim();
+export const clean = s => String(s || '').replace(/[\r\n]+/g, ' ').trim();
+
+/** Datum und Uhrzeit eines Termins in Berliner Zeit (gemeinsam fuer Absage- und Erinnerungsmail). */
+export function datumUhrDe(startIso) {
+  const d = new Date(startIso);
+  return {
+    datum: d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
+    uhr: d.toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }),
+  };
+}
 
 /** Fester Text. Keine Anrede mit Namen, kein Grund, keine Behandlung. */
 export function mitteilungsText({ praxis, telefon, startIso }) {
-  const d = new Date(startIso);
-  const datum = d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-  const uhr = d.toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
+  const { datum, uhr } = datumUhrDe(startIso);
   const name = clean(praxis) || 'Ihre Praxis';
   const tel = clean(telefon);
   return {

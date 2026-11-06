@@ -22,7 +22,7 @@ import {
 } from '../lib/sondertag-mitteilung.js';
 
 const ANLASS = 'sondertag_geschlossen';
-const SMTP_ABBRUCH = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'EAUTH', 'ECONNREFUSED']);
+export const SMTP_ABBRUCH = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EDNS', 'EAUTH', 'ECONNREFUSED']);
 
 /** Alles, was Vorschau und Senden brauchen — immer frisch aus der DB, Mandant aus dem JWT. */
 export async function ladeLage(supabase, tenantId, von, bis, { env = process.env, kutu = istKutu(), jetzt = new Date() } = {}) {
@@ -67,17 +67,20 @@ export async function ladeLage(supabase, tenantId, von, bis, { env = process.env
  *     es, bleibt IN_ARBEIT stehen -> Vorschau zeigt „Versandstatus unklar – bitte anrufen", nie automatisch erneut.
  *     Ein Prozessabbruch zwischen 1 und 3 hinterlaesst ebenso IN_ARBEIT, nie einen falschen Erfolg (Review 02.11.).
  */
-export async function sendeLauf(supabase, { tenantId, userId, ids, lage, transportFabrik = createSMTPTransport, gmail = null, jetzt = new Date() }) {
+export async function sendeLauf(supabase, {
+  tenantId, userId, ids, lage, transportFabrik = createSMTPTransport, gmail = null, jetzt = new Date(),
+  anlass = ANLASS, textFn = mitteilungsText, deckel = TAGESDECKEL, tag: logTag = 'sondertag/senden',
+}) {
   const gewuenscht = new Set(ids);
   // Nur, was die frische Pruefung erlaubt — nie dem Vorschau-Ergebnis des Browsers vertrauen.
   const ziele = lage.mail.filter(x => gewuenscht.has(x.termin.id));
   const abgelehnt = ids.length - ziele.length;
   const seit = new Date(jetzt.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const { count, error: cErr } = await supabase.from('termin_mitteilungen').select('id', { count: 'exact', head: true })
-    .eq('owner_id', tenantId).gte('created_at', seit);
+    .eq('owner_id', tenantId).eq('anlass', anlass).gte('created_at', seit);
   if (cErr) throw cErr;
-  if ((count || 0) + ziele.length > TAGESDECKEL) {
-    return { status: 429, body: { error: `Tagesgrenze von ${TAGESDECKEL} Mitteilungen erreicht.`, code: 'TAGESDECKEL' } };
+  if ((count || 0) + ziele.length > deckel) {
+    return { status: 429, body: { error: `Tagesgrenze von ${deckel} Mitteilungen erreicht.`, code: 'TAGESDECKEL' } };
   }
   const zaehler = { gesendet: 0, fehler: 0, doppelt: 0, abgelehnt, unklar: 0 };
   const abschliessen = async (zeileId, werte) => {
@@ -88,23 +91,23 @@ export async function sendeLauf(supabase, { tenantId, userId, ids, lage, transpo
   for (const { termin, tag, email } of ziele) {
     const reservierung = { status: 'fehler', fehler_code: IN_ARBEIT, freigegeben_von: userId, gesendet_am: null };
     const { data: zeile, error: iErr } = await supabase.from('termin_mitteilungen').insert({
-      owner_id: tenantId, booking_id: termin.id, custom_day_id: tag.id || null, anlass: ANLASS, termin_beginn: termin.start_time, ...reservierung,
+      owner_id: tenantId, booking_id: termin.id, custom_day_id: tag?.id || null, anlass, termin_beginn: termin.start_time, ...reservierung,
     }).select('id').maybeSingle();
     let zeileId = zeile?.id;
     if (iErr) {
       if (iErr.code === 'PT429') {
-        return { status: 429, body: { error: `Tagesgrenze von ${TAGESDECKEL} Mitteilungen erreicht.`, code: 'TAGESDECKEL', ...zaehler } };
+        return { status: 429, body: { error: `Tagesgrenze von ${deckel} Mitteilungen erreicht.`, code: 'TAGESDECKEL', ...zaehler } };
       }
       if (iErr.code !== '23505') throw iErr;
       const { data: alt, error: uErr } = await supabase.from('termin_mitteilungen').update(reservierung)
-        .eq('owner_id', tenantId).eq('booking_id', termin.id).eq('anlass', ANLASS).eq('termin_beginn', termin.start_time)
+        .eq('owner_id', tenantId).eq('booking_id', termin.id).eq('anlass', anlass).eq('termin_beginn', termin.start_time)
         .eq('status', 'fehler').neq('fehler_code', IN_ARBEIT).select('id').maybeSingle();
       if (uErr) throw uErr;
       if (!alt) { zaehler.doppelt += 1; continue; }
       zeileId = alt.id;
     }
     if (!zeileId) { zaehler.unklar += 1; continue; }
-    const { betreff, text } = mitteilungsText({ praxis: lage.profil.business_name, telefon: lage.profil.phone, startIso: termin.start_time });
+    const { betreff, text } = textFn({ praxis: lage.profil.business_name, telefon: lage.profil.phone, startIso: termin.start_time, termin, standort: lage.standort?.get?.(termin.business_id) || null });
     try {
       if (lage.weg === 'smtp') {
         await transportFabrik({ requireTLS: true }).sendMail({ from: getMailFrom(lage.profil.business_name), to: email, subject: betreff, text });
@@ -118,11 +121,11 @@ export async function sendeLauf(supabase, { tenantId, userId, ids, lage, transpo
       await abschliessen(zeileId, { status: 'fehler', fehler_code: code === IN_ARBEIT ? 'VERSAND_FEHLER' : code });
       // SMTP nicht erreichbar / Gmail getrennt: sofort abbrechen statt je Empfaenger auf den Timeout zu warten (onprem O-240).
       if (SMTP_ABBRUCH.has(code)) {
-        console.error('[sondertag/senden] SMTP abgebrochen', code, zaehler);
+        console.error(`[${logTag}] SMTP abgebrochen`, code, zaehler);
         return { status: 409, body: { error: 'Der Mailserver der Praxis ist nicht erreichbar. Bitte später erneut oder telefonisch informieren.', code, ...zaehler } };
       }
       if (code === 'GMAIL_NICHT_VERBUNDEN' || code === 'gmail_reauth_required') {
-        console.error('[sondertag/senden] abgebrochen', code, zaehler);
+        console.error(`[${logTag}] abgebrochen`, code, zaehler);
         return { status: 409, body: { error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail verbinden.', code, ...zaehler } };
       }
       continue;
@@ -130,7 +133,7 @@ export async function sendeLauf(supabase, { tenantId, userId, ids, lage, transpo
     zaehler.gesendet += 1;
     await abschliessen(zeileId, { status: 'gesendet', fehler_code: null, gesendet_am: new Date().toISOString() });
   }
-  if (zaehler.fehler || zaehler.unklar) console.error('[sondertag/senden]', zaehler);
+  if (zaehler.fehler || zaehler.unklar) console.error(`[${logTag}]`, zaehler);
   return { status: 200, body: zaehler };
 }
 
