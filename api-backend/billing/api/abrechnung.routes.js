@@ -582,7 +582,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     const certSet = therapistCerts ? therapistCerts.get(therapistId) : null;
     const hasCert = requiredCert ? !!(certSet && certSet.has(requiredCert)) : true;
 
-    const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+    const dateStr = s.done_at ? s.done_at.slice(0, 10) : null;
 
     // Preis + Zuzahlung zentral (billing/preise/resolver.js) — derselbe Aufruf,
     // den auch die Druckrouten benutzen. Vorher liefen beide Wege auseinander.
@@ -591,6 +591,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       code: z.code,
       datum: dateStr,
       abrechnungscode,
+      abrechnung: true,
     });
 
     return {

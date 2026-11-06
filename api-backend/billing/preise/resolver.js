@@ -38,6 +38,7 @@
 import { findPosition } from '../codes/physio_positions.js';
 import { findPodologiePosition } from '../codes/podologie_positions.js';
 import { resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
+import { istStichtag } from '../../lib/berlin-tag.js';
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -62,13 +63,27 @@ export function resolvePreis({
   code,
   datum = null,
   abrechnungscode = '22',
+  abrechnung = false,
 } = {}) {
+  if (abrechnung && !istStichtag(datum)) {
+    const error = new Error('Für die Abrechnung ist ein gültiges Leistungsdatum erforderlich.');
+    error.status = 422;
+    error.code = 'PREIS_LEISTUNGSDATUM_UNGUELTIG';
+    throw error;
+  }
   const istPodologie = String(bereich || '').toLowerCase() === 'podologie';
 
   // 1. Katalogposition — sie entscheidet immer über Preis UND Zuzahlung.
   const katalogPosition = istPodologie
     ? findPodologiePosition(code, datum || undefined)
     : findPosition(code, abrechnungscode, datum);
+
+  if (abrechnung && (!katalogPosition || katalogPosition.ausserhalb_preisfenster)) {
+    const error = new Error('Für diese Leistung liegt am Leistungsdatum kein gültiger Vertragspreis vor.');
+    error.status = 422;
+    error.code = !katalogPosition ? 'PREIS_POSITION_UNBEKANNT' : 'PREIS_FENSTER_FEHLT';
+    throw error;
+  }
 
   const preis_eur = r2(katalogPosition?.preis ?? 0);
   const quelle = katalogPosition ? 'katalog' : 'unbekannt';
