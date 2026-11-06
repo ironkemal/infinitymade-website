@@ -552,6 +552,7 @@ niedrig — die Annahmestelle würde eine schon benutzte Nummer ablehnen.
 | Protokolle | `install.log`, `update.log`, `backup.log`, `restore.log` im selben Ordner |
 | Neustart des PCs/Servers | die Box kommt von selbst wieder (1–2 Minuten) |
 | Mails an Patienten (Terminbestätigung) | **optional**: Mailserver der Praxis in `.env` (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` mit Ihrer eigenen Domain), dann `sudo docker compose up -d api` |
+| Terminerinnerung per E-Mail | **optional, standardmäßig aus.** Voraussetzung: der Mailserver der Praxis (Zeile darüber). Einschalten: Einstellungen → „Terminerinnerung“ (nur Inhaber). Danach geht am Vorabend zwischen 18 und 22 Uhr eine kurze Mail (Datum, Uhrzeit, Praxis, ohne Namen) an Patienten mit Termin am nächsten Tag, **nur** wenn sie der Mitteilung per E-Mail zugestimmt haben. Absagen telefonisch. Ohne Mailserver passiert nichts; die Mails gehen über Ihren eigenen Server, nicht über Praxura. |
 | KI-Funktionen (Serienplanung, Mail-Assistent) | standardmäßig **aus** (`AI_MODE=aus`) — die Funktionen zeigen eine Meldung statt zu arbeiten. Eingeschaltet wird die KI bei der Einrichtung mit `install.sh --ki`, danach gibt Praxura die Box frei und der Praxisinhaber willigt in den Einstellungen ein. Der Rezept-Foto-Scan bleibt aus |
 
 Windows: jeden Befehl mit `wsl -d Praxura -- ` davor ausführen, z. B.

@@ -3,14 +3,14 @@
 > Üretim: 2026-11-06 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4389 fonksiyon** (4267 JS · 95 bash · 27 ps1) · 541 dosya · 42 sidebar modülü
+**4393 fonksiyon** (4271 JS · 95 bash · 27 ps1) · 542 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
 Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanlama var
 (ortak taban + alana göre modifikasyon); onu script ayırt edemez. Karar insanın.
 
-### `profiles` — 22 bağımsız yazma yolu
+### `profiles` — 23 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · profiles:update
@@ -65,26 +65,29 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 15 — `speichereStufen()`** · Ekran: _UI yolu çözülemedi_
 - `speichereStufen()` — [module/selbstzahler-stufen.js:260](module/selbstzahler-stufen.js#L260-L290) · 31 satır · profiles:update
 
-**Yol 16 — `loadProfile()`** · Ekran: _UI yolu çözülemedi_
+**Yol 16 — `speichereSchalter()`** · Ekran: _UI yolu çözülemedi_
+- `speichereSchalter()` — [module/terminerinnerung-einstellung.js:28](module/terminerinnerung-einstellung.js#L28-L32) · 5 satır · profiles:update
+
+**Yol 17 — `loadProfile()`** · Ekran: _UI yolu çözülemedi_
 - `loadProfile()` — [onboarding.js:115](onboarding.js#L115-L173) · 59 satır · profiles:insert
 
-**Yol 17 — `saveStepProgress()`** · Ekran: _UI yolu çözülemedi_
+**Yol 18 — `saveStepProgress()`** · Ekran: _UI yolu çözülemedi_
 - `saveStepProgress()` — [onboarding.js:281](onboarding.js#L281-L285) · 5 satır · profiles:update
 
-**Yol 18 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
+**Yol 19 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
 - `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · profiles:update
 
-**Yol 19 — `bindBilling()`** · Ekran: _UI yolu çözülemedi_
+**Yol 20 — `bindBilling()`** · Ekran: _UI yolu çözülemedi_
 - `bindBilling()` — [onboarding.js:453](onboarding.js#L453-L513) · 61 satır · profiles:update
 - `handleSave()` — [onboarding.js:457](onboarding.js#L457-L503) · 47 satır · profiles:update
 
-**Yol 20 — `bindOwner()`** · Ekran: _UI yolu çözülemedi_
+**Yol 21 — `bindOwner()`** · Ekran: _UI yolu çözülemedi_
 - `bindOwner()` — [onboarding.js:516](onboarding.js#L516-L542) · 27 satır · profiles:update
 
-**Yol 21 — `bindHours()`** · Ekran: _UI yolu çözülemedi_
+**Yol 22 — `bindHours()`** · Ekran: _UI yolu çözülemedi_
 - `bindHours()` — [onboarding.js:820](onboarding.js#L820-L865) · 46 satır · profiles:update
 
-**Yol 22 — `bindPlan()`** · Ekran: _UI yolu çözülemedi_
+**Yol 23 — `bindPlan()`** · Ekran: _UI yolu çözülemedi_
 - `bindPlan()` — [onboarding.js:877](onboarding.js#L877-L1023) · 147 satır · profiles:update
 
 ### `bookings` — 16 bağımsız yazma yolu
@@ -530,7 +533,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 ## En çok yazılan tablolar
 
-- `profiles` — 31 ayrı fonksiyon yazıyor
+- `profiles` — 32 ayrı fonksiyon yazıyor
 - `bookings` — 20 ayrı fonksiyon yazıyor
 - `prescriptions` — 15 ayrı fonksiyon yazıyor
 - `leads` — 12 ayrı fonksiyon yazıyor

@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Einstellung Terminerinnerung (O-206)</title>
+<!--
+  Fasst den ECHTEN Abschnitt `#settingsTerminerinnerungSection` aus dashboard.html an, mit erfundener Supabase-Antwort.
+  Kein Login. Prueft: versteckt fuer Mitarbeiter und ohne Spalte (SaaS), sichtbar fuer Inhaber, Schalter schreibt genau
+  die Inhaber-Zeile, Fehler setzt den Haken zurueck, Texte sind sichtbar.
+-->
+<div id="buehne" style="max-width:720px"></div>
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+try {
+  const { renderTerminerinnerungSettings } = await import('../../module/terminerinnerung-einstellung.js');
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const abschnitt = doc.getElementById('settingsTerminerinnerungSection');
+  pruef('dashboard.html enthaelt den Abschnitt (anfangs versteckt)', !!abschnitt?.hasAttribute('hidden'));
+  const buehne = document.getElementById('buehne');
+  buehne.appendChild(document.importNode(abschnitt, true));
+  const sec = () => document.getElementById('settingsTerminerinnerungSection');
+
+  const writes = []; let fehlerModus = false; const toasts = [];
+  const sb = { from: (t) => ({ update: (w) => ({ eq: async (k, v) => { writes.push({ t, w, k, v }); return { error: fehlerModus ? { message: 'x' } : null }; } }) }) };
+  const deps = (profile) => ({ supabase: sb, profile, ownerId: () => 'owner-1', showToast: (m, art) => toasts.push([m, art]) });
+
+  renderTerminerinnerungSettings(deps({ role: 'employee', terminerinnerung_aktiv: true }));
+  pruef('Mitarbeiter: Abschnitt versteckt', sec().hidden === true);
+  renderTerminerinnerungSettings(deps({ role: 'owner' }));
+  pruef('Inhaber ohne Spalte (SaaS ohne 0110): versteckt', sec().hidden === true);
+
+  const profil = { role: 'owner', terminerinnerung_aktiv: false };
+  renderTerminerinnerungSettings(deps(profil));
+  pruef('Inhaber mit Spalte: sichtbar', sec().hidden === false);
+  const box = document.getElementById('setTerminerinnerungAktiv');
+  pruef('Haken entspricht dem gespeicherten Wert (aus)', box && box.checked === false);
+  const text = sec().textContent;
+  pruef('Texte nennen Einwilligung, telefonische Absage, SMTP, nicht ueber Praxura', /zugestimmt/.test(text) && /telefonisch/.test(text) && /SMTP/.test(text) && /nicht über Praxura/.test(text));
+  pruef('Abschnitt ist mit sichtbarem Platz gerendert (Hoehe > 80 px, Breite <= Buehne)', sec().getBoundingClientRect().height > 80 && sec().getBoundingClientRect().width <= buehne.getBoundingClientRect().width + 1);
+
+  box.click(); await new Promise(r => setTimeout(r, 20));
+  pruef('Einschalten schreibt genau profiles.terminerinnerung_aktiv=true fuer die Inhaber-Zeile',
+    JSON.stringify(writes[0]) === JSON.stringify({ t: 'profiles', w: { terminerinnerung_aktiv: true }, k: 'id', v: 'owner-1' }), JSON.stringify(writes[0]));
+  pruef('Profil wird nachgezogen und Toast bestaetigt', profil.terminerinnerung_aktiv === true && toasts.at(-1)?.[1] === 'success', JSON.stringify(toasts.at(-1)));
+
+  fehlerModus = true; box.click(); await new Promise(r => setTimeout(r, 20));
+  pruef('Speicherfehler: Haken springt zurueck, Fehler-Toast ohne Rohtext', box.checked === true && toasts.at(-1)?.[1] === 'error' && !/x$/.test(toasts.at(-1)[0]), JSON.stringify(toasts.at(-1)));
+  pruef('Schalter ist nach dem Speichern wieder bedienbar', box.disabled === false);
+} catch (e) {
+  pruef('Probe ohne Ausnahme', false, e?.stack || e);
+}
+window.__probe = ergebnis;
+</script>

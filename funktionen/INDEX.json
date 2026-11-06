@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-06",
- "dateien": 541,
- "funktionen": 4389,
+ "dateien": 542,
+ "funktionen": 4393,
  "module": [
   "abrechnung",
   "anamnese",
@@ -78669,6 +78669,7 @@
     "renderPreisstufenSettings",
     "renderRechtslinksSettings",
     "renderSidebar",
+    "renderTerminerinnerungSettings",
     "setupScheduleNav",
     "setzeMaskeBruecke",
     "showToast",
@@ -146671,6 +146672,7 @@
     "speichereEinheiten",
     "speichereKonten",
     "speichereRaum",
+    "speichereSchalter",
     "speichereStufen",
     "speichern",
     "startVorlagenInlineRename",
@@ -170914,6 +170916,7 @@
     "renderKontenSettings",
     "renderLegendeSettings",
     "renderPreisstufenSettings",
+    "renderTerminerinnerungSettings",
     "schalter",
     "setzen",
     "speichereKonten",
@@ -208448,6 +208451,105 @@
    "uiPfad": [
     "ortak yardımcı — 38 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "schalterSichtbar",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/terminerinnerung-einstellung.js",
+   "start": 23,
+   "end": 25,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "renderTerminerinnerungSettings"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "speichereSchalter",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/terminerinnerung-einstellung.js",
+   "start": 28,
+   "end": 32,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [
+    "profiles"
+   ],
+   "rpcs": [],
+   "writes": [
+    "profiles:update"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "update"
+   ],
+   "calledBy": [
+    "renderTerminerinnerungSettings"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "renderTerminerinnerungSettings",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/terminerinnerung-einstellung.js",
+   "start": 34,
+   "end": 66,
+   "lines": 33,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "absatz",
+    "ownerId",
+    "schalterSichtbar",
+    "speichereSchalter"
+   ],
+   "calledBy": [
+    "init"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "absatz",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/terminerinnerung-einstellung.js",
+   "start": 43,
+   "end": 43,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "renderTerminerinnerungSettings"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "esc",
@@ -249727,7 +249829,7 @@
  "kopieKandidaten": [
   {
    "tabelle": "profiles",
-   "anzahl": 22,
+   "anzahl": 23,
    "pfade": [
     {
      "leitfunktion": "kontoLoeschenIntern",
@@ -250441,6 +250543,23 @@
        "start": 260,
        "end": 290,
        "lines": 31,
+       "writes": [
+        "profiles:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "speichereSchalter",
+     "funktionen": [
+      {
+       "name": "speichereSchalter",
+       "file": "module/terminerinnerung-einstellung.js",
+       "start": 28,
+       "end": 32,
+       "lines": 5,
        "writes": [
         "profiles:update"
        ],
