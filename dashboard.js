@@ -14802,9 +14802,7 @@ async function oeffneZaaVerordnung(rxId) {
   closeModal('zaaModal');
   const { data: rx } = await supabase.from('prescriptions').select('patient_id').eq('id', rxId).maybeSingle();
   if (!rx?.patient_id) return;
-  const { data: lead } = await supabase.from('leads').select('*').eq('id', rx.patient_id).maybeSingle();
-  if (!lead) return;
-  openPatientDetailModal(lead);
+  await window.openPatientDetail(rx.patient_id);   // legt den Patienten in leadsCache (Termine-Tab, canli-test 06.11.2026)
   setTimeout(() => document.getElementById('pdTabRezepte')?.click(), 300);
 }
 
