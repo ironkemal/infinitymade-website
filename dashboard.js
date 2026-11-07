@@ -4786,7 +4786,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   const startDate = new Date(startV);
-
+  if (await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor ALLEN Rückfragen, auch Frequenz (canli-test 07.11.)
   // Frequenz WARNT nur (Beta-2, 12.08.2026, Quelle frequenz-pruefung.js) — die Beginn-Frist direkt darunter ist dagegen ein BLOCK (§15 HeilM-RL).
   {
     // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
@@ -4820,7 +4820,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  const now = new Date(); if (await sondertagGesperrt(startDate.toISOString(), id || null)) return; // Sondertag sperrt vor allen Rückfragen (canli-test 05.11.)
+  const now = new Date();
   if (startDate < now) {
     const proceedPast = await showConfirmModal({
       title: 'Termin in der Vergangenheit',
