@@ -9,7 +9,7 @@
  */
 import {
   raumAuswahlVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, ladeRaumliste, tagesgrenzen,
-} from './raum-auswahl.js?v=20261105sperre';
+} from './raum-auswahl.js?v=20261107hinweis';
 import { raeumeDesStandorts } from './raum-plan.js';
 import { mountRaumVerwaltung } from './raum-verwaltung.js?v=20261103raum';
 import { mountRaumStreifen } from './raum-streifen.js';
