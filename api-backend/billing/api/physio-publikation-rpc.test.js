@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
-import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation, reserviereUndLadeHoch } from './artefakt-registry.js';
+import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation, reserviereUndLadeHoch, berechnePhysioPaketHash } from './artefakt-registry.js';
 
 test('Reserve preserves SQL timestamp/null input and distinguishes worker permission', async () => {
   for (const granted of [true, false]) {
@@ -144,5 +144,20 @@ test('Invalid Physio upload contract fails before registry or storage side effec
     await assert.rejects(reserviereUndLadeHoch({ db: { rpc: async () => { calls++; } },
       kind: 'unsigned', role: 'dta', bytes: Buffer.from('synthetic'), ...extra }), e => e.status === 422);
     assert.equal(calls, 0);
+  }
+});
+
+test('Package hash comes from PostgreSQL physio_v1_hash and must be 64 lowercase hex', async () => {
+  const paket = { b: 1, a: [2] };
+  const hash = 'ab'.repeat(32);
+  const db = { async rpc(name, args) {
+    assert.equal(name, 'physio_v1_hash');
+    assert.deepEqual(args, { v: paket });
+    return { data: hash };
+  } };
+  assert.equal(await berechnePhysioPaketHash({ db, paket }), hash);
+  for (const data of ['AB'.repeat(32), 'ab'.repeat(31), null, 5]) {
+    await assert.rejects(berechnePhysioPaketHash({ db: { rpc: async () => ({ data }) }, paket }),
+      e => e.status === 503);
   }
 });
