@@ -3,7 +3,7 @@
 > Üretim: 2026-11-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4424 fonksiyon** (4302 JS · 95 bash · 27 ps1) · 546 dosya · 42 sidebar modülü
+**4431 fonksiyon** (4309 JS · 95 bash · 27 ps1) · 548 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -611,6 +611,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `onEsc` — dashboard.js:5949 · module/rechnung-leistung-picker.js:46 · module/verordnung-einheiten.js:304 · module/verordnung-einheiten.js:402 · module/verordnung-einheiten.js:596 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:374
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:758
+- `fehler` — api-backend/billing/api/artefakt-historie.js:26 · api-backend/billing/api/artefakt-registry.js:15 · api-backend/billing/api/physio-publikation-ablauf.js:17 · api-backend/billing/codes/physio-leistungszeilen.js:27 · api-backend/lib/gmail-senden.js:57 · module/therapiebericht.js:204
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · api-backend/lib/terminerinnerung-job.js:19 · module/fahrtenbuch-regeln.js:315 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:101
 - `load` — module/patient-notizen.js:19 · module/rezept-patientenkopf.js:23 · ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/deinstallieren.sh:37 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
@@ -618,7 +619,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:98 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:428
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:32 · module/mail-entwurf.js:41 · module/verordnung-pruefen-knopf.js:44 · setup.js:327
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/verordnung-einheiten.js:552 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
-- `fehler` — api-backend/billing/api/artefakt-historie.js:26 · api-backend/billing/api/artefakt-registry.js:15 · api-backend/billing/codes/physio-leistungszeilen.js:27 · api-backend/lib/gmail-senden.js:57 · module/therapiebericht.js:204
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/planung-bruecke.js:134 · module/verordnung-liste.js:255 · widget/booking-widget.js:107
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:64 · api-backend/billing/dta/preflight.js:161

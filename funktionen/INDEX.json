@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-07",
- "dateien": 546,
- "funktionen": 4424,
+ "dateien": 548,
+ "funktionen": 4431,
  "module": [
   "abrechnung",
   "anamnese",
@@ -13929,6 +13929,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fuehrePhysioPublikationAus",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -14181,6 +14182,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fuehrePhysioPublikationAus",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -14487,7 +14489,9 @@
    "calls": [
     "physioRpc"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "fuehrePhysioPublikationAus"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -14512,7 +14516,9 @@
    "calls": [
     "physioRpc"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "fuehrePhysioPublikationAus"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -14564,7 +14570,9 @@
    "calls": [
     "physioRpc"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "fuehrePhysioPublikationAus"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -14695,7 +14703,8 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js",
-    "berechneVerschluesselung"
+    "berechneVerschluesselung",
+    "fuehrePhysioPublikationAus"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -15430,6 +15439,137 @@
    "uiPfad": [
     "ortak yardımcı — 38 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "physioPublikationAktiv",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/physio-publikation-ablauf.js",
+   "start": 11,
+   "end": 13,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fehler",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/physio-publikation-ablauf.js",
+   "start": 17,
+   "end": 19,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "fuehrePhysioPublikationAus",
+    "ladeArtefaktVersion",
+    "ladeHeader",
+    "listeArtefaktVersionen",
+    "oeffneBerichtDialog",
+    "physioLeistungszeilen",
+    "physioRpc",
+    "reserviereUndLadeHoch",
+    "rpc",
+    "sendeUeberGmail",
+    "sha256Hex",
+    "unavailable",
+    "veroeffentliche"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "fuehrePhysioPublikationAus",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/physio-publikation-ablauf.js",
+   "start": 35,
+   "end": 78,
+   "lines": 44,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "berechnePhysioPaketHash",
+    "fehler",
+    "finalisierePhysioPublikation",
+    "push",
+    "reservierePhysioPublikation",
+    "reserviereUndLadeHoch"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "invokeRoute",
@@ -17787,6 +17927,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fuehrePhysioPublikationAus",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -35123,6 +35264,7 @@
     "fqdn",
     "fristenSchritt",
     "fuegeZeileHinzu",
+    "fuehrePhysioPublikationAus",
     "g",
     "generateRecurringDates",
     "generateSetupCode",
@@ -36674,6 +36816,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fuehrePhysioPublikationAus",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -40362,7 +40505,8 @@
     "reject"
    ],
    "calledBy": [
-    "(datei) api-backend/server.js"
+    "(datei) api-backend/server.js",
+    "(datei) module/rezept-entlass.js"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -118578,6 +118722,7 @@
     "escapeHtml"
    ],
    "calledBy": [
+    "entlassFeldHtml",
     "formularHtml",
     "podDiagOptionsHtml"
    ],
@@ -129404,6 +129549,7 @@
     "escapeHtml"
    ],
    "calledBy": [
+    "entlassFeldHtml",
     "formularHtml",
     "podDiagOptionsHtml"
    ],
@@ -174508,6 +174654,7 @@
    "calls": [],
    "calledBy": [
     "(datei) api-backend/merkez-istemci/kimlik.js",
+    "(datei) module/rezept-entlass.js",
     "abrechenbareBehandlungstage",
     "bestehenderBehandlungstag",
     "datumKurz",
@@ -200661,6 +200808,148 @@
    ]
   },
   {
+   "name": "merkmalZuAuswahl",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rezept-entlass.js",
+   "start": 15,
+   "end": 19,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "entlassFeldHtml"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "entlassFelderAusFormular",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rezept-entlass.js",
+   "start": 27,
+   "end": 40,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "entlassFeldHtml",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/rezept-entlass.js",
+   "start": 43,
+   "end": 52,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "merkmalZuAuswahl",
+    "opt"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "opt",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/rezept-entlass.js",
+   "start": 46,
+   "end": 49,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "entlassFeldHtml",
+    "formularHtml",
+    "podDiagOptionsHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "g",
    "kind": "arrow",
    "lang": "js",
@@ -224971,6 +225260,7 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "fuehrePhysioPublikationAus",
     "ladeArtefaktVersion",
     "ladeHeader",
     "listeArtefaktVersionen",
@@ -274795,6 +275085,18 @@
    "aynalar": []
   },
   {
+   "name": "fehler",
+   "orte": [
+    "api-backend/billing/api/artefakt-historie.js:26",
+    "api-backend/billing/api/artefakt-registry.js:15",
+    "api-backend/billing/api/physio-publikation-ablauf.js:17",
+    "api-backend/billing/codes/physio-leistungszeilen.js:27",
+    "api-backend/lib/gmail-senden.js:57",
+    "module/therapiebericht.js:204"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "leer",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:53",
@@ -274875,17 +275177,6 @@
     "module/zuzahlung-befreiung.js:150",
     "module/zuzahlung-korrektur.js:208",
     "widget/booking-widget.js:362"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "fehler",
-   "orte": [
-    "api-backend/billing/api/artefakt-historie.js:26",
-    "api-backend/billing/api/artefakt-registry.js:15",
-    "api-backend/billing/codes/physio-leistungszeilen.js:27",
-    "api-backend/lib/gmail-senden.js:57",
-    "module/therapiebericht.js:204"
    ],
    "aynalar": []
   },
@@ -275340,6 +275631,15 @@
     "module/formular-editor.js:575",
     "module/formular-unterschreiben.js:391",
     "module/rechnung-zahlungseingang.js:566"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "opt",
+   "orte": [
+    "module/anfrage-bearbeiten.js:102",
+    "module/diagnosegruppen-regeln.js:92",
+    "module/rezept-entlass.js:46"
    ],
    "aynalar": []
   },
@@ -276288,14 +276588,6 @@
    "orte": [
     "dashboard.js:907",
     "ops/app.js:136"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "opt",
-   "orte": [
-    "module/anfrage-bearbeiten.js:102",
-    "module/diagnosegruppen-regeln.js:92"
    ],
    "aynalar": []
   },
