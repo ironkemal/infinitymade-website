@@ -75,9 +75,12 @@ Leseberechtigung ohne Registry-Freigabestatus. Backend-Downloadprüfung allein
 reicht deshalb nicht. Datenvertrag muss beide Zugriffswege kontrollieren und
 bestehende Artefakte kompatibel halten. Kein Storage-/Live-SQL geändert.
 
-DB-Spezialistenprüfung für neuen Publikationsvertrag scheiterte am Agenten-
-Nutzungslimit. Kein Entwurf/keine Abnahme daraus vorhanden; keine stille
-Provider-Umschaltung. Atomare Veröffentlichung bleibt offen. Unabhängige
+Erster DB-Spezialistenversuch scheiterte am Agenten-Nutzungslimit. Erneute
+native Beratung erfolgreich: `db/entwuerfe/2026-11-07-physio-publikation.md`.
+Konsey-Beschluss: `konsey/tutanak/2026-11-07-physio-publikation.md`;
+atomare fachliche Finalisierung plus Wiederholung und Storagefreigabe erforderlich.
+Lokaler SQL-Entwurf/Probe beauftragt, noch keine Implementierungsabnahme.
+Keine Provider-Umschaltung. Atomare Veröffentlichung bleibt offen. Unabhängige
 Eingabefix-Nachprüfung abgeschlossen: keine Regression im geprüften Umfang,
 14/14 Tests und zusätzliche Grenzproben unabhängig bestanden. Backend-Regressionslauf
 nach Fix: 1.967 bestanden, vier übersprungen, null Fehler; regulär Exit0 in 21,80s.
