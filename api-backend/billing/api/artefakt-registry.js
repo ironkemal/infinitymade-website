@@ -22,6 +22,72 @@ function fehler(status, code, message) {
 
 export const sha256Hex = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+// Only exact protocol exceptions may cross the API boundary. PostgreSQL details,
+// hints and arbitrary exception text can contain patient data and stay private.
+const PHYSIO_RPC_FEHLER = new Map([
+  ...['PHYSIO_OWNER_UNAVAILABLE', 'PHYSIO_LINE_RPC_REQUIRED', 'PHYSIO_RPC_REQUIRED',
+    'PHYSIO_BUSINESS_SCOPE', 'PHYSIO_ARTIFACT_SCOPE', 'PHYSIO_HEADER_SCOPE']
+    .map(code => [`42501:${code}`, [403, code, 'Zugriff auf diesen Abrechnungsvorgang nicht erlaubt.']]),
+  ...['PHYSIO_KEY_PAYLOAD_CONFLICT', 'PHYSIO_INPUT_CHANGED', 'PHYSIO_SOURCE_SCOPE_OR_CLAIM',
+    'PHYSIO_READBACK_INVALID', 'PHYSIO_BINDING_CONFLICT', 'PHYSIO_GENERATION_OR_CAS_CONFLICT']
+    .map(code => [`40001:${code}`, [409, code, 'Abrechnungsstand oder Ausführungsauftrag hat sich geändert.']]),
+  ...['PHYSIO_REQUEST_INVALID', 'PHYSIO_MANIFEST_OR_PACKAGE_INVALID']
+    .map(code => [`22023:${code}`, [422, code, 'Abrechnungsauftrag oder Dateipaket ist ungültig.']]),
+  ['23505:PHYSIO_SESSION_CLAIM_CONFLICT', [409, 'PHYSIO_SESSION_CLAIM_CONFLICT', 'Eine Sitzung wurde bereits beansprucht.']],
+]);
+
+// Separate from the legacy rpc(): existing registry callers keep their contract.
+async function physioRpc(db, name, args, pruefe) {
+  const unavailable = () => fehler(503, 'PHYSIO_PUBLIKATION_NICHT_VERFUEGBAR',
+    'Publikationsdienst nicht verfügbar. Ausgang des Auftrags vor Wiederholung prüfen.');
+  if (typeof db?.rpc !== 'function') throw unavailable();
+  let result;
+  try { result = await db.rpc(name, args); } catch { throw unavailable(); }
+  if (!result || result.status === 0) throw unavailable();
+  if (result.error) {
+    const e = result.error;
+    const bekannt = PHYSIO_RPC_FEHLER.get(`${e.code}:${e.message}`);
+    if (bekannt) throw fehler(...bekannt);
+    if (['42883', '42703', '42P01', 'PGRST202', 'PGRST204'].includes(e.code)) throw unavailable();
+    throw fehler(500, 'PHYSIO_PUBLIKATION_FEHLER', 'Abrechnungsvorgang konnte nicht abgeschlossen werden.');
+  }
+  if (!pruefe(result.data)) throw unavailable();
+  return result.data;
+}
+
+/** Local protocol adapter; route activation still requires schema AND Storage gates. */
+export async function reservierePhysioPublikation({ db, ownerId, key, payload, expectedInput = null }) {
+  return physioRpc(db, 'abrechnung_idempotency_reserve', {
+    p_owner: ownerId, p_key: key, p_payload: payload, p_expected_input: expectedInput,
+  }, data => data && typeof data.abrechnungId === 'string' && data.abrechnungId.trim() !== '' && (
+    (data.state === 'published' && data.ok === true)
+    || data.state === 'aborted'
+    || (data.state === 'preparing' && typeof data.worker_granted === 'boolean'
+      && Number.isSafeInteger(data.generation) && data.generation > 0
+      && (!data.worker_granted || (typeof data.input_sha256 === 'string'
+        && /^[0-9a-f]{64}$/.test(data.input_sha256)
+        && typeof data.updated_at === 'string' && data.updated_at.trim() !== '')))));
+}
+
+/** Receipt only after immutable upload, successful readback/hash and format validation. */
+export async function quittierePhysioReadback({ db, ownerId, registryId, generation, sha256, bytes, packageSha256 }) {
+  return physioRpc(db, 'physio_artefakt_readback', {
+    p_owner: ownerId, p_id: registryId, p_generation: generation, p_sha256: sha256,
+    p_bytes: bytes, p_package_sha256: packageSha256,
+  }, data => data === true);
+}
+
+/** A timeout is an unknown commit outcome, never evidence that a new bill is needed. */
+export async function finalisierePhysioPublikation({ db, ownerId, abrechnungId, key,
+  payloadSha256, inputSha256, generation, expectedUpdatedAt, paket, manifest }) {
+  return physioRpc(db, 'abrechnung_physio_finalize', {
+    p_owner: ownerId, p_abrechnung: abrechnungId, p_key: key, p_payload_sha256: payloadSha256,
+    p_input_sha256: inputSha256, p_generation: generation, p_expected_updated_at: expectedUpdatedAt,
+    p_package: paket, p_manifest: manifest,
+  }, data => data?.ok === true && data.state === 'published'
+    && typeof abrechnungId === 'string' && abrechnungId.trim() !== '' && data.abrechnungId === abrechnungId);
+}
+
 async function rpc(db, name, args) {
   if (!db || typeof db.rpc !== 'function') {
     throw fehler(503, 'ARTEFAKT_REGISTRY_NICHT_VERFUEGBAR', 'Artefakt-Registry nicht verfügbar.');

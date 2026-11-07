@@ -94,3 +94,12 @@ Log lokal `/tmp/praxura-p0-fix-backend.log`; keine vollständige Physio-Abnahme.
 
 Offen für externe Abnahme: konkrete DAS samt verbindlichem Rückmeldungs-/Testprofil,
 externer Fachprüfer und gesonderte Live-Freigaben. CONTRL/APERAK nicht ohne Profil bauen.
+
+## Publikationsadapter: lokaler Backendvertrag
+
+- Bestehende Registry-API um getrennte Reserve-/Readback-/Finalize-Adapter ergänzt; Legacy-RPC und sämtliche aktiven Routen unverändert. Noch keine Schema-/Storage-Aktivierung.
+- Exakte SQLSTATE/Fachcode-Allowlist; unbekannte Datenbanktexte, Details und Hints gelangen nicht in Fehlermeldungen. Fehlende RPC-/Schemafähigkeit und unklarer Transportausgang liefern 503, Konflikte 409. SQL-Zeitstempel bleiben für CAS unverändert, einschließlich Mikrosekunden.
+- Unabhängiger Review fand Supabase-Transportantwort mit status0 und unvollständige Worker-Zusagen. Beide reproduziert, behoben und durch Regressionen abgesichert; echter Supabase-Client mit ausschließlich lokal werfendem Fetch getestet.
+- Gezielte Prüfung: `node --test api-backend/billing/api/artefakt-registry.test.js api-backend/billing/api/physio-publikation-rpc.test.js`: 17/17 bestanden.
+- Regulärer Gesamtlauf `npm run test:backend`: 1.973 bestanden, vier übersprungen, null Fehler, Exit0 (38,15s); Log `/tmp/praxura-publication-adapter-backend-final.log`.
+- SQL-Lockprotokoll und worker_granted werden parallel separat geprüft. Veröffentlichung bleibt bis vollständiger Backend-/Storage- und Schemaabnahme gesperrt.

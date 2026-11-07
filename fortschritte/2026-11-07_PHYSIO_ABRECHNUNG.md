@@ -70,3 +70,12 @@ Commit-Gate verlangt für aktive Migrationen SaaS-Status und Box-Zählermessung.
 - Bekannte Freigabeblocker: globale Quelltabellensperren, vollständige Quellen-/Schemaabdeckung, Backendintegration, Storage-Policy-/Bestandsabgleich, DSGVO-Auskunft/Löschung, echte komplette Upgrade-/RLS-Prüfung. Korrektur-/Delta-/Stornoprotokoll nicht durch diesen Erstabrechnungsprototyp freigegeben.
 - Bestehendes Goal steht technisch auf paused; CreateGoal mit vollständigem Auftrag wurde einmal aufgerufen und wegen unerledigtem Altziel abgewiesen. Keine neue Goal-Automatik aktiviert; verfügbare Werkzeuge besitzen keine Resume-Operation. Umsetzung innerhalb laufender Sitzung trotzdem fortgesetzt.
 - Abschließende Agentenprobe erweitert auf 42 PASS-Notices, Exit0: zwei PostgreSQL-Verbindungen per lokalem dblink/Unixsocket, identischer Reserveauftrag ergibt gleiche Kopf-ID, überlappende Finalizer ergeben einen veröffentlichten Fall/einen Quellkonflikt, genau einen Dauerclaim; Wiederholung nach verlorener Commit-Antwort stabil. Zusätzlich Legacy-ohneHash und blockierte VKZ02/04/10. Root hat Log gelesen, diesen erweiterten Parallelitätslauf nicht selbst wiederholt. Reproduktionsbefehle im Testkopf, Log `/tmp/physio-publikation-v1-proof.log`.
+
+## Publikationsadapter: lokaler Backendvertrag
+
+- Bestehende Registry-API um getrennte Reserve-/Readback-/Finalize-Adapter ergänzt; Legacy-RPC und sämtliche aktiven Routen unverändert. Noch keine Schema-/Storage-Aktivierung.
+- Exakte SQLSTATE/Fachcode-Allowlist; unbekannte Datenbanktexte, Details und Hints gelangen nicht in Fehlermeldungen. Fehlende RPC-/Schemafähigkeit und unklarer Transportausgang liefern 503, Konflikte 409. SQL-Zeitstempel bleiben für CAS unverändert, einschließlich Mikrosekunden.
+- Unabhängiger Review fand Supabase-Transportantwort mit status0 und unvollständige Worker-Zusagen. Beide reproduziert, behoben und durch Regressionen abgesichert; echter Supabase-Client mit ausschließlich lokal werfendem Fetch getestet.
+- Gezielte Prüfung: `node --test api-backend/billing/api/artefakt-registry.test.js api-backend/billing/api/physio-publikation-rpc.test.js`: 17/17 bestanden.
+- Regulärer Gesamtlauf `npm run test:backend`: 1.973 bestanden, vier übersprungen, null Fehler, Exit0 (38,15s); Log `/tmp/praxura-publication-adapter-backend-final.log`.
+- SQL-Lockprotokoll und worker_granted werden parallel separat geprüft. Veröffentlichung bleibt bis vollständiger Backend-/Storage- und Schemaabnahme gesperrt.
