@@ -5,6 +5,19 @@ import { physioLeistungszeilen } from './physio-leistungszeilen.js';
 const rx = { id: 'rx-1', heilmittel_position: 'X0501', anzahl_einheiten: 6 };
 const s = (id, extra = {}) => ({ id, done_at: `2026-11-0${id}T09:00:00Z`, ...extra });
 
+test('ausgewähltes Multi-Heilmittel ohne Position darf nicht Hauptposition abrechnen', () => {
+  const r = { ...rx, heilmittel_items: [
+    { code: 'X0501', einheiten: 2 }, { bezeichnung: 'MT', einheiten: 2 },
+  ] };
+  assert.throws(() => physioLeistungszeilen(r, [s('1', { heilmittel_index: 1 })]),
+    e => e.status === 422 && e.code === 'HEILMITTEL_POSITION_FEHLT');
+});
+
+test('Einzel-Heilmittel: zusätzliche Sitzung nach ausgeschöpfter Menge sperrt', () => {
+  assert.throws(() => physioLeistungszeilen({ ...rx, anzahl_einheiten: 1 }, [s('1'), s('2')]),
+    e => e.status === 422 && e.code === 'HEILMITTEL_UEBER_MENGE');
+});
+
 test('nur vorrangig: eine Zeile je Sitzung, Anzahl 1', () => {
   const z = physioLeistungszeilen(rx, [s('1'), s('2')]);
   assert.deepEqual(z.map(x => [x.code, x.anzahl, x.art]), [['X0501', 1, 'vorrangig'], ['X0501', 1, 'vorrangig']]);

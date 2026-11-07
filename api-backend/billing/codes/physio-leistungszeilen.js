@@ -77,7 +77,11 @@ export function physioLeistungszeilen(rx, sessions) {
       const anzahl = Math.max(1, Math.min(anzahlVorrangig, rest));
       verbrauchtJeItem[idx] += anzahl;
 
-      const code = item.code || item.position || rx?.heilmittel_position || '';
+      const code = item.code || item.position;
+      if (typeof code !== 'string' || !code.trim()) {
+        throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: ausgewähltes Heilmittel ${idx} hat keine Positionsnummer.`,
+          'HEILMITTEL_POSITION_FEHLT');
+      }
       zeilen.push({ ...basis, id: s.id, code, anzahl, art: 'vorrangig' });
 
       if (s.ergaenzend_erbracht) {
@@ -109,6 +113,10 @@ export function physioLeistungszeilen(rx, sessions) {
 
   for (const s of sessions || []) {
     const basis = { sessionId: s.id, done_at: s.done_at || null, session: s };
+    if (verbraucht >= verordnet) {
+      throw fehler(`Verordnung ${String(rx?.id || '').slice(0, 8)}: Heilmittel über verordnete Menge (${verordnet}) erbracht.`,
+        'HEILMITTEL_UEBER_MENGE');
+    }
     const anzahl = Math.max(1, Math.min(anzahlVorrangig, verordnet - verbraucht));
     verbraucht += anzahl;
     zeilen.push({ ...basis, id: s.id, code: vorrangig, anzahl, art: 'vorrangig' });

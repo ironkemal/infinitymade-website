@@ -2,7 +2,7 @@
 
 ## Status
 
-Teilumsetzung des genehmigten Plans. Keine Freigabe für Echtbetrieb, kein Deployment, kein Push, keine Live-Migration und keine Übermittlung.
+Teilumsetzung des genehmigten Plans. Code bis `922fb5bd` auf ausdrücklichen Auftrag gepusht. Keine Freigabe für Echtbetrieb, kein Deployment, keine Live-Migration und keine Übermittlung. Fortschreibung des Astra-Plans: `wissensbank/sitzungen/2026-11-07_physio-fertigstellung.md`.
 
 ## Geschrieben und gezielt lokal geprüft
 
@@ -26,7 +26,7 @@ Das Entlassmerkmal ist bisher weder strukturiert gespeichert noch im Abrechnungs
 
 ## Fortsetzung, in Reihenfolge
 
-1. DB-Entwurf `db/entwuerfe/2026-11-07-physio-abrechnung.md` durch Fach-/Daten-/Rechtsprüfung abschließen. Noch keine Migration geschrieben oder angewandt.
+1. DB-Entwurf `db/entwuerfe/2026-11-07-physio-abrechnung.md` durch Fach-/Daten-/Rechtsprüfung abschließen. Entlass-SQL unter `db/entwuerfe/0112_prescriptions_entlassmanagement.sql` lokal vorbereitet, nicht in aktiver Migrationskette und nicht live angewandt. Vor weiteren Freigaben atomaren Publikations-/Sitzungsanspruchsschutz herstellen (Astra-Paket 1).
 2. Strukturierte Entlass- und Unterbrechungsdaten erfassen, ownergebunden laden und festschreiben; Altbestand unbekannt lassen. Erst danach Physio-Schutzsperre durch vollständig geprüfte Angaben erfüllen.
 3. Leistungsbezogene Befreiungsintervalle und Volljährigkeit samt Blattgebühr am ersten Leistungstag in bestehenden gemeinsamen Berechnungsweg integrieren. Auch unterjährige Befreiungswechsel prüfen; momentane Übergangssperren reichen dafür nicht.
 4. Blanko-Preise/Positionen/Ampel deterministisch mit Originaltabellen abgleichen; LHB/BVB-Berechtigung, Leistungsmenge und Kombinationen, Qualifikationen, Teilabrechnung und Wiederaufnahme einzeln nachweisen. Exakte 16-Wochen-Endgrenze bleibt ungeklärt.
@@ -50,3 +50,13 @@ Das Entlassmerkmal ist bisher weder strukturiert gespeichert noch im Abrechnungs
 Backend-Gesamtlauf nach Entlassdaten-Ergänzung: 1.965 bestanden, vier übersprungen, null Fehler (26,93 Sekunden). Unabhängige Nachprüfung bestätigt Behebung des Blanko-Widerspruchs; SQL-Probe vom Reviewer gelesen, nicht selbst ausgeführt.
 
 Commit-Gate verlangt für aktive Migrationen SaaS-Status und Box-Zählermessung. Deshalb bleibt SQL bewusst unter db/entwuerfe außerhalb der automatischen Migrationskette; keine Gate-Umgehung und keine automatische Box-Anwendung. Aktivierung erfordert eigenen Releaseschritt.
+
+## Astra-Fortsetzung: Prüfvertrag und reproduzierte Eingabefehler
+
+- Zentrale Wissensfassung: `wissensbank/sitzungen/2026-11-07_physio-fertigstellung.md`; unabhängige Fachfälle: `2026-11-07_physio-sollfaelle.md` im selben Ordner. Numerischer Vollabgleich bleibt offen; Stichproben sind keine Tarifabnahme.
+- Neuer regulärer Backend-Basislauf: 1.965 bestanden, vier opt-in PostgreSQL-Integrationen übersprungen, kein Fehler/offener Handle reproduziert. Details in `2026-11-07_PHYSIO_TESTBASIS.md`.
+- Zwei Regressionstests zunächst rot: Multi-Heilmittel ohne eigenen Code wurde als Hauptposition abgerechnet; Einzelzweig akzeptierte Sitzungen über ausgeschöpfter Menge. Bestehenden Mapper gezielt korrigiert; keine neue Funktion/kein Schema.
+- Nach Fix: `node --test api-backend/billing/codes/physio-leistungszeilen.test.js` 14/14. Unabhängiges Funktionsreview und zusätzliche Grenzproben bestätigen Fix und unveränderte ungerade Doppelmenge.
+- `npm run test:backend` nach Fix regulär Exit0: 1.967 bestanden, vier übersprungen, null Fehler, 21,80 Sekunden; Log `/tmp/praxura-p0-fix-backend.log`.
+- Publikationsreview findet direkten Storage-URL-Download und tenantpfadbezogene Storage-Policy ohne Freigabestatus. Paket1 muss beide berücksichtigen. Neuer DB-Vertrag mangels erfolgreicher Spezialistenprüfung noch nicht geschrieben (Agentenlimit); keine Publikations-/Schemafreigabe.
+- Gesamtziel bleibt offen. Paket0 ist teilweise geliefert, nicht vollständig abgenommen; Pakete1–6 nicht abgeschlossen.
