@@ -218,7 +218,11 @@ for (const fn of functions) {
   const b = fn.body;
 
   fn.tables = uniq([...b.matchAll(/\.from\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g)].map(m => m[1]));
-  fn.rpcs   = uniq([...b.matchAll(/\.rpc\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g)].map(m => m[1]));
+  fn.rpcs   = uniq([
+    ...b.matchAll(/\.rpc\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g),
+    // Wrapper-Form rpc(db, 'name', …) / physioRpc(db, 'name', …): sonst unsichtbar in der Karte (Niyet-Notiz 07.11.2026)
+    ...b.matchAll(/\b(?:rpc|[a-z]\w*Rpc)\(\s*[A-Za-z_.]+\s*,\s*['"`]([a-zA-Z0-9_]+)['"`]/g),
+  ].map(m => m[1]));
 
   // Yazma mı okuma mı — kopya avında en ayırt edici sinyal bu.
   fn.writes = uniq([

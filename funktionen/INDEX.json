@@ -14635,7 +14635,9 @@
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "abrechnung_idempotency_reserve"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -14662,7 +14664,9 @@
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "physio_v1_hash"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -14689,7 +14693,9 @@
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "physio_artefakt_readback"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -14716,7 +14722,9 @@
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "abrechnung_physio_finalize"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -14841,7 +14849,10 @@
    "tables": [
     "abrechnungen"
    ],
-   "rpcs": [],
+   "rpcs": [
+    "artefakt_reserve",
+    "artefakt_upload_done"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [
@@ -14876,7 +14887,9 @@
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "artefakt_publish"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -14905,7 +14918,9 @@
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
-   "rpcs": [],
+   "rpcs": [
+    "artefakt_registriere_veroeffentlicht"
+   ],
    "writes": [],
    "endpoints": [],
    "storage": [],
