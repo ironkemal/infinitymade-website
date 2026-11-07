@@ -117,6 +117,12 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 07.11.2026 · Physio-Abrechnung: Paket-Hash und Readback-Bindung (`api-backend/billing/api/artefakt-registry.js`, Commit `1f2508d2`)
+- Niye: Die Readback-Quittung soll an den Paket-Hash gebunden sein. Der Hash kommt aus PostgreSQL (`physio_v1_hash`), weil `JSON.stringify` nicht die jsonb-Kanonisierung ist. Ein JS-Nachbau des Hashs wäre ein zweiter, abweichender Vertrag, deshalb keinen schreiben.
+- Neu: `berechnePhysioPaketHash({db, paket})`. Geändert: `reserviereUndLadeHoch(…, physio)` nimmt optional `{generation, packageSha256}`. Die Quittung kommt erst nach Upload, Readback und Fachprüfung (`pruefeReadback` ist dann Pflicht).
+- Nerede: bisher nur in `physio-publikation-rpc.test.js`, und dort nur der `physio`-Parameter. `berechnePhysioPaketHash` hat zum Zeitpunkt der Notiz keinen Aufrufer, auch keinen Test. Die Physio-Publikation ist gesperrt und nicht aktiviert.
+- Grenze der Karte: RPCs, die über den Wrapper `physioRpc` laufen, erscheinen nicht in `rpcs[]`. Wer `physio_v1_hash` sucht, sollte zusätzlich roh greppen.
+
 ### 05.11.2026 · Physio-Pilot M6: Sondertag-Sperre vor den Rückfragen (`module/raum-auswahl.js`)
 - Niye (canli-test 05.11., Melih GO): Erst wurde „kein Arbeitstag“ bestätigt, danach kam die Sondertag-Sperre. Die Sperre läuft jetzt VOR den „Trotzdem eintragen?“-Rückfragen (Vergangenheit, Arbeitszeit).
 - Neu: `sondertagGesperrt(startIso, id=null)`, aus `terminWarnungen()` herausgelöst, Export über `module/planung-bruecke.js`. Regel wie Migration 0106: Ein Bestandstermin mit unveränderter Startzeit bleibt frei. Nerede: `dashboard.js` Termin speichern (vor der Vergangenheitsprüfung) und `terminWarnungen()` selbst.
