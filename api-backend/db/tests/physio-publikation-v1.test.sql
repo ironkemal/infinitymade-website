@@ -24,6 +24,8 @@
 \if :{?physio_bootstrap}
 \ir physio-publikation-v1.fixture.sql
 \endif
+-- Catalog bootstrap is a separate transaction by the new lock protocol.
+INSERT INTO public.kostentraeger(ik,name) VALUES('100000001','SYNTHETIC');
 BEGIN;
 CREATE FUNCTION public.qa_physio_assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',label; END IF; RAISE NOTICE 'PASS: %',label; END $$;
@@ -39,7 +41,6 @@ GRANT EXECUTE ON FUNCTION public.qa_physio_assert(boolean,text),public.qa_physio
 INSERT INTO auth.users(id) VALUES ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
 INSERT INTO public.profiles(id,is_active,role,sector) VALUES
  ('11111111-1111-4111-8111-111111111111',true,'owner','physiotherapy'),('22222222-2222-4222-8222-222222222222',true,'owner','physiotherapy');
-INSERT INTO public.kostentraeger(ik,name) VALUES('100000001','SYNTHETIC');
 INSERT INTO public.terapeut_zertifikat(owner_id,ik_nummer) VALUES('11111111-1111-4111-8111-111111111111','100000002');
 INSERT INTO public.leads(id,owner_id,title) VALUES('33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111','SYNTHETIC');
 INSERT INTO public.prescriptions(id,owner_id,patient_id,status,rezeptart,rezept_typ,therapie_bereich,kostentraeger_ik,krankenkasse_ik,heilmittel_position,anzahl_einheiten)
@@ -52,7 +53,7 @@ GRANT ALL ON physio_ctx TO service_role,authenticated;
 INSERT INTO physio_ctx VALUES('payload','{"vkz":"01","bereich":"physio","prescription_ids":["44444444-4444-4444-8444-444444444444"],"session_ids":["55555555-5555-4555-8555-555555555555"],"kostentraeger_ik":"100000001","empfaenger_ik":"100000003"}');
 SET LOCAL ROLE service_role;
 INSERT INTO physio_ctx SELECT 'reserve',public.abrechnung_idempotency_reserve('11111111-1111-4111-8111-111111111111','synthetic-request-0001',v) FROM physio_ctx WHERE k='payload';
-SELECT public.qa_physio_assert((v->>'generation')::int=1,'reserve generation 1') FROM physio_ctx WHERE k='reserve';
+SELECT public.qa_physio_assert((v->>'generation')::int=1 AND (v->>'worker_granted')::boolean,'reserve generation 1') FROM physio_ctx WHERE k='reserve';
 SELECT public.qa_physio_assert((public.abrechnung_idempotency_reserve('11111111-1111-4111-8111-111111111111','synthetic-request-0001',p.v)->>'abrechnungId')=r.v->>'abrechnungId','reserve retry same header') FROM physio_ctx p,physio_ctx r WHERE p.k='payload' AND r.k='reserve';
 SELECT public.qa_physio_error(format('SELECT public.abrechnung_idempotency_reserve(%L,%L,%L::jsonb)',
  '11111111-1111-4111-8111-111111111111','synthetic-request-0001',(v||'{"extra":true}')::text),'40001','key payload conflict') FROM physio_ctx WHERE k='payload';
@@ -114,11 +115,13 @@ RESET ROLE;
 -- deterministic package hashing locally. Grant only inside synthetic test transaction.
 
 -- A real source change invalidates a prepared, readback-confirmed package.
+SAVEPOINT source_change;
 UPDATE public.prescription_sessions SET done_at='2026-11-02 10:00Z' WHERE id='55555555-5555-4555-8555-555555555555';
 SET LOCAL ROLE service_role;
 SELECT public.qa_physio_error('SELECT public.qa_physio_finalize()','40001','changed persisted source blocked');
 RESET ROLE;
-UPDATE public.prescription_sessions SET done_at='2026-11-01 10:00Z' WHERE id='55555555-5555-4555-8555-555555555555';
+ROLLBACK TO source_change;
+RELEASE source_change;
 SELECT set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 SET LOCAL ROLE authenticated;
 SELECT public.qa_physio_assert(NOT public.physio_storage_readable(v->0->>'path'),'preparing storage path unreadable') FROM physio_ctx WHERE k='manifest';
@@ -168,6 +171,28 @@ SELECT public.qa_physio_assert(NOT has_function_privilege('authenticated','publi
 -- No permanent claim may disappear because its worker lease elapsed.
 UPDATE public.abrechnung SET publication_lease_until=clock_timestamp()-interval '1 hour' WHERE publication_state='preparing';
 SELECT public.qa_physio_assert((SELECT count(*) FROM public.prescription_session_abrechnungsanspruch)=1,'lease expiry never releases permanent claim');
+-- Explicit guard lifecycle checks, all disposable synthetic data.
+SELECT public.qa_physio_assert((SELECT physio_source_revision>0 FROM public.profiles WHERE id='11111111-1111-4111-8111-111111111111'),
+ 'new owner profile and its new Rx/session initialize revision safely');
+SELECT public.qa_physio_error('UPDATE public.prescription_sessions SET done_at=''2026-11-03 10:00Z'' WHERE id=''55555555-5555-4555-8555-555555555555''','55000','claimed session change rejected after commit boundary');
+SELECT public.qa_physio_error('DELETE FROM public.prescription_sessions WHERE id=''55555555-5555-4555-8555-555555555555''','55000','claimed session delete rejected');
+SAVEPOINT masterdata_after_publish;
+UPDATE public.leads SET city='SYNTHETIC NEW CITY' WHERE id='33333333-3333-4333-8333-333333333333';
+SELECT public.qa_physio_assert(public.qa_physio_finalize()=v,'master data edit allowed; published result immutable') FROM physio_ctx WHERE k='result';
+ROLLBACK TO masterdata_after_publish;
+RELEASE masterdata_after_publish;
+SELECT public.qa_physio_error('INSERT INTO public.prescription_sessions(prescription_id,session_number) VALUES(''99999999-9999-4999-8999-999999999999'',1)','23503','unknown Rx owner cannot bypass source guard');
+SELECT public.qa_physio_error('UPDATE public.kostentraeger SET name=''SYNTHETIC MIXED'' WHERE ik=''100000001''','40001','tenant then catalog mixed write transaction rejected');
+SAVEPOINT owner_transfer;
+DO $$ DECLARE before_a bigint;before_b bigint;BEGIN
+ SELECT physio_source_revision INTO before_a FROM public.profiles WHERE id='11111111-1111-4111-8111-111111111111';
+ SELECT physio_source_revision INTO before_b FROM public.profiles WHERE id='22222222-2222-4222-8222-222222222222';
+ UPDATE public.leads SET owner_id='22222222-2222-4222-8222-222222222222' WHERE id='33333333-3333-4333-8333-333333333333';
+ PERFORM public.qa_physio_assert((SELECT physio_source_revision>before_a FROM public.profiles WHERE id='11111111-1111-4111-8111-111111111111') AND
+  (SELECT physio_source_revision>before_b FROM public.profiles WHERE id='22222222-2222-4222-8222-222222222222'),'owner transfer invalidates both old and new tenant revisions');
+END $$;
+ROLLBACK TO owner_transfer;
+RELEASE owner_transfer;
 -- Old registered artifacts remain readable; unknown neighboring paths do not.
 INSERT INTO public.abrechnung(id,owner_id,kostentraeger_ik,storage_path)
  VALUES('77777777-7777-4777-8777-777777777777','11111111-1111-4111-8111-111111111111','100000001','11111111-1111-4111-8111-111111111111/legacy/original.dta');
@@ -209,13 +234,19 @@ INSERT INTO public.qa_physio_jobs(i,payload,package)
 SELECT dblink_connect('physio_c1','dbname='||current_database()||' application_name=physio_c1');
 SELECT dblink_connect('physio_c2','dbname='||current_database()||' application_name=physio_c2');
 SELECT dblink_exec('physio_c1','SET ROLE service_role'); SELECT dblink_exec('physio_c2','SET ROLE service_role');
+SELECT dblink_connect('physio_catalog','dbname='||current_database()||' application_name=physio_catalog');
+SELECT dblink_exec('physio_catalog','SET ROLE service_role');
+GRANT SELECT,UPDATE ON public.profiles,public.kostentraeger TO service_role;
+GRANT INSERT,UPDATE,DELETE ON public.prescription_sessions TO service_role;
+
 DO $$ DECLARE q text; a jsonb;b jsonb; BEGIN
  SELECT format('WITH x AS MATERIALIZED (SELECT public.abrechnung_idempotency_reserve(%L,%L,%L::jsonb) r) SELECT r,pg_sleep(0.2)::text FROM x',
   '11111111-1111-4111-8111-111111111111','synthetic-concurrent01',payload::text) INTO q FROM public.qa_physio_jobs WHERE i=1;
  PERFORM dblink_send_query('physio_c1',q);PERFORM dblink_send_query('physio_c2',q);
  SELECT r INTO a FROM dblink_get_result('physio_c1') AS t(r jsonb,pause text);
  SELECT r INTO b FROM dblink_get_result('physio_c2') AS t(r jsonb,pause text);
- PERFORM public.qa_physio_assert(a->>'abrechnungId'=b->>'abrechnungId','two connections reserve same key -> same header');
+ PERFORM public.qa_physio_assert(a->>'abrechnungId'=b->>'abrechnungId' AND
+  (a->>'worker_granted')::boolean IS DISTINCT FROM (b->>'worker_granted')::boolean,'two connections reserve same key -> same header');
  UPDATE public.qa_physio_jobs SET reserved=a WHERE i=1;
 END $$;
 -- Drain the command completion before reusing libpq asynchronous connections.
@@ -244,7 +275,7 @@ DECLARE j public.qa_physio_jobs%ROWTYPE;h public.abrechnung%ROWTYPE; BEGIN
 END $$;
 GRANT EXECUTE ON FUNCTION public.qa_physio_job_finalize(integer) TO service_role;
 DO $$ DECLARE a jsonb;msg text;seen boolean:=false; BEGIN
- PERFORM dblink_send_query('physio_c1','WITH x AS MATERIALIZED (SELECT public.qa_physio_job_finalize(1) r) SELECT r,pg_sleep(0.5)::text FROM x');
+ PERFORM dblink_send_query('physio_c1','WITH x AS MATERIALIZED (SELECT public.qa_physio_job_finalize(1) r) SELECT r,pg_sleep(1.5)::text FROM x');
  -- Observe c1 sleeping AFTER finalization while its SQL transaction still holds
  -- the owner lock; then issue c2 for a real overlapping transaction.
  FOR i IN 1..100 LOOP
@@ -253,8 +284,26 @@ DO $$ DECLARE a jsonb;msg text;seen boolean:=false; BEGIN
   PERFORM pg_sleep(0.01);
  END LOOP;
  PERFORM public.qa_physio_assert(seen,'first finalizer observed holding open transaction');
+ PERFORM dblink_exec('physio_c2','SET statement_timeout=''200ms''');
+ PERFORM dblink_exec('physio_c2','UPDATE public.profiles SET business_name=''SYNTHETIC FOREIGN NONBLOCKING'' WHERE id=''22222222-2222-4222-8222-222222222222''');
+ PERFORM public.qa_physio_assert(EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='physio_c1' AND wait_event='PgSleep'),
+  'foreign practice write commits while finalizer transaction still open');
+ PERFORM dblink_exec('physio_c2','INSERT INTO public.prescription_sessions(id,prescription_id,session_number,status) VALUES(''85555555-5555-4555-8555-555555555555'',''64444444-4444-4444-8444-444444444444'',2,''planned'')',false);
+ PERFORM public.qa_physio_assert(dblink_error_message('physio_c2') LIKE '%PHYSIO_SOURCE_OWNER_BUSY%',
+  'same-owner source INSERT phantom fails fast while finalizing');
+ PERFORM dblink_exec('physio_c2','SET statement_timeout=0');
+ PERFORM dblink_send_query('physio_catalog','UPDATE public.kostentraeger SET name=''SYNTHETIC SERIALIZED CATALOG'' WHERE ik=''100000001'' RETURNING ik');
+ seen:=false;
+ FOR i IN 1..100 LOOP
+  PERFORM pg_stat_clear_snapshot();
+  IF EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='physio_catalog' AND wait_event_type='Lock') THEN seen:=true;EXIT;END IF;
+  PERFORM pg_sleep(0.005);
+ END LOOP;
+ PERFORM public.qa_physio_assert(seen AND dblink_is_busy('physio_catalog')=1,'catalog writer waits for finalizer shared catalog lock');
  PERFORM dblink_send_query('physio_c2','SELECT public.qa_physio_job_finalize(2),null::text');
  SELECT r INTO a FROM dblink_get_result('physio_c1') AS t(r jsonb,pause text);
+ PERFORM ik FROM dblink_get_result('physio_catalog') AS t(ik text);
+ PERFORM public.qa_physio_assert((SELECT name FROM public.kostentraeger WHERE ik='100000001')='SYNTHETIC SERIALIZED CATALOG','catalog writer commits after finalizer');
  PERFORM r FROM dblink_get_result('physio_c2',false) AS t(r jsonb,pause text);
  msg:=dblink_error_message('physio_c2');
  PERFORM public.qa_physio_assert(a->>'state'='published' AND msg LIKE '%PHYSIO_INPUT_CHANGED%',
@@ -263,5 +312,5 @@ DO $$ DECLARE a jsonb;msg text;seen boolean:=false; BEGIN
   'concurrent publication leaves one permanent claim');
  PERFORM public.qa_physio_assert(public.qa_physio_job_finalize(1)=a,'reply loss retry after concurrent commit stable');
 END $$;
-SELECT dblink_disconnect('physio_c1'); SELECT dblink_disconnect('physio_c2');
+SELECT dblink_disconnect('physio_c1'); SELECT dblink_disconnect('physio_c2'); SELECT dblink_disconnect('physio_catalog');
 \endif

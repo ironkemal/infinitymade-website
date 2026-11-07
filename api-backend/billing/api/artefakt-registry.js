@@ -69,6 +69,12 @@ export async function reservierePhysioPublikation({ db, ownerId, key, payload, e
         && typeof data.updated_at === 'string' && data.updated_at.trim() !== '')))));
 }
 
+/** PostgreSQL owns jsonb canonicalization; JSON.stringify is not this hash contract. */
+export async function berechnePhysioPaketHash({ db, paket }) {
+  return physioRpc(db, 'physio_v1_hash', { v: paket },
+    data => typeof data === 'string' && /^[0-9a-f]{64}$/.test(data));
+}
+
 /** Receipt only after immutable upload, successful readback/hash and format validation. */
 export async function quittierePhysioReadback({ db, ownerId, registryId, generation, sha256, bytes, packageSha256 }) {
   return physioRpc(db, 'physio_artefakt_readback', {
@@ -117,10 +123,17 @@ async function rpc(db, name, args) {
  * @param {'dta'|'auftrag'|'begleit'|'signed'|'encrypted'} p.role
  * @param {Buffer}   p.bytes
  * @param {string}   p.contentType
+ * @param {{generation:number,packageSha256:string}} [p.physio]  Unpublished Physio receipt, never single-file publish
  * @param {(bytes:Buffer)=>Promise<void>|void} [p.pruefeReadback]  Fachpruefung auf den zurueckgelesenen Bytes
  * @returns {Promise<{ registryId: string, sha256: string }>}
  */
-export async function reserviereUndLadeHoch({ db, ownerId, abrechnungId, pfad, kind, role, bytes, contentType, pruefeReadback }) {
+export async function reserviereUndLadeHoch({ db, ownerId, abrechnungId, pfad, kind, role, bytes, contentType, pruefeReadback, physio }) {
+  if (physio !== undefined && (!physio || !Number.isSafeInteger(physio.generation) || physio.generation <= 0
+    || typeof physio.packageSha256 !== 'string' || !/^[0-9a-f]{64}$/.test(physio.packageSha256)
+    || kind !== 'unsigned' || !['dta', 'auftrag', 'begleit'].includes(role)
+    || typeof pruefeReadback !== 'function')) {
+    throw fehler(422, 'PHYSIO_READBACK_AUFTRAG_UNGUELTIG', 'Physio-Readback benötigt Generation, Pakethash und Dateiprüfung.');
+  }
   const sha = sha256Hex(bytes);
 
   const registryId = await rpc(db, 'artefakt_reserve', {
@@ -163,6 +176,11 @@ export async function reserviereUndLadeHoch({ db, ownerId, abrechnungId, pfad, k
   }
   if (typeof pruefeReadback === 'function') {
     await pruefeReadback(zurueck);
+  }
+
+  if (physio !== undefined) {
+    await quittierePhysioReadback({ db, ownerId, registryId, generation: physio.generation,
+      sha256: sha, bytes: zurueck.length, packageSha256: physio.packageSha256 });
   }
 
   return { registryId, sha256: sha };

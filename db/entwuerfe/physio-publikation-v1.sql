@@ -2,12 +2,15 @@
 -- Requires repository schema through 0111 and registry 0060/0063.
 -- VKZ01 / physio / complete original bill only. No correction, partial bill,
 -- Blanko, VKZ02/04/10. SQL validates persistence, not the TA1 clinical rules.
--- Lock contract: owner -> header -> source tables (fixed order) -> registry.
--- Source table SHARE ROW EXCLUSIVE locks intentionally serialize ALL owners and
--- block legacy writers/phantom inserts. This is safe but NOT a throughput claim.
+-- Lock contract: catalog shared -> owner -> header -> targeted NOWAIT FK/Rx rows
+-- -> registry. Tenant writers guard old/new owners before changing stored state.
+-- Catalog writers take exclusive BEFORE STATEMENT, never owner. Mixed catalog /
+-- tenant write transactions are rejected (compatibility boundary). No tenant-wide
+-- table locks. A busy old source writer causes a retry, never a waiting FK cycle.
 -- Caller is authenticated backend service_role; owner must come from auth middleware.
 -- Readback receipt is a trusted backend assertion; SQL cannot inspect Storage bytes.
 BEGIN;
+ALTER TABLE public.profiles ADD COLUMN physio_source_revision bigint NOT NULL DEFAULT 0;
 ALTER TABLE public.abrechnung
  ADD COLUMN publication_protocol text,
  ADD COLUMN publication_state text,
@@ -66,23 +69,159 @@ CREATE FUNCTION public.physio_v1_hash(p_value jsonb) RETURNS text
  LANGUAGE sql IMMUTABLE STRICT SET search_path='' AS $$
  SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(p_value::text,'UTF8')),'hex') $$;
 
+-- Global advisory namespace is explicit and reserved for this protocol only.
+-- No caller-controlled GUC can skip a lock or guard. Inspect owned lock modes to
+-- reject mixed write transactions; never use a flag as an authorization bypass.
+CREATE FUNCTION public.physio_v1_catalog_shared() RETURNS void
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE pid=pg_backend_pid() AND locktype='advisory'
+  AND classid=827001::oid AND objid=1::oid AND objsubid=2 AND mode='ExclusiveLock') THEN
+  RAISE EXCEPTION 'PHYSIO_MIXED_CATALOG_TENANT' USING ERRCODE='40001'; END IF;
+ PERFORM pg_catalog.pg_advisory_xact_lock_shared(827001,1);
+END $$;
+CREATE FUNCTION public.physio_v1_catalog_guard() RETURNS trigger
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE pid=pg_backend_pid() AND locktype='advisory'
+  AND classid=827001::oid AND objid=1::oid AND objsubid=2 AND mode='ShareLock') THEN
+  RAISE EXCEPTION 'PHYSIO_MIXED_TENANT_CATALOG' USING ERRCODE='40001'; END IF;
+ PERFORM pg_catalog.pg_advisory_xact_lock(827001,1);
+ RETURN NULL;
+END $$;
+-- Acquire shared/catalog mixed-write gate before executor takes ANY source row
+-- lock. A row-only gate would allow catalog->tenant lock inversion first.
+CREATE FUNCTION public.physio_v1_tenant_statement_guard() RETURNS trigger
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN PERFORM public.physio_v1_catalog_shared(); RETURN NULL; END $$;
+CREATE FUNCTION public.physio_v1_no_truncate() RETURNS trigger
+ LANGUAGE plpgsql SET search_path='' AS $$
+BEGIN RAISE EXCEPTION 'PHYSIO_SOURCE_TRUNCATE_FORBIDDEN' USING ERRCODE='42501'; END $$;
+CREATE FUNCTION public.physio_v1_revision_no_client() RETURNS trigger
+ LANGUAGE plpgsql SET search_path='' AS $$
+BEGIN
+ IF NEW.physio_source_revision IS DISTINCT FROM OLD.physio_source_revision
+  AND current_user IN ('anon','authenticated','service_role') THEN
+  RAISE EXCEPTION 'PHYSIO_REVISION_RPC_ONLY' USING ERRCODE='42501'; END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER physio_v1_revision_client BEFORE UPDATE OF physio_source_revision ON public.profiles
+ FOR EACH ROW EXECUTE FUNCTION public.physio_v1_revision_no_client();
+
+CREATE FUNCTION public.physio_v1_source_owners(p_table text,p_row jsonb) RETURNS uuid[]
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE a uuid[]:='{}'; u uuid; x uuid;
+BEGIN
+ IF p_row IS NULL THEN RETURN a; END IF;
+ IF p_table='profiles' THEN
+  a:=ARRAY[coalesce((p_row->>'owner_id')::uuid,(p_row->>'id')::uuid)];
+ ELSIF p_table='prescription_sessions' THEN
+  SELECT owner_id INTO u FROM public.prescriptions WHERE id=(p_row->>'prescription_id')::uuid;
+  IF u IS NULL THEN RAISE EXCEPTION 'PHYSIO_SESSION_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+  a:=ARRAY[u];
+ ELSIF p_table IN ('bookings','services') THEN
+  IF p_row->>'owner_id' IS NOT NULL THEN a:=array_append(a,(p_row->>'owner_id')::uuid); END IF;
+  SELECT coalesce(owner_id,id) INTO u FROM public.profiles WHERE id=(p_row->>'user_id')::uuid;
+  IF u IS NOT NULL THEN a:=array_append(a,u); END IF;
+  IF p_table='bookings' AND p_row->>'verordnung_id' IS NOT NULL THEN
+   SELECT owner_id INTO x FROM public.prescriptions WHERE id=(p_row->>'verordnung_id')::uuid;
+   IF x IS NOT NULL THEN a:=array_append(a,x); END IF;
+  END IF;
+ ELSE a:=ARRAY[(p_row->>'owner_id')::uuid]; END IF;
+ SELECT coalesce(array_agg(DISTINCT q ORDER BY q),'{}'::uuid[]) INTO a FROM unnest(a) q WHERE q IS NOT NULL;
+ IF cardinality(a)=0 THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+ RETURN a;
+END $$;
+
+CREATE FUNCTION public.physio_v1_tenant_guard() RETURNS trigger
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE o jsonb; n jsonb; owners uuid[]; again uuid[]; u uuid; self_owner boolean;
+BEGIN
+ IF TG_OP<>'INSERT' THEN o:=to_jsonb(OLD); END IF;
+ IF TG_OP<>'DELETE' THEN n:=to_jsonb(NEW); END IF;
+ -- Internal revision bump must not recurse. A separate invoker trigger rejects
+ -- direct client changes to this column; this is not a client-settable flag.
+ IF TG_TABLE_NAME='profiles' AND TG_OP='UPDATE'
+  AND (n-ARRAY['physio_source_revision','updated_at']) IS NOT DISTINCT FROM (o-ARRAY['physio_source_revision','updated_at']) THEN
+  RETURN NEW;
+ END IF;
+ PERFORM public.physio_v1_catalog_shared();
+ SELECT array_agg(DISTINCT x ORDER BY x) INTO owners FROM unnest(
+  public.physio_v1_source_owners(TG_TABLE_NAME,o)||public.physio_v1_source_owners(TG_TABLE_NAME,n)) x;
+ FOREACH u IN ARRAY owners LOOP
+  self_owner:=TG_TABLE_NAME='profiles' AND coalesce(n->>'id',o->>'id')=u::text;
+  IF NOT (self_owner AND TG_OP='INSERT') THEN
+   BEGIN
+    PERFORM 1 FROM public.profiles WHERE id=u FOR NO KEY UPDATE NOWAIT;
+   EXCEPTION WHEN lock_not_available THEN
+    RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_BUSY' USING ERRCODE='40001';
+   END;
+   IF NOT FOUND THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+  END IF;
+ END LOOP;
+ -- A parent/profile reassignment may have committed while the original row was
+ -- located. Never write under a stale owner mapping; re-evaluate after locks.
+ SELECT array_agg(DISTINCT x ORDER BY x) INTO again FROM unnest(
+  public.physio_v1_source_owners(TG_TABLE_NAME,o)||public.physio_v1_source_owners(TG_TABLE_NAME,n)) x;
+ IF again IS DISTINCT FROM owners THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_CHANGED' USING ERRCODE='40001'; END IF;
+ IF TG_TABLE_NAME='prescription_sessions' THEN
+  IF TG_OP<>'INSERT' AND EXISTS(SELECT 1 FROM public.prescription_session_abrechnungsanspruch WHERE prescription_session_id=(o->>'id')::uuid) THEN
+   RAISE EXCEPTION 'PHYSIO_CLAIMED_SESSION_FROZEN' USING ERRCODE='55000'; END IF;
+ END IF;
+ FOREACH u IN ARRAY owners LOOP
+  self_owner:=TG_TABLE_NAME='profiles' AND coalesce(n->>'id',o->>'id')=u::text;
+  IF self_owner THEN
+   IF TG_OP<>'DELETE' THEN NEW.physio_source_revision:=coalesce(OLD.physio_source_revision,0)+1; END IF;
+  ELSE
+   UPDATE public.profiles SET physio_source_revision=physio_source_revision+1 WHERE id=u;
+  END IF;
+ END LOOP;
+ IF TG_OP='DELETE' THEN RETURN OLD; END IF;
+ RETURN NEW;
+END $$;
+DO $$ DECLARE t text; BEGIN
+ FOREACH t IN ARRAY ARRAY['profiles','prescriptions','prescription_sessions','leads','aerzte',
+  'bookings','services','therapist_certificates','zuzahlung_befreiung','prescription_documents',
+  'terapeut_zertifikat','betriebsart_empfaenger','businesses'] LOOP
+  EXECUTE format('CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.physio_v1_tenant_statement_guard()',t);
+  EXECUTE format('CREATE TRIGGER physio_v1_source BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.physio_v1_tenant_guard()',t);
+  EXECUTE format('CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.physio_v1_no_truncate()',t);
+ END LOOP;
+ FOREACH t IN ARRAY ARRAY['heilmittel_katalog','heilmittel_position','heilmittel_tarif',
+  'kostentraeger','kostentraeger_annahmestellen','krankenkassen','empfaenger_zertifikate'] LOOP
+  EXECUTE format('CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR UPDATE OR DELETE OR TRUNCATE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.physio_v1_catalog_guard()',t);
+ END LOOP;
+END $$;
+
 -- Digest only; selected owner/Rx/dependents and relevant price-position suffixes.
--- Coarse locks are a DRAFT OPERATIONS/SCALE BLOCKER: they block all practice
--- writers. Before production replace with shared per-source revision/guard locks
--- including old writers and phantom protection; this is not a completed package.
+-- Owner revision catches every source mutation, including INSERT/DELETE phantoms
+-- and restoration of the old values. Same-owner unrelated edits conservatively
+-- invalidate the draft; a different owner's writes do not touch this revision.
 CREATE FUNCTION public.physio_v1_input_hash(p_owner uuid,p_payload jsonb) RETURNS text
  LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE n text; a jsonb; s jsonb:='{}'; w text; cols text[];
  rx uuid[]; patients uuid[]; doctors uuid[]; v_booking_ids uuid[]; serviceids uuid[]; therapists uuid[]; codes text[];
 BEGIN
- FOREACH n IN ARRAY ARRAY['profiles','prescriptions','prescription_sessions','leads','aerzte',
-  'bookings','services','therapist_certificates','zuzahlung_befreiung','prescription_documents',
-  'heilmittel_katalog','heilmittel_position','heilmittel_tarif','kostentraeger',
-  'kostentraeger_annahmestellen','krankenkassen','terapeut_zertifikat',
-  'betriebsart_empfaenger','empfaenger_zertifikate','businesses'] LOOP
-  EXECUTE format('LOCK TABLE public.%I IN SHARE ROW EXCLUSIVE MODE',n);
- END LOOP;
+ PERFORM public.physio_v1_owner(p_owner);
  SELECT array_agg(x::uuid) INTO rx FROM jsonb_array_elements_text(p_payload->'prescription_ids') x;
+ -- Fail closed on the complete dependency chain. UUID FKs alone do not prove
+ -- tenant ownership; otherwise a B-service edit would bypass A's revision.
+ IF coalesce(cardinality(rx),0)=0 OR cardinality(rx)<>(SELECT count(*) FROM public.prescriptions WHERE id=ANY(rx) AND owner_id=p_owner)
+  OR EXISTS(SELECT 1 FROM public.prescriptions r WHERE r.id=ANY(rx) AND (
+   (r.patient_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.leads l WHERE l.id=r.patient_id AND l.owner_id=p_owner)) OR
+   (r.arzt_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.aerzte a WHERE a.id=r.arzt_id AND a.owner_id=p_owner)) OR
+   (r.business_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.businesses b WHERE b.id=r.business_id AND b.owner_id=p_owner))))
+  OR EXISTS(SELECT 1 FROM public.prescription_sessions s WHERE s.prescription_id=ANY(rx) AND s.booking_id IS NOT NULL AND NOT EXISTS(
+   SELECT 1 FROM public.bookings b JOIN public.profiles p ON p.id=b.user_id
+    WHERE b.id=s.booking_id AND coalesce(p.owner_id,p.id)=p_owner
+     AND (b.owner_id IS NULL OR b.owner_id=p_owner)
+     AND (b.service_id IS NULL OR EXISTS(SELECT 1 FROM public.services v
+      LEFT JOIN public.profiles vp ON vp.id=v.user_id WHERE v.id=b.service_id
+       AND (v.owner_id IS NULL OR v.owner_id=p_owner)
+       AND (v.user_id IS NULL OR coalesce(vp.owner_id,vp.id)=p_owner)
+       AND (v.owner_id=p_owner OR coalesce(vp.owner_id,vp.id)=p_owner))))) THEN
+  RAISE EXCEPTION 'PHYSIO_DEPENDENCY_OWNER_MISMATCH' USING ERRCODE='40001';
+ END IF;
  SELECT array_agg(patient_id),array_agg(arzt_id) INTO patients,doctors FROM public.prescriptions WHERE owner_id=p_owner AND id=ANY(rx);
  SELECT array_agg(booking_id) INTO v_booking_ids FROM public.prescription_sessions WHERE prescription_id=ANY(rx);
  SELECT array_agg(service_id),array_agg(user_id) INTO serviceids,therapists FROM public.bookings WHERE id=ANY(v_booking_ids);
@@ -118,7 +257,7 @@ BEGIN
    WHEN 'empfaenger_zertifikate' THEN 't.ik=$10'
    WHEN 'businesses' THEN 't.owner_id=$1 AND t.id=$11' END;
   cols:=CASE n
-   WHEN 'profiles' THEN ARRAY['id','owner_id','is_active','role','business_name','sector','street','house_number','zip','city','phone','bundesland']
+   WHEN 'profiles' THEN ARRAY['id','owner_id','physio_source_revision','is_active','role','business_name','sector','street','house_number','zip','city','phone','bundesland']
    WHEN 'prescriptions' THEN ARRAY['id','owner_id','patient_id','arzt_id','status','rezept_typ','rezeptart','therapie_bereich','ausstellungsdatum','behandlungsbeginn','icd10','icd10_2','diagnosegruppe','heilmittel','heilmittel_position','heilmittel_items','anzahl_einheiten','frequenz','is_dringend','hausbesuch','is_blanko','is_lhb_bvb','hausbesuch_ort','doppelbehandlung','ergaenzend_position','ergaenzend_einheiten','vorrangig_einheiten','doctor_lanr','doctor_bsnr','leitsymptomatik','pat_leitsymptomatik','zuzahlung_eur','zuzahlung_befreit','kostentraeger_ik','krankenkasse_ik','abrechnung_status','abrechnung_id','belegnummer','verordnungsnummer','business_id','bericht_angefordert','bericht_status','gueltig_bis']
    WHEN 'prescription_sessions' THEN ARRAY['id','prescription_id','booking_id','session_number','status','done_at','heilmittel_index','ergaenzend_erbracht']
    WHEN 'leads' THEN ARRAY['id','owner_id','first_name','last_name','geburtsdatum','versichertennummer','versichertenstatus','krankenkasse','patientennummer','street','plz','city']
@@ -137,9 +276,13 @@ END $$;
 CREATE FUNCTION public.physio_v1_owner(p_owner uuid) RETURNS void
  LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
+ PERFORM public.physio_v1_catalog_shared();
  PERFORM 1 FROM public.profiles WHERE id=p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
  IF NOT FOUND OR EXISTS(SELECT 1 FROM public.abrechnung_artefakt_freeze WHERE owner_id=p_owner) THEN
   RAISE EXCEPTION 'PHYSIO_OWNER_UNAVAILABLE' USING ERRCODE='42501'; END IF;
+ BEGIN
+  PERFORM 1 FROM auth.users WHERE id=p_owner FOR KEY SHARE NOWAIT;
+ EXCEPTION WHEN lock_not_available THEN RAISE EXCEPTION 'PHYSIO_AUTH_SOURCE_BUSY' USING ERRCODE='40001'; END;
 END $$;
 
 -- Trigger-visible protocol check must bypass header RLS; otherwise a hidden
@@ -250,10 +393,10 @@ BEGIN
  IF FOUND THEN
   IF h.publication_payload_sha256<>v_hash OR (p_expected_input IS NOT NULL AND p_expected_input<>h.publication_input_sha256) THEN
    RAISE EXCEPTION 'PHYSIO_KEY_PAYLOAD_CONFLICT' USING ERRCODE='40001'; END IF;
-  IF h.publication_state='published' THEN RETURN h.publication_result; END IF;
-  IF h.publication_state='aborted' THEN RETURN jsonb_build_object('state','aborted','abrechnungId',h.id); END IF;
+  IF h.publication_state='published' THEN RETURN h.publication_result||jsonb_build_object('worker_granted',false); END IF;
+  IF h.publication_state='aborted' THEN RETURN jsonb_build_object('state','aborted','abrechnungId',h.id,'worker_granted',false); END IF;
   IF h.publication_lease_until>v_now THEN
-   RETURN jsonb_build_object('state','preparing','abrechnungId',h.id,'generation',h.publication_generation,
+   RETURN jsonb_build_object('state','preparing','worker_granted',false,'abrechnungId',h.id,'generation',h.publication_generation,
     'input_sha256',h.publication_input_sha256,'updated_at',h.updated_at::text,'lease_until',h.publication_lease_until); END IF;
   v_input:=public.physio_v1_input_hash(p_owner,p_payload);
   IF v_input<>h.publication_input_sha256 THEN RAISE EXCEPTION 'PHYSIO_INPUT_CHANGED' USING ERRCODE='40001'; END IF;
@@ -293,11 +436,17 @@ BEGIN
    v_ref,v_transfer,'R'||to_char(v_now AT TIME ZONE 'Europe/Berlin','IYYY')||'-W'||to_char(v_now AT TIME ZONE 'Europe/Berlin','IW')||'-'||lpad(v_ref::text,greatest(3,length(v_ref::text)),'0'),v_mode,
    'physio-v1','preparing',p_key,p_payload,v_hash,v_input,1,v_now+interval '5 minutes') RETURNING * INTO h;
  END IF;
- RETURN jsonb_build_object('state','preparing','abrechnungId',h.id,'generation',h.publication_generation,
+ RETURN jsonb_build_object('state','preparing','worker_granted',true,'abrechnungId',h.id,'generation',h.publication_generation,
   'input_sha256',h.publication_input_sha256,'updated_at',h.updated_at::text,'lease_until',h.publication_lease_until,
   'rechnungsnummer',h.rechnungsnummer,'datenaustauschreferenz',h.datenaustauschreferenz,'transfernummer',h.transfernummer);
 END $$;
 
+-- BOOL compatibility retained. Every receipt UPDATEs the header and changes
+-- its exact updated_at through the existing trigger. After ALL true receipts,
+-- backend MUST owner/id-scope SELECT updated_at,publication_generation,
+-- publication_package_sha256 and pass that unchanged timestamp string to final.
+-- Never reuse reserveCAS, truncate precision, or skip CAS. Packagehash comes
+-- from physio_v1_hash(jsonb) RPC and must match this stored packagehash.
 CREATE FUNCTION public.physio_artefakt_readback(p_owner uuid,p_id uuid,p_generation bigint,p_sha256 text,p_bytes bigint,p_package_sha256 text)
  RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE h public.abrechnung%ROWTYPE; r public.abrechnung_artefakt_version%ROWTYPE;
@@ -344,10 +493,17 @@ BEGIN
  IF h.publication_protocol IS DISTINCT FROM 'physio-v1' OR h.publication_key IS DISTINCT FROM p_key
   OR h.publication_payload_sha256 IS DISTINCT FROM p_payload_sha256 OR h.publication_input_sha256 IS DISTINCT FROM p_input_sha256 THEN
   RAISE EXCEPTION 'PHYSIO_BINDING_CONFLICT' USING ERRCODE='40001'; END IF;
- IF h.publication_state='published' THEN RETURN h.publication_result; END IF;
+ IF h.publication_state='published' THEN RETURN h.publication_result||jsonb_build_object('worker_granted',false); END IF;
  IF h.publication_state<>'preparing' OR h.publication_generation IS DISTINCT FROM p_generation
   OR h.publication_lease_until<=clock_timestamp() OR h.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
   RAISE EXCEPTION 'PHYSIO_GENERATION_OR_CAS_CONFLICT' USING ERRCODE='40001'; END IF;
+ BEGIN
+  PERFORM 1 FROM public.prescriptions WHERE id IN (SELECT value::uuid FROM jsonb_array_elements_text(h.publication_payload->'prescription_ids')) ORDER BY id FOR UPDATE NOWAIT;
+  PERFORM 1 FROM public.prescription_sessions WHERE id IN (SELECT value::uuid FROM jsonb_array_elements_text(h.publication_payload->'session_ids')) ORDER BY id FOR KEY SHARE NOWAIT;
+  PERFORM 1 FROM public.businesses WHERE id=h.business_id FOR KEY SHARE NOWAIT;
+ EXCEPTION WHEN lock_not_available THEN
+  RAISE EXCEPTION 'PHYSIO_SOURCE_ROW_BUSY' USING ERRCODE='40001';
+ END;
  IF EXISTS(SELECT 1 FROM public.abrechnung_zeile WHERE abrechnung_id=h.id) THEN RAISE EXCEPTION 'PHYSIO_EXISTING_LINES'; END IF;
  v_input:=public.physio_v1_input_hash(p_owner,h.publication_payload);
  IF v_input<>h.publication_input_sha256 THEN RAISE EXCEPTION 'PHYSIO_INPUT_CHANGED' USING ERRCODE='40001'; END IF;
@@ -413,7 +569,7 @@ BEGIN
  FOR it IN SELECT x FROM jsonb_array_elements(p_manifest) x LOOP
   UPDATE public.abrechnung_artefakt_version SET state='published',published_at=clock_timestamp() WHERE id=(it->>'id')::uuid;
  END LOOP;
- v_result:=jsonb_build_object('ok',true,'state','published','abrechnungId',h.id,'rechnungsnummer',h.rechnungsnummer,
+ v_result:=jsonb_build_object('ok',true,'state','published','worker_granted',false,'abrechnungId',h.id,'rechnungsnummer',h.rechnungsnummer,
   'prescriptionCount',cardinality(rx),'zeilenGespeichert',cardinality(rx));
  UPDATE public.abrechnung SET
   storage_path=(SELECT x->>'path' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='dta'),
@@ -458,6 +614,9 @@ END $$;
 GRANT EXECUTE ON FUNCTION public.abrechnung_idempotency_reserve(uuid,text,jsonb,text),
  public.physio_artefakt_readback(uuid,uuid,bigint,text,bigint,text),
  public.abrechnung_physio_finalize(uuid,uuid,text,text,text,bigint,text,jsonb,jsonb) TO service_role;
+-- Package digest is computed by PostgreSQL, not JSON.stringify. Only trusted
+-- backend may submit the semantic package to this hash RPC; no browser grant.
+GRANT EXECUTE ON FUNCTION public.physio_v1_hash(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.physio_storage_readable(text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.physio_v1_is_protocol_header(uuid) TO authenticated,service_role;
 COMMIT;
@@ -477,8 +636,8 @@ COMMIT;
 -- proves byte identity, not correspondence of DTA content to line arithmetic.
 -- Missing catalogue/schema capabilities must fail closed. No live/production claim.
 
--- RELEASE BLOCKERS: coarse global source locks; independent review; real full-chain
--- FK/audit/trigger tests; targeted revision guard replacing global locks; Storage RLS
+-- RELEASE BLOCKERS: independent review; real full-chain FK/audit/trigger tests;
+-- mixed catalog/tenant write transaction compatibility and tenant-level retry load; Storage RLS
 -- activation reconciliation; api-backend/dsgvo/klassifikation.js + loeschen.js
 -- export/category coverage and a legally approved eventual claim retention/purge
 -- procedure. RESTRICT/nondelete is interim protection, not unlimited PHI retention.

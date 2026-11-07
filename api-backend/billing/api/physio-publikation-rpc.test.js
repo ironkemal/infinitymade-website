@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
-import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation } from './artefakt-registry.js';
+import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation, reserviereUndLadeHoch } from './artefakt-registry.js';
 
 test('Reserve preserves SQL timestamp/null input and distinguishes worker permission', async () => {
   for (const granted of [true, false]) {
@@ -84,4 +84,65 @@ test('Finalization binds full precision CAS and result to original invoice', asy
   const args = { db, abrechnungId: 'ab1', generation: 3, expectedUpdatedAt: timestamp, manifest: [{ id: 'artifact' }] };
   assert.equal((await finalisierePhysioPublikation(args)).abrechnungId, 'ab1');
   await assert.rejects(finalisierePhysioPublikation({ ...args, abrechnungId: 'other' }), e => e.status === 503);
+});
+
+
+test('Physio upload receipts follow byte and format checks; failures never publish or delete', async () => {
+  for (const failure of [null, 'hash', 'format', 'receipt']) {
+    const calls = [];
+    const original = Buffer.from('synthetic payload');
+    const db = {
+      rpc: async (name, args) => {
+        calls.push(name);
+        if (name === 'artefakt_reserve') return { data: 'artifact1' };
+        if (name === 'physio_artefakt_readback') {
+          assert.equal(args.p_generation, 2);
+          assert.equal(args.p_bytes, original.length);
+          assert.equal(args.p_package_sha256, 'b'.repeat(64));
+          assert.equal(calls.at(-2), 'format');
+          return { data: failure !== 'receipt' };
+        }
+        assert.equal(name, 'artefakt_upload_done');
+        return { data: true };
+      },
+      storage: { from: () => ({
+        upload: async (path, bytes, options) => {
+          calls.push('upload'); assert.equal(options.upsert, false);
+          assert.deepEqual(bytes, original); return { data: { path } };
+        },
+        download: async () => {
+          calls.push('download');
+          return { data: new Blob([failure === 'hash' ? 'corrupted' : original]) };
+        },
+        remove: async () => { throw new Error('must never delete'); },
+      }) },
+    };
+    const operation = reserviereUndLadeHoch({ db, ownerId: 'o1', abrechnungId: 'ab1',
+      pfad: 'o1/ab1/physio-v1/2/synthetic.dta', kind: 'unsigned', role: 'dta',
+      bytes: original, contentType: 'application/octet-stream',
+      physio: { generation: 2, packageSha256: 'b'.repeat(64) },
+      pruefeReadback: () => {
+        calls.push('format');
+        if (failure === 'format') throw Object.assign(new Error('invalid syntax'), { status: 422 });
+      },
+    });
+    if (failure) await assert.rejects(operation);
+    else assert.equal((await operation).registryId, 'artifact1');
+    assert.equal(calls.includes('physio_artefakt_readback'), !['hash', 'format'].includes(failure));
+    assert.ok(!calls.includes('artefakt_publish'));
+    assert.ok(!calls.includes('abrechnung_physio_finalize'));
+  }
+});
+
+test('Invalid Physio upload contract fails before registry or storage side effects', async () => {
+  for (const extra of [
+    { physio: { generation: 0, packageSha256: 'b'.repeat(64) }, pruefeReadback: () => {} },
+    { physio: { generation: 2, packageSha256: 'bad' }, pruefeReadback: () => {} },
+    { physio: { generation: 2, packageSha256: 'b'.repeat(64) } },
+  ]) {
+    let calls = 0;
+    await assert.rejects(reserviereUndLadeHoch({ db: { rpc: async () => { calls++; } },
+      kind: 'unsigned', role: 'dta', bytes: Buffer.from('synthetic'), ...extra }), e => e.status === 422);
+    assert.equal(calls, 0);
+  }
 });

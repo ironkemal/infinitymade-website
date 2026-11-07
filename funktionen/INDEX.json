@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-07",
  "dateien": 546,
- "funktionen": 4422,
+ "funktionen": 4423,
  "module": [
   "abrechnung",
   "anamnese",
@@ -14346,6 +14346,7 @@
     "unavailable"
    ],
    "calledBy": [
+    "berechnePhysioPaketHash",
     "finalisierePhysioPublikation",
     "quittierePhysioReadback",
     "reservierePhysioPublikation",
@@ -14492,13 +14493,13 @@
    "uiPfad": []
   },
   {
-   "name": "quittierePhysioReadback",
+   "name": "berechnePhysioPaketHash",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
    "start": 73,
-   "end": 78,
-   "lines": 6,
+   "end": 76,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -14517,12 +14518,39 @@
    "uiPfad": []
   },
   {
+   "name": "quittierePhysioReadback",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 79,
+   "end": 84,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "physioRpc"
+   ],
+   "calledBy": [
+    "reserviereUndLadeHoch"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "finalisierePhysioPublikation",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
-   "start": 81,
-   "end": 89,
+   "start": 87,
+   "end": 95,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -14546,8 +14574,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
-   "start": 91,
-   "end": 105,
+   "start": 97,
+   "end": 111,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -14642,9 +14670,9 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
-   "start": 123,
-   "end": 169,
-   "lines": 47,
+   "start": 130,
+   "end": 187,
+   "lines": 58,
    "spiegelHinweis": null,
    "tables": [
     "abrechnungen"
@@ -14660,6 +14688,7 @@
    "domRender": false,
    "calls": [
     "fehler",
+    "quittierePhysioReadback",
     "rpc",
     "sha256Hex",
     "upload"
@@ -14677,8 +14706,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
-   "start": 176,
-   "end": 186,
+   "start": 194,
+   "end": 204,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -14706,8 +14735,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/artefakt-registry.js",
-   "start": 197,
-   "end": 211,
+   "start": 215,
+   "end": 229,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
