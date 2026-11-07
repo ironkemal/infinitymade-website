@@ -2235,3 +2235,11 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 - [x] Kalender, Tagesansicht Raum, 14.12., vor und nach dem Neuladen gleich: Spalte „TEST-Raum 1" zeigt 1 Block (`05b07381`, 11:00, 25 min, ohne Überbelegt-Markierung, Spaltenkopf ebenfalls ohne). „TEST-Raum 2" ist leer. Eine Spalte „Ohne Raum" gibt es nicht. Konsole 0 Fehler, keine HTTP-Antwort ≥400.
 - [ ] NICHT geprüft: dass beide Schreibversuche tatsächlich gleichzeitig die Datenbank erreicht haben. Das hängt allein an den Netzwerkaufzeichnungen des Laufs, die hier nicht vorliegen. Ebenfalls nicht geprüft: Zeilen, die zwischendurch angelegt und wieder entfernt wurden (dafür gibt es keine Leseansicht und keine Prüfspur), Buchungen außerhalb der Inhaber-Leserechte, Mitarbeiteransicht, Mobil.
 - Ergebnis: Der gespeicherte Bestand ist **GEÇTİ** (genau eine Belegung, keine Doppelbelegung, keine Reste). Ob der Lauf wirklich parallel war, bleibt **offen**, bis der Netzwerknachweis des Laufs in `fortschritte/2026-11-07.md` nachgetragen ist.
+
+### Rauchtest nach Push `0563e86b` (Physio-Abrechnung hinter Flag) — TEST-Physio QA, Inhaber — 07.11.2026 ~19:25Z — GEÇTİ
+
+**Kapılar:** `/api/krankenkassen` 200 JSON · Backend `/api/ueber` `0.7.1+0563e86` (vorher `09ec148`, Wechsel abgewartet) · `dashboard.js?v=20261106zaa2` = lokal (Push änderte kein Frontend außer dem nicht eingebundenen `module/rezept-entlass.js`). Eigener Headless-Browser, frischer Login, 1440 px. Nichts gespeichert, gesendet oder erzeugt.
+- [x] Dashboard lädt, Konsole 0 Fehler/Warnungen, keine HTTP-Antwort ≥400, kein fehlgeschlagener Request — vor und nach Backendwechsel, auch nach Reload.
+- [x] `calendar` → „Neuer Termin" öffnet; Leistung gewählt → `#bkRaum` sichtbar (3 Optionen), Dauer-Hinweis „geschätzt". Über ✕ ohne Speichern geschlossen, kein Dialog.
+- [x] `verordnungen` und `abrechnung` öffnen sichtbar, fehlerfrei (nur angesehen).
+- Beobachtung (P3, vorbestehend, nicht durch diesen Push): Bei leerer Startzeit (`#bkStart` = leer bei neuem Termin) zeigt `#bkRaumFrei` „Kein freier geeigneter Raum zu dieser Zeit …" (`module/raum-auswahl.js:268`) — es gibt noch keine Zeit, der Satz ist irreführend. Erwartet wäre ein neutraler Hinweis bis eine Zeit gesetzt ist.
