@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 30.10.2026 (**W-14/W-15/W-16 Physio Anlage 7 (iki Fassung) + Anlage 1 girdi**, zincir **Z-20**, açık madde **W-A15**; yayıncıdan `curl`, SHA `gkv-302` kopyasıyla birebir, yalnız yerel. Anlage 1'in daha yeni sürümü yok.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 07.11.2026 (**Zuzahlung Ergo/Logo kaynakları girdi** — kartlar **W-27** Ergo §125 Hauptvertrag · **W-28** SSSST §125 Hauptvertrag · **W-29** SGB V §§ 32/61/62 · **W-30** BGB §§ 187/188; zincir **Z-21**, açık madde **W-A16**. Yeni klasör `gemeinsam/gesetze/` (Gesetzestext = amtliches Werk, Auszug-TXT im Repo). Yan bulgu: Ergo Anlage 2 Stand 01.06.2024 yayıncıda „Ältere Dokumente“ → DÜŞMÜŞ. ⚠️ „Bir bakışta“ sayıları W-17…W-30 ile tazelenmedi.)
+> Önceki: 30.10.2026 (**W-14/W-15/W-16 Physio Anlage 7 (iki Fassung) + Anlage 1 girdi**, zincir **Z-20**, açık madde **W-A15**; yayıncıdan `curl`, SHA `gkv-302` kopyasıyla birebir, yalnız yerel. Anlage 1'in daha yeni sürümü yok.)
 > Önceki: 22.10.2026 (**W-13 DATEV-Format (EXTF Buchungsstapel V13, Header 700) girdi** — yayıncının API yanıtı + Musterdaten `curl` ile, yalnız yerel `gemeinsam/datev-format/`; açık madde W-A14.)
 > Önceki: 21.10.2026 (**W-11 Podologie-Vertrag § 125 Lesefassung girdi** — `gkv-302`’nin 21.10.2026 Zuzahlung kuralının (SPEC-RULES „Zuzahlung = nur auf ERBRACHTE Leistungen") kaynağı. Yayıncıdan `curl` ile indirildi, SHA-256 `gkv-302`’nin okuduğu kopyayla birebir; yayıncı sayfası aynı gün tarandı, daha yeni sürüm yok. Z-17’deki „elle indirme" maddesi kapandı.)
 > Önceki: 11.10.2026 (**belge temizliği turu** — kayıt silinmedi, sicil dosya/kod/`db/SCHEMA.sql`'e karşı yürütüldü: §1'e ICD-10-GM 2027 satırı eklendi (Z-08/W-A02 ona atıf yapıyordu, yoktu), 01.10.2026 satırı kapandı; Z-01/Z-09/Z-11/Z-12/Z-14/Z-16, W-01 #6, W-02, W-03, W-04, W-A01/W-A05/W-A10 ve „Kapalı" bölümü bayat durumdan çıkarıldı; kayan satır numaraları sembol adına çevrildi; `sitzungen/` arşiv düzenine yazıldı; PDF sayımı ölçüldü.)
@@ -81,7 +82,7 @@ ilgilendiriyor?* Kararsız kalınca `gemeinsam/`. Detay: `README.md`.
 wissensbank/
 ├── README.md · REGISTER.md · INDEX.md · SPEC-RULES.md     ← yönetim dosyaları
 ├── gemeinsam/          302-tp5/ · kostentraeger/ · heilmittel-richtlinie/
-│                       positionsnummern/ · icd-10-gm/ · unfallversicherung-dguv/
+│                       positionsnummern/ · icd-10-gm/ · unfallversicherung-dguv/ · gesetze/
 ├── podologie/          Anlage 1a–3, FAK, filtrelenmiş HPNR
 ├── physiotherapie/     Vertrag §125 Anlage 1, 2, 7, Blanko-Leitfaden
 ├── ergotherapie/       Anlage 2 Vergütungsvereinbarung
@@ -708,6 +709,17 @@ W-16 Anlage 1 (Voraussetzung/Weiterbildungsnachweis) + W-15 Anlage 7 Fassung 202
 ```
 Eşleme W-16'dan doğrulandı: X0201/02/04/05 Z.404-573 · X0507 Z.1166-1254 · X0708/09 Z.1262-1342 · X0710/11/12 Z.1351-1445 · X1201 Z.1451-1519. X0720/X0728/X1221 W-16'da **yok**; telemedizin kodları, `20251201_…Anlage_2` Z.136-199'da. Yeni kaynak gelince sıra: SPEC-RULES → `ZERTIFIKAT_PFLICHT` + test → gerekirse yeni migration. Saat değişikliği tek başına koda iş çıkarmaz.
 
+### Z-21 · Zuzahlung Ergo/Logo (§ 32 Abs. 2 · § 61 S. 3 · § 62 SGB V + Vertrag § 8) — 07.11.2026
+```
+W-29 SGB V § 32 Abs. 2 (ab vollendetem 18. Lj.) · § 61 S. 3 (10 % der Kosten + 10 € je Verordnung) · § 62 (Belastungsgrenze/Befreiung)
+  + W-30 BGB § 187 Abs. 2 S. 2 / § 188 Abs. 2 (Lebensalter: Geburtstag mitgerechnet)
+  + W-27 Ergo-Vertrag § 8 Abs. 2-3 · W-28 SSSST-Vertrag § 8 Abs. 2-3 (Leistungstag / erster Behandlungstag / Jahreswechsel)
+  → api-backend/billing/zuzahlung/calculator.js  isUnter18() · isBefreit() · Pauschale am ersten pflichtigen Tag
+  → (Podologie-Pendant: W-11 → module/rezeptinfo-geld.js)
+  → DB: keine eigene Tabelle
+```
+Kein SPEC-RULES-Eintrag für Ergo/Logo geschrieben — Regelauslegung (insb. „Geburtstag selbst") gehört `gkv-302`. Fundstellen: INDEX-Einträge W-27…W-30. Bei neuer Lesefassung: § 8 erneut lesen → calculator.js-Kommentar/Test → SPEC-RULES.
+
 ---
 
 ## 3. Kaynak envanteri
@@ -757,8 +769,12 @@ yeniden araştırılıyor demektir.
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı · **Z-16** (Nr. 11/34, yorum — norm değil) |
-| `20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung` | i.d.F. 12.02.2026 | ✅ GEÇERLİ | Logo/Stimme — ⬜ koda girmedi |
-| `20240531_Ergo_Anlage_2_Vertrag_nach_125…` | Stand 01.06.2024 | ✅ GEÇERLİ | Ergo — ⬜ koda girmedi |
+| `20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung` | i.d.F. 12.02.2026 | ✅ GEÇERLİ (yayıncı 07.11.2026: „gültig ab 01.07.2026“, güncel listede) | Logo/Stimme — ⬜ koda girmedi |
+| `20240531_Ergo_Anlage_2_Vertrag_nach_125…` | Stand 01.06.2024 | 🚫 DÜŞMÜŞ — yayıncı sayfası 07.11.2026 bunu „Ältere Dokumente“ altında listeliyor; güncel: `20260629_Vertrag_125_Ergotherapie_Anlage_2.pdf` (gültig ab 01.07.2026), arşivde yok → **W-A16** | Ergo — ⬜ koda girmedi |
+| `wissensbank/ergotherapie/20260316_Ergotherapie_125_Absatz_1_SGB_V_Vertrag_final` — ⚠️ TXT yalnız yerel | Lesefassung nach Ergänzungsvereinbarung 16.03.2026 (yayıncı: gültig ab 01.04.2026) | ✅ GEÇERLİ | **kart W-27** · **Z-21** (§ 8 Zuzahlung) |
+| `wissensbank/logopaedie/20260501_SSSST_Vertrag_nach_125_Absatz_1_SGB_V` — ⚠️ TXT yalnız yerel | inkl. Änderungsvereinbarungen bis 02.03.2026 (yayıncı: gültig ab 01.05.2026) | ✅ GEÇERLİ | **kart W-28** · **Z-21** (§ 8 Zuzahlung) |
+| `wissensbank/gemeinsam/gesetze/SGB_5_Auszug_32_61_62` (+ `SGB_5.pdf` yalnız yerel) | Gesamtausgabe, zuletzt geändert Art. 2 G v. 06.10.2026 | ✅ GEÇERLİ | **kart W-29** · **Z-21** |
+| `wissensbank/gemeinsam/gesetze/BGB_Auszug_187_188` (+ `BGB.pdf` yalnız yerel) | zuletzt geändert Art. 6 G v. 23.7.2026 | 📎 REFERANS (Lebensalter-Berechnung) | **kart W-30** · **Z-21** |
 | `20220421_Lesefassung_Anlage_3_Ernaehrungstherapie` | 25.04.2022 | 🚫 KAPSAM DIŞI (Ernährungstherapie) | — |
 | `wissensbank/gemeinsam/302-tp5/GGT` | Fassung ab **01.09.2026** (Stand 29.06.2026) | ✅ GEÇERLİ | Z-12 · **kart W-05** |
 | `wissensbank/_archiv/GGT_Fassung_ab_01.01.2026_Stand_06.11.2025` | ab 01.01.2026 | 🚫 DÜŞMÜŞ (21.09.2026) | — |
@@ -1900,6 +1916,9 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
 ### W-A15 · Physio Anlage 1, yeni Anlage 7'nin gerisinde — `offen`, karar `gkv-302`
 W-16 hâlâ MLD için „mind. 170 Std." (Z.408) ve MT, KG-Gerät, KG-ZNS için „Anlage 3 der Rahmenempfehlungen" diyor (Z.1251/1339/1441/1518). W-14'te KPE asgari **140 UE** (Z.449), adı KPE; MT 260 ve KG-Gerät 40 aynı. Eski sertifikalar etkilenmez (V Abs. 4-5), kod saat tutmaz, yani bugün fatura riski görünmüyor. Sorular: (1) 140 UE'lik yeni KPE sertifikası Anlage 1'deki 170 Std. şartını karşılar mı, Anlage 1 değişene kadar hangisi esas? (2) Yeni belge „KPE" diyor, kod değeri `MLD`: UI etiketi güncellenmeli mi? (3) Präambel „mit Wirkung zum 01.06.2026 löst ab" ile V Abs. 1 „ab 01.06.2027 verbindlich / spätestens ersetzt" 12 aylık geçiş olarak okunabilir mi. **Tarih:** 01.06.2027'den önce. **Sahip:** `gkv-302` (yorum), `wissensbank` (Anlage 1 yeni sürüm takibi).
 
+### W-A16 · Zuzahlung Ergo/Logo (Z-21): Auslegungslücken + veraltete Ergo Anlage 2 — `offen`
+(1) **Geburtstag selbst:** weder W-27 noch W-28 sagt, ob die Pflicht am 18. Geburtstag beginnt; beide verweisen nur auf „18. Lebensjahr vollendet" (§ 32 Abs. 2 SGB V). Rechenregel steht in W-30 (BGB § 187 Abs. 2 S. 2 + § 188 Abs. 2); `calculator.js` `isUnter18()` zählt den Geburtstag bereits als 18. Bestätigung der Auslegung: **`gkv-302`**. (2) **Unterschied Ergo/Logo:** nur W-27 § 8 Abs. 3 sagt „gesamte Zuzahlung am Tag der ersten Behandlung fällig" + Erinnerungsfrist 14 KT + Schlüssel 2; W-28 § 8 hat das nicht — ob Code Ergo und Logo gleich behandeln darf: **`gkv-302`**. (3) **Unterjährige Befreiung:** Verträge regeln nur „zum Leistungszeitpunkt gültige Bescheinigung" (W-27) bzw. Bescheinigung/Kennzeichnung (W-28) + Jahreswechsel-Prüfung; ob eine mitten in der Serie vorgelegte Befreiung nur die späteren Leistungstage befreit, steht explizit nur in W-27 (Leistungszeitpunkt) — Logo: **`gkv-302`**. (4) **Ergo Anlage 2** Stand 01.06.2024 ist DÜŞMÜŞ, Nachfolger (gültig ab 01.07.2026) nicht archiviert → nächster Download-Auftrag, `wissensbank`, vor jeder Ergo-Preisarbeit. FAK Ergo (20260316) ebenfalls nicht archiviert. **Tarih:** vor erstem Ergo-/Logo-Abrechnungslauf (Vertikal-Reihenfolge: nach Podologie). **Sahip:** `gkv-302` (1-3), `wissensbank` (4).
+
 ---
 
 ## 5. Kayıt formatı
@@ -2063,3 +2082,58 @@ Bilinmeyen alana **"belirtilmemiş"** yazılır, tahmin edilmez.
 - **Yeniden dağıtım:** şüpheli; PDF global und TXT exakt in `.gitignore`, `wissensbank/` in `.vercelignore` gesperrt; legal-de vor Veröffentlichung.
 - **Yedek:** Git nein; URL wiederbeschaffbar. SHA256 PDF `f61eec734b6902830438875a204ab0cc473729e97687f3c160c64be457820624`.
 - **Format:** deterministischer TXT für Formelschema und veröffentlichte Beispiele, kein KI-Tabellenimport.
+
+
+## Zuzahlung Ergo/Logo — Quellen 07.11.2026
+
+### W-27 · Ergotherapie §125 Abs. 1 Hauptvertrag — Lesefassung nach Ergänzungsvereinbarung 16.03.2026
+- **Dosya:** `wissensbank/ergotherapie/20260316_Ergotherapie_125_Absatz_1_SGB_V_Vertrag_final.pdf` + `.txt` (beide nur lokal; TXT 1643 Zeilen inkl. 3-zeiligem Quellenkopf).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/ergotherapie/20260316_Ergotherapie_125_Absatz_1_SGB_V_Vertrag_final.pdf · **İndirme:** 07.11.2026 (`curl`, HTTP 200, 262.474 B) · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** GKV-Spitzenverband mit BED und DVE (Schiedsspruch 4 HE 14-21 vom 15.12.2021, Fußnote S.1).
+- **Sürüm / Stand:** Kopf: „Lesefassung nach der Ergänzungsvereinbarung vom 16.03.2026"; LEGS 2600501/2700531/2800531. 29 Seiten.
+- **Anzuwenden ab:** Vertrag 01.01.2022 (§ 21 Abs. 1, TXT Z.1581); Datum der Lesefassung im Dokument belirtilmemiş — Herausgeberseite: „gültig ab 01.04.2026" · **Düşer:** açık uçlu (Kündigung 3 Monate zum Jahresende, § 21 Abs. 1).
+- **Durum:** GEÇERLİ (Herausgeberliste „aktuell", Seite zuletzt aktualisiert 20.07.2026, geprüft 07.11.2026).
+- **Neyi besler:** **Z-21** → § 8 Zuzahlung → `api-backend/billing/zuzahlung/calculator.js` (heute ohne Ergo-spezifische Quelle im Kommentar).
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_ergo/125_ergotherapie.jsp → Titel „Vertrag … gültig ab TT.MM.JJJJ" ≠ 01.04.2026 oder neue Zeile unter „Änderungsvereinbarungen". Elle, `wissensbank`, jedes Januar/Juli + vor Ergo-Freigabe.
+- **Yeniden dağıtım:** şüpheli — GKV Lesefassung, W-A07; PDF `*.pdf`, TXT exakter Pfad in `.gitignore`; `.vercelignore` → `wissensbank/`.
+- **Yedek:** Git nein; per URL wiederbeschaffbar. SHA-256 PDF `09d96805d1d9a2bdc83ebf2a837a64f75c7a531acec43a522f92aca173e5f2ab`.
+- **Format:** TXT + INDEX-Bölümkarte; keine md, keine Tabellenübernahme.
+
+### W-28 · SSSST (Logopädie) §125 Abs. 1 Hauptvertrag — inkl. Änderungsvereinbarungen bis 02.03.2026
+- **Dosya:** `wissensbank/logopaedie/20260501_SSSST_Vertrag_nach_125_Absatz_1_SGB_V.pdf` + `.txt` (beide nur lokal; TXT 1589 Zeilen inkl. Quellenkopf).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/sssst/20260501_SSSST_Vertrag_nach_125_Absatz_1_SGB_V.pdf · **İndirme:** 07.11.2026 (`curl`, HTTP 200, 495.507 B) · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** GKV-Spitzenverband mit dba, dbl, dbs, LOGO Deutschland (Schiedsstelle 15.03.2021).
+- **Sürüm / Stand:** Kopf: „Einschließlich der Änderungsvereinbarungen bis zum 02.03.2026" / „in der Fassung vom 01.12.2022 und vom 02.03.2026"; LEGS 2300501/2400501/2500501. 28 Seiten.
+- **Anzuwenden ab:** Vertrag 16.03.2021 (§ 21 Abs. 1, TXT Z.1512); Datum der Lesefassung im Dokument belirtilmemiş — Herausgeberseite: „gültig ab 01.05.2026" · **Düşer:** açık uçlu, gilt fort bis Neuvertrag/Schiedsfestsetzung (§ 21 Abs. 5).
+- **Durum:** GEÇERLİ (Herausgeberliste, Seite zuletzt aktualisiert 28.04.2026, geprüft 07.11.2026). Änderungsvereinbarungen 12.02.2026 / 02.03.2026 einzeln nicht archiviert (in Lesefassung enthalten).
+- **Neyi besler:** **Z-21** → § 8 Zuzahlung → `calculator.js`.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_ssss/125_sssst.jsp → Vertragstitel „gültig ab" ≠ 01.05.2026 oder neue Änderungsvereinbarung nach 02.03.2026. Elle, `wissensbank`, Januar/Juli.
+- **Yeniden dağıtım:** şüpheli — W-A07; wie W-27 nur lokal.
+- **Yedek:** Git nein. SHA-256 PDF `b9fd90199a2f1dffa7ae85b0efd833cd7167fc0af9fbcbded9bd4c347eee7a1f`.
+- **Format:** TXT + INDEX-Bölümkarte.
+
+### W-29 · SGB V — Gesamtausgabe, Auszug §§ 32, 61, 62
+- **Dosya:** `wissensbank/gemeinsam/gesetze/SGB_5.pdf` (nur lokal, 581 S.) + Auszug `wissensbank/gemeinsam/gesetze/SGB_5_Auszug_32_61_62.txt` (im Repo, 144 Zeilen, Kopf nennt Quellzeilen 3346-3376 / 5959-6063 des Volltexts).
+- **Herkunft:** https://www.gesetze-im-internet.de/sgb_5/SGB_5.pdf · Gegenprobe https://www.gesetze-im-internet.de/sgb_5/__61.html + `__62.html` · **İndirme:** 07.11.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** BMJV / Bundesamt für Justiz (gesetze-im-internet.de).
+- **Sürüm / Stand:** Vollzitat „zuletzt durch Artikel 2 des Gesetzes vom 6. Oktober 2026 (BGBl. 2026 I Nr. 289) geändert"; Stand-Zeile „Art. 1 G v. 26.6.2026 I Nr. 195", Hinweis Art. 1 G v. 24.7.2026 dokumentarisch noch nicht abschließend bearbeitet. PDF erzeugt 06.11.2026.
+- **Anzuwenden ab:** jeweilige Gesetzesfassung · **Düşer:** bei Gesetzesänderung von §§ 32/61/62.
+- **Durum:** GEÇERLİ.
+- **Neyi besler:** **Z-21** (alle vier Fachbereiche; Podologie über W-11 ebenso).
+- **Tazelik kontrolü:** https://www.gesetze-im-internet.de/sgb_5/__61.html / `__62.html` / `__32.html` Wortlaut gegen Auszug diffen; elle, `wissensbank`, jedes Januar (Gesetzesänderungen meist zum 01.01).
+- **Yeniden dağıtım:** serbest — Gesetzestext ist amtliches Werk (§ 5 Abs. 1 UrhG). Auszug-TXT darf ins Repo; PDF bleibt wegen Größe/`*.pdf` lokal.
+- **Yedek:** Auszug ja (Git); PDF nein. SHA-256 PDF `757d6a4a42658a496068c0785eee9b5615d3121854d09876fbbb3e17720fedd1`.
+- **Format:** Auszug statt Volltext (39.698 Zeilen, nur 3 Paragraphen gebraucht); deterministisch per `sed` aus pdftotext.
+
+### W-30 · BGB — Auszug §§ 187, 188 (Lebensalter-/Fristberechnung)
+- **Dosya:** `wissensbank/gemeinsam/gesetze/BGB.pdf` (nur lokal, 490 S.) + `wissensbank/gemeinsam/gesetze/BGB_Auszug_187_188.txt` (im Repo, 36 Zeilen, Quellzeilen 3912-3942).
+- **Herkunft:** https://www.gesetze-im-internet.de/bgb/BGB.pdf · Gegenprobe `__187.html`, `__188.html` · **İndirme:** 07.11.2026 · **İndiren:** `wissensbank` ajanı.
+- **Yayıncı:** BMJV / Bundesamt für Justiz.
+- **Sürüm / Stand:** „zuletzt geändert durch Art. 6 G v. 23.7.2026 I Nr. 226".
+- **Anzuwenden ab:** — · **Düşer:** bei Änderung §§ 187/188 (seit 2002 unverändert, Wortlaut).
+- **Durum:** REFERANS — Rechenregel für „18. Lebensjahr vollendet"; Auslegung `gkv-302` (W-A16 Punkt 1).
+- **Neyi besler:** **Z-21** → `calculator.js` `isUnter18()`.
+- **Tazelik kontrolü:** elle, selten; nur bei Gesetzesänderungsmeldung.
+- **Yeniden dağıtım:** serbest — amtliches Werk (§ 5 Abs. 1 UrhG).
+- **Yedek:** Auszug ja; PDF nein. SHA-256 PDF `9b5a99536e7b00756e9fa5f20082bd9ad3951b37c381fc0f5d52aa5a556839eb`.
+- **Format:** Auszug-TXT.

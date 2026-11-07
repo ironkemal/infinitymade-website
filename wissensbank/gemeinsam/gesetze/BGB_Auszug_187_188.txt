@@ -1,0 +1,36 @@
+Quelle: https://www.gesetze-im-internet.de/bgb/BGB.pdf (Gesamtausgabe, 490 S., SHA-256 9b5a99536e7b00756e9fa5f20082bd9ad3951b37c381fc0f5d52aa5a556839eb)
+Stand laut Deckblatt: zuletzt geaendert durch Art. 6 G v. 23.7.2026 I Nr. 226
+Deterministisch erzeugt: pdftotext -enc UTF-8 -layout, 07.11.2026; Auszug = Zeilen 3912-3942 (§§ 187, 188) der Volltextausgabe. Keine Autoritaet gegenueber Original.
+Gegenprobe: § 187 Wortlaut identisch mit https://www.gesetze-im-internet.de/bgb/__187.html (07.11.2026).
+
+§ 187 Fristbeginn
+
+(1) Ist für den Anfang einer Frist ein Ereignis oder ein in den Lauf eines Tages fallender Zeitpunkt maßgebend, so
+wird bei der Berechnung der Frist der Tag nicht mitgerechnet, in welchen das Ereignis oder der Zeitpunkt fällt.
+
+(2) Ist der Beginn eines Tages der für den Anfang einer Frist maßgebende Zeitpunkt, so wird dieser Tag bei
+der Berechnung der Frist mitgerechnet. Das Gleiche gilt von dem Tage der Geburt bei der Berechnung des
+Lebensalters.
+
+Fußnote
+
+(+++ § 187: Zur Anwendung vgl. § 31 Abs. 5 KVBG +++)
+
+§ 188 Fristende
+
+(1) Eine nach Tagen bestimmte Frist endigt mit dem Ablauf des letzten Tages der Frist.
+
+(2) Eine Frist, die nach Wochen, nach Monaten oder nach einem mehrere Monate umfassenden Zeitraum - Jahr,
+halbes Jahr, Vierteljahr - bestimmt ist, endigt im Falle des § 187 Abs. 1 mit dem Ablauf desjenigen Tages der
+letzten Woche oder des letzten Monats, welcher durch seine Benennung oder seine Zahl dem Tage entspricht, in
+den das Ereignis oder der Zeitpunkt fällt, im Falle des § 187 Abs. 2 mit dem Ablauf desjenigen Tages der letzten
+Woche oder des letzten Monats, welcher dem Tage vorhergeht, der durch seine Benennung oder seine Zahl dem
+Anfangstag der Frist entspricht.
+
+(3) Fehlt bei einer nach Monaten bestimmten Frist in dem letzten Monat der für ihren Ablauf maßgebende Tag, so
+endigt die Frist mit dem Ablauf des letzten Tages dieses Monats.
+
+Fußnote
+
+(+++ § 188: Zur Anwendung vgl. § 31 Abs. 5 KVBG +++)
+

@@ -44,6 +44,7 @@ gemeinsam/heilmittel-richtlinie/  HeilM-RL, KBV Diagnoseliste, praxiswissen
 gemeinsam/positionsnummern/       Heilmittelpositionsnummernverzeichnis (tüm bereich'lar)
 gemeinsam/icd-10-gm/              BfArM ICD-10-GM veri paketi
 gemeinsam/unfallversicherung-dguv/ DGUV (BG/Unfallkasse) — Handlungsanleitung, Gebührenverzeichnisse.
+gemeinsam/gesetze/                Gesetzestexte (gesetze-im-internet.de) — nur Paragraphen-Auszüge als TXT, Gesamt-PDF lokal (07.11.2026).
                                   §302 DIŞI. PDF + TXT yalnız yerel (.gitignore), bkz. REGISTER W-08
 gemeinsam/datev-format/          DATEV-Format (EXTF) Formatbeschreibung + Musterdaten — Steuerberater-Export.
                                   §302 DIŞI. Klasörün tamamı yalnız yerel (.gitignore), bkz. REGISTER W-13

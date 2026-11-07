@@ -3,7 +3,7 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-10-11 (temizlik turu: Kostenträgerdatei durumu 01.10 sonrasına çekildi, Anhang 01'deki GGT atfı, HPNR halef notu, `sitzungen/` notu) · önceki 2026-10-10 · **44 belge kayıtlı** (39 mevcut arşiv kaydı — +Podologie-Vertrag § 125 Lesefassung 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
+> Son güncelleme: 2026-11-07 (+4 belge: Ergo §125 Hauptvertrag, SSSST §125 Hauptvertrag, SGB V §§ 32/61/62 Auszug, BGB §§ 187/188 Auszug — yeni klasör `gemeinsam/gesetze/`; REGISTER W-27…W-30) · önceki 2026-10-11 (temizlik turu: Kostenträgerdatei durumu 01.10 sonrasına çekildi, Anhang 01'deki GGT atfı, HPNR halef notu, `sitzungen/` notu) · önceki 2026-10-10 · **44 belge kayıtlı** (39 mevcut arşiv kaydı — +Podologie-Vertrag § 125 Lesefassung 21.10.2026 + W-06 depo dışı + W-07 yalnız yerel + W-08/W-09/W-10 DGUV yalnız yerel; yerel olanların ham PDF/TXT'si commit içinde değildir)
 > (10.10.2026: **DGUV / gesetzliche Unfallversicherung** — Handlungsanleitung Heilmittel (Januar 2026) +
 >  Gebührenverzeichnis Physiotherapie (ab 01.01.2026) + Ergotherapie (ab 01.09.2026). Yeni klasör
 >  `gemeinsam/unfallversicherung-dguv/`. BG fatura dalının (PE-006 B) kaynağı; Podologie üçünde de **geçmiyor**.)
@@ -439,7 +439,30 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.06.2024
 - **Ne zaman lazım:** Ergotherapie (ergoterapi) hizmetlerinin, geçici atellerin ve ev ziyaretlerinin faturalandırılması ile ücret listesinin kontrol edilmesi gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** evet, X4002 (38,43 Euro), X4102 (52,77 Euro)
-- **⚠️ ESKİMİŞ (gkv-302, 26.10.2026):** üç kez değişti — Fassung 25.07.2025 (pencereler 01.08.2025 / 01.10.2025) ve **Lesefassung Stand 01.07.2026** (Schiedsstelle 1 HE 12-26) geçerli; arşivde yok, `wissensbank` girişi bekliyor. Ayrıca bu `.txt` (-layout) sütun kaymalı — tablo `-raw` ile okunmalı. Ayrıntı: `sitzungen/2026-10-26_katalog-physio-ergo-logo.md`
+- **⚠️ DÜŞMÜŞ (REGISTER 07.11.2026, yayıncı „Ältere Dokumente“; halef arşivde yok → W-A16) · ESKİMİŞ (gkv-302, 26.10.2026):** üç kez değişti — Fassung 25.07.2025 (pencereler 01.08.2025 / 01.10.2025) ve **Lesefassung Stand 01.07.2026** (Schiedsstelle 1 HE 12-26) geçerli; arşivde yok, `wissensbank` girişi bekliyor. Ayrıca bu `.txt` (-layout) sütun kaymalı — tablo `-raw` ile okunmalı. Ayrıntı: `sitzungen/2026-10-26_katalog-physio-ergo-logo.md`
+
+### wissensbank/ergotherapie/20260316_Ergotherapie_125_Absatz_1_SGB_V_Vertrag_final.txt
+- **Ne:** Ergotherapie Vertrag § 125 Abs. 1 SGB V (Hauptvertrag), Lesefassung nach Ergänzungsvereinbarung 16.03.2026 (REGISTER **W-27**). ⚠️ TXT yalnız yerel. Satır no 3 satırlık Quellenkopf dahil.
+- **İçerdiği fiyat/pozisyon numarası var mı:** hayır (fiyat Anlage 2'de).
+- **Ne zaman lazım:** Ergo Zuzahlung, Behandlungsbeginn/-unterbrechung, Abrechnungsregeln.
+- **Anahtar bölümler:** § 5 Bestätigung Z.433 · § 6 Beginn Z.472 · § 7 Durchführung Z.518 · **§ 8 Zuzahlung Z.696-765** (18. Lj./Befreiung/Status bindend Z.705-713 · Leistungstag + erster Behandlungstag + Fälligkeit am 1. Behandlungstag Z.716-729 · Erstattung Z.733) · § 16 Vergütung Z.1232 · § 18 Abrechnung Z.1316 · § 21 Inkrafttreten Z.1579
+- **Zuzahlung:** kural yorumu yok, yalnız Fundstelle — zincir REGISTER **Z-21**, açık sorular **W-A16**.
+
+### wissensbank/logopaedie/20260501_SSSST_Vertrag_nach_125_Absatz_1_SGB_V.txt
+- **Ne:** SSSST (Stimm-, Sprech-, Sprach-, Schlucktherapie) Vertrag § 125 Abs. 1 SGB V, inkl. Änderungsvereinbarungen bis 02.03.2026 (REGISTER **W-28**). ⚠️ TXT yalnız yerel. Satır no Quellenkopf dahil.
+- **İçerdiği fiyat/pozisyon numarası var mı:** hayır.
+- **Ne zaman lazım:** Logo Zuzahlung, Altersgrenzen (7./14. Lj.) bei Bestätigung/Leistung, Abrechnungsregeln.
+- **Anahtar bölümler:** § 5 Bestätigung Z.514 (ab 18. Lj. Z.537) · § 6 Beginn Z.567 · § 7 Durchführung Z.599 · **§ 8 Zuzahlung Z.800-851** (18. Lj. + Leistungszeitpunkt + erster Behandlungstag Z.808-814 · Verzicht nur bei Kennzeichnung/Befreiungsbescheinigung + Jahreswechsel Z.817-820 · Erstattung Z.823) · § 16 Vergütung Z.1147 · § 18 Abrechnung Z.1228 · § 21 Inkrafttreten Z.1509
+- **Dikkat:** Ergo § 8 Abs. 3'teki „gesamte Zuzahlung am Tag der ersten Behandlung fällig" + 14-KT-Erinnerung burada **yok** (W-A16).
+
+### wissensbank/gemeinsam/gesetze/SGB_5_Auszug_32_61_62.txt
+- **Ne:** SGB V §§ 32, 61, 62 — deterministik Auszug aus der Gesamtausgabe gesetze-im-internet.de (REGISTER **W-29**). Depoda.
+- **İçerdiği fiyat/pozisyon numarası var mı:** hayır (yalnız gesetzliche Beträge: 10 %, 10 € je Verordnung, 2 %/1 % Belastungsgrenze).
+- **Anahtar bölümler:** § 32 Abs. 2 (ab vollendetem 18. Lj.) Z.27-32 · § 61 S. 3 Heilmittel 10 % + 10 € je Verordnung Z.59-61 · § 62 Abs. 1 Belastungsgrenze + Bescheinigung „für den Rest des Kalenderjahres" Z.69-72 · § 62 Abs. 3 Befreiungsbescheinigung Z.131-133
+
+### wissensbank/gemeinsam/gesetze/BGB_Auszug_187_188.txt
+- **Ne:** BGB §§ 187, 188 — Fristbeginn/-ende, Lebensalter-Berechnung (REGISTER **W-30**). Depoda.
+- **Anahtar bölümler:** § 187 Abs. 2 S. 2 „Tag der Geburt … mitgerechnet" Z.11-13 · § 188 Abs. 2 Fristende Z.23-27
 
 ### wissensbank/_archiv/20220421_Lesefassung_Anlage_3_Ernaehrungstherapie.txt
 - **Ne:** Anlage 3: notwendige Angaben auf der Heilmittelverordnung und einheitliche Regelungen zur Abrechnung zum Vertrag nach § 125 Absatz 1 SGB V für Ernährungstherapie über die Versorgung mit Leistungen der Ernährungstherapie und deren Vergütung.

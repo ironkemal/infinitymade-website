@@ -1,0 +1,144 @@
+Quelle: https://www.gesetze-im-internet.de/sgb_5/SGB_5.pdf (Gesamtausgabe, 581 S., SHA-256 757d6a4a42658a496068c0785eee9b5615d3121854d09876fbbb3e17720fedd1)
+Stand laut Deckblatt: zuletzt geaendert durch Art. 2 G v. 06.10.2026 (BGBl. 2026 I Nr. 289) [Vollzitat]; Stand-Zeile: Art. 1 G v. 26.6.2026 I Nr. 195, Hinweis: Art. 2 G v. 6.10.2026 I Nr. 289 beruecksichtigt
+Deterministisch erzeugt: pdftotext -enc UTF-8 -layout, 07.11.2026; Auszug = Zeilen 3346-3376 (§ 32) und 5959-6063 (§§ 61, 62) der Volltextausgabe. Keine Autoritaet gegenueber Original.
+Gegenprobe: § 61 Wortlaut identisch mit https://www.gesetze-im-internet.de/sgb_5/__61.html (07.11.2026).
+
+===== § 32 (Volltext Z.3346-3376) =====
+§ 32 Heilmittel
+
+(1) Versicherte haben Anspruch auf Versorgung mit Heilmitteln, soweit sie nicht nach § 34 ausgeschlossen sind.
+Ein Anspruch besteht auch auf Versorgung mit Heilmitteln, die telemedizinisch erbracht werden. Für nicht nach
+Satz 1 ausgeschlossene Heilmittel bleibt § 92 unberührt.
+
+(1a) Der Gemeinsame Bundesausschuss regelt in seiner Richtlinie nach § 92 Absatz 1 Satz 2 Nummer 6 das
+Nähere zur Heilmittelversorgung von Versicherten mit langfristigem Behandlungsbedarf. Er hat insbesondere
+zu bestimmen, wann ein langfristiger Heilmittelbedarf vorliegt, und festzulegen, ob und inwieweit ein
+Genehmigungsverfahren durchzuführen ist. Ist in der Richtlinie ein Genehmigungsverfahren vorgesehen, so ist
+über die Anträge innerhalb von vier Wochen zu entscheiden; ansonsten gilt die Genehmigung nach Ablauf der
+Frist als erteilt. Soweit zur Entscheidung ergänzende Informationen des Antragstellers erforderlich sind, ist der
+Lauf der Frist bis zum Eingang dieser Informationen unterbrochen.
+
+(1b) Verordnungen, die über die in der Richtlinie des Gemeinsamen Bundesausschusses nach § 92 Absatz 1
+Satz 2 Nummer 6 in Verbindung mit Absatz 6 Satz 1 Nummer 3 geregelte orientierende Behandlungsmenge
+hinausgehen, bedürfen keiner Genehmigung durch die Krankenkasse.
+
+(1c) (weggefallen)
+
+(2) Versicherte, die das achtzehnte Lebensjahr vollendet haben, haben zu den Kosten der Heilmittel als Zuzahlung
+den sich nach § 61 Satz 3 ergebenden Betrag an die abgebende Stelle zu leisten. Dies gilt auch, wenn Massagen,
+Bäder und Krankengymnastik als Bestandteil der ärztlichen Behandlung (§ 27 Absatz 1 Satz 2 Nr. 1) oder bei
+ambulanter Behandlung in Krankenhäusern, Rehabilitations- oder anderen Einrichtungen abgegeben werden.
+Die Zuzahlung für die in Satz 2 genannten Heilmittel, die als Bestandteil der ärztlichen Behandlung abgegeben
+werden, errechnet sich nach den Preisen, die nach § 125 vereinbart oder nach § 125b Absatz 2 festgesetzt worden
+sind.
+
+Fußnote
+
+(+++ § 32 Abs. 2: Zur Anwendung vgl. § 24e +++)
+
+===== §§ 61, 62 (Volltext Z.5959-6063) =====
+Neunter Abschnitt
+Zuzahlungen, Belastungsgrenze
+§ 61 Zuzahlungen
+
+Zuzahlungen, die Versicherte zu leisten haben, betragen 10 vom Hundert des Abgabepreises, mindestens
+jedoch 5 Euro und höchstens 10 Euro; allerdings jeweils nicht mehr als die Kosten des Mittels; im Fall einer
+Bestimmung nach § 130b Absatz 1c entspricht die Höhe der Zuzahlung dem nach § 131 Absatz 4 Satz 3 Nummer
+3 übermittelten Betrag. Als Zuzahlungen zu stationären Maßnahmen und zur außerklinischen Intensivpflege in
+vollstationären Pflegeeinrichtungen, in Einrichtungen oder Räumlichkeiten im Sinne des § 43a des Elften Buches in
+
+
+                                                 - Seite 87 von 581 -
+                                                  Ein Service des Bundesministerium der Justiz und für Verbraucherschutz
+                                                            sowie des Bundesamts für Justiz ‒ www.gesetze-im-internet.de
+
+
+
+
+Verbindung mit § 71 Absatz 4 des Elften Buches sowie in Wohneinheiten nach § 132l Absatz 5 Nummer 1 werden
+je Kalendertag 10 Euro erhoben. Bei Heilmitteln, häuslicher Krankenpflege und außerklinischer Intensivpflege
+an den in § 37c Absatz 2 Satz 1 Nummer 4 genannten Orten beträgt die Zuzahlung 10 vom Hundert der Kosten
+sowie 10 Euro je Verordnung. Geleistete Zuzahlungen sind von dem zum Einzug Verpflichteten gegenüber dem
+Versicherten zu quittieren; ein Vergütungsanspruch hierfür besteht nicht. Erfolgt in der Apotheke auf Grund
+einer Nichtverfügbarkeit ein Austausch des verordneten Arzneimittels gegen mehrere Packungen mit geringerer
+Packungsgröße, ist die Zuzahlung nach Satz 1 nur einmalig auf der Grundlage der Packungsgröße zu leisten, die
+der verordneten Menge entspricht. Dies gilt entsprechend bei der Abgabe einer Teilmenge aus einer Packung.
+
+§ 62 Belastungsgrenze
+
+(1) Versicherte haben während jedes Kalenderjahres nur Zuzahlungen bis zur Belastungsgrenze zu leisten;
+wird die Belastungsgrenze bereits innerhalb eines Kalenderjahres erreicht, hat die Krankenkasse eine
+Bescheinigung darüber zu erteilen, dass für den Rest des Kalenderjahres keine Zuzahlungen mehr zu leisten
+sind. Die Belastungsgrenze beträgt 2 vom Hundert der jährlichen Bruttoeinnahmen zum Lebensunterhalt;
+für chronisch Kranke, die wegen derselben schwerwiegenden Krankheit in Dauerbehandlung sind, beträgt
+sie 1 vom Hundert der jährlichen Bruttoeinnahmen zum Lebensunterhalt. Abweichend von Satz 2 beträgt
+die Belastungsgrenze 2 vom Hundert der jährlichen Bruttoeinnahmen zum Lebensunterhalt für nach dem 1.
+April 1972 geborene chronisch kranke Versicherte, die ab dem 1. Januar 2008 die in § 25 Absatz 1 genannten
+Gesundheitsuntersuchungen vor der Erkrankung nicht regelmäßig in Anspruch genommen haben. Für Versicherte
+nach Satz 3, die an einem für ihre Erkrankung bestehenden strukturierten Behandlungsprogramm teilnehmen,
+beträgt die Belastungsgrenze 1 vom Hundert der jährlichen Bruttoeinnahmen zum Lebensunterhalt. Der
+Gemeinsame Bundesausschuss legt in seinen Richtlinien fest, in welchen Fällen Gesundheitsuntersuchungen
+ausnahmsweise nicht zwingend durchgeführt werden müssen. Die weitere Dauer der in Satz 2 genannten
+Behandlung ist der Krankenkasse jeweils spätestens nach Ablauf eines Kalenderjahres nachzuweisen und
+vom Medizinischen Dienst, soweit erforderlich, zu prüfen; die Krankenkasse kann auf den jährlichen Nachweis
+verzichten, wenn bereits die notwendigen Feststellungen getroffen worden sind und im Einzelfall keine
+Anhaltspunkte für einen Wegfall der chronischen Erkrankung vorliegen. Die Krankenkassen sind verpflichtet, ihre
+Versicherten zu Beginn eines Kalenderjahres auf die für sie in diesem Kalenderjahr maßgeblichen Untersuchungen
+nach § 25 Abs. 1 hinzuweisen. Das Nähere zur Definition einer schwerwiegenden chronischen Erkrankung
+bestimmt der Gemeinsame Bundesausschuss in den Richtlinien nach § 92.
+
+(2) Bei der Ermittlung der Belastungsgrenzen nach Absatz 1 werden die Zuzahlungen und die Bruttoeinnahmen
+zum Lebensunterhalt des Versicherten, seines Ehegatten oder Lebenspartners, der minderjährigen oder nach §
+10 versicherten Kinder des Versicherten, seines Ehegatten oder Lebenspartners sowie der Angehörigen im Sinne
+des § 8 Absatz 4 des Zweiten Gesetzes über die Krankenversicherung der Landwirte jeweils zusammengerechnet,
+soweit sie im gemeinsamen Haushalt leben. Hierbei sind die jährlichen Bruttoeinnahmen für den ersten in dem
+gemeinsamen Haushalt lebenden Angehörigen des Versicherten um 15 vom Hundert und für jeden weiteren
+in dem gemeinsamen Haushalt lebenden Angehörigen des Versicherten und des Lebenspartners um 10 vom
+Hundert der jährlichen Bezugsgröße nach § 18 des Vierten Buches zu vermindern. Für jedes Kind des Versicherten
+und des Lebenspartners sind die jährlichen Bruttoeinnahmen um den sich aus den Freibeträgen nach § 32
+Abs. 6 Satz 1 und 2 des Einkommensteuergesetzes ergebenden Betrag zu vermindern; die nach Satz 2 bei der
+Ermittlung der Belastungsgrenze vorgesehene Berücksichtigung entfällt. Zu den Einnahmen zum Lebensunterhalt
+gehören nicht Entschädigungszahlungen, die Geschädigte nach dem Vierzehnten Buch oder nach anderen
+Gesetzen in entsprechender Anwendung des Vierzehnten Buches erhalten, Renten oder Beihilfen, die nach
+dem Bundesentschädigungsgesetz für Schäden an Körper und Gesundheit gezahlt werden, bis zur Höhe der
+vergleichbaren Entschädigungszahlungen nach dem Vierzehnten Buch sowie der Ausgleich für gesundheitliche
+Schädigungsfolgen nach dem Soldatenentschädigungsgesetz. Abweichend von den Sätzen 1 bis 3 ist bei
+Versicherten,
+
+1.    die Hilfe zum Lebensunterhalt oder Grundsicherung im Alter und bei Erwerbsminderung nach dem
+      Zwölften Buch oder die Leistungen zum Lebensunterhalt nach § 93 des Vierzehnten Buches oder nach
+      einem Gesetz, das dieses für anwendbar erklärt, erhalten,
+2.    bei denen die Kosten der Unterbringung in einem Heim oder einer ähnlichen Einrichtung von einem Träger
+      der Sozialhilfe, der Sozialen Entschädigung oder der Soldatenentschädigung getragen werden,
+sowie für den in § 264 genannten Personenkreis als Bruttoeinnahmen zum Lebensunterhalt für die gesamte
+Bedarfsgemeinschaft nur der Regelsatz für die Regelbedarfsstufe 1 nach der Anlage zu § 28 des Zwölften Buches
+maßgeblich. Bei Versicherten, die Leistungen zur Sicherung des Lebensunterhalts nach dem Zweiten Buch
+erhalten, ist abweichend von den Sätzen 1 bis 3 als Bruttoeinnahmen zum Lebensunterhalt für die gesamte
+Bedarfsgemeinschaft nur der Regelbedarf nach § 20 Absatz 2 Satz 1 des Zweiten Buches maßgeblich. Bei
+Ehegatten und Lebenspartnern ist ein gemeinsamer Haushalt im Sinne des Satzes 1 auch dann anzunehmen,
+
+
+                                               - Seite 88 von 581 -
+                                                   Ein Service des Bundesministerium der Justiz und für Verbraucherschutz
+                                                             sowie des Bundesamts für Justiz ‒ www.gesetze-im-internet.de
+
+
+
+
+wenn ein Ehegatte oder Lebenspartner dauerhaft in eine vollstationäre Einrichtung aufgenommen wurde, in der
+Leistungen gemäß § 43 oder § 43a des Elften Buches erbracht werden.
+
+(3) Die Krankenkasse stellt dem Versicherten eine Bescheinigung über die Befreiung nach Absatz 1 aus. Diese
+darf keine Angaben über das Einkommen des Versicherten oder anderer zu berücksichtigender Personen
+enthalten.
+
+(4) (weggefallen)
+
+(5) (weggefallen)
+
+§ 62a
+
+(weggefallen)
+
+Zehnter Abschnitt
+Weiterentwicklung der Versorgung
