@@ -186482,8 +186482,8 @@
    "lang": "js",
    "file": "module/raum-auswahl.js",
    "start": 227,
-   "end": 335,
-   "lines": 109,
+   "end": 336,
+   "lines": 110,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -186607,8 +186607,8 @@
    "lang": "js",
    "file": "module/raum-auswahl.js",
    "start": 251,
-   "end": 270,
-   "lines": 20,
+   "end": 271,
+   "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -186702,8 +186702,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 272,
-   "end": 305,
+   "start": 273,
+   "end": 306,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [
@@ -186788,8 +186788,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 312,
-   "end": 328,
+   "start": 313,
+   "end": 329,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -186861,8 +186861,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 329,
-   "end": 329,
+   "start": 330,
+   "end": 330,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -186931,8 +186931,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 337,
-   "end": 363,
+   "start": 338,
+   "end": 364,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -186965,8 +186965,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 366,
-   "end": 382,
+   "start": 367,
+   "end": 383,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [
@@ -187039,8 +187039,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/raum-auswahl.js",
-   "start": 385,
-   "end": 389,
+   "start": 386,
+   "end": 390,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -269936,8 +269936,8 @@
       {
        "name": "mountAktionspanel",
        "file": "module/raum-auswahl.js",
-       "start": 337,
-       "end": 363,
+       "start": 338,
+       "end": 364,
        "lines": 27,
        "writes": [
         "bookings:update"
@@ -275665,7 +275665,7 @@
    "orte": [
     "dashboard.js:7211",
     "module/fussbefund.js:1078",
-    "module/raum-auswahl.js:272",
+    "module/raum-auswahl.js:273",
     "module/rechnung-mail.js:59"
    ],
    "aynalar": []

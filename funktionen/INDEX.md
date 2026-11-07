@@ -133,7 +133,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `markiereNichtErschienen()` — [module/termin-nicht-erschienen.js:105](module/termin-nicht-erschienen.js#L105-L198) · 94 satır · bookings:update
 
 **Yol 13 — `mountAktionspanel()`** · Ekran: _UI yolu çözülemedi_
-- `mountAktionspanel()` — [module/raum-auswahl.js:337](module/raum-auswahl.js#L337-L363) · 27 satır · bookings:update
+- `mountAktionspanel()` — [module/raum-auswahl.js:338](module/raum-auswahl.js#L338-L364) · 27 satır · bookings:update
 
 **Yol 14 — `bindeTermin()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `bindeTermin()` — [module/verordnung-termine.js:196](module/verordnung-termine.js#L196-L229) · 34 satır · bookings:update

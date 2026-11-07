@@ -263,6 +263,7 @@ function mountTerminmaske() {
     const gewaehlt = stand.raeume.find(r => r.id === auswahl.value);
     if (ohneRaum) hinweis.textContent = 'Kein Praxisraum erforderlich.';
     else if (stand.belegungsFehler) hinweis.textContent = 'Raumbelegung konnte nicht geladen werden. Beim Speichern wird erneut geprüft.';
+    else if (!startIso && anforderungen !== null) hinweis.textContent = 'Raumvorschlag folgt, sobald eine Startzeit gewählt ist.';
     else if (anforderungen === null) hinweis.textContent = freieRaeumeHinweis(stand.raeume, stand.termine, startIso, endIso, { ohneTerminId: id });
     else if (gewaehlt && !anforderungen.every(text => (gewaehlt.ausstattung || []).includes(text))) hinweis.textContent = 'Gewählter Raum besitzt nicht alle benötigten Ausstattungen.';
     else if (!vorschlag) hinweis.textContent = 'Kein freier geeigneter Raum zu dieser Zeit. Bitte Raum oder Terminzeit prüfen.';
