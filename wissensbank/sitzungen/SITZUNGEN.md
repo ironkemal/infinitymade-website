@@ -36,6 +36,7 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-11-07 | Zentrale Restabnahme | [[2026-11-07_restarbeiten-abnahme-und-koordination]] | Reihenfolge und Ownership abgeglichen; lokale Kettenbelege gegen 111 Originaldateien geprüft; P4 weiter seriell, Box/SMTP/F11/KI nicht pauschal abgenommen |
 | 2026-11-04 | Hetzner / Praxisserver / Ops #34/#340 | [[2026-11-04_hetzner-praxisserver-und-ops-abgleich]] | Gesprächsverlauf gesichert; Hardwarevorschlag ohne Kapazitätsabnahme; am 03.11. #34/#340 bereits abgehakt, #332/#334 offen; keine neuen Haken, kein Hetzner-/Docker-/Restore-Test |
 | 2026-11-04 | Physio-Anfrage / Vorbereitung | [[2026-11-04_physio-anfrage-gespraechsvorbereitung]] | Historische Vorbereitung gesichert; Ops live abgeglichen: keine passende Vorbereitungskarte, #342/#343 bereits erledigt; private Mappe visuell geprüft und mobil korrigiert |
 | 2026-11-04 | Planung M4/M5/M7 / Urlaub UTC | [[2026-11-04_planung-urlaub-utc-abschluss]] | Konsolidierte Korrekturen und Grenzen;ddfa3cc laut Übergabe veröffentlicht;UTC-Fix82cc618 lokal,7 PG/30 Roundtrips+55 Regressionen+Build grün;Live-QA und installierte Box offen,Mail STOP |
