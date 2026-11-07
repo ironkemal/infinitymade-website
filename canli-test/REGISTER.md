@@ -2243,3 +2243,22 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 - [x] `calendar` → „Neuer Termin" öffnet; Leistung gewählt → `#bkRaum` sichtbar (3 Optionen), Dauer-Hinweis „geschätzt". Über ✕ ohne Speichern geschlossen, kein Dialog.
 - [x] `verordnungen` und `abrechnung` öffnen sichtbar, fehlerfrei (nur angesehen).
 - Beobachtung (P3, vorbestehend, nicht durch diesen Push): Bei leerer Startzeit (`#bkStart` = leer bei neuem Termin) zeigt `#bkRaumFrei` „Kein freier geeigneter Raum zu dieser Zeit …" (`module/raum-auswahl.js:268`) — es gibt noch keine Zeit, der Satz ist irreführend. Erwartet wäre ein neutraler Hinweis bis eine Zeit gesetzt ist.
+
+### M2 Raum-Tagesansicht/Streifen/Terminmaske · M5 „Mein Urlaub" + Urlaubswarnung · M7 Widget auf Fremdseite + Support-Hinweis — TEST-Physio QA — Live 07.11.2026 ~19:35–19:43Z
+**Kapılar:** `/api/krankenkassen` 200 JSON · canlı `dashboard.js?v=20261106zaa2` = yerel · Mandant „TEST-Physio QA" bestätigt (Inhaber + Mitarbeiter „QA Testtherapeut"). Eigener Headless-Playwright (frische Sitzungen, `de-DE`/Europe/Berlin), alle schreibenden Requests an DB/Backend im Browser gesperrt (0 Sperrtreffer, d. h. kein Schreibversuch). Nachher lesend: 0 Termine am 07.12., 0 neue Buchungen/Anfragen seit 19:30Z. Nichts gesendet, gespeichert oder gelöscht.
+**M2 — GEÇTİ (1 Restpunkt):**
+- [x] Kalender Tag Mo 09.11., Umschalter „Therapeut | Raum" → Spalten „TEST-Raum 1", „TEST-Raum 2" (Standort Mitte), 1 Block (Termin 10:00 in Raum 1), Therapeutenraster ausgeblendet; Modus „Raum" bleibt nach Reload.
+- [x] Raumstreifen: „TEST-Raum 1 frei · TEST-Raum 2 frei", keine Namen. Zustand „belegt" nicht prüfbar (Sa-Abend, kein laufender Termin; nichts angelegt).
+- [x] Terminmaske nach Zeitwahl: 09.11. 10:00 → Optionen „TEST-Raum 2", „TEST-Raum 1 (belegt)", Hinweis „Raumvorschlag: TEST-Raum 2"; 12:00 → „Raumvorschlag: TEST-Raum 1".
+- [ ] OHNE Zeit live weiterhin „Kein freier geeigneter Raum zu dieser Zeit …". Fix `3ba7b809` („Raumvorschlag folgt, sobald eine Startzeit gewählt ist.") liegt nur lokal (nicht gepusht); außerdem `planung-bruecke.js` importiert weiter `raum-auswahl.js?v=20261105sperre` → Cache-Bust fehlt im Fix.
+**M5 — GEÇTİ:**
+- [x] Mitarbeitersicht Startseite „Mein Urlaub · 2026": Teilzeit, 20 Std., Jahresurlaub 18, „15 Tage übrig · 3 Tage eingetragen", nach Reload gleich. Plausibel: Arbeitstage Mo–Mi (working_hours), Urlaub 07.–13.12. = 3 AT (07./08./09.12.).
+- [x] Inhaber: Termin für QA Testtherapeut Mo 07.12. 10:00 → Dialog „Hinweis zum Termin" / „Therapeut:in ist an diesem Tag nicht verfügbar." (Trotzdem eintragen | Abbrechen), als einzige Rückfrage. Abbrechen → Maske offen, kein Fehler, kein Schreibrequest.
+- [x] Eintrag 31.12.2026 (0 AT) geklärt: gespeichert als reines Datum `2026-12-31T00:00Z` (kein UTC-Versatz eines 01.01.), Typ urlaub, angelegt 04.11. 22:13:31Z zwischen den Einträgen 01.01.2027 (22:11Z) und 01.07.2027 (22:14Z) → mit hoher Wahrscheinlichkeit Jahresgrenz-Test vom 04.11. (Urheber nicht belegt). 31.12.2026 ist Donnerstag, kein Arbeitstag → 0 AT, Resturlaub unverändert 15 (korrekt). Würde Do Arbeitstag, zählte er 1. 01.01.2027 fällt nicht ins Jahr 2026 (korrekt).
+**M7 — GEÇTİ mit Vorbedingung:**
+- [x] Termin-Anfragen-Panel: „Anfrageformular auf Ihrer Webseite … Wenden Sie sich an das Praxura-Team …" mit sichtbarem Link `mailto:support@praxura.de`, kein Code-Feld.
+- [x] Fremdseite `https://example.org` (route.fulfill), iframe mit Code aus `einbettungsCode`: Widget 200, `frame-ancestors https:`, `/booking-request/praxis` 200 mit ACAO praxura.de, Konsole 0 Fehler; Host liest Frame nicht.
+- [ ] Echte Daten: Widget sperrt mit „Online-Terminvereinbarung … noch nicht eingerichtet" — Backend liefert `vollstaendig:false`, Praxisanschrift des QA-Mandanten ohne Straße (nur Hausnummer + PLZ/Ort). Korrektes Verhalten, Testdaten-Lücke.
+- [x] Mit Browser-Mock `vollstaendig:true` (keine DB-Änderung): 1 „Wie sind Sie versichert?" (4 Optionen, keine Podologie-Anliegen, kein Fuß-Hinweis bei Physio) → 2 „Wann haben Sie Zeit?" → 3 „Ihre Angaben" → 4 „Prüfen und senden", Knopf „Terminanfrage senden", 4 Prüfzeilen. NICHT abgesendet.
+**Konsole:** Dashboard 0 Fehler/Warnungen, keine HTTP ≥400; §3 #3/#4/#6 nicht gesehen.
+**Offen:** Straße im QA-Praxisprofil ergänzen (Melih), dann M7 ohne Mock wiederholen; Push von `3ba7b809` + `?v=`-Bump, dann M2-Hinweis ohne Zeit nachprüfen.
