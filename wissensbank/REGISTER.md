@@ -1922,3 +1922,144 @@ Yeni bir kaynak girdiğinde ajanın §3 giriş protokolüyle açtığı kart:
 ```
 
 Bilinmeyen alana **"belirtilmemiş"** yazılır, tahmin edilmez.
+
+## Physio-Quellenabschluss 07.11.2026 — lokale Originale
+
+### W-17 · Physiotherapie §125 Hauptvertrag
+- **Dosya:** `wissensbank/physiotherapie/20220331_Vertrag__Lesefassung_Stand_04.04.2022_telemedizinische_Leistungen_Physiotherapie.pdf` + `wissensbank/physiotherapie/20220331_Vertrag__Lesefassung_Stand_04.04.2022_telemedizinische_Leistungen_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20220331_Vertrag__Lesefassung_Stand_04.04.2022_telemedizinische_Leistungen_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** Lesefassung nach Ergänzungsvereinbarung 04.04.2022 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** Inkrafttreten im Vertrag; aktuelle Lesefassung laut Herausgeber am 07.11.2026 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `2dabb926e197eeab3da3b02ff80b0bfac92ffe246b70703ffb3cf3f0aac8cc8e`; TXT1615 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** §6 Behandlungsbeginn Z.515–539; §7 Durchführung/Gültigkeit/Unterbrechung/Entlassmanagement Z.544–620; §8 Zuzahlung Z.746–790.
+
+### W-18 · Physiotherapie §125 Anlage 3a Ärzte
+- **Dosya:** `wissensbank/physiotherapie/20241202_Lesefassung_Anlage_3a_gueltig_ab_01.12.2024_Physiotherapie.pdf` + `wissensbank/physiotherapie/20241202_Lesefassung_Anlage_3a_gueltig_ab_01.12.2024_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20241202_Lesefassung_Anlage_3a_gueltig_ab_01.12.2024_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** Lesefassung gültig ab 01.12.2024 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.12.2024 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `2775438f881309fb8af7cc03bfea275553ce1523945821d523454805b7a88752`; TXT993 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** Entlassmanagement Z.59–73; Zuzahlungsstatus und Jahreswechsel Z.355–374; weitere Verordnungsangaben über Feldüberschriften suchen.
+
+### W-19 · Physiotherapie §125 Anlage 3b Zahnärzte
+- **Dosya:** `wissensbank/physiotherapie/20220324_Physiotherapie_Aenderung_Anlage_3b-Lesefassung_notwendige_Angaben_Zahnaerzte.pdf` + `wissensbank/physiotherapie/20220324_Physiotherapie_Aenderung_Anlage_3b-Lesefassung_notwendige_Angaben_Zahnaerzte.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_125abs1/physiotherapie/20220324_Physiotherapie_Aenderung_Anlage_3b-Lesefassung_notwendige_Angaben_Zahnaerzte.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** Lesefassung Stand 04.04.2022 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** Inkrafttreten im Original prüfen; aktuelle Lesefassung laut Herausgeber · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `457db8fff63ec455e28c5ba2df9d799578ccd464c1001db1f8581e5bf2bc17fa`; TXT1025 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** Zahnärztliche Verordnungsangaben; eigene Verfahrensprüfung erforderlich.
+
+### W-20 · Physiotherapie §125a Hauptvertrag Blankoverordnung
+- **Dosya:** `wissensbank/physiotherapie/20240830_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf` + `wissensbank/physiotherapie/20240830_Vertrag_nach__125a_SGB_V_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/20240830_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** i.d.F. 01.11.2024 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.11.2024 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `afac38a447d4d59c35f8568f6236c06e612a61b3b615e43c05517baa8ab86ce3`; TXT498 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** §2 Gültigkeit/Unterbrechung/Wiederaufnahme/ZHE05 Z.118–159; §3 Zuzahlung Z.173–183.
+
+### W-21 · Physiotherapie §125a Anlage 1 Schulter
+- **Dosya:** `wissensbank/physiotherapie/20240830_Anlage_1_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf` + `wissensbank/physiotherapie/20240830_Anlage_1_Vertrag_nach__125a_SGB_V_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/anlagen_blanko_physio/20240830_Anlage_1_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** i.d.F. 01.11.2024 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.11.2024 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `d9d01135bfd95dbd0788ecd1105d299d56937ef9f1517107655a198f100ca5fc`; TXT326 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** Indikationsspezifische Regeln, Ampelsystem; Diagnosecodes aus Anhang1.
+
+### W-22 · Physiotherapie §125a Anhang 1 zur Anlage 1
+- **Dosya:** `wissensbank/physiotherapie/20251128_Physiotherapie_Vertrag_125a_Anhang_1_zur_Anlage_1_barrierearm.pdf` + `wissensbank/physiotherapie/20251128_Physiotherapie_Vertrag_125a_Anhang_1_zur_Anlage_1_barrierearm.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/anlagen_blanko_physio/20251128_Physiotherapie_Vertrag_125a_Anhang_1_zur_Anlage_1_barrierearm.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** gültig ab 01.01.2026 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.01.2026 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `d9cbed58863a0218e16e0dd0bd0feadc72b357b13e2eea1bed4d0239d298d6c2`; TXT321 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** ICD-Liste Schulter; ausschließlich deterministisch auswerten.
+
+### W-23 · Physiotherapie §125a Anlage 2 Vergütung
+- **Dosya:** `wissensbank/physiotherapie/20251211_Physiotherapie_Vertrag_125a_Anlage_2_barrierefrei.pdf` + `wissensbank/physiotherapie/20251211_Physiotherapie_Vertrag_125a_Anlage_2_barrierefrei.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/anlagen_blanko_physio/20251211_Physiotherapie_Vertrag_125a_Anlage_2_barrierefrei.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** Lesefassung gültig ab 01.01.2026 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.01.2026 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `e96c0daf80e903095e2e06a2faa5b0e7bb6bddd0194fc3e5051b0db2ad1fffbd`; TXT348 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** LEGS Z.33–36; Preise Z.40ff; Abrechnungsbedingungen TeilB; keine JS/DB-Übernahme erfolgt.
+
+### W-24 · Physiotherapie §125a Anlage 3a Ärzte
+- **Dosya:** `wissensbank/physiotherapie/20240830_Anlage3a_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf` + `wissensbank/physiotherapie/20240830_Anlage3a_Vertrag_nach__125a_SGB_V_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/anlagen_blanko_physio/20240830_Anlage3a_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** i.d.F. 01.11.2024 (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** 01.11.2024 · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `71b318e816b6093052726e40f16a6b4b6c4851848c55dfc2c8b1d5dfa321303c`; TXT384 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** Notwendige Verordnungsangaben und Abrechnungsregeln; Zuzahlungsstatus Z.142ff.
+
+### W-25 · Physiotherapie §125a Anhang A Wiederaufnahme
+- **Dosya:** `wissensbank/physiotherapie/20240830_Anhang_A_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf` + `wissensbank/physiotherapie/20240830_Anhang_A_Vertrag_nach__125a_SGB_V_Physiotherapie.txt` (beide nur lokal).
+- **Herkunft:** https://www.gkv-spitzenverband.de/media/dokumente/krankenversicherung_1/ambulante_leistungen/heilmittel/vertraege_nach_125a/physio/anlagen_blanko_physio/20240830_Anhang_A_Vertrag_nach__125a_SGB_V_Physiotherapie.pdf · **İndirme:** 07.11.2026 · **İndiren:** wissensbank/source_build
+- **Yayıncı:** GKV-Spitzenverband und Vertragspartner Physiotherapie.
+- **Sürüm / Stand:** belirtilmemiş; Formular nennt16-Wochen-Gültigkeit (Kopf des deterministisch extrahierten Originals).
+- **Anzuwenden ab:** zum Vertrag01.11.2024 veröffentlicht; kein eigener Termin angegeben · **Düşer:** offen, bis Ablösung; historischer Leistungszeitpunkt bleibt maßgebend.
+- **Durum:** GEÇERLİ laut aktueller Herausgeberliste, geprüft07.11.2026; keine pauschale Freigabe der Software.
+- **Neyi besler:** Original → TXT/INDEX → geplante Vertragsprüfung `api-backend/billing/dta/preflight.js`, `billing/preise/resolver.js`, `billing/codes/physio_positions.js`; derzeit keine neuen Laufzeitdaten/DB-Zeilen aus dieser Beschaffung.
+- **Tazelik kontrolü:** https://www.gkv-spitzenverband.de/krankenversicherung/ambulante_leistungen/heilmittel/125_physio/125_physiotherapie.jsp · manuell vor fachlicher Freigabe und Preisfensterwechsel; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli — Veröffentlichung auf Herausgeberseite ist keine nachgewiesene Weiterverbreitungslizenz; PDF durch `*.pdf`, genau dieser TXT-Pfad durch `.gitignore` geschützt; `.vercelignore` schließt `wissensbank/` vollständig aus. Rechtsklärung vor Weiterverbreitung: legal-de.
+- **Yedek:** Git nein; Quelle erneut über URL beschaffbar. SHA256 PDF `d7fde7903d77406ff8484c6640c3d1b0febc4c9e51be25a97b064a0a38bd73b1`; TXT45 Zeilen inklusive Quellenkopf.
+- **Format:** TXT mit Original-URL/Erzeugungsdatum genügt für zielgerichtetes Lesen; keine Markdown-Vollkopie und keine KI-Tabellenübertragung.
+- **Bölümler:** Wiederaufnahme-Bestätigung bei Rezidiv Z.24–34.
+
+### W-26 · KVNR Prüfziffernberechnung nach §290 SGB V, Anlage1
+- **Dosya:** `wissensbank/gemeinsam/302-tp5/Anlage_1_20230102_Pruefziffernberechnung-KVNR.pdf` + `wissensbank/gemeinsam/302-tp5/Anlage_1_20230102_Pruefziffernberechnung-KVNR.txt`, beide nur lokal.
+- **Herkunft:** https://www.gkv-datenaustausch.de/media/dokumente/kvnr/Anlage_1_20230102_Pruefziffernberechnung-KVNR.pdf · **İndirme:**07.11.2026 · **İndiren:** wissensbank/source_build.
+- **Yayıncı:** GKV-Spitzenverband, GKV-Datenaustausch.
+- **Sürüm / Stand:** Stand02.Januar2023, Originalkopf.
+- **Anzuwenden ab:** belirtilmemiş · **Düşer:** bis Ablösung.
+- **Durum:** GEÇERLİ als Original-Prüfmaßstab für unveränderlichen KVNR-Teil; vollständige Vertragsprüfung separat.
+- **Neyi besler:** Original → TXT → `api-backend/billing/dta/preflight.js`/strikte Feldprüfung + Tests; keine Datenbankänderung.
+- **Tazelik kontrolü:** https://www.gkv-datenaustausch.de/kvnr/kvnr.jsp · manuell vor Änderung des Algorithmus; Eigentümer wissensbank.
+- **Yeniden dağıtım:** şüpheli; PDF global und TXT exakt in `.gitignore`, `wissensbank/` in `.vercelignore` gesperrt; legal-de vor Veröffentlichung.
+- **Yedek:** Git nein; URL wiederbeschaffbar. SHA256 PDF `f61eec734b6902830438875a204ab0cc473729e97687f3c160c64be457820624`.
+- **Format:** deterministischer TXT für Formelschema und veröffentlichte Beispiele, kein KI-Tabellenimport.

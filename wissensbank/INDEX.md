@@ -403,7 +403,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Z.299-347 X2001 · X9701 Übermittlungsgebühr · X9950/X9951 Hausbesuch (X9933→X9950, X9934→X9951 umbenannt zum 01.01.2026; Begriff soziale Einrichtung)
   - Z.356-374 X9922 HB Kurzzeit-/Verhinderungs-/Tagespflege + betreutes Wohnen · X1906 Bericht auf schriftliche Anforderung („Kreuz nicht ausreichend")
   - Z.387-435 Teil B: (1) nur verordnete Leistungen · (3) keine Zuzahlung X9701/X1906/21901/21904 · (4) HB-Pauschalen · (5) HB nicht kombinierbar, 1×/Tag, Praxissitz=Ort ausgeschlossen, Bestätigung auf VO
-  - Fehlt im Archiv: Physio-Rahmenvertrag § 125 + Anlage 3 (Verordnungsangaben)
+  - Ergänzt07.11.2026: Physio-Rahmenvertrag §125 + Anlage3a/3b lokal vorhanden, siehe W-17..W-19 und Einträge unten.
 
 ### wissensbank/physiotherapie/20260320_Physiotherapie_Vertrag_125_Anlage_7.txt
 - **Ne:** Physio Vertrag § 125 Anlage 7 Weiterbildung, Fassung 13.04.2026 (kart W-14). ⚠️ Yalnız yerel. Satır no başlıkla birlikte.
@@ -887,3 +887,65 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - ⚠️ Rapor **servis↔bölge eşlemesi vermiyor** — datacenter listesinde bir bölgenin olması, o
   servisin orada denetlendiği anlamına gelmez.
 - **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-06** (Herkunft, dağıtım şartları, zincir Z-15).
+
+## Physio-Vertragsquellen ergänzt 07.11.2026
+
+### wissensbank/physiotherapie/20220331_Vertrag__Lesefassung_Stand_04.04.2022_telemedizinische_Leistungen_Physiotherapie.txt
+- **Ne:** Physiotherapie §125 Hauptvertrag (REGISTER W-17). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** Lesefassung nach Ergänzungsvereinbarung 04.04.2022 · **Anzuwenden ab:** Inkrafttreten im Vertrag; aktuelle Lesefassung laut Herausgeber am 07.11.2026.
+- **Anahtar bölümler:** §6 Behandlungsbeginn Z.515–539; §7 Durchführung/Gültigkeit/Unterbrechung/Entlassmanagement Z.544–620; §8 Zuzahlung Z.746–790.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20241202_Lesefassung_Anlage_3a_gueltig_ab_01.12.2024_Physiotherapie.txt
+- **Ne:** Physiotherapie §125 Anlage 3a Ärzte (REGISTER W-18). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** Lesefassung gültig ab 01.12.2024 · **Anzuwenden ab:** 01.12.2024.
+- **Anahtar bölümler:** Entlassmanagement Z.59–73; Zuzahlungsstatus und Jahreswechsel Z.355–374; weitere Verordnungsangaben über Feldüberschriften suchen.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20220324_Physiotherapie_Aenderung_Anlage_3b-Lesefassung_notwendige_Angaben_Zahnaerzte.txt
+- **Ne:** Physiotherapie §125 Anlage 3b Zahnärzte (REGISTER W-19). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** Lesefassung Stand 04.04.2022 · **Anzuwenden ab:** Inkrafttreten im Original prüfen; aktuelle Lesefassung laut Herausgeber.
+- **Anahtar bölümler:** Zahnärztliche Verordnungsangaben; eigene Verfahrensprüfung erforderlich.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20240830_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+- **Ne:** Physiotherapie §125a Hauptvertrag Blankoverordnung (REGISTER W-20). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** i.d.F. 01.11.2024 · **Anzuwenden ab:** 01.11.2024.
+- **Anahtar bölümler:** §2 Gültigkeit/Unterbrechung/Wiederaufnahme/ZHE05 Z.118–159; §3 Zuzahlung Z.173–183.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20240830_Anlage_1_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+- **Ne:** Physiotherapie §125a Anlage 1 Schulter (REGISTER W-21). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** i.d.F. 01.11.2024 · **Anzuwenden ab:** 01.11.2024.
+- **Anahtar bölümler:** Indikationsspezifische Regeln, Ampelsystem; Diagnosecodes aus Anhang1.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20251128_Physiotherapie_Vertrag_125a_Anhang_1_zur_Anlage_1_barrierearm.txt
+- **Ne:** Physiotherapie §125a Anhang 1 zur Anlage 1 (REGISTER W-22). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** gültig ab 01.01.2026 · **Anzuwenden ab:** 01.01.2026.
+- **Anahtar bölümler:** ICD-Liste Schulter; ausschließlich deterministisch auswerten.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20251211_Physiotherapie_Vertrag_125a_Anlage_2_barrierefrei.txt
+- **Ne:** Physiotherapie §125a Anlage 2 Vergütung (REGISTER W-23). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** Lesefassung gültig ab 01.01.2026 · **Anzuwenden ab:** 01.01.2026.
+- **Anahtar bölümler:** LEGS Z.33–36; Preise Z.40ff; Abrechnungsbedingungen TeilB; keine JS/DB-Übernahme erfolgt.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20240830_Anlage3a_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+- **Ne:** Physiotherapie §125a Anlage 3a Ärzte (REGISTER W-24). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** i.d.F. 01.11.2024 · **Anzuwenden ab:** 01.11.2024.
+- **Anahtar bölümler:** Notwendige Verordnungsangaben und Abrechnungsregeln; Zuzahlungsstatus Z.142ff.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/physiotherapie/20240830_Anhang_A_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+- **Ne:** Physiotherapie §125a Anhang A Wiederaufnahme (REGISTER W-25). Original-PDF und TXT ausschließlich lokal.
+- **Sürüm:** belirtilmemiş; Formular nennt16-Wochen-Gültigkeit · **Anzuwenden ab:** zum Vertrag01.11.2024 veröffentlicht; kein eigener Termin angegeben.
+- **Anahtar bölümler:** Wiederaufnahme-Bestätigung bei Rezidiv Z.24–34.
+- **Okuma:** TXT zuerst; jede fachliche Aussage gegen Original/PDF-Seite/Version absichern. Zahlen deterministisch, nicht durch KI transkribieren.
+
+### wissensbank/gemeinsam/302-tp5/Anlage_1_20230102_Pruefziffernberechnung-KVNR.txt
+- **Ne:** Prüfziffernberechnung KVNR §290, Anlage1 (W-26).
+- **Sürüm:** Stand02.Januar2023; eigener Gültigkeitsbeginn belirtilmemiş.
+- **Anahtar bölümler:** einzige Originalseite; unveränderlicher Teil links, Buchstabe als zweistellige Alphabetposition, alternierende Faktoren1/2, Quersummen und Modulo10; veränderliche Familien-/Kassenteile separat.
+- **Okuma:** lokale TXT-Ableitung samt Quellenkopf; Regeln/Beispiele stets gegen Original prüfen.

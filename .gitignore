@@ -147,3 +147,16 @@ redesign/referenz/
 # Serena (LSP-MCP, 06.11.2026): Cache + Agenten-Memories, lokal pro Rechner.
 # Depo public — memories/ darf nicht hinaus.
 .serena/
+
+# Physio Vertragsoriginale: lokale TXT-Ableitungen, Wiederverteilung ungeklärt (W-17..W-25)
+wissensbank/physiotherapie/20220331_Vertrag__Lesefassung_Stand_04.04.2022_telemedizinische_Leistungen_Physiotherapie.txt
+wissensbank/physiotherapie/20241202_Lesefassung_Anlage_3a_gueltig_ab_01.12.2024_Physiotherapie.txt
+wissensbank/physiotherapie/20220324_Physiotherapie_Aenderung_Anlage_3b-Lesefassung_notwendige_Angaben_Zahnaerzte.txt
+wissensbank/physiotherapie/20240830_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+wissensbank/physiotherapie/20240830_Anlage_1_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+wissensbank/physiotherapie/20251128_Physiotherapie_Vertrag_125a_Anhang_1_zur_Anlage_1_barrierearm.txt
+wissensbank/physiotherapie/20251211_Physiotherapie_Vertrag_125a_Anlage_2_barrierefrei.txt
+wissensbank/physiotherapie/20240830_Anlage3a_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+wissensbank/physiotherapie/20240830_Anhang_A_Vertrag_nach__125a_SGB_V_Physiotherapie.txt
+
+wissensbank/gemeinsam/302-tp5/Anlage_1_20230102_Pruefziffernberechnung-KVNR.txt
