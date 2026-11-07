@@ -21,7 +21,7 @@ Das Entlassmerkmal ist bisher weder strukturiert gespeichert noch im Abrechnungs
 
 - `node --test "api-backend/billing/dta/*.test.js" "api-backend/billing/preise/*.test.js"`: 342 Tests, 342 bestanden; außerdem interne Legacy-Assertions in vorhandenen Testdateien.
 - Zuzahlungsforderungs-Routentests separat: 51/51 laut unabhängigem Testlauf. Ungültige synthetische KVNR im Fixture ersetzt; Produktionsprüfung blieb streng.
-- Gesamt-Backend/Billing-Läufe ohne bestätigten Abschluss: nicht als bestanden gewertet. Keine externe DAS-Abnahme.
+- Billing-Gesamtlauf: `node --test --test-force-exit "api-backend/billing/**/*.test.js"`: 1.037/1.037 bestanden, 0 Fehler, 0 übersprungen (31,98 Sekunden). Force-exit beendet offene Testhandles nach Abschluss. Gesamt-Backend separat nicht abschließend ausgewertet. Keine externe DAS-Abnahme.
 - Unabhängige QA fand GES-Abgleich, INV/ZHE-Pflichten, Positionspräfix und UTC-Leistungstagfehler; behoben und Mutationstests ergänzt. Abschließende unabhängige Wiederholungsprüfung brach am Agenten-Nutzungslimit ab und bleibt offen.
 
 ## Fortsetzung, in Reihenfolge
@@ -31,7 +31,7 @@ Das Entlassmerkmal ist bisher weder strukturiert gespeichert noch im Abrechnungs
 3. Leistungsbezogene Befreiungsintervalle und Volljährigkeit samt Blattgebühr am ersten Leistungstag in bestehenden gemeinsamen Berechnungsweg integrieren. Auch unterjährige Befreiungswechsel prüfen; momentane Übergangssperren reichen dafür nicht.
 4. Blanko-Preise/Positionen/Ampel deterministisch mit Originaltabellen abgleichen; LHB/BVB-Berechtigung, Leistungsmenge und Kombinationen, Qualifikationen, Teilabrechnung und Wiederaufnahme einzeln nachweisen. Exakte 16-Wochen-Endgrenze bleibt ungeklärt.
 5. Sitzungsschutz gegen Doppelabrechnung und ZAA-Importidempotenz atomar umsetzen; ursprüngliche Artefakte erhalten. Profilabhängige Decoder bleiben bis verbindlichem DAS-Profil gesperrt.
-6. Vollständiges synthetisches Versand-/Abnahmepaket, unabhängige Byteprüfung, Fehlerbetrieb und UI→Download-Integration abschließen. Gesamt-Testlauf zuverlässig beenden; externe Fach-/DAS-Prüfung gesondert.
+6. Vollständiges synthetisches Versand-/Abnahmepaket, unabhängige Byteprüfung, Fehlerbetrieb und UI→Download-Integration abschließen. Gesamt-Backend und offene Testhandles prüfen; externe Fach-/DAS-Prüfung gesondert.
 
 ## Lokal nutzbare Gut-/Schlechtfälle
 
