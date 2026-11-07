@@ -64,3 +64,16 @@ Alle fachlichen Voten empfehlen A; kein widersprechendes Votum. Mehr Aufwand
 als B, dafür vollständige gemeinsame Abschlussgrenze. Keine zweite Beratungsrunde
 erforderlich. Keine neue Infrastruktur. Detailvertrag und Tests sind noch offen;
 dieses Protokoll beweist weder Implementierung noch Produktionsreife.
+
+## Ergänzung Datenschutzprüfung
+
+legal-de bestätigt bedingt anhand bestehender K1.4/K1.8-Entscheidungen:
+Claims und verknüpfbare Hashes sind personenbezogene Abrechnungsnachweise,
+keine anonymen Metadaten. Neue Relation in
+`api-backend/dsgvo/klassifikation.js` und `loeschen.js` aufnehmen;
+ownergebundene Auskunft, Sperrbestand und FK-Reihenfolge prüfen.
+`api/dsgvo.js` ist kein aktueller Pfad mehr. REGISTER, Nutzungskarte und VVT
+Verarbeitung3 aktualisieren. Dauerhaft bedeutet kein Timeout-/Stornorelease,
+nicht unbegrenzte Aufbewahrung; Fristende und kontrollierte spätere Bereinigung
+gesondert behandeln. Preparing/aborted nicht automatisch als publizierten
+Beleg klassifizieren. Keine neue Live-/Rechtsstandsabnahme.

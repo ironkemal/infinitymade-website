@@ -268,3 +268,13 @@ diese Dateien hier.
 ## Lokal vorbereitet am 07.11.2026: Entlassmanagement
 
 `db/entwuerfe/0112_prescriptions_entlassmanagement.sql` ergänzt zwei nullable Angaben mit Konsistenzprüfung und erweitert den vorhandenen Festschreibungstrigger. Kein Backfill, keine Live-Anwendung. PostgreSQL-Minimalprobe unter `api-backend/db/tests/0112_prescriptions_entlassmanagement.test.sql`; keine vollständige Ketten-/RLS-Abnahme. Live-Exports bleiben unverändert. Vor Verwendung der neuen Felder müssen Schemaanwendung und Erfassungs-/Ladekette gesondert nachgewiesen werden.
+
+## Lokaler Entwurf: Physio-Publikation
+
+`db/entwuerfe/2026-11-07-physio-publikation.md` beschreibt den Konsey-geprüften
+Datenvertrag für atomare Erstabrechnung, Wiederholung und Dateifreigabe.
+`db/entwuerfe/physio-publikation-v1.sql` ist ein nicht aktivierter SQL-Prototyp,
+keine Migration. Globale Quelltabellensperren sind ausdrücklich ein Betriebs-
+und Skalierungsblocker. Storage-Policy-Aktivierung, DSGVO-Klassifikation,
+vollständige Migrations-/Upgradeprüfung und Backendintegration bleiben offen.
+Keine Live-Exports aus diesem Entwurf ableiten, keine Bestandsdaten umschreiben.

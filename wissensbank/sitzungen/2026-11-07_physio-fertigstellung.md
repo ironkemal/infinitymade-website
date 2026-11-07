@@ -79,7 +79,13 @@ Erster DB-Spezialistenversuch scheiterte am Agenten-Nutzungslimit. Erneute
 native Beratung erfolgreich: `db/entwuerfe/2026-11-07-physio-publikation.md`.
 Konsey-Beschluss: `konsey/tutanak/2026-11-07-physio-publikation.md`;
 atomare fachliche Finalisierung plus Wiederholung und Storagefreigabe erforderlich.
-Lokaler SQL-Entwurf/Probe beauftragt, noch keine Implementierungsabnahme.
+Lokaler SQL-Prototyp `db/entwuerfe/physio-publikation-v1.sql` und reproduzierbare
+Fixture/SQL-Tests unter `api-backend/db/tests/physio-publikation-v1.*.sql` geschrieben.
+31 SQL-Assertions von Root unabhängig bestanden; erweiterte Agentenprobe 42
+PASS-Notices inklusive zwei Verbindungen, Einzelclaim und stabilem Retry.
+Reviewbefunde ZeilenINSERT-/Signaturblockade und globaler Hash gezielt geschlossen.
+Noch keine Paketabnahme: globale Sperren, vollständige Quellen-/Schemaabdeckung,
+Storageaktivierung, DSGVO-Klassifikation und Backendintegration offen.
 Keine Provider-Umschaltung. Atomare Veröffentlichung bleibt offen. Unabhängige
 Eingabefix-Nachprüfung abgeschlossen: keine Regression im geprüften Umfang,
 14/14 Tests und zusätzliche Grenzproben unabhängig bestanden. Backend-Regressionslauf
