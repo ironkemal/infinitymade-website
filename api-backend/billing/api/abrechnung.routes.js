@@ -34,6 +34,8 @@ import { berlinHeute, berlinTagesgrenzen } from '../../lib/berlin-tag.js';
 import { nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { praxisKopf } from '../../lib/rechnung-snapshot.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
+import { physioPublikationAktiv, fuehrePhysioPublikationAus } from './physio-publikation-ablauf.js';
+import { pruefeDatenstrom } from '../dta/preflight.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
 import { entferneUnsignierteDta, wiederholeAusmusterung, dtaEntfernungAktiv } from './artefakt-ausmustern.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
@@ -792,6 +794,150 @@ router.post('/abrechnung/annahmestellen', async (req, res) => {
   }
 });
 
+/**
+ * Physio-Publikation v1 (Flag PHYSIO_PUBLIKATION_V1=1, Standard AUS).
+ * Nummern + Kopf kommen aus abrechnung_idempotency_reserve, Abschluss atomar
+ * aus abrechnung_physio_finalize. Wirft bei Fehlern (aeusserer catch mappt
+ * status/code); loescht nie. Legacy-Weg bleibt unveraendert.
+ */
+async function physioPublikationV1Create({ req, res, userId, tenantId, profile, cert, kk, kostentraegerIk,
+  dasIk, dasName, das, rxRows, therapistCerts, tenantSector, berichtUebersteuert, berichtGrund, ktWarnungen }) {
+  const key = String(req.headers['idempotency-key'] || req.body?.idempotencyKey || '');
+  const now = new Date();
+  const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
+  // Sitzungs-IDs in derselben Reihenfolge wie die Mapper-Sitzungen (physioLeistungszeilen ist deterministisch).
+  const sitzungsIds = rxRows.map((r, i) => {
+    const done = (r.prescription_sessions || []).filter(s => s.status === 'done')
+      .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+    const ids = physioLeistungszeilen(r, done).map(z => z.sessionId);
+    if (ids.length !== prescriptions[i].sessions.length) {
+      throw Object.assign(new Error('Sitzungszuordnung der Verordnung nicht eindeutig.'), { status: 422, code: 'PHYSIO_SITZUNGSZUORDNUNG' });
+    }
+    return ids;
+  });
+  const bericht = {};
+  for (const r of rxRows) {
+    if (r.bericht_angefordert && r.bericht_status !== 'erledigt' && berichtUebersteuert.has(r.id)) {
+      bericht[r.id] = (typeof berichtGrund === 'string' && berichtGrund.trim()) ? berichtGrund.trim().slice(0, 500) : 'Ohne Angabe übersteuert';
+    }
+  }
+  const payload = {
+    vkz: '01', bereich: 'physio', kostentraeger_ik: kostentraegerIk, empfaenger_ik: dasIk,
+    prescription_ids: rxRows.map(r => r.id).sort(),
+    session_ids: [...new Set(sitzungsIds.flat())].sort(),
+    ...(Object.keys(bericht).length ? { bericht_override: bericht } : {}),
+  };
+  const betriebsart = await ladeBetriebsart({ ownerId: tenantId, empfaengerIk: dasIk, cert, db: supabase });
+  const { year, week } = isoWeek(now);
+  const t = { totalBrutto: 0, totalZu: 0 };
+
+  const erzeuge = async (rs) => {
+    let dta;
+    try {
+      dta = buildDtaFile({
+        absender:   { ik: cert.ik_nummer, name: profile.business_name || 'Praxis' },
+        empfaenger: { ik: dasIk, name: dasName || kk.name },
+        rechnung: {
+          sammelRechnungsnummer: rs.rechnungsnummer, einzelRechnungsnummer: '0', datum: now,
+          datennummer: rs.datenaustauschreferenz, rechnungsart: rechnungsartFuer({ absenderIk: cert.ik_nummer }),
+        },
+        prescriptions, kind: betriebsart, vkz: '01', transfernummer: rs.transfernummer,
+        davIk: dasIk, kassenart: das.treffer?.kassenart || undefined,
+        rechnungssteller: { name: profile.business_name || 'Praxis', telefon: profile.phone || '' },
+      });
+    } catch (e) {
+      if (e.preflight) {
+        throw Object.assign(new Error('Abrechnung enthält Fehler, die vom DMRZ abgelehnt würden.'),
+          { status: 422, code: 'PREFLIGHT_FEHLER', preflight: e.preflight });
+      }
+      throw e;
+    }
+    const zeilen = zeilenAusDta({ abrechnungId: rs.abrechnungId, ownerId: tenantId, businessId: null,
+      kostentraegerIk, dta, prescriptions, quellen: rxRows });
+    const lines = zeilen.map(z => {
+      const i = rxRows.findIndex(r => r.id === z.prescription_id);
+      const leistungen = prescriptions[i].sessions.map((s, j) => ({
+        session_id: sitzungsIds[i][j], datum: s.datumLeistung || null, positionsnummer: s.positionsnummer,
+        anzahl: Number(s.anzahl) || 1, einzelbetrag_cents: Math.round((Number(s.einzelbetrag) || 0) * 100),
+      }));
+      const brutto = leistungen.reduce((a, l) => a + l.anzahl * l.einzelbetrag_cents, 0);
+      const zu = Math.round(z.zuzahlung_eur * 100);
+      t.totalBrutto += brutto; t.totalZu += zu;
+      return {
+        prescription_id: z.prescription_id, belegnummer: z.belegnummer, einzel_rechnungsnummer: z.einzel_rechnungsnummer,
+        sort_order: z.sort_order, patient_name: z.patient_name, versichertennummer: z.versichertennummer,
+        verordnungsdatum: z.verordnungsdatum, heilmittel_position: z.heilmittel_position,
+        anzahl_einheiten: z.anzahl_einheiten, brutto_cents: brutto, zuzahlung_cents: zu, leistungen,
+      };
+    });
+    if (!dta.auftragsdatei) {
+      throw Object.assign(new Error('Auftragsdatei nicht erzeugt.'), { status: 422, code: 'PHYSIO_AUFTRAGSDATEI_FEHLT' });
+    }
+    const dtaBuf = Buffer.from(dta.content, 'latin1');
+    const aufBuf = Buffer.from(dta.auftragsdatei, 'latin1');
+    const praxis = {
+      name: profile.business_name || 'Praxis',
+      strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
+      plz_ort: [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
+      telefon: profile.phone || '', ik: cert.ik_nummer,
+    };
+    const belege = rxRows.map((r, i) => {
+      const np = nameParts(r.leads);
+      const brutto = prescriptions[i].sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0).toFixed(2);
+      return { belegnummer: buildBelegnummer(r, r.leads?.patientennummer), patient_nachname: np.nachname,
+        patient_vorname: np.vorname, verordnungsdatum: r.ausstellungsdatum, brutto };
+    });
+    const begleitHtml = await baueBegleitzettel({ dta, belege, kk, kostentraegerIk, now, praxis,
+      sammelRechnungsnummer: rs.rechnungsnummer, bereich: tenantSector, eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector) });
+    const formatFehler = (fn) => (bytes) => {
+      try { fn(bytes); } catch (e) {
+        throw Object.assign(new Error('Gespeicherte Datei besteht die Formatprüfung nicht.'), { status: 422, code: 'PHYSIO_READBACK_FORMAT' });
+      }
+    };
+    return {
+      paket: { dateiname: dta.filename, dta_segment_count: dta.segmentCount, lines },
+      dateien: [
+        { role: 'dta', name: `${dta.filename}.dta`, bytes: dtaBuf, contentType: 'application/octet-stream',
+          pruefeReadback: formatFehler(b => pruefeDatenstrom(b.toString('latin1'))) },
+        { role: 'auftrag', name: `${dta.filename}.auf`, bytes: aufBuf, contentType: 'application/octet-stream',
+          pruefeReadback: formatFehler(b => { if (b.length !== 348) throw new Error('Länge'); }) },
+        { role: 'begleit', name: 'begleitzettel.html', bytes: Buffer.from(begleitHtml, 'utf8'), contentType: 'text/html; charset=utf-8',
+          pruefeReadback: formatFehler(b => { if (!b.length) throw new Error('leer'); }) },
+      ],
+      antwort: { dateiname: dta.filename, sammelRechnungsnummer: rs.rechnungsnummer },
+    };
+  };
+  const ladeKopfStand = async (abrechnungId) => {
+    const { data, error } = await supabase.from('abrechnung')
+      // '*': publication_* Spalten existieren erst mit der (noch nicht aktivierten) Physio-Migration.
+      .select('*')
+      .eq('id', abrechnungId).eq('owner_id', tenantId).single();
+    return error ? null : data;
+  };
+
+  let lauf;
+  try {
+    lauf = await fuehrePhysioPublikationAus({ db: supabase, ownerId: tenantId, key, payload, erzeuge, ladeKopfStand });
+  } catch (e) {
+    if (e.preflight) return res.status(422).json({ error: e.message, preflight: e.preflight });
+    throw e;
+  }
+  const erg = lauf.ergebnis;
+  logAccess(supabase, {
+    userId: userId || null, ownerId: tenantId, ip: req.ip, userAgent: req.headers['user-agent'],
+    method: 'POST', path: req.path, resource: 'abrechnung', resourceId: erg.abrechnungId,
+    action: 'create', statusCode: 200,
+    metadata: { kostentraegerIk, prescription_count: rxRows.length, protokoll: 'physio-v1', replay: lauf.replay },
+  });
+  return res.json({
+    ok: true, abrechnungId: erg.abrechnungId, replay: lauf.replay,
+    prescriptionCount: erg.prescriptionCount ?? rxRows.length, zeilenGespeichert: erg.zeilenGespeichert,
+    ...(lauf.replay ? { sammelRechnungsnummer: erg.rechnungsnummer }
+      : { ...lauf.antwort, totalBrutto: +(t.totalBrutto / 100).toFixed(2), totalZu: +(t.totalZu / 100).toFixed(2) }),
+    kostentraegerWarnungen: ktWarnungen,
+  });
+}
+
 router.post('/abrechnung/create', async (req, res) => {
   try {
     // ---- auth ----
@@ -994,6 +1140,14 @@ router.post('/abrechnung/create', async (req, res) => {
           prescriptionId: r.id,
         });
       }
+    }
+
+    // Physio-Publikation v1: nur mit Flag UND Physio-Sektor; sonst Legacy unveraendert.
+    if (physioPublikationAktiv() && ['physiotherapy', 'physiotherapie', 'physio'].includes(String(tenantSector).toLowerCase())) {
+      return await physioPublikationV1Create({
+        req, res, userId: u.user.id, tenantId, profile, cert, kk, kostentraegerIk, dasIk, dasName, das, rxRows,
+        therapistCerts, tenantSector, berichtUebersteuert, berichtGrund, ktWarnungen,
+      });
     }
 
     // ---- numbering ----
