@@ -6,12 +6,19 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+// Windows kennt keine POSIX-Dateirechte (0700/0600): die Produktionspruefung lehnt dort jedes
+// Verzeichnis ab, und symlinkSync braucht Adminrechte. Diese Tests laufen auf Linux (CI
+// publish-calendar-api, Box, SaaS-Container) und macOS; unter Windows werden sie uebersprungen,
+// statt die Pruefung im Code aufzuweichen (06.11.2026).
+const POSIX_RECHTE_FEHLEN = process.platform === 'win32' && 'Windows: keine POSIX-Dateirechte';
+
 const TENANT = '11111111-1111-4111-8111-111111111111';
 const OTHER_TENANT = '22222222-2222-4222-8222-222222222222';
 const childSource = `
 import { createOwnerDecisionStore } from ${JSON.stringify(new URL('./ki-einwilligung.js', import.meta.url).href)};
 import { createConfirmationService } from ${JSON.stringify(new URL('./ki-rueckfrage.js', import.meta.url).href)};
 import crypto from 'node:crypto';
+
 let store, confirmation;
 process.on('message', async ({ id, op, config, args }) => {
   try {
@@ -94,7 +101,7 @@ function ownerDecision(enabled, tenantId = TENANT) {
   return { auth: { role: 'owner', userId: tenantId, tenantId }, decision: { enabled } };
 }
 
-test('two live processes see owner opt-in and revocation without restarting or cache refresh', { timeout: 15_000 }, async () => {
+test('two live processes see owner opt-in and revocation without restarting or cache refresh', { timeout: 15_000, skip: POSIX_RECHTE_FEHLEN }, async () => {
   await withWorkers(async ([first, second], directory) => {
     assert.equal((await second.call('read', { tenantId: TENANT })).enabled, false);
     await first.call('set', ownerDecision(true));
@@ -112,7 +119,7 @@ test('two live processes see owner opt-in and revocation without restarting or c
   });
 });
 
-test('two processes derive same identity key: one concurrent confirmation wins, restart cannot replay', { timeout: 15_000 }, async () => {
+test('two processes derive same identity key: one concurrent confirmation wins, restart cannot replay', { timeout: 15_000, skip: POSIX_RECHTE_FEHLEN }, async () => {
   await withWorkers(async (workers, directory, config) => {
     const [first, second] = workers;
     const context = {
@@ -147,7 +154,7 @@ test('two processes derive same identity key: one concurrent confirmation wins, 
   });
 });
 
-test('cross-process confirmation rejects changed tenant or payload, untouched challenge still succeeds', { timeout: 15_000 }, async () => {
+test('cross-process confirmation rejects changed tenant or payload, untouched challenge still succeeds', { timeout: 15_000, skip: POSIX_RECHTE_FEHLEN }, async () => {
   await withWorkers(async ([first, second]) => {
     const context = {
       task: 'b2c-draft', userId: TENANT, tenantId: TENANT,

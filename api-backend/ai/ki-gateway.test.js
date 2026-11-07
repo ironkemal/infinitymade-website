@@ -10,6 +10,12 @@ import { createConfirmationService } from './ki-rueckfrage.js';
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
+
+// Windows kennt keine POSIX-Dateirechte (0700/0600): die Produktionspruefung lehnt dort jedes
+// Verzeichnis ab, und symlinkSync braucht Adminrechte. Diese Tests laufen auf Linux (CI
+// publish-calendar-api, Box, SaaS-Container) und macOS; unter Windows werden sie uebersprungen,
+// statt die Pruefung im Code aufzuweichen (06.11.2026).
+const POSIX_RECHTE_FEHLEN = process.platform === 'win32' && 'Windows: keine POSIX-Dateirechte';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-test-'));
 const confirmationService = createConfirmationService({ secret: Buffer.alloc(32, 7), directory: tempDir });
 
@@ -233,7 +239,7 @@ test('jeton mode without AI_ALLOW_FREETEXT refuses B-freetext with 403 KI_FREITE
   );
 });
 
-for (const mode of ['direkt', 'jeton']) test(`${mode} mode triggers 409 KI_RUECKFRAGE challenge on unconfirmed residual PII in freetext`, async () => {
+for (const mode of ['direkt', 'jeton']) test(`${mode} mode triggers 409 KI_RUECKFRAGE challenge on unconfirmed residual PII in freetext`, { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const cfg = makeReadyConfig(mode);
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
@@ -410,7 +416,7 @@ test('parallel tasks from different tenants have isolated nonces and maps', asyn
   assert.notEqual(nonces[0], nonces[1], 'Parallele Mandantenaufrufe müssen getrennte Nonces haben');
 });
 
-test('confirmation flow: ki_confirmation resolves challenge and executes task', async () => {
+test('confirmation flow: ki_confirmation resolves challenge and executes task', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const cfg = makeReadyConfig();
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
@@ -629,7 +635,7 @@ test('adversarial: type shifting - array instead of string for patient.name is r
   );
 });
 
-test('adversarial: freetext with unapproved PII triggers KI_RUECKFRAGE before transport', async () => {
+test('adversarial: freetext with unapproved PII triggers KI_RUECKFRAGE before transport', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const cfg = makeReadyConfig();
   const ownerStore = createFakeOwnerDecisionStore({ defaultEnabled: true });
 
@@ -780,7 +786,7 @@ test('actual driver rechecks owner and operator after asynchronous token acquisi
 });
 
 
-test('explicit direct normalize freetext joins same confirmation gate before transport', async () => {
+test('explicit direct normalize freetext joins same confirmation gate before transport', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const params = syntheticAppointment({ task: 'rezept-normalize', payload: { rezept: { heilmittel_feld_text: 'Bitte Rückruf unter 987654321 veranlassen.' }, heilmittel_positionen: [] } });
   params.dependencies.config = { ...makeReadyConfig(), allowFreeText: true };
   params.dependencies.confirmationService = confirmationService;

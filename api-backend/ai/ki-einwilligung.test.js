@@ -13,11 +13,17 @@ import {
   CURRENT_EINWILLIGUNG_VERSION
 } from './ki-einwilligung.js';
 
+// Windows kennt keine POSIX-Dateirechte (0700/0600): die Produktionspruefung lehnt dort jedes
+// Verzeichnis ab, und symlinkSync braucht Adminrechte. Diese Tests laufen auf Linux (CI
+// publish-calendar-api, Box, SaaS-Container) und macOS; unter Windows werden sie uebersprungen,
+// statt die Pruefung im Code aufzuweichen (06.11.2026).
+const POSIX_RECHTE_FEHLEN = process.platform === 'win32' && 'Windows: keine POSIX-Dateirechte';
+
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
 const TENANT_B = '22222222-2222-4222-8222-222222222222';
 const BOX_ID = 'box-test-siegburg-01';
 
-test('owner can set and read opt-in decision atomically', async () => {
+test('owner can set and read opt-in decision atomically', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-test-'));
   try {
     const store = createOwnerDecisionStore({
@@ -102,7 +108,7 @@ test('missing box identity returns inactive on read and throws on set', async ()
   }
 });
 
-test('foreign box record returns inactive (rejects foreign box migration/copy)', async () => {
+test('foreign box record returns inactive (rejects foreign box migration/copy)', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-test-'));
   try {
     const store = createOwnerDecisionStore({
@@ -132,7 +138,7 @@ test('foreign box record returns inactive (rejects foreign box migration/copy)',
   }
 });
 
-test('corrupt file or invalid version fails closed to inactive', async () => {
+test('corrupt file or invalid version fails closed to inactive', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-test-'));
   try {
     const store = createOwnerDecisionStore({
@@ -152,7 +158,7 @@ test('corrupt file or invalid version fails closed to inactive', async () => {
   }
 });
 
-test('rejects symlinks without following', async () => {
+test('rejects symlinks without following', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-test-'));
   try {
     const store = createOwnerDecisionStore({
@@ -180,7 +186,7 @@ test('rejects symlinks without following', async () => {
   }
 });
 
-test('multiple parallel tenants have isolated state', async () => {
+test('multiple parallel tenants have isolated state', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-test-'));
   try {
     const store = createOwnerDecisionStore({
@@ -216,7 +222,7 @@ test('browser opt-in status respects operator readiness gate', async () => {
 });
 
 
-test('fresh reads reject future timestamps, old information version and oversized record', async () => {
+test('fresh reads reject future timestamps, old information version and oversized record', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-guards-'));
   try {
     const now = () => Date.parse('2026-10-08T10:00:00.000Z');
@@ -233,7 +239,7 @@ test('fresh reads reject future timestamps, old information version and oversize
     assert.equal((await store.read(TENANT_A)).reason, 'RECORD_TOO_LARGE');
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
-test('unsafe existing directory and target symlink reject writes, without changing target', async () => {
+test('unsafe existing directory and target symlink reject writes, without changing target', { skip: POSIX_RECHTE_FEHLEN }, async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ki-optin-writes-'));
   try {
     const store = createOwnerDecisionStore({ directory, boxIdProvider: () => BOX_ID });
