@@ -3,7 +3,7 @@
 > Üretim: 2026-11-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4423 fonksiyon** (4301 JS · 95 bash · 27 ps1) · 546 dosya · 42 sidebar modülü
+**4424 fonksiyon** (4302 JS · 95 bash · 27 ps1) · 546 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -575,7 +575,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 - `empfaengerSnapshot()` — [api-backend/lib/rechnung-snapshot.js:53](api-backend/lib/rechnung-snapshot.js#L53-L74) — Spiegel von module/bg-angaben
 - `fehlendePflichtangaben()` — [api-backend/billing/api/abrechnung.routes.js:444](api-backend/billing/api/abrechnung.routes.js#L444-L450) — Spiegel von module/beleg-druck
 - `fehlendePflichtangaben()` — [module/beleg-druck.js:57](module/beleg-druck.js#L57-L63) — Identisch mit `fehlendePflichtangaben()` im Backend — beim Ändern beide
-- `istEchteUebersetzung()` — [api-backend/billing/zaa/anwenden.js:15](api-backend/billing/zaa/anwenden.js#L15-L18) — identisch mit dem Dateitext (z
+- `istEchteUebersetzung()` — [api-backend/billing/zaa/anwenden.js:16](api-backend/billing/zaa/anwenden.js#L16-L19) — identisch mit dem Dateitext (z
 - `kartenIkNormalisieren()` — [module/krankenkasse-suche.js:169](module/krankenkasse-suche.js#L169-L172) — Spiegel von `kartenIkNormalisieren()` in `api-backend/lib/rezept-felder
 - `leitsymptomatikAlsBitmaske()` — [api-backend/billing/dta/leitsymptomatik.js:58](api-backend/billing/dta/leitsymptomatik.js#L58-L96) — Spiegel von `leitsymptomatikListe()` in `module/verordnung-pruefung
 - `leitsymptomatikListe()` — [module/verordnung-pruefung.js:116](module/verordnung-pruefung.js#L116-L128) — Spiegel von `api-backend/billing/dta/leitsymptomatik

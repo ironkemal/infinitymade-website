@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-07",
  "dateien": 546,
- "funktionen": 4423,
+ "funktionen": 4424,
  "module": [
   "abrechnung",
   "anamnese",
@@ -30642,8 +30642,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/zaa/anwenden.js",
-   "start": 15,
-   "end": 18,
+   "start": 16,
+   "end": 19,
    "lines": 4,
    "spiegelHinweis": "identisch mit dem Dateitext (z",
    "tables": [],
@@ -30663,13 +30663,40 @@
    "uiPfad": []
   },
   {
+   "name": "zaaDateiHash",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/zaa/anwenden.js",
+   "start": 21,
+   "end": 23,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "update"
+   ],
+   "calledBy": [
+    "zaaRueckmeldungAnwenden"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "zaaRueckmeldungAnwenden",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/zaa/anwenden.js",
-   "start": 20,
-   "end": 103,
-   "lines": 84,
+   "start": 28,
+   "end": 119,
+   "lines": 92,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -30689,7 +30716,8 @@
     "istEchteUebersetzung",
     "parseZaaFile",
     "rpc",
-    "set"
+    "set",
+    "zaaDateiHash"
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/abrechnung.routes.js"
@@ -158788,6 +158816,7 @@
     "wireAbrechnungSettings",
     "wireBusinessModal",
     "withTimeout",
+    "zaaDateiHash",
     "zaehler"
    ],
    "modules": [
@@ -276831,8 +276860,8 @@
   {
    "name": "istEchteUebersetzung",
    "file": "api-backend/billing/zaa/anwenden.js",
-   "start": 15,
-   "end": 18,
+   "start": 16,
+   "end": 19,
    "hinweis": "identisch mit dem Dateitext (z"
   },
   {

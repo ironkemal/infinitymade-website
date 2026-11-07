@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { zaaRueckmeldungAnwenden } from './anwenden.js';
+import { zaaRueckmeldungAnwenden, zaaDateiHash } from './anwenden.js';
 
 function mockDb({ rpcResult = { data: { konflikt: false, zeilen: 1 }, error: null } } = {}) {
   const calls = { rpc: [], mutationen: 0 };
@@ -83,4 +83,20 @@ test('RPC-Fehler: 500 ohne Details', async () => {
   const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: gueltig });
   assert.equal(r.status, 500);
   assert.ok(!JSON.stringify(r.body).includes('geheim'));
+});
+
+test('Idempotenz-Flag aus: RPC ohne Hash (bisheriges Verhalten)', async () => {
+  const { db, calls } = mockDb();
+  await zaaRueckmeldungAnwenden({ ...basis, db, buf: gueltig });
+  assert.ok(!('p_sha256' in calls.rpc[0].args));
+});
+
+test('Idempotenz-Flag an: Hash geht mit, Wiederholung liefert 200 wiederholt ohne Neuanwendung', async () => {
+  const { db, calls } = mockDb({ rpcResult: { data: { konflikt: false, wiederholt: true }, error: null } });
+  const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: gueltig, idempotenz: true });
+  assert.equal(calls.rpc[0].args.p_sha256, zaaDateiHash(gueltig));
+  assert.match(calls.rpc[0].args.p_sha256, /^[0-9a-f]{64}$/);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.wiederholt, true);
+  assert.equal(r.body.zeilenAktualisiert, undefined);
 });

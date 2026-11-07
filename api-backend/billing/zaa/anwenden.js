@@ -8,6 +8,7 @@
 // gibt es im DAS-Kanal noch nicht (M1.16b offen); es wird nie 'accepted'/'akzeptiert' erfunden.
 // Fehlerbestand + Header + Verordnungs-/Zeilenstatus laufen atomar in der RPC
 // `zaa_fehler_anwenden` (Migration 0061), gebunden an die gelesene Header-Version.
+import { createHash } from 'node:crypto';
 import { parseZaaFile } from './parser.js';
 
 // „Uebersetzung" nur, wenn sie dem Anwender etwas Neues sagt: ist sie identisch mit dem Dateitext (z. B. gleiche
@@ -17,7 +18,14 @@ function istEchteUebersetzung(e) {
   return u !== '' && u.toLowerCase() !== String(e?.text || '').trim().toLowerCase();
 }
 
-export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, buf, filename, abgesetztStatus, heute }) {
+export function zaaDateiHash(buf) {
+  return createHash('sha256').update(buf).digest('hex');
+}
+
+// idempotenz=true (Flag, Standard aus): die RPC bekommt den Datei-Hash und erkennt Wiederholung
+// derselben Datei (Schema: db/entwuerfe/zaa-import-idempotenz.sql, nicht aktiv). Ohne Flag bleibt
+// der Aufruf byte-identisch zum bisherigen Verhalten.
+export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, buf, filename, abgesetztStatus, heute, idempotenz = false }) {
   const { data: rxRows } = await db
     .from('prescriptions')
     .select('id, belegnummer')
@@ -78,6 +86,7 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
     p_gruende: gruende,
     p_vord_status: abgesetztStatus,
     p_datum: heute,
+    ...(idempotenz ? { p_sha256: zaaDateiHash(buf) } : {}),
   });
   if (anwErr) {
     console.error('[abrechnung/upload-zaa] zaa_fehler_anwenden', anwErr);
@@ -87,6 +96,13 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
     return { status: 409, body: {
       error: 'Die Abrechnung wurde zwischenzeitlich geändert. Bitte Ansicht aktualisieren und die ZAA-Datei erneut hochladen.',
       unveraendert: true,
+    } };
+  }
+  if (anw.wiederholt) {
+    // Gleiche Datei schon verarbeitet: nichts erneut angewendet, gespeicherter Stand bleibt.
+    return { status: 200, body: {
+      ok: true, wiederholt: true, format: parsed.format, errorCount: fehler.length,
+      status: 'rejected', filename: filename || null,
     } };
   }
   return { status: 200, body: {
