@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-07",
  "dateien": 546,
- "funktionen": 4415,
+ "funktionen": 4417,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1969,6 +1969,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "reject",
     "resolve"
    ],
    "calledBy": [
@@ -2044,7 +2045,9 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "reject"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -2415,6 +2418,7 @@
     "createAiConfig",
     "createAiRouter",
     "einmalig",
+    "entlassFelderAusRezept",
     "exportAenderungsprotokollCsv",
     "getEnvOverride",
     "has",
@@ -4053,6 +4057,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "reject",
     "resolve"
    ],
    "calledBy": [
@@ -4128,7 +4133,9 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "reject"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -34172,6 +34179,7 @@
     "buildUNB",
     "createZuzahlungsforderungRouter",
     "datum",
+    "entlassFelderAusRezept",
     "fmtDate",
     "fmtDateTime14",
     "kostentraegerIkAufloesen",
@@ -40035,6 +40043,116 @@
    "uiPfad": []
   },
   {
+   "name": "entlassFelderAusRezept",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/rezept-felder.js",
+   "start": 352,
+   "end": 370,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "hasOwn",
+    "istStichtag",
+    "reject"
+   ],
+   "calledBy": [
+    "(datei) api-backend/server.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "reject",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/rezept-felder.js",
+   "start": 356,
+   "end": 360,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/server.js",
+    "(datei) ops/vendor/supabase-js.js",
+    "current",
+    "entlassFelderAusRezept",
+    "entpackeXml",
+    "erstelleUeberweisungUpload",
+    "getLocation",
+    "kioskScrypt",
+    "ladeAppKonfiguration",
+    "mitTimeout",
+    "oeffneZahlungseingang",
+    "onAbort",
+    "raceSignal",
+    "runZaaUpload",
+    "signaturePad",
+    "upload"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "istUuid",
    "kind": "function",
    "lang": "js",
@@ -41758,7 +41876,9 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "reject"
+   ],
    "calledBy": [
     "lauf",
     "laufen",
@@ -45916,6 +46036,7 @@
     "close",
     "on",
     "push",
+    "reject",
     "resolve"
    ],
    "calledBy": [
@@ -48832,8 +48953,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3492,
-   "end": 3500,
+   "start": 3502,
+   "end": 3510,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -48845,6 +48966,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "reject",
     "resolve"
    ],
    "calledBy": [
@@ -48860,8 +48982,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3502,
-   "end": 3506,
+   "start": 3512,
+   "end": 3516,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -48887,8 +49009,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3508,
-   "end": 3520,
+   "start": 3518,
+   "end": 3530,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -48914,8 +49036,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3541,
-   "end": 3555,
+   "start": 3551,
+   "end": 3565,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -48941,8 +49063,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3722,
-   "end": 3731,
+   "start": 3732,
+   "end": 3741,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -48966,8 +49088,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3724,
-   "end": 3737,
+   "start": 3734,
+   "end": 3747,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -48993,8 +49115,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3737,
-   "end": 3739,
+   "start": 3747,
+   "end": 3749,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -49021,8 +49143,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4001,
-   "end": 4011,
+   "start": 4011,
+   "end": 4021,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -49097,8 +49219,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4013,
-   "end": 4027,
+   "start": 4023,
+   "end": 4037,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -49125,8 +49247,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4152,
-   "end": 4158,
+   "start": 4162,
+   "end": 4168,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -49152,8 +49274,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4177,
-   "end": 4195,
+   "start": 4187,
+   "end": 4205,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [
@@ -49189,8 +49311,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4214,
-   "end": 4228,
+   "start": 4224,
+   "end": 4238,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -49343,8 +49465,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4215,
-   "end": 4228,
+   "start": 4225,
+   "end": 4238,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -49416,8 +49538,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4464,
-   "end": 4518,
+   "start": 4474,
+   "end": 4528,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -49445,8 +49567,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4466,
-   "end": 4466,
+   "start": 4476,
+   "end": 4476,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -49521,8 +49643,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4704,
-   "end": 4707,
+   "start": 4714,
+   "end": 4717,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -56289,6 +56411,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "reject",
     "resolve"
    ],
    "calledBy": [],
@@ -87171,6 +87294,7 @@
     "json",
     "ladeZaaZeilen",
     "loadAbrechnung",
+    "reject",
     "renderZaaUploadResult",
     "resolve",
     "showToast",
@@ -120078,7 +120202,8 @@
    "domRender": false,
    "calls": [
     "abort",
-    "json"
+    "json",
+    "reject"
    ],
    "calledBy": [
     "(datei) supabase-config.js"
@@ -163238,6 +163363,7 @@
     "current",
     "getOwnerId",
     "invalidate",
+    "reject",
     "reload",
     "resolve",
     "showToast",
@@ -163354,6 +163480,7 @@
    "calls": [
     "current",
     "getOwnerId",
+    "reject",
     "reload",
     "resolve",
     "showToast"
@@ -163446,6 +163573,7 @@
    "domRender": false,
    "calls": [
     "getOwnerId",
+    "reject",
     "reload",
     "resolve",
     "showToast"
@@ -164883,6 +165011,7 @@
     "clear",
     "moveTo",
     "pos",
+    "reject",
     "resize",
     "resolve",
     "restore",
@@ -196437,6 +196566,7 @@
     "offenerBetrag",
     "planeZahlung",
     "push",
+    "reject",
     "resolve",
     "schliessen",
     "set",
@@ -274197,7 +274327,7 @@
     "api-backend/lib/rechnung-pdf.js:16",
     "api-backend/lib/rechnung-snapshot.js:14",
     "api-backend/lib/therapiebericht.js:40",
-    "api-backend/server.js:4214",
+    "api-backend/server.js:4224",
     "dashboard.js:525",
     "module/anamnese.js:386",
     "module/bg-angaben.js:36",
@@ -274492,7 +274622,7 @@
     "api-backend/dsgvo/fristen.js:97",
     "api-backend/lib/terminerinnerung-job.js:137",
     "api-backend/merkez-istemci/ip-abgleich.js:257",
-    "api-backend/server.js:4013",
+    "api-backend/server.js:4023",
     "dashboard.js:12582"
    ],
    "aynalar": []
@@ -274803,7 +274933,7 @@
    "name": "https",
    "orte": [
     "api-backend/lib/mail-signatur.js:4",
-    "api-backend/server.js:4215",
+    "api-backend/server.js:4225",
     "module/mail-signatur.js:4"
    ],
    "aynalar": []
@@ -274982,7 +275112,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4466",
+    "api-backend/server.js:4476",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:115"
    ],
@@ -275996,7 +276126,7 @@
   {
    "name": "schliesse",
    "orte": [
-    "api-backend/server.js:4001",
+    "api-backend/server.js:4011",
     "module/kalender-kontextmenue.js:92"
    ],
    "aynalar": []

@@ -42,7 +42,7 @@ import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './lib/rezept-felder.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept } from './lib/rezept-felder.js';
 import { validiereBarcodeErfassung, computedMitErfassung } from './lib/rezept-erfassung.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
@@ -2597,6 +2597,9 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     const patient = parsed.patient || {};
     const arzt = parsed.arzt || {};
     const rezept = parsed.rezept || {};
+    let entlassFelder;
+    try { entlassFelder = entlassFelderAusRezept(rezept); }
+    catch (e) { return res.status(422).json({ code: e.code, error: e.message, field: 'entlassmanagement' }); }
 
     // --- Patient: erst die Wahl der Maske, dann erst raten ---
     let patientId = null;
@@ -2747,6 +2750,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         owner_id: tenantId,
         patient_id: patientId,
         arzt_id: arztId,
+        ...entlassFelder,
         ...artFelder,   // rezeptart (ausdrücklich), behandlungsanlass, nagel — PE-006 A
         ...bgFelder,    // bg_* (nur bei BG) — PE-006 B
         image_storage_path: storage_path || null,
@@ -2802,6 +2806,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       })
       .select('id')
       .single();
+    if (rxErr?.code === '23514' && /prescriptions_entlass/.test(rxErr.message || '')) return res.status(422).json({ code: 'ENTLASSDATEN_UNGUELTIG', error: 'Entlassdaten widersprechen dem gespeicherten Verordnungstyp.', field: 'entlassmanagement' });
     if (rxErr) throw rxErr;
 
     // --- Validation snapshot (audit trail) ---
@@ -2881,6 +2886,9 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     const patient = parsed.patient || {};
     const arzt = parsed.arzt || {};
     const rezept = parsed.rezept || {};
+    let entlassFelder;
+    try { entlassFelder = entlassFelderAusRezept(rezept); }
+    catch (e) { return res.status(422).json({ code: e.code, error: e.message, field: 'entlassmanagement' }); }
 
     // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
     const { data: bestehend, error: findErr } = await supabase
@@ -3009,6 +3017,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       ...(entwurf ? { confirmed_by: null, confirmed_at: null } : bestehend.status === 'parsed'
         ? { confirmed_by: req.auth.userId, confirmed_at: new Date().toISOString() } : {}),
       ...(patientId ? { patient_id: patientId } : {}),
+      ...entlassFelder,
       ...artFelder,   // rezeptart, behandlungsanlass, nagel — nur was mitkam
       ...bgFelder,    // bg_* — nur bei BG bzw. beim ausdrücklichen Wechsel weg von BG (leert)
       ...(statusZuruecksetzen || (entwurf && bestehend.abrechnung_status === 'bereit') ? { abrechnung_status: null } : {}),
@@ -3062,6 +3071,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       .update(patch)
       .eq('id', id).eq('owner_id', tenantId)
       .select('id');
+    if (upErr?.code === '23514' && /prescriptions_entlass/.test(upErr.message || '')) return res.status(422).json({ code: 'ENTLASSDATEN_UNGUELTIG', error: 'Entlassdaten widersprechen dem gespeicherten Verordnungstyp.', field: 'entlassmanagement' });
     if (upErr) return res.status(500).json({ error: upErr.message });
     if (!upd || !upd.length) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
 

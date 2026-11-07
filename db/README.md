@@ -264,3 +264,7 @@ diese Dateien hier.
 ## Migrationen 0081/0082 — SaaS-angewandt 17.10.2026
 
 `0081_ausfall_zahlung_faelligkeit.sql` (MCP-Version `20261017202834`) und `0082_request_approve_atomic.sql` (`20261017202847`) ergänzen Fälligkeitssnapshot/atomare Ausfallzahlung und atomare Anfragebestätigung. Beide rein expansiv (`:stable` läuft weiter). Live geprüft: Spalte `ausfallrechnungen.faellig_am` vorhanden, die RPCs `ausfall_status_buchen` und `approve_booking_request_atomic` nur für `service_role` ausführbar (anon/authenticated: nein). Schemaexports `SCHEMA.sql`/`SCHEMA-RLS.sql` am 17.10.2026 gezielt fortgeschrieben (Spalte, 3 Funktionen, ACLs, Zähler 1398 Spalten / 110 Funktionen); kein vollständiger Katalogexport.
+
+## Lokal vorbereitet am 07.11.2026: Entlassmanagement
+
+`db/entwuerfe/0112_prescriptions_entlassmanagement.sql` ergänzt zwei nullable Angaben mit Konsistenzprüfung und erweitert den vorhandenen Festschreibungstrigger. Kein Backfill, keine Live-Anwendung. PostgreSQL-Minimalprobe unter `api-backend/db/tests/0112_prescriptions_entlassmanagement.test.sql`; keine vollständige Ketten-/RLS-Abnahme. Live-Exports bleiben unverändert. Vor Verwendung der neuen Felder müssen Schemaanwendung und Erfassungs-/Ladekette gesondert nachgewiesen werden.

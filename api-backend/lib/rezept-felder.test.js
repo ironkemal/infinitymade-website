@@ -6,6 +6,7 @@ import {
   kostentraegerIkAufloesen,
   kartenIkNormalisieren,
   artFelderAusRezept,
+  entlassFelderAusRezept,
   rezeptartWechselPruefen,
   bgFelderAusRezept,
   bgAenderungGesperrt,
@@ -463,4 +464,27 @@ test('nichtGkvAbrechenbarMeldung: Kasse/NULL/gkv ok, privat/selbstzahler/bg gesp
     assert.match(m, new RegExp(art));
     assert.match(m, /nicht GKV-abrechenbar/);
   }
+});
+
+
+test('Entlassdaten preserve omission and all three explicit states', () => {
+  assert.deepEqual(entlassFelderAusRezept({}), {});
+  for (const entlassmanagement of [null, false]) {
+    const input = { entlassmanagement, entlassungsdatum: null };
+    assert.deepEqual(entlassFelderAusRezept(input), input);
+  }
+  const input = { entlassmanagement: true, entlassungsdatum: '2024-02-29' };
+  assert.deepEqual(entlassFelderAusRezept(input), input);
+});
+
+test('Entlassdaten reject coercion, half updates, invalid dates and Blanko', () => {
+  const invalid = [
+    { entlassmanagement: false }, { entlassungsdatum: null },
+    ...['false', 'true', 0, 1, undefined].map(entlassmanagement => ({ entlassmanagement, entlassungsdatum: null })),
+    ...[null, '', '2026-02-29', '2026-01-02T00:00:00Z'].map(entlassungsdatum => ({ entlassmanagement: true, entlassungsdatum })),
+    { entlassmanagement: false, entlassungsdatum: '2026-01-02' },
+    { entlassmanagement: null, entlassungsdatum: '2026-01-02' },
+    { entlassmanagement: true, entlassungsdatum: '2026-01-02', is_blanko: true },
+  ];
+  for (const input of invalid) assert.throws(() => entlassFelderAusRezept(input), { code: 'ENTLASSDATEN_UNGUELTIG' });
 });

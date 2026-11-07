@@ -36,3 +36,17 @@ Das Entlassmerkmal ist bisher weder strukturiert gespeichert noch im Abrechnungs
 ## Lokal nutzbare Gut-/Schlechtfälle
 
 `api-backend/billing/dta/output-validator.test.js` enthält handgeschriebenen Gut-Datenstrom mit unabhängig festgelegten Centbeträgen und Mutationen für falsche Version, Referenzen, Datumswerte, Mengen, Überlauf, Unicode, INV/ZHE und widersprüchliche Summen. `strict-fields.test.js`, `physio-verfahren.test.js` und `preise/abrechnungsfenster.test.js` ergänzen Eingabe-, Frist- und Preisgrenzen. Synthetische Syntaxfälle begründen keine Vergütungsberechtigung.
+
+
+## Fortsetzung: Entlassdaten lokal vorbereitet
+
+- Bisherigen Zwischenstand am 07.11.2026 auf ausdrücklichen Auftrag nach origin/main gepusht (bis 8d53e248 einschließlich vorhandener QA-Dokumentation).
+- `db/entwuerfe/0112_prescriptions_entlassmanagement.sql`: nullable Merkmal/Datum, konsistente Paare, Ausschluss Blanko und bestehender Festschreibungsschutz erweitert. Kein Default/Backfill. Nicht live angewandt; SCHEMA-Exports unverändert.
+- Gemeinsame strikte Feldprüfung in `rezept-felder.js`; bestehende Confirm-/PATCH-Routen verwenden sie vor Sideeffects. Ausgelassene Felder bleiben unberührt. Datenbank-Konsistenzfehler liefern stabilen422-Code mit Feldbezug.
+- 63/63 gezielte JavaScript-Tests bestanden. PostgreSQL17.11-Minimalprobe durch db-ustasi bestanden; vollständige Migrationskette/RLS nicht damit nachgewiesen.
+- Unabhängiges Review entdeckte Blanko-Wechsel bei ausgelassenem Entlasspaar; durch DB-Invariante für effektiven Alt-/Neustand geschlossen, SQL-Übergangsfälle ergänzt.
+- UI-Erfassung, DTO-Roundtrip und Laden in DTA stehen noch aus. Bestehende Physio-Sperre bleibt aktiv. Neue Serverfelder erst nach autorisierter Schemaanwendung verwenden.
+
+Backend-Gesamtlauf nach Entlassdaten-Ergänzung: 1.965 bestanden, vier übersprungen, null Fehler (26,93 Sekunden). Unabhängige Nachprüfung bestätigt Behebung des Blanko-Widerspruchs; SQL-Probe vom Reviewer gelesen, nicht selbst ausgeführt.
+
+Commit-Gate verlangt für aktive Migrationen SaaS-Status und Box-Zählermessung. Deshalb bleibt SQL bewusst unter db/entwuerfe außerhalb der automatischen Migrationskette; keine Gate-Umgehung und keine automatische Box-Anwendung. Aktivierung erfordert eigenen Releaseschritt.

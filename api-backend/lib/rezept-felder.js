@@ -343,3 +343,28 @@ export function nichtGkvAbrechenbarMeldung(rx) {
   if (!art || art === 'kassen' || art === 'gkv') return null;
   return `Rezept ${String(rx.id).slice(0, 8)}: Rezeptart „${art}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`;
 }
+
+/**
+ * Explicit discharge facts. Both fields form one atomic input pair.
+ * Omitted pair preserves PATCH state and keeps legacy clients schema-compatible.
+ * NULL means unreviewed; it must never be coerced to false.
+ */
+export function entlassFelderAusRezept(rezept = {}) {
+  const marker = Object.hasOwn(rezept, 'entlassmanagement');
+  const datum = Object.hasOwn(rezept, 'entlassungsdatum');
+  if (!marker && !datum) return {};
+  const reject = message => {
+    const error = new Error(message);
+    error.code = 'ENTLASSDATEN_UNGUELTIG';
+    throw error;
+  };
+  if (!marker || !datum) reject('Entlassmerkmal und Entlassdatum müssen gemeinsam angegeben werden.');
+  const status = rezept.entlassmanagement;
+  const day = rezept.entlassungsdatum;
+  if (status !== null && typeof status !== 'boolean') reject('Entlassmerkmal muss true, false oder null sein.');
+  if (status === true) {
+    if (!istStichtag(day)) reject('Bestätigtes Entlassmanagement benötigt ein gültiges Entlassdatum (JJJJ-MM-TT).');
+    if (rezept.is_blanko === true || rezept.rezept_typ === 'blanko') reject('Blankoverordnung und Entlassmanagement dürfen nicht kombiniert werden.');
+  } else if (day !== null) reject('Ohne bestätigtes Entlassmanagement muss das Entlassdatum null sein.');
+  return { entlassmanagement: status, entlassungsdatum: day };
+}

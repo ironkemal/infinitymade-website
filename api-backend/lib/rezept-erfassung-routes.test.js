@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validiereBarcodeErfassung, computedMitErfassung } from './rezept-erfassung.js';
 import { heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
-  rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './rezept-felder.js';
+  rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept } from './rezept-felder.js';
 import { statusAusAbrechnungStatus } from '../billing/utils/einreichbar.js';
 import { normalisiereGeschlecht } from './geschlecht.js';
 import { pruefeHeilmittelItems } from './heilmittel-items-pruefen.js';
@@ -35,7 +35,7 @@ function productionHandler(method, route, dependencies) {
   return captured;
 }
 
-function fixture({ existing, foreignPatient=false, validationOk=true } = {}) {
+function fixture({ existing, foreignPatient=false, validationOk=true, prescriptionError=null } = {}) {
   const writes = [], reads = [], doctors = [], validationInputs = [], unexpectedErrors = [];
   const supabase = { from(table) {
     const query = { table, operation:'select', filters:[] };
@@ -58,7 +58,7 @@ function fixture({ existing, foreignPatient=false, validationOk=true } = {}) {
           else if(table==='prescriptions') data=query.operation==='insert' ? {id:'synthetic-rx'} : [{id:'synthetic-rx'}];
           else if(table==='prescription_validations') data=null;
           else throw new Error(`Unexpected write: ${table}`);
-          return Promise.resolve({data,error:null}).then(resolve,reject);
+          return Promise.resolve({data,error:table==='prescriptions' && query.operation!=='select' ? prescriptionError : null}).then(resolve,reject);
         } catch(error) {return Promise.reject(error).then(resolve,reject);}
       },
     };
@@ -67,7 +67,7 @@ function fixture({ existing, foreignPatient=false, validationOk=true } = {}) {
   const dependencies = {
     supabase, validiereBarcodeErfassung, computedMitErfassung,
     heilmittelPositionAufloesen, kartenIkNormalisieren, artFelderAusRezept,
-    rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt,
+    rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt, entlassFelderAusRezept,
     statusAusAbrechnungStatus, normalisiereGeschlecht, pruefeHeilmittelItems,
     kostentraegerIkAufloesen:async()=>null,
     resolveOrCreateArzt:async(_db, tenantId, input, options)=>{
@@ -249,4 +249,49 @@ test('Production POST und PATCH validieren heilmittel_items und berechnen anzahl
   };
   const res3 = await f3.invoke('patch', badPatchReq);
   assert.equal(res3.statusCode, 422);
+});
+
+
+test('Production confirm/PATCH persist explicit discharge states and preserve omitted pair', async () => {
+  for (const method of ['post', 'patch']) {
+    for (const pair of [{}, { entlassmanagement: null, entlassungsdatum: null },
+      { entlassmanagement: false, entlassungsdatum: null },
+      { entlassmanagement: true, entlassungsdatum: '2026-10-06' }]) {
+      const f = fixture({ existing: { id:'synthetic-rx', owner_id:'synthetic-tenant', rezeptart:'kassen' } });
+      const request = body(); Object.assign(request.parsed.rezept, pair);
+      const response = await f.invoke(method, request);
+      assert.equal(response.statusCode, 200);
+      const row = f.writes.find(w => w.table === 'prescriptions').value;
+      for (const key of ['entlassmanagement', 'entlassungsdatum']) {
+        assert.equal(Object.hasOwn(row, key), Object.hasOwn(pair, key));
+        if (Object.hasOwn(pair, key)) assert.equal(row[key], pair[key]);
+      }
+    }
+  }
+});
+
+test('Production confirm/PATCH reject invalid discharge facts before IO', async () => {
+  for (const method of ['post', 'patch']) {
+    for (const pair of [{ entlassmanagement: 'false', entlassungsdatum: null },
+      { entlassmanagement: true, entlassungsdatum: '2026-02-30' },
+      { entlassmanagement: false, entlassungsdatum: '2026-10-06' }]) {
+      const f = fixture(); const request = body(); Object.assign(request.parsed.rezept, pair);
+      const response = await f.invoke(method, request);
+      assert.equal(response.statusCode, 422);
+      assert.equal(response.body.code, 'ENTLASSDATEN_UNGUELTIG');
+      assert.deepEqual(f.writes, []); assert.deepEqual(f.doctors, []); assert.deepEqual(f.reads, []);
+    }
+  }
+});
+
+
+test('Production confirm/PATCH return controlled422 for effective stored discharge conflict', async () => {
+  for (const method of ['post', 'patch']) {
+    const f = fixture({ existing: {id:'synthetic-rx',owner_id:'synthetic-tenant',rezeptart:'kassen'},
+      prescriptionError: {code:'23514',message:'violates check constraint prescriptions_entlassmanagement_datum_check'} });
+    const response = await f.invoke(method, body());
+    assert.equal(response.statusCode, 422);
+    assert.equal(response.body.code, 'ENTLASSDATEN_UNGUELTIG');
+    assert.equal(f.writes.some(w => w.table === 'prescription_validations'), false);
+  }
 });
