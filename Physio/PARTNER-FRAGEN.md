@@ -169,3 +169,10 @@
 - **Cevap "hayır" ise değişen:** Yalnız Bestandspatient ise widget'ta Telefon/Geburtsdatum ile eşleştirme zorunlu olur; Selbstzahler ayrı ise ikinci widget/sekme.
 - **Öncelik:** 🟡 selten
 - **Eklendi:** 2026-11-04 (physio-Prüfung M7) · **Cevap:** —
+
+### #18 — Zuzahlung: Alter 18 und Befreiung innerhalb einer Verordnung
+- **Soru (Almanca, partnere/Kasse aynen):** „Wird der Patient am Tag seines 18. Geburtstags schon als zuzahlungsfrei/-pflichtig geführt, und gilt der Status am ersten Behandlungstag auch für die 10-€-Verordnungspauschale, wenn sich Alter oder Befreiung innerhalb der Verordnung ändern?"
+- **Varsayımımız:** Geburtstag selbst = 18 (heutige Implementierung `isUnter18`); Alter/Befreiung gelten je Leistungstag, Pauschale hängt am Status des ersten Behandlungstags (gkv-302 07.11.2026, Vertragswortlaut belegt nur „erster Behandlungstag"). `calcAbrechnungsfallZuzahlungProTag` fertig, in den Routen noch nicht aktiv.
+- **Cevap "hayır" ise değişen:** Pauschale nach Status am Tag der Verordnung oder des letzten Tags; Rechnung und DTA-Builder müssen gemeinsam angepasst werden.
+- **Öncelik:** 🟠 Geld (Kassenabsetzung möglich)
+- **Eklendi:** 2026-11-07 (Zuzahlung je Tag) · **Cevap:** —
