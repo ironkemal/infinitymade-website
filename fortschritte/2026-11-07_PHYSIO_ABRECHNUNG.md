@@ -79,3 +79,9 @@ Commit-Gate verlangt für aktive Migrationen SaaS-Status und Box-Zählermessung.
 - Gezielte Prüfung: `node --test api-backend/billing/api/artefakt-registry.test.js api-backend/billing/api/physio-publikation-rpc.test.js`: 17/17 bestanden.
 - Regulärer Gesamtlauf `npm run test:backend`: 1.973 bestanden, vier übersprungen, null Fehler, Exit0 (38,15s); Log `/tmp/praxura-publication-adapter-backend-final.log`.
 - SQL-Lockprotokoll und worker_granted werden parallel separat geprüft. Veröffentlichung bleibt bis vollständiger Backend-/Storage- und Schemaabnahme gesperrt.
+
+## Readback-Quittung an Pakethash gebunden (07.11.2026, lokal committet, nicht gepusht)
+
+- `artefakt-registry.js`: neuer `berechnePhysioPaketHash` (Hash kommt aus PostgreSQL `physio_v1_hash`, nicht aus `JSON.stringify`); `reserviereUndLadeHoch` nimmt optional `physio {generation, packageSha256}` und quittiert erst nach Upload, Readback und Fachprüfung. Ungültiger Auftrag → 422 `PHYSIO_READBACK_AUFTRAG_UNGUELTIG` vor jedem Nebeneffekt.
+- Prüfung: Physio-RPC-Test 9/9, alle Billing-Tests 1048/1048; SQL-Test frisch in lokalem `postgres:17.11` (`--network none`, tmpfs) bis ROLLBACK ohne Fehler (ON_ERROR_STOP). Container entfernt.
+- Weiter gesperrt: Veröffentlichung bis vollständige Backend-/Storage-/Schemaabnahme (Blocker siehe oben).
