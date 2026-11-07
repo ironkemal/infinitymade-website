@@ -413,3 +413,20 @@ test('W15 P2: Ueberschreitung der Hoechstmenge in Physio (WS2: 12 > 6) zeigt gel
   assert.equal(e.gelb, 1, 'In gelb/Hinweis gezaehlt');
   assert.equal(e.rot, 0, 'Kein Blocker');
 });
+
+test('W15 P3: Dublette mit Höchstmenge-Überschreitung zeigt nur „übersprungen", nicht zugleich „Entwurf"', () => {
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
+  const csv = kopf
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS2;M54.5;X0501;12;ja;0;nein\n';
+  const erst = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
+  assert.equal(erst.zeilen[0].istEntwurf, true);
+
+  const vorhandeneVo = new Set([voImportSchluessel({
+    patientId: 'p1', ausstellungsdatum: '2026-10-15', codes: ['20501'], bereich: 'physio',
+  })]);
+  const z = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio', vorhandeneVo })).zeilen[0];
+  assert.equal(z.istDublette, true);
+  assert.equal(z.istEntwurf, false);
+  assert.ok(z.hinweise.some(h => /bereits vorhanden/.test(h)));
+  assert.ok(!z.hinweise.some(h => h.startsWith('wird als Entwurf übernommen')), 'kein Widerspruch zum Überspringen');
+});

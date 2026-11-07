@@ -586,6 +586,9 @@ export function zeileZuVerordnung(werte, zu, k = {}) {
     if (normBereich === 'physio' || normBereich === 'ergo') {
       hinweise.push('Verordnung mit gleicher Position und gleichem Datum existiert bereits (bereits vorhanden) – wird übersprungen');
       istDublette = true;
+      // Übersprungene Zeile wird nicht importiert → kein „wird als Entwurf übernommen“ daneben (canli-test 03.11. P3)
+      for (let i = hinweise.length - 1; i >= 0; i--) if (hinweise[i].startsWith('wird als Entwurf übernommen')) hinweise.splice(i, 1);
+      istEntwurf = false; entwurfGrund = '';
     } else {
       fehler.push('Verordnung ist schon in Praxura (bereits vorhanden)');
     }
