@@ -77,7 +77,7 @@ export const REGEL_SCHWERE = Object.freeze({
   'F:05001': { schwere: 'hart', kasse: 'datei', quelle: 'hausregel',                         hinweis: 'Leere Datei — es gibt nichts zu übermitteln' },
 
   // ── Versicherter (SLLA.INV / SLLA.NAD) ───────────────────────────────────
-  'P:01001': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.1 (INV)', hinweis: 'KVNR-Format' },
+  'P:01001': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.1 (INV); §290 Anlage 1 Stand 02.01.2023', hinweis: 'KVNR-Format und Prüfziffer' },
   'P:01002': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.1 (INV)', hinweis: 'Versichertenstatus-Format' },
   'P:01003': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.1 (NAD, AN M)', hinweis: 'Nachname fehlt — leeres Muss-Feld' },
   'P:01004': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.1 (NAD, AN M)', hinweis: 'Vorname fehlt — leeres Muss-Feld' },
@@ -140,6 +140,9 @@ export const REGEL_SCHWERE = Object.freeze({
   // 'S:01012' entfernt (Ops #340, 22.10.2026, gkv-302): pauschale 84-Tage-Sperre unbelegt, siehe REGELN.md. Code nicht wiederverwenden.
   'S:01013': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL § 12 Abs. 8; Podologie Anlage 2 § 2 c (78610 bis 2× je Tag)', hinweis: 'Mehr als eine Behandlung (78010/78020) je Tag an derselben Verordnung' },
   'S:01014': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 3 TP5 §8.1.2; § 302 SGB V', hinweis: 'Arbeitsunfall (ZHE8=1) / BG nicht über GKV § 302 abrechenbar' },
+  'S:01015': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21 §5.5.3.3 EHE Anzahl ..4,2', hinweis: 'Menge positiv, endlich, maximal zwei Nachkommastellen und vier Vorkommastellen' },
+  'S:01016': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21 §5.5.3.3 EHE Einzelbetrag ..10,2', hinweis: 'Einzelbetrag positiv, endlich und feldkonform' },
+  'S:01017': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21 §5.5.3.3 EHE Zuzahlung ..10,2', hinweis: 'Zuzahlung endlich und zwischen null und Einzelbetrag' },
 
   // ── Tarif (SLLA.EHE, LEGS) ───────────────────────────────────────────────
   'T:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anhang 3 Anlage 1 TP5 § 8.14 (Abrechnungscode)', hinweis: 'Abrechnungscode unbekannt' },

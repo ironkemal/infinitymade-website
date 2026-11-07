@@ -34,7 +34,7 @@ function createVkz03Fixture(overrides = {}) {
     transfernummer: 1,
     prescriptions: [{
       patient: {
-        kvnr: 'A123456789',
+        kvnr: 'A000500015',
         versichertenstatus: '10000',
         nachname: 'Müller',
         vorname: 'Hans',
@@ -254,7 +254,7 @@ test('VKZ 03: Mehrere Statusgruppen bilden korrekte GES 00, 11 und 31 Zeilen mit
   const f = createVkz03Fixture();
   const p1 = f.prescriptions[0]; // Versichertenstatus 10000 -> Summenstatus 11, Forderung 20 €
   const p2 = structuredClone(p1); // Versichertenstatus 30000 -> Summenstatus 31
-  p2.patient.kvnr = 'B987654321';
+  p2.patient.kvnr = 'B987654320';
   p2.patient.versichertenstatus = '30000';
   p2.patient.belegnummer = '0000002';
   p2.urspruenglich.belegnummer = '0000002';
@@ -470,7 +470,7 @@ test('VKZ 04: unterstützt pauschKorrektur und erzeugt BES', () => {
   assert.ok(bes[0].includes('+5,00'));
 });
 
-test('VKZ 01: position_frei=true und fehlende zuzahlungProPos emittiert im EHE leeres Feld und nutzt unveränderte Logik', () => {
+test('VKZ 01: freie Position hat synchron 0,00 in EHE und BES-Prozentanteil', () => {
   const f = structuredClone(physioFixture);
   f.preflight = false;
   f.prescriptions[0].sessions[0].position_frei = true;
@@ -478,7 +478,8 @@ test('VKZ 01: position_frei=true und fehlende zuzahlungProPos emittiert im EHE l
 
   const res = buildDtaFile(f);
   const ehe = findeSegmente(res.content, 'EHE');
-  assert.ok(!ehe[0].includes('+0,00'), 'EHE darf für abwesende Zuzahlung bei non-03 nicht 0,00 ausgeben');
+  assert.ok(ehe[0].endsWith('+0,00'));
+  assert.equal(res.totals.fallTotals[0].prozZuzahlung, 11.25);
 });
 
 // ---------------------------------------------------------------------------

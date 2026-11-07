@@ -28,7 +28,10 @@ import { icdDgPreflightBefund } from '../../ai/validators/icdDgRules.js';
 import { getIcdDgRules } from '../../ai/validators/catalog.js';
 import { behandlungstageJeDatum, TAGESHOECHSTZAHL } from '../utils/behandlungstage.js';
 import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
+import { pruefeAusgabeStruktur } from './output-validator.js';
 import { isValidTwoDecimalPrecision } from './builder.js';
+import { istStichtag } from '../../lib/berlin-tag.js';
+import { hasKvnrChecksum, isDtaDecimal } from './strict-fields.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -61,10 +64,9 @@ export function ikKlassifikation(ik) {
 }
 
 // KVNR (Krankenversichertennummer, lebenslang): 1 capital letter + 9 digits.
-// Last digit is Prüfziffer (Modulo 10 on letter-coded value, but DMRZ accepts
-// format-only check from upstream — we mirror that).
+// Checksum per §290 Anlage 1, not merely the printed shape.
 export function isValidKvnr(kvnr) {
-  return /^[A-Z]\d{9}$/.test(kvnr || '');
+  return hasKvnrChecksum(kvnr);
 }
 
 // Versichertenstatus: 5 chars, first digit 1/3/5/9 (Mitglied/Familie/Rentner/sonst).
@@ -158,6 +160,12 @@ export function isValidBelegnummer(bn) {
 // Datum: YYYY-MM-DD or Date object; must be a real, parseable date.
 function parseDate(v) {
   if (!v) return null;
+  if (!(v instanceof Date)) {
+    if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}(?:$|T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$)/.test(v)) return null;
+    if (!istStichtag(v.slice(0, 10))) return null;
+    // Date parses 24:00 as the next day; a billing timestamp must not roll over.
+    if (v.length > 10 && (+v.slice(11, 13) > 23 || +v.slice(14, 16) > 59 || +v.slice(17, 19) > 59)) return null;
+  }
   const d = v instanceof Date ? v : new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
 }
@@ -216,14 +224,14 @@ export function preflight(input) {
     E(errors, 'F:03007', 'rechnung.einzelRechnungsnummer', 'Einzelrechnungsnummer max. 6 Zeichen');
   }
 
-  if (!input.rechnung?.datennummer || input.rechnung.datennummer < 1)
-    E(errors, 'F:03003', 'rechnung.datennummer', 'Datennummer fehlt oder < 1');
+  if (!/^[0-9]+$/.test(String(input.rechnung?.datennummer ?? '')) || !Number.isInteger(Number(input.rechnung?.datennummer)) || Number(input.rechnung.datennummer) < 1)
+    E(errors, 'F:03003', 'rechnung.datennummer', 'Datennummer muss eine ganze Zahl von 1 bis 99999 sein');
   else if (input.rechnung.datennummer > 99999)
     E(errors, 'F:03004', 'rechnung.datennummer', 'Datennummer überschreitet 5-stelligen Wertebereich');
 
   const rechnungsDatum = parseDate(input.rechnung?.datum);
-  if (input.rechnung?.datum && !rechnungsDatum)
-    E(errors, 'F:03005', 'rechnung.datum', 'Rechnungsdatum nicht parsebar');
+  if (!rechnungsDatum)
+    E(errors, 'F:03005', 'rechnung.datum', 'Rechnungsdatum fehlt oder ist kein gültiges Kalenderdatum');
 
   const vkz = input.vkz || '01';
   const isVkz03 = vkz === '03';
@@ -484,14 +492,14 @@ export function preflight(input) {
     if (!v.therapiefrequenz)
       E(errors, 'V:01007', `${at}.verordnung.therapiefrequenz`, 'Therapiefrequenz fehlt');
 
-    if (v.kostentraegerIk && !isValidIkChecksum(v.kostentraegerIk))
+    if (!isValidIkChecksum(v.kostentraegerIk))
       E(errors, 'V:01008', `${at}.verordnung.kostentraegerIk`, 'Kostenträger-IK Prüfziffer ungültig');
 
     // Karten-IK (SLGA/SLLA-FKT Mussfeld) ist ein eigenes Feld, KEIN Rückfall auf
     // die Kostenträger-IK (gkv-302, 30.09.2026).
-    if (!/^\d{9}$/.test(String(v.krankenkasseIk ?? '').trim()))
+    if (!isValidIkChecksum(String(v.krankenkasseIk ?? '').trim()))
       E(errors, 'V:01017', `${at}.verordnung.krankenkasseIk`,
-        'IK der Krankenkasse von der Versichertenkarte fehlt oder ist nicht 9-stellig');
+        'IK der Krankenkasse von der Versichertenkarte fehlt, ist nicht 9-stellig oder hat eine ungültige Prüfziffer');
 
     if (v.berichtAngefordert && v.berichtStatus !== 'erledigt') {
       E(errors, 'V:01009', `${at}.verordnung`, `Therapiebericht angefordert aber ausstehend (Status: "${v.berichtStatus || 'offen'}")`);
@@ -584,6 +592,7 @@ export function preflight(input) {
       // (Podologie-Vertrag § 7 Abs. 7, Stand 16.06.2025) — gkv-302 21.10.2026. Vorher wurde
       // eine normale Podo-VO mit 4–6 Wochen Abstand hier hart abgewiesen.
       const istPodo = ['71', '72'].includes(String(p.tarif?.abrechnungscode || ''));
+      const istPhysio = ['21', '22'].includes(String(p.tarif?.abrechnungscode || ''));
       const maxPause = istPodo ? 84 : 14;
       if (p.sessions.length > 1) {
         const sorted = [...p.sessions].sort((a, b) => {
@@ -597,7 +606,13 @@ export function preflight(input) {
           if (prevD && currD) {
             const diffTime = currD.getTime() - prevD.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays > maxPause) {
+            // §125-Vertrag §7(3a): documented T/K/F exceptions apply only
+            // to Physiotherapie; neither free text nor a client approval flag suffices.
+            const pauseBelegt = istPhysio && Array.isArray(p.verordnung?.unterbrechungen)
+              && p.verordnung.unterbrechungen.some(n => n?.von === sorted[k - 1].datumLeistung
+                && n?.bis === sorted[k].datumLeistung && ['T', 'K', 'F'].includes(n.grund)
+                && n.dokumentiert === true);
+            if (diffDays > maxPause && !pauseBelegt) {
               E(errors, 'S:01010', `${at}.sessions`, istPodo
                 ? `Behandlungspause von ${diffDays} Tagen zwischen ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} — nach mehr als 12 Kalenderwochen ist die Verordnung ungültig (Podologie-Vertrag § 7 Abs. 7). Spätere Behandlungen gehören auf eine neue Verordnung.`
                 : `Unzulässige Behandlungsunterbrechung von ${diffDays} Tagen zwischen den Sitzungen vom ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} (maximal 14 Tage erlaubt)`);
@@ -622,6 +637,15 @@ export function preflight(input) {
       let pBrutto = 0, pZu = 0;
       p.sessions.forEach((s, j) => {
         const sat = `${at}.sessions[${j}]`;
+        // Apply the same wire-field bounds to every processing procedure.
+        const comma = isVkz03;
+        if (!isDtaDecimal(s.anzahl ?? 1, 4, { positive: true, comma }))
+          E(errors, 'S:01015', `${sat}.anzahl`, 'Anzahl muss positiv sein und in EHE ..4,2 passen');
+        if (!isDtaDecimal(s.einzelbetrag, 10, { positive: true, comma }))
+          E(errors, 'S:01016', `${sat}.einzelbetrag`, 'Einzelbetrag muss positiv sein und in EHE ..10,2 passen');
+        if (s.zuzahlungProPos != null && (!isDtaDecimal(s.zuzahlungProPos, 10, { comma })
+            || Number(String(s.zuzahlungProPos).replace(',', '.')) > Number(String(s.einzelbetrag).replace(',', '.'))))
+          E(errors, 'S:01017', `${sat}.zuzahlungProPos`, 'Zuzahlung muss zwischen 0 und Einzelbetrag liegen und in EHE ..10,2 passen');
         if (!isValidPositionsnummer(s.positionsnummer))
           E(errors, 'S:01002', `${sat}.positionsnummer`, `Positionsnummer "${s.positionsnummer}" muss 5 Ziffern haben`);
 
@@ -890,6 +914,7 @@ export function felderTrennen(segment) {
 export function pruefeDatenstrom(inhalt) {
   const fehler = [];
   const segmente = segmenteTrennen(String(inhalt || ''));
+  fehler.push(...pruefeAusgabeStruktur(String(inhalt || ''), segmente.map(felderTrennen)));
 
   let offen = null;        // { referenz, anzahl }
   let unhZaehler = 0;

@@ -30,6 +30,8 @@ function sha256Hex(buf) {
 function erstelleTestDta({ claim20 = false } = {}) {
   const f = structuredClone(podoFixture);
   f.absender.ik = '800000000'; // Gültige LE-IK Prüfziffer
+  // Synthetische KVNR mit korrekter Prüfziffer (GKV §290 Anlage 1).
+  f.prescriptions[0].patient.kvnr = 'C000500021';
   f.empfaenger.ik = '108310400';
   f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
   f.prescriptions[0].verordnung.krankenkasseIk = '108310400';

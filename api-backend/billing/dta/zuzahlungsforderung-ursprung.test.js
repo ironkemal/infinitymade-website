@@ -419,7 +419,8 @@ test('7. Negativtest negativeprice: Nicht-positiver Einzelbetrag in EHE wird mit
       reason: 'KZ2',
     });
   }, (err) => {
-    assert.equal(err.code, 'INVALID_AMOUNT');
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
     return true;
   });
@@ -453,7 +454,7 @@ test('8. Negativtest missingBES: Unvollständiges BES-Segment wird mit 422 abgew
       reason: 'KZ2',
     });
   }, (err) => {
-    assert.equal(err.code, 'INVALID_BES_SEGMENT');
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
     return true;
   });
@@ -519,7 +520,8 @@ test('10. Negativtest removedEHEcopay: Fehlender EHE-Zuzahlungsbetrag wird mit 4
       reason: 'KZ2',
     });
   }, (err) => {
-    assert.equal(err.code, 'MISSING_EHE_COPAY');
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
     return true;
   });
@@ -595,9 +597,10 @@ test('12. Negativtest multipleTXT: Mehrere TXT-Segmente zu einer EHE werden mit 
       reason: 'KZ2',
     });
   }, (err) => {
-    assert.equal(err.code, 'UNSUPPORTED_ORIGINAL_SEGMENT');
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
-    assert.match(err.message, /Mehrere TXT-Segmente/);
+    assert.match(err.message, /syntaktisch beschädigt/);
     return true;
   });
 });
@@ -1027,9 +1030,10 @@ test('21. Ursprungsrechnung mit VKZ ungleich 01 wird strikt abgewiesen', () => {
       currentSenderIk: f.absender.ik,
     });
   }, (err) => {
-    assert.equal(err.code, 'INVALID_ORIGINAL_VKZ');
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     assert.equal(err.status, 422);
-    assert.match(err.message, /VKZ 01 zulässig/);
+    assert.match(err.message, /syntaktisch beschädigt/);
     return true;
   });
 });
@@ -1060,8 +1064,9 @@ test('22. Strikte Mengen- und Betragsvalidierung (keine nicht-positive Menge)', 
       currentSenderIk: '800000000',
     });
   }, (err) => {
-    assert.equal(err.code, 'INVALID_AMOUNT');
-    assert.match(err.message, /nicht-positive Menge/);
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
+    assert.match(err.message, /syntaktisch beschädigt/);
     return true;
   });
 });
@@ -1092,7 +1097,8 @@ test('23. Mehrere Tarife in einer Verordnung werden strikt abgewiesen', () => {
       currentSenderIk: '800000000',
     });
   }, (err) => {
-    assert.equal(err.code, 'MULTIPLE_TARIFFS_NOT_SUPPORTED');
+    // Strict byte grammar now rejects this malformed source before domain extraction.
+    assert.equal(err.code, 'DTA_SYNTAX_ERROR');
     return true;
   });
 });

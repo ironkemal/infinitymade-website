@@ -53,6 +53,7 @@ import {
 import {
   preflight as runPreflight,
   pruefeDatenstrom,
+  segmenteTrennen,
   isValidBelegnummer,
   isValidIkChecksum,
 } from './preflight.js';
@@ -360,6 +361,7 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
       (a, s) => a + calcSessionZuzahlung({
         preis_eur: num(s.einzelbetrag),
         zuzahlung_eur_position: s.zuzahlungProPos,
+        position_frei: s.position_frei === true,
       }) * num(s.anzahl || 1), 0));
     pauschZuzahlung = Math.min(10.00, r2(serviceBrutto - prozZuzahlung));
     if (pauschZuzahlung < 0) pauschZuzahlung = 0;
@@ -518,7 +520,9 @@ function buildSLLAMessage({
     const s = sessions[sIndex];
     let anzahl = s.anzahl || 1;
     let einzelbetrag = s.einzelbetrag;
-    let zuzahlung = s.zuzahlungProPos != null ? s.zuzahlungProPos : '';
+    let zuzahlung = verordnung.zuzahlungskennzeichen === '3'
+      ? calcSessionZuzahlung({ preis_eur: num(s.einzelbetrag), zuzahlung_eur_position: s.zuzahlungProPos, position_frei: s.position_frei === true })
+      : '';
 
     if (vkz === '03') {
       const parsed = parseVkz03Session(s, sIndex);
@@ -1001,6 +1005,10 @@ export function buildDtaFile({
     ...(isVkz03 ? { serviceBrutto: r2(gruppen.reduce((a, g) => a + (g.totals.serviceBrutto ?? g.totals.brutto), 0)) } : {}),
   };
 
+  if (rechnung.anwendungsreferenz && rechnung.anwendungsreferenz !== logischerDateiname) {
+    throw new Error('UNB-Anwendungsreferenz muss mit dem logischen Namen der Auftragsdatei übereinstimmen');
+  }
+
   // UNB / UNZ wrap
   const unb = buildUNB({
     absenderIk:          absender.ik,
@@ -1018,7 +1026,7 @@ export function buildDtaFile({
   // Referenzdatei steht es nicht. Begruendung ausfuehrlich in encoding.js.
   // Damit faellt auch das `- 1` weg, das vorher den UNA-Abschluss abzog.
   const content      = unb + allLines.join('') + unz;
-  const segmentCount = (content.match(/'/g) || []).length;
+  const segmentCount = segmenteTrennen(content).length;
   const byteLength   = Buffer.byteLength(content, 'latin1');
 
   // Selbstpruefung des erzeugten Datenstroms. Der Preflight oben sieht nur die

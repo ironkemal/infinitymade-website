@@ -84,6 +84,13 @@ export function resolvePreis({
     error.code = !katalogPosition ? 'PREIS_POSITION_UNBEKANNT' : 'PREIS_FENSTER_FEHLT';
     throw error;
   }
+  if (abrechnung && !istPodologie && /^\d{5}$/.test(String(code))
+      && katalogPosition.positionsnummer !== String(code)) {
+    const error = new Error('Positionsnummer passt nicht zur abrechnenden Leistungserbringergruppe.');
+    error.status = 422;
+    error.code = 'PREIS_POSITION_FALSCHE_LE_GRUPPE';
+    throw error;
+  }
 
   const preis_eur = r2(katalogPosition?.preis ?? 0);
   const quelle = katalogPosition ? 'katalog' : 'unbekannt';

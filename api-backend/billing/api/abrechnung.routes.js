@@ -22,6 +22,7 @@ import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { befundpauschaleRegeln } from '../dta/befundpauschale-regeln.js';
 import { hausbesuchRegeln } from '../dta/hausbesuch-regeln.js';
 import { verordnungsartFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
+import { validatePhysioAbrechnung } from '../dta/physio-verfahren.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
 import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
@@ -553,6 +554,22 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     .filter(s => s.status === 'done')
     .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
+  if (['physiotherapy', 'physiotherapie', 'physio'].includes(String(sector).toLowerCase())) {
+    const procedure = validatePhysioAbrechnung({
+      rx: { ...rx, patient_geburtsdatum: lead?.geburtsdatum }, sessions: doneSessions,
+      entlassmanagement: rx.entlassmanagement,
+      entlassdatum: rx.entlassungsdatum ?? null,
+      unterbrechungen: rx.unterbrechungen ?? [],
+    });
+    if (!procedure.ok) {
+      const error = new Error(procedure.errors.map(e => e.message).join(' '));
+      error.status = 422;
+      error.code = procedure.errors[0].code;
+      error.validation = procedure;
+      throw error;
+    }
+  }
+
   // Kombi-Termin-Zeilen mit heilmittel_index > 0 meinen ein ANDERES Heilmittel
   // der Verordnung. Wenn heilmittel_items mit Einheiten vorliegt, wird jede Zeile
   // über ihren Index aufgelöst. Fehlen die Items, halten wir an.
@@ -582,7 +599,8 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     const certSet = therapistCerts ? therapistCerts.get(therapistId) : null;
     const hasCert = requiredCert ? !!(certSet && certSet.has(requiredCert)) : true;
 
-    const dateStr = s.done_at ? s.done_at.slice(0, 10) : null;
+    const dateStr = s.done_at && !Number.isNaN(new Date(s.done_at).getTime())
+      ? berlinHeute(new Date(s.done_at)) : null;
 
     // Preis + Zuzahlung zentral (billing/preise/resolver.js) — derselbe Aufruf,
     // den auch die Druckrouten benutzen. Vorher liefen beide Wege auseinander.
@@ -645,6 +663,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       bsnr: rx.doctor_bsnr || doctor?.bsnr || '999999999',
     },
     verordnung: {
+      unterbrechungen:           rx.unterbrechungen ?? [],
       ausstellungsdatum:        rx.ausstellungsdatum,
       icd10:                    icdOhneStrich(rx.icd10),
       // Je Diagnose ein eigenes DIA-Segment (Anlage 1 TP5 V21, Kap. 5.5.3.3
@@ -899,7 +918,7 @@ router.post('/abrechnung/create', async (req, res) => {
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten, frequenz,
-        is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
+        is_dringend, hausbesuch, is_blanko, is_lhb_bvb, rezept_typ,
         hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
@@ -3629,7 +3648,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten, frequenz,
-        is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
+        is_dringend, hausbesuch, is_blanko, is_lhb_bvb, rezept_typ,
         hausbesuch_ort, doppelbehandlung, ergaenzend_position, ergaenzend_einheiten, vorrangig_einheiten,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,

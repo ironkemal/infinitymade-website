@@ -20,3 +20,8 @@ test('Preisvorschau darf historisches Ersatzfenster zeigen, Abrechnung sperrt es
   assert.equal(resolvePreis(opts).ausserhalb_preisfenster, true);
   assert.throws(() => resolvePreis({ ...opts, abrechnung: true }), { code: 'PREIS_FENSTER_FEHLT', status: 422 });
 });
+
+test('Numerische Position einer anderen Leistungserbringergruppe wird nicht umtaxiert', () => {
+  assert.throws(() => resolvePreis({ code: '10501', abrechnungscode: '22', datum: '2026-08-10', abrechnung: true }),
+    { code: 'PREIS_POSITION_FALSCHE_LE_GRUPPE', status: 422 });
+});

@@ -29,7 +29,7 @@ test('IK checksum: too short',                    () => assert.equal(isValidIkCh
 test('IK Klassifikation Kostenträger',  () => assert.equal(ikKlassifikation('108310400'), 'kostentraeger'));
 test('IK Klassifikation Leistungserbringer', () => assert.equal(ikKlassifikation('801234561'), 'leistungserbringer'));
 
-test('KVNR valid format',     () => assert.equal(isValidKvnr('A123456789'), true));
+test('KVNR valid format',     () => assert.equal(isValidKvnr('A000500015'), true));
 test('KVNR rejects lowercase', () => assert.equal(isValidKvnr('a123456789'), false));
 test('KVNR rejects no letter', () => assert.equal(isValidKvnr('1123456789'), false));
 
@@ -75,7 +75,7 @@ const validInput = {
   rechnung: { sammelRechnungsnummer: 'R2026-W21-001', datum: '2026-05-23', datennummer: 1, rechnungsart: '1' },
   vkz: '01',
   prescriptions: [{
-    patient: { kvnr: 'A123456789', versichertenstatus: '10000', nachname: 'Müller', vorname: 'Hans',
+    patient: { kvnr: 'A000500015', versichertenstatus: '10000', nachname: 'Müller', vorname: 'Hans',
                geburtsdatum: '1972-04-13', plz: '40213', belegnummer: '0000001' },
     doctor: { lanr: '999999999', bsnr: '999999999' },
     verordnung: { ausstellungsdatum: '2026-05-02', icd10: 'M54.5', diagnosegruppe: 'WS2',
@@ -329,6 +329,20 @@ test('catches 14-day legal break (Behandlungsunterbrechung) violation', () => {
   const r = preflight(i);
   assert.equal(r.ok, false);
   assert.ok(hasErr(r, 'S:01010'));
+});
+
+test('Physio interruption needs exact documented T/K/F evidence; other areas retain their rules', () => {
+  for (const grund of ['T', 'K', 'F']) {
+    const i = clone(validInput);
+    i.prescriptions[0].sessions[5].datumLeistung = '2026-06-10';
+    i.prescriptions[0].verordnung.unterbrechungen = [{ von: '2026-05-19', bis: '2026-06-10', grund, dokumentiert: true }];
+    assert.equal(hasErr(preflight(i), 'S:01010'), false);
+    i.prescriptions[0].verordnung.unterbrechungen[0].dokumentiert = false;
+    assert.equal(hasErr(preflight(i), 'S:01010'), true);
+    i.prescriptions[0].verordnung.unterbrechungen[0].dokumentiert = true;
+    i.prescriptions[0].tarif.abrechnungscode = '26';
+    assert.equal(hasErr(preflight(i), 'S:01010'), true);
+  }
 });
 
 test('catches missing therapist certificate qualification', () => {
