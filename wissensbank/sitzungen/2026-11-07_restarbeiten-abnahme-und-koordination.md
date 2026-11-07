@@ -26,6 +26,8 @@ Diese Sitzungsnotiz erklärt Arbeitsweise und Erkenntnisse. Verbindlicher Belegi
 
 ## Schutz und Wiederaufnahme
 
+Paralleltest-Lernpunkt: zwei gleichzeitig geklickte Bestätigungen beweisen keine Datenbankkonkurrenz. Unterschiedliche nachgelagerte Verfügbarkeitsprüfungen können einen Teilnehmer vor DB-Schreiben stoppen. Vor erneutem Lauf beide Pfade bis unmittelbar vor tatsächlichem Speichern vorbereiten; fehlende Request-Zeitdaten ausdrücklich nennen. Versuche und erzeugte synthetische Termine im Tagesprotokoll erhalten, keine Löschung.
+
 Fortsetzung: Sondertag-Bestand/Anrufliste und unveränderter Beginn bei Raumänderung live bestätigt. Nach zusätzlichem Nutzer-GO synthetische Ausstattung und eigene Testleistung angelegt; automatische Raumzuordnung gespeichert/wieder geöffnet, belegter geeigneter Raum bei zweitem Behandler abgewiesen. Das ersetzt kein gleichzeitiges Kapazitätsrennen. Details/IDs und Vorherwerte im Tagesprotokoll. Widget ausdrücklich zurückgestellt; dessen Create-Route kann Inhaber-Mail senden. Manuelle Überbelegung ist bestehender Vertrag und wird nicht als Fehler umgebaut. Schemaunterlagen aktuell 0111 gezielt auf 0109 fortgeschrieben, kein vollständiger Export.
 
 Kein Versand, keine Löschung, keine Live-Migration, keine Nutzung ausgeschlossener Konten, keine realen Patientendaten in Berichten. Box/Hetzner und Live-Fußzeilen-/Logospeicherung bleiben zurückgestellt. Echte KI erst nach separatem GO und nachgewiesener Begrenzung. Kein neuer Provider.
