@@ -71,7 +71,7 @@ export async function reservierePhysioPublikation({ db, ownerId, key, payload, e
 
 /** PostgreSQL owns jsonb canonicalization; JSON.stringify is not this hash contract. */
 export async function berechnePhysioPaketHash({ db, paket }) {
-  return physioRpc(db, 'physio_v1_hash', { v: paket },
+  return physioRpc(db, 'physio_v1_hash', { p_value: paket },
     data => typeof data === 'string' && /^[0-9a-f]{64}$/.test(data));
 }
 

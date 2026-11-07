@@ -1119,7 +1119,10 @@ router.post('/abrechnung/create', async (req, res) => {
         }
         return res.status(400).json({ error: `Rezept ${r.id.slice(0,8)} gehört zu einer anderen Krankenkasse.` });
       }
-      if (r.abrechnung_status && r.abrechnung_status !== 'bereit') {
+      // Physio-Publikation v1 (Flag): Replay mit gleichem Idempotency-Key trifft Rezepte, die nicht mehr 'bereit' sind;
+      // der Dauerclaim in abrechnung_idempotency_reserve/finalize schuetzt dann statt dieser Vorpruefung.
+      if (r.abrechnung_status && r.abrechnung_status !== 'bereit'
+        && !(physioPublikationAktiv() && ['physiotherapy', 'physiotherapie', 'physio'].includes(String(tenantSector).toLowerCase()))) {
         return res.status(409).json({ error: `Rezept ${r.id.slice(0,8)} ist bereits in einer Abrechnung (${r.abrechnung_status}).` });
       }
       // Therapiebericht: Hinweis, kein Riegel. Das Kreuz auf der Verordnung sagt

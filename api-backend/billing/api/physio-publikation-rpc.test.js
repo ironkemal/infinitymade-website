@@ -152,7 +152,7 @@ test('Package hash comes from PostgreSQL physio_v1_hash and must be 64 lowercase
   const hash = 'ab'.repeat(32);
   const db = { async rpc(name, args) {
     assert.equal(name, 'physio_v1_hash');
-    assert.deepEqual(args, { v: paket });
+    assert.deepEqual(args, { p_value: paket });
     return { data: hash };
   } };
   assert.equal(await berechnePhysioPaketHash({ db, paket }), hash);
