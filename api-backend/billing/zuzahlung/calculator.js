@@ -108,6 +108,52 @@ export function calcAbrechnungsfallZuzahlung({
   return { brutto, prozZuzahlung, pauschZuzahlung: Math.max(0, pauschZuzahlung), gesZuzahlung, netto, befreiungsgrund: null };
 }
 
+/**
+ * Zuzahlung je Leistungstag (gkv-302 07.11.2026; Physio/Podo-Vertrag § 8 Abs. 2/4, Anlage 1 TP5 V21 EHE/GZF):
+ *   - Alter (18) und Befreiung (§ 62) gelten je LEISTUNGSTAG; 10 % nur fuer Tage mit Zuzahlungspflicht.
+ *   - 10-EUR-Pauschale haengt am ersten Behandlungstag der Verordnung: ist der frei, entfaellt sie.
+ *     (Wortlaut belegt nur "erster Behandlungstag"; dass Alter/§62 dort gelten, ist Auslegung — offene Frage.)
+ *   - Alter: Geburtstag selbst zaehlt als 18 (offene Frage, nicht im Archiv belegt).
+ * Jede Session braucht `datum` (YYYY-MM-DD, Berliner Leistungstag). Fehlt eines: Fehler, nie raten.
+ * Befreiung: patient.befreiungen = [{ jahr, befreit_ab, befreit_bis }] (isBefreit je Tag), oder
+ * patient.befreit_im_jahr (Boolean) = ganzes Jahr der Leistung.
+ *
+ * @returns {{brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund, tage}}
+ */
+export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnung_zuzahlungsfrei = false }) {
+  if (patient?.insurance_type === 'privat') return { zuzahlung_eur: 0, befreit: false, grund: 'privat' };
+  if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('Zuzahlung je Tag: keine Sitzungen.');
+  for (const s of sessions) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s.datum || ''))) {
+      throw new Error('Zuzahlung je Tag: Leistungstag fehlt oder ist ungueltig.');
+    }
+  }
+  const sortiert = [...sessions].sort((a, b) => a.datum.localeCompare(b.datum));
+  const grundAm = (datum) => {
+    if (verordnung_zuzahlungsfrei) return 'verordnung';
+    if (isUnter18(patient?.geburtsdatum, `${datum}T12:00:00`)) return 'unter_18';
+    const jahr = +datum.slice(0, 4);
+    if (Array.isArray(patient?.befreiungen) ? isBefreit(patient.befreiungen, jahr, `${datum}T12:00:00`) : patient?.befreit_im_jahr) {
+      return 'befreiungsausweis';
+    }
+    return null;
+  };
+  const tage = sortiert.map(s => ({ datum: s.datum, preis_eur: +s.preis_eur || 0, grund: grundAm(s.datum),
+    zuz: grundAm(s.datum) ? 0 : calcSessionZuzahlung(s) }));
+  const brutto = r2(tage.reduce((a, t) => a + t.preis_eur, 0));
+  const prozZuzahlung = r2(tage.reduce((a, t) => a + t.zuz, 0));
+  const ersterTagPflichtig = tage[0].grund === null;
+  const pflichtigBrutto = r2(tage.filter(t => t.grund === null).reduce((a, t) => a + t.preis_eur, 0));
+  const pauschZuzahlung = ersterTagPflichtig ? Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozZuzahlung))) : 0;
+  const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
+  const alleFrei = tage.every(t => t.grund !== null);
+  return {
+    brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto: r2(brutto - gesZuzahlung),
+    befreiungsgrund: alleFrei ? tage[0].grund : null,
+    tage: tage.map(({ datum, grund, zuz }) => ({ datum, befreiungsgrund: grund, zuzahlung: zuz })),
+  };
+}
+
 export function isUnter18(geburtsdatum, referenceDate = new Date()) {
   if (!geburtsdatum) return false;
   const gb = geburtsdatum instanceof Date ? geburtsdatum : new Date(geburtsdatum);
