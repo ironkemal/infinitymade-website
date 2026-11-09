@@ -47,7 +47,7 @@ test('Passwort: nie im JSON des Kanals, unlesbar -> kein Versand mit Code', asyn
   const json = JSON.stringify(k);
   assert.ok(!json.includes('s3cret'), 'Passwort darf nicht serialisiert werden');
   assert.ok(!json.includes('smtp.ionos.de'), 'Zugangsdaten nicht aufzaehlbar');
-  const kaputt = await mailKanal({ zeile: zeile({ smtp_passwort: '\\x00ff' }), env: { SMTP_HOST: 'x' }, kutu: true });
+  const kaputt = await mailKanal({ zeile: zeile({ smtp_passwort: '\\x00ff' }), env: {}, kutu: true });
   assert.equal(kaputt.weg, 'kein'); assert.equal(kaputt.fehler, 'PASSWORT_NICHT_LESBAR');
   assert.match(verschluesselePasswort('x'), /^\\x[0-9a-f]+$/);
 });
@@ -97,4 +97,12 @@ test('meldeVerbindungsfehler: nur Praxis-Postfach + Verbindungscode', async () =
   await meldeVerbindungsfehler(supabase, 'o1', { quelle: 'env' }, { code: 'EAUTH' });
   await meldeVerbindungsfehler(supabase, 'o1', { quelle: 'db' }, { code: 'EENVELOPE' });
   assert.equal(updates.length, 1); assert.equal(updates[0].status, 'unterbrochen'); assert.equal(updates[0].letzter_fehler_code, 'EAUTH');
+});
+
+test('Review 09.11.: unlesbares Passwort faellt auf SMTP_* zurueck (Fehler bleibt sichtbar); Gmail der Praxis nur fuer Dokumente', async () => {
+  const k = await mailKanal({ zeile: zeile({ smtp_passwort: '\\x00ff' }), env: { SMTP_HOST: 'smtp.env.invalid' }, kutu: true });
+  assert.equal(k.weg, 'smtp'); assert.equal(k.quelle, 'env'); assert.equal(k.fehler, 'PASSWORT_NICHT_LESBAR');
+  const env = { SMTP_HOST: 'smtp.praxura.invalid' };
+  assert.equal((await mailKanal({ zeile: { modus: 'gmail_oauth' }, env, kutu: false, zweck: 'booking' })).quelle, 'env');
+  assert.equal((await mailKanal({ zeile: { modus: 'gmail_oauth' }, env, kutu: false, zweck: 'dokument' })).weg, 'gmail');
 });

@@ -1,0 +1,96 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Probe: Einstellungen → E-Mail-Versand (AUFTRAG-MAILVERSAND)</title>
+<!--
+  Haengt den ECHTEN Abschnitt „Integrationen" aus dashboard.html ein und rendert module/mailversand.js mit erfundenen
+  API-Antworten. Kein Login, keine Netzverbindung nach aussen. Prueft: nur Inhaber, Einfuegeort, Status, Kacheln,
+  Formular je Anbieter, Anfragekoerper, Fehlerhinweis, „noch nicht verfuegbar", Banner, kein Ueberlauf.
+-->
+<link rel="stylesheet" href="../../dashboard.css">
+<link rel="stylesheet" href="../../dashboard-feinschliff.css">
+<link rel="stylesheet" href="../../praxura-design.css">
+<div id="ik-missing-banner" hidden></div>
+<div id="buehne" class="settings-sections" style="max-width:720px"></div>
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+const warte = (ms = 30) => new Promise(r => setTimeout(r, ms));
+try {
+  const { renderMailversandSettings, SECTION_ID } = await import('../../module/mailversand.js');
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const gruppe = doc.getElementById('googleCalBtn')?.closest('.settings-group');
+  pruef('dashboard.html hat die Gruppe mit Google Calendar (Einfuegeort)', !!gruppe);
+  document.getElementById('buehne').appendChild(document.importNode(gruppe, true));
+  const presets = { outlook: { name: 'Microsoft 365 / Outlook' }, gmail: { name: 'Google / Gmail' }, ionos: { name: 'IONOS' }, strato: { name: 'Strato' },
+    einsundeins: { name: '1&1' }, telekom: { name: 'T-Online' }, gmx: { name: 'GMX' }, webde: { name: 'WEB.DE' }, andere: { name: 'Andere' } };
+  const basis = { kutu: true, verfuegbar: true, quelle: null, einstellung: null, env: null, presets, hinweise: { gmx: 'GMX: POP3/IMAP erlauben.' },
+    verschluesselung: true, google: null, vorgaben: { absender_email: 'inhaber@example.invalid', absender_name: 'Physio Test' }, fehler: null };
+  let antwortGet = basis; const anfragen = []; let antwortPut = { ok: true, verbunden: true };
+  const fetchImpl = async (url, opt) => {
+    anfragen.push({ url, method: opt.method, body: opt.body ? JSON.parse(opt.body) : null, auth: opt.headers.Authorization });
+    const daten = opt.method === 'GET' ? antwortGet : antwortPut;
+    return { ok: !daten.__status || daten.__status < 400, status: daten.__status || 200, json: async () => daten };
+  };
+  const toasts = [];
+  const deps = (role) => ({ profile: { role }, apiBase: '/api', getToken: async () => 'T', fetchImpl, showToast: (m, a) => toasts.push([m, a]), showConfirmModal: async () => true });
+  const $ = (id) => document.getElementById(id);
+
+  renderMailversandSettings(deps('employee'));
+  pruef('Mitarbeiter: kein Abschnitt', !$(SECTION_ID));
+
+  renderMailversandSettings(deps('owner')); await warte();
+  const sec = $(SECTION_ID);
+  pruef('Inhaber: Abschnitt vor „Integrationen" in derselben Gruppe', sec && sec.nextElementSibling?.querySelector('#googleCalBtn'));
+  pruef('Status „Nicht eingerichtet" + Hinweis ohne Postfach', /Nicht eingerichtet/.test($('mvStatusKarte').textContent) && /Entwurf/.test($('mvStatusKarte').textContent));
+  pruef('GET mit Bearer-Token', anfragen[0]?.url === '/api/mailversand' && anfragen[0].auth === 'Bearer T');
+  const kacheln = [...sec.querySelectorAll('.mv-kachel')].map(k => k.dataset.preset);
+  pruef('Neun Anbieter-Kacheln, Microsoft zuerst, Andere zuletzt', kacheln.length === 9 && kacheln[0] === 'outlook' && kacheln[8] === 'andere', kacheln.join(','));
+  pruef('Kein Testmail-Knopf ohne Postfach', !$('mvTestBtn'));
+
+  sec.querySelector('[data-preset="gmx"]').click(); await warte();
+  pruef('GMX: Formular ohne Serverfelder, Adresse vorbelegt, Tipp sichtbar', $('mvFormular') && !$('mvHost') && $('mvEmail').value === 'inhaber@example.invalid' && /POP3/.test($('mvFormular').textContent));
+  pruef('Kachel GMX gedrueckt', sec.querySelector('[data-preset="gmx"]').getAttribute('aria-pressed') === 'true');
+  $('mvPasswort').value = 'geheim';
+  antwortGet = { ...basis, quelle: 'db', einstellung: { modus: 'smtp', preset: 'gmx', absender_email: 'inhaber@example.invalid', status: 'verbunden', passwortGespeichert: true } };
+  $('mvFormular').dispatchEvent(new Event('submit', { cancelable: true })); await warte(80);
+  const put = anfragen.find(a => a.method === 'PUT');
+  pruef('Speichern sendet Vorlage + Passwort, keine Serverfelder', put && put.body.preset === 'gmx' && put.body.passwort === 'geheim' && !('smtp_host' in put.body), JSON.stringify(put?.body));
+  pruef('Danach „Verbunden" + Testmail- und Trennen-Knopf', /Verbunden/.test($('mvStatusKarte').textContent) && $('mvTestBtn') && $('mvTrennenBtn'));
+  pruef('Passwort nach dem Speichern nicht mehr im Abschnitt', !sec.innerHTML.includes('geheim') && !($('mvPasswort')?.value));
+
+  sec.querySelector('[data-preset="andere"]').click(); await warte();
+  pruef('Andere: Server, Port, Verschluesselung, Benutzer', $('mvHost') && $('mvPort') && $('mvSicherheit') && $('mvBenutzer'));
+  $('mvHost').value = 'mail.example.invalid'; $('mvPort').value = '465'; $('mvSicherheit').value = 'ssl'; $('mvPasswort').value = '';
+  antwortPut = { __status: 400, error: 'Bitte das Passwort eingeben.' };
+  $('mvFormular').dispatchEvent(new Event('submit', { cancelable: true })); await warte(80);
+  const put2 = anfragen.filter(a => a.method === 'PUT').at(-1);
+  pruef('Andere: Port als Zahl, ohne Passwortfeld', put2.body.smtp_port === 465 && put2.body.smtp_sicherheit === 'ssl' && !('passwort' in put2.body), JSON.stringify(put2.body));
+  pruef('Fehlermeldung im Formular, Knopf wieder bedienbar', /Passwort eingeben/.test($('mvMeldung').textContent) && !$('mvSpeichernBtn').disabled);
+
+  antwortGet = { ...basis, quelle: 'db', einstellung: { modus: 'smtp', preset: 'telekom', absender_email: 'p@t-online.invalid', status: 'unterbrochen', passwortGespeichert: true },
+    fehler: { code: 'EAUTH', meldung: 'Benutzername oder Passwort wird vom Mailserver abgelehnt.', hinweis: 'T-Online: separates E-Mail-Passwort anlegen.' } };
+  renderMailversandSettings(deps('owner')); await warte(60);
+  pruef('Unterbrochen: Meldung + Anbieter-Hinweis', /unterbrochen/.test($('mvStatusKarte').textContent) && /E-Mail-Passwort/.test($('mvStatusKarte').textContent));
+  pruef('Banner im Dashboard sichtbar', $('mailversand-banner') && !$('mailversand-banner').hidden);
+
+  antwortGet = { ...basis, verfuegbar: false };
+  renderMailversandSettings(deps('owner')); await warte(60);
+  pruef('Tabelle fehlt (0118 nicht live): „wird freigeschaltet", keine Kacheln', $('mvNichtVerfuegbar') && !sec.querySelector('.mv-kachel'));
+  pruef('Banner wieder weg', $('mailversand-banner').hidden === true);
+
+  antwortGet = basis; renderMailversandSettings(deps('owner')); await warte(60);
+  sec.querySelector('[data-preset="gmail"]').click(); await warte();
+  pruef('Gmail (Box): App-Passwort-Schritte, kein Google-OAuth', sec.querySelectorAll('.mv-schritte li').length === 3 && !$('mvGoogleBtn'));
+  antwortGet = { ...basis, kutu: false, google: { verfuegbar: true, verbunden: false } };
+  renderMailversandSettings(deps('owner')); await warte(60);
+  sec.querySelector('[data-preset="gmail"]').click(); await warte();
+  pruef('Gmail (SaaS): „Mit Google verbinden"', !!$('mvGoogleBtn'));
+  pruef('Abschnitt hat sichtbare Groesse', sec.getBoundingClientRect().height > 200);
+  pruef('Kein waagerechter Ueberlauf', document.documentElement.scrollWidth <= window.innerWidth, `${document.documentElement.scrollWidth} > ${window.innerWidth}`);
+} catch (e) {
+  pruef('Probe ohne Ausnahme', false, e?.stack || e);
+}
+window.__probe = ergebnis;
+</script>

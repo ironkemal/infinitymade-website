@@ -6,7 +6,8 @@ import express from 'express';
 process.env.SUPABASE_URL ||= 'http://127.0.0.1:9';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'synthetic-test-key';
 process.env.DATA_ENCRYPTION_KEY ||= 'c'.repeat(64);
-const { createMailversandRouter, pruefeMailEingabe, istInterneAdresse } = await import('./mailversand.js');
+const { createMailversandRouter, pruefeMailEingabe, istInterneAdresse, pruefZiel } = await import('./mailversand.js');
+const { verschluesselePasswort } = await import('../lib/mail.js');
 
 const OWNER = 'aaaaaaaa-0000-4000-8000-000000000001';
 
@@ -43,13 +44,13 @@ function fakeDb() {
   };
 }
 
-let server, base, db, rolle, verifyFehler, gesendet, kutuWert;
+let server, base, db, rolle, verifyFehler, gesendet, kutuWert; const optionen = [];
 before(async () => {
   db = fakeDb();
   const app = express(); app.use(express.json());
   const auth = (req, _res, next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: rolle }; next(); };
   const owner = (req, res, next) => (req.auth.role === 'owner' ? next() : res.status(403).json({ error: 'Nur für Inhaber' }));
-  const transportFabrik = () => ({
+  const transportFabrik = (o) => (optionen.push(o), {
     async verify() { if (verifyFehler) throw Object.assign(new Error('x'), { code: verifyFehler }); },
     async sendMail(m) { gesendet.push(m); },
   });
@@ -178,4 +179,35 @@ test('SSRF (O-244 Auflage 1): SaaS lehnt intern aufloesende Hosts ab, Box erlaub
   assert.equal(db.t.praxis_mailversand.length, 0);
   reset({ kutu: true });
   assert.equal((await call('PUT', '/mailversand', body)).status, 200, 'Box: Mailserver im Praxisnetz erlaubt');
+});
+
+test('Review 09.11.: verify/Testmail immer mit requireTLS', async () => {
+  reset(); optionen.length = 0;
+  await call('PUT', '/mailversand', { preset: 'gmx', absender_email: 'praxis@gmx.invalid', passwort: 'pw' });
+  await new Promise(r => setTimeout(r, 0));
+  assert.ok(optionen.length >= 1 && optionen.every(o => o.requireTLS === true && o.host === 'mail.gmx.net'));
+});
+
+test('Review 09.11.: gespeichertes, unlesbares Passwort behalten → 400 statt falschem „verbunden"', async () => {
+  reset();
+  db.t.praxis_mailversand.push({ owner_id: OWNER, modus: 'smtp', preset: 'ionos', smtp_host: 'smtp.ionos.de', smtp_port: 465, smtp_sicherheit: 'ssl',
+    smtp_benutzer: 'praxis@example.invalid', smtp_passwort: '\\x00ff', absender_email: 'praxis@example.invalid', status: 'verbunden' });
+  const g = await call('GET', '/mailversand');
+  assert.equal(g.body.einstellung.status, 'unterbrochen'); assert.equal(g.body.fehler.code, 'PASSWORT_NICHT_LESBAR');
+  const r = await call('PUT', '/mailversand', { preset: 'ionos', absender_email: 'praxis@example.invalid' });
+  assert.equal(r.status, 400); assert.equal(r.body.code, 'PASSWORT_NICHT_LESBAR');
+  const neu = await call('PUT', '/mailversand', { preset: 'ionos', absender_email: 'praxis@example.invalid', passwort: 'neu' });
+  assert.equal(neu.status, 200); assert.equal(neu.body.verbunden, true);
+});
+
+test('Review 09.11.: SSRF — IP festgenagelt mit tls.servername, Hex-Form erkannt', async () => {
+  assert.equal(istInterneAdresse('::ffff:7f00:1'), true);
+  assert.equal(istInterneAdresse('::ffff:cb00:7107'), false);
+  const smtp = { host: 'mail.b.invalid', port: 587, secure: false, user: 'u', pass: 'p' };
+  const lookup = async () => [{ address: '203.0.113.9' }];
+  const z = await pruefZiel(smtp, { preset: 'andere', kutu: false, lookup });
+  assert.equal(z.host, '203.0.113.9'); assert.equal(z.tls.servername, 'mail.b.invalid'); assert.equal(z.requireTLS, true);
+  assert.equal(await pruefZiel(smtp, { preset: 'andere', kutu: false, lookup: async () => [{ address: '10.0.0.1' }] }), null);
+  assert.equal((await pruefZiel(smtp, { preset: 'andere', kutu: true, lookup: async () => [{ address: '10.0.0.1' }] })).host, 'mail.b.invalid', 'Box: Praxisnetz erlaubt');
+  assert.equal((await pruefZiel(smtp, { preset: 'ionos', kutu: false, lookup })).host, 'mail.b.invalid', 'Vorlagen nicht umgeschrieben');
 });

@@ -35,7 +35,7 @@ try {
   const box = document.getElementById('setTerminerinnerungAktiv');
   pruef('Haken entspricht dem gespeicherten Wert (aus)', box && box.checked === false);
   const text = sec().textContent;
-  pruef('Texte nennen Einwilligung, telefonische Absage, SMTP, nicht ueber Praxura', /zugestimmt/.test(text) && /telefonisch/.test(text) && /SMTP/.test(text) && /nicht über Praxura/.test(text));
+  pruef('Texte nennen Einwilligung, telefonische Absage, Postfach unter E-Mail-Versand, nicht ueber Praxura', /zugestimmt/.test(text) && /telefonisch/.test(text) && /E-Mail-Versand/.test(text) && /nicht über Praxura/.test(text));
   pruef('Abschnitt ist mit sichtbarem Platz gerendert (Hoehe > 80 px, Breite <= Buehne)', sec().getBoundingClientRect().height > 80 && sec().getBoundingClientRect().width <= buehne.getBoundingClientRect().width + 1);
 
   box.click(); await new Promise(r => setTimeout(r, 20));

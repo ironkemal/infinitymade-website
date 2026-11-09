@@ -23,12 +23,19 @@ import { encryptPHI, decryptPHI } from './phi-encrypt.js';
 //
 // Mit `host` (Praxis-Postfach aus Einstellungen → E-Mail-Versand, praxis_mailversand)
 // werden host/port/secure/user/pass aus dem Argument genommen, sonst aus SMTP_* (wie bisher).
-export function createSMTPTransport({ requireTLS = false, host, port, secure, user, pass } = {}) {
+// `tls` (z. B. servername beim festgenagelten Ziel, routes/mailversand.js pruefZiel) und Zeitgrenzen werden durchgereicht.
+export function createSMTPTransport({
+  requireTLS = false, host, port, secure, user, pass, tls, connectionTimeout, greetingTimeout, socketTimeout,
+} = {}) {
   if (host) {
     return nodemailer.createTransport({
       host, port: Number(port) || 587, secure: !!secure,
       auth: { user, pass },
       ...(requireTLS ? { requireTLS: true } : {}),
+      ...(tls ? { tls } : {}),
+      ...(connectionTimeout ? { connectionTimeout } : {}),
+      ...(greetingTimeout ? { greetingTimeout } : {}),
+      ...(socketTimeout ? { socketTimeout } : {}),
     });
   }
   return nodemailer.createTransport({
@@ -181,7 +188,12 @@ export async function mailKanal({ supabase, ownerId, zweck = 'dokument', env = p
   if (z?.modus === 'smtp' && z.smtp_host) {
     const pass = decryptPHI(z.smtp_passwort);
     const absender = z.absender_email || z.smtp_benutzer || null;
-    if (!pass) return kanal('kein', 'db', { fehler: 'PASSWORT_NICHT_LESBAR', preset: z.preset || null, absender });
+    if (!pass) {
+      // Schlüssel gewechselt/Zeile kaputt: lieber der alte Weg (SMTP_*) als gar keiner — Fehler bleibt sichtbar.
+      const rueckfall = umgebungsKanal(zweck, env, kutu);
+      if (rueckfall.weg !== 'kein') { rueckfall.fehler = 'PASSWORT_NICHT_LESBAR'; return rueckfall; }
+      return kanal('kein', 'db', { fehler: 'PASSWORT_NICHT_LESBAR', preset: z.preset || null, absender });
+    }
     const smtp = {
       host: z.smtp_host, port: Number(z.smtp_port) || 587, secure: z.smtp_sicherheit === 'ssl',
       user: z.smtp_benutzer || z.absender_email, pass,
@@ -191,8 +203,13 @@ export async function mailKanal({ supabase, ownerId, zweck = 'dokument', env = p
       from: name => fromHeader(z.absender_name || name, absender),
     });
   }
-  if (z?.modus === 'gmail_oauth' && !kutu) return kanal('gmail', 'db');
+  // Gmail der Praxis ersetzt nur den Dokumentenweg; Booking/Alarm bleiben wie bisher auf SMTP_*.
+  if (z?.modus === 'gmail_oauth' && !kutu && zweck === 'dokument') return kanal('gmail', 'db');
+  return umgebungsKanal(zweck, env, kutu);
+}
 
+/** Weg ohne Praxis-Einstellung — exakt das Verhalten vor AUFTRAG-MAILVERSAND. */
+function umgebungsKanal(zweck, env, kutu) {
   const envSmtp = envSmtpVorhanden(env);
   if (kutu) return envSmtp ? kanal('smtp', 'env') : kanal('kein', null);
   if (zweck === 'booking' || zweck === 'alarm') return envSmtp ? kanal('smtp', 'env') : kanal('kein', null);

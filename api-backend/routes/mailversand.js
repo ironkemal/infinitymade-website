@@ -19,7 +19,7 @@ import net from 'node:net';
 import rateLimit from 'express-rate-limit';
 import { requireAuth, requireOwner } from '../ai/auth.js';
 import { istKutu } from '../lib/dagitim.js';
-import { encryptionAvailable } from '../lib/phi-encrypt.js';
+import { encryptionAvailable, decryptPHI } from '../lib/phi-encrypt.js';
 import {
   SMTP_PRESETS, ANBIETER_HINWEIS, fehlerHinweis, envSmtpAnzeige, verschluesselePasswort,
   ladeMailEinstellung, mailKanal, createSMTPTransport,
@@ -35,6 +35,11 @@ export const ERLAUBTE_PORTS = new Set([25, 465, 587, 2525]);
 
 /** Private, Loopback-, Link-local-, CGNAT- und ULA-Adressen. */
 export function istInterneAdresse(ip) {
+  const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(String(ip));
+  if (hex) {
+    const a = parseInt(hex[1], 16); const b = parseInt(hex[2], 16);
+    return istInterneAdresse(`${a >> 8}.${a & 255}.${b >> 8}.${b & 255}`);
+  }
   if (net.isIPv4(ip)) {
     const [a, b] = ip.split('.').map(Number);
     return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
@@ -51,6 +56,21 @@ async function zeigtIntern(host, lookup = dns.promises.lookup) {
     const adressen = await lookup(host, { all: true });
     return adressen.some(a => istInterneAdresse(a.address));
   } catch { return false; } // nicht auflösbar → verify() meldet EDNS
+}
+
+/**
+ * Verbindungsziel für verify()/Testmail. Im SaaS bei „Andere": EINMAL auflösen, prüfen und die IP festnageln
+ * (tls.servername = Hostname), sonst könnte nodemailer beim Verbinden neu auflösen (DNS-Rebinding).
+ * requireTLS immer: ohne STARTTLS gingen Zugangsdaten im Klartext (Review 09.11.2026).
+ * @returns {Promise<object|null>} Transport-Optionen, null = internes Ziel (abgelehnt)
+ */
+export async function pruefZiel(smtp, { preset, kutu, lookup = dns.promises.lookup }) {
+  const basis = { ...(smtp || {}), requireTLS: true };
+  if (kutu || preset !== 'andere' || !smtp?.host) return basis;
+  let adressen;
+  try { adressen = await lookup(smtp.host, { all: true }); } catch { return basis; }
+  if (!adressen.length || adressen.some(a => istInterneAdresse(a.address))) return null;
+  return { ...basis, host: adressen[0].address, tls: { servername: smtp.host } };
 }
 const VERIFY_TIMEOUT_MS = 15_000;
 
@@ -139,6 +159,10 @@ export function createMailversandRouter({
       const box = kutu();
       const [z, profil, verfuegbar] = await Promise.all([ladeMailEinstellung(supabase, ownerId), ladeProfil(ownerId), tabelleDa()]);
       const sicht = oeffentlicheSicht(z);
+      // Gespeichertes Passwort nicht mehr lesbar (Schlüssel gewechselt): sichtbar machen statt „verbunden" zu zeigen.
+      if (sicht?.modus === 'smtp' && z.smtp_passwort && !decryptPHI(z.smtp_passwort)) {
+        sicht.status = 'unterbrochen'; sicht.letzter_fehler_code = 'PASSWORT_NICHT_LESBAR'; sicht.passwortGespeichert = false;
+      }
       const aktiv = sicht && sicht.modus !== 'aus' ? sicht : null;
       // SMTP_* der Box anzeigen (read-only); im SaaS nie — das wäre der Praxura-Server.
       const env_smtp = box ? envSmtpAnzeige(env) : null;
@@ -186,10 +210,15 @@ export function createMailversandRouter({
         status: 'nicht_eingerichtet', letzter_fehler_code: null, updated_at: new Date().toISOString(),
       };
       // Verbindung gleich prüfen (ohne Mail): sofortige Rückmeldung mit Anbieter-Hinweis.
-      const kanal = await mailKanal({ zeile, zweck: 'dokument', env, kutu: kutu() });
+      const kanal = await mailKanal({ zeile, zweck: 'dokument', env: {}, kutu: kutu() });
+      if (kanal.weg !== 'smtp' || kanal.quelle !== 'db') {
+        return res.status(400).json({ error: 'Das gespeicherte Passwort kann nicht mehr gelesen werden. Bitte das Passwort neu eingeben.', code: 'PASSWORT_NICHT_LESBAR' });
+      }
+      const ziel = await pruefZiel(kanal.smtp, { preset: werte.preset, kutu: kutu(), lookup });
+      if (!ziel) return res.status(400).json({ error: 'Dieser Server ist aus dem Internet nicht erreichbar. Bitte den öffentlichen Postausgangsserver Ihres Anbieters eintragen.' });
       let pruefung;
       try {
-        await mitTimeout(Promise.resolve(transportFabrik({ ...kanal.smtp }).verify()), VERIFY_TIMEOUT_MS);
+        await mitTimeout(Promise.resolve(transportFabrik(ziel).verify()), VERIFY_TIMEOUT_MS);
         pruefung = { ok: true, code: null };
       } catch (e) {
         pruefung = { ok: false, code: String(e?.code || 'VERIFY_FEHLER').slice(0, 64) };
@@ -224,10 +253,13 @@ export function createMailversandRouter({
       if (jetzt - (letzterTest.get(ownerId) || 0) < TEST_ABSTAND_MS) {
         return res.status(429).json({ error: 'Bitte kurz warten, bevor Sie es erneut versuchen.' });
       }
+      if (letzterTest.size > 5000) letzterTest.clear();
       letzterTest.set(ownerId, jetzt);
+      const ziel = await pruefZiel(kanal.smtp, { preset: kanal.preset, kutu: kutu(), lookup });
+      if (!ziel) return res.status(400).json({ error: 'Dieser Server ist aus dem Internet nicht erreichbar.', code: 'ZIEL_INTERN' });
       let ergebnis;
       try {
-        const t = transportFabrik({ ...(kanal.smtp || {}) });
+        const t = transportFabrik(ziel);
         await mitTimeout(Promise.resolve(t.verify()), VERIFY_TIMEOUT_MS);
         await t.sendMail({
           from: kanal.from(profil.business_name),
