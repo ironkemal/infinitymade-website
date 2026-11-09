@@ -462,7 +462,7 @@ trigger/bucket/publication/extension/seed satırları vb.). Burada tanımlanan, 
 | 6 | Realtime | `bookings` aboneliği bir olay aldı |
 | 7 | Storage | 5 bucket var, private bucket'a yazma + signed-URL ile okuma çalıştı |
 | 8 | Şifreleme | `DATA_ENCRYPTION_KEY` ile yaz-oku turu başarılı; parmak izi panelde görünüyor (§4.5) |
-| 9 | SMTP | "Test maili gönder" başarılı **ya da** müşteri bilinçli olarak atladı (Discourse deseni) |
+| 9 | E-Mail-Versand | Optional, nicht Teil des Wizards (AUFTRAG-MAILVERSAND, O-244): Inhaber richtet das Postfach unter Einstellungen → E-Mail-Versand ein und „Testmail senden" kommt an — **oder** die Praxis verzichtet bewusst (Entwurfsweg/mailto bleibt) |
 | 10 | TLS | `https://<alan>` geçerli sertifikayla 200 döndü (kendinden imzalı değil) |
 | 11 | Yedek | **Bir kez gerçekten yedek alındı** ve künyesi yazıldı — kurulum bittiğinde elde bir yedek var |
 | 12 | Zamanlanmış işler | Zamanlayıcılar kayıtlı, bir sonraki çalışma zamanı panelde görünüyor (O-22/O-23) |

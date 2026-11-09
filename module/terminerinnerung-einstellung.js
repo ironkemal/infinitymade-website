@@ -10,14 +10,15 @@
  * ausschließlich, wo 0110 angewandt ist) – in der SaaS bleibt der Abschnitt versteckt, ohne Fehlerabfrage.
  */
 'use strict';
+import { einrichtenLink } from './mailversand.js?v=20261109';
 
 export const WIRKUNG_TEXT = 'Am Vorabend (zwischen 18 und 22 Uhr) erhalten Patientinnen und Patienten mit Termin am nächsten Tag '
   + 'eine kurze E-Mail mit Datum, Uhrzeit und Praxis. Gesendet wird nur an Personen, die der Mitteilung per E-Mail '
   + 'zugestimmt haben (Datenschutz-Einwilligung mit der Option „Terminerinnerungen und Terminänderungen"). '
   + 'Die Mail enthält keinen Namen und keinen Grund. Absagen erfolgen telefonisch.';
 
-export const VORAUSSETZUNG_TEXT = 'Voraussetzung: Für Ihre Praxis ist ein E-Mail-Server (SMTP) eingerichtet. Ohne ihn wird nichts versendet. '
-  + 'Die Mails gehen über Ihren eigenen Mailserver, nicht über Praxura.';
+export const VORAUSSETZUNG_TEXT = 'Voraussetzung: Unter Einstellungen → E-Mail-Versand ist ein Postfach der Praxis verbunden. Ohne Postfach wird nichts versendet. '
+  + 'Die Mails gehen über Ihr eigenes Postfach, nicht über Praxura.';
 
 /** Soll der Abschnitt gezeigt werden? Inhaber + Spalte vorhanden (boolean). */
 export function schalterSichtbar(profile) {
@@ -48,7 +49,9 @@ export function renderTerminerinnerungSettings(deps) {
   const beschriftung = document.createElement('span');
   beschriftung.textContent = 'Terminerinnerung per E-Mail senden';
   zeile.append(box, beschriftung);
-  body.append(absatz(WIRKUNG_TEXT, 'margin-bottom:10px;'), absatz(VORAUSSETZUNG_TEXT, 'margin-bottom:12px;'), zeile);
+  const voraus = absatz(VORAUSSETZUNG_TEXT + ' ', 'margin-bottom:12px;');
+  voraus.append(einrichtenLink(document, 'Zum E-Mail-Versand →'));
+  body.append(absatz(WIRKUNG_TEXT, 'margin-bottom:10px;'), voraus, zeile);
 
   box.addEventListener('change', async () => {
     const gewollt = box.checked;

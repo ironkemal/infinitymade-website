@@ -31,32 +31,24 @@ try {
     if (pfad === '/setup/verify') return antwort(200, body?.pruefungen
       ? { ok: true, billigePruefungen: { schema: { status: 'yesil' }, rls: { status: 'yesil' }, sifreleme: { status: 'yesil' } } }
       : { ok: true, ownerAngelegt: true });
-    if (pfad === '/setup/test-smtp') return antwort(200, { eingerichtet: false });
     if (pfad === '/setup/branding') return antwort(brandingAntwort.status, brandingAntwort.body);
     if (pfad === '/setup/abschluss') return antwort(200, { ok: true });
     return antwort(404, {});
   };
 
-  await import('../../setup.js?v=20261006a');
+  await import('../../setup.js?v=20261109');
   await warte(100);
   const $ = (id) => document.getElementById(id);
   const sichtbar = (id) => !$(id).hidden;
 
-  // Jeton → (Owner existiert) → Mail
+  // Jeton → (Owner existiert) → direkt Praxisangaben (Mail ist kein Schritt mehr, AUFTRAG-MAILVERSAND 09.11.2026)
   $('token').value = 'jeton'; $('tokenForm').dispatchEvent(new Event('submit', { cancelable: true }));
   await warte();
-  pruef('Nach dem Jeton folgt die Mailprüfung', sichtbar('stepSmtp') && !sichtbar('stepBranding'));
-  pruef('Schrittzähler nennt fünf Schritte', /von 5/.test($('smtpStepLabel').textContent) && /Schritt 4 von 5/.test($('brandingStepLabel').textContent) && /Schritt 5 von 5/.test($('doneStepLabel').textContent),
-    [$('smtpStepLabel').textContent, $('brandingStepLabel').textContent, $('doneStepLabel').textContent].join(' / '));
-  const txt = $('smtpSkippedMsg').textContent;
-  pruef('Mailtext nennt nur Patienten-/Termin-/Mahnungsmails (O-142)', /Patientinnen und Patienten/.test(txt) && /Mahnungen/.test(txt) && /Anmeldung braucht keine Mails/.test(txt), txt);
-  pruef('keine Aussage mehr zu Einladungs-/Passwort-Reset-Mails', !/Einladung|Passwort-Reset/.test(txt + $('smtpAckLabel').textContent));
-
-  // Weiter ohne Mail → Praxisangaben
-  $('smtpAckCheckbox').checked = true; $('smtpAckCheckbox').dispatchEvent(new Event('change'));
-  $('smtpSkipContinueBtn').click();
-  await warte();
-  pruef('Danach kommt der Branding-Schritt, noch keine Prüfungen', sichtbar('stepBranding') && !sichtbar('stepDone'));
+  pruef('Nach dem Jeton folgt direkt der Branding-Schritt, keine Mailprüfung', !$('stepSmtp') && sichtbar('stepBranding') && !sichtbar('stepDone'));
+  pruef('Schrittzähler nennt vier Schritte', /Schritt 3 von 4/.test($('brandingStepLabel').textContent) && /Schritt 4 von 4/.test($('doneStepLabel').textContent),
+    [$('brandingStepLabel').textContent, $('doneStepLabel').textContent].join(' / '));
+  pruef('Kein Aufruf von /setup/test-smtp', !anrufe.some(a => a[0] === '/setup/test-smtp'));
+  pruef('Fertig-Text nennt E-Mail-Versand als spätere, optionale Einstellung', /Einstellungen → E-Mail-Versand/.test($('doneText').textContent));
 
   // Fehler: Server lehnt ab → Meldung, Schritt bleibt, Überspringen geht trotzdem
   brandingAntwort = { status: 400, body: { error: 'Postleitzahl: ungültig (fünf Ziffern)' } };

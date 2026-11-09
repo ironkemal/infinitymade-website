@@ -11,6 +11,8 @@
  * eingehängt von module/rechnung-ansicht.js.
  */
 
+import { einrichtenLinkHtml } from './mailversand.js?v=20261109';
+
 let d = null;
 let aktuelleRechnung = null;
 
@@ -25,11 +27,13 @@ export function ergebnisText(antwort) {
   }
   const gruende = {
     KEINE_EMAIL: 'Für diesen Patienten ist keine E-Mail-Adresse hinterlegt.',
-    VERSAND_NICHT_EINGERICHTET: 'Der E-Mail-Versand ist nicht eingerichtet (SMTP der Praxis fehlt).',
+    VERSAND_NICHT_EINGERICHTET: 'Der E-Mail-Versand ist nicht eingerichtet (kein Postfach verbunden).',
     GMAIL_NICHT_VERBUNDEN: 'Gmail ist nicht verbunden.',
     gmail_reauth_required: 'Die Gmail-Verbindung ist abgelaufen – bitte neu verbinden.',
   };
-  return { ok: false, text: `${gruende[antwort?.code] || antwort?.error || 'Die E-Mail konnte nicht versendet werden.'} Sie können das PDF herunterladen und selbst senden.` };
+  // Bei fehlendem/abgelaufenem Postfach den Weg zur Einstellung zeigen (AUFTRAG-MAILVERSAND).
+  const einrichten = ['VERSAND_NICHT_EINGERICHTET', 'GMAIL_NICHT_VERBUNDEN', 'gmail_reauth_required'].includes(antwort?.code);
+  return { ok: false, einrichten, text: `${gruende[antwort?.code] || antwort?.error || 'Die E-Mail konnte nicht versendet werden.'} Sie können das PDF herunterladen und selbst senden.` };
 }
 
 function pdfLink(base64, dateiname) {
@@ -100,6 +104,7 @@ async function senden(body) {
   const e = ergebnisText(antwort);
   body.innerHTML = `
     <p style="font-size:14px;line-height:1.5;color:var(--text-main);">${esc(e.text)}</p>
+    ${e.einrichten ? `<p style="margin:6px 0 0;" data-rm-schliessen>${einrichtenLinkHtml()}</p>` : ''}
     <div style="margin-top:12px;padding:12px;border-radius:8px;background:var(--bg-card-solid);border:1px solid var(--border, rgba(0,0,0,.12));">
       <div style="font-size:12px;color:var(--text-muted);">Passwort für das PDF (nur jetzt sichtbar)</div>
       <div style="font-size:22px;font-weight:700;letter-spacing:2px;font-family:monospace;margin-top:4px;">${esc(antwort.passwort || '')}</div>

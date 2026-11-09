@@ -1,7 +1,7 @@
 import { verbindeMailSignaturen } from './module/mail-signatur-anbindung.js?v=20261103mail1'; import { ladePraxisLogoHoch } from './module/praxis-logo-upload.js?v=20261103mail1';
 import { oeffneLeistungsRaum, leistungsRaumPayload } from './module/leistungs-raum.js?v=20261103raum';
 import { renderBlankoHinweis } from './module/blanko-hinweis.js?v=20261021a';
-import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261107hinweis';
+import { planungVerdrahten, raumFelder, terminWarnungen, sondertagGesperrt, serieNachpruefen, raumAktionsTermin, mountWidgetEinbettung, anstellungFuerUrlaub, urlaubsKennzahlen, arbeitstageImZeitraum, zeigeAnrufliste } from './module/planung-bruecke.js?v=20261109';
 import { pruefeStartprofil, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
 import { createPendingGuard, setzeSpeichernText } from './module/rechnung-speichern.js?v=20261010zc';
 import { mountKiEinstellungen } from './module/ki-einstellungen.js?v=20261103mail1';
@@ -72,11 +72,11 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261102c';
-import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261103q';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261109';
+import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261109';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
-import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261106';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261031k9'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
+import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261109'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261022q'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261009rs'; import { rechnungSnapshotsGeprueft } from './module/rechnung-snapshot.js?v=20261010zc'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261010b'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261022q'; import { mountStartAufgaben } from './module/start-aufgaben.js?v=20261101st';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20261014fix1'; import { markiereZuBelegBezahlt } from './module/rechnung-zahlung.js?v=20261010w';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20261103b';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261010b';
@@ -12042,7 +12042,7 @@ async function handleGmailCallback() {
   }
   window.history.replaceState({}, '', window.location.pathname);
   showToast('Gmail verbunden: ' + (gmailConnectedEmail || ''));
-  switchPanel('b2b');
+  if (qp.get('mailversand')) { renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal }); gehZuEinstellung('settingsMailversandSection'); } else switchPanel('b2b');
 }
 
 function openAddEmployeeModal() {
@@ -14163,7 +14163,7 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
-    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast }); renderTerminerinnerungSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
+    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast }); renderTerminerinnerungSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
@@ -17735,7 +17735,7 @@ function nachrichtAnPatient(requestId) {
         });
         const json = await r.json();
         if (!r.ok) throw new Error(json.error || 'Fehler');
-        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden.', 'info'); else showToast(tl.anfragen_nachricht_ok, 'success'); // Box: K2b.15
+        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden. Direkt versenden: Einstellungen → E-Mail-Versand.', 'info'); else showToast(tl.anfragen_nachricht_ok, 'success'); // Box: K2b.15
       } catch (e) {
         showToast(e.message || 'Fehler beim Senden', 'error');
         return false;
@@ -17851,7 +17851,7 @@ async function declineAnfrage(requestId) {
         });
         const json = await r.json();
         if (!r.ok) throw new Error(json.error || 'Fehler');
-        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden.', 'info'); else showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info'); // Box: K2b.15
+        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden. Direkt versenden: Einstellungen → E-Mail-Versand.', 'info'); else showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info'); // Box: K2b.15
         loadAnfragen(anfragenCurrentStatus);
       } catch (e) {
         showToast(e.message || 'Fehler beim Ablehnen', 'error');

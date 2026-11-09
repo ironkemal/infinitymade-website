@@ -6,6 +6,8 @@
  * Ohne Einwilligung ab v6, ohne Adresse oder ohne eingerichteten Versand bleibt es bei der Anrufliste.
  */
 
+import { einrichtenLinkHtml } from './mailversand.js?v=20261109';
+
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -22,7 +24,7 @@ export function mitteilungHtml(v) {
       ${v.beispiel ? `<details class="stm-text"><summary>Mustertext ansehen</summary><p><strong>${escapeHtml(v.beispiel.betreff)}</strong></p><pre>${escapeHtml(v.beispiel.text)}</pre></details>` : ''}
       <button type="button" class="btn-primary" id="stmSenden">Freigeben und senden (${v.mail.length})</button>`);
   } else if (!v.weg) {
-    teile.push('<p class="form-hint">E-Mail-Versand ist nicht eingerichtet (Box: SMTP der Praxis, sonst Gmail unter Einstellungen → E-Mail). Bitte telefonisch informieren.</p>');
+    teile.push(`<p class="form-hint">E-Mail-Versand ist nicht eingerichtet. Bitte telefonisch informieren. ${einrichtenLinkHtml()}</p>`);
   } else {
     teile.push('<p class="form-hint">Niemand hat in E-Mail-Mitteilungen eingewilligt. Bitte telefonisch informieren.</p>');
   }

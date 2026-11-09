@@ -176,7 +176,7 @@
 
       <!-- Schritt 1: Jeton -->
       <section id="stepToken">
-        <p class="step-indicator" id="tokenStepLabel">Schritt 1 von 5</p>
+        <p class="step-indicator" id="tokenStepLabel">Schritt 1 von 4</p>
         <h1 id="tokenTitle">Einrichtung starten</h1>
         <p class="sub" id="tokenSub">Normalerweise öffnet sich diese Seite nach der Installation von selbst. Falls nicht: den Link vom Ende von install.sh öffnen oder den Jeton hier eintragen.</p>
         <p class="sub" id="tokenAuto" hidden></p>
@@ -190,7 +190,7 @@
 
       <!-- Schritt 2: Owner-Konto -->
       <section id="stepOwner" hidden>
-        <p class="step-indicator" id="ownerStepLabel">Schritt 2 von 5</p>
+        <p class="step-indicator" id="ownerStepLabel">Schritt 2 von 4</p>
         <h1 id="ownerTitle">Praxis und Konto</h1>
         <p class="sub" id="ownerSub">Diese Angaben legen das erste Inhaber-Konto an.</p>
         <form id="ownerForm">
@@ -228,47 +228,9 @@
         </form>
       </section>
 
-      <!-- Schritt 3: SMTP testen -->
-      <section id="stepSmtp" hidden>
-        <p class="step-indicator" id="smtpStepLabel">Schritt 3 von 5</p>
-        <h1 id="smtpTitle">Mailversand prüfen</h1>
-        <p class="sub" id="smtpIntro">Wir prüfen jetzt, ob die Box wirklich Mails verschicken kann.</p>
-
-        <div id="smtpChecking" class="msg info show">Wird geprüft …</div>
-
-        <div id="smtpSkipped" hidden>
-          <div class="msg warn show" id="smtpSkippedMsg">Kein E-Mail-Konto verbunden — Mails an Patientinnen und Patienten (z. B. Terminbestätigungen, Mahnungen) werden nicht verschickt. Die Anmeldung braucht keine Mails.</div>
-          <label class="check-row">
-            <input type="checkbox" id="smtpAckCheckbox" />
-            <span id="smtpAckLabel">Ich bin mir bewusst, dass keine Mails an Patientinnen und Patienten verschickt werden, und möchte trotzdem fortfahren.</span>
-          </label>
-          <button type="button" class="btn-primary" id="smtpSkipContinueBtn" disabled>Weiter</button>
-        </div>
-
-        <div id="smtpSent" hidden>
-          <div class="msg warn show" id="smtpSentMsg"></div>
-          <p class="sub" id="smtpArrivedQuestion" style="margin-top:0.8rem;margin-bottom:0.4rem;font-size:0.85rem;">Ist die Testmail angekommen (auch im Spam-Ordner prüfen)?</p>
-          <div class="btn-row">
-            <button type="button" class="btn-secondary" id="smtpNotArrivedBtn">Nicht angekommen</button>
-            <button type="button" class="btn-primary" id="smtpArrivedBtn" style="margin-top:0;">Angekommen</button>
-          </div>
-        </div>
-
-        <div id="smtpError" hidden>
-          <div class="msg error show" id="smtpErrorMsg"></div>
-          <button type="button" class="btn-primary" id="smtpRetryBtn">Erneut versuchen</button>
-          <button type="button" class="btn-secondary" id="smtpErrorContinueBtn" style="width:100%;margin-top:0.7rem;">Trotzdem fortfahren</button>
-        </div>
-
-        <div id="smtpConfirmed" hidden>
-          <div class="msg success show" id="smtpConfirmedMsg">Mailversand funktioniert.</div>
-          <button type="button" class="btn-primary" id="smtpConfirmedContinueBtn">Weiter</button>
-        </div>
-      </section>
-
-      <!-- Schritt 4: Praxisangaben für Rechnungen (überspringbar, KHS M2.5) -->
+      <!-- Schritt 3: Praxisangaben für Rechnungen (überspringbar, KHS M2.5) -->
       <section id="stepBranding" hidden>
-        <p class="step-indicator" id="brandingStepLabel">Schritt 4 von 5</p>
+        <p class="step-indicator" id="brandingStepLabel">Schritt 3 von 4</p>
         <h1 id="brandingTitle">Praxisangaben für Rechnungen</h1>
         <p class="sub" id="brandingSub">Diese Angaben stehen später auf Ihren Rechnungen. Sie können den Schritt überspringen und alles in den Einstellungen nachtragen — dort auch Logo, Stempel und Fußzeile.</p>
         <form id="brandingForm" novalidate>
@@ -322,7 +284,7 @@
 
       <!-- Schritt 4: Prüfungen + Abschluss -->
       <section id="stepDone" hidden>
-        <p class="step-indicator" id="doneStepLabel">Schritt 5 von 5</p>
+        <p class="step-indicator" id="doneStepLabel">Schritt 4 von 4</p>
 
         <div id="pruefChecking" class="msg info show">Kontrollen laufen …</div>
 
@@ -346,7 +308,7 @@
 
         <div id="doneFinal" hidden>
           <h1 id="doneTitle">Fertig</h1>
-          <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
+          <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden. Den E-Mail-Versand richten Sie später in Ruhe unter Einstellungen → E-Mail-Versand ein (optional).</p>
           <a href="/login.html" class="btn-primary" id="doneLoginBtn" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
         </div>
       </section>
@@ -361,6 +323,6 @@
     </div>
   </main>
 
-  <script type="module" src="setup.js?v=20261022"></script>
+  <script type="module" src="setup.js?v=20261109"></script>
 </body>
 </html>

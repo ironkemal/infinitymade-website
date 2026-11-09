@@ -16,3 +16,10 @@ test('ergebnisText: ohne Versand immer mit Hinweis auf PDF zum selbst Senden', (
     assert.match(e.text, /PDF herunterladen/);
   }
 });
+
+test('ergebnisText: fehlendes/abgelaufenes Postfach zeigt den Weg zur Einstellung', () => {
+  for (const code of ['VERSAND_NICHT_EINGERICHTET', 'GMAIL_NICHT_VERBUNDEN', 'gmail_reauth_required']) {
+    assert.equal(ergebnisText({ gesendet: false, code }).einrichten, true, code);
+  }
+  assert.equal(ergebnisText({ gesendet: false, code: 'KEINE_EMAIL' }).einrichten, false);
+});

@@ -9,8 +9,8 @@
 // Backend hält den service_role-Schlüssel (der gehört nie in den Browser,
 // G2). Diese Seite ruft nur fetch() gegen dieselbe Origin auf.
 //
-// SMTP selbst wird HIER NICHT eingerichtet (O-66) — das hat install.sh schon
-// erledigt oder bewusst ausgelassen. Schritt 3 TESTET nur, ob es funktioniert.
+// Mail ist KEIN Schritt der Einrichtung mehr (AUFTRAG-MAILVERSAND, Kemal 09.11.2026):
+// die Praxis verbindet ihr Postfach später, optional, unter Einstellungen → E-Mail-Versand.
 //
 // Kurulum modu (Faz 2.2 dilim 2, §5.6): solange praxura_setup.abgeschlossen_am
 // NULL ist, sperrt server.js die anonyme Patienten-Oberfläche (Buchung).
@@ -23,7 +23,7 @@ import { API_BASE } from './supabase-config.js';
 
 const T = {
   de: {
-    tokenStepLabel: 'Schritt 1 von 5', tokenTitle: 'Einrichtung starten',
+    tokenStepLabel: 'Schritt 1 von 4', tokenTitle: 'Einrichtung starten',
     // Gleicher Text wie NEUER_LINK_* in module/einrichtung-hinweis.js — setup.js darf
     // das Modul nicht importieren (Jeton-Seite, tools/onprem-setup-jeton.test.js);
     // Gleichlauf prüft tools/onprem-setup-kapi.test.js.
@@ -33,28 +33,14 @@ const T = {
     tokenInvalid: 'Jeton wird nicht akzeptiert. Bitte den Link vom Ende von install.sh erneut öffnen.',
     netzwerkfehler: 'Verbindung fehlgeschlagen. Bitte erneut versuchen.',
 
-    ownerStepLabel: 'Schritt 2 von 5', ownerTitle: 'Praxis und Konto',
+    ownerStepLabel: 'Schritt 2 von 4', ownerTitle: 'Praxis und Konto',
     ownerSub: 'Diese Angaben legen das erste Inhaber-Konto an.',
     lblBusinessName: 'Praxisname', lblSector: 'Fachbereich', optSectorChoose: 'Bitte wählen',
     lblFirstName: 'Vorname (Inhaber)', lblLastName: 'Nachname (Inhaber)',
     lblEmail: 'E-Mail (Anmeldung)', lblPassword: 'Passwort', ownerSubmit: 'Konto anlegen',
     ownerFehlgeschlagen: 'Konto konnte nicht angelegt werden.',
 
-    smtpStepLabel: 'Schritt 3 von 5', smtpTitle: 'Mailversand prüfen',
-    smtpIntro: 'Wir prüfen jetzt, ob die Box wirklich Mails verschicken kann.',
-    smtpChecking: 'Wird geprüft …',
-    smtpSkippedMsg: 'Kein E-Mail-Konto verbunden — Mails an Patientinnen und Patienten (z. B. Terminbestätigungen, Mahnungen) werden nicht verschickt. Die Anmeldung braucht keine Mails.',
-    smtpAckLabel: 'Ich bin mir bewusst, dass keine Mails an Patientinnen und Patienten verschickt werden, und möchte trotzdem fortfahren.',
-    weiter: 'Weiter',
-    smtpSentMsg: (empf) => `Testmail an ${empf} gesendet — bitte Posteingang und Spam-Ordner prüfen.`,
-    smtpArrivedQuestion: 'Ist die Testmail angekommen (auch im Spam-Ordner prüfen)?',
-    smtpNotArrived: 'Nicht angekommen', smtpArrived: 'Angekommen',
-    smtpRetry: 'Erneut versuchen', smtpErrorContinue: 'Trotzdem fortfahren',
-    smtpConfirmedMsg: 'Mailversand funktioniert.',
-    smtpFehlgeschlagen: 'Testmail konnte nicht gesendet werden.',
-    smtpNichtAngekommenText: 'Die Mail wurde vom Server angenommen, kam aber nicht an. Häufigste Ursache: die Absenderadresse gehört nicht zur eigenen Domain des Mailservers (SPF/DMARC) — Absenderadresse in der .env prüfen (SMTP_FROM).',
-
-    brandingStepLabel: 'Schritt 4 von 5', brandingTitle: 'Praxisangaben für Rechnungen',
+    brandingStepLabel: 'Schritt 3 von 4', brandingTitle: 'Praxisangaben für Rechnungen',
     brandingSub: 'Diese Angaben stehen später auf Ihren Rechnungen. Sie können den Schritt überspringen und alles in den Einstellungen nachtragen — dort auch Logo, Stempel und Fußzeile.',
     lblBrStreet: 'Straße und Hausnummer', lblBrPlz: 'Postleitzahl', lblBrCity: 'Ort', lblBrPhone: 'Telefon',
     lblBrSteuernummer: 'Steuernummer', lblBrUstId: 'oder USt-IdNr.',
@@ -63,7 +49,7 @@ const T = {
     brandingSkip: 'Überspringen', brandingSave: 'Speichern und weiter',
     brandingFehlgeschlagen: 'Die Angaben konnten nicht gespeichert werden. Sie lassen sich später in den Einstellungen nachtragen.',
 
-    doneStepLabel: 'Schritt 5 von 5',
+    doneStepLabel: 'Schritt 4 von 4',
     pruefChecking: 'Kontrollen laufen …',
     pruefTitle: 'Einrichtung abschließen', pruefIntro: 'Ein paar kurze Kontrollen, bevor die Box fertig ist.',
     pruefLabelSchema: 'Datenbank-Struktur', pruefLabelRls: 'Mandantentrennung (RLS)', pruefLabelDek: 'Verschlüsselung',
@@ -72,7 +58,7 @@ const T = {
     pruefAbschlussBtn: 'Einrichtung abschließen',
 
     doneTitle: 'Fertig',
-    doneText: 'Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.',
+    doneText: 'Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden. Den E-Mail-Versand richten Sie später in Ruhe unter Einstellungen → E-Mail-Versand ein (optional).',
     doneLoginBtn: 'Zur Anmeldung',
 
     closedTitle: 'Bereits eingerichtet',
@@ -101,14 +87,6 @@ function applyLang() {
   setText('lblEmail', t.lblEmail); setText('lblPassword', t.lblPassword);
   setText('ownerSubmitBtn', t.ownerSubmit);
 
-  setText('smtpStepLabel', t.smtpStepLabel); setText('smtpTitle', t.smtpTitle);
-  setText('smtpIntro', t.smtpIntro); setText('smtpChecking', t.smtpChecking);
-  setText('smtpSkippedMsg', t.smtpSkippedMsg); setText('smtpAckLabel', t.smtpAckLabel);
-  setText('smtpSkipContinueBtn', t.weiter);
-  setText('smtpArrivedQuestion', t.smtpArrivedQuestion);
-  setText('smtpNotArrivedBtn', t.smtpNotArrived); setText('smtpArrivedBtn', t.smtpArrived);
-  setText('smtpRetryBtn', t.smtpRetry); setText('smtpErrorContinueBtn', t.smtpErrorContinue);
-  setText('smtpConfirmedMsg', t.smtpConfirmedMsg); setText('smtpConfirmedContinueBtn', t.weiter);
 
   for (const id of ['brandingStepLabel', 'brandingTitle', 'brandingSub', 'lblBrStreet', 'lblBrPlz', 'lblBrCity', 'lblBrPhone',
     'lblBrSteuernummer', 'lblBrUstId', 'lblBrTaxNote', 'lblBrIban', 'lblBrBic', 'lblBrBank', 'lblBrIk']) setText(id, t[id]);
@@ -131,7 +109,6 @@ applyLang();
 
 const stepToken = document.getElementById('stepToken');
 const stepOwner = document.getElementById('stepOwner');
-const stepSmtp = document.getElementById('stepSmtp');
 const stepBranding = document.getElementById('stepBranding');
 const stepDone = document.getElementById('stepDone');
 const stepClosed = document.getElementById('stepClosed');
@@ -141,7 +118,7 @@ const stepClosed = document.getElementById('stepClosed');
 // server.js den Router gar nicht mehr ein) und für "Link abgelaufen" (410 mit
 // abgelaufen:true, 14 Tage). Derselbe Abschnitt, nur andere Texte.
 function zeigeGeschlossen(abgelaufen) {
-  verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
+  verstecken(stepToken, stepOwner, stepBranding, stepDone);
   document.getElementById('closedTitle').textContent = abgelaufen ? T[lang].abgelaufenTitle : T[lang].closedTitle;
   document.getElementById('closedSub').textContent = abgelaufen ? T[lang].abgelaufenSub : T[lang].closedSub;
   // style statt hidden: der Knopf hat inline display:block (setup.html)
@@ -200,9 +177,8 @@ async function pruefeJeton(token) {
     tokenAuto.hidden = true;
     verstecken(stepToken);
     if (data.ownerAngelegt) {
-      // Wiederaufnahme: Owner existiert schon, direkt zu Schritt 3.
-      stepSmtp.hidden = false;
-      testeSmtp();
+      // Wiederaufnahme: Owner existiert schon, direkt zu den Praxisangaben.
+      zuBranding();
     } else {
       stepOwner.hidden = false;
     }
@@ -290,8 +266,7 @@ document.getElementById('ownerForm').addEventListener('submit', async (e) => {
     }
 
     verstecken(stepOwner);
-    stepSmtp.hidden = false;
-    testeSmtp();
+    zuBranding();
   } catch {
     zeigeMsg(msg, T[lang].netzwerkfehler, 'error');
   } finally {
@@ -299,23 +274,11 @@ document.getElementById('ownerForm').addEventListener('submit', async (e) => {
   }
 });
 
-// ── Schritt 3: SMTP testen ───────────────────────────────────────────────
-const smtpChecking = document.getElementById('smtpChecking');
-const smtpSkipped = document.getElementById('smtpSkipped');
-const smtpSent = document.getElementById('smtpSent');
-const smtpError = document.getElementById('smtpError');
-const smtpConfirmed = document.getElementById('smtpConfirmed');
-
-function smtpZeige(el) {
-  [smtpChecking, smtpSkipped, smtpSent, smtpError, smtpConfirmed].forEach((s) => { s.hidden = (s !== el); });
-}
-
-// Schritt 4 — Praxisangaben für Rechnungen (KHS M2.5, überspringbar). Läuft über den Jeton
+// Schritt 3 — Praxisangaben für Rechnungen (KHS M2.5, überspringbar). Läuft über den Jeton
 // (POST /setup/branding), nicht über eine Anmeldung: diese Seite hat keinen Supabase-Client.
 // Ein Fehler hält die Einrichtung NIE auf — „Überspringen" und Nachtragen in den Einstellungen
 // bleiben immer möglich.
 function zuBranding() {
-  verstecken(stepSmtp);
   stepBranding.hidden = false;
 }
 
@@ -384,7 +347,7 @@ function pruefZeileZeichnen(rowId, ergebnis) {
 }
 
 async function zuPruefungenUndAbschluss() {
-  verstecken(stepSmtp, stepBranding);
+  verstecken(stepBranding);
   stepDone.hidden = false;
   pruefChecklist.hidden = true;
   doneFinal.hidden = true;
@@ -430,7 +393,6 @@ async function abschliessen() {
       body: JSON.stringify({ token: gueltigerToken }),
     });
   } catch { /* "Fertig" wird trotzdem gezeigt, siehe Kommentar oben */ }
-  verstecken(stepSmtp);
   pruefChecklist.hidden = true;
   doneFinal.hidden = false;
   stepDone.hidden = false;
@@ -441,44 +403,3 @@ pruefAckCheckbox.addEventListener('change', (e) => {
 });
 pruefAbschlussBtn.addEventListener('click', abschliessen);
 
-async function testeSmtp() {
-  smtpZeige(smtpChecking);
-  try {
-    const res = await fetch(API_BASE + '/setup/test-smtp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: gueltigerToken }),
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (res.ok && data.eingerichtet === false) {
-      smtpZeige(smtpSkipped);
-      return;
-    }
-    if (res.ok && data.eingerichtet === true) {
-      document.getElementById('smtpSentMsg').textContent = T[lang].smtpSentMsg(data.gesendetAn);
-      smtpZeige(smtpSent);
-      return;
-    }
-    document.getElementById('smtpErrorMsg').textContent = data.error || T[lang].smtpFehlgeschlagen;
-    smtpZeige(smtpError);
-  } catch {
-    document.getElementById('smtpErrorMsg').textContent = T[lang].netzwerkfehler;
-    smtpZeige(smtpError);
-  }
-}
-
-document.getElementById('smtpAckCheckbox').addEventListener('change', (e) => {
-  document.getElementById('smtpSkipContinueBtn').disabled = !e.target.checked;
-});
-document.getElementById('smtpSkipContinueBtn').addEventListener('click', zuBranding);
-document.getElementById('smtpArrivedBtn').addEventListener('click', () => {
-  smtpZeige(smtpConfirmed);
-});
-document.getElementById('smtpConfirmedContinueBtn').addEventListener('click', zuBranding);
-document.getElementById('smtpNotArrivedBtn').addEventListener('click', () => {
-  document.getElementById('smtpErrorMsg').textContent = T[lang].smtpNichtAngekommenText;
-  smtpZeige(smtpError);
-});
-document.getElementById('smtpRetryBtn').addEventListener('click', testeSmtp);
-document.getElementById('smtpErrorContinueBtn').addEventListener('click', zuBranding);

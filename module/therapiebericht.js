@@ -22,6 +22,7 @@
  */
 import { API_BASE } from '../supabase-config.js';
 import { mailtoLink } from './mail-entwurf.js?v=20261103mail1';
+import { einrichtenLinkHtml } from './mailversand.js?v=20261109';
 import { druckeFaxDeckblatt } from './fax-deckblatt.js?v=20261031a';
 
 'use strict';
@@ -254,7 +255,9 @@ function zeigeErgebnis(ov, r, aktion, supabase) {
         ${tel}
         ${selbst ? '<button type="button" class="btn btn-secondary btn-sm" data-tb-entwurf>Mail-Entwurf öffnen</button>' : ''}
         <label style="font-size:13px;display:flex;gap:6px;align-items:center;"><input type="checkbox" data-tb-telok> Passwort telefonisch übermittelt</label>
-      </div>`;
+      </div>
+      ${r.code === 'SMTP_FEHLT' ? `<p style="margin:10px 0 0;font-size:13px;">Kein Postfach verbunden — ${einrichtenLinkHtml()}</p>` : ''}`;
+    body.querySelector('[data-mailversand-link]')?.addEventListener('click', () => ov.remove());
     if (selbst && r.pdf_base64) {
       const a = document.createElement('a');
       a.href = pdfBlobUrl(r.pdf_base64); a.download = r.dateiname || 'Therapiebericht.pdf';
@@ -278,7 +281,7 @@ function zeigeErgebnis(ov, r, aktion, supabase) {
     } else {
       const hinweise = {
         SAAS: 'In der Cloud-Version versendet Praxura keine Faxe. Drucken Sie das PDF und faxen Sie es mit Ihrem Gerät.',
-        KEIN_SMTP: 'Kein Mail-Server eingerichtet. Drucken Sie das PDF und faxen Sie es mit Ihrem Gerät oder richten Sie in der Box einen Mail-Server ein.',
+        KEIN_SMTP: 'Kein Postfach verbunden. Drucken Sie das PDF und faxen Sie es mit Ihrem Gerät oder verbinden Sie unter Einstellungen → E-Mail-Versand ein Postfach.',
         KEIN_MUSTER: 'Hinterlegen Sie unter Einstellungen das Adressmuster Ihres Fax-Dienstes.',
         KEINE_FAXNUMMER: 'Beim Arzt ist keine Faxnummer hinterlegt.',
       };

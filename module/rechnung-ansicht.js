@@ -28,7 +28,7 @@ import { brandingAus, ausstellerSnapshot } from './branding.js?v=20261022q';
 import { typKennzeichen } from './rechnung-summen.js?v=20261010b';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 import { belegDruckUrl } from './beleg-druck.js?v=20261021zd';
-import { mountRechnungMail, merkeRechnungFuerMail } from './rechnung-mail.js?v=20261031k9';
+import { mountRechnungMail, merkeRechnungFuerMail } from './rechnung-mail.js?v=20261109';
 
 let d = null;
 

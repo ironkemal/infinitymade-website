@@ -31,5 +31,5 @@ test('speichereSchalter meldet Datenbankfehler ohne Rohtext', async () => {
 test('Texte: ehrlich zu Voraussetzung, Einwilligung und telefonischer Absage; kein Link versprochen', () => {
   assert.match(WIRKUNG_TEXT, /zugestimmt/); assert.match(WIRKUNG_TEXT, /telefonisch/);
   assert.match(WIRKUNG_TEXT, /keinen Namen/); assert.doesNotMatch(WIRKUNG_TEXT, /Link|absagen Sie per/i);
-  assert.match(VORAUSSETZUNG_TEXT, /SMTP/); assert.match(VORAUSSETZUNG_TEXT, /nicht über Praxura/);
+  assert.match(VORAUSSETZUNG_TEXT, /E-Mail-Versand/); assert.match(VORAUSSETZUNG_TEXT, /nicht über Praxura/);
 });

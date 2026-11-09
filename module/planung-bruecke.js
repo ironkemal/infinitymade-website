@@ -20,7 +20,7 @@ import { mountAnstellung, ladeAnstellung, ladeArbeitstage, urlaubsKennzahlen, ar
 import { setzeGrundSichtbar } from './abwesenheit.js?v=20261031';
 import { mountStandortPlan } from './standort-plan.js?v=20261104zeit';
 import { mountEhemalige } from './ehemalige-mitarbeiter.js?v=20261102a';
-import { mountMitteilung } from './sondertag-mitteilung.js?v=20261102a';
+import { mountMitteilung } from './sondertag-mitteilung.js?v=20261109';
 import { mountMeinUrlaub } from './mein-urlaub.js?v=20261103planung2';
 import { ladeSondertage, markiereSondertage, markiereSondertagTermine, sondertagEtikett, sondertagArt, ladeBetroffene, betroffeneTermine, anruflisteHtml } from './sondertag.js?v=20261104sondertag';
 

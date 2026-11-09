@@ -96,7 +96,7 @@ import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 import { terminZielToplam } from './sitzung-abgleich.js?v=20261103q';
 import { kuerzelAusKatalog, formatMultiHeilmittelTitel } from './heilmittel-kuerzel.js?v=20261103q';
 // Therapiebericht erstellen/senden (22.10.2026) — eigener Block unter „Therapiebericht".
-import { mountTherapiebericht } from './therapiebericht.js?v=20261031a';
+import { mountTherapiebericht } from './therapiebericht.js?v=20261109';
 
 export { formatMultiHeilmittelTitel as multiHeilmittelTitel };
 
