@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
-import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation, reserviereUndLadeHoch, berechnePhysioPaketHash } from './artefakt-registry.js';
+import { reservierePhysioPublikation, quittierePhysioReadback, finalisierePhysioPublikation, reserviereUndLadeHoch, berechnePhysioPaketHash, abbrechePhysioPublikation } from './artefakt-registry.js';
 
 test('Reserve preserves SQL timestamp/null input and distinguishes worker permission', async () => {
   for (const granted of [true, false]) {
@@ -86,6 +86,16 @@ test('Finalization binds full precision CAS and result to original invoice', asy
   await assert.rejects(finalisierePhysioPublikation({ ...args, abrechnungId: 'other' }), e => e.status === 503);
 });
 
+test('Abort adapter binds owner/key/generation and verifies aborted result for same invoice', async () => {
+  const db = { async rpc(name, args) {
+    assert.equal(name, 'abrechnung_physio_abort');
+    assert.deepEqual(args, { p_owner: 'o1', p_abrechnung: 'ab1', p_key: 'k', p_generation: 3, p_grund: 'PHYSIO_X' });
+    return { data: { state: 'aborted', abrechnungId: 'ab1' } };
+  } };
+  const a = { db, ownerId: 'o1', abrechnungId: 'ab1', key: 'k', generation: 3, grund: 'PHYSIO_X' };
+  assert.equal((await abbrechePhysioPublikation(a)).state, 'aborted');
+  await assert.rejects(abbrechePhysioPublikation({ ...a, abrechnungId: 'other' }), e => e.status === 503);
+});
 
 test('Physio upload receipts follow byte and format checks; failures never publish or delete', async () => {
   for (const failure of [null, 'hash', 'format', 'receipt']) {

@@ -42,7 +42,7 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261021v';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261103a';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261109a';
 import { entferneBarcodeBestaetigung, pruefeBarcodeBestaetigung, mountBarcodeBestaetigung } from './rezept-barcode-bestaetigung.js?v=20261007m3';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20261103q';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
@@ -50,6 +50,7 @@ import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261010zd';
+import { entlassMaskeAktualisieren, entlassNutzlastAusMaske } from './rezept-entlass.js?v=20261109a';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010zc';
 import { initialisiereHeilmittelZeilen, fuelleHeilmittelZeilen, liesHeilmittelZeilenAusMaske, leereHeilmittelZeilen, aktualisiereAddBtnSichtbarkeit } from './heilmittel-zeilen-ui.js';
 import { pruefeHeilmittelZeilen, pruefeItemsAenderung } from './heilmittel-zeilen.js';
@@ -177,6 +178,9 @@ export function maskeHeimschicken() {
   // soll nicht das Foto der vorherigen Verordnung sehen.
   const beleg = document.getElementById('rzScanBeleg');
   if (beleg) beleg.hidden = true;
+  entlassMaskeAktualisieren(document, _bruecke?.supabase, {
+    bereich: document.getElementById('rzTherapieBereich')?.value || (_bruecke?.bereich ? _bruecke.bereich() : 'physio'),
+  }).catch(() => {});
   if (!wrap || !heim) return;
   hinweisEntfernen();
   loescheMarkierungen(wrap);
@@ -524,6 +528,9 @@ export function fuelleMuster13(rx, opt = {}) {
   setz('rzHinweise', rx.hinweise || '');
   _bruecke?.setFrequenz?.('rzFreq', rx.frequenz || '');
   _bruecke?.setTherapiebereich?.(rx.therapie_bereich || '');
+  entlassMaskeAktualisieren(document, _bruecke?.supabase, {
+    rxId: rx.id || null, alsVorlage, bereich: rx.therapie_bereich || (_bruecke?.bereich ? _bruecke.bereich() : 'physio'),
+  }).catch(() => {});
   _bruecke?.setHausbesuch?.(!!rx.hausbesuch);
   haken('rzDringend', rx.is_dringend);
   haken('rzBlanko', rx.is_blanko);
@@ -815,6 +822,8 @@ export function nutzlastAusMaske(v) {
     // Nagelspangen-Serie). `wagner_grad` stand hier bis 18.09.2026 auch drin —
     // das Feld ist aus der Maske raus (siehe podoVerordnungsfelder()).
     ...podoVerordnungsfelder(),
+    // Entlassmerkmal Physio (leer, solange Migration 0112 nicht live oder Container inaktiv).
+    ...entlassNutzlastAusMaske(document, { istBlanko: an('rzBlanko') }),
     // Gescannt? Dann gehoeren Beleg, Vertrauen und Herkunft dazu — sonst
     // bleibt `quelle` auf dem Vorgabewert `papier`.
     ..._scanHerkunft ? {

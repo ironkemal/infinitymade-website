@@ -138,6 +138,8 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       ...('nagel' in n ? { nagel: n.nagel ?? null } : {}),
       wagner_grad: n.wagner_grad ?? null,
       ...('behandlungsanlass' in n ? { behandlungsanlass: n.behandlungsanlass ?? null } : {}),
+      // Entlassmerkmal (Migration 0112): Paar nur, wenn die Maske es aktiv fuehrt; Fehlen = Spalten unberuehrt.
+      ...('entlassmanagement' in n ? { entlassmanagement: n.entlassmanagement ?? null, entlassungsdatum: n.entlassungsdatum ?? null } : {}),
     },
   };
 }

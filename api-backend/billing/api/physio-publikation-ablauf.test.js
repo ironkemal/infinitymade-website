@@ -7,7 +7,7 @@ const KEY = 'k'.repeat(24);
 const H = 'c'.repeat(64);
 const mkDatei = (role, extra = {}) => ({ role, name: `x.${role}`, bytes: Buffer.from(role), contentType: 'text/plain', pruefeReadback: () => {}, ...extra });
 
-function baue({ reserve, upload, finalize, kopf, dateien } = {}) {
+function baue({ reserve, upload, finalize, kopf, dateien, erzeugeFehler, abortFehler } = {}) {
   const calls = [];
   const deps = {
     reservierePhysioPublikation: async () => { calls.push('reserve'); return reserve ?? { state: 'preparing', worker_granted: true, abrechnungId: 'ab1', generation: 2, input_sha256: 'a'.repeat(64) }; },
@@ -19,6 +19,12 @@ function baue({ reserve, upload, finalize, kopf, dateien } = {}) {
       if (upload) await upload(a);
       return { registryId: 'r-' + a.role, sha256: 's'.repeat(64) };
     },
+    abbrechePhysioPublikation: async (a) => {
+      calls.push('abort:' + a.grund);
+      assert.equal(a.generation, 2); assert.equal(a.key, KEY); assert.equal(a.abrechnungId, 'ab1');
+      if (abortFehler) throw new Error('abort down');
+      return { state: 'aborted', abrechnungId: 'ab1' };
+    },
     finalisierePhysioPublikation: async (a) => {
       calls.push('finalize');
       if (finalize) return finalize(a);
@@ -27,7 +33,7 @@ function baue({ reserve, upload, finalize, kopf, dateien } = {}) {
       return { ok: true, state: 'published', abrechnungId: 'ab1' };
     },
   };
-  const erzeuge = async () => { calls.push('erzeuge'); return { paket: { lines: [] }, dateien: dateien ?? [mkDatei('dta'), mkDatei('auftrag'), mkDatei('begleit')] }; };
+  const erzeuge = async () => { calls.push('erzeuge'); if (erzeugeFehler) throw erzeugeFehler; return { paket: { lines: [] }, dateien: dateien ?? [mkDatei('dta'), mkDatei('auftrag'), mkDatei('begleit')] }; };
   const ladeKopfStand = async () => kopf ?? { updated_at: '2026-11-07 12:00:00.123456+00', publication_generation: 2, publication_package_sha256: H };
   const lauf = () => fuehrePhysioPublikationAus({ db: {}, ownerId: 'o1', key: KEY, payload: { a: 1 }, erzeuge, ladeKopfStand, deps });
   return { calls, lauf };
@@ -116,4 +122,29 @@ test('Adapter-503 bei Reserve (Schema nicht live) -> 503, nichts erzeugt', async
     erzeuge: async () => { calls.push('erzeuge'); }, ladeKopfStand: async () => null,
     deps: { reservierePhysioPublikation: async () => { throw Object.assign(new Error('n'), { status: 503 }); } } }), e => e.status === 503);
   assert.deepEqual(calls, []);
+});
+
+test('Erzeugungsfehler -> Abort mit Generation, Ursprungsfehler bleibt', async () => {
+  const orig = Object.assign(new Error('x'), { status: 422, code: 'X' });
+  const { calls, lauf } = baue({ erzeugeFehler: orig });
+  await assert.rejects(lauf(), e => e === orig);
+  assert.deepEqual(calls, ['reserve', 'erzeuge', 'abort:PHYSIO_ERZEUGUNG_FEHLGESCHLAGEN']);
+});
+
+test('Abort selbst faellt aus -> Ursprungsfehler wird nicht verdeckt', async () => {
+  const orig = Object.assign(new Error('x'), { status: 422, code: 'X' });
+  const { lauf } = baue({ erzeugeFehler: orig, abortFehler: true });
+  await assert.rejects(lauf(), e => e === orig);
+});
+
+test('Kopf-Konflikt vor Finalize -> Abort; Upload-/Finalize-Fehler -> KEIN Abort', async () => {
+  const k = baue({ kopf: { updated_at: 't', publication_generation: 3, publication_package_sha256: H } });
+  await assert.rejects(k.lauf(), e => e.status === 409);
+  assert.ok(k.calls.includes('abort:PHYSIO_KOPF_KONFLIKT') && !k.calls.includes('finalize'));
+  const u = baue({ upload: async () => { throw Object.assign(new Error('t'), { status: 503 }); } });
+  await assert.rejects(u.lauf(), e => e.status === 503);
+  assert.ok(!u.calls.some(c => c.startsWith('abort')));
+  const f = baue({ finalize: () => { throw Object.assign(new Error('t'), { status: 503 }); } });
+  await assert.rejects(f.lauf(), e => e.status === 503);
+  assert.ok(!f.calls.some(c => c.startsWith('abort')));
 });

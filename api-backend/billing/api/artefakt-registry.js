@@ -94,6 +94,13 @@ export async function finalisierePhysioPublikation({ db, ownerId, abrechnungId, 
     && typeof abrechnungId === 'string' && abrechnungId.trim() !== '' && data.abrechnungId === abrechnungId);
 }
 
+/** Deterministischer Abbruch (nur vor Upload/Finalize-Unsicherheit). Nie nach published; loescht nichts. */
+export async function abbrechePhysioPublikation({ db, ownerId, abrechnungId, key, generation, grund }) {
+  return physioRpc(db, 'abrechnung_physio_abort', {
+    p_owner: ownerId, p_abrechnung: abrechnungId, p_key: key, p_generation: generation, p_grund: grund,
+  }, data => data?.state === 'aborted' && data.abrechnungId === abrechnungId);
+}
+
 async function rpc(db, name, args) {
   if (!db || typeof db.rpc !== 'function') {
     throw fehler(503, 'ARTEFAKT_REGISTRY_NICHT_VERFUEGBAR', 'Artefakt-Registry nicht verfügbar.');

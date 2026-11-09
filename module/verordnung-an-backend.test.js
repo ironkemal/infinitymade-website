@@ -234,3 +234,13 @@ test('bg-Angaben gehen mit, ohne bg fehlt der Schlüssel', () => {
   assert.deepEqual(verordnungFuerAendern({ nutzlast: { ...NUTZLAST, rezeptart: 'bg', bg } }).parsed.rezept.bg, bg);
   assert.equal('bg' in verordnungFuerAendern({ nutzlast: NUTZLAST }).parsed.rezept, false);
 });
+
+test('Entlassmerkmal: Paar nur wenn die Maske es fuehrt; Fehlen laesst Spalten unberuehrt', () => {
+  const ohne = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: {} });
+  assert.equal('entlassmanagement' in ohne.parsed.rezept, false);
+  const mit = verordnungFuerAendern({ nutzlast: { ...NUTZLAST, entlassmanagement: true, entlassungsdatum: '2026-11-01' }, patientFelder: {} });
+  assert.equal(mit.parsed.rezept.entlassmanagement, true);
+  assert.equal(mit.parsed.rezept.entlassungsdatum, '2026-11-01');
+  const ungeprueft = verordnungFuerAendern({ nutzlast: { ...NUTZLAST, entlassmanagement: null, entlassungsdatum: null }, patientFelder: {} });
+  assert.equal(ungeprueft.parsed.rezept.entlassmanagement, null);
+});

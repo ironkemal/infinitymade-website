@@ -909,8 +909,8 @@ async function physioPublikationV1Create({ req, res, userId, tenantId, profile, 
   };
   const ladeKopfStand = async (abrechnungId) => {
     const { data, error } = await supabase.from('abrechnung')
-      // '*': publication_* Spalten existieren erst mit der (noch nicht aktivierten) Physio-Migration.
-      .select('*')
+      // Nur unter Flag aufgerufen: publication_* existiert erst mit Migration 0113.
+      .select('updated_at, publication_generation, publication_package_sha256')
       .eq('id', abrechnungId).eq('owner_id', tenantId).single();
     return error ? null : data;
   };
@@ -1057,10 +1057,11 @@ router.post('/abrechnung/create', async (req, res) => {
     }
 
     // ---- fetch prescriptions joined with patient & doctor & sessions & bookings & services ----
-    const { data: rxRows, error: rxErr } = await supabase
+    // Entlassmerkmal (Migration 0112): Spalten nur lesen, wenn sie live existieren (42703 -> ohne).
+    const ladeRx = (mitEntlass) => supabase
       .from('prescriptions')
       .select(`
-        id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
+        id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,${mitEntlass ? ' entlassmanagement, entlassungsdatum,' : ''}
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, heilmittel_items, anzahl_einheiten, frequenz,
@@ -1083,6 +1084,8 @@ router.post('/abrechnung/create', async (req, res) => {
       `)
       .eq('owner_id', tenantId)
       .in('id', prescriptionIds);
+    let { data: rxRows, error: rxErr } = await ladeRx(true);
+    if (rxErr?.code === '42703') ({ data: rxRows, error: rxErr } = await ladeRx(false));
 
     if (rxErr) return res.status(500).json({ error: rxErr.message });
     if (!rxRows || rxRows.length !== prescriptionIds.length) {

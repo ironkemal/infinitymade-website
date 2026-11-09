@@ -46,7 +46,7 @@
 import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261021f';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261103q';
-import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261103q';
+import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261109a';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;

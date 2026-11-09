@@ -4,7 +4,7 @@
 // Vertrag: db/entwuerfe/physio-publikation-v1.sql, Adapter: artefakt-registry.js.
 import {
   reservierePhysioPublikation, berechnePhysioPaketHash, finalisierePhysioPublikation,
-  reserviereUndLadeHoch,
+  reserviereUndLadeHoch, abbrechePhysioPublikation,
 } from './artefakt-registry.js';
 
 /** Flag default OFF; nur der exakte Wert '1' schaltet ein. */
@@ -18,7 +18,7 @@ function fehler(status, code, message) {
   return Object.assign(new Error(message), { status, code });
 }
 
-const STANDARD = { reservierePhysioPublikation, berechnePhysioPaketHash, finalisierePhysioPublikation, reserviereUndLadeHoch };
+const STANDARD = { reservierePhysioPublikation, berechnePhysioPaketHash, finalisierePhysioPublikation, reserviereUndLadeHoch, abbrechePhysioPublikation };
 
 /**
  * @param {object} p
@@ -47,7 +47,18 @@ export async function fuehrePhysioPublikationAus({ db, ownerId, key, payload, er
     throw fehler(409, 'PHYSIO_AUFTRAG_IN_BEARBEITUNG', 'Dieser Abrechnungsauftrag wird bereits bearbeitet. Später erneut abfragen.');
   }
 
-  const { paket, dateien, antwort } = await erzeuge(res);
+  // Abbruch nur bei deterministischen Fehlern VOR Upload (Erzeugung) bzw. bei bewiesenem
+  // Kopf-Konflikt VOR Finalize. Upload-/Finalize-Fehler mit unbekanntem Ausgang: nie abbrechen,
+  // gleicher Key setzt fort. Abbruch-Fehler verdeckt den Ursprungsfehler nicht.
+  const abbrechen = async (grund) => {
+    try {
+      await d.abbrechePhysioPublikation({ db, ownerId, abrechnungId: res.abrechnungId, key, generation: res.generation, grund });
+    } catch { /* Lease laeuft ab; Ursprungsfehler bleibt massgeblich */ }
+  };
+
+  let erzeugt;
+  try { erzeugt = await erzeuge(res); } catch (e) { await abbrechen('PHYSIO_ERZEUGUNG_FEHLGESCHLAGEN'); throw e; }
+  const { paket, dateien, antwort } = erzeugt;
   const paketHash = await d.berechnePhysioPaketHash({ db, paket });
 
   const manifest = [];
@@ -66,6 +77,7 @@ export async function fuehrePhysioPublikationAus({ db, ownerId, key, payload, er
   if (!kopf || Number(kopf.publication_generation) !== res.generation
     || kopf.publication_package_sha256 !== paketHash
     || typeof kopf.updated_at !== 'string' || !kopf.updated_at) {
+    await abbrechen('PHYSIO_KOPF_KONFLIKT');
     throw fehler(409, 'PHYSIO_GENERATION_OR_CAS_CONFLICT', 'Abrechnungsstand hat sich geändert.');
   }
 
