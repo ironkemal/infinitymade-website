@@ -17,7 +17,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../ai/auth.js';
 import { istKutu } from '../lib/dagitim.js';
-import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
+import { createSMTPTransport, mailKanal, transportFabrikFuer, meldeVerbindungsfehler } from '../lib/mail.js';
 import {
   ladeSnapshot, erzeugeBerichtPdf, erzeugePasswort, berichtDateiname,
   EMPFEHLUNG_CODES, BERICHT_ARTEN,
@@ -29,8 +29,13 @@ import { pruefeFaxMuster, faxNummerNormalisieren, baueFaxAdresse } from '../lib/
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 const MAX_TEXT = 4000;
 
-/** Darf diese Instanz selbst mailen? Nur Box mit eigenem SMTP (siehe Kopf). */
-export function versandMoeglich(env = process.env, kutu = istKutu()) {
+/**
+ * Darf diese Instanz selbst mailen? Box mit SMTP der Praxis (siehe Kopf). Mit `kanal` (lib/mail.js mailKanal)
+ * zählt auch das in den Einstellungen verbundene Postfach — auch im SaaS, denn dann ist es das eigene Postfach
+ * der Praxis, nicht der Praxura-Absender.
+ */
+export function versandMoeglich(env = process.env, kutu = istKutu(), kanal = null) {
+  if (kanal) return kanal.weg === 'smtp' && (kanal.quelle === 'db' || !!kutu);
   return !!(kutu && env.SMTP_HOST);
 }
 
@@ -71,9 +76,15 @@ export function pruefeEingabe(body = {}) {
  * SaaS → nur das Gmail-Konto der Praxis. Nie ein Praxura-SMTP als Rückfall.
  * @returns {'smtp'|'gmail'|null}
  */
-export function versandWeg(env = process.env, kutu = istKutu()) {
+export function versandWeg(env = process.env, kutu = istKutu(), kanal = null) {
+  if (kanal) return kanal.weg === 'kein' ? null : kanal.weg;
   if (kutu) return env.SMTP_HOST ? 'smtp' : null;
   return 'gmail';
+}
+
+/** Kanal für Dokumente einer Praxis (Einstellung → SMTP_* → kein), mit den injizierten env/kutu der Tests. */
+export function dokumentKanal(supabase, tenantId, env = process.env, kutu = istKutu()) {
+  return mailKanal({ supabase, ownerId: tenantId, zweck: 'dokument', env, kutu });
 }
 
 export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null } = {}) {
@@ -111,11 +122,13 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         : werte.aktion === 'fax' ? (snapshot.arzt?.fax || '') : '';
 
       let gesendet = false;
-      if (werte.aktion === 'mail' && versandMoeglich(env, kutu())) {
+      const kanal = werte.aktion === 'vorschau' || werte.aktion === 'druck' ? null : await dokumentKanal(supabase, tenantId, env, kutu());
+      const fabrik = transportFabrikFuer(kanal, transportFabrik);
+      if (werte.aktion === 'mail' && versandMoeglich(env, kutu(), kanal)) {
         if (!an) return res.status(400).json({ error: 'Für diesen Arzt ist keine E-Mail-Adresse hinterlegt.' });
         try {
-          await transportFabrik({ requireTLS: true }).sendMail({
-            from: getMailFrom(snapshot.praxis?.name),
+          await fabrik({ requireTLS: true }).sendMail({
+            from: kanal.from(snapshot.praxis?.name),
             ...(snapshot.praxis?.email && EMAIL_RE.test(snapshot.praxis.email) ? { replyTo: snapshot.praxis.email } : {}),
             to: an,
             subject: `Therapiebericht${snapshot.verordnung?.ausstellungsdatum ? ' zur Verordnung vom ' + snapshot.verordnung.ausstellungsdatum.split('-').reverse().join('.') : ''}`,
@@ -127,6 +140,7 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
           gesendet = true;
         } catch (e) {
           console.error('[dokument/therapiebericht] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
+          await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
           return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden (Mailserver). Bitte Einstellungen prüfen oder als Fax/Druck senden.', code: 'SMTP_FEHLER' });
         }
       }
@@ -149,15 +163,15 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
 
         faxEntscheidung = entscheideFaxVersand({
           kutu: kutu(),
-          smtp: env.SMTP_HOST,
+          smtp: kanal?.weg === 'smtp',
           muster,
           nummer: an,
         });
 
         if (faxEntscheidung.senden) {
           try {
-            await transportFabrik({ requireTLS: true }).sendMail({
-              from: getMailFrom(snapshot.praxis?.name),
+            await fabrik({ requireTLS: true }).sendMail({
+              from: kanal.from(snapshot.praxis?.name),
               to: faxEntscheidung.adresse,
               subject: 'Fax',
               text: 'Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie ein Telefax.\n\nMit freundlichen Grüßen\n' + (snapshot.praxis?.name || ''),
@@ -166,6 +180,7 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
             gesendet = true;
           } catch (e) {
             console.error('[dokument/therapiebericht] Fax-Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
+            await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
             return res.status(502).json({
               error: 'Das Fax konnte nicht über den Mailserver versendet werden. Bitte Einstellungen prüfen oder das PDF drucken.',
               code: 'SMTP_FEHLER',
@@ -273,13 +288,14 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
       const text = 'Guten Tag,\n\nanbei erhalten Sie Ihre Rechnung als PDF. '
         + 'Das PDF ist passwortgeschützt; das Passwort teilen wir Ihnen persönlich oder telefonisch mit.\n\n'
         + `Mit freundlichen Grüßen\n${praxis}`;
-      const weg = versandWeg(env, kutu());
+      const kanal = await dokumentKanal(supabase, tenantId, env, kutu());
+      const weg = versandWeg(env, kutu(), kanal);
       let gesendet = false;
       if (weg && an) {
         try {
           if (weg === 'smtp') {
-            await transportFabrik({ requireTLS: true }).sendMail({
-              from: getMailFrom(praxis),
+            await transportFabrikFuer(kanal, transportFabrik)({ requireTLS: true }).sendMail({
+              from: kanal.from(praxis),
               ...(praxisMail && EMAIL_RE.test(praxisMail) ? { replyTo: praxisMail } : {}),
               to: an, subject: betreff, text,
               attachments: [{ filename: dateiname, content: pdf, contentType: 'application/pdf' }],
@@ -292,8 +308,9 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
           }
         } catch (e) {
           console.error('[dokument/rechnung] Versand fehlgeschlagen', e?.code || '', e?.responseCode || '');
+          await meldeVerbindungsfehler(supabase, tenantId, kanal, e);
           if (e?.code === 'GMAIL_NICHT_VERBUNDEN' || e?.code === 'gmail_reauth_required') {
-            return res.status(409).json({ error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail verbinden – oder das PDF herunterladen und selbst senden.', code: e.code, passwort, pdf_base64: pdf.toString('base64'), dateiname });
+            return res.status(409).json({ error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail-Versand verbinden – oder das PDF herunterladen und selbst senden.', code: e.code, passwort, pdf_base64: pdf.toString('base64'), dateiname });
           }
           return res.status(502).json({ error: 'Die E-Mail konnte nicht versendet werden. Bitte das PDF herunterladen und selbst senden.', code: 'VERSAND_FEHLER', passwort, pdf_base64: pdf.toString('base64'), dateiname });
         }

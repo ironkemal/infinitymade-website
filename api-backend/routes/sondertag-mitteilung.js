@@ -14,7 +14,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../ai/auth.js';
 import { istKutu } from '../lib/dagitim.js';
-import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
+import { createSMTPTransport, getMailFrom, mailKanal, transportFabrikFuer, meldeVerbindungsfehler } from '../lib/mail.js';
 import { sendeUeberGmail } from '../lib/gmail-senden.js';
 import { versandWeg } from './dokument-mail.js';
 import {
@@ -52,10 +52,11 @@ export async function ladeLage(supabase, tenantId, von, bis, { env = process.env
   const leads = new Map((leadsR.data || []).map(l => [l.id, l]));
   const einw = new Map();
   for (const e of einwR.data || []) { if (!einw.has(e.patient_id)) einw.set(e.patient_id, []); einw.get(e.patient_id).push(e); }
-  const weg = versandWeg(env, kutu);
+  const kanal = await mailKanal({ supabase, ownerId: tenantId, zweck: 'dokument', env, kutu });
+  const weg = versandWeg(env, kutu, kanal);
   const versandMoeglich = weg === 'smtp' || (weg === 'gmail' && !!profR.data?.b2b_from_email);
   const geteilt = einteilen(liste, leads, einw, protokollZustand(protR.data), versandMoeglich);
-  return { ...geteilt, weg: versandMoeglich ? weg : null, profil: profR.data || {} };
+  return { ...geteilt, weg: versandMoeglich ? weg : null, profil: profR.data || {}, kanal };
 }
 
 /**
@@ -110,7 +111,8 @@ export async function sendeLauf(supabase, {
     const { betreff, text } = textFn({ praxis: lage.profil.business_name, telefon: lage.profil.phone, startIso: termin.start_time, termin, standort: lage.standort?.get?.(termin.business_id) || null });
     try {
       if (lage.weg === 'smtp') {
-        await transportFabrik({ requireTLS: true }).sendMail({ from: getMailFrom(lage.profil.business_name), to: email, subject: betreff, text });
+        const from = lage.kanal ? lage.kanal.from(lage.profil.business_name) : getMailFrom(lage.profil.business_name);
+        await transportFabrikFuer(lage.kanal, transportFabrik)({ requireTLS: true }).sendMail({ from, to: email, subject: betreff, text });
       } else {
         if (!gmail) { const f = new Error('gmail fehlt'); f.code = 'GMAIL_NICHT_VERBUNDEN'; throw f; }
         await sendeUeberGmail({ supabase, ...gmail, userId: tenantId, to: email, subject: betreff, text, senderName: lage.profil.business_name });
@@ -123,12 +125,13 @@ export async function sendeLauf(supabase, {
       await abschliessen(zeileId, { status: 'fehler', fehler_code: gespeichert === IN_ARBEIT ? 'VERSAND_FEHLER' : gespeichert });
       // SMTP nicht erreichbar / Gmail getrennt: sofort abbrechen statt je Empfaenger auf den Timeout zu warten (onprem O-240).
       if (SMTP_ABBRUCH.has(code)) {
+        await meldeVerbindungsfehler(supabase, tenantId, lage.kanal, e);
         console.error(`[${logTag}] SMTP abgebrochen`, code, zaehler);
         return { status: 409, body: { error: 'Der Mailserver der Praxis ist nicht erreichbar. Bitte später erneut oder telefonisch informieren.', code, ...zaehler } };
       }
       if (code === 'GMAIL_NICHT_VERBUNDEN' || code === 'gmail_reauth_required') {
         console.error(`[${logTag}] abgebrochen`, code, zaehler);
-        return { status: 409, body: { error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail verbinden.', code, ...zaehler } };
+        return { status: 409, body: { error: 'Gmail ist nicht verbunden. Bitte unter Einstellungen → E-Mail-Versand verbinden.', code, ...zaehler } };
       }
       continue;
     }

@@ -89,8 +89,13 @@ const ctx = vm.createContext({
   logAccess: (_supabase, entry) => { logAccessCounter++; lastAuditOwner = entry.ownerId; },
   createBookingsFromRequest: () => { approvedCounter++; throw new Error('approved helper called'); },
   createBookingsFromRequestFactory: () => () => { approvedCounter++; throw new Error('approved helper called'); },
-  createSMTPTransport: () => ({ sendMail: (m) => { lastMail = m; mailCounter++; return Promise.resolve(); } }),
-  getMailFrom: () => 'synthetic@example.invalid', appBaseUrl: () => 'https://synthetic.invalid',
+  // Seit AUFTRAG-MAILVERSAND waehlt lib/mail.js mailKanal() den Weg; hier: Box-/SaaS-SMTP aus der Umgebung.
+  mailKanal: async () => ({
+    weg: 'smtp', quelle: 'env',
+    transport: () => ({ sendMail: (m) => { lastMail = m; mailCounter++; return Promise.resolve(); } }),
+    from: () => 'synthetic@example.invalid',
+  }),
+  appBaseUrl: () => 'https://synthetic.invalid',
   process: { env: { SMTP_HOST: 'synthetic.invalid', SUPABASE_SERVICE_ROLE_KEY: 'test-secret' } },
   console, Date, Error, Math, parseInt, parseFloat, String, Number, Boolean, Object, Array, Promise, JSON
 });

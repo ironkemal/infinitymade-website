@@ -72,8 +72,25 @@ test('G-5 ohne Praxis-SMTP, in der SaaS (Gmail) und ausserhalb des Fensters: kei
     const u = umgebung();
     const r = await u.lauf(opt);
     assert.equal(r.uebersprungen, grund); assert.equal(r.gesendet, 0);
-    assert.equal(u.db.aufrufe.length, 0, 'keine Datenbankabfrage'); assert.equal(u.mails.length, 0); assert.equal(u.logs.length, 0);
+    // Einzige erlaubte Abfrage: hat irgendeine Praxis ein eigenes Postfach (praxis_mailversand)? Keine Patientendaten.
+    assert.ok(u.db.aufrufe.every(n => n === 'praxis_mailversand'), 'keine Datenbankabfrage ausser Postfach-Pruefung');
+    assert.equal(u.mails.length, 0); assert.equal(u.logs.length, 0);
   }
+});
+
+test('Eigenes Postfach (praxis_mailversand) einer Praxis: Lauf auch ohne Box-SMTP, Zugangsdaten an den Transport', async () => {
+  process.env.DATA_ENCRYPTION_KEY ||= 'a'.repeat(64);
+  const { verschluesselePasswort } = await import('./mail.js');
+  const t = basis();
+  t.praxis_mailversand = [{ owner_id: T, modus: 'smtp', smtp_host: 'smtp.praxis.invalid', smtp_port: 465, smtp_sicherheit: 'ssl',
+    smtp_benutzer: 'praxis@example.invalid', smtp_passwort: verschluesselePasswort('geheim'), absender_email: 'praxis@example.invalid', absender_name: 'Physio Test' }];
+  const db = fakeDb(t);
+  const optionen = []; const mails = [];
+  const transportFabrik = (o) => { optionen.push(o); return { async verify() {}, async sendMail(m) { mails.push(m); } }; };
+  const r = await erinnerungsLauf(db, { jetzt, env: {}, kutu: true, transportFabrik, log: { log() {}, error() {}, warn() {} } });
+  assert.equal(r.uebersprungen, null); assert.equal(r.gesendet, 1);
+  assert.ok(optionen.every(o => o.host === 'smtp.praxis.invalid' && o.pass === 'geheim' && o.secure === true && o.requireTLS === true));
+  assert.equal(mails[0].from, '"Physio Test" <praxis@example.invalid>');
 });
 
 // ── G-1 Doppelversand ────────────────────────────────────────────────────────────────────────────

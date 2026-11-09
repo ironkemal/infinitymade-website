@@ -12,10 +12,14 @@
 // zeigt auf die Box-Adresse, die der Patient von zu Hause meist nicht erreicht.
 // Bis Kemal O-155 entscheidet, steht dort „Bitte rufen Sie die Praxis an".
 // Praxisseitiger Direktversand aus dem eigenen Postfach: Ops #335 (nach Launch).
+// Seit AUFTRAG-MAILVERSAND (09.11.2026) kann die Praxis ihr Postfach unter Einstellungen → E-Mail-Versand
+// verbinden; dann versendet die Box selbst. Aufrufer übergeben den Kanal aus lib/mail.js mailKanal().
 import { istKutu } from './dagitim.js';
+import { envSmtpVorhanden } from './mail.js';
 
-export function mailEntwurfStattVersand() {
-  return istKutu() && !process.env.SMTP_HOST;
+export function mailEntwurfStattVersand(kanal = null) {
+  if (!istKutu()) return false;
+  return kanal ? kanal.weg !== 'smtp' : !envSmtpVorhanden();
 }
 
 const datumDe = d => new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString('de-DE');

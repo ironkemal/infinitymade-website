@@ -34,10 +34,11 @@ import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
-import ueberRouter from './routes/ueber.js';
+import { createUeberRouter } from './routes/ueber.js';
 import { createManifestRouter } from './routes/manifest.js';
 import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { createSondertagMitteilungRouter } from './routes/sondertag-mitteilung.js';
+import { createMailversandRouter } from './routes/mailversand.js';
 import { createFormularSignierenRouter } from './routes/formular-signieren.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
@@ -67,7 +68,7 @@ import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
-import { createSMTPTransport, getMailFrom } from './lib/mail.js';
+import { mailKanal } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
@@ -635,9 +636,11 @@ app.use('/api/warteliste', wartelisteRouter);
 app.use('/api', mitarbeiterZugangRouter);
 app.use('/api', dsgvoRouter);
 // „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
-app.use('/api', ueberRouter);
+app.use('/api', createUeberRouter({ supabase }));
 // Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
 app.use('/api', createDokumentMailRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
+// Einstellungen → E-Mail-Versand (AUFTRAG-MAILVERSAND): Postfach der Praxis, nur Inhaber.
+app.use('/api', createMailversandRouter({ supabase, googleVerfuegbar: GOOGLE_KONFIGURIERT }));
 // M6b/S8: Terminabsage per Mail bei geschlossenem Sondertag — nie automatisch, Vorschau -> Freigabe -> Versand.
 app.use('/api', createSondertagMitteilungRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 app.use('/api', createFormularSignierenRouter({ supabase }));
@@ -672,7 +675,8 @@ app.get('/api/gmail/connect', requireAuthAI, (req, res) => {
     access_type: 'offline',
     prompt: 'consent select_account',
     scope: ['email', 'profile', 'openid', 'https://www.googleapis.com/auth/gmail.send'],
-    state: createOAuthState(userId, 'gmail')
+    // ?ziel=mailversand: aus Einstellungen → E-Mail-Versand gestartet → Rücksprung dorthin statt in den B2B-Bereich.
+    state: createOAuthState(userId, req.query.ziel === 'mailversand' ? 'gmail_mailversand' : 'gmail')
   });
 
   res.redirect(url);
@@ -691,7 +695,7 @@ app.get('/api/calendar/google-callback', async (req, res) => {
   try {
     const { tokens } = await newOAuthClient().getToken(code);
 
-    if (flowType === 'gmail') {
+    if (flowType === 'gmail' || flowType === 'gmail_mailversand') {
       const uRes  = await fetchWithTimeout('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: 'Bearer ' + tokens.access_token }
       }, 10000);
@@ -706,6 +710,9 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       }
 
       const emailEnc = encodeURIComponent(uinfo.email);
+      if (flowType === 'gmail_mailversand') {
+        return res.redirect(`${appBaseUrl()}/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}&mailversand=1`);
+      }
       return res.redirect(`${appBaseUrl()}/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
     }
 
@@ -4394,12 +4401,13 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
             booking_id: autoResult.booking_id, booking_ids: autoResult.booking_ids,
           })
           .eq('id', request.id);
-        if (pat?.email && process.env.SMTP_HOST) {
+        const kanal = pat?.email ? await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' }) : null;
+        if (pat?.email && kanal.weg === 'smtp') {
           const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
             .update(`${request.id}:${resolvedPatientId}`).digest('hex').substring(0, 32);
-          const t = createSMTPTransport();
+          const t = kanal.transport();
           t.sendMail({
-            from: getMailFrom(ownerProfile.business_name),
+            from: kanal.from(ownerProfile.business_name),
             replyTo: ownerProfile.email || undefined,
             to: pat.email,
             subject: mailBetreff(`Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`),
@@ -4410,7 +4418,8 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       }
     }
 
-    if (process.env.SMTP_HOST && ownerProfile.email) {
+    const praxisKanal = ownerProfile.email ? await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' }) : null;
+    if (praxisKanal?.weg === 'smtp' && ownerProfile.email) {
       let pName = 'Unbekannter Patient';
       if (resolvedPatientId) {
         const { data: pat } = await supabase.from('patients').select('vorname, nachname').eq('id', resolvedPatientId).maybeSingle();
@@ -4418,9 +4427,9 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       } else if (patient) {
         pName = `${patient.vorname} ${patient.nachname}`;
       }
-      const t = createSMTPTransport();
+      const t = praxisKanal.transport();
       t.sendMail({
-        from: getMailFrom(),
+        from: praxisKanal.quelle === 'db' ? praxisKanal.from(ownerProfile.business_name) : praxisKanal.from(),
         to: ownerProfile.email,
         subject: mailBetreff(`Neue Terminanfrage von ${pName}`),
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${escHtml(pName)}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + escHtml(preferred_time) + ' Uhr' : ''}</p>` : ''}${ausWidget ? '<p>Die Angaben der Anfrage stehen im Dashboard unter Termin-Anfragen.</p>' : (notizen ? `<p><strong>Notiz:</strong> ${escHtml(String(notizen).substring(0, 500))}</p>` : '')}<p><a href="${appBaseUrl()}/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
@@ -4598,7 +4607,8 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     }
 
     // Box ohne SMTP: Entwurf an den Inhaber statt Versand (K2b.15, lib/mail-entwurf.js)
-    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+    const kanal = bookReq.patients?.email ? await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' }) : null;
+    if (bookReq.patients?.email && mailEntwurfStattVersand(kanal)) {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
         supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle(),
         supabase.from('profiles').select('owner_first_name, owner_last_name, business_name').eq('id', empId).maybeSingle(),
@@ -4608,7 +4618,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         datum: anfrage.preferred_date, uhrzeit: anfrage.preferred_time,
         therapeut: [empP?.owner_first_name, empP?.owner_last_name].filter(Boolean).join(' ') || empP?.business_name || '',
       });
-    } else if (bookReq.patients?.email && process.env.SMTP_HOST) {
+    } else if (bookReq.patients?.email && kanal.weg === 'smtp') {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
         supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle(),
         // `profiles` hat keine Spalte `full_name` — dieser Select lief mit 400 ins
@@ -4622,9 +4632,9 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         || empP?.business_name || '';
       const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
         .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
-      const t = createSMTPTransport();
+      const t = kanal.transport();
       t.sendMail({
-        from: getMailFrom(ownerP?.business_name),
+        from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
@@ -4659,17 +4669,18 @@ app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLi
 
     await supabase.from('booking_requests').update({ status: 'declined' }).eq('id', request_id);
 
-    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+    const kanal = bookReq.patients?.email ? await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' }) : null;
+    if (bookReq.patients?.email && mailEntwurfStattVersand(kanal)) {
       const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
       return res.json({ ok: true, mailEntwurf: entwurfAbgelehnt({
         to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name, grund: reason,
       }) });
     }
-    if (bookReq.patients?.email && process.env.SMTP_HOST) {
+    if (bookReq.patients?.email && kanal.weg === 'smtp') {
       const { data: ownerP } = await supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle();
-      const t = createSMTPTransport();
+      const t = kanal.transport();
       t.sendMail({
-        from: getMailFrom(ownerP?.business_name),
+        from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: 'Terminanfrage – Leider nicht möglich',
@@ -4760,14 +4771,15 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
     }).eq('id', request_id);
     if (updErr) throw updErr;
 
-    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+    const kanal = bookReq.patients?.email ? await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' }) : null;
+    if (bookReq.patients?.email && mailEntwurfStattVersand(kanal)) {
       const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
       return res.json({ ok: true, angeboten: gespeichert.length, mailEntwurf: entwurfGegenangebot({
         to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name,
         grund: reason, termine: gespeichert,
       }) });
     }
-    if (process.env.SMTP_HOST) {
+    if (kanal?.weg === 'smtp') {
       const { data: ownerP } = await supabase.from('profiles')
         .select('business_name, email').eq('id', owner_id).maybeSingle();
       const zeilen = gespeichert.map((a, i) => {
@@ -4778,9 +4790,9 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
         });
         return `<p style="margin:10px 0"><a href="${link}" style="display:inline-block;background:#b1891b;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px">${datum} um ${a.time} Uhr annehmen</a></p>`;
       }).join('');
-      const t = createSMTPTransport();
+      const t = kanal.transport();
       t.sendMail({
-        from: getMailFrom(ownerP?.business_name),
+        from: kanal.from(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Terminvorschlag – ${ownerP?.business_name || 'Praxura'}`,
@@ -4815,13 +4827,14 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
       .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (!bookReq.patients?.email) return res.status(400).json({ error: 'Für diesen Patienten ist keine E-Mail-Adresse hinterlegt' });
-    if (mailEntwurfStattVersand()) {
+    const kanal = await mailKanal({ supabase, ownerId: owner_id, zweck: 'booking' });
+    if (mailEntwurfStattVersand(kanal)) {
       const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
       return res.json({ ok: true, mailEntwurf: entwurfNachricht({
         to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name, nachricht,
       }) });
     }
-    if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'E-Mail-Versand ist nicht eingerichtet' });
+    if (kanal.weg !== 'smtp') return res.status(503).json({ error: 'E-Mail-Versand ist nicht eingerichtet', code: 'VERSAND_NICHT_EINGERICHTET' });
 
     const { data: ownerP } = await supabase.from('profiles')
       .select('business_name, email').eq('id', owner_id).maybeSingle();
@@ -4831,9 +4844,9 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>');
 
-    const t = createSMTPTransport();
+    const t = kanal.transport();
     await t.sendMail({
-      from: getMailFrom(ownerP?.business_name),
+      from: kanal.from(ownerP?.business_name),
       replyTo: ownerP?.email || undefined,
       to: bookReq.patients.email,
       subject: `Nachricht von ${ownerP?.business_name || 'Ihrer Praxis'}`,

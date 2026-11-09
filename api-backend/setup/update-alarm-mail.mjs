@@ -10,15 +10,35 @@
 // 13.09.2026) — mail yolu, alarm vermesi gereken arızadan bağımsız kalsın diye.
 //
 // Kullanım: node setup/update-alarm-mail.mjs <sonuc> <email> [business_name]
-import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
+//
+// AUFTRAG-MAILVERSAND (09.11.2026): Postfach kommt jetzt bevorzugt aus Einstellungen → E-Mail-Versand
+// (praxis_mailversand, lib/mail.js mailKanal). Dafür EIN kurzer DB-Versuch (5 s): klappt er nicht
+// (z. B. bakim_modu, DB down), gilt wie bisher nur SMTP_* — der Alarm hängt nie an der DB. Bekannte
+// Grenze: eine Box, deren Mail NUR in der Oberfläche eingerichtet ist, bekommt bei DB-Ausfall keinen Alarm.
+import { createClient } from '@supabase/supabase-js';
+import { mailKanal } from '../lib/mail.js';
 
 const [, , sonuc, email, businessName] = process.argv;
 
-// SMTP kurulu değilse çık — install.sh SMTP'yi sormuyor (O-142), yani SMTP'siz kutu
-// varsayılan. Çıkış 3 = "gönderilmedi, SMTP yok" (O-185): 0 dönseydi update.sh/backup.sh
-// logda "gönderildi" yazıp 7 günlük sessizliği başlatırdı. Sözleşme: 0 gönderildi ·
+async function ladePostfach() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  const versuch = (async () => {
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+    const { data: setup } = await supabase.from('praxura_setup').select('owner_user_id').eq('id', 1).maybeSingle();
+    if (!setup?.owner_user_id) return null;
+    const { data } = await supabase.from('praxis_mailversand').select('*').eq('owner_id', setup.owner_user_id).maybeSingle();
+    return data || null;
+  })().catch(() => null);
+  return Promise.race([versuch, new Promise(r => setTimeout(() => r(null), 5000).unref())]);
+}
+
+const kanal = await mailKanal({ zweck: 'alarm', zeile: await ladePostfach() });
+
+// Kein Postfach — install.sh SMTP'yi sormuyor (O-142), yani SMTP'siz kutu varsayılan.
+// Çıkış 3 = "gönderilmedi, SMTP yok" (O-185): 0 dönseydi update.sh/backup.sh logda
+// "gönderildi" yazıp 7 günlük sessizliği başlatırdı. Sözleşme: 0 gönderildi ·
 // 3 SMTP yok (atlandı, epoch ilerlemez) · diğer = hata (yeniden dene).
-if (!process.env.SMTP_HOST) process.exit(3);
+if (kanal.weg !== 'smtp') process.exit(3);
 if (!sonuc || !email) process.exit(0);
 
 const METINLER = {
@@ -50,11 +70,11 @@ const betreff = sonuc === 'ok'
       : 'Praxura — automatisches Update braucht Aufmerksamkeit';
 const zeile = METINLER[sonuc] || `Automatisches Update: unbekannter Status "${sonuc}".`;
 
-const transport = createSMTPTransport();
+const transport = kanal.transport();
 try {
   await transport.verify();
   await transport.sendMail({
-    from: getMailFrom(businessName),
+    from: kanal.from(businessName),
     to: email,
     subject: betreff,
     html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
@@ -68,6 +88,7 @@ try {
   // Mail-Fehler dürfen den Exit-Code des Update-Laufs nie beeinflussen — das
   // ist bereits vor diesem Aufruf entschieden. update.sh liest nur diesen
   // Exit-Code (0/1), keine Ursache; die Diagnose steht in update.log.
-  console.error('[update-alarm-mail]', err.message);
+  // Nur der Code: nodemailer-Meldungen können Adressen enthalten.
+  console.error('[update-alarm-mail]', err?.code || 'FEHLER');
   process.exit(1);
 }

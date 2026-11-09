@@ -1,4 +1,4 @@
-// Faz 2.2 — Einrichtungsassistent, dilim 1 + 2 + SMTP-Testmail (O-66).
+// Faz 2.2 — Einrichtungsassistent, dilim 1 + 2.
 //
 // GET  /api/setup/status     — darf man den Assistenten ueberhaupt oeffnen/fortsetzen?
 // POST /api/setup/verify     — Jeton pruefen, OHNE ihn zu verbrauchen.
@@ -6,7 +6,6 @@
 //                              der Owner-Anlage) laesst zusaetzlich §5.4/1/5/8 laufen
 //                              (Faz 2.2 dilim 2b) — kein neuer Endpunkt, ein Feld mehr.
 // POST /api/setup/owner      — der EINE Schreibvorgang: legt den ersten Owner an
-// POST /api/setup/test-smtp  — sendet EINE Testmail an den soeben angelegten Owner
 // POST /api/setup/abschluss  — markiert die Einrichtung als fertig (kurulum modu endet)
 //
 // Dieser Router wird in server.js NUR registriert, wenn SETUP_TOKEN gesetzt
@@ -18,10 +17,10 @@
 // Schluessel im Client (G2-Verstoss, keine Ausnahme). Sie laeuft hier, im
 // Container, mit dem Schluessel, den server.js ohnehin schon haelt.
 //
-// SMTP selbst wird NICHT hier eingerichtet (O-66, Entscheidung 11.09.2026):
-// `install.sh` fragt danach und schreibt EINE Wahrheit in `.env`, die GoTrue
-// und `api` beide lesen. Dieser Router prueft nur, ob sie funktioniert — er
-// kann `.env` nicht aendern (Container liest Umgebung nur beim Start).
+// Mail gehoert NICHT zur Einrichtung (AUFTRAG-MAILVERSAND, Kemal 09.11.2026): die
+// Praxis verbindet ihr Postfach spaeter, optional, unter Einstellungen → E-Mail-Versand
+// (routes/mailversand.js, owner-Anmeldung statt Jeton). Der fruehere Schritt
+// /test-smtp ist entfallen; SMTP_* aus `.env` alter Boxen gilt weiter (lib/mail.js).
 //
 // Was dieser Router sonst NICHT tut (spätere dilim): Praxis-/Backup-
 // Einstellungen einrichten (nur testen/abschliessen ist hier drin).
@@ -29,7 +28,6 @@
 import express from 'express';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
 import { schemaZaehlerLesen } from './selbstpruefung.js';
 import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
 import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
@@ -261,80 +259,12 @@ router.post('/owner', async (req, res) => {
   res.json({ ok: true, email });
 });
 
-// Rate-Limit fuer die Testmail: kein express-rate-limit-Overhead fuer einen
-// einzelnen, seltenen, ohnehin schon jetongeschuetzten Endpunkt — ein simpler
-// Zeitstempel reicht, verhindert nur ein versehentliches Doppelklick-Spamming.
-let letzterTestmailVersand = 0;
-
-router.post('/test-smtp', async (req, res) => {
-  const { token } = req.body || {};
-  // Hier NUR tokenGueltig(): genau nach der Owner-Anlage (Schritt 2), noch VOR
-  // dem Abschluss (Schritt 4), will man die Mail testen koennen. NACH dem
-  // Abschluss ist die Route zu — das macht seit K2b.7a das Tor oben
-  // (setupKapisi, 410), vorher war sie mit dem Jeton weiter offen (S-50).
-  if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
-
-  if (!process.env.SMTP_HOST) {
-    return res.json({ eingerichtet: false });
-  }
-
-  const jetzt = Date.now();
-  if (jetzt - letzterTestmailVersand < 10_000) {
-    return res.status(429).json({ error: 'Bitte kurz warten, bevor Sie es erneut versuchen.' });
-  }
-
-  // Empfaenger kommt NIE aus der Anfrage — sonst waere dieser Endpunkt ein
-  // Mail-Versand-Hebel fuer jeden, der das Jeton kennt (O-66, Gegenlesen
-  // 11.09.2026). Ziel ist immer der Owner, den DIESE Box gerade angelegt hat.
-  const { data: setupZeile } = await supabase
-    .from('praxura_setup')
-    .select('owner_user_id')
-    .eq('id', 1)
-    .maybeSingle();
-  if (!setupZeile?.owner_user_id) {
-    return res.status(409).json({ error: 'Noch kein Owner-Konto — zuerst Schritt 2 abschließen.' });
-  }
-  const { data: ownerProfil } = await supabase
-    .from('profiles')
-    .select('email, business_name')
-    .eq('id', setupZeile.owner_user_id)
-    .maybeSingle();
-  if (!ownerProfil?.email) {
-    return res.status(500).json({ error: 'Owner-E-Mail-Adresse nicht gefunden.' });
-  }
-
-  letzterTestmailVersand = jetzt;
-  const transport = createSMTPTransport();
-  try {
-    await transport.verify();
-    await transport.sendMail({
-      from: getMailFrom(ownerProfil.business_name),
-      to: ownerProfil.email,
-      subject: 'Praxura — Testmail der Einrichtung',
-      html: '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>SMTP funktioniert</h2><p>Diese Mail kam über den in der Einrichtung angegebenen Mailserver an.</p></div>',
-    });
-    return res.json({ eingerichtet: true, gesendetAn: ownerProfil.email });
-  } catch (err) {
-    // Nodemailer-Fehlercodes in verstaendliche Diagnose uebersetzen — der
-    // Kunde soll nicht "ECONNREFUSED" lesen muessen (RELEASE-STANDARD §5.4/9).
-    const diagnose = {
-      EAUTH: 'Benutzername oder Passwort wird vom Mailserver abgelehnt.',
-      ECONNECTION: 'Server oder Port nicht erreichbar — Firewall oder falscher Port?',
-      ESOCKET: 'Verbindung zum Mailserver ist abgebrochen — Firewall oder falscher Port?',
-      ETIMEDOUT: 'Mailserver antwortet nicht (Zeitüberschreitung).',
-      EENVELOPE: 'Absender- oder Empfängeradresse wurde vom Mailserver abgelehnt.',
-      EDNS: 'Mailserver-Adresse ist unbekannt — Hostname in der Einrichtung prüfen.',
-    }[err.code] || err.message || 'Unbekannter Fehler beim Mailversand.';
-    return res.status(502).json({ error: diagnose, code: err.code || null, gesendetAn: ownerProfil.email });
-  }
-});
-
 // Schritt 4 — bewusster Klick, kein automatischer Übergang: §5.4s Kontrollen
 // (1/5/8) werden angezeigt, aber KEINE davon sperrt den Abschluss — ein
 // mechanisches UND-über-alle-Kontrollen würde die Box bei einer einzigen
 // roten Ampel für immer in "kurulum modu" einfrieren, denn NICHTS anderes
 // setzt abgeschlossen_am (onprem-Konsultation, §7H "Dilim 2", 11.09.2026).
-// Jetongeschützt wie /test-smtp, nicht über istAbgeschlossen(): der Jeton ist
+// Jetongeschützt, nicht über istAbgeschlossen(): der Jeton ist
 // zu diesem Zeitpunkt bereits verbraucht (Schritt 2), das ist erwartet.
 router.post('/abschluss', async (req, res) => {
   const { token } = req.body || {};
@@ -365,7 +295,7 @@ router.post('/abschluss', async (req, res) => {
 
 // Schritt „Praxisangaben für Rechnungen" (KHS M2.5, überspringbar). Läuft ZWISCHEN Mailprüfung und
 // Abschluss: der Jeton ist da schon verbraucht (Schritt 2), gilt aber weiter als Ausweis (wie
-// /test-smtp, /abschluss). Nach dem Abschluss ist der Weg zu (410) — danach nur noch angemeldet in
+// /abschluss). Nach dem Abschluss ist der Weg zu (410) — danach nur noch angemeldet in
 // den Einstellungen. Schreibt nur eine Whitelist von Profilspalten des Owners (branding-felder.js).
 router.post('/branding', async (req, res) => {
   const { token } = req.body || {};

@@ -49,3 +49,13 @@ test('jede Zeile hat Zweck, Zeitpunkt und Inhalt (die Praxis soll sie verstehen)
     assert.ok(['Praxura', 'Betriebssystem'].includes(v.von));
   }
 });
+
+test('Postfach der Praxis (Einstellungen) hat Vorrang vor SMTP_* und wird ohne Zugangsdaten gezeigt', () => {
+  const v = verbindungenListe({ SMTP_HOST: 'smtp.env.invalid' }, { modus: 'smtp', smtp_host: 'smtp.praxis.invalid', smtp_port: 465 }).verbindungen;
+  const mail = v.filter((x) => /E-Mail-Versand/.test(x.zweck));
+  assert.equal(mail.length, 1);
+  assert.equal(mail[0].ziel, 'smtp.praxis.invalid:465');
+  assert.ok(!JSON.stringify(v).includes('smtp.env.invalid'));
+  const aus = verbindungenListe({ SMTP_HOST: 'smtp.env.invalid' }, { modus: 'aus' }).verbindungen;
+  assert.ok(aus.some((x) => x.ziel === 'smtp.env.invalid:587'));
+});

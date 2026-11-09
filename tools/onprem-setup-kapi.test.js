@@ -85,7 +85,8 @@ test('router.js: Tor ist die ERSTE Schicht, jede Route (auch künftige) liegt da
   assert.ok(!stack[0].route, 'erste Schicht darf keine Route sein');
   assert.equal(stack[0].name, 'setupKapi', 'erste Schicht muss das Tor sein');
   const routen = stack.filter((l) => l.route);
-  assert.ok(routen.length >= 6, `erwartet ≥6 Routen, gefunden ${routen.length}`);
+  // 5 seit AUFTRAG-MAILVERSAND (09.11.2026): /test-smtp entfallen, Mail kommt in Einstellungen → E-Mail-Versand.
+  assert.ok(routen.length >= 5, `erwartet ≥5 Routen, gefunden ${routen.length}`);
 
   const kapi = setupKapisi({ istAbgeschlossen: async () => true, seit: () => '' });
   for (const l of routen) {

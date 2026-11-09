@@ -2,18 +2,18 @@
 // Reine Logik: lib/terminerinnerung.js. Versand + Protokoll + Tagesdeckel: sendeLauf() aus routes/sondertag-mitteilung.js
 // (dieselbe Reservierung VOR dem Versand, dieselbe Einwilligungspruefung – keine zweite Versandschleife).
 //
-// Nur Box mit Praxis-SMTP (versandWeg() === 'smtp'). SaaS/Gmail braucht einen Request-Kontext und gehoert nicht zu
-// Phase A; ohne SMTP laeuft nichts und es entsteht keine Fehlerflut (G-5). Praxis-Schalter profiles.terminerinnerung_aktiv
+// Nur mit Praxis-SMTP: Einstellung der Praxis (praxis_mailversand, je Mandant) oder SMTP_* der Box (lib/mail.js
+// mailKanal, zweck 'erinnerung'). SaaS/Gmail braucht einen Request-Kontext und gehoert nicht zu Phase A; ohne SMTP
+// laeuft nichts und es entsteht keine Fehlerflut (G-5). Praxis-Schalter profiles.terminerinnerung_aktiv
 // (Migration 0110, Standard AUS), gelesen nur aus der Inhaber-Zeile (role='owner').
 // Logs: nur Anzahlen und Codes – nie Adresse, Name oder Termin (G-4).
 import { istKutu } from './dagitim.js';
-import { createSMTPTransport } from './mail.js';
+import { createSMTPTransport, mailKanal, transportFabrikFuer, meldeVerbindungsfehler } from './mail.js';
 import { berlinTagesgrenzen } from './berlin-tag.js';
 import { einteilen, protokollSchluessel, IN_ARBEIT } from './sondertag-mitteilung.js';
 import {
   ANLASS_ERINNERUNG, DECKEL_ERINNERUNG, fensterOffen, morgenBerlin, zuErinnern, protokollZustandErinnerung, erinnerungsText,
 } from './terminerinnerung.js';
-import { versandWeg } from '../routes/dokument-mail.js';
 import { sendeLauf, SMTP_ABBRUCH } from '../routes/sondertag-mitteilung.js';
 
 const leer = () => ({ mandanten: 0, gesendet: 0, fehler: 0, doppelt: 0, unklar: 0, abgelehnt: 0, anruf: 0, deckel: 0, abgebrochen: false, uebersprungen: null });
@@ -36,7 +36,7 @@ const adresse = b => [b.business_name, [b.street, b.house_number].filter(Boolean
   .map(x => String(x || '').trim()).filter(Boolean).join(', ');
 
 /** Ein Mandant: Termine von morgen laden, einteilen, senden. Wirft bei DB-Fehlern (Aufrufer isoliert je Mandant). */
-export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik }) {
+export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik, kanal = null }) {
   const tenantId = profil.id;
   const { data: termine, error: e1 } = await supabase.from('bookings')
     .select('id,start_time,status,group_parent_id,business_id,lead_id,created_at')
@@ -75,11 +75,12 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
   try {
     await transportFabrik({ requireTLS: true }).verify?.();
   } catch (err) {
+    await meldeVerbindungsfehler(supabase, tenantId, kanal, err);
     ergebnis.abgebrochen = true;
     return { ergebnis, abbruch: true, serverCode: String(err?.code || 'VERIFY_FEHLER').slice(0, 64) };
   }
 
-  const lage = { weg: 'smtp', mail: teile.mail, profil: { business_name: profil.business_name, phone: profil.phone }, standort };
+  const lage = { weg: 'smtp', kanal, mail: teile.mail, profil: { business_name: profil.business_name, phone: profil.phone }, standort };
   const r = await sendeLauf(supabase, {
     tenantId, userId: null, ids: teile.mail.map(x => x.termin.id), lage, transportFabrik, jetzt,
     anlass: ANLASS_ERINNERUNG, textFn: erinnerungsText, deckel: DECKEL_ERINNERUNG, tag: 'terminerinnerung',
@@ -92,14 +93,23 @@ export async function mandantLauf(supabase, profil, { jetzt, morgen, grenzen, tr
 
 /**
  * Ein Durchlauf (ohne Timer, testbar). Ausserhalb des Versandfensters oder ohne Praxis-SMTP passiert nichts.
- * Bricht beim ersten SMTP-Transportfehler ab: der Mailserver der Box ist fuer alle Mandanten derselbe.
+ * Bricht beim ersten SMTP-Transportfehler des Box-SMTP (SMTP_*) ab: der ist fuer alle Mandanten derselbe.
+ * Ein eigenes Postfach (Einstellung) betrifft nur seinen Mandanten — dort geht es mit dem naechsten weiter.
  */
+async function irgendeinPraxisPostfach(supabase) {
+  try {
+    const { data, error } = await supabase.from('praxis_mailversand').select('owner_id').eq('modus', 'smtp');
+    return !error && (data || []).length > 0;
+  } catch { return false; }
+}
+
 export async function erinnerungsLauf(supabase, {
   jetzt = new Date(), env = process.env, kutu = istKutu(), transportFabrik = createSMTPTransport, log = console,
 } = {}) {
   const summe = leer();
   if (!fensterOffen(jetzt)) return { ...summe, uebersprungen: 'ausserhalb_fenster' };
-  if (versandWeg(env, kutu) !== 'smtp') return { ...summe, uebersprungen: 'kein_smtp' };
+  const boxSmtp = !!(kutu && env.SMTP_HOST);
+  if (!boxSmtp && !(await irgendeinPraxisPostfach(supabase))) return { ...summe, uebersprungen: 'kein_smtp' };
   const morgen = morgenBerlin(jetzt);
   const grenzen = berlinTagesgrenzen(morgen);
   if (!grenzen) return { ...summe, uebersprungen: 'ungueltiger_tag' };
@@ -109,11 +119,19 @@ export async function erinnerungsLauf(supabase, {
   if (error) throw error;
 
   for (const profil of profile || []) {
-    summe.mandanten += 1;
     try {
-      const { ergebnis, abbruch, serverCode } = await mandantLauf(supabase, profil, { jetzt, morgen, grenzen, transportFabrik });
+      const kanal = await mailKanal({ supabase, ownerId: profil.id, zweck: 'erinnerung', env, kutu });
+      if (kanal.weg !== 'smtp') continue;
+      summe.mandanten += 1;
+      const { ergebnis, abbruch, serverCode } = await mandantLauf(supabase, profil, {
+        jetzt, morgen, grenzen, kanal, transportFabrik: transportFabrikFuer(kanal, transportFabrik),
+      });
       for (const k of ['gesendet', 'fehler', 'doppelt', 'unklar', 'abgelehnt', 'anruf', 'deckel']) summe[k] += ergebnis[k];
-      if (abbruch) { summe.abgebrochen = true; log.error?.(`[terminerinnerung] Mailserver nicht nutzbar: ${serverCode || 'SMTP'}`); break; }
+      if (abbruch) {
+        summe.abgebrochen = true;
+        log.error?.(`[terminerinnerung] Mailserver nicht nutzbar: ${serverCode || 'SMTP'}`);
+        if (kanal.quelle !== 'db') break;
+      }
     } catch (err) {
       summe.fehler += 1;
       log.error?.(`[terminerinnerung] Mandantenlauf fehlgeschlagen: ${String(err?.code || 'FEHLER').slice(0, 64)}`);

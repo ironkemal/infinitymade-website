@@ -19,9 +19,12 @@ function host(url) {
 
 /**
  * @param {Record<string,string|undefined>} [env]
+ * @param {{modus?:string, smtp_host?:string, smtp_port?:number}|null} [postfach] Einstellung der Praxis
+ *   (praxis_mailversand, Einstellungen → E-Mail-Versand). Hat Vorrang vor SMTP_* — genau wie beim Versand
+ *   (lib/mail.js mailKanal), sonst sagte diese Seite „kein Mailserver", obwohl die Box mailt.
  * @returns {{kutu: boolean, verbindungen: Array<{ziel:string, zweck:string, wann:string, inhalt:string, von:'Praxura'|'Betriebssystem'}>}}
  */
-export function verbindungenListe(env = process.env) {
+export function verbindungenListe(env = process.env, postfach = null) {
   const v = [];
   const add = (ziel, zweck, wann, inhalt, von = 'Praxura') => v.push({ ziel, zweck, wann, inhalt, von });
 
@@ -60,7 +63,10 @@ export function verbindungenListe(env = process.env) {
       'etwa alle 60 Tage', 'Box-Adresse — keine Patientendaten');
   }
 
-  if (env.SMTP_HOST) {
+  if (postfach?.modus === 'smtp' && postfach.smtp_host) {
+    add(`${postfach.smtp_host}:${postfach.smtp_port || 587}`, 'E-Mail-Versand über das Postfach der Praxis (Einstellungen → E-Mail-Versand)',
+      'wenn die Software eine E-Mail verschickt', 'die jeweilige E-Mail (Empfänger, Inhalt)');
+  } else if (env.SMTP_HOST) {
     add(`${env.SMTP_HOST}:${env.SMTP_PORT || 587}`, 'E-Mail-Versand über den Mailserver der Praxis',
       'wenn die Software eine E-Mail verschickt', 'die jeweilige E-Mail (Empfänger, Inhalt)');
   }
