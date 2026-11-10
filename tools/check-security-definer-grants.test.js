@@ -199,13 +199,15 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (45) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
-  // AUSNAHMEN: genau 4 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
-  assert.equal(AUSNAHMEN.length, 5);
+test('9. Listenstruktur: AUSNAHMEN (6), PROTECTED (45) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+  // AUSNAHMEN: genau 6 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
+  assert.equal(AUSNAHMEN.length, 6);
   const erwarteteAusnahmen = [
     'search_diagnosen',
     'search_heilmittel',
     'public_praxis_sector',
+    'public_praxis_angaben',
+    'public_sondertage',
     'find_owner_id_by_code',
   ];
   for (const name of erwarteteAusnahmen) {
