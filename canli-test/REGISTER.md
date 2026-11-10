@@ -2288,3 +2288,17 @@ Negative Schrittweite als mögliche Endlosschleife im Quellcode bestätigt; Rout
 **P3:** Ein Sondertag in der Vergangenheit steht nicht in der Sondertag-Liste (`renderSpecialDaysList` filtert `date >= heute`, `dashboard.js` ~8846) → in der UI nicht mehr löschbar; der Test-Sondertag musste über die API (eigene Sitzung, RLS des Inhabers) entfernt werden. P3 (vorbestehend): der Knopf heißt in der Terminmaske „Löschen", führt aber die Absage aus.
 **Konsole:** 0 Fehler aus der App; einziger 400 war eine eigene Testabfrage. §3 #3/#4/#6 nicht gesehen.
 **Testdaten-Stand:** neu angelegt und wieder entfernt: Sondertag 03.11. · bleibt (abgesagt, nicht löschbar): Termin `22be529d`.
+
+### Buchungsseite/Sondertage nach S-64 (`cb541ac4`, rebased von `d609e0a4`): `booking.html` liest Sondertage nur über `rpc/public_sondertage`, Notiz nicht mehr öffentlich — anonym, Live 10.11.2026 ~15:38–15:45Z — GEÇTİ (1 Restpunkt nicht über UI prüfbar, 1 Domänenfrage)
+**Kapılar:** `/api/krankenkassen` 200 JSON · `git log origin/main..HEAD` leer · canlı `booking.js?v=20261110sondertag` = lokal · öffentliche Seite, kein Login. Eigener Headless-Playwright (anonym, frischer Kontext; `playwright-cli` auf diesem Mac nicht installiert), 1280 px und 390 px. Buchungsformular NICHT abgesendet, nichts geschrieben. Linkparameter ist `?u=<slug>` (nicht `?slug=`).
+**Geprüft:**
+- [x] Netzwerk: Kalender und Tagesauswahl rufen nur noch `POST /rest/v1/rpc/public_sondertage` → jeweils **200**; **kein einziger** Request auf `custom_days` mehr (Desktop und mobil). Antwortfelder nur `date,type,start_time,end_time` — **kein `note`** (auch per direktem anon-RPC für beide Slugs bestätigt). Konsole: 0 Fehler, 0 Warnungen, keine HTTP ≥400 in allen Läufen.
+- [x] `?u=hoffmann-schwabing` (Owner `cccccc01`, Einzelpraxis, 1 Leistung), Dezember 2026: 10.–24.12. alle `unavailable` (RPC liefert 10.–24.12. `holiday`), dazu nur Wochenenden; 1.–4./7.–9./28.–31.12. wählbar.
+- [x] Klick auf geschlossenen Tag (15.12.): keine Reaktion, kein Request, keine Auswahl — Tag ist nicht anklickbar (by design: Listener nur auf `.avail`/`.today`).
+- [x] Text „Geschlossen" (Pfad `loadBookingSlots`, `booking.js:250`): nur erreichbar, wenn „heute" ein geschlossener Tag ist → mit Browser-Uhr auf 10.12.2026 bzw. 24.12.2026 simuliert: „Heute, Donnerstag, 10. Dezember **Geschlossen**" — ohne Notiz/Doppelpunkt, keine Slots.
+- [x] Offener Werktag (01.12.): `POST /api/booking/get-slots` 200, 35 Slots (bzw. 23 am 25.12.).
+- [x] Mobil 390 px: gleiche Markierungen, „Geschlossen" bei simuliertem 24.12., Slots am 01.12., `scrollWidth` 390 = kein Überlauf.
+**Nicht über UI prüfbar:**
+- [ ] `?u=praxura-de` (Owner `fad47bfc`): Praxis + 2 Personen laden, aber für beide „Keine Dienstleistungen verfügbar." (bekannter Datenstand, siehe Zeile Public-Buchung oben) → Monatskalender nicht erreichbar. Ersatzbeleg: anon-RPC `public_sondertage` 01.–30.11. → 200, enthält `2026-11-24 closed` (ganztägig), ebenfalls 09./26./27.11. closed, 23.11. special 09–12; kein `note`.
+**Domänenfrage (→ `podoloji`, kein Fehler von S-64):** 25.12.2026 (1. Weihnachtstag, gesetzlicher Feiertag) ist bei hoffmann-schwabing frei buchbar (23 Slots). Gesetzliche Feiertage werden nur gesperrt, wenn der Inhaber sie als Sondertag einträgt. Soll die öffentliche Buchung gesetzliche Feiertage (Bundesland) von sich aus sperren? Vermutlich P2.
+**Erwartet, nicht bewertet:** Rohtabelle `custom_days` für anon weiter lesbar (Policy `custom_days_public_read`) — Sperre folgt später (siehe Nebenbefund 09.11.).
