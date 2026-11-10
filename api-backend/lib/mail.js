@@ -82,14 +82,17 @@ export function getMailFrom(businessName) {
 // `smtp` ist am Kanal nicht aufzählbar (JSON.stringify(kanal) enthält es nicht), Logs nur e.code.
 // Hosts sind fest im Code — keine automatische Erkennung (ISPDB/MX), das wäre eine neue Außenverbindung.
 
-/** Anbieter-Vorlagen. Nur host/port/sicherheit; der Nutzer gibt Adresse + Passwort ein. */
+/** Anbieter-Vorlagen. Nur host/port/sicherheit; der Nutzer gibt Adresse + Passwort ein.
+ *  Alle auf 587/STARTTLS (requireTLS erzwingt die Verschluesselung): Port 465 ist ausgehend oft gesperrt —
+ *  live gemessen 10.11.2026 auf dem SaaS-VPS (Hetzner: smtp.gmail.com:465 Zeitueberschreitung, :587 erreichbar;
+ *  ebenso IONOS/Strato/T-Online auf 587). Alle vier Anbieter dokumentieren 587 mit STARTTLS. */
 export const SMTP_PRESETS = Object.freeze({
   outlook: Object.freeze({ name: 'Microsoft 365 / Outlook', host: 'smtp.office365.com', port: 587, sicherheit: 'starttls' }),
-  gmail: Object.freeze({ name: 'Google / Gmail', host: 'smtp.gmail.com', port: 465, sicherheit: 'ssl' }),
-  ionos: Object.freeze({ name: 'IONOS', host: 'smtp.ionos.de', port: 465, sicherheit: 'ssl' }),
-  strato: Object.freeze({ name: 'Strato', host: 'smtp.strato.de', port: 465, sicherheit: 'ssl' }),
+  gmail: Object.freeze({ name: 'Google / Gmail', host: 'smtp.gmail.com', port: 587, sicherheit: 'starttls' }),
+  ionos: Object.freeze({ name: 'IONOS', host: 'smtp.ionos.de', port: 587, sicherheit: 'starttls' }),
+  strato: Object.freeze({ name: 'Strato', host: 'smtp.strato.de', port: 587, sicherheit: 'starttls' }),
   einsundeins: Object.freeze({ name: '1&1', host: 'smtp.1und1.de', port: 587, sicherheit: 'starttls' }),
-  telekom: Object.freeze({ name: 'T-Online', host: 'securesmtp.t-online.de', port: 465, sicherheit: 'ssl' }),
+  telekom: Object.freeze({ name: 'T-Online', host: 'securesmtp.t-online.de', port: 587, sicherheit: 'starttls' }),
   gmx: Object.freeze({ name: 'GMX', host: 'mail.gmx.net', port: 587, sicherheit: 'starttls' }),
   webde: Object.freeze({ name: 'WEB.DE', host: 'smtp.web.de', port: 587, sicherheit: 'starttls' }),
   andere: Object.freeze({ name: 'Andere', host: null, port: null, sicherheit: null }),
@@ -114,18 +117,19 @@ export const SMTP_DIAGNOSE = Object.freeze({
   EENVELOPE: 'Absender- oder Empfängeradresse wurde vom Mailserver abgelehnt.',
   EDNS: 'Mailserver-Adresse ist unbekannt — bitte den Servernamen prüfen.',
   ETLS: 'Verschlüsselte Verbindung fehlgeschlagen — SSL/STARTTLS-Einstellung prüfen.',
+  EPROTOCOL: 'Der Mailserver hat die Anmeldung unerwartet beendet — bitte E-Mail-Adresse, Passwort und Anbieter prüfen.',
   PASSWORT_NICHT_LESBAR: 'Das gespeicherte Passwort kann nicht gelesen werden (Schlüssel geändert). Bitte das Passwort neu eingeben.',
 });
 
 /** Codes, bei denen das Postfach als „Verbindung unterbrochen" gilt (nicht: einzelner Empfänger abgelehnt). */
-export const VERBINDUNG_CODES = new Set(['EAUTH', 'ECONNECTION', 'ECONNREFUSED', 'ESOCKET', 'ETIMEDOUT', 'EDNS', 'ETLS', 'PASSWORT_NICHT_LESBAR']);
+export const VERBINDUNG_CODES = new Set(['EAUTH', 'EPROTOCOL', 'ECONNECTION', 'ECONNREFUSED', 'ESOCKET', 'ETIMEDOUT', 'EDNS', 'ETLS', 'PASSWORT_NICHT_LESBAR']);
 
 /** @returns {{code: string|null, meldung: string, hinweis: string|null}} — nie die Rohmeldung (kann Empfänger enthalten). */
 export function fehlerHinweis(code, preset) {
   const c = code ? String(code) : null;
   const meldung = (c && SMTP_DIAGNOSE[c]) || 'Unbekannter Fehler beim Mailversand.';
   const anbieter = preset && ANBIETER_HINWEIS[preset] ? ANBIETER_HINWEIS[preset] : null;
-  const hinweis = anbieter && (c === 'EAUTH' || c === 'ETLS' || c === 'ESOCKET') ? anbieter : null;
+  const hinweis = anbieter && (c === 'EAUTH' || c === 'EPROTOCOL' || c === 'ETLS' || c === 'ESOCKET') ? anbieter : null;
   return { code: c, meldung, hinweis };
 }
 

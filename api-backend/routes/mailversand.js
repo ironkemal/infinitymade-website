@@ -32,6 +32,9 @@ const TEST_ABSTAND_MS = 10_000;
 // das auf private/lokale Adressen auflöst (der VPS darf nicht ins eigene Netz verbinden). In der Box ist ein
 // Mailserver im Praxisnetz dagegen legitim.
 export const ERLAUBTE_PORTS = new Set([25, 465, 587, 2525]);
+// SaaS-VPS (Hetzner) sperrt ausgehend 25 und 465 — live gemessen 10.11.2026 (465: Zeitueberschreitung). Statt
+// 15 s auf ETIMEDOUT zu warten, gleich mit klarem Hinweis ablehnen. In der Box gelten alle vier Ports.
+export const SAAS_GESPERRTE_PORTS = new Set([25, 465]);
 
 /** Private, Loopback-, Link-local-, CGNAT- und ULA-Adressen. */
 export function istInterneAdresse(ip) {
@@ -75,7 +78,7 @@ export async function pruefZiel(smtp, { preset, kutu, lookup = dns.promises.look
 const VERIFY_TIMEOUT_MS = 15_000;
 
 /** Eingaben prüfen. @returns {{fehler:string}|{werte:object}} — `passwort` nur, wenn neu eingegeben. */
-export function pruefeMailEingabe(body = {}) {
+export function pruefeMailEingabe(body = {}, { kutu = true } = {}) {
   const preset = String(body.preset || '');
   const vorlage = SMTP_PRESETS[preset];
   if (!vorlage) return { fehler: 'Bitte einen Anbieter wählen.' };
@@ -88,7 +91,8 @@ export function pruefeMailEingabe(body = {}) {
     if (!HOST_RE.test(smtp_host)) return { fehler: 'Bitte einen gültigen Servernamen eingeben (z. B. smtp.example.de).' };
     if (net.isIP(smtp_host)) return { fehler: 'Bitte den Servernamen statt einer IP-Adresse eingeben.' };
     smtp_port = Number(body.smtp_port);
-    if (!ERLAUBTE_PORTS.has(smtp_port)) return { fehler: 'Bitte einen Mail-Port wählen: 465 (SSL/TLS), 587 (STARTTLS), 25 oder 2525.' };
+    if (!ERLAUBTE_PORTS.has(smtp_port)) return { fehler: 'Bitte einen Mail-Port wählen: 587 (STARTTLS), 465 (SSL/TLS), 25 oder 2525.' };
+    if (!kutu && SAAS_GESPERRTE_PORTS.has(smtp_port)) return { fehler: 'Port 25 und 465 sind von unserem Server aus gesperrt. Bitte Port 587 mit STARTTLS wählen (bieten fast alle Anbieter an).' };
     smtp_sicherheit = String(body.smtp_sicherheit || '');
     if (!['ssl', 'starttls'].includes(smtp_sicherheit)) return { fehler: 'Bitte die Verschlüsselung wählen (SSL/TLS oder STARTTLS).' };
   }
@@ -187,7 +191,7 @@ export function createMailversandRouter({
   });
 
   router.put('/mailversand', auth, owner, limiter, async (req, res) => {
-    const { fehler, werte } = pruefeMailEingabe(req.body);
+    const { fehler, werte } = pruefeMailEingabe(req.body, { kutu: kutu() });
     if (fehler) return res.status(400).json({ error: fehler });
     if (!encryptionAvailable()) {
       return res.status(503).json({ error: 'Passwörter können auf diesem Server nicht verschlüsselt gespeichert werden (Schlüssel fehlt). Bitte den Support kontaktieren.', code: 'VERSCHLUESSELUNG_FEHLT' });

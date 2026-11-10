@@ -71,6 +71,9 @@ test('transportFabrikFuer setzt Zugangsdaten + requireTLS ein', async () => {
 
 test('fehlerHinweis: anbieterspezifisch nur bei Anmeldefehlern, nie Rohmeldung', () => {
   assert.match(fehlerHinweis('EAUTH', 'telekom').hinweis, /E-Mail-Passwort/);
+  // Live 10.11.2026: T-Online beendet bei falschen Zugangsdaten mit EPROTOCOL statt EAUTH
+  assert.match(fehlerHinweis('EPROTOCOL', 'telekom').meldung, /unerwartet beendet/);
+  assert.match(fehlerHinweis('EPROTOCOL', 'telekom').hinweis, /E-Mail-Passwort/);
   assert.match(fehlerHinweis('EAUTH', 'gmx').hinweis, /POP3\/IMAP/);
   assert.match(fehlerHinweis('EAUTH', 'webde').hinweis, /POP3\/IMAP/);
   assert.match(fehlerHinweis('EAUTH', 'gmail').hinweis, /App-Passwort/);
@@ -82,8 +85,9 @@ test('fehlerHinweis: anbieterspezifisch nur bei Anmeldefehlern, nie Rohmeldung',
 test('Vorlagen: feste Hosts, keine Praxura-Adresse; Env-Anzeige ohne Zugangsdaten', () => {
   for (const [k, v] of Object.entries(SMTP_PRESETS)) {
     if (k === 'andere') continue;
-    assert.match(v.host, /^[a-z0-9.-]+$/); assert.ok([465, 587].includes(v.port)); assert.ok(['ssl', 'starttls'].includes(v.sicherheit));
-    assert.ok(v.port === 465 ? v.sicherheit === 'ssl' : v.sicherheit === 'starttls', `${k}: Port/Verschluesselung passen`);
+    assert.match(v.host, /^[a-z0-9.-]+$/);
+    // Live 10.11.2026: ausgehend 465 auf dem SaaS-VPS gesperrt → alle Vorlagen 587/STARTTLS
+    assert.equal(v.port, 587, `${k}: Port 587`); assert.equal(v.sicherheit, 'starttls', `${k}: STARTTLS`);
     assert.ok(!/praxura/.test(v.host));
   }
   assert.deepEqual(envSmtpAnzeige({ SMTP_HOST: 'h', SMTP_PORT: '465', SMTP_USER: 'u', SMTP_PASS: 'p' }), { host: 'h', port: 465, absender: null });

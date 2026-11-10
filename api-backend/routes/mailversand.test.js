@@ -149,6 +149,11 @@ test('pruefeMailEingabe: Andere verlangt Host/Port/Verschluesselung, keine Heade
   assert.ok(pruefeMailEingabe({ preset: 'andere', absender_email: 'a@b.de', smtp_host: 'mail.b.de', smtp_port: 99999, smtp_sicherheit: 'ssl' }).fehler);
   assert.ok(pruefeMailEingabe({ preset: 'andere', absender_email: 'a@b.de', smtp_host: 'mail.b.de', smtp_port: 22, smtp_sicherheit: 'ssl' }).fehler, 'nur Mail-Ports');
   assert.ok(pruefeMailEingabe({ preset: 'andere', absender_email: 'a@b.de', smtp_host: '10.0.0.5', smtp_port: 587, smtp_sicherheit: 'starttls' }).fehler, 'keine IP-Literale');
+  const p465 = { preset: 'andere', absender_email: 'a@b.de', smtp_host: 'mail.b.de', smtp_port: 465, smtp_sicherheit: 'ssl' };
+  assert.match(pruefeMailEingabe(p465, { kutu: false }).fehler, /587/, 'SaaS: 465 gesperrt, Hinweis auf 587');
+  assert.ok(pruefeMailEingabe({ ...p465, smtp_port: 25 }, { kutu: false }).fehler, 'SaaS: 25 gesperrt');
+  assert.ok(pruefeMailEingabe(p465, { kutu: true }).werte, 'Box: 465 erlaubt');
+  assert.ok(pruefeMailEingabe({ ...p465, smtp_port: 587, smtp_sicherheit: 'starttls' }, { kutu: false }).werte, 'SaaS: 587 erlaubt');
   const ok = pruefeMailEingabe({ preset: 'andere', absender_email: 'a@b.de', smtp_host: 'Mail.B.de', smtp_port: '587', smtp_sicherheit: 'starttls', absender_name: 'X\r\nBcc: y' }).werte;
   assert.equal(ok.smtp_host, 'mail.b.de'); assert.equal(ok.smtp_port, 587); assert.equal(ok.absender_name, 'XBcc: y');
   assert.ok(pruefeMailEingabe({ preset: 'quatsch', absender_email: 'a@b.de' }).fehler);
