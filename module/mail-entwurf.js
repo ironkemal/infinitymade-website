@@ -14,6 +14,7 @@
  * Direktversand aus dem Praxispostfach: Ops #335 (nach Launch).
  */
 import { IST_KUTU } from '../supabase-config.js';
+import { einrichtenLink } from './mailversand.js?v=20261109';
 
 export function mailtoLink({ to, subject, text } = {}) {
   const teile = [];
@@ -32,6 +33,7 @@ export function mailEntwurfOeffnen(entwurf, win = globalThis) {
 export function composeMailVorbereiten(doc = globalThis.document) {
   const senden = doc?.getElementById('composeSendBtn');
   if (!senden) return false;
+  if (doc.getElementById('composeMailtoBtn')) return true;
   const knopf = doc.createElement('button');
   knopf.type = 'button';
   knopf.className = senden.className;
@@ -46,7 +48,9 @@ export function composeMailVorbereiten(doc = globalThis.document) {
     if (typeof danach === 'function') { globalThis._composePostFlow = null; danach(); }
   });
   senden.hidden = true;
-  senden.after(knopf);
+  const einrichten = einrichtenLink(doc);
+  einrichten.addEventListener('click', () => doc.querySelector('.modal-close[data-modal="emailComposeModal"]')?.click(), { capture: true });
+  senden.after(knopf, einrichten);
   return true;
 }
 

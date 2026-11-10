@@ -160602,8 +160602,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mail-entwurf.js",
-   "start": 18,
-   "end": 23,
+   "start": 19,
+   "end": 24,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -160671,8 +160671,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mail-entwurf.js",
-   "start": 26,
-   "end": 30,
+   "start": 27,
+   "end": 31,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -160740,9 +160740,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/mail-entwurf.js",
-   "start": 32,
-   "end": 51,
-   "lines": 20,
+   "start": 33,
+   "end": 55,
+   "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -160750,6 +160750,7 @@
    "endpoints": [],
    "storage": [],
    "domIds": [
+    "composeMailtoBtn",
     "composeSendBtn",
     "composeToEmail",
     "mailSignaturCompose"
@@ -160757,6 +160758,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "einrichtenLink",
     "mailEntwurfOeffnen",
     "wert"
    ],
@@ -160772,8 +160774,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/mail-entwurf.js",
-   "start": 41,
-   "end": 43,
+   "start": 43,
+   "end": 45,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -162826,6 +162828,7 @@
     "stilEinmal"
    ],
    "calledBy": [
+    "composeMailVorbereiten",
     "renderTerminerinnerungSettings"
    ],
    "modules": [],
@@ -280353,7 +280356,7 @@
     "module/anfrage-bearbeiten.js:186",
     "module/fahrtenbuch-regeln.js:307",
     "module/hausbesuch-route.js:32",
-    "module/mail-entwurf.js:41",
+    "module/mail-entwurf.js:43",
     "module/mailversand.js:323",
     "module/verordnung-pruefen-knopf.js:44",
     "setup.js:290"
