@@ -28,3 +28,6 @@ Produktdiff und genaue Befehle/Ergebnisse: P01-HANDOFF.md. 24 passende Scope-/Ko
 ## P01-START
 
 Befehle, Identitäts-/Fehler-/Rückkehrbelege und Grenzen: P01-START-HANDOFF.md, Rohdaten evidence/p01-start/. Zusätzlicher Elternbeleg für Kalender-Touchziele evidence/calendar-targets/README.md. Unabhängiger Review ausstehend.
+
+## P01-SHELL-HOOK (10.11.2026, integrierter Lauf)
+Shell-Adapter in dashboard.js eingehängt (nach Auth/Profil/Scope, nur bei `data-design=neu`, zeilenneutral) plus `design/shell.css` in dashboard.html. Probe `physio-demo-p01.mjs` (P01_OUT=integrated-final): 28 Einträge; 0 Fremdrequests/Writes/WebSockets; kein Layout-Überlauf; Alt-Pixelvergleich 390/1440 hell/dunkel identisch. Einziger Seitenfehler im Szenario „langsam": `loadAnamnese` (`module/anamnese.js:280`, `d` noch nicht initialisiert, weil Probe das Panel vor Ende von init öffnet). Tritt ohne Shell-Hook identisch auf, also Bestand, kein Shell-Befund; offen als eigener Punkt. Probe wartet nun auf `attached` statt `visible` (Schublade ist mobil geschlossen). Bilder 1440 hell Start und 390 dunkel Kalender gesichtet. Offen: Pixelkante Neu→Alt ab 1025 px, Aktivierung nur fürs Physio-Testkonto, unabhängiger Review, echte Geräte.

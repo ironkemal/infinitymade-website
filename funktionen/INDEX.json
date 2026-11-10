@@ -88839,6 +88839,7 @@
     "log",
     "lsWireToggle",
     "montiereAnamneseAbschnitte",
+    "montiereShellansicht",
     "montiereStartansicht",
     "montiereVerordnungPruefen",
     "mountRechnungsansicht",
@@ -214254,7 +214255,9 @@
     "verdrahteProfil",
     "verdrahteSchublade"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "init"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
