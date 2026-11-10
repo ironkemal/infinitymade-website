@@ -153,3 +153,10 @@ Nachweis dieses Schritts: `npm run test:backend` nach letztem Codefix:
 Los Angeles, Tokio und Berlin grün. Unabhängiger Abschlussreview: 31/31 unter
 Los Angeles plus Timestamp-/Date-Kompatibilität unter Tokio, keine neuen Blocker.
 Keine Live-/Browserabnahme. Tagesverlauf: `fortschritte/2026-11-10.md`.
+
+DB-Pflichtberatung anschließend abgeschlossen: Jahres-Unique verhindert getrennte
+Intervalle; Browser-Upsert und jährlicher Dateipfad müssen zusammen umgestellt
+werden. Bisheriges Rezeptboolean folgt Ausstellungsdatum, vorhandene Zahlungsfelder
+trennen Blattgebühr nicht vom Gesamtbetrag. Konkrete nächste Datenvertragsgrenzen
+in `db/entwuerfe/2026-11-07-physio-abrechnung.md`, Nachtrag 10.11.2026. Keine
+neue Migration geschrieben; keine Altbeträge oder Nachweiszeiträume erfunden.

@@ -106,3 +106,37 @@ Transporttabelle enthält keine Originaldatei, Fehlertexte mit Patientendaten od
 Neue Fachprofile per Backend-Freigabeschalter sperren, bestehende Artefakte und Nachweise erhalten. Additive Spalten und Tabellen nicht durch automatisches Down-SQL löschen. Eine ältere Codeversion ist nur zulässig, wenn sie neue Fachprofile/Verarbeitungskennzeichen sicher abweist; sonst bleibt der neue Backend-Schutz aktiv. Keine Rücksetzung von NULL auf false, keine automatische Neuabrechnung, keine Aufhebung bestehender Festschreibung.
 
 Publikationsschutz: `.vercelignore` enthält bereits `db/`; der neue Unterordner bleibt dadurch vom Webdeployment ausgeschlossen.
+
+## Datenberatung 10.11.2026: nächstes begrenztes Zuzahlungspaket
+
+Dieser Nachtrag beschreibt geprüfte lokale Lücken gegen Exportstand 0119; keine
+Migration und kein Live-Katalogzugriff. Frühere Schemaangaben oben sind historisch.
+
+- `zuzahlung_befreiung` weiterverwenden. Bestehendes UNIQUE `(patient_id, jahr)`
+  verhindert getrennte Intervalle. Vor dessen Ersatz Datumsreihenfolge,
+  Jahresbindung, überlappende/widersprüchliche Nachweise und gemeinsame Ownerbindung
+  von Patient/Intervall absichern. RLS allein ersetzt diese Relation nicht.
+- Umstellung umfasst Browser-Upsert mit `onConflict: 'patient_id,jahr'` und
+  Nachweisdateipfad `befreiung_<jahr>.<ext>` in `module/zuzahlung-befreiung.js`.
+  Ohne neuen identitätsgebundenen Schreib-/Dateivertrag würden Altclients Fehler
+  erzeugen oder Nachweise überschreiben. Bestehende Belege erhalten; kein automatisches
+  Zusammenziehen, Überschreiben oder Erfinden von Altintervallen.
+- Vorhandene DB-Helfer `fn_befreiung_backfill_prescriptions` und
+  `fn_is_patient_befreit` gemeinsam prüfen: Rezeptboolean folgt bisher
+  Ausstellungsdatum; Nachweisjahr und Owner werden nicht durchgängig mitgeführt.
+  Boolean ist daher keine ausreichende leistungsdatumsbezogene Berechnungsquelle.
+- Tatsächlichen ursprünglichen Beginn aus allen belegten Sitzungen der Verordnung
+  bestimmen, nicht aus aktueller Abrechnungsauswahl. `behandlungsbeginn` und
+  importierte Vorgeschichte benötigen eindeutige Provenienz. Unbekannt bleibt
+  gesperrt statt durch erste verfügbare Sitzung ersetzt zu werden.
+- Bestehende Kassen-/Altsystemfelder dokumentieren Gesamtzuzahlung. Separate
+  Blattgebühr daraus nicht ableiten. Vorhandenen Snapshot um explizite Entscheidung,
+  ursprünglichen Beginn, angewandte Nachweis-IDs und Originalbezug erweitern;
+  alte Komponenten bleiben unbekannt, kein Rückrechnen aus Gesamtbetrag.
+- Vor gemeinsamer Anbindung Doppelbuchungsgrenze zwischen ZU-Rechnung und
+  Kassierweg gezielt prüfen (`db/REGISTER.md`, Abschnitt invoices/ZU).
+
+Nächster Übergang: konkreten kompatiblen Migrations-/API-/UI-Vertrag getrennt
+fachlich, datenschutzrechtlich und auf Altclients prüfen; dann paketweise bauen.
+Keine zweite Befreiungs-/Rechnungstabelle als Standardlösung. Lokale Umsetzung
+bleibt autorisiert; Live-Anwendung und externe Abnahme bleiben gesondert.
