@@ -184,13 +184,13 @@ export function montiereStartansicht(k) {
  for(const id of ['physioRezKpi','anfragenNavBadge']){const node=document.getElementById(id);if(node)obs.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});}
  const nav=document.getElementById('sidebarNav');
  if(nav)new MutationObserver(()=>{const badge=document.getElementById('anfragenNavBadge');if(badge)obs.observe(badge,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});redraw();}).observe(nav,{childList:true,subtree:true});
- setInterval(()=>{if(root.hidden || !panel.classList.contains('active'))return;zustand.liste=heutigeTermine(zustand.liste,{uid:k.uid(),nurEigene:!istOwner()});redraw();},60000);
+ setInterval(()=>{if(root.hidden || !panel.classList.contains('active'))return;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date());if(zustand.tag && zustand.tag!==today)zustand={...zustand,laden:false,fehler:true,liste:[],stand:null};else zustand.liste=heutigeTermine(zustand.liste,{uid:k.uid(),nurEigene:!istOwner()});redraw();},60000);
  new MutationObserver(()=>toggle()).observe(document.documentElement,{attributes:true,attributeFilter:['data-design']});
  window.addEventListener('beforeprint',()=>toggle(false));window.addEventListener('afterprint',()=>toggle());
  toggle();
  return { termine({bookings=[],error=null,laden=false,date=new Date()}={}) {
   // Nur der vollständige heutige Snapshot des vorhandenen Loaders. Andere Tage nie als heute ausgeben.
   const heute = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'});
-  zustand={laden,fehler:!!error || heute.format(date)!==heute.format(new Date()),liste:heutigeTermine(bookings,{uid:k.uid(),nurEigene:!istOwner()}),stand:laden?null:new Date()};redraw();
+  zustand={laden,tag:heute.format(date),fehler:!!error || heute.format(date)!==heute.format(new Date()),liste:heutigeTermine(bookings,{uid:k.uid(),nurEigene:!istOwner()}),stand:laden?null:new Date()};redraw();
  }, aktualisieren:redraw };
 }

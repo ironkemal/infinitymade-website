@@ -14170,7 +14170,7 @@ async function init() {
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
-    console.log('[init] team ok'); if (document.documentElement.dataset.design === 'neu') startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start')).montiereStartansicht({ uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':'), springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
+    console.log('[init] team ok'); if (document.documentElement.dataset.design === 'neu') startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start-r1')).montiereStartansicht({ uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':'), springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
     await renderOverview();
     console.log('[init] overview ok');
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
@@ -17554,7 +17554,7 @@ async function loadAnfragen(status) {
   anfragenCurrentStatus = status || anfragenCurrentStatus;
   const list = document.getElementById('anfragenList');
   if (!list) return;
-  list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>';
+  list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>'; if (anfragenCurrentStatus === 'pending') updateAnfragenBadge(null, 'laden');
 
   const ownerId = currentProfile?.id;
   if (!ownerId) return;
@@ -17565,8 +17565,8 @@ async function loadAnfragen(status) {
     const r = await fetch(`${API}/booking-request/list?owner_id=${ownerId}&status=${anfragenCurrentStatus}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const json = await r.json();
-    anfragenCurrentRequests = json.requests || [];
+    const json = await r.json(); if (!r.ok || !Array.isArray(json.requests)) throw new Error('Anfragen konnten nicht geladen werden');
+    anfragenCurrentRequests = json.requests;
     renderAnfragenList(anfragenCurrentRequests);
     // Der Zähler zählt offene Anfragen. Er darf nur aus dem Tab "Offen" kommen —
     // sonst stünde er auf den Tabs "Bestätigt"/"Abgelehnt" fälschlich auf 0.
@@ -17574,7 +17574,7 @@ async function loadAnfragen(status) {
       updateAnfragenBadge(anfragenCurrentRequests.filter(r => r.status === 'pending').length);
     }
   } catch (e) {
-    list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
+    list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>'; if (anfragenCurrentStatus === 'pending') updateAnfragenBadge(null, 'fehler');
     console.error('[anfragen]', e);
   }
 }
@@ -17633,10 +17633,10 @@ function renderAnfragenList(requests) {
 
 }
 
-function updateAnfragenBadge(count) {
+function updateAnfragenBadge(count, status = 'ok') {
   const badge = document.getElementById('anfragenNavBadge');
   if (!badge) return;
-  badge.textContent = count > 0 ? count : '';
+  badge.textContent = count > 0 ? count : ''; badge.dataset.pxStatus = status; if (status === 'ok') badge.dataset.pxCount = String(count); else delete badge.dataset.pxCount;
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
