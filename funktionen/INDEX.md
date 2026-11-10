@@ -3,7 +3,7 @@
 > Üretim: 2026-11-10 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4492 fonksiyon** (4370 JS · 95 bash · 27 ps1) · 550 dosya · 42 sidebar modülü
+**4505 fonksiyon** (4383 JS · 95 bash · 27 ps1) · 552 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -440,6 +440,14 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 2 — `loadEmpHours()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `loadEmpHours()` — [dashboard.js:9849](dashboard.js#L9849-L9939) · 91 satır · breaks:insert, breaks:delete
 
+### `custom_days` — 2 bağımsız yazma yolu
+
+**Yol 1 — `saveSpecialDays()`** · Ekran: _UI yolu çözülemedi_
+- `saveSpecialDays()` — [dashboard.js:8873](dashboard.js#L8873-L8899) · 27 satır · custom_days:upsert
+
+**Yol 2 — `feiertageKnopf()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
+- `feiertageKnopf()` — [module/feiertage-knopf.js:35](module/feiertage-knopf.js#L35-L88) · 54 satır · custom_days:upsert
+
 ### `employee_scope_overrides` — 2 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
@@ -525,14 +533,6 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 2 — `ladeLhbNachweisHoch()`** · Ekran: _UI yolu çözülemedi_
 - `ladeLhbNachweisHoch()` — [module/verordnung-nachweis.js:109](module/verordnung-nachweis.js#L109-L145) · 37 satır · prescription_documents:insert
-
-### `user_preferences` — 2 bağımsız yazma yolu
-
-**Yol 1 — `saveUserPref()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `saveUserPref()` — [dashboard.js:12210](dashboard.js#L12210-L12220) · 11 satır · user_preferences:upsert
-
-**Yol 2 — `switchBusiness()`** · Ekran: _UI yolu çözülemedi_
-- `switchBusiness()` — [dashboard.js:14074](dashboard.js#L14074-L14089) · 16 satır · user_preferences:upsert
 
 ## Çift render adayları — aynı DOM id'ye HTML basan, birbirini çağırmayan fonksiyonlar
 
@@ -622,6 +622,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `ok` — installieren/install.sh:20 · onprem/backup.sh:48 · onprem/deinstallieren.sh:38 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:100 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:39 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:428
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/verordnung-einheiten.js:552 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208 · widget/booking-widget.js:362
+- `add` — api-backend/ai/pii-mask.js:121 · api-backend/billing/dta/output-validator.js:126 · api-backend/lib/verbindungen.js:29 · module/feiertage.js:48 · module/podo-vorgeschichte.js:30
 - `feld` — module/abrechnung-auswahl.js:985 · module/datev-einstellungen.js:63 · module/fussbefund.js:307 · module/mailversand.js:286 · module/rezeptinfo-geld.js:385
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/planung-bruecke.js:134 · module/verordnung-liste.js:255 · widget/booking-widget.js:107
@@ -631,7 +632,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `warn` — onprem/backup.sh:49 · onprem/deinstallieren.sh:39 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `zahl` — api-backend/lib/datev.js:280 · api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223
 - `abbrechen` — api-backend/billing/api/physio-publikation-ablauf.js:53 · module/langer-druck.js:45 · module/physio-befund.js:899 · module/rezept-barcode-scan.js:57
-- `abschnittBauen` — module/fax-einstellungen.js:51 · module/formular-editor.js:211 · module/mitarbeiter-app-einstellungen.js:62 · module/praxis-rechtslinks-einstellungen.js:45
 
 ## Shell (onprem/)
 

@@ -65,7 +65,7 @@ import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } fr
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261021f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, pruefeSertHeilmittelFehler, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
-  from './module/verordnung-maske.js?v=20261110chip'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+  from './module/verordnung-maske.js?v=20261110chip'; import { istKasse } from './module/rezeptart.js?v=20261006a'; import { feiertageKnopf } from './module/feiertage-knopf.js?v=20261110fn';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { pruefeBarcodeBestaetigung } from './module/rezept-barcode-bestaetigung.js?v=20261007m3';
 import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20261007m3';
@@ -8841,7 +8841,7 @@ document.getElementById('hoursCalNext').addEventListener('click', () => {
 });
 
 function renderSpecialDaysList() {
-  const list = document.getElementById('specialDaysList');
+  const list = document.getElementById('specialDaysList'); feiertageKnopf(list, { supabase, ownerId: getOwnerId(), profil: (typeof ownerProfile !== 'undefined' && ownerProfile) || currentProfile, showToast, nachher: renderHoursMiniCal });
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   // Geçmiş tarihli sondertage'ları listede gösterme (tatil bitince düşer)

@@ -9,7 +9,7 @@
  *   3. Bei geschlossenen Tagen eine Patienten-Anrufliste (anruflisteHtml) betroffener Termine anzeigen.
  *
  * ⛔ Rechtliche Auflagen (legal-de & Praxura Guardrails):
- * - custom_days.note ist öffentlich lesbar und bleibt intern: sie erscheint in keinem
+ * - custom_days.note ist seit 0116/0117 (S-64) nur noch für das eigene Team lesbar und bleibt intern: sie erscheint in keinem
  *   Kalendermarkierungstext, keiner Warnung und keinem HTML der Anrufliste.
  * - Patientenlisten nur im Dashboard, nie Diagnosen oder Leistungen.
  * - Die Anrufliste nennt nicht den Grund des Sondertags.

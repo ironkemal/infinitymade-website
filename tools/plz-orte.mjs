@@ -149,6 +149,8 @@ if (process.argv.includes('--bundesland')) {
     bundesland: bl,
   };
   writeFileSync(ziel, JSON.stringify(inhalt));
+  // Frontend-Kopie (api-backend/ ist per .vercelignore nicht im Deploy): module/plz.js -> bundeslandKandidaten()
+  writeFileSync(new URL('../module/plz-bundesland.json', import.meta.url), JSON.stringify(inhalt));
   console.log(`→ api-backend/billing/codes/plz-bundesland.json (${(JSON.stringify(inhalt).length / 1024).toFixed(0)} KB, ${Object.keys(bl).length} PLZ, ${grenzfaelle} Grenzfaelle)`);
 }
 

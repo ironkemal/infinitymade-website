@@ -64,6 +64,33 @@ export async function orteZu(plz) {
   return Array.isArray(treffer) ? treffer : [treffer];
 }
 
+let blDaten = null;
+let blLadend = null;
+
+async function blLaden() {
+  if (blDaten) return blDaten;
+  if (blLadend) return blLadend;
+  blLadend = fetch(new URL('./plz-bundesland.json', import.meta.url))
+    .then(r => r.json())
+    .then(j => { blDaten = j.bundesland || {}; return blDaten; })
+    .catch(e => { console.warn('[plz] Bundesland-Tabelle nicht ladbar:', e); blDaten = {}; return blDaten; });
+  return blLadend;
+}
+
+/**
+ * Bundesland-Kuerzel (BW, BY, ... TH) zu einer PLZ. Daten: module/plz-bundesland.json (Kopie derselben Quelle wie
+ * api-backend/billing/codes/plz-bundesland.json, erzeugt von tools/plz-orte.mjs --bundesland).
+ * @param {string} plz
+ * @returns {Promise<string[]>} 0 = unbekannt · 1 = eindeutig · >1 = Landesgrenze (dann Anwender fragen)
+ */
+export async function bundeslandKandidaten(plz) {
+  const key = String(plz || '').trim();
+  if (!/^\d{5}$/.test(key)) return [];
+  const treffer = (await blLaden())[key];
+  if (!treffer) return [];
+  return Array.isArray(treffer) ? treffer : [treffer];
+}
+
 /**
  * Hängt die Ergänzung an ein PLZ-Feld.
  *
