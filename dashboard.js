@@ -756,8 +756,8 @@ function showMyBookingLink() {
 // ein Knopf, der dorthin springt, ist der Weg. Fokus statt nur Scroll, damit der
 // Cursor im richtigen Feld steht.
 async function gehZuEinstellung(sectionId, focusId) {
-  await switchPanel('settings');
-  document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  await switchPanel('settings'); const ziel = () => document.getElementById(sectionId); // sofort + zweiter Lauf: Abschnitte darueber rendern nach
+  ziel()?.scrollIntoView({ block: 'start' }); setTimeout(() => ziel()?.scrollIntoView({ block: 'start' }), 350); // (Live 10.11.2026: smooth blieb auf halbem Weg stehen)
   if (focusId) setTimeout(() => document.getElementById(focusId)?.focus(), 400);
 }
 window.gehZuEinstellung = gehZuEinstellung;
