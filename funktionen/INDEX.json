@@ -48810,8 +48810,8 @@
    "lang": "js",
    "file": "api-backend/routes/mailversand.js",
    "start": 135,
-   "end": 315,
-   "lines": 181,
+   "end": 330,
+   "lines": 196,
    "spiegelHinweis": null,
    "tables": [
     "praxis_mailversand",
@@ -273385,8 +273385,8 @@
        "name": "createMailversandRouter",
        "file": "api-backend/routes/mailversand.js",
        "start": 135,
-       "end": 315,
-       "lines": 181,
+       "end": 330,
+       "lines": 196,
        "writes": [
         "profiles:update"
        ],
@@ -279577,8 +279577,8 @@
        "name": "createMailversandRouter",
        "file": "api-backend/routes/mailversand.js",
        "start": 135,
-       "end": 315,
-       "lines": 181,
+       "end": 330,
+       "lines": 196,
        "writes": [
         "praxis_mailversand:upsert",
         "praxis_mailversand:update"

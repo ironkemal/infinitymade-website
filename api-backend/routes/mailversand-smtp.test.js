@@ -87,7 +87,7 @@ function fakeDb() {
     from(name) {
       const f = []; let op = 'select'; let wert = null; const rows = () => (t[name] ||= []);
       const b = {
-        select() { return b; }, limit() { return b; }, eq(k, v) { f.push(r => r[k] === v); return b; },
+        select() { return b; }, limit() { return b; }, eq(k, v) { f.push(r => r[k] === v); return b; }, or(expr) { const teile = String(expr).split(','); f.push(r => teile.some(x => { const [k, op, ...rest] = x.split('.'); const v = rest.join('.'); return op === 'is' ? r[k] == null : op === 'lt' ? (r[k] != null && r[k] < v) : false; })); return b; },
         update(w) { op = 'update'; wert = w; return b; }, upsert(w) { op = 'upsert'; wert = w; return b; },
         maybeSingle() { return b.run(true); }, then(ok, no) { return b.run(false).then(ok, no); },
         async run(einzeln) {

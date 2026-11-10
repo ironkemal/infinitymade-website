@@ -257,6 +257,21 @@ export function createMailversandRouter({
       if (jetzt - (letzterTest.get(ownerId) || 0) < TEST_ABSTAND_MS) {
         return res.status(429).json({ error: 'Bitte kurz warten, bevor Sie es erneut versuchen.' });
       }
+      // Der Speicher oben gilt nur je Prozess (SaaS: 2 Worker, node:cluster). Beim Praxis-Postfach zusaetzlich
+      // atomar in der DB beanspruchen: nur ein Aufruf je 10 s setzt letzter_test_at (Regressionstest mit zwei Routern).
+      if (z && kanal.quelle === 'db') {
+        const grenze = new Date(jetzt - TEST_ABSTAND_MS).toISOString();
+        const { data: frei, error: aErr } = await supabase.from('praxis_mailversand')
+          .update({ letzter_test_at: new Date(jetzt).toISOString() })
+          .eq('owner_id', ownerId).or(`letzter_test_at.is.null,letzter_test_at.lt.${grenze}`).select('owner_id');
+        if (aErr || !Array.isArray(frei)) {
+          console.error('[mailversand/test] Drossel', aErr?.code || 'UNGUELTIGE_ANTWORT');
+          return res.status(503).json({ error: 'Testmail derzeit nicht möglich. Bitte später erneut versuchen.' });
+        }
+        if (frei.length === 0) {
+          return res.status(429).json({ error: 'Bitte kurz warten, bevor Sie es erneut versuchen.' });
+        }
+      }
       if (letzterTest.size > 5000) letzterTest.clear();
       letzterTest.set(ownerId, jetzt);
       const ziel = await pruefZiel(kanal.smtp, { preset: kanal.preset, kutu: kutu(), lookup });

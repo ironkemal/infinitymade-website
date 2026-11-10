@@ -23,7 +23,7 @@ function fakeDb() {
       const b = {
         select() { return b; },
         limit() { return b; },
-        eq(k, v) { f.push(r => r[k] === v); return b; },
+        eq(k, v) { f.push(r => r[k] === v); return b; }, or(expr) { const teile = String(expr).split(','); f.push(r => teile.some(x => { const [k, op, ...rest] = x.split('.'); const v = rest.join('.'); return op === 'is' ? r[k] == null : op === 'lt' ? (r[k] != null && r[k] < v) : false; })); return b; },
         update(w) { op = 'update'; wert = w; return b; },
         upsert(w) { op = 'upsert'; wert = w; return b; },
         maybeSingle() { return b.run(true); },
@@ -35,6 +35,7 @@ function fakeDb() {
             return { data: null, error: null };
           }
           const hit = rows().filter(r => f.every(x => x(r)));
+          if (op === 'update' && wert.letzter_test_at && Object.keys(wert).length === 1 && t.claimFehler) return { data: null, error: { code: 'DB_TEST_FEHLER' } };
           if (op === 'update') { hit.forEach(r => Object.assign(r, wert)); return { data: hit, error: null }; }
           return { data: einzeln ? hit[0] || null : hit, error: null };
         },
@@ -114,6 +115,34 @@ test('Testmail geht an die Inhaber-Adresse, nie an eine Adresse aus der Anfrage'
   assert.equal(gesendet[0].to, 'inhaber@example.invalid'); assert.equal(gesendet[0].from, '"Praxis Test" <praxis@gmx.invalid>');
   assert.equal(db.t.praxis_mailversand[0].letzter_test_ok, true);
   assert.equal((await call('POST', '/mailversand/test')).status, 429, 'Drossel 10 s');
+});
+
+test('Drossel gilt ueber Prozesse hinweg (2 Worker): zweiter Router mit eigenem Speicher bekommt 429', async () => {
+  reset();
+  await call('PUT', '/mailversand', { preset: 'gmx', absender_email: 'praxis@gmx.invalid', passwort: 'pw' });
+  // zwei "Worker": je eigener Router = eigener Speicher, gleiche Datenbank
+  const worker = async () => {
+    const app2 = express(); app2.use(express.json());
+    const auth = (req, _res, next) => { req.auth = { userId: OWNER, tenantId: OWNER, role: 'owner' }; next(); };
+    app2.use('/api', createMailversandRouter({ supabase: db, auth, owner: (q, r, n) => n(), kutu: () => true, env: {},
+      transportFabrik: () => ({ async verify() {}, async sendMail(m) { gesendet.push(m); } }) }));
+    const s = app2.listen(0, '127.0.0.1'); await new Promise(r => s.once('listening', r)); return s;
+  };
+  const s1 = await worker(); const s2 = await worker();
+  try {
+    db.t.claimFehler = true;
+    const fehler = await fetch(`http://127.0.0.1:${s1.address().port}/api/mailversand/test`, { method: 'POST' });
+    assert.equal(fehler.status, 503, 'DB-Sperre nicht verfügbar: kein Versand');
+    assert.equal(gesendet.length, 0);
+    db.t.claimFehler = false;
+    assert.equal((await fetch(`http://127.0.0.1:${s1.address().port}/api/mailversand/test`, { method: 'POST' })).status, 200);
+    const r2 = await fetch(`http://127.0.0.1:${s2.address().port}/api/mailversand/test`, { method: 'POST' });
+    assert.equal(r2.status, 429, 'anderer Prozess sieht den Anspruch in der DB');
+    assert.equal(gesendet.length, 1, 'nur eine Testmail');
+    db.t.praxis_mailversand[0].letzter_test_at = new Date(Date.now() - 11_000).toISOString();
+    const r3 = await fetch(`http://127.0.0.1:${s2.address().port}/api/mailversand/test`, { method: 'POST' });
+    assert.equal(r3.status, 200, 'nach 10 s wieder frei');
+  } finally { db.t.claimFehler = false; s1.close(); s2.close(); }
 });
 
 test('Testmail ohne Postfach: 409 mit Code', async () => {

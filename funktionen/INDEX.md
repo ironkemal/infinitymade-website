@@ -16,7 +16,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · profiles:update
 
 **Yol 2 — `createMailversandRouter()`** · Ekran: _UI yolu çözülemedi_
-- `createMailversandRouter()` — [api-backend/routes/mailversand.js:135](api-backend/routes/mailversand.js#L135-L315) · 181 satır · profiles:update
+- `createMailversandRouter()` — [api-backend/routes/mailversand.js:135](api-backend/routes/mailversand.js#L135-L330) · 196 satır · profiles:update
 
 **Yol 3 — `openStripePortal()`** · Ekran: _UI yolu çözülemedi_
 - `openStripePortal()` — [dashboard.js:1718](dashboard.js#L1718-L1828) · 111 satır · profiles:update
@@ -524,7 +524,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `meldeVerbindungsfehler()` — [api-backend/lib/mail.js:233](api-backend/lib/mail.js#L233-L241) · 9 satır · praxis_mailversand:update
 
 **Yol 2 — `createMailversandRouter()`** · Ekran: _UI yolu çözülemedi_
-- `createMailversandRouter()` — [api-backend/routes/mailversand.js:135](api-backend/routes/mailversand.js#L135-L315) · 181 satır · praxis_mailversand:upsert, praxis_mailversand:update
+- `createMailversandRouter()` — [api-backend/routes/mailversand.js:135](api-backend/routes/mailversand.js#L135-L330) · 196 satır · praxis_mailversand:upsert, praxis_mailversand:update
 
 ### `prescription_documents` — 2 bağımsız yazma yolu
 
