@@ -60,6 +60,23 @@ export const PROTECTED = [
   'booking_raum_automatisch',
   'booking_leistung_raum_nachpruefen',
   'booking_gruppe_raum_nachziehen',
+  // 0113 (07.11.2026, db-ustasi): Physio-Publikation v1. Owner kommt als ARGUMENT (Backend-Auth),
+  // Sperr-/Revisions-Trigger und RPCs -> nur service_role bzw. Trigger-Kontext; drei REVOKEs je Funktion.
+  // physio_storage_readable + physio_v1_is_protocol_header danach BEWUSST GRANT authenticated
+  // (Storage-Policy 0115 bzw. Invoker-Trigger physio_v1_guard), nie anon.
+  'physio_v1_catalog_shared',
+  'physio_v1_catalog_guard',
+  'physio_v1_tenant_statement_guard',
+  'physio_v1_source_owners',
+  'physio_v1_tenant_guard',
+  'physio_v1_input_hash',
+  'physio_v1_owner',
+  'physio_v1_is_protocol_header',
+  'abrechnung_idempotency_reserve',
+  'physio_artefakt_readback',
+  'abrechnung_physio_finalize',
+  'abrechnung_physio_abort',
+  'physio_storage_readable',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

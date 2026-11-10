@@ -33,7 +33,7 @@ export const KATEGORIE_TABELLEN = {
     'physio_befunde',
   ],
   einwilligung: ['patient_consents'],
-  beleg: ['invoices', 'ausfallrechnungen', 'abrechnung', 'abrechnung_zeile', 'abrechnung_uebermittlung', 'zuzahlung_befreiung'],
+  beleg: ['invoices', 'ausfallrechnungen', 'abrechnung', 'abrechnung_zeile', 'abrechnung_uebermittlung', 'zuzahlung_befreiung', 'prescription_session_abrechnungsanspruch'],
   grundaufzeichnung: ['rechnung_zahlungen', 'abrechnung_zahlung', 'belegliste', 'zuzahlung_korrekturen', 'zuzahlung_guthaben', 'booking_status_korrekturen', 'fahrten', 'fahrten_aenderungen', 'vehicles'],
   geschaeftsbrief: ['mahnungen'],
 };
@@ -558,6 +558,8 @@ async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, s
     { table: 'therapist_certificates', filter: 'owner_id' },
     { table: 'terapeut_zertifikat', filter: 'owner_id' },
     { table: 'betriebsart_empfaenger', filter: 'owner_id' },
+    // 0118: profiles wird nur anonymisiert, die ON DELETE CASCADE greift bei der DSGVO-Loeschung nie
+    { table: 'praxis_mailversand', filter: 'owner_id' },
     { table: 'user_preferences', filter: 'user_id' },
     { table: 'email_logs', filter: 'owner_id' },
     { table: 'b2b_contacts', filter: 'owner_id' },

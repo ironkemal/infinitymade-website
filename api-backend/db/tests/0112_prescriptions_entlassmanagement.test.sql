@@ -1,4 +1,6 @@
 -- Only disposable PostgreSQL after migrations through 0112; never a live database.
+-- Part 2 (07.11.2026) runs against the REAL public.prescriptions with every chain trigger; needs auth.users
+-- (platform or stub) and the full chain — on the old minimal probe DB omit it with -v entlass_nur_klon=1.
 -- Synthetic temporary clone: no public rows, FKs, audit or auth data touched.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -106,3 +108,40 @@ BEGIN
     WHERE id = probe_id;
 END $$;
 ROLLBACK;
+
+\if :{?entlass_nur_klon}
+\else
+-- Part 2: real table, real constraint name, real festschreibung trigger and all other chain triggers.
+BEGIN;
+INSERT INTO auth.users(id) VALUES ('61111111-1111-4111-8111-111111111112');
+UPDATE public.profiles SET role='owner', is_active=true WHERE id='61111111-1111-4111-8111-111111111112';
+DO $$
+DECLARE rx uuid; c text;
+BEGIN
+  INSERT INTO public.prescriptions(owner_id,status,rezeptart,therapie_bereich)
+    VALUES ('61111111-1111-4111-8111-111111111112','confirmed','kassen','physio') RETURNING id INTO rx;
+  IF EXISTS (SELECT 1 FROM public.prescriptions WHERE id=rx AND (entlassmanagement IS NOT NULL OR entlassungsdatum IS NOT NULL)) THEN
+    RAISE EXCEPTION 'FAIL real table: no default may be invented';
+  END IF;
+  BEGIN
+    UPDATE public.prescriptions SET entlassmanagement=true WHERE id=rx;
+    RAISE EXCEPTION 'FAIL real table: flag without date accepted';
+  EXCEPTION WHEN check_violation THEN
+    GET STACKED DIAGNOSTICS c = CONSTRAINT_NAME;
+    IF c <> 'prescriptions_entlassmanagement_datum_check' THEN RAISE; END IF;
+  END;
+  UPDATE public.prescriptions SET entlassmanagement=true, entlassungsdatum=DATE '2026-11-01', belegnummer='SYNTHETIC-0112-REAL' WHERE id=rx;
+  BEGIN
+    UPDATE public.prescriptions SET entlassungsdatum=DATE '2026-11-02' WHERE id=rx;
+    RAISE EXCEPTION 'FAIL real table: frozen date changed';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM NOT LIKE 'Eingereichte Verordnung ist festgeschrieben%' THEN RAISE; END IF;
+  END;
+  IF (SELECT count(*) FROM pg_trigger WHERE tgrelid='public.prescriptions'::regclass AND NOT tgisinternal
+      AND tgfoid='public.prescriptions_festschreibung()'::regprocedure) <> 1 THEN
+    RAISE EXCEPTION 'FAIL real table: festschreibung trigger not attached exactly once';
+  END IF;
+  RAISE NOTICE 'PASS: 0112 real prescriptions table (constraint, freeze, chain triggers)';
+END $$;
+ROLLBACK;
+\endif

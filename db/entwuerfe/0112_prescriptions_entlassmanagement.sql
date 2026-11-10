@@ -1,3 +1,5 @@
+-- ⚠️ ÜBERFÜHRT 07.11.2026 nach api-backend/db/migrations/0112_prescriptions_entlassmanagement.sql. Maßgeblich ist die Migration;
+-- dieser Entwurf wird nicht mehr gepflegt und nicht ausgeführt.
 -- Migration 0112_prescriptions_entlassmanagement.sql
 -- NUR LOKAL GESCHRIEBEN; keine SaaS-Anwendung oder Live-Pruefung.
 -- Entwurf: db/entwuerfe/2026-11-07-physio-abrechnung.md, Abschnitt 1.

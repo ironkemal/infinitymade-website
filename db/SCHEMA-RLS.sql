@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261106191103 0111_zaa_fehler_belegnummer_kasse
--- EXPORTED AT:        2026-11-06T19:12:34Z
--- ERZEUGT AM:         2026-11-06
+-- LAST MIGRATION:     20261110153900 0115_physio_storage_direktzugriff
+-- EXPORTED AT:        2026-11-10T15:39:37Z
+-- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       106
---   table_columns:       1547
+--   public_tables:       110
+--   table_columns:       1595
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        197
---   functions:           132
---   triggers:            127
---   indexes:             375
+--   rls_policies:        198
+--   functions:           150
+--   triggers:            179
+--   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -32,7 +32,7 @@
 -- ----------------------------------------------------------------------------
 -- PUBLICATIONS:
 --   Publication: "supabase_realtime" (all_tables: false, tables: [public.bookings])
---   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_01, realtime.messages_2026_11_02, realtime.messages_2026_11_03, realtime.messages_2026_11_04, realtime.messages_2026_11_05, realtime.messages_2026_11_06, realtime.messages_2026_11_07])
+--   Publication: "supabase_realtime_messages_publication" (all_tables: false, tables: [realtime.messages_2026_11_06, realtime.messages_2026_11_07, realtime.messages_2026_11_08, realtime.messages_2026_11_09, realtime.messages_2026_11_10, realtime.messages_2026_11_11, realtime.messages_2026_11_12])
 
 -- AUTH NON-INTERNAL TRIGGERS (OUTSIDE PUBLIC INVENTORY — REFERENCE ONLY):
 --   Trigger: "on_auth_user_created" ON auth."users" (enabled: O)
@@ -43,6 +43,8 @@
 --     USING: (((bucket_id = 'abrechnungen'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (((storage.foldername(name))[1])::uuid IN ( SELECT profiles.owner_id
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id IS NOT NULL)))))))
+--   Policy: "abrechnungen_physio_direktlesen" ON storage."objects" (cmd: SELECT, permissive: false, roles: [authenticated])
+--     USING: (((bucket_id IS DISTINCT FROM 'abrechnungen'::text) OR ((storage.foldername(name))[3] IS DISTINCT FROM 'physio-v1'::text) OR physio_storage_readable(name)))
 --   Policy: "avatars_own_delete" ON storage."objects" (cmd: DELETE, permissive: true, roles: [authenticated])
 --     USING: (((bucket_id = 'avatars'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR ((storage.foldername(name))[1] IN ( SELECT (p.id)::text AS id
    FROM profiles p
@@ -244,6 +246,8 @@ ALTER TABLE public.pending_signups ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.physio_befunde ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.physio_storage_legacy_allowlist ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.podologie_behandlungen ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.podologie_empfangsnachweise ENABLE ROW LEVEL SECURITY;
@@ -252,11 +256,15 @@ ALTER TABLE public.praxis_aufgaben ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.praxis_formulare ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.praxis_mailversand ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.praxura_migrations ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.praxura_setup ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.prescription_documents ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.prescription_session_abrechnungsanspruch ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.prescription_sessions ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -304,6 +312,8 @@ ALTER TABLE public.warteliste ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.working_hours ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.zaa_fehler ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.zaa_import ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.zuzahlung_befreiung ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -748,6 +758,12 @@ CREATE POLICY custom_days_public_read ON public.custom_days
   FOR SELECT
   TO PUBLIC
   USING (true);
+
+CREATE POLICY custom_days_team_read ON public.custom_days
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth_tenant_id() AS auth_tenant_id)));
 
 CREATE POLICY "owner reads own access log" ON public.data_access_log
   AS PERMISSIVE
@@ -1826,6 +1842,215 @@ CREATE POLICY "Korrekturen select scoping" ON public.zuzahlung_korrekturen
 -- ----------------------------------------------------------------------------
 -- FUNCTIONS & PROCEDURES
 -- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.abrechnung_idempotency_reserve(p_owner uuid, p_key text, p_payload jsonb, p_expected_input text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE h public.abrechnung%ROWTYPE; v_hash text; v_input text; rx uuid[]; ss uuid[];
+ v_abs text; v_mode text; v_ref bigint; v_transfer integer; v_now timestamptz:=clock_timestamp();
+BEGIN
+ IF p_key IS NULL OR p_key !~ '^[A-Za-z0-9_-]{16,128}$' OR p_payload IS NULL OR jsonb_typeof(p_payload)<>'object'
+  OR p_payload->>'vkz' IS DISTINCT FROM '01' OR p_payload->>'bereich' IS DISTINCT FROM 'physio'
+  OR jsonb_typeof(p_payload->'prescription_ids') IS DISTINCT FROM 'array'
+  OR jsonb_typeof(p_payload->'session_ids') IS DISTINCT FROM 'array' THEN
+  RAISE EXCEPTION 'PHYSIO_REQUEST_INVALID' USING ERRCODE='22023'; END IF;
+ v_hash:=public.physio_v1_hash(p_payload);
+ PERFORM public.physio_v1_owner(p_owner);
+ SELECT * INTO h FROM public.abrechnung WHERE owner_id=p_owner AND publication_key=p_key FOR UPDATE;
+ IF FOUND THEN
+  IF h.publication_payload_sha256<>v_hash OR (p_expected_input IS NOT NULL AND p_expected_input<>h.publication_input_sha256) THEN
+   RAISE EXCEPTION 'PHYSIO_KEY_PAYLOAD_CONFLICT' USING ERRCODE='40001'; END IF;
+  IF h.publication_state='published' THEN RETURN h.publication_result||jsonb_build_object('worker_granted',false); END IF;
+  IF h.publication_state='aborted' THEN RETURN jsonb_build_object('state','aborted','abrechnungId',h.id,'worker_granted',false); END IF;
+  IF h.publication_lease_until>v_now THEN
+   RETURN jsonb_build_object('state','preparing','worker_granted',false,'abrechnungId',h.id,'generation',h.publication_generation,
+    'input_sha256',h.publication_input_sha256,'updated_at',h.updated_at::text,'lease_until',h.publication_lease_until); END IF;
+  v_input:=public.physio_v1_input_hash(p_owner,p_payload);
+  IF v_input<>h.publication_input_sha256 THEN RAISE EXCEPTION 'PHYSIO_INPUT_CHANGED' USING ERRCODE='40001'; END IF;
+  UPDATE public.abrechnung SET publication_generation=publication_generation+1,
+   publication_lease_until=v_now+interval '5 minutes',publication_package_sha256=NULL WHERE id=h.id RETURNING * INTO h;
+ ELSE
+  v_input:=public.physio_v1_input_hash(p_owner,p_payload);
+  IF p_expected_input IS NOT NULL AND p_expected_input<>v_input THEN RAISE EXCEPTION 'PHYSIO_INPUT_CHANGED' USING ERRCODE='40001'; END IF;
+  SELECT array_agg(x::uuid ORDER BY x) INTO rx FROM jsonb_array_elements_text(p_payload->'prescription_ids') x;
+  SELECT array_agg(x::uuid ORDER BY x) INTO ss FROM jsonb_array_elements_text(p_payload->'session_ids') x;
+  IF coalesce(cardinality(rx),0)=0 OR coalesce(cardinality(ss),0)=0
+   OR cardinality(rx)<>(SELECT count(DISTINCT x) FROM unnest(rx) x)
+   OR cardinality(ss)<>(SELECT count(DISTINCT x) FROM unnest(ss) x)
+   OR cardinality(rx)<>(SELECT count(*) FROM public.prescriptions r WHERE r.id=ANY(rx)
+    AND r.owner_id=p_owner AND r.therapie_bereich='physio' AND r.rezeptart='kassen'
+    AND r.status<>'parsed' AND coalesce(r.abrechnung_status,'bereit')='bereit' AND r.abrechnung_id IS NULL
+    AND NOT coalesce(r.is_blanko,false) AND r.rezept_typ='standard'
+    AND r.kostentraeger_ik=p_payload->>'kostentraeger_ik')
+   OR cardinality(ss)<>(SELECT count(*) FROM public.prescription_sessions s WHERE s.id=ANY(ss)
+     AND s.prescription_id=ANY(rx) AND s.status='done' AND s.done_at IS NOT NULL)
+   OR EXISTS(SELECT 1 FROM public.prescription_sessions s WHERE s.prescription_id=ANY(rx)
+     AND (s.status='planned' OR (s.status='done' AND NOT s.id=ANY(ss))))
+   OR EXISTS(SELECT 1 FROM unnest(rx) r WHERE NOT EXISTS(SELECT 1 FROM public.prescription_sessions s WHERE s.prescription_id=r AND s.id=ANY(ss)))
+   OR EXISTS(SELECT 1 FROM public.prescription_session_abrechnungsanspruch WHERE prescription_session_id=ANY(ss)) THEN
+   RAISE EXCEPTION 'PHYSIO_SOURCE_SCOPE_OR_CLAIM' USING ERRCODE='40001'; END IF;
+  IF p_payload->>'business_id' IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.businesses b WHERE b.id=(p_payload->>'business_id')::uuid AND b.owner_id=p_owner) THEN
+   RAISE EXCEPTION 'PHYSIO_BUSINESS_SCOPE' USING ERRCODE='42501'; END IF;
+  SELECT ik_nummer,betriebsart INTO v_abs,v_mode FROM public.terapeut_zertifikat WHERE owner_id=p_owner;
+  IF v_abs IS NULL OR p_payload->>'empfaenger_ik' IS NULL THEN RAISE EXCEPTION 'PHYSIO_RECIPIENT_REQUIRED'; END IF;
+  SELECT coalesce((SELECT betriebsart FROM public.betriebsart_empfaenger WHERE owner_id=p_owner AND empfaenger_ik=p_payload->>'empfaenger_ik'),v_mode) INTO v_mode;
+  v_ref:=public.naechste_datenaustauschreferenz(p_owner,v_abs,p_payload->>'empfaenger_ik');
+  v_transfer:=public.naechste_transfernummer(p_owner,v_abs,p_payload->>'empfaenger_ik');
+  INSERT INTO public.abrechnung(owner_id,business_id,kostentraeger_ik,empfaenger_ik,status,verarbeitungskennzeichen,
+   datenaustauschreferenz,transfernummer,rechnungsnummer,betriebsart,publication_protocol,publication_state,
+   publication_key,publication_payload,publication_payload_sha256,publication_input_sha256,publication_generation,publication_lease_until)
+  VALUES(p_owner,(p_payload->>'business_id')::uuid,p_payload->>'kostentraeger_ik',p_payload->>'empfaenger_ik','erstellt','01',
+   v_ref,v_transfer,'R'||to_char(v_now AT TIME ZONE 'Europe/Berlin','IYYY')||'-W'||to_char(v_now AT TIME ZONE 'Europe/Berlin','IW')||'-'||lpad(v_ref::text,greatest(3,length(v_ref::text)),'0'),v_mode,
+   'physio-v1','preparing',p_key,p_payload,v_hash,v_input,1,v_now+interval '5 minutes') RETURNING * INTO h;
+ END IF;
+ RETURN jsonb_build_object('state','preparing','worker_granted',true,'abrechnungId',h.id,'generation',h.publication_generation,
+  'input_sha256',h.publication_input_sha256,'updated_at',h.updated_at::text,'lease_until',h.publication_lease_until,
+  'rechnungsnummer',h.rechnungsnummer,'datenaustauschreferenz',h.datenaustauschreferenz,'transfernummer',h.transfernummer);
+END $function$
+;
+ALTER FUNCTION public.abrechnung_idempotency_reserve(p_owner uuid, p_key text, p_payload jsonb, p_expected_input text) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.abrechnung_physio_abort(p_owner uuid, p_abrechnung uuid, p_key text, p_generation bigint, p_grund text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE h public.abrechnung%ROWTYPE;
+BEGIN
+ IF p_grund IS NULL OR p_grund !~ '^[A-Z][A-Z0-9_]{2,63}$' OR p_generation IS NULL OR p_generation<=0 THEN
+  RAISE EXCEPTION 'PHYSIO_ABORT_INVALID' USING ERRCODE='22023'; END IF;
+ PERFORM public.physio_v1_owner(p_owner);
+ SELECT * INTO h FROM public.abrechnung WHERE id=p_abrechnung AND owner_id=p_owner FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'PHYSIO_HEADER_SCOPE' USING ERRCODE='42501'; END IF;
+ IF h.publication_protocol IS DISTINCT FROM 'physio-v1' OR h.publication_key IS DISTINCT FROM p_key THEN
+  RAISE EXCEPTION 'PHYSIO_BINDING_CONFLICT' USING ERRCODE='40001'; END IF;
+ IF h.publication_state='aborted' THEN
+  RETURN jsonb_build_object('state','aborted','abrechnungId',h.id,'generation',h.publication_generation,
+   'worker_granted',false,'wiederholt',true); END IF;
+ IF h.publication_state='published' THEN RAISE EXCEPTION 'PHYSIO_ABORT_PUBLISHED' USING ERRCODE='55000'; END IF;
+ IF h.publication_generation IS DISTINCT FROM p_generation THEN
+  RAISE EXCEPTION 'PHYSIO_GENERATION_OR_CAS_CONFLICT' USING ERRCODE='40001'; END IF;
+ UPDATE public.abrechnung SET publication_state='aborted',publication_lease_until=clock_timestamp(),
+  status='verworfen',verwerfungsgrund=p_grund WHERE id=h.id RETURNING * INTO h;
+ RETURN jsonb_build_object('state','aborted','abrechnungId',h.id,'generation',h.publication_generation,
+  'worker_granted',false,'wiederholt',false);
+END $function$
+;
+ALTER FUNCTION public.abrechnung_physio_abort(p_owner uuid, p_abrechnung uuid, p_key text, p_generation bigint, p_grund text) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_key text, p_payload_sha256 text, p_input_sha256 text, p_generation bigint, p_expected_updated_at text, p_package jsonb, p_manifest jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE h public.abrechnung%ROWTYPE; r public.abrechnung_artefakt_version%ROWTYPE; it jsonb; ln jsonb; comp jsonb;
+ rx uuid[]; ss uuid[]; seen_rx uuid[]:='{}'; seen_ss uuid[]:='{}'; line_ss uuid[]; rid uuid; zid uuid;
+ v_input text; ph text; b bigint; z bigint; total_b bigint:=0;total_z bigint:=0; calc_b bigint; v_result jsonb;
+BEGIN
+ PERFORM public.physio_v1_owner(p_owner);
+ SELECT * INTO h FROM public.abrechnung WHERE id=p_abrechnung AND owner_id=p_owner FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'PHYSIO_HEADER_SCOPE' USING ERRCODE='42501'; END IF;
+ IF h.publication_protocol IS DISTINCT FROM 'physio-v1' OR h.publication_key IS DISTINCT FROM p_key
+  OR h.publication_payload_sha256 IS DISTINCT FROM p_payload_sha256 OR h.publication_input_sha256 IS DISTINCT FROM p_input_sha256 THEN
+  RAISE EXCEPTION 'PHYSIO_BINDING_CONFLICT' USING ERRCODE='40001'; END IF;
+ IF h.publication_state='published' THEN RETURN h.publication_result||jsonb_build_object('worker_granted',false); END IF;
+ IF h.publication_state<>'preparing' OR h.publication_generation IS DISTINCT FROM p_generation
+  OR h.publication_lease_until<=clock_timestamp() OR h.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
+  RAISE EXCEPTION 'PHYSIO_GENERATION_OR_CAS_CONFLICT' USING ERRCODE='40001'; END IF;
+ BEGIN
+  PERFORM 1 FROM public.prescriptions WHERE id IN (SELECT value::uuid FROM jsonb_array_elements_text(h.publication_payload->'prescription_ids')) ORDER BY id FOR UPDATE NOWAIT;
+  PERFORM 1 FROM public.prescription_sessions WHERE id IN (SELECT value::uuid FROM jsonb_array_elements_text(h.publication_payload->'session_ids')) ORDER BY id FOR KEY SHARE NOWAIT;
+  PERFORM 1 FROM public.businesses WHERE id=h.business_id FOR KEY SHARE NOWAIT;
+ EXCEPTION WHEN lock_not_available THEN
+  RAISE EXCEPTION 'PHYSIO_SOURCE_ROW_BUSY' USING ERRCODE='40001';
+ END;
+ IF EXISTS(SELECT 1 FROM public.abrechnung_zeile WHERE abrechnung_id=h.id) THEN RAISE EXCEPTION 'PHYSIO_EXISTING_LINES'; END IF;
+ v_input:=public.physio_v1_input_hash(p_owner,h.publication_payload);
+ IF v_input<>h.publication_input_sha256 THEN RAISE EXCEPTION 'PHYSIO_INPUT_CHANGED' USING ERRCODE='40001'; END IF;
+ ph:=public.physio_v1_hash(p_package);
+ IF ph IS NULL OR ph IS DISTINCT FROM h.publication_package_sha256 OR jsonb_typeof(p_package->'lines') IS DISTINCT FROM 'array'
+  OR nullif(btrim(p_package->>'dateiname'),'') IS NULL
+  OR coalesce((p_package->>'dta_segment_count')::integer,0)<=0
+  OR jsonb_typeof(p_manifest) IS DISTINCT FROM 'array' OR jsonb_array_length(p_manifest)<>3
+  OR (SELECT count(DISTINCT x->>'role') FROM jsonb_array_elements(p_manifest) x WHERE x->>'role' IN ('dta','auftrag','begleit'))<>3 THEN
+  RAISE EXCEPTION 'PHYSIO_MANIFEST_OR_PACKAGE_INVALID' USING ERRCODE='22023'; END IF;
+ FOR it IN SELECT x FROM jsonb_array_elements(p_manifest) x ORDER BY x->>'id' LOOP
+  SELECT * INTO r FROM public.abrechnung_artefakt_version WHERE id=(it->>'id')::uuid FOR UPDATE;
+  IF NOT FOUND OR r.owner_id<>p_owner OR r.abrechnung_id<>h.id OR r.execution_generation IS DISTINCT FROM p_generation
+   OR r.state<>'reserved' OR r.upload_state<>'uploaded' OR r.kind<>'unsigned'
+   OR r.role IS DISTINCT FROM it->>'role' OR r.storage_path IS DISTINCT FROM it->>'path'
+   OR r.sha256 IS DISTINCT FROM it->>'sha256' OR r.readback_sha256 IS DISTINCT FROM r.sha256
+   OR r.readback_bytes IS DISTINCT FROM (it->>'bytes')::bigint OR r.readback_at IS NULL
+   OR (r.role='auftrag' AND r.readback_bytes<>348)
+   OR r.readback_package_sha256 IS DISTINCT FROM ph THEN RAISE EXCEPTION 'PHYSIO_ARTIFACT_NOT_VERIFIED'; END IF;
+ END LOOP;
+ SELECT array_agg(x::uuid ORDER BY x) INTO rx FROM jsonb_array_elements_text(h.publication_payload->'prescription_ids') x;
+ SELECT array_agg(x::uuid ORDER BY x) INTO ss FROM jsonb_array_elements_text(h.publication_payload->'session_ids') x;
+ IF EXISTS(SELECT 1 FROM public.prescription_session_abrechnungsanspruch WHERE prescription_session_id=ANY(ss)) THEN
+  RAISE EXCEPTION 'PHYSIO_SESSION_CLAIM_CONFLICT' USING ERRCODE='23505'; END IF;
+ FOR ln IN SELECT x FROM jsonb_array_elements(p_package->'lines') x LOOP
+  rid:=(ln->>'prescription_id')::uuid;
+  IF rid IS NULL OR NOT rid=ANY(rx) OR rid=ANY(seen_rx) OR jsonb_typeof(ln->'leistungen') IS DISTINCT FROM 'array'
+   OR jsonb_array_length(ln->'leistungen')=0 THEN RAISE EXCEPTION 'PHYSIO_LINE_SCOPE'; END IF;
+  seen_rx:=array_append(seen_rx,rid);
+  b:=(ln->>'brutto_cents')::bigint; z:=(ln->>'zuzahlung_cents')::bigint; calc_b:=0; line_ss:='{}';
+  FOR comp IN SELECT x FROM jsonb_array_elements(ln->'leistungen') x LOOP
+   IF NOT EXISTS(SELECT 1 FROM public.prescription_sessions s WHERE s.id=(comp->>'session_id')::uuid AND s.id=ANY(ss) AND s.prescription_id=rid AND s.status='done')
+    OR comp->>'positionsnummer' IS NULL OR (comp->>'anzahl')::integer IS NULL OR (comp->>'anzahl')::integer<=0
+    OR comp->>'einzelbetrag_cents' IS NULL OR (comp->>'einzelbetrag_cents')::bigint<0 THEN RAISE EXCEPTION 'PHYSIO_COMPONENT_INVALID'; END IF;
+   calc_b:=calc_b+(comp->>'anzahl')::integer*(comp->>'einzelbetrag_cents')::bigint;
+   IF NOT (comp->>'session_id')::uuid=ANY(line_ss) THEN line_ss:=array_append(line_ss,(comp->>'session_id')::uuid); END IF;
+  END LOOP;
+  IF b IS NULL OR z IS NULL OR b<0 OR z<0 OR z>b OR b<>calc_b OR nullif(btrim(ln->>'belegnummer'),'') IS NULL
+   OR nullif(btrim(ln->>'einzel_rechnungsnummer'),'') IS NULL THEN RAISE EXCEPTION 'PHYSIO_LINE_TOTAL_OR_NUMBER'; END IF;
+  IF EXISTS(SELECT 1 FROM public.prescriptions WHERE id=rid AND belegnummer IS NOT NULL AND belegnummer IS DISTINCT FROM ln->>'belegnummer') THEN
+   RAISE EXCEPTION 'PHYSIO_BELEG_FROZEN'; END IF;
+  IF EXISTS(SELECT 1 FROM public.prescriptions WHERE id=rid AND bericht_angefordert AND bericht_status<>'erledigt') THEN
+   IF nullif(btrim(h.publication_payload->'bericht_override'->>rid::text),'') IS NULL THEN RAISE EXCEPTION 'PHYSIO_REPORT_MISSING'; END IF;
+   INSERT INTO public.prescription_validations(prescription_id,engine,input_snapshot,result,ok,blockers_count,proceeded_anyway,validated_by,overridden_rules,proceed_reason)
+    SELECT rid,'abrechnung-freigabe',jsonb_build_object('bericht_angefordert',bericht_angefordert,'bericht_status',bericht_status),
+     jsonb_build_object('abrechnung_id',h.id),false,1,true,p_owner,ARRAY['THERAPIEBERICHT_FEHLT'],left(h.publication_payload->'bericht_override'->>rid::text,500)
+    FROM public.prescriptions WHERE id=rid;
+  END IF;
+  INSERT INTO public.abrechnung_zeile(abrechnung_id,owner_id,business_id,prescription_id,kostentraeger_ik,karten_ik,
+   einzel_rechnungsnummer,sort_order,belegnummer,patient_name,versichertennummer,verordnungsdatum,therapie_bereich,
+   heilmittel_position,anzahl_einheiten,leistungen,brutto_eur,zuzahlung_eur,netto_eur)
+   SELECT h.id,p_owner,h.business_id,rid,h.kostentraeger_ik,krankenkasse_ik,ln->>'einzel_rechnungsnummer',
+    (ln->>'sort_order')::smallint,ln->>'belegnummer',ln->>'patient_name',ln->>'versichertennummer',
+    (ln->>'verordnungsdatum')::date,'physio',ln->>'heilmittel_position',(ln->>'anzahl_einheiten')::integer,
+    ln->'leistungen',b/100.0,z/100.0,(b-z)/100.0 FROM public.prescriptions WHERE id=rid RETURNING id INTO zid;
+  INSERT INTO public.prescription_session_abrechnungsanspruch(prescription_session_id,owner_id,prescription_id,abrechnung_zeile_id)
+   SELECT x,p_owner,rid,zid FROM unnest(line_ss) x;
+  seen_ss:=seen_ss||line_ss; total_b:=total_b+b;total_z:=total_z+z;
+  UPDATE public.prescriptions SET belegnummer=ln->>'belegnummer',abrechnung_id=h.id,abrechnung_status='in_abrechnung',status='billed' WHERE id=rid;
+ END LOOP;
+ IF cardinality(seen_rx)<>cardinality(rx) OR cardinality(seen_ss)<>cardinality(ss)
+  OR NOT seen_ss @> ss OR NOT ss @> seen_ss THEN RAISE EXCEPTION 'PHYSIO_INCOMPLETE_MAPPING'; END IF;
+ FOR it IN SELECT x FROM jsonb_array_elements(p_manifest) x LOOP
+  UPDATE public.abrechnung_artefakt_version SET state='published',published_at=clock_timestamp() WHERE id=(it->>'id')::uuid;
+ END LOOP;
+ v_result:=jsonb_build_object('ok',true,'state','published','worker_granted',false,'abrechnungId',h.id,'rechnungsnummer',h.rechnungsnummer,
+  'prescriptionCount',cardinality(rx),'zeilenGespeichert',cardinality(rx));
+ UPDATE public.abrechnung SET
+  storage_path=(SELECT x->>'path' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='dta'),
+  dta_sha256=(SELECT x->>'sha256' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='dta'),
+  dta_file_size=(SELECT (x->>'bytes')::integer FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='dta'),
+  auftragsdatei_path=(SELECT x->>'path' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='auftrag'),
+  auftragsdatei_sha256=(SELECT x->>'sha256' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='auftrag'),
+  auftragsdatei_size=(SELECT (x->>'bytes')::integer FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='auftrag'),
+  begleitzettel_path=(SELECT x->>'path' FROM jsonb_array_elements(p_manifest) x WHERE x->>'role'='begleit'),
+  dateiname=p_package->>'dateiname',dta_segment_count=(p_package->>'dta_segment_count')::integer,
+  prescription_count=cardinality(rx),total_eur=total_b/100.0,zuzahlung_total=total_z/100.0,
+  publication_state='published',publication_at=clock_timestamp(),publication_result=v_result WHERE id=h.id;
+ RETURN v_result;
+END $function$
+;
+ALTER FUNCTION public.abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_key text, p_payload_sha256 text, p_input_sha256 text, p_generation bigint, p_expected_updated_at text, p_package jsonb, p_manifest jsonb) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.add_credits(p_user_id uuid, p_credits integer)
  RETURNS void
  LANGUAGE plpgsql
@@ -4293,6 +4518,39 @@ $function$
 ;
 ALTER FUNCTION public.pending_signup_store(p_email text, p_onboarding jsonb, p_password text) OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.physio_artefakt_readback(p_owner uuid, p_id uuid, p_generation bigint, p_sha256 text, p_bytes bigint, p_package_sha256 text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE h public.abrechnung%ROWTYPE; r public.abrechnung_artefakt_version%ROWTYPE;
+BEGIN
+ PERFORM public.physio_v1_owner(p_owner);
+ SELECT * INTO r FROM public.abrechnung_artefakt_version WHERE id=p_id AND owner_id=p_owner;
+ IF NOT FOUND THEN RAISE EXCEPTION 'PHYSIO_ARTIFACT_SCOPE' USING ERRCODE='42501'; END IF;
+ SELECT * INTO h FROM public.abrechnung WHERE id=r.abrechnung_id AND owner_id=p_owner FOR UPDATE;
+ SELECT * INTO r FROM public.abrechnung_artefakt_version WHERE id=p_id FOR UPDATE;
+ IF h.publication_protocol IS DISTINCT FROM 'physio-v1' OR h.publication_state<>'preparing'
+  OR h.publication_generation IS DISTINCT FROM p_generation OR r.execution_generation IS DISTINCT FROM p_generation
+  OR h.publication_lease_until<=clock_timestamp() OR r.state<>'reserved' OR r.upload_state<>'uploaded'
+  OR p_sha256 IS NULL OR r.sha256 IS DISTINCT FROM p_sha256 OR p_bytes IS NULL OR p_bytes<=0
+  OR p_package_sha256 IS NULL OR p_package_sha256 !~ '^[0-9a-f]{64}$'
+  OR (h.publication_package_sha256 IS NOT NULL AND h.publication_package_sha256<>p_package_sha256) THEN
+  RAISE EXCEPTION 'PHYSIO_READBACK_INVALID' USING ERRCODE='40001'; END IF;
+ IF r.readback_at IS NOT NULL THEN
+  IF ROW(r.readback_sha256,r.readback_bytes,r.readback_package_sha256) IS DISTINCT FROM ROW(p_sha256,p_bytes,p_package_sha256) THEN
+   RAISE EXCEPTION 'PHYSIO_READBACK_CONFLICT'; END IF;
+  RETURN true;
+ END IF;
+ UPDATE public.abrechnung SET publication_package_sha256=p_package_sha256 WHERE id=h.id;
+ UPDATE public.abrechnung_artefakt_version SET readback_sha256=p_sha256,readback_bytes=p_bytes,
+  readback_package_sha256=p_package_sha256,readback_at=clock_timestamp() WHERE id=p_id;
+ RETURN true;
+END $function$
+;
+ALTER FUNCTION public.physio_artefakt_readback(p_owner uuid, p_id uuid, p_generation bigint, p_sha256 text, p_bytes bigint, p_package_sha256 text) OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.physio_befunde_delete_gesperrt()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4426,6 +4684,373 @@ END;
 $function$
 ;
 ALTER FUNCTION public.physio_befunde_versionieren() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_storage_readable(p_path text)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+ SELECT EXISTS(SELECT 1 FROM public.abrechnung h
+ WHERE (h.owner_id=auth.uid() OR EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=auth.uid() AND p.owner_id=h.owner_id))
+ AND ((h.publication_protocol IS NULL AND (
+   EXISTS(SELECT 1 FROM public.abrechnung_artefakt_version r WHERE r.abrechnung_id=h.id AND r.owner_id=h.owner_id AND r.storage_path=p_path AND r.state='published')
+   OR EXISTS(SELECT 1 FROM public.physio_storage_legacy_allowlist l WHERE l.abrechnung_id=h.id AND l.owner_id=h.owner_id AND l.storage_path=p_path)))
+ OR (h.publication_protocol='physio-v1' AND h.publication_state='published' AND
+   EXISTS(SELECT 1 FROM public.abrechnung_artefakt_version r WHERE r.abrechnung_id=h.id AND r.owner_id=h.owner_id
+    AND r.storage_path=p_path AND r.state='published' AND r.execution_generation=h.publication_generation)))) $function$
+;
+ALTER FUNCTION public.physio_storage_readable(p_path text) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_catalog_guard()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+ IF EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE pid=pg_backend_pid() AND locktype='advisory'
+  AND classid=827001::oid AND objid=1::oid AND objsubid=2 AND mode='ShareLock') THEN
+  RAISE EXCEPTION 'PHYSIO_MIXED_TENANT_CATALOG' USING ERRCODE='40001'; END IF;
+ PERFORM pg_catalog.pg_advisory_xact_lock(827001,1);
+ RETURN NULL;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_catalog_guard() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_catalog_shared()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+ IF EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE pid=pg_backend_pid() AND locktype='advisory'
+  AND classid=827001::oid AND objid=1::oid AND objsubid=2 AND mode='ExclusiveLock') THEN
+  RAISE EXCEPTION 'PHYSIO_MIXED_CATALOG_TENANT' USING ERRCODE='40001'; END IF;
+ PERFORM pg_catalog.pg_advisory_xact_lock_shared(827001,1);
+END $function$
+;
+ALTER FUNCTION public.physio_v1_catalog_shared() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_guard()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+DECLARE h public.abrechnung%ROWTYPE;
+BEGIN
+ IF TG_TABLE_NAME='abrechnung_zeile' THEN
+  IF public.physio_v1_is_protocol_header(NEW.abrechnung_id) THEN
+   IF current_user IN ('anon','authenticated','service_role') THEN
+    RAISE EXCEPTION 'PHYSIO_LINE_RPC_REQUIRED' USING ERRCODE='42501'; END IF;
+   SELECT * INTO h FROM public.abrechnung WHERE id=NEW.abrechnung_id FOR UPDATE;
+   IF h.publication_state<>'preparing' THEN RAISE EXCEPTION 'PHYSIO_LINE_NOT_PREPARING'; END IF;
+  END IF;
+  RETURN NEW;
+ END IF;
+ IF TG_TABLE_NAME='prescription_session_abrechnungsanspruch' THEN
+  IF TG_OP<>'INSERT' THEN RAISE EXCEPTION 'PHYSIO_CLAIM_IMMUTABLE'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.prescription_sessions s JOIN public.prescriptions r ON r.id=s.prescription_id
+    JOIN public.abrechnung_zeile z ON z.id=NEW.abrechnung_zeile_id
+    WHERE s.id=NEW.prescription_session_id AND r.id=NEW.prescription_id AND r.owner_id=NEW.owner_id
+      AND z.owner_id=NEW.owner_id AND z.prescription_id=r.id) THEN
+   RAISE EXCEPTION 'PHYSIO_CLAIM_SCOPE'; END IF;
+  RETURN NEW;
+ END IF;
+ IF TG_TABLE_NAME='abrechnung' THEN
+  IF TG_OP='DELETE' THEN
+   IF OLD.publication_protocol IS NOT NULL THEN RAISE EXCEPTION 'PHYSIO_HEADER_RETAIN'; END IF;
+   RETURN OLD;
+  END IF;
+  IF TG_OP='UPDATE' AND OLD.publication_protocol IS NOT NULL THEN
+   IF ROW(NEW.publication_protocol,NEW.owner_id,NEW.publication_key,NEW.publication_payload,
+    NEW.publication_payload_sha256,NEW.publication_input_sha256,NEW.rechnungsnummer,
+    NEW.datenaustauschreferenz,NEW.transfernummer,NEW.empfaenger_ik,NEW.kostentraeger_ik,
+    NEW.betriebsart,NEW.business_id,NEW.verarbeitungskennzeichen)
+    IS DISTINCT FROM ROW(OLD.publication_protocol,OLD.owner_id,OLD.publication_key,OLD.publication_payload,
+    OLD.publication_payload_sha256,OLD.publication_input_sha256,OLD.rechnungsnummer,
+    OLD.datenaustauschreferenz,OLD.transfernummer,OLD.empfaenger_ik,OLD.kostentraeger_ik,
+    OLD.betriebsart,OLD.business_id,OLD.verarbeitungskennzeichen) THEN
+    RAISE EXCEPTION 'PHYSIO_REQUEST_IMMUTABLE'; END IF;
+   IF OLD.publication_state='published' AND
+    (to_jsonb(NEW)-ARRAY['updated_at','status','signed_storage_path','signed_sha256','signed_at',
+     'signed_by_cert_thumbprint','encrypted_storage_path','encrypted_sha256','verschluesselt_am',
+     'verschluesselt_fuer_fingerprint','verschluesselung_hinweis','paid_at','zaa_uploaded_at','rejected_count'])
+     IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['updated_at','status','signed_storage_path','signed_sha256','signed_at',
+     'signed_by_cert_thumbprint','encrypted_storage_path','encrypted_sha256','verschluesselt_am',
+     'verschluesselt_fuer_fingerprint','verschluesselung_hinweis','paid_at','zaa_uploaded_at','rejected_count']) THEN
+    RAISE EXCEPTION 'PHYSIO_PUBLICATION_IMMUTABLE'; END IF;
+   IF OLD.publication_state='aborted' AND to_jsonb(NEW)-'updated_at' IS DISTINCT FROM to_jsonb(OLD)-'updated_at' THEN
+    RAISE EXCEPTION 'PHYSIO_ABORT_TERMINAL'; END IF;
+  END IF;
+  IF NEW.publication_protocol IS NOT NULL AND current_user IN ('anon','authenticated','service_role') THEN
+   RAISE EXCEPTION 'PHYSIO_RPC_REQUIRED' USING ERRCODE='42501'; END IF;
+  RETURN NEW;
+ END IF;
+ -- Registry: bind every new version of a protocol header to current generation.
+ SELECT * INTO h FROM public.abrechnung WHERE id=NEW.abrechnung_id;
+ IF TG_OP='INSERT' AND h.publication_protocol='physio-v1' AND NEW.kind IN ('signed','encrypted') THEN
+  IF h.publication_state<>'published' THEN RAISE EXCEPTION 'PHYSIO_FOLLOWUP_NOT_PUBLISHED'; END IF;
+  NEW.execution_generation:=h.publication_generation;
+ ELSIF TG_OP='INSERT' AND h.publication_protocol='physio-v1' THEN
+  IF h.publication_state<>'preparing' OR h.publication_lease_until<=clock_timestamp() THEN
+   RAISE EXCEPTION 'PHYSIO_UPLOAD_NOT_PREPARING'; END IF;
+  IF NEW.storage_path NOT LIKE h.owner_id::text||'/'||h.id::text||'/physio-v1/'||h.publication_generation::text||'/%' THEN
+   RAISE EXCEPTION 'PHYSIO_GENERATION_PATH'; END IF;
+  NEW.execution_generation:=h.publication_generation;
+ END IF;
+ IF TG_OP='UPDATE' THEN
+  IF NEW.execution_generation IS DISTINCT FROM OLD.execution_generation OR
+    (OLD.readback_at IS NOT NULL AND ROW(NEW.readback_sha256,NEW.readback_bytes,NEW.readback_package_sha256,NEW.readback_at)
+     IS DISTINCT FROM ROW(OLD.readback_sha256,OLD.readback_bytes,OLD.readback_package_sha256,OLD.readback_at)) THEN
+   RAISE EXCEPTION 'PHYSIO_RECEIPT_IMMUTABLE'; END IF;
+  IF NEW.state='published' AND OLD.state<>'published' AND h.publication_protocol='physio-v1' AND NEW.kind='unsigned'
+    AND (NEW.execution_generation IS DISTINCT FROM h.publication_generation OR NEW.readback_at IS NULL
+     OR NEW.readback_package_sha256 IS DISTINCT FROM h.publication_package_sha256) THEN
+   RAISE EXCEPTION 'PHYSIO_UNVERIFIED_PUBLICATION'; END IF;
+ END IF;
+ RETURN NEW;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_guard() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_hash(p_value jsonb)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE STRICT
+ SET search_path TO ''
+AS $function$
+ SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(p_value::text,'UTF8')),'hex') $function$
+;
+ALTER FUNCTION public.physio_v1_hash(p_value jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_input_hash(p_owner uuid, p_payload jsonb)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE n text; a jsonb; s jsonb:='{}'; w text; cols text[];
+ rx uuid[]; patients uuid[]; doctors uuid[]; v_booking_ids uuid[]; serviceids uuid[]; therapists uuid[]; codes text[];
+BEGIN
+ PERFORM public.physio_v1_owner(p_owner);
+ SELECT array_agg(x::uuid) INTO rx FROM jsonb_array_elements_text(p_payload->'prescription_ids') x;
+ -- Fail closed on the complete dependency chain. UUID FKs alone do not prove
+ -- tenant ownership; otherwise a B-service edit would bypass A's revision.
+ IF coalesce(cardinality(rx),0)=0 OR cardinality(rx)<>(SELECT count(*) FROM public.prescriptions WHERE id=ANY(rx) AND owner_id=p_owner)
+  OR EXISTS(SELECT 1 FROM public.prescriptions r WHERE r.id=ANY(rx) AND (
+   (r.patient_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.leads l WHERE l.id=r.patient_id AND l.owner_id=p_owner)) OR
+   (r.arzt_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.aerzte a WHERE a.id=r.arzt_id AND a.owner_id=p_owner)) OR
+   (r.business_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.businesses b WHERE b.id=r.business_id AND b.owner_id=p_owner))))
+  OR EXISTS(SELECT 1 FROM public.prescription_sessions s WHERE s.prescription_id=ANY(rx) AND s.booking_id IS NOT NULL AND NOT EXISTS(
+   SELECT 1 FROM public.bookings b JOIN public.profiles p ON p.id=b.user_id
+    WHERE b.id=s.booking_id AND coalesce(p.owner_id,p.id)=p_owner
+     AND (b.owner_id IS NULL OR b.owner_id=p_owner)
+     AND (b.service_id IS NULL OR EXISTS(SELECT 1 FROM public.services v
+      LEFT JOIN public.profiles vp ON vp.id=v.user_id WHERE v.id=b.service_id
+       AND (v.owner_id IS NULL OR v.owner_id=p_owner)
+       AND (v.user_id IS NULL OR coalesce(vp.owner_id,vp.id)=p_owner)
+       AND (v.owner_id=p_owner OR coalesce(vp.owner_id,vp.id)=p_owner))))) THEN
+  RAISE EXCEPTION 'PHYSIO_DEPENDENCY_OWNER_MISMATCH' USING ERRCODE='40001';
+ END IF;
+ SELECT array_agg(patient_id),array_agg(arzt_id) INTO patients,doctors FROM public.prescriptions WHERE owner_id=p_owner AND id=ANY(rx);
+ SELECT array_agg(booking_id) INTO v_booking_ids FROM public.prescription_sessions WHERE prescription_id=ANY(rx);
+ SELECT array_agg(service_id),array_agg(user_id) INTO serviceids,therapists FROM public.bookings WHERE id=ANY(v_booking_ids);
+ SELECT array_agg(DISTINCT right(c,4)) INTO codes FROM (
+  SELECT unnest(ARRAY[heilmittel_position,ergaenzend_position,'X9950','X9951','X9922']) c FROM public.prescriptions WHERE owner_id=p_owner AND id=ANY(rx)
+  UNION ALL SELECT trim(both '"' from j::text) FROM public.prescriptions r,
+   LATERAL jsonb_path_query(r.heilmittel_items,'$.** ? (@.type() == "string")') j
+   WHERE r.owner_id=p_owner AND r.id=ANY(rx)) q WHERE c ~ '^[X0-9][0-9]{4}$';
+ FOREACH n IN ARRAY ARRAY['profiles','prescriptions','prescription_sessions','leads','aerzte',
+  'bookings','services','therapist_certificates','zuzahlung_befreiung','prescription_documents',
+  'heilmittel_katalog','heilmittel_position','heilmittel_tarif','kostentraeger',
+  'kostentraeger_annahmestellen','krankenkassen','terapeut_zertifikat',
+  'betriebsart_empfaenger','empfaenger_zertifikate','businesses'] LOOP
+  w:=CASE n
+   WHEN 'profiles' THEN 't.id=$1 OR (t.id=ANY($8) AND t.owner_id=$1)'
+   WHEN 'prescriptions' THEN 't.owner_id=$1 AND t.id=ANY($2)'
+   WHEN 'prescription_sessions' THEN 't.prescription_id=ANY($2)'
+   WHEN 'leads' THEN 't.owner_id=$1 AND t.id=ANY($3)'
+   WHEN 'aerzte' THEN 't.owner_id=$1 AND t.id=ANY($4)'
+   WHEN 'bookings' THEN 't.id=ANY($5)'
+   WHEN 'services' THEN 't.id=ANY($6)'
+   WHEN 'therapist_certificates' THEN 't.owner_id=$1 AND t.profile_id=ANY($8)'
+   WHEN 'zuzahlung_befreiung' THEN 't.owner_id=$1 AND t.patient_id=ANY($3)'
+   WHEN 'prescription_documents' THEN 't.owner_id=$1 AND t.prescription_id=ANY($2)'
+   WHEN 'heilmittel_katalog' THEN 't.bereich=''physio'' AND right(t.code,4)=ANY($7)'
+   WHEN 'heilmittel_position' THEN 'right(t.positionsnummer,4)=ANY($7)'
+   WHEN 'heilmittel_tarif' THEN 'right(t.position_nr,4)=ANY($7) AND (t.kostentraeger_ik IS NULL OR t.kostentraeger_ik=$9)'
+   WHEN 'kostentraeger' THEN 't.ik IN ($9,$10)'
+   WHEN 'kostentraeger_annahmestellen' THEN 't.kostentraeger_ik=$9'
+   WHEN 'krankenkassen' THEN 'EXISTS(SELECT 1 FROM public.prescriptions r WHERE r.id=ANY($2) AND r.owner_id=$1 AND r.krankenkasse_ik=t.ik_number)'
+   WHEN 'terapeut_zertifikat' THEN 't.owner_id=$1'
+   WHEN 'betriebsart_empfaenger' THEN 't.owner_id=$1 AND t.empfaenger_ik=$10'
+   WHEN 'empfaenger_zertifikate' THEN 't.ik=$10'
+   WHEN 'businesses' THEN 't.owner_id=$1 AND t.id=$11' END;
+  cols:=CASE n
+   WHEN 'profiles' THEN ARRAY['id','owner_id','physio_source_revision','is_active','role','business_name','sector','street','house_number','zip','city','phone','bundesland']
+   WHEN 'prescriptions' THEN ARRAY['id','owner_id','patient_id','arzt_id','status','rezept_typ','rezeptart','therapie_bereich','ausstellungsdatum','behandlungsbeginn','icd10','icd10_2','diagnosegruppe','heilmittel','heilmittel_position','heilmittel_items','anzahl_einheiten','frequenz','is_dringend','hausbesuch','is_blanko','is_lhb_bvb','hausbesuch_ort','doppelbehandlung','ergaenzend_position','ergaenzend_einheiten','vorrangig_einheiten','doctor_lanr','doctor_bsnr','leitsymptomatik','pat_leitsymptomatik','zuzahlung_eur','zuzahlung_befreit','kostentraeger_ik','krankenkasse_ik','abrechnung_status','abrechnung_id','belegnummer','verordnungsnummer','business_id','bericht_angefordert','bericht_status','gueltig_bis']
+   WHEN 'prescription_sessions' THEN ARRAY['id','prescription_id','booking_id','session_number','status','done_at','heilmittel_index','ergaenzend_erbracht']
+   WHEN 'leads' THEN ARRAY['id','owner_id','first_name','last_name','geburtsdatum','versichertennummer','versichertenstatus','krankenkasse','patientennummer','street','plz','city']
+   WHEN 'aerzte' THEN ARRAY['id','owner_id','lanr','bsnr','arzt_name']
+   WHEN 'bookings' THEN ARRAY['id','user_id','service_id','hausbesuch','status','start_time','end_time']
+   WHEN 'prescription_documents' THEN ARRAY['id','owner_id','prescription_id','art','storage_path','groesse_bytes','created_at']
+   WHEN 'empfaenger_zertifikate' THEN ARRAY['ik','fingerprint_sha256','gueltig_von','gueltig_bis']
+   ELSE NULL END;
+  EXECUTE format('SELECT coalesce(jsonb_agg(v ORDER BY v::text),''[]''::jsonb) FROM (SELECT CASE WHEN $12::text[] IS NULL THEN to_jsonb(t) ELSE (SELECT jsonb_object_agg(key,value) FROM jsonb_each(to_jsonb(t)) WHERE key=ANY($12)) END v FROM public.%I t WHERE %s) q',n,w)
+   INTO a USING p_owner,rx,patients,doctors,v_booking_ids,serviceids,codes,therapists,p_payload->>'kostentraeger_ik',p_payload->>'empfaenger_ik',(p_payload->>'business_id')::uuid,cols;
+  s:=s||jsonb_build_object(n,a);
+ END LOOP;
+ RETURN public.physio_v1_hash(s);
+END $function$
+;
+ALTER FUNCTION public.physio_v1_input_hash(p_owner uuid, p_payload jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_is_protocol_header(p_id uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+ SELECT EXISTS(SELECT 1 FROM public.abrechnung WHERE id=p_id AND publication_protocol='physio-v1') $function$
+;
+ALTER FUNCTION public.physio_v1_is_protocol_header(p_id uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_no_truncate()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN RAISE EXCEPTION 'PHYSIO_SOURCE_TRUNCATE_FORBIDDEN' USING ERRCODE='42501'; END $function$
+;
+ALTER FUNCTION public.physio_v1_no_truncate() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_owner(p_owner uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+ PERFORM public.physio_v1_catalog_shared();
+ PERFORM 1 FROM public.profiles WHERE id=p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
+ IF NOT FOUND OR EXISTS(SELECT 1 FROM public.abrechnung_artefakt_freeze WHERE owner_id=p_owner) THEN
+  RAISE EXCEPTION 'PHYSIO_OWNER_UNAVAILABLE' USING ERRCODE='42501'; END IF;
+ BEGIN
+  PERFORM 1 FROM auth.users WHERE id=p_owner FOR KEY SHARE NOWAIT;
+ EXCEPTION WHEN lock_not_available THEN RAISE EXCEPTION 'PHYSIO_AUTH_SOURCE_BUSY' USING ERRCODE='40001'; END;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_owner(p_owner uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_revision_no_client()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+ IF NEW.physio_source_revision IS DISTINCT FROM OLD.physio_source_revision
+  AND current_user IN ('anon','authenticated','service_role') THEN
+  RAISE EXCEPTION 'PHYSIO_REVISION_RPC_ONLY' USING ERRCODE='42501'; END IF;
+ RETURN NEW;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_revision_no_client() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_source_owners(p_table text, p_row jsonb)
+ RETURNS uuid[]
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE a uuid[]:='{}'; u uuid; x uuid;
+BEGIN
+ IF p_row IS NULL THEN RETURN a; END IF;
+ IF p_table='profiles' THEN
+  a:=ARRAY[coalesce((p_row->>'owner_id')::uuid,(p_row->>'id')::uuid)];
+ ELSIF p_table='prescription_sessions' THEN
+  SELECT owner_id INTO u FROM public.prescriptions WHERE id=(p_row->>'prescription_id')::uuid;
+  IF u IS NULL THEN RAISE EXCEPTION 'PHYSIO_SESSION_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+  a:=ARRAY[u];
+ ELSIF p_table IN ('bookings','services') THEN
+  IF p_row->>'owner_id' IS NOT NULL THEN a:=array_append(a,(p_row->>'owner_id')::uuid); END IF;
+  SELECT coalesce(owner_id,id) INTO u FROM public.profiles WHERE id=(p_row->>'user_id')::uuid;
+  IF u IS NOT NULL THEN a:=array_append(a,u); END IF;
+  IF p_table='bookings' AND p_row->>'verordnung_id' IS NOT NULL THEN
+   SELECT owner_id INTO x FROM public.prescriptions WHERE id=(p_row->>'verordnung_id')::uuid;
+   IF x IS NOT NULL THEN a:=array_append(a,x); END IF;
+  END IF;
+ ELSE a:=ARRAY[(p_row->>'owner_id')::uuid]; END IF;
+ SELECT coalesce(array_agg(DISTINCT q ORDER BY q),'{}'::uuid[]) INTO a FROM unnest(a) q WHERE q IS NOT NULL;
+ IF cardinality(a)=0 THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+ RETURN a;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_source_owners(p_table text, p_row jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_tenant_guard()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE o jsonb; n jsonb; owners uuid[]; again uuid[]; u uuid; self_owner boolean;
+BEGIN
+ IF TG_OP<>'INSERT' THEN o:=to_jsonb(OLD); END IF;
+ IF TG_OP<>'DELETE' THEN n:=to_jsonb(NEW); END IF;
+ -- Internal revision bump must not recurse. A separate invoker trigger rejects
+ -- direct client changes to this column; this is not a client-settable flag.
+ IF TG_TABLE_NAME='profiles' AND TG_OP='UPDATE'
+  AND (n-ARRAY['physio_source_revision','updated_at']) IS NOT DISTINCT FROM (o-ARRAY['physio_source_revision','updated_at']) THEN
+  RETURN NEW;
+ END IF;
+ PERFORM public.physio_v1_catalog_shared();
+ SELECT array_agg(DISTINCT x ORDER BY x) INTO owners FROM unnest(
+  public.physio_v1_source_owners(TG_TABLE_NAME,o)||public.physio_v1_source_owners(TG_TABLE_NAME,n)) x;
+ FOREACH u IN ARRAY owners LOOP
+  self_owner:=TG_TABLE_NAME='profiles' AND coalesce(n->>'id',o->>'id')=u::text;
+  IF NOT (self_owner AND TG_OP='INSERT') THEN
+   BEGIN
+    PERFORM 1 FROM public.profiles WHERE id=u FOR NO KEY UPDATE NOWAIT;
+   EXCEPTION WHEN lock_not_available THEN
+    RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_BUSY' USING ERRCODE='40001';
+   END;
+   IF NOT FOUND THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_MISSING' USING ERRCODE='23503'; END IF;
+  END IF;
+ END LOOP;
+ -- A parent/profile reassignment may have committed while the original row was
+ -- located. Never write under a stale owner mapping; re-evaluate after locks.
+ SELECT array_agg(DISTINCT x ORDER BY x) INTO again FROM unnest(
+  public.physio_v1_source_owners(TG_TABLE_NAME,o)||public.physio_v1_source_owners(TG_TABLE_NAME,n)) x;
+ IF again IS DISTINCT FROM owners THEN RAISE EXCEPTION 'PHYSIO_SOURCE_OWNER_CHANGED' USING ERRCODE='40001'; END IF;
+ IF TG_TABLE_NAME='prescription_sessions' THEN
+  IF TG_OP<>'INSERT' AND EXISTS(SELECT 1 FROM public.prescription_session_abrechnungsanspruch WHERE prescription_session_id=(o->>'id')::uuid) THEN
+   RAISE EXCEPTION 'PHYSIO_CLAIMED_SESSION_FROZEN' USING ERRCODE='55000'; END IF;
+ END IF;
+ FOREACH u IN ARRAY owners LOOP
+  self_owner:=TG_TABLE_NAME='profiles' AND coalesce(n->>'id',o->>'id')=u::text;
+  IF self_owner THEN
+   IF TG_OP<>'DELETE' THEN NEW.physio_source_revision:=coalesce(OLD.physio_source_revision,0)+1; END IF;
+  ELSE
+   UPDATE public.profiles SET physio_source_revision=physio_source_revision+1 WHERE id=u;
+  END IF;
+ END LOOP;
+ IF TG_OP='DELETE' THEN RETURN OLD; END IF;
+ RETURN NEW;
+END $function$
+;
+ALTER FUNCTION public.physio_v1_tenant_guard() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.physio_v1_tenant_statement_guard()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN PERFORM public.physio_v1_catalog_shared(); RETURN NULL; END $function$
+;
+ALTER FUNCTION public.physio_v1_tenant_statement_guard() OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.podologie_behandlungen_festschreibung()
  RETURNS trigger
@@ -4789,6 +5414,9 @@ begin
   or new.doppelbehandlung     is distinct from old.doppelbehandlung
   -- 0099 (Ops #202): mehrere Heilmittel je Verordnung
   or new.heilmittel_items     is distinct from old.heilmittel_items
+  -- 0112: bestaetigte Entlassmanagement-Angaben
+  or new.entlassmanagement    is distinct from old.entlassmanagement
+  or new.entlassungsdatum     is distinct from old.entlassungsdatum
   then
     raise exception 'Eingereichte Verordnung ist festgeschrieben (GoBD, §302 SGB V). Offen bleiben nur status/absetzung_*/storno_*/zuzahlung_kassiert_* und die Anonymisierung.';
   end if;
@@ -5695,6 +6323,25 @@ AS $function$
 $function$
 ;
 ALTER FUNCTION public.public_praxis_sector(p_owner_id uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.public_sondertage(p_owner uuid, p_von date, p_bis date)
+ RETURNS TABLE(date date, type text, start_time time without time zone, end_time time without time zone)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  SELECT cd.date, cd.type, cd.start_time, cd.end_time
+  FROM public.custom_days cd
+  WHERE cd.owner_id = p_owner
+    AND p_von IS NOT NULL AND p_bis IS NOT NULL
+    AND p_bis >= p_von AND p_bis - p_von <= 92
+    AND cd.date BETWEEN p_von AND p_bis
+    AND EXISTS (SELECT 1 FROM public.businesses b WHERE b.owner_id = p_owner AND b.booking_slug IS NOT NULL)
+  ORDER BY cd.date;
+$function$
+;
+ALTER FUNCTION public.public_sondertage(p_owner uuid, p_von date, p_bis date) OWNER TO postgres;
+COMMENT ON FUNCTION public.public_sondertage(p_owner uuid, p_von date, p_bis date) IS 'Oeffentliche Sicht auf Sondertage fuer die Buchungsseite: ohne Notiz, nur Praxen mit booking_slug, max. 92 Tage (S-64).';
 
 CREATE OR REPLACE FUNCTION public.raum_ausstattung_gueltig(punkte text[])
  RETURNS boolean
@@ -6630,7 +7277,7 @@ $function$
 ;
 ALTER FUNCTION public.working_hours_owner_ableiten() OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date)
+CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date, p_sha256 text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -6654,6 +7301,17 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Abrechnung nicht gefunden'; END IF;
   IF v_hdr.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
     RETURN jsonb_build_object('konflikt', true);
+  END IF;
+
+  -- 0114: gleiche Datei fuer dieselbe Abrechnung schon angewandt -> nichts aendern.
+  IF p_sha256 IS NOT NULL THEN
+    IF p_sha256 !~ '^[0-9a-f]{64}$' THEN
+      RAISE EXCEPTION 'zaa_fehler_anwenden: ungueltiger Datei-Hash' USING ERRCODE = '22023';
+    END IF;
+    IF EXISTS (SELECT 1 FROM public.zaa_import WHERE abrechnung_id = p_abrechnung AND sha256 = p_sha256) THEN
+      RETURN jsonb_build_object('konflikt', false, 'wiederholt', true);
+    END IF;
+    INSERT INTO public.zaa_import (abrechnung_id, sha256) VALUES (p_abrechnung, p_sha256);
   END IF;
 
   DELETE FROM public.zaa_fehler WHERE abrechnung_id = p_abrechnung;
@@ -6680,12 +7338,14 @@ BEGIN
   RETURN jsonb_build_object('konflikt', false, 'zeilen', v_zeilen, 'fehler', jsonb_array_length(p_fehler));
 END $function$
 ;
-ALTER FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date) OWNER TO postgres;
+ALTER FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date, p_sha256 text) OWNER TO postgres;
 
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+
+CREATE TRIGGER physio_v1_header BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION physio_v1_guard();
 
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
 
@@ -6699,6 +7359,8 @@ CREATE TRIGGER artefakt_version_no_delete_trg BEFORE DELETE ON abrechnung_artefa
 
 CREATE TRIGGER artefakt_version_no_truncate_trg BEFORE TRUNCATE ON abrechnung_artefakt_version FOR EACH STATEMENT EXECUTE FUNCTION artefakt_version_no_delete();
 
+CREATE TRIGGER physio_v1_registry BEFORE INSERT OR UPDATE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION physio_v1_guard();
+
 CREATE TRIGGER trg_abrechnung_uebermittlung_festschreibung BEFORE DELETE OR UPDATE ON abrechnung_uebermittlung FOR EACH ROW EXECUTE FUNCTION fn_abrechnung_uebermittlung_festschreibung();
 
 CREATE TRIGGER trg_a_abrechnung_zahlung_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
@@ -6707,9 +7369,17 @@ CREATE TRIGGER trg_abrechnung_zahlung_status AFTER INSERT ON abrechnung_zahlung 
 
 CREATE TRIGGER trg_prevent_abrechnung_zahlung_mod BEFORE DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION prevent_abrechnung_zahlung_mod();
 
+CREATE TRIGGER physio_v1_line BEFORE INSERT ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION physio_v1_guard();
+
 CREATE TRIGGER trg_a_abrechnung_zeile_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
 CREATE TRIGGER trg_abrechnung_zeile_festschreibung BEFORE DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION fn_abrechnung_zeile_festschreibung();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON aerzte FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON aerzte FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON aerzte FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_aerzte_updated_at BEFORE UPDATE ON aerzte FOR EACH ROW EXECUTE FUNCTION aerzte_touch_updated_at();
 
@@ -6735,6 +7405,12 @@ CREATE TRIGGER trg_prevent_belegliste_mod BEFORE DELETE OR UPDATE ON belegliste 
 
 CREATE TRIGGER trg_set_beleg_nr BEFORE INSERT ON belegliste FOR EACH ROW WHEN (new.beleg_nr IS NULL OR new.beleg_nr = 0) EXECUTE FUNCTION set_next_beleg_nr();
 
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON betriebsart_empfaenger FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON betriebsart_empfaenger FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON betriebsart_empfaenger FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
+
 CREATE TRIGGER trg_booking_hauptleistung AFTER INSERT OR DELETE OR UPDATE ON booking_leistungen FOR EACH ROW EXECUTE FUNCTION sync_booking_hauptleistung();
 
 CREATE TRIGGER trg_booking_leistung_owner BEFORE INSERT OR UPDATE OF booking_id, owner_id ON booking_leistungen FOR EACH ROW EXECUTE FUNCTION pruefe_booking_leistung_owner();
@@ -6748,6 +7424,12 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON booking_status_korrekturen F
 CREATE TRIGGER codex_192_booking_after_cancel AFTER UPDATE OF status ON bookings FOR EACH ROW WHEN (new.status = 'cancelled'::text) EXECUTE FUNCTION codex_192_booking_after_cancel();
 
 CREATE TRIGGER codex_192_booking_before_write BEFORE INSERT OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION codex_192_booking_before_write();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON bookings FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON bookings FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_booking_gruppe_raum AFTER UPDATE OF room_id ON bookings FOR EACH ROW EXECUTE FUNCTION booking_gruppe_raum_nachziehen();
 
@@ -6767,6 +7449,12 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON breaks FOR EACH ROW EXECUTE 
 
 CREATE TRIGGER businesses_updated_at BEFORE UPDATE ON businesses FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON businesses FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON businesses FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON businesses FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
+
 CREATE TRIGGER trg_seed_default_groups AFTER INSERT ON businesses FOR EACH ROW EXECUTE FUNCTION seed_default_groups_for_business();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON calendar_integrations FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -6783,6 +7471,8 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON einheiten_korrekturen FOR EA
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON email_logs FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON empfaenger_zertifikate FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON employee_services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER employee_standort_plan_updated_at BEFORE UPDATE ON employee_standort_plan FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
@@ -6795,6 +7485,12 @@ CREATE TRIGGER trg_feedback_telegram AFTER INSERT ON feedbacks FOR EACH ROW EXEC
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON feedbacks FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_katalog FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_position FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_tarif FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
 CREATE TRIGGER trg_invoice_festschreibung BEFORE DELETE OR UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION invoice_festschreibung();
 
 CREATE TRIGGER trg_invoice_nummer BEFORE INSERT OR UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION set_invoice_nummer();
@@ -6802,6 +7498,18 @@ CREATE TRIGGER trg_invoice_nummer BEFORE INSERT OR UPDATE ON invoices FOR EACH R
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON invoices FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER kostentraeger_updated_at BEFORE UPDATE ON kostentraeger FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON kostentraeger FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON kostentraeger_annahmestellen FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON krankenkassen FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON leads FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON leads FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON leads FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_audit_write_leads AFTER INSERT OR DELETE OR UPDATE ON leads FOR EACH ROW EXECUTE FUNCTION audit_write_log();
 
@@ -6861,7 +7569,29 @@ CREATE TRIGGER praxis_formulare_pdf_fest_trg BEFORE UPDATE ON praxis_formulare F
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON praxis_formulare FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER praxis_mailversand_updated_at BEFORE UPDATE ON praxis_mailversand FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON prescription_documents FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON prescription_documents FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON prescription_documents FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
+
+CREATE TRIGGER physio_v1_claim BEFORE INSERT OR DELETE OR UPDATE ON prescription_session_abrechnungsanspruch FOR EACH ROW EXECUTE FUNCTION physio_v1_guard();
+
 CREATE TRIGGER codex_192_session_booking_guard BEFORE INSERT OR UPDATE OF booking_id, status ON prescription_sessions FOR EACH ROW EXECUTE FUNCTION codex_192_session_booking_guard();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON prescription_sessions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON prescription_sessions FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON prescription_sessions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON prescriptions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER prescriptions_mandant_pruefen BEFORE INSERT OR UPDATE OF owner_id, patient_id, arzt_id ON prescriptions FOR EACH ROW EXECUTE FUNCTION prescriptions_mandant_pruefen();
 
@@ -6878,6 +7608,14 @@ CREATE TRIGGER trg_prescriptions_set_befreit BEFORE INSERT OR UPDATE OF patient_
 CREATE TRIGGER trg_prescriptions_verordnungsnummer BEFORE INSERT OR UPDATE OF patient_id ON prescriptions FOR EACH ROW EXECUTE FUNCTION vergebe_verordnungsnummer_rx();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON prescriptions FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON profiles FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_revision_client BEFORE UPDATE OF physio_source_revision ON profiles FOR EACH ROW EXECUTE FUNCTION physio_v1_revision_no_client();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON profiles FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER profiles_privilegierte_spalten_schuetzen BEFORE INSERT OR UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION profiles_privilegierte_spalten_schuetzen();
 
@@ -6901,7 +7639,19 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON rooms FOR EACH ROW EXECUTE F
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON scraper_data FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON services FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON services FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON services FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
+
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON services FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON terapeut_zertifikat FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON terapeut_zertifikat FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON terapeut_zertifikat FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -6910,6 +7660,12 @@ CREATE TRIGGER zertifikat_updated_at BEFORE UPDATE ON terapeut_zertifikat FOR EA
 CREATE TRIGGER termin_mitteilungen_tagesdeckel BEFORE INSERT ON termin_mitteilungen FOR EACH ROW EXECUTE FUNCTION termin_mitteilungen_tagesdeckel();
 
 CREATE TRIGGER therapieberichte_festschreibung BEFORE DELETE OR UPDATE ON therapieberichte FOR EACH ROW EXECUTE FUNCTION therapieberichte_festschreibung();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON therapist_certificates FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON therapist_certificates FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON therapist_certificates FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON time_offs FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -6926,6 +7682,12 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON working_hours FOR EACH ROW E
 CREATE TRIGGER trg_working_hours_owner_ableiten BEFORE INSERT OR UPDATE OF user_id, owner_id ON working_hours FOR EACH ROW EXECUTE FUNCTION working_hours_owner_ableiten();
 
 CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
+
+CREATE TRIGGER physio_v1_no_truncate BEFORE TRUNCATE ON zuzahlung_befreiung FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_no_truncate();
+
+CREATE TRIGGER physio_v1_source BEFORE INSERT OR DELETE OR UPDATE ON zuzahlung_befreiung FOR EACH ROW EXECUTE FUNCTION physio_v1_tenant_guard();
+
+CREATE TRIGGER physio_v1_source_statement BEFORE INSERT OR DELETE OR UPDATE ON zuzahlung_befreiung FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_tenant_statement_guard();
 
 CREATE TRIGGER trg_befreiung_backfill_prescriptions AFTER INSERT OR DELETE OR UPDATE ON zuzahlung_befreiung FOR EACH ROW EXECUTE FUNCTION fn_befreiung_backfill_prescriptions();
 
@@ -6952,6 +7714,8 @@ CREATE INDEX idx_abrechnung_business ON abrechnung USING btree (business_id);
 CREATE INDEX idx_abrechnung_kostentraeger ON abrechnung USING btree (kostentraeger_ik, created_at DESC);
 
 CREATE INDEX idx_abrechnung_owner_status ON abrechnung USING btree (owner_id, status, created_at DESC);
+
+CREATE UNIQUE INDEX physio_publication_owner_key ON abrechnung USING btree (owner_id, publication_key) WHERE publication_key IS NOT NULL;
 
 -- Index abrechnung_artefakt_freeze_pkey ON public.abrechnung_artefakt_freeze is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX abrechnung_artefakt_freeze_pkey ON abrechnung_artefakt_freeze USING btree (owner_id);
@@ -7546,6 +8310,9 @@ CREATE UNIQUE INDEX physio_befunde_aktuell_uidx ON physio_befunde USING btree (o
 -- Index physio_befunde_pkey ON public.physio_befunde is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX physio_befunde_pkey ON physio_befunde USING btree (id);
 
+-- Index physio_storage_legacy_allowlist_pkey ON public.physio_storage_legacy_allowlist is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX physio_storage_legacy_allowlist_pkey ON physio_storage_legacy_allowlist USING btree (storage_path);
+
 CREATE INDEX idx_pod_behandlungen_invoice_id ON podologie_behandlungen USING btree (invoice_id) WHERE invoice_id IS NOT NULL;
 
 CREATE INDEX idx_pod_behandlungen_verordnung_id ON podologie_behandlungen USING btree (verordnung_id) WHERE verordnung_id IS NOT NULL;
@@ -7575,6 +8342,9 @@ CREATE INDEX idx_praxis_formulare_owner ON praxis_formulare USING btree (owner_i
 -- Index praxis_formulare_pkey ON public.praxis_formulare is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX praxis_formulare_pkey ON praxis_formulare USING btree (id);
 
+-- Index praxis_mailversand_pkey ON public.praxis_mailversand is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX praxis_mailversand_pkey ON praxis_mailversand USING btree (owner_id);
+
 -- Index praxura_migrations_pkey ON public.praxura_migrations is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX praxura_migrations_pkey ON praxura_migrations USING btree (version);
 
@@ -7587,6 +8357,9 @@ CREATE INDEX prescription_documents_owner_idx ON prescription_documents USING bt
 -- DDL: CREATE UNIQUE INDEX prescription_documents_pkey ON prescription_documents USING btree (id);
 
 CREATE INDEX prescription_documents_rx_idx ON prescription_documents USING btree (prescription_id);
+
+-- Index prescription_session_abrechnungsanspruch_pkey ON public.prescription_session_abrechnungsanspruch is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX prescription_session_abrechnungsanspruch_pkey ON prescription_session_abrechnungsanspruch USING btree (prescription_session_id);
 
 CREATE INDEX codex_192_prescription_sessions_booking_idx ON prescription_sessions USING btree (booking_id) WHERE booking_id IS NOT NULL;
 
@@ -7808,6 +8581,9 @@ CREATE INDEX idx_zaa_fehler_prescription ON zaa_fehler USING btree (prescription
 
 -- Index zaa_fehler_pkey ON public.zaa_fehler is enforced by constraint
 -- DDL: CREATE UNIQUE INDEX zaa_fehler_pkey ON zaa_fehler USING btree (id);
+
+-- Index zaa_import_pkey ON public.zaa_import is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX zaa_import_pkey ON zaa_import USING btree (abrechnung_id, sha256);
 
 CREATE INDEX idx_befreiung_patient_jahr ON zuzahlung_befreiung USING btree (patient_id, jahr);
 
@@ -8126,6 +8902,12 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=_st_within(geom1 geometry, geom2 geometry) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=_st_within(geom1 geometry, geom2 geometry) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=_st_within(geom1 geometry, geom2 geometry) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_idempotency_reserve(p_owner uuid, p_key text, p_payl column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_idempotency_reserve(p_owner uuid, p_key text, p_payl column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_physio_abort(p_owner uuid, p_abrechnung uuid, p_key  column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_physio_abort(p_owner uuid, p_abrechnung uuid, p_key  column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_k column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_k column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=add_credits(p_user_id uuid, p_credits integer) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=add_credits(p_user_id uuid, p_credits integer) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=addauth(text) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
@@ -10791,6 +11573,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=pgis_geometry_union_parallel_transfn(internal, geometry) column=- grantee=PUBLIC privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=pgis_geometry_union_parallel_transfn(internal, geometry) column=- grantee=service_role privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=pgis_geometry_union_parallel_transfn(internal, geometry) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_artefakt_readback(p_owner uuid, p_id uuid, p_generation  column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_artefakt_readback(p_owner uuid, p_id uuid, p_generation  column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_delete_gesperrt() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_delete_gesperrt() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_mandant_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -10799,6 +11583,23 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=physio_befunde_unveraenderlich() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_versionieren() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=physio_befunde_versionieren() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_storage_readable(p_path text) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_storage_readable(p_path text) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_catalog_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_catalog_shared() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_hash(p_value jsonb) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_hash(p_value jsonb) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_input_hash(p_owner uuid, p_payload jsonb) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_is_protocol_header(p_id uuid) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_is_protocol_header(p_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_is_protocol_header(p_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_no_truncate() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_owner(p_owner uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_revision_no_client() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_source_owners(p_table text, p_row jsonb) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_tenant_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=physio_v1_tenant_statement_guard() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=podologie_behandlungen_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=podologie_behandlungen_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=podologie_behandlungen_kein_delete() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -11073,6 +11874,10 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=PUBLIC privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=public_praxis_sector(p_owner_id uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_sondertage(p_owner uuid, p_von date, p_bis date) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_sondertage(p_owner uuid, p_von date, p_bis date) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_sondertage(p_owner uuid, p_von date, p_bis date) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=public_sondertage(p_owner uuid, p_von date, p_bis date) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -16216,6 +17021,14 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=physio_befunde column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=physio_befunde column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=physio_befunde column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=podologie_behandlungen column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=podologie_behandlungen column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=podologie_behandlungen column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -16304,6 +17117,18 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=praxis_formulare column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=praxis_formulare column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=praxis_formulare column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=service_role privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=service_role privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=praxis_mailversand column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=praxura_migrations column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=praxura_migrations column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=praxura_migrations column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
@@ -16368,6 +17193,15 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=prescription_documents column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescription_documents column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescription_documents column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescription_sessions column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescription_sessions column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=prescription_sessions column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -17103,6 +17937,15 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TABLE schema=public object=zaa_fehler column=- grantee=service_role privilege=TRIGGER grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=zaa_fehler column=- grantee=service_role privilege=TRUNCATE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=zaa_fehler column=- grantee=service_role privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=DELETE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=INSERT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=MAINTAIN grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=REFERENCES grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=SELECT grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=TRIGGER grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=TRUNCATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=postgres privilege=UPDATE grantor=postgres grantable=NO
+-- ACL: type=TABLE schema=public object=zaa_import column=- grantee=service_role privilege=SELECT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=zuzahlung_befreiung column=- grantee=anon privilege=DELETE grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=zuzahlung_befreiung column=- grantee=anon privilege=INSERT grantor=postgres grantable=NO
 -- ACL: type=TABLE schema=public object=zuzahlung_befreiung column=- grantee=anon privilege=MAINTAIN grantor=postgres grantable=NO
@@ -17379,6 +18222,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_pending_signups column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_physio_befunde column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_physio_befunde column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_physio_storage_legacy_allowlist column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_physio_storage_legacy_allowlist column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_behandlungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_behandlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_podologie_empfangsnachweise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17387,12 +18232,16 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_praxis_aufgaben column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxis_formulare column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxis_formulare column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_mailversand column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_praxis_mailversand column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_migrations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_migrations column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_setup column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_praxura_setup column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_prescription_documents column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_prescription_documents column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_prescription_session_abrechnungsanspruch column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_prescription_sessions column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_prescription_sessions column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_prescription_validations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17447,6 +18296,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=_working_hours column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_zaa_fehler column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_zaa_fehler column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_zaa_import column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=_zaa_import column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_zuzahlung_befreiung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_zuzahlung_befreiung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=_zuzahlung_guthaben column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17633,6 +18484,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=pending_signups column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=physio_befunde column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=physio_befunde column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=physio_storage_legacy_allowlist column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=physio_storage_legacy_allowlist column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_behandlungen column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_behandlungen column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=podologie_empfangsnachweise column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17641,12 +18494,16 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=praxis_aufgaben column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxis_formulare column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxis_formulare column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_mailversand column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=praxis_mailversand column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_migrations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_migrations column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_setup column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=praxura_setup column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=prescription_documents column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=prescription_documents column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=prescription_session_abrechnungsanspruch column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=prescription_sessions column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=prescription_sessions column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=prescription_validations column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
@@ -17701,6 +18558,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=TYPE schema=public object=working_hours column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=zaa_fehler column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=zaa_fehler column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=zaa_import column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
+-- ACL: type=TYPE schema=public object=zaa_import column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=zuzahlung_befreiung column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=zuzahlung_befreiung column=- grantee=PUBLIC privilege=USAGE grantor=postgres grantable=NO
 -- ACL: type=TYPE schema=public object=zuzahlung_guthaben column=- grantee=postgres privilege=USAGE grantor=postgres grantable=NO

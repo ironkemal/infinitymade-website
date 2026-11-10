@@ -13,7 +13,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `profiles` — 24 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · profiles:update
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · profiles:update
 
 **Yol 2 — `createMailversandRouter()`** · Ekran: _UI yolu çözülemedi_
 - `createMailversandRouter()` — [api-backend/routes/mailversand.js:131](api-backend/routes/mailversand.js#L131-L311) · 181 satır · profiles:update
@@ -104,7 +104,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `insertBooking()` — [api-backend/booking/from-request.js:42](api-backend/booking/from-request.js#L42-L49) · 8 satır · bookings:insert
 
 **Yol 3 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · bookings:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · bookings:delete
 
 **Yol 4 — `openBookingActionModal()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `openBookingActionModal()` — [dashboard.js:2405](dashboard.js#L2405-L2807) · 403 satır · bookings:update
@@ -153,7 +153,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `kostentraegerIkZurueckschreiben()` — [api-backend/billing/utils/kostentraeger-frisch.js:114](api-backend/billing/utils/kostentraeger-frisch.js#L114-L136) · 23 satır · prescriptions:update
 
 **Yol 2 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · prescriptions:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · prescriptions:delete
 
 **Yol 3 — `createDokumentMailRouter()`** · Ekran: _UI yolu çözülemedi_
 - `createDokumentMailRouter()` — [api-backend/routes/dokument-mail.js:90](api-backend/routes/dokument-mail.js#L90-L348) · 259 satır · prescriptions:update
@@ -192,7 +192,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `leadAusAnfrage()` — [api-backend/booking/lead-aus-anfrage.js:50](api-backend/booking/lead-aus-anfrage.js#L50-L78) · 29 satır · leads:insert
 
 **Yol 2 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · leads:delete, leads:update
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · leads:delete, leads:update
 
 **Yol 3 — `handleDirectAusfallrechnung()`** · Ekran: _UI yolu çözülemedi_
 - `handleDirectAusfallrechnung()` — [dashboard.js:3481](dashboard.js#L3481-L3627) · 147 satır · leads:update
@@ -275,7 +275,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `businesses` — 6 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · businesses:update
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · businesses:update
 
 **Yol 2 — `toggleStandortDay()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `toggleStandortDay()` — [dashboard.js:8653](dashboard.js#L8653-L8673) · 21 satır · businesses:update
@@ -318,7 +318,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `employee_business_assignments` — 4 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · employee_business_assignments:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · employee_business_assignments:delete
 
 **Yol 2 — `renderOtherStandortEmps()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `renderOtherStandortEmps()` — [dashboard.js:9257](dashboard.js#L9257-L9342) · 86 satır · employee_business_assignments:upsert
@@ -369,7 +369,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `employee_services` — 3 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · employee_services:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · employee_services:delete
 
 **Yol 2 — `loadEmpServices()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `loadEmpServices()` — [dashboard.js:9941](dashboard.js#L9941-L10025) · 85 satır · employee_services:insert, employee_services:delete
@@ -443,7 +443,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `employee_scope_overrides` — 2 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · employee_scope_overrides:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · employee_scope_overrides:delete
 
 **Yol 2 — `saveEmpPermissions()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `saveEmpPermissions()` — [dashboard.js:9505](dashboard.js#L9505-L9556) · 52 satır · employee_scope_overrides:delete, employee_scope_overrides:insert
@@ -521,7 +521,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `prescription_documents` — 2 bağımsız yazma yolu
 
 **Yol 1 — `kontoLoeschenIntern()`** · Ekran: _UI yolu çözülemedi_
-- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L819) · 714 satır · prescription_documents:delete
+- `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · prescription_documents:delete
 
 **Yol 2 — `ladeLhbNachweisHoch()`** · Ekran: _UI yolu çözülemedi_
 - `ladeLhbNachweisHoch()` — [module/verordnung-nachweis.js:109](module/verordnung-nachweis.js#L109-L145) · 37 satır · prescription_documents:insert

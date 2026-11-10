@@ -1,3 +1,5 @@
+-- ⚠️ ÜBERFÜHRT 07.11.2026 nach api-backend/db/migrations/0114_zaa_import_idempotenz.sql. Maßgeblich ist die Migration;
+-- dieser Entwurf wird nicht mehr gepflegt und nicht ausgeführt.
 -- ENTWURF — NICHT aktiv, nicht in api-backend/db/migrations, nicht live angewandt (GO nötig).
 -- ZAA-Import: gleiche Datei zweimal hochgeladen ändert nichts (Hash je Abrechnung).
 -- Heute ersetzt zaa_fehler_anwenden (0061) den Fehlerbestand vollständig; Wiederholung

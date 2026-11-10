@@ -1,3 +1,5 @@
+-- ⚠️ ÜBERFÜHRT 07.11.2026 nach api-backend/db/migrations/0113_physio_publikation_v1.sql (+ abrechnung_physio_abort). Maßgeblich ist die Migration;
+-- dieser Entwurf wird nicht mehr gepflegt und nicht ausgeführt.
 -- LOCAL DRAFT ONLY. Not in migration chain; no activation/backfill.
 -- Requires repository schema through 0111 and registry 0060/0063.
 -- VKZ01 / physio / complete original bill only. No correction, partial bill,

@@ -265,11 +265,15 @@ diese Dateien hier.
 
 `0081_ausfall_zahlung_faelligkeit.sql` (MCP-Version `20261017202834`) und `0082_request_approve_atomic.sql` (`20261017202847`) ergänzen Fälligkeitssnapshot/atomare Ausfallzahlung und atomare Anfragebestätigung. Beide rein expansiv (`:stable` läuft weiter). Live geprüft: Spalte `ausfallrechnungen.faellig_am` vorhanden, die RPCs `ausfall_status_buchen` und `approve_booking_request_atomic` nur für `service_role` ausführbar (anon/authenticated: nein). Schemaexports `SCHEMA.sql`/`SCHEMA-RLS.sql` am 17.10.2026 gezielt fortgeschrieben (Spalte, 3 Funktionen, ACLs, Zähler 1398 Spalten / 110 Funktionen); kein vollständiger Katalogexport.
 
-## Lokal vorbereitet am 07.11.2026: Entlassmanagement
+## Migrationen 0112–0115 — in der Kette, NICHT SaaS-angewandt (07.11.2026)
+
+`0112_prescriptions_entlassmanagement`, `0113_physio_publikation_v1` (inkl. neuer RPC `abrechnung_physio_abort`), `0114_zaa_import_idempotenz`, `0115_physio_storage_direktzugriff` liegen in `api-backend/db/migrations/` (Melih GO 07.11.2026; Inhalt aus `db/entwuerfe/`, dort nur noch Verweis). Nachweis: vollständige Kette 0000–0115 in Wegwerf-PostgreSQL (postgres:17.11 mit Plattform-Stubs **und** box-nah supabase/postgres + storage-api mit echtem `migrate.js`), danach SQL-Tests. Die Live-Exports oben enthalten diese Objekte **nicht**; nach Live-Anwendung `SCHEMA.sql`/`SCHEMA-RLS.sql` neu erzeugen. Warum je Objekt: `REGISTER.md`; Boxfolgen: `onprem/REGISTER.md` O-243.
+
+### Historie: lokal vorbereitet am 07.11.2026: Entlassmanagement
 
 `db/entwuerfe/0112_prescriptions_entlassmanagement.sql` ergänzt zwei nullable Angaben mit Konsistenzprüfung und erweitert den vorhandenen Festschreibungstrigger. Kein Backfill, keine Live-Anwendung. PostgreSQL-Minimalprobe unter `api-backend/db/tests/0112_prescriptions_entlassmanagement.test.sql`; keine vollständige Ketten-/RLS-Abnahme. Live-Exports bleiben unverändert. Vor Verwendung der neuen Felder müssen Schemaanwendung und Erfassungs-/Ladekette gesondert nachgewiesen werden.
 
-## Lokaler Entwurf: Physio-Publikation
+### Historie: Lokaler Entwurf: Physio-Publikation (jetzt Migration 0113)
 
 `db/entwuerfe/2026-11-07-physio-publikation.md` beschreibt den Konsey-geprüften
 Datenvertrag für atomare Erstabrechnung, Wiederholung und Dateifreigabe.

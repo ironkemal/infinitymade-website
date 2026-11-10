@@ -34375,8 +34375,8 @@
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
    "start": 106,
-   "end": 819,
-   "lines": 714,
+   "end": 821,
+   "lines": 716,
    "spiegelHinweis": null,
    "tables": [
     "abrechnung_artefakt_version",
@@ -34603,8 +34603,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 824,
-   "end": 895,
+   "start": 826,
+   "end": 897,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -34634,8 +34634,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 860,
-   "end": 875,
+   "start": 862,
+   "end": 877,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -272083,8 +272083,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "profiles:update"
        ],
@@ -273032,8 +273032,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "bookings:delete"
        ],
@@ -273645,8 +273645,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "prescriptions:delete"
        ],
@@ -274214,8 +274214,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "leads:delete",
         "leads:update"
@@ -275338,8 +275338,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "businesses:update"
        ],
@@ -275884,8 +275884,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "employee_business_assignments:delete"
        ],
@@ -276407,8 +276407,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "employee_services:delete"
        ],
@@ -277181,8 +277181,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "employee_scope_overrides:delete"
        ],
@@ -278235,8 +278235,8 @@
        "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 106,
-       "end": 819,
-       "lines": 714,
+       "end": 821,
+       "lines": 716,
        "writes": [
         "prescription_documents:delete"
        ],

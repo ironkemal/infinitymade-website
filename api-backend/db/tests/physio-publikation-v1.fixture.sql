@@ -1275,4 +1275,4 @@ CREATE TRIGGER fixture_zeile BEFORE UPDATE OR DELETE ON public.abrechnung_zeile 
 CREATE TRIGGER fixture_rx BEFORE UPDATE ON public.prescriptions FOR EACH ROW EXECUTE FUNCTION public.prescriptions_festschreibung();
 CREATE TRIGGER fixture_header BEFORE UPDATE ON public.abrechnung FOR EACH ROW EXECUTE FUNCTION public.trg_billing_updated_at();
 \ir ../migrations/0060_abrechnung_artefakt_version.sql
-\ir ../../../db/entwuerfe/physio-publikation-v1.sql
+\ir ../migrations/0113_physio_publikation_v1.sql

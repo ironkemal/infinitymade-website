@@ -3,20 +3,20 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261106191103 0111_zaa_fehler_belegnummer_kasse
--- EXPORTED AT:        2026-11-06T19:12:34Z
--- ERZEUGT AM:         2026-11-06
+-- LAST MIGRATION:     20261110153900 0115_physio_storage_direktzugriff
+-- EXPORTED AT:        2026-11-10T15:39:37Z
+-- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       106
---   table_columns:       1547
+--   public_tables:       110
+--   table_columns:       1595
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        197
---   functions:           132
---   triggers:            127
---   indexes:             375
+--   rls_policies:        198
+--   functions:           150
+--   triggers:            179
+--   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
@@ -170,7 +170,18 @@ CREATE TABLE public.abrechnung (
   verschluesselung_hinweis text,
   verarbeitungskennzeichen text,
   zuzahlungsforderung_ursprung_id uuid,
-  zuzahlungsforderung_daten jsonb
+  zuzahlungsforderung_daten jsonb,
+  publication_protocol text,
+  publication_state text,
+  publication_key text,
+  publication_payload jsonb,
+  publication_payload_sha256 text,
+  publication_input_sha256 text,
+  publication_generation bigint,
+  publication_lease_until timestamp with time zone,
+  publication_package_sha256 text,
+  publication_result jsonb,
+  publication_at timestamp with time zone
 );
 --   FK business_id -> businesses(id)
 --   FK kostentraeger_ik -> kostentraeger(ik)
@@ -223,6 +234,9 @@ ALTER TABLE ONLY public.abrechnung
 ALTER TABLE ONLY public.abrechnung
   ADD CONSTRAINT abrechnung_zuzahlungsforderung_ursprung_fk FOREIGN KEY (zuzahlungsforderung_ursprung_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT;
 
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT physio_publication_shape CHECK (publication_protocol IS NULL AND publication_state IS NULL AND publication_key IS NULL AND publication_payload IS NULL AND publication_payload_sha256 IS NULL AND publication_input_sha256 IS NULL AND publication_generation IS NULL AND publication_lease_until IS NULL AND publication_package_sha256 IS NULL AND publication_result IS NULL AND publication_at IS NULL OR publication_protocol IS NOT NULL AND publication_protocol = 'physio-v1'::text AND publication_state IS NOT NULL AND (publication_state = ANY (ARRAY['preparing'::text, 'published'::text, 'aborted'::text])) AND publication_key IS NOT NULL AND publication_key ~ '^[A-Za-z0-9_-]{16,128}$'::text AND publication_payload IS NOT NULL AND jsonb_typeof(publication_payload) = 'object'::text AND publication_payload_sha256 IS NOT NULL AND publication_payload_sha256 ~ '^[0-9a-f]{64}$'::text AND publication_input_sha256 IS NOT NULL AND publication_input_sha256 ~ '^[0-9a-f]{64}$'::text AND publication_generation IS NOT NULL AND publication_generation > 0 AND publication_lease_until IS NOT NULL AND (publication_package_sha256 IS NULL OR publication_package_sha256 ~ '^[0-9a-f]{64}$'::text) AND NOT verarbeitungskennzeichen IS DISTINCT FROM '01'::text AND (publication_state = 'published'::text) = (publication_result IS NOT NULL AND publication_at IS NOT NULL));
+
 CREATE TABLE public.abrechnung_artefakt_freeze (
   owner_id uuid NOT NULL,
   frozen_at timestamp with time zone DEFAULT now() NOT NULL
@@ -253,7 +267,12 @@ CREATE TABLE public.abrechnung_artefakt_version (
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   published_at timestamp with time zone,
   retired_at timestamp with time zone,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  execution_generation bigint,
+  readback_sha256 text,
+  readback_bytes bigint,
+  readback_package_sha256 text,
+  readback_at timestamp with time zone
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK owner_id -> auth.users(id)
@@ -298,6 +317,9 @@ ALTER TABLE ONLY public.abrechnung_artefakt_version
 
 ALTER TABLE ONLY public.abrechnung_artefakt_version
   ADD CONSTRAINT artefakt_rolle_kind CHECK ((role = ANY (ARRAY['dta'::text, 'auftrag'::text, 'begleit'::text])) AND kind = 'unsigned'::text OR role = 'signed'::text AND kind = 'signed'::text OR role = 'encrypted'::text AND kind = 'encrypted'::text);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT physio_readback_shape CHECK (readback_at IS NULL AND readback_sha256 IS NULL AND readback_bytes IS NULL AND readback_package_sha256 IS NULL OR readback_at IS NOT NULL AND execution_generation IS NOT NULL AND readback_sha256 IS NOT NULL AND readback_sha256 = sha256 AND readback_bytes IS NOT NULL AND readback_bytes > 0 AND readback_package_sha256 IS NOT NULL AND readback_package_sha256 ~ '^[0-9a-f]{64}$'::text);
 
 CREATE TABLE public.abrechnung_uebermittlung (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -2792,6 +2814,29 @@ ALTER TABLE ONLY public.physio_befunde
 ALTER TABLE ONLY public.physio_befunde
   ADD CONSTRAINT physio_befunde_therapeut_id_fkey FOREIGN KEY (therapeut_id) REFERENCES profiles(id) ON DELETE SET NULL;
 
+CREATE TABLE public.physio_storage_legacy_allowlist (
+  storage_path text NOT NULL,
+  owner_id uuid NOT NULL,
+  abrechnung_id uuid NOT NULL,
+  reviewed_at timestamp with time zone NOT NULL,
+  reason text NOT NULL
+);
+--   FK abrechnung_id -> abrechnung(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.physio_storage_legacy_allowlist OWNER TO postgres;
+
+ALTER TABLE ONLY public.physio_storage_legacy_allowlist
+  ADD CONSTRAINT physio_storage_legacy_allowlist_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.physio_storage_legacy_allowlist
+  ADD CONSTRAINT physio_storage_legacy_allowlist_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.physio_storage_legacy_allowlist
+  ADD CONSTRAINT physio_storage_legacy_allowlist_pkey PRIMARY KEY (storage_path);
+
+ALTER TABLE ONLY public.physio_storage_legacy_allowlist
+  ADD CONSTRAINT physio_storage_legacy_allowlist_reason_check CHECK (length(reason) > 0);
+
 CREATE TABLE public.podologie_behandlungen (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
   owner_id uuid,
@@ -2974,6 +3019,67 @@ ALTER TABLE ONLY public.praxis_formulare
 ALTER TABLE ONLY public.praxis_formulare
   ADD CONSTRAINT praxis_formulare_titel_check CHECK (length(btrim(titel)) > 0);
 
+CREATE TABLE public.praxis_mailversand (
+  owner_id uuid NOT NULL,
+  modus text DEFAULT 'aus'::text NOT NULL,
+  preset text,
+  smtp_host text,
+  smtp_port integer,
+  smtp_sicherheit text,
+  smtp_benutzer text,
+  smtp_passwort bytea,
+  oauth_refresh_token bytea,
+  absender_email text,
+  absender_name text,
+  status text DEFAULT 'nicht_eingerichtet'::text NOT NULL,
+  letzter_test_at timestamp with time zone,
+  letzter_test_ok boolean,
+  letzter_fehler_code text,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.praxis_mailversand OWNER TO postgres;
+COMMENT ON TABLE public.praxis_mailversand IS 'Postfach der Praxis (0118, Einstellungen → E-Mail-Versand). Passwort/Token verschluesselt, nur service_role. Kein Mailinhalt, keine Empfaenger.';
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_absender_email_check CHECK (absender_email IS NULL OR length(absender_email) <= 254);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_absender_name_check CHECK (absender_name IS NULL OR length(absender_name) <= 120);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_check CHECK (modus <> 'smtp'::text OR smtp_host IS NOT NULL AND smtp_port IS NOT NULL AND smtp_sicherheit IS NOT NULL AND smtp_passwort IS NOT NULL);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_letzter_fehler_code_check CHECK (letzter_fehler_code IS NULL OR letzter_fehler_code ~ '^[A-Za-z0-9_]{1,64}$'::text);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_modus_check CHECK (modus = ANY (ARRAY['aus'::text, 'smtp'::text, 'gmail_oauth'::text, 'microsoft_oauth'::text]));
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_pkey PRIMARY KEY (owner_id);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_preset_check CHECK (preset IS NULL OR preset ~ '^[a-z0-9_]{1,32}$'::text);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_smtp_benutzer_check CHECK (smtp_benutzer IS NULL OR length(smtp_benutzer) <= 254);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_smtp_host_check CHECK (smtp_host IS NULL OR length(smtp_host) <= 253);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_smtp_port_check CHECK (smtp_port IS NULL OR smtp_port >= 1 AND smtp_port <= 65535);
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_smtp_sicherheit_check CHECK (smtp_sicherheit IS NULL OR (smtp_sicherheit = ANY (ARRAY['ssl'::text, 'starttls'::text])));
+
+ALTER TABLE ONLY public.praxis_mailversand
+  ADD CONSTRAINT praxis_mailversand_status_check CHECK (status = ANY (ARRAY['nicht_eingerichtet'::text, 'verbunden'::text, 'unterbrochen'::text]));
+
 CREATE TABLE public.praxura_migrations (
   version text NOT NULL,
   name text NOT NULL,
@@ -3056,6 +3162,34 @@ ALTER TABLE ONLY public.prescription_documents
 
 ALTER TABLE ONLY public.prescription_documents
   ADD CONSTRAINT prescription_documents_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE TABLE public.prescription_session_abrechnungsanspruch (
+  prescription_session_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  prescription_id uuid NOT NULL,
+  abrechnung_zeile_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL
+);
+--   FK prescription_session_id -> prescription_sessions(id)
+--   FK abrechnung_zeile_id -> abrechnung_zeile(id)
+--   FK owner_id -> profiles(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch OWNER TO postgres;
+
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch
+  ADD CONSTRAINT prescription_session_abrechnungsan_prescription_session_id_fkey FOREIGN KEY (prescription_session_id) REFERENCES prescription_sessions(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch
+  ADD CONSTRAINT prescription_session_abrechnungsanspru_abrechnung_zeile_id_fkey FOREIGN KEY (abrechnung_zeile_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch
+  ADD CONSTRAINT prescription_session_abrechnungsanspruch_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch
+  ADD CONSTRAINT prescription_session_abrechnungsanspruch_pkey PRIMARY KEY (prescription_session_id);
+
+ALTER TABLE ONLY public.prescription_session_abrechnungsanspruch
+  ADD CONSTRAINT prescription_session_abrechnungsanspruch_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE RESTRICT;
 
 CREATE TABLE public.prescription_sessions (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -3216,7 +3350,9 @@ CREATE TABLE public.prescriptions (
   zuzahlung_altsystem_beleg text,
   ergaenzend_position text,
   hausbesuch_ort text,
-  doppelbehandlung boolean DEFAULT false NOT NULL
+  doppelbehandlung boolean DEFAULT false NOT NULL,
+  entlassmanagement boolean,
+  entlassungsdatum date
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK abrechnung_status_manuell_von -> auth.users(id)
@@ -3254,6 +3390,8 @@ COMMENT ON COLUMN public.prescriptions.zuzahlung_altsystem_eur IS 'Im Altsystem 
 COMMENT ON COLUMN public.prescriptions.ergaenzend_position IS 'Physio/Ergo/Logo: Positionsnummer des ergänzenden Heilmittels (X-Vorlage wie heilmittel_position). Abgerechnet je Sitzung mit prescription_sessions.ergaenzend_erbracht.';
 COMMENT ON COLUMN public.prescriptions.hausbesuch_ort IS 'Ort des Hausbesuchs als Kategorie (keine Adresse): haeuslich→X9950, soziale_einrichtung→X9951, tagespflege_kurzzeit_betreut→X9922. NULL = Altbestand, Mapper fällt auf hausbesuch zurück.';
 COMMENT ON COLUMN public.prescriptions.doppelbehandlung IS 'Doppelbehandlung ausdrücklich verordnet (HeilM-RL §12 Abs. 8): eine Sitzung = zwei Einheiten, DTA eine EHE mit Anzahl 2. Nicht für ergänzende Heilmittel.';
+COMMENT ON COLUMN public.prescriptions.entlassmanagement IS 'Bestaetigtes Entlassmanagement: NULL ungeprueft, false ausdruecklich nein, true ja. Kein stiller Standardwert. Ab belegnummer festgeschrieben (0112).';
+COMMENT ON COLUMN public.prescriptions.entlassungsdatum IS 'Bestaetigtes Entlassungsdatum; genau bei entlassmanagement=true erforderlich. Fristen prueft die versionierte Fachlogik. Ab belegnummer festgeschrieben (0112).';
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
@@ -3284,6 +3422,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_entlassmanagement_datum_check CHECK (entlassmanagement IS TRUE AND entlassungsdatum IS NOT NULL AND is_blanko IS NOT TRUE AND rezept_typ IS DISTINCT FROM 'blanko'::text OR entlassmanagement IS NOT TRUE AND entlassungsdatum IS NULL);
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_ergaenzend_position_format CHECK (ergaenzend_position IS NULL OR ergaenzend_position ~ '^[X0-9][0-9]{4}$'::text);
@@ -3433,7 +3574,8 @@ CREATE TABLE public.profiles (
   praxis_impressum_url text,
   praxis_datenschutz_url text,
   datev_einstellungen jsonb DEFAULT '{}'::jsonb NOT NULL,
-  fax_mail_muster text
+  fax_mail_muster text,
+  physio_source_revision bigint DEFAULT 0 NOT NULL
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -4213,6 +4355,24 @@ ALTER TABLE ONLY public.zaa_fehler
 
 ALTER TABLE ONLY public.zaa_fehler
   ADD CONSTRAINT zaa_fehler_status_check CHECK (status = ANY (ARRAY['offen'::text, 'in_bearbeitung'::text, 'behoben'::text, 'ignoriert'::text]));
+
+CREATE TABLE public.zaa_import (
+  abrechnung_id uuid NOT NULL,
+  sha256 text NOT NULL,
+  angewendet_am timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK abrechnung_id -> abrechnung(id)
+ALTER TABLE ONLY public.zaa_import OWNER TO postgres;
+COMMENT ON TABLE public.zaa_import IS 'ZAA-Idempotenz (0114): SHA-256 der Kassenrueckmeldungsdatei je Abrechnung, geschrieben nur von zaa_fehler_anwenden. Kein Dateiinhalt, keine Patientendaten.';
+
+ALTER TABLE ONLY public.zaa_import
+  ADD CONSTRAINT zaa_import_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zaa_import
+  ADD CONSTRAINT zaa_import_pkey PRIMARY KEY (abrechnung_id, sha256);
+
+ALTER TABLE ONLY public.zaa_import
+  ADD CONSTRAINT zaa_import_sha256_check CHECK (sha256 ~ '^[0-9a-f]{64}$'::text);
 
 CREATE TABLE public.zuzahlung_befreiung (
   id bigint DEFAULT nextval('zuzahlung_befreiung_id_seq'::regclass) NOT NULL,

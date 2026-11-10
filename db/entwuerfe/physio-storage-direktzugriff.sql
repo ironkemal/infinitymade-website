@@ -1,3 +1,5 @@
+-- ⚠️ ÜBERFÜHRT 07.11.2026 nach api-backend/db/migrations/0115_physio_storage_direktzugriff.sql (korrigierte NULL-Semantik). Maßgeblich ist die Migration;
+-- dieser Entwurf wird nicht mehr gepflegt und nicht ausgeführt.
 -- ENTWURF — NICHT aktiv, nicht in api-backend/db/migrations, nicht live angewandt (GO nötig).
 -- Ziel (Paket 1, Publikationsreview 07.11.2026): Physio-Publikationsartefakte dürfen NICHT per
 -- Direkt-Storage-URL (createSignedUrl mit User-JWT, abrechnung-detail.js downloadAbrechnungFile)

@@ -1,3 +1,8 @@
+-- Two run modes (disposable local PostgreSQL only, never a live database):
+-- (1) FULL CHAIN (since 07.11.2026, migration 0113): apply 0000..0115 to an empty DB
+--     after platform stubs (auth/storage/vault/roles), then run this file WITHOUT
+--     physio_bootstrap. Proof script + stubs: see db/REGISTER.md -> prescription_session_abrechnungsanspruch.
+-- (2) Legacy partial fixture (below): fixture now includes migration 0113 instead of the draft.
 -- Reproducible isolated run from repository root (local image only):
 -- docker run -d --pull=never --network none --tmpfs /var/lib/postgresql/data \
 --   -e POSTGRES_HOST_AUTH_METHOD=trust --name praxura-physio-v1-probe postgres:17.11
@@ -6,11 +11,11 @@
 --   api-backend/db/tests/physio-publikation-v1.fixture.sql
 --   api-backend/db/tests/physio-publikation-v1.test.sql
 --   api-backend/db/migrations/0060_abrechnung_artefakt_version.sql
---   db/entwuerfe/physio-publikation-v1.sql
+--   api-backend/db/migrations/0113_physio_publikation_v1.sql
 -- docker exec praxura-physio-v1-probe pg_isready -U postgres
 -- docker exec praxura-physio-v1-probe createdb -U postgres physio_proof
 -- docker exec praxura-physio-v1-probe psql -U postgres -d physio_proof -v ON_ERROR_STOP=1 -v physio_bootstrap=1 -v physio_keep_fixture=1 -v physio_concurrency=1 -f /tmp/probe/api-backend/db/tests/physio-publikation-v1.test.sql
--- Fixture includes 0060 + draft exactly once. Omit keep_fixture/concurrency for
+-- Fixture includes 0060 + 0113 exactly once. Omit keep_fixture/concurrency for
 -- rollback-only unit proof. dblink uses local Unix sockets, no external DB.
 -- Dispose ONLY this uniquely named synthetic container after collecting output:
 -- docker rm -f praxura-physio-v1-probe
@@ -25,7 +30,7 @@
 \ir physio-publikation-v1.fixture.sql
 \endif
 -- Catalog bootstrap is a separate transaction by the new lock protocol.
-INSERT INTO public.kostentraeger(ik,name) VALUES('100000001','SYNTHETIC');
+INSERT INTO public.kostentraeger(ik,name) VALUES('100000001','SYNTHETIC') ON CONFLICT DO NOTHING;
 BEGIN;
 CREATE FUNCTION public.qa_physio_assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',label; END IF; RAISE NOTICE 'PASS: %',label; END $$;
@@ -39,8 +44,10 @@ DECLARE caught boolean:=false; BEGIN
 END $$;
 GRANT EXECUTE ON FUNCTION public.qa_physio_assert(boolean,text),public.qa_physio_error(text,text,text) TO service_role,authenticated;
 INSERT INTO auth.users(id) VALUES ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
+-- Full chain: on_auth_user_created already created both profiles (handle_new_user).
 INSERT INTO public.profiles(id,is_active,role,sector) VALUES
- ('11111111-1111-4111-8111-111111111111',true,'owner','physiotherapy'),('22222222-2222-4222-8222-222222222222',true,'owner','physiotherapy');
+ ('11111111-1111-4111-8111-111111111111',true,'owner','physiotherapy'),('22222222-2222-4222-8222-222222222222',true,'owner','physiotherapy')
+ ON CONFLICT (id) DO UPDATE SET is_active=EXCLUDED.is_active,role=EXCLUDED.role,sector=EXCLUDED.sector;
 INSERT INTO public.terapeut_zertifikat(owner_id,ik_nummer) VALUES('11111111-1111-4111-8111-111111111111','100000002');
 INSERT INTO public.leads(id,owner_id,title) VALUES('33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111','SYNTHETIC');
 INSERT INTO public.prescriptions(id,owner_id,patient_id,status,rezeptart,rezept_typ,therapie_bereich,kostentraeger_ik,krankenkasse_ik,heilmittel_position,anzahl_einheiten)
@@ -168,9 +175,61 @@ RESET ROLE;
 SELECT public.qa_physio_assert(NOT has_function_privilege('authenticated','public.abrechnung_physio_finalize(uuid,uuid,text,text,text,bigint,text,jsonb,jsonb)','EXECUTE') AND
  NOT has_function_privilege('anon','public.abrechnung_idempotency_reserve(uuid,text,jsonb,text)','EXECUTE') AND
  has_function_privilege('service_role','public.abrechnung_idempotency_reserve(uuid,text,jsonb,text)','EXECUTE'),'RPC grants restricted');
+SELECT public.qa_physio_assert(NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.pronamespace='public'::regnamespace
+ AND (p.proname LIKE 'physio\_v1\_%' OR p.proname IN ('abrechnung_idempotency_reserve','physio_artefakt_readback','abrechnung_physio_finalize','abrechnung_physio_abort','physio_storage_readable'))
+ AND (has_function_privilege('anon',p.oid,'EXECUTE') OR (has_function_privilege('authenticated',p.oid,'EXECUTE')
+  AND p.proname NOT IN ('physio_storage_readable','physio_v1_is_protocol_header')))),
+ 'all 0113 functions: anon none, authenticated only storage_readable + is_protocol_header (despite default privileges)');
 -- No permanent claim may disappear because its worker lease elapsed.
 UPDATE public.abrechnung SET publication_lease_until=clock_timestamp()-interval '1 hour' WHERE publication_state='preparing';
 SELECT public.qa_physio_assert((SELECT count(*) FROM public.prescription_session_abrechnungsanspruch)=1,'lease expiry never releases permanent claim');
+CREATE FUNCTION public.qa_physio_error_any(q text,codes text[],label text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE caught boolean:=false; BEGIN
+ BEGIN EXECUTE q; EXCEPTION WHEN OTHERS THEN
+  IF NOT SQLSTATE=ANY(codes) THEN RAISE EXCEPTION 'FAIL: % expected %, got %: %',label,codes,SQLSTATE,SQLERRM; END IF;
+  caught:=true;
+ END;
+ PERFORM public.qa_physio_assert(caught,label);
+END $$;
+GRANT EXECUTE ON FUNCTION public.qa_physio_error_any(text,text[],text) TO service_role;
+-- ── Abort (0113 abrechnung_physio_abort): owner-/key-/generation-bound, idempotent ──
+-- 'second' (key 0002) is still preparing, generation 1, lease expired just above.
+CREATE FUNCTION public.qa_physio_abort(p_gen bigint DEFAULT 1,p_owner uuid DEFAULT '11111111-1111-4111-8111-111111111111',
+ p_key text DEFAULT 'synthetic-request-0002',p_grund text DEFAULT 'SYNTHETIC_WORKER_FAILED',p_ctx text DEFAULT 'second')
+ RETURNS jsonb LANGUAGE sql AS $$ SELECT public.abrechnung_physio_abort(p_owner,(SELECT (v->>'abrechnungId')::uuid FROM pg_temp.physio_ctx WHERE k=p_ctx),p_key,p_gen,p_grund) $$;
+GRANT EXECUTE ON FUNCTION public.qa_physio_abort(bigint,uuid,text,text,text) TO service_role,authenticated;
+SET LOCAL ROLE service_role;
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(1,''11111111-1111-4111-8111-111111111111'',''synthetic-request-0002'',''freitext mit name'')','22023','abort reason must be PHI-free code');
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(0)','22023','abort generation must be positive');
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(1,''22222222-2222-4222-8222-222222222222'')','42501','foreign owner cannot abort');
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(1,''11111111-1111-4111-8111-111111111111'',''synthetic-request-0001'')','40001','abort key must match header');
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(2,''11111111-1111-4111-8111-111111111111'',''synthetic-request-0001'',''SYNTHETIC_X'',''takeover'')','55000','published header cannot be aborted');
+RESET ROLE;
+-- Simulated takeover: a successor worker now owns generation 2 (fixture-only direct write).
+UPDATE public.abrechnung SET publication_generation=2 WHERE id=(SELECT (v->>'abrechnungId')::uuid FROM physio_ctx WHERE k='second');
+SET LOCAL ROLE service_role;
+SELECT public.qa_physio_error('SELECT public.qa_physio_abort(1)','40001','stale generation cannot abort successor');
+INSERT INTO physio_ctx VALUES('abort',public.qa_physio_abort(2));
+SELECT public.qa_physio_assert(v->>'state'='aborted' AND (v->>'wiederholt')::boolean=false AND (v->>'generation')::int=2
+ AND (v->>'worker_granted')::boolean=false,'owning generation aborts after lease expiry') FROM physio_ctx WHERE k='abort';
+SELECT public.qa_physio_assert((public.qa_physio_abort(2)->>'wiederholt')::boolean AND public.qa_physio_abort(2)->>'abrechnungId'=v->>'abrechnungId','abort retry idempotent') FROM physio_ctx WHERE k='abort';
+SELECT public.qa_physio_assert((public.qa_physio_abort(1)->>'state')='aborted','aborted is terminal for any generation of the same key');
+SELECT public.qa_physio_assert(public.abrechnung_idempotency_reserve('11111111-1111-4111-8111-111111111111','synthetic-request-0002',v)->>'state'='aborted','reserve after abort returns aborted, no worker') FROM physio_ctx WHERE k='payload';
+SELECT public.qa_physio_error(format('SELECT public.artefakt_reserve(%L,%L::uuid,%L,''unsigned'',''dta'',%L)','11111111-1111-4111-8111-111111111111',v->>'abrechnungId',
+ '11111111-1111-4111-8111-111111111111/'||(v->>'abrechnungId')||'/physio-v1/2/dta',repeat('e',64)),'P0001','aborted header accepts no new upload') FROM physio_ctx WHERE k='second';
+SELECT public.qa_physio_error(format('SELECT public.abrechnung_physio_finalize(%L,%L,%L,%L,%L,2,%L,%L::jsonb,%L::jsonb)','11111111-1111-4111-8111-111111111111',h.id,h.publication_key,
+ h.publication_payload_sha256,h.publication_input_sha256,h.updated_at::text,(SELECT v FROM physio_ctx WHERE k='package')::text,(SELECT v FROM physio_ctx WHERE k='manifest')::text),
+ '40001','aborted header cannot finalize') FROM public.abrechnung h WHERE h.id=(SELECT (v->>'abrechnungId')::uuid FROM physio_ctx WHERE k='second');
+SELECT public.qa_physio_error_any(format('UPDATE public.abrechnung SET status=''erstellt'' WHERE id=%L',v->>'abrechnungId'),ARRAY['P0001','42501'],'service role cannot rewrite aborted header directly (terminal in chain, no grant in fixture)') FROM physio_ctx WHERE k='second';
+RESET ROLE;
+SELECT public.qa_physio_error(format('UPDATE public.abrechnung SET status=''erstellt'' WHERE id=%L',v->>'abrechnungId'),'P0001','aborted header terminal even for table owner') FROM physio_ctx WHERE k='second';
+SELECT public.qa_physio_assert(h.status='verworfen' AND h.verwerfungsgrund='SYNTHETIC_WORKER_FAILED' AND h.publication_state='aborted'
+ AND h.publication_result IS NULL AND h.publication_lease_until<=clock_timestamp() AND h.datenaustauschreferenz IS NOT NULL,
+ 'aborted header verworfen with reason, number gap stays explained') FROM public.abrechnung h WHERE h.id=(SELECT (v->>'abrechnungId')::uuid FROM physio_ctx WHERE k='second');
+SELECT public.qa_physio_assert((SELECT count(*) FROM public.prescription_session_abrechnungsanspruch)=1,'abort leaves the committed claim untouched');
+SELECT public.qa_physio_assert(NOT has_function_privilege('authenticated','public.abrechnung_physio_abort(uuid,uuid,text,bigint,text)','EXECUTE')
+ AND NOT has_function_privilege('anon','public.abrechnung_physio_abort(uuid,uuid,text,bigint,text)','EXECUTE')
+ AND has_function_privilege('service_role','public.abrechnung_physio_abort(uuid,uuid,text,bigint,text)','EXECUTE'),'abort RPC service_role only');
 -- Explicit guard lifecycle checks, all disposable synthetic data.
 SELECT public.qa_physio_assert((SELECT physio_source_revision>0 FROM public.profiles WHERE id='11111111-1111-4111-8111-111111111111'),
  'new owner profile and its new Rx/session initialize revision safely');
@@ -252,6 +311,21 @@ END $$;
 -- Drain the command completion before reusing libpq asynchronous connections.
 SELECT * FROM dblink_get_result('physio_c1') AS t(r jsonb,pause text);
 SELECT * FROM dblink_get_result('physio_c2') AS t(r jsonb,pause text);
+-- Two connections abort the same preparing header: exactly one transition, one idempotent reply.
+INSERT INTO public.qa_physio_jobs(i,payload,reserved)
+ SELECT 9,payload,public.abrechnung_idempotency_reserve('11111111-1111-4111-8111-111111111111','synthetic-concurrent-abort',payload) FROM public.qa_physio_jobs WHERE i=1;
+DO $$ DECLARE q text; a jsonb;b jsonb; BEGIN
+ SELECT format('WITH x AS MATERIALIZED (SELECT public.abrechnung_physio_abort(%L,%L,%L,1,%L) r) SELECT r,pg_sleep(0.2)::text FROM x',
+  '11111111-1111-4111-8111-111111111111',reserved->>'abrechnungId','synthetic-concurrent-abort','SYNTHETIC_PARALLEL') INTO q FROM public.qa_physio_jobs WHERE i=9;
+ PERFORM dblink_send_query('physio_c1',q);PERFORM dblink_send_query('physio_c2',q);
+ SELECT r INTO a FROM dblink_get_result('physio_c1') AS t(r jsonb,pause text);
+ SELECT r INTO b FROM dblink_get_result('physio_c2') AS t(r jsonb,pause text);
+ PERFORM public.qa_physio_assert(a->>'state'='aborted' AND b->>'state'='aborted' AND a->>'abrechnungId'=b->>'abrechnungId'
+  AND (a->>'wiederholt')::boolean IS DISTINCT FROM (b->>'wiederholt')::boolean,'two connections abort same header -> one transition');
+END $$;
+SELECT * FROM dblink_get_result('physio_c1') AS t(r jsonb,pause text);
+SELECT * FROM dblink_get_result('physio_c2') AS t(r jsonb,pause text);
+DELETE FROM public.qa_physio_jobs WHERE i=9;
 INSERT INTO public.qa_physio_jobs SELECT 2,payload,
  public.abrechnung_idempotency_reserve('11111111-1111-4111-8111-111111111111','synthetic-concurrent02',payload),package,NULL FROM public.qa_physio_jobs WHERE i=1;
 DO $$ DECLARE j record; role text; id uuid; path text; m jsonb; BEGIN

@@ -190,6 +190,18 @@ export const TABELLEN = [
     anmerkung: 'GKV-Abrechnung Einzelzeilen, festgeschrieben',
   },
   {
+    table: 'prescription_session_abrechnungsanspruch',
+    kategorie: 'beleg',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Physio-Erstabrechnung (0113): Dauerhafter Claim je Sitzung gegen Doppelabrechnung; nur IDs, unveraenderlich, FKs RESTRICT',
+  },
+  {
+    table: 'physio_storage_legacy_allowlist',
+    kategorie: 'behalten_ohne_person',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Physio-Publikation (0113): geprueft freigegebene Altpfade im Bucket abrechnungen (nur Pfad + IDs), derzeit leer',
+  },
+  {
     table: 'abrechnung_uebermittlung',
     kategorie: 'beleg',
     export: { filter: 'owner_id' },
@@ -501,6 +513,12 @@ export const TABELLEN = [
     anmerkung: 'DTA-Betriebsart je Datenannahmestelle',
   },
   {
+    table: 'praxis_mailversand',
+    kategorie: 'loeschen',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Postfach der Praxis fuer Patientenmails (0118); smtp_passwort/oauth_refresh_token maskiert der Export (GEHEIM)',
+  },
+  {
     table: 'user_preferences',
     kategorie: 'loeschen',
     export: { filter: 'user_id' },
@@ -633,6 +651,7 @@ export const AUSNAHMEN = [
   'trip_history',
   'trip_plans',
   'user_credits',
+  'zaa_import',
 ];
 
 /**
