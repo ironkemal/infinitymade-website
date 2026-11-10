@@ -148,6 +148,22 @@ export function verschluesselePasswort(klartext) {
   return '\\x' + buf.toString('hex');
 }
 
+/** Gmail-Auswahl aus dem Einstellungen-OAuth-Callback; Token bleibt ausschließlich im Vault. */
+export async function speichereGmailMailversand({ supabase, ownerId, email, refreshToken }) {
+  const { data: token, error: tokenFehler } = refreshToken
+    ? await supabase.rpc('set_gmail_token', { p_user_id: ownerId, p_token: refreshToken })
+    : await supabase.rpc('get_gmail_token', { p_user_id: ownerId });
+  if (tokenFehler) throw tokenFehler;
+  if (!refreshToken && !token) throw Object.assign(new Error('Gmail refresh token missing'), { code: 'GMAIL_TOKEN_FEHLT' });
+  const { error } = await supabase.from('praxis_mailversand').upsert({
+    owner_id: ownerId, modus: 'gmail_oauth', preset: 'gmail', absender_email: email, absender_name: null,
+    smtp_host: null, smtp_port: null, smtp_sicherheit: null, smtp_benutzer: null, smtp_passwort: null,
+    oauth_refresh_token: null, status: 'verbunden', letzter_test_at: null, letzter_test_ok: null,
+    letzter_fehler_code: null,
+  }, { onConflict: 'owner_id' });
+  if (error) throw error;
+}
+
 /** Liest die Praxis-Einstellung; jeder Fehler (auch: Tabelle fehlt noch) = keine Einstellung. */
 export async function ladeMailEinstellung(supabase, ownerId) {
   if (!supabase || !ownerId) return null;

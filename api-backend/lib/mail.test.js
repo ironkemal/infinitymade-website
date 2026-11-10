@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 process.env.DATA_ENCRYPTION_KEY ||= 'b'.repeat(64);
 const {
-  mailKanal, verschluesselePasswort, fehlerHinweis, SMTP_PRESETS, transportFabrikFuer, envSmtpAnzeige, meldeVerbindungsfehler,
+  speichereGmailMailversand, mailKanal, verschluesselePasswort, fehlerHinweis, SMTP_PRESETS, transportFabrikFuer, envSmtpAnzeige, meldeVerbindungsfehler,
 } = await import('./mail.js');
 
 const zeile = (extra = {}) => ({
@@ -109,4 +109,34 @@ test('Review 09.11.: unlesbares Passwort faellt auf SMTP_* zurueck (Fehler bleib
   const env = { SMTP_HOST: 'smtp.praxura.invalid' };
   assert.equal((await mailKanal({ zeile: { modus: 'gmail_oauth' }, env, kutu: false, zweck: 'booking' })).quelle, 'env');
   assert.equal((await mailKanal({ zeile: { modus: 'gmail_oauth' }, env, kutu: false, zweck: 'dokument' })).weg, 'gmail');
+});
+
+
+test('Gmail-Auswahl: Vault zuerst, SMTP-Geheimnisse löschen, Fehler verhindern Erfolg', async () => {
+  const schritte = []; let rpcFehler = null; let dbFehler = null; let vorhanden = 'alter-synthetischer-token';
+  const db = {
+    async rpc(name, args) { schritte.push({ name, args }); return { data: vorhanden, error: rpcFehler }; },
+    from(table) { return { async upsert(werte, opts) { schritte.push({ table, werte, opts }); return { error: dbFehler }; } }; },
+  };
+  const args = { supabase: db, ownerId: 'o1', email: 'praxis@example.invalid' };
+  await speichereGmailMailversand({ ...args, refreshToken: 'neuer-synthetischer-token' }); // secret-scan: ignore — synthetic test fixture
+  assert.equal(schritte[0].name, 'set_gmail_token');
+  assert.equal(schritte[1].table, 'praxis_mailversand');
+  assert.equal(schritte[1].werte.modus, 'gmail_oauth');
+  assert.equal(schritte[1].werte.status, 'verbunden');
+  assert.equal(schritte[1].werte.owner_id, 'o1');
+  assert.equal(schritte[1].werte.smtp_passwort, null);
+  assert.equal(schritte[1].werte.oauth_refresh_token, null);
+  assert.ok(!JSON.stringify(schritte[1]).includes('synthetischer-token'));
+  schritte.length = 0;
+  await speichereGmailMailversand(args);
+  assert.equal(schritte[0].name, 'get_gmail_token');
+  schritte.length = 0; vorhanden = null;
+  await assert.rejects(speichereGmailMailversand(args), e => e.code === 'GMAIL_TOKEN_FEHLT');
+  assert.equal(schritte.length, 1, 'kein Moduswechsel ohne nutzbaren Token');
+  rpcFehler = { code: 'VAULT_FEHLER' }; schritte.length = 0;
+  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), e => e.code === 'VAULT_FEHLER');
+  assert.equal(schritte.length, 1);
+  rpcFehler = null; dbFehler = { code: 'DB_FEHLER' };
+  await assert.rejects(speichereGmailMailversand({ ...args, refreshToken: 'x' }), e => e.code === 'DB_FEHLER');
 });

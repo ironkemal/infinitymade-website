@@ -174,7 +174,7 @@ export function createMailversandRouter({
       return res.json({
         kutu: box,
         verfuegbar,
-        quelle: aktiv?.modus === 'smtp' ? 'db' : env_smtp ? 'env' : null,
+        quelle: aktiv && (aktiv.modus === 'smtp' || (!box && aktiv.modus === 'gmail_oauth')) ? 'db' : env_smtp ? 'env' : null,
         einstellung: sicht,
         env: env_smtp,
         presets: SMTP_PRESETS,

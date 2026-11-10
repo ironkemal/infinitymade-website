@@ -245,3 +245,16 @@ test('Review 09.11.: SSRF — IP festgenagelt mit tls.servername, Hex-Form erkan
   assert.equal((await pruefZiel(smtp, { preset: 'andere', kutu: true, lookup: async () => [{ address: '10.0.0.1' }] })).host, 'mail.b.invalid', 'Box: Praxisnetz erlaubt');
   assert.equal((await pruefZiel(smtp, { preset: 'ionos', kutu: false, lookup })).host, 'mail.b.invalid', 'Vorlagen nicht umgeschrieben');
 });
+
+
+test('Gmail-Auswahl im SaaS wird als DB-Quelle angezeigt, nicht als SMTP-Testziel', async () => {
+  reset({ kutu: false });
+  db.t.praxis_mailversand.push({ owner_id: OWNER, modus: 'gmail_oauth', preset: 'gmail', status: 'verbunden', absender_email: 'praxis@example.invalid' });
+  const r = await call('GET', '/mailversand');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.quelle, 'db');
+  assert.equal(r.body.einstellung.modus, 'gmail_oauth');
+  assert.equal(r.body.einstellung.passwortGespeichert, false);
+  assert.equal((await call('POST', '/mailversand/test')).status, 409);
+  assert.equal(gesendet.length, 0);
+});

@@ -68,7 +68,7 @@ import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
-import { mailKanal } from './lib/mail.js';
+import { mailKanal, speichereGmailMailversand } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
@@ -705,7 +705,9 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       const updateData = { b2b_from_email: uinfo.email };
       const { error } = await supabase.from('profiles').update(updateData).eq('id', userId);
       if (error) throw error;
-      if (tokens.refresh_token) {
+      if (flowType === 'gmail_mailversand') {
+        await speichereGmailMailversand({ supabase, ownerId: userId, email: uinfo.email, refreshToken: tokens.refresh_token });
+      } else if (tokens.refresh_token) {
         await supabase.rpc('set_gmail_token', { p_user_id: userId, p_token: tokens.refresh_token });
       }
 
