@@ -66,6 +66,8 @@ export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich 
   const wrap = doc?.getElementById?.(CONTAINER);
   if (!wrap) return false;
   const meine = ++_folge;
+  _ctx = { doc, db, rxId, alsVorlage };
+  chipWechselBeobachten(doc, wrap);
   const aus = () => { wrap.innerHTML = ''; wrap.hidden = true; delete wrap.dataset.entlassAktiv; return false; };
   // Die Maske uebergibt beim ersten Oeffnen den Praxis-Sektor ('physiotherapy') statt des Bereichsschluessels ('physio') — canli-test 10.11.
   if (bereich === 'physiotherapy') bereich = 'physio';
@@ -89,6 +91,21 @@ export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich 
   return true;
 }
 
+// Therapiebereich-Chips setzen nur das versteckte Feld (kein Event): nach jedem Chip-Klick den Block neu bewerten.
+let _ctx = null;
+const _beobachtet = new WeakSet();
+function chipWechselBeobachten(doc, wrap) {
+  if (typeof doc.addEventListener !== 'function' || _beobachtet.has(doc)) return;
+  _beobachtet.add(doc);
+  doc.addEventListener('click', (e) => {
+    if (!e.target?.closest?.('.m13-chk[data-th]') || !_ctx) return;
+    const b = doc.getElementById('rzTherapieBereich')?.value || '';
+    if (!b) return;
+    if (b !== 'physio') { ++_folge; wrap.innerHTML = ''; wrap.hidden = true; delete wrap.dataset.entlassAktiv; return; }
+    if (wrap.dataset.entlassAktiv !== '1') entlassMaskeAktualisieren(_ctx.doc, _ctx.db, { rxId: _ctx.rxId, alsVorlage: _ctx.alsVorlage, bereich: 'physio' });
+  });
+}
+
 /**
  * Feldpaar für die Nutzlast. `{}` wenn der Container nicht aktiv ist (Server lässt Spalten dann unberührt).
  * Ungültig (ja ohne Datum / Blanko) -> bewusst unvollständig senden, der Server antwortet 422 mit Klartext.
@@ -96,6 +113,8 @@ export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich 
 export function entlassNutzlastAusMaske(doc, { istBlanko = false } = {}) {
   const wrap = doc?.getElementById?.(CONTAINER);
   if (!wrap || wrap.dataset.entlassAktiv !== '1') return {};
+  const bereich = doc.getElementById('rzTherapieBereich')?.value || '';
+  if (bereich && bereich !== 'physio') return {};
   const werte = { auswahl: doc.getElementById('rzEntlass')?.value || '', datum: doc.getElementById('rzEntlassDatum')?.value || '' };
   const r = entlassFelderAusFormular(werte, { schemaAktiv: true, istBlanko });
   if (r.ok) return r.felder;

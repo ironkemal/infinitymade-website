@@ -98,3 +98,25 @@ test('Veraltete Antwort (zweiter Aufruf gestartet) zeichnet nicht', async () => 
   freigeben();
   assert.equal(await erste, false);
 });
+
+test('Chip-Wechsel auf Podologie blendet den Block aus, zurueck auf Physio zeigt ihn wieder; Nutzlast bleibt leer', async () => {
+  const d = fakeDoc();
+  d.els.rzTherapieBereich = { value: 'physio' };
+  let klick;
+  d.addEventListener = (art, fn) => { if (art === 'click') klick = fn; };
+  const chip = { closest: (sel) => (sel === '.m13-chk[data-th]' ? chip : null) };
+  const db = fakeDb({ data: [{}], error: null });
+  assert.equal(await entlassMaskeAktualisieren(d, db, { bereich: 'physio' }), true);
+  assert.equal(d.els.rzEntlassWrap.dataset.entlassAktiv, '1');
+  d.els.rzTherapieBereich.value = 'podo';
+  klick({ target: chip });
+  assert.equal(d.els.rzEntlassWrap.hidden, true);
+  assert.equal(d.els.rzEntlassWrap.dataset.entlassAktiv, undefined);
+  d.els.rzEntlassWrap.dataset.entlassAktiv = '1';
+  assert.deepEqual(entlassNutzlastAusMaske(d), {});
+  delete d.els.rzEntlassWrap.dataset.entlassAktiv;
+  d.els.rzTherapieBereich.value = 'physio';
+  klick({ target: chip });
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(d.els.rzEntlassWrap.dataset.entlassAktiv, '1');
+});
