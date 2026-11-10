@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           150
---   triggers:            179
+--   functions:           151
+--   triggers:            180
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8

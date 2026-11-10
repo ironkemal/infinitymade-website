@@ -56,3 +56,20 @@ KI separat: maximal drei Aufrufe / insgesamt 1 EUR, synthetische Inhalte, besteh
 - Praxis: eigener Wochenplan. Box/Hetzner bleibt zurückgestellt.
 
 Keine Freigabe wird aus Zeitablauf, Limit-Reset oder allgemeiner Wiederaufnahme abgeleitet.
+
+## Neuer, noch nicht freigegebener Umfang — 10.11.2026
+
+Produktziel `dc583aa4`, anschließend ausschließlich Dokumentationskorrekturen dieser Übergabe. Aktuelle Remote-Basis `29998b0a`; vor Push erneut prüfen. Enthaltene Produktcommits:
+
+| Commit | Änderung | Vorhandener Nachweis / Grenze |
+|---|---|---|
+| `439e3957` | 0119: Browser kann Rechnungs-Owner nicht ändern; Box-Migrationskette und gezielt fortgeschriebene Exporte | Anwendung auf SaaS durch fremden Bearbeiter dokumentiert, hier nicht live wiederholt. DB-Beratung bestätigt engen Schutz; übrige 0081-Rechtefälle offen |
+| `0b086cf7` | Einheitliche PLZ-Importversion im Feiertagsbutton | Importgraph lokal grün; öffentlich noch alter Import gelesen |
+| `245fbe4d` | Workerübergreifende Testmail-Sperre, bei DB-Fehler kein Versand | Bearbeiter: 28/28 lokale Tests einschließlich Loopback-STARTTLS; kein Liveversand |
+| `dc583aa4` | Berliner Feiertagshinweise, ehrliche Konflikt-/Fehlerrückmeldung | 33/33 lokale Tests, vier vorher rote Repros, unabhängiger enger Review; kein authentifizierter Livebeleg |
+
+Dokumentation korrigiert README-Dateistand und zwei Kommentarzähler im Hauptschema auf 0119/151 Funktionen/180 Trigger; SQL-Definitionen unverändert. Matrix, Fortschritt und Wissensfassung aktualisiert. Fremde uncommittete `db/NUTZUNG.*` und Berichte bleiben außerhalb.
+
+Benötigtes neues GO: diesen gesamten Umfang nach `origin/main` pushen; dadurch Vercel und Frontend-/Backend-Image-Builds sowie mögliche Backendauslieferung. **Keine zusätzliche SaaS-Migration, kein Mailversand, kein Einschalten von Jobs, keine Nutzung ausgeschlossener Accounts.** Allgemeine Auslieferung bleibt von QA-Abnahme getrennt. Bisheriger Vertrag schließt neue fremde Produktänderungen ausdrücklich aus; deshalb ist erneute Freigabe nötig.
+
+Nach GO: unveränderten Commitumfang bestätigen, Push, CI desselben SHA, Frontend-/Backendauslieferung prüfen. Feiertags-Klick-/Persistenztest erst mit bestätigter TEST-Physio-QA-Sitzung. Aktuelles eigenes Preview nicht angemeldet. Negative Rechtefälle 0081 bleiben eigenständige offene Sicherheitsarbeit; 0119 ist keine Gesamtfreigabe.

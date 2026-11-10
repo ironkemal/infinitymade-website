@@ -24,3 +24,7 @@ Vier Tests vor Änderung rot, anschließend 33 gezielte Tests grün, null Skips.
 Abgebrochener früherer Live-Test wegen Providerlimit gilt weiterhin nicht als Prüfung. Eigenes Preview steht am Login; keine andere Sitzung oder ausgeschlossene Identität übernehmen. Öffentlicher Modulabruf zeigt alte Importversion, nicht den lokalen Fix. Erst veröffentlichte Zielversion und bestätigte synthetische QA-Identität erlauben Liveabnahme.
 
 Vor erneuter Integration HEAD, Remote, laufende Bearbeiter und Dateibesitz prüfen. Lokale Migration 0119 und Mail-Cooldown gehören zu neuen fremden Änderungen vor `origin/main`; ursprünglicher Releasevertrag schließt diese Erweiterung aus. Keine fremden Commits über Reset/Rebase umgehen und keine Migration ausführen. Neue Freigabe muss vollständigen Releaseumfang benennen. Zurückgestellte Widget-/Box-/Fußzeilenarbeiten bleiben zurückgestellt.
+
+## Schemaorientierung ohne fingierten Export
+
+DB-Beratung und Originaldiff 0119 zeigen: +1 Funktion/+1 Trigger nur im RLS-Kopf fortgeschrieben, Hauptschema-Kopf blieb zurück. Zwei Kommentarwerte auf 151/180 angeglichen, README von historischem 0111 auf Dateiköpfe 0119 berichtigt. SQL-Definitionen bleiben identisch; vorhandener Exportzeitpunkt wird nicht als neuer Export ausgegeben. Fehlende unabhängige Liveprüfung bleibt ausdrücklich offen. Die formale Kopfkorrektur verwendet ausschließlich dokumentierte Migrationsgate-Ausnahme; keine zusätzliche Migration oder abgeschwächte Prüfung.
