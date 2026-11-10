@@ -14164,15 +14164,15 @@ async function init() {
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast }); renderRechtslinksSettings({ supabase, profile: currentProfile, userId: () => currentSession.user.id, showToast }); renderMitarbeiterAppSettings({ profile: currentProfile, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal }); renderDatevSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); verdrahteDatevExport({ supabase, showToast }); renderTerminerinnerungSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast }); renderMailversandSettings({ profile: currentProfile, apiBase: API, getToken: async () => (await supabase.auth.getSession())?.data?.session?.access_token || null, showToast, showConfirmModal });
-    console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
-    await renderSidebar();
-    console.log('[init] sidebar ok');
-    await loadTeam();
-    console.log('[init] team ok'); if (document.documentElement.dataset.design === 'neu') startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start-r1')).montiereStartansicht({ uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':'), springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
+    await renderSidebar(); await loadTeam();
+    if (document.documentElement.dataset.design === 'neu') {
+      const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
+      startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start-r1')).montiereStartansicht({ ...ansichtKontext, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
+      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext);
+    }
     await renderOverview();
-    console.log('[init] overview ok');
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await bootScheduleViewToggle();

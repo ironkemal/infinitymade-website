@@ -1,0 +1,86 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "identity": {
+      "same": true,
+      "focus": true,
+      "selection": [
+        3,
+        9
+      ],
+      "value": "Synthetischer Entwurf bleibt erhalten."
+    },
+    "sections": 6,
+    "kioskHidden": true,
+    "altPixelEqualToControl": true,
+    "initialHash": "d0ea53e17835948cfc909a31d327ac127e2089c766b4b1b50dbcdeadbf2b448f",
+    "controlHash": "216dd0344b87e610b4eac2e593200e4f606ffe397292582f8e3cc9b0baea0c3e",
+    "rollbackHash": "216dd0344b87e610b4eac2e593200e4f606ffe397292582f8e3cc9b0baea0c3e",
+    "existingDesignToggleChangesPixels": true,
+    "scopeRestore": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "identity": {
+      "same": true,
+      "focus": true,
+      "selection": [
+        3,
+        9
+      ],
+      "value": "Synthetischer Entwurf bleibt erhalten."
+    },
+    "sections": 6,
+    "kioskHidden": true,
+    "altPixelEqualToControl": true,
+    "initialHash": "a678dd9625725fcadc90c6a26572a6d41e50031a9b03ba580e7122d5971d525a",
+    "controlHash": "a678dd9625725fcadc90c6a26572a6d41e50031a9b03ba580e7122d5971d525a",
+    "rollbackHash": "a678dd9625725fcadc90c6a26572a6d41e50031a9b03ba580e7122d5971d525a",
+    "existingDesignToggleChangesPixels": false,
+    "scopeRestore": true
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "identity": {
+      "same": true,
+      "focus": true,
+      "selection": [
+        3,
+        9
+      ],
+      "value": "Synthetischer Entwurf bleibt erhalten."
+    },
+    "sections": 6,
+    "kioskHidden": true,
+    "altPixelEqualToControl": true,
+    "initialHash": "56f35840944453ef27f13c4b9f7f99fa4b2e90068c05b27f9c013548f9d83666",
+    "controlHash": "56f35840944453ef27f13c4b9f7f99fa4b2e90068c05b27f9c013548f9d83666",
+    "rollbackHash": "56f35840944453ef27f13c4b9f7f99fa4b2e90068c05b27f9c013548f9d83666",
+    "existingDesignToggleChangesPixels": false,
+    "scopeRestore": true
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "identity": {
+      "same": true,
+      "focus": true,
+      "selection": [
+        3,
+        9
+      ],
+      "value": "Synthetischer Entwurf bleibt erhalten."
+    },
+    "sections": 6,
+    "kioskHidden": true,
+    "altPixelEqualToControl": true,
+    "initialHash": "b481725a321bc28705aeede566c55fa834b4105a93e7b9f88a1b1f1e5a8c89b1",
+    "controlHash": "b481725a321bc28705aeede566c55fa834b4105a93e7b9f88a1b1f1e5a8c89b1",
+    "rollbackHash": "b481725a321bc28705aeede566c55fa834b4105a93e7b9f88a1b1f1e5a8c89b1",
+    "existingDesignToggleChangesPixels": false,
+    "scopeRestore": true
+  }
+]
