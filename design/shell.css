@@ -1,0 +1,618 @@
+/* ============================================================================
+   design/shell.css — App-Shell des neuen Designs (Redesign v2, PLAN-V2 Phase V2)
+   ============================================================================
+
+   Warum ein eigener Ordner
+   ────────────────────────
+   praxura-design.css bleibt die Schicht für Token und Bausteine. Die Struktur
+   des neuen Designs (Leiste über volle Höhe, Icon-Leiste mit Flyout, Kopfleiste,
+   mobile Schublade) kommt in eigene Dateien unter design/, damit jede Schicht
+   klein und prüfbar bleibt (Architektur-Bericht 25.10.2026, Abschnitt 4).
+   Reihenfolge in dashboard.html: dashboard.css → dashboard-feinschliff.css →
+   praxura-design.css → design/shell.css → (später seiten.css, startseite.css).
+
+   Regeln
+   ──────
+   - Alles nur unter [data-design="neu"][data-px-shell="v2"] und nur @media screen (Druck bleibt alt).
+     tools/redesign-wachen.mjs prüft den Scope und die Auslieferung.
+   - Ausgeliefert über onprem/frontend.Dockerfile (COPY design ./design) und
+     .github/workflows/publish-frontend.yml (design/**). Vercel liefert den Ordner aus.
+   - Jede Änderung: neue ?v=-Nummer in dashboard.html.
+   ========================================================================== */
+
+/* ── V2.03 Hülle: Leiste über die volle Höhe, Kopfleiste rechts daneben ────────
+   Ab 1025 px (darunter bleibt die Schublade von dashboard.css). #app wird Raster,
+   .dashboard-layout gibt seine Kinder per display: contents an das Raster weiter
+   (Kiosk-`inert` hängt am DOM-Baum, nicht an der Box – unverändert wirksam).
+   Spalte 1 = auto: folgt der Leistenbreite, auch eingeklappt (Breite 0 bzw. später Icon-Leiste).
+   Kein !important an display, damit das Inline-display:none beim Laden weiter gewinnt. */
+@media screen and (min-width: 1025px) {
+  [data-design="neu"][data-px-shell="v2"] #app {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+  }
+  [data-design="neu"][data-px-shell="v2"] #app > .topbar { grid-column: 2; grid-row: 1; }
+  [data-design="neu"][data-px-shell="v2"] #app > .dashboard-layout { display: contents; }
+  [data-design="neu"][data-px-shell="v2"] #app .sidebar { grid-column: 1; grid-row: 1 / 3; min-height: 0; }
+  [data-design="neu"][data-px-shell="v2"] #app .main-area { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; }
+
+  /* Marke: Kopie oben in der Leiste (module/shell-neu.js), Original in der Kopfleiste aus. */
+  [data-design="neu"][data-px-shell="v2"] .topbar .brand { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-leiste-marke {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: var(--topbar-h);
+    flex-shrink: 0;
+    padding: 0 20px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    text-decoration: none;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-leiste-marke::before {
+    content: 'P';
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+@media screen and (max-width: 1024px) {
+  [data-design="neu"][data-px-shell="v2"] .px-leiste-marke { display: none; }
+}
+
+/* ── V2.04 Leiste v2: ruhig, beschriftet, 40 px Einträge ────────────────────────
+   PLAN-V2 3.2: weiß, 1 px Linie, aktiv = graue Fläche + schwarze Schrift, kein Seitenstrich.
+   Gruppenköpfe als leise Überschrift (Gruppensymbol erst in der Icon-Leiste, V2.06).
+   Spezifität über [data-design] + #sidebarNav, damit dashboard-feinschliff.css und das
+   <style> „Grouped sidebar navigation" in dashboard.html ohne !important überstimmt werden. */
+@media screen {
+  [data-design="neu"][data-px-shell="v2"] .sidebar {
+    background: var(--bg-card-solid);
+    border-right: 1px solid var(--border);
+    backdrop-filter: none;
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed { border-right: none; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar nav { padding: 8px 12px 16px; gap: 0; }
+
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group { margin: 0; }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group + .nav-group { margin-top: 8px; }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group-header {
+    min-height: 44px;
+    padding: 0 12px;
+    gap: 8px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group-header:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group-icon { display: none; }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group-chevron { opacity: 0.7; transition: transform var(--dur) var(--ease-standard); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-group-items { padding: 2px 0 4px; gap: 2px; }
+
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item {
+    min-height: 44px;
+    padding: 0 12px;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item::before { border-radius: var(--radius-sm); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item .icon,
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item .icon svg { width: 18px; height: 18px; }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item .icon { color: var(--text-muted); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item:hover { color: var(--text-main); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item:hover .icon { color: var(--text-main); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item.active { font-weight: 600; }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item.active::before { background: var(--nav-active); }
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item.active .icon { color: var(--primary); }
+
+  /* Zählerplakette (heute nur Anfragen): rechtsbündig, schwarz, eckig-rund wie Zähler-Chips. */
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .nav-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-xxs);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── V2.06 Eingeklappt: Icon-Leiste 72 px statt Breite 0 ───────────────────────
+   PLAN-V2 3.2: Gruppen-Symbol + Kurzlabel (data-kurz aus module/shell-neu.js), Einträge als
+   40-px-Symbolknöpfe mit title/aria-Namen (Beschriftung nur visuell versteckt). Bis zum
+   Flyout (V2.07) klappt ein Klick auf die Gruppe ihre Symbole darunter auf.
+   Einklappen über den Knopf unten in der Leiste (.px-einklappen); er löst den alten,
+   schwebenden #sidebarCollapseBtn aus, der Zustand bleibt localStorage sidebar_collapsed. */
+@media screen and (min-width: 1025px) {
+  /* Gegen das Inline-display:flex des alten Knopfs (dashboard.html); Ersatz ist .px-einklappen. */
+  [data-design="neu"][data-px-shell="v2"] #sidebarCollapseBtn { display: none !important; }
+
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed {
+    width: 72px;
+    border-right: 1px solid var(--border);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed .px-leiste-marke { justify-content: center; padding: 0; gap: 0; font-size: 0; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed nav { padding: 4px 8px 12px; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group + .nav-group { margin-top: 4px; }
+
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    padding: 6px 0;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-icon { display: flex; width: 20px; height: 20px; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-icon svg { width: 20px; height: 20px; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-label,
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-chevron { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-header::after { content: attr(data-kurz); }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-header.has-active { color: var(--text-main); background: var(--nav-active); }
+
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .sidebar-item { justify-content: center; padding: 0; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .sidebar-item > span:not(.icon):not(.nav-badge) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-badge {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  [data-design="neu"][data-px-shell="v2"] .px-einklappen {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    min-height: 44px;
+    margin: auto 12px 12px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-einklappen:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"][data-px-shell="v2"] .px-einklappen svg { flex-shrink: 0; transition: transform var(--dur) var(--ease-standard); }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed .px-einklappen { justify-content: center; margin: auto 8px 12px; padding: 0; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed .px-einklappen svg { transform: scaleX(-1); }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed .px-einklappen span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media screen and (max-width: 1024px) {
+  [data-design="neu"][data-px-shell="v2"] .px-einklappen { display: none; }
+}
+
+/* ── V2.07 Gruppen-Flyout der Icon-Leiste (module/leiste-flyout.js) ────────────
+   Eingeklappt klappt eine Gruppe nicht mehr in der Leiste auf; die Einträge erscheinen im
+   Feld rechts daneben. Lage setzt das Modul (fixed, im Fenster geklemmt). */
+@media screen and (min-width: 1025px) {
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group .nav-group-items { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed #sidebarNav .nav-group-header[aria-expanded="true"] { background: var(--bg-hover); color: var(--text-main); }
+
+  [data-design="neu"][data-px-shell="v2"] .px-flyout {
+    position: fixed;
+    z-index: 400;
+    width: 240px;
+    /* R-18: nie höher als das Fenster (Rand 8 oben/unten wie flyoutLage), sonst intern scrollen. */
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 6px;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-titel {
+    padding: 6px 10px 4px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag .icon { display: grid; place-items: center; width: 18px; height: 18px; flex-shrink: 0; }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag .icon svg { width: 18px; height: 18px; }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag.active { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout-eintrag.active .icon { color: var(--primary); }
+  [data-design="neu"][data-px-shell="v2"] .px-flyout .nav-badge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: var(--radius-xxs);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+}
+
+/* ── V2.08 Kopfleiste v2: Praxisname, „Einrichtung n %“ beschriftet, Profilmenü ─
+   PLAN-V2 3.2. Abmelden und Admin wandern ins Profilmenü (module/kopf-profil.js);
+   Suche (V2.09) und „+ Neu“ (V2.10) kommen zwischen Praxisname und Einrichtung. */
+@media screen {
+  [data-design="neu"][data-px-shell="v2"] .topbar .biz-name {
+    max-width: 260px;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  [data-design="neu"][data-px-shell="v2"] .topbar-right { gap: 8px; }
+
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring {
+    min-height: 44px;
+    padding: 0 12px 0 6px;
+    gap: 8px;
+    border-color: var(--border);
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring:hover { background: var(--bg-hover); }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring svg { width: 22px; height: 22px; }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring-text { font-variant-numeric: tabular-nums; }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring-text::before { content: 'Einrichtung '; color: var(--text-muted); }
+
+  [data-design="neu"][data-px-shell="v2"] .live-clock { color: var(--text-muted); font-family: inherit; font-size: 13px; letter-spacing: 0; }
+
+  /* Gegen Inline-display der beiden (dashboard.html/dashboard.js schalten sie per style);
+     Ersatz: Einträge im Profilmenü, die die Originale auslösen. */
+  [data-design="neu"][data-px-shell="v2"].px-profil-bereit #logoutBtn,
+  [data-design="neu"][data-px-shell="v2"].px-profil-bereit #topbarAdminLink { display: none !important; }
+
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-wrap, .px-neu-wrap) { position: relative; }
+  [data-design="neu"][data-px-shell="v2"] .px-profil {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background: var(--nav-active);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-profil:hover,
+  [data-design="neu"][data-px-shell="v2"] .px-profil[aria-expanded="true"] { border-color: var(--border-strong); }
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-menue, .px-neu-menue) {
+    position: absolute;
+    /* R-22: nie länger als der Platz unter der Kopfleiste, sonst intern scrollen. */
+    max-height: calc(100vh - var(--topbar-h) - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 450;
+    min-width: 220px;
+    padding: 6px;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-menue, .px-neu-menue)[hidden] { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-profil-kopf {
+    padding: 8px 10px 6px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-profil-kopf strong { display: block; color: var(--text-main); font-size: 14px; line-height: 20px; font-weight: 600; }
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-eintrag, .px-neu-eintrag) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-eintrag, .px-neu-eintrag):hover { background: var(--bg-hover); }
+  [data-design="neu"][data-px-shell="v2"] :is(.px-profil-eintrag, .px-neu-eintrag) svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+}
+@media screen and (max-width: 768px) {
+  /* Schmal: nur der Ring, ohne Wort (Platz). */
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring-text::before { content: none; }
+  [data-design="neu"][data-px-shell="v2"] .topbar .biz-name { font-size: 14px; }
+}
+
+/* ── V2.09 Suche in der Kopfleiste (module/kopf-suche.js) ──────────────────────
+   Feld mit Lupe und Tastenhinweis „/“; Trefferliste ist die gemeinsame
+   .patient-search-list (patient-suche.js), hier nur an die Form v3 angepasst.
+   Ab 900 px sichtbar (V2.12: Tablet quer hat Platz); darunter aus (Hochformat/Telefon: Patienten-Liste). */
+@media screen and (min-width: 900px) {
+  [data-design="neu"][data-px-shell="v2"] .px-suche {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: clamp(240px, 26vw, 360px);
+    height: 44px;
+    margin-left: 8px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    color: var(--text-muted);
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[hidden] { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-halo); background: var(--bg-card-solid); }
+  [data-design="neu"][data-px-shell="v2"] .px-suche svg { flex-shrink: 0; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-art { width: 106px; min-height: 44px; padding: 0 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: var(--bg-main); color: var(--text-main); font: inherit; font-size: 12px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-art[hidden] { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-art:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-hinweis { position: absolute; left: 0; top: calc(100% + 4px); width: 100%; padding: 6px 8px; background: var(--bg-card-solid); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; z-index: 31; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-hinweis:empty { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche:not(:focus-within) .px-suche-hinweis { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche:has(.px-suche-hinweis:not(:empty)) .patient-search-list { top: calc(100% + 66px); }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-feld {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 14px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-feld::placeholder { color: var(--text-faint); }
+  /* Gegen `input:focus-visible { outline … !important }` (dashboard.css, Abschnitt 4):
+     den Fokus zeigt hier die ganze Hülle (:focus-within mit Halo), kein zweiter Rahmen im Feld. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche-feld:focus-visible { outline: none !important; box-shadow: none !important; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-feld::-webkit-search-cancel-button { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-taste {
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xxs);
+    background: var(--bg-card-solid);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche:focus-within .px-suche-taste { display: none; }
+
+  [data-design="neu"][data-px-shell="v2"] .px-suche .patient-search-list {
+    top: calc(100% + 6px);
+    left: 0;
+    right: auto;
+    min-width: 100%;
+    width: max-content;
+    max-width: 440px;
+    max-height: min(420px, calc(100vh - 80px));
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-e3);
+    z-index: 450;
+  }
+  /* Block statt Flex: in Flex-Zeilen verschwindet das Leerzeichen vor der Treffer-Hervorhebung. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche .patient-search-list li {
+    padding: 10px;
+    line-height: 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche .patient-search-list li .match-hl { color: var(--text-main); font-weight: 700; }
+}
+@media screen and (max-width: 899px) {
+  [data-design="neu"][data-px-shell="v2"] .px-suche { display: none; }
+}
+/* V2.12 Tablet (769–1279 px): Kopfleiste entlasten, damit der Praxisname lesbar bleibt —
+   Uhr aus, Einrichtung nur Ring + Prozent, Suche schmaler. */
+@media screen and (min-width: 769px) and (max-width: 1279px) {
+  [data-design="neu"][data-px-shell="v2"] .live-clock { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring-text::before { content: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche { width: clamp(180px, 22vw, 260px); }
+}
+
+/* ── V2.10 „+ Neu“ (module/kopf-neu.js) ────────────────────────────────────────
+   Ein schwarzer Hauptknopf der Kopfleiste; Menü-Stile teilt er mit dem Profilmenü (V2.08).
+   „Rezept scannen“ steht jetzt im Menü, der alte Knopf ist aus, sobald das Menü steht. */
+@media screen {
+  /* Gegen das Inline-display von #rezeptScanBtn (rezept-barcode-dialog.js schaltet es per style). */
+  [data-design="neu"][data-px-shell="v2"].px-neu-bereit #rezeptScanBtn { display: none !important; }
+
+  [data-design="neu"][data-px-shell="v2"] .px-neu {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 14px 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--bg-card-solid);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-neu:hover { background: var(--primary-hover, var(--primary)); }
+  [data-design="neu"][data-px-shell="v2"] .px-neu-menue { right: auto; left: 0; }
+}
+@media screen and (max-width: 768px) {
+  [data-design="neu"][data-px-shell="v2"] .px-neu { width: 44px; padding: 0; justify-content: center; }
+  [data-design="neu"][data-px-shell="v2"] .px-neu span { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-neu-menue { left: auto; right: -96px; }
+}
+
+/* ── V3.W Hinweise ruhig (Melih 26.10.: kein dominantes Orange, keine Emojis) ──────
+   Ein Banner-Baustein für alle Varianten: weiße Karte, feine Linie, Symbol monochrom in
+   einem grauen Kreis, Titel dunkel (nicht farbig), Text gedämpft, Aktion als Zweitknopf.
+   Die Dringlichkeit trägt der Wortlaut. Nur „pastdue“ (Zahlung fehlgeschlagen) bekommt
+   das Rot – als Symbolfarbe und feiner Rand, nie als Fläche. Emojis: module/ohne-emoji.js. */
+@media screen {
+  [data-design="neu"][data-px-shell="v2"] .dash-banner,
+  [data-design="neu"][data-px-shell="v2"] .dash-banner:is(.welcome, .pending, .trial, .pastdue) {
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card-solid);
+    box-shadow: var(--shadow-e1);
+  }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner.pastdue { border-color: var(--st-bad-line); }
+  /* Melih 26.10.: Hintergrund weiß, nur das Symbol farbig (Warnung Orange, Fehler Rot). */
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner.trial .dash-banner-icon { color: var(--warning); }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-icon svg { width: 18px; height: 18px; }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner.pastdue .dash-banner-icon { color: var(--st-bad-fg, var(--danger)); }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-content strong { color: var(--text-main); font-weight: 600; }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-content p { color: var(--text-muted); }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-action {
+    border-color: var(--border-strong);
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font-weight: 500;
+  }
+  [data-design="neu"][data-px-shell="v2"] .dash-banner-action:hover { background: var(--bg-hover); }
+
+  /* IK-Hinweis (dashboard.js:1086 rendert ihn mit Inline-Farben): auf den Banner-Baustein bringen. */
+  [data-design="neu"][data-px-shell="v2"] #ik-missing-banner > div {
+    background: var(--bg-card-solid) !important;  /* gegen Inline-Blau */
+    border: 1px solid var(--border) !important;    /* gegen Inline-Blau */
+    border-radius: var(--radius-md) !important;    /* gegen Inline 8px */
+    padding: 14px 18px !important;                 /* gegen Inline 12/14 */
+    box-shadow: var(--shadow-e1);
+    font-size: 14px !important;                    /* gegen Inline 13px */
+  }
+  [data-design="neu"][data-px-shell="v2"] #ik-missing-banner > div a { color: var(--accent) !important; font-weight: 500; } /* gegen Inline-Gold */
+
+  /* Symbole aus module/ohne-emoji.js: Textfarbe, Grundlinie wie Text. */
+  [data-design="neu"][data-px-shell="v2"] .px-sym-wrap { display: inline-flex; vertical-align: -0.15em; }
+  [data-design="neu"][data-px-shell="v2"] .px-sym { flex-shrink: 0; }
+}
+
+/* ── V6.F02: versteckte Menüzeilen (z. B. „Überblick“, in der Startseite aufgegangen) ── */
+@media screen {
+  [data-design="neu"][data-px-shell="v2"] #sidebarNav .sidebar-item[hidden] { display: none; }
+}
+
+/* ── V2.11 Schublade unter 1025 px (module/schublade-neu.js) ──────────────────────
+   R-01: dashboard.css setzt bei „Bewegung reduzieren“ `* { transform: none !important }` und hebt
+   damit `.sidebar { transform: translateX(-100%) }` auf — die Leiste blieb offen über dem Inhalt.
+   Im Neu-Design schiebt die eigene Eigenschaft `translate` (von `transform: none` unberührt);
+   geschlossen zusätzlich `visibility: hidden`, damit nichts Unsichtbares fokussierbar bleibt. */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"][data-px-shell="v2"] .sidebar {
+    transform: none;
+    translate: -100% 0;
+    visibility: hidden;
+    width: min(300px, 86vw);
+    transition: translate var(--dur, 180ms) var(--ease-standard, ease), visibility 0s linear var(--dur, 180ms);
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.open {
+    translate: 0 0;
+    visibility: visible;
+    box-shadow: var(--shadow-e3);
+    transition: translate var(--dur, 180ms) var(--ease-standard, ease);
+  }
+  [data-design="neu"][data-px-shell="v2"] .sidebar.collapsed { width: min(300px, 86vw); }
+  [data-design="neu"][data-px-shell="v2"] .sidebar-overlay { background: rgba(11, 15, 23, 0.32); }
+  [data-design="neu"][data-px-shell="v2"] .sidebar .sidebar-item { min-height: 44px; }   /* Fingerziel */
+}
+@media screen and (max-width: 1024px) and (prefers-reduced-motion: reduce) {
+  [data-design="neu"][data-px-shell="v2"] .sidebar,
+  [data-design="neu"][data-px-shell="v2"] .sidebar.open { transition: none; }
+}

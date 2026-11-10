@@ -1,0 +1,138 @@
+[
+  {
+    "case": "390-light-owner",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "390-light-employee",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "390-dark-owner",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "390-dark-employee",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "1024-light-owner",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "1024-light-employee",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "1024-dark-owner",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "1024-dark-employee",
+    "bbox": null,
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  {
+    "case": "1025-light-owner",
+    "bbox": [
+      286,
+      163,
+      1001,
+      755
+    ],
+    "changedPixels": 46,
+    "maxChannelDelta": 2
+  },
+  {
+    "case": "1025-light-employee",
+    "bbox": [
+      286,
+      163,
+      1001,
+      802
+    ],
+    "changedPixels": 46,
+    "maxChannelDelta": 2
+  },
+  {
+    "case": "1025-dark-owner",
+    "bbox": [
+      286,
+      163,
+      1001,
+      755
+    ],
+    "changedPixels": 51,
+    "maxChannelDelta": 1
+  },
+  {
+    "case": "1025-dark-employee",
+    "bbox": [
+      286,
+      163,
+      1001,
+      802
+    ],
+    "changedPixels": 51,
+    "maxChannelDelta": 1
+  },
+  {
+    "case": "1440-light-owner",
+    "bbox": [
+      286,
+      163,
+      1416,
+      755
+    ],
+    "changedPixels": 46,
+    "maxChannelDelta": 2
+  },
+  {
+    "case": "1440-light-employee",
+    "bbox": [
+      286,
+      163,
+      1416,
+      802
+    ],
+    "changedPixels": 48,
+    "maxChannelDelta": 2
+  },
+  {
+    "case": "1440-dark-owner",
+    "bbox": [
+      286,
+      163,
+      1416,
+      755
+    ],
+    "changedPixels": 61,
+    "maxChannelDelta": 5
+  },
+  {
+    "case": "1440-dark-employee",
+    "bbox": [
+      802,
+      163,
+      1416,
+      756
+    ],
+    "changedPixels": 27,
+    "maxChannelDelta": 5
+  }
+]

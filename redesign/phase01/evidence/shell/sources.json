@@ -1,0 +1,34 @@
+[
+  {
+    "path": "design/shell.css",
+    "sha256": "b83397f13d261c5b526234611136b4c65d6aa84488a35362960ff448ca1af07c"
+  },
+  {
+    "path": "module/shell-ansicht.js",
+    "sha256": "22ed433b2cb47bd96a9237dcba49c3a0db7518d3f696d76fe8a20bfbcfd3274f"
+  },
+  {
+    "path": "module/kopf-menue.js",
+    "sha256": "4330edafc3315034f6e43db150da491250aad681622ec55f6ed1e9474007d906"
+  },
+  {
+    "path": "module/kopf-profil.js",
+    "sha256": "8793db6d59304675fbd8571f37f61b6c088d31be4be57a5c2a8b50466587b094"
+  },
+  {
+    "path": "module/kopf-neu.js",
+    "sha256": "4ddeeb914fbfbb235c5767e571cae64356df1ed3fda685e37d55067397c090eb"
+  },
+  {
+    "path": "module/kopf-suche-ansicht.js",
+    "sha256": "fc1fb5919fe4c588218c0680defffd547de0be42831580df9ae9c79aa94c7b57"
+  },
+  {
+    "path": "module/leiste-flyout.js",
+    "sha256": "09fc57b9d21ac8826a4d9134d0447727fdd38aed4cd712c74d9fea0d84387769"
+  },
+  {
+    "path": "module/schublade-neu.js",
+    "sha256": "cbb8b6b8da914e4703cde14f5da7e956f29058c5c852d1021bbe6871bd73c535"
+  }
+]

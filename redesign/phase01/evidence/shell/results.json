@@ -1,0 +1,350 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "dc9468d8729f4feb599024bacce16b5b424a8a5bc19227c940b0e0f86d4c57cd",
+      "after": "44dae4da9ec76e7678bad04d65fc85205da5629ca3556469caf5e0d549298141",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "44dae4da9ec76e7678bad04d65fc85205da5629ca3556469caf5e0d549298141",
+    "contextMismatch": {
+      "field": "scope",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "6e4fa2d1fcf5171e747ae8256ac099844b983fd67a675eacab616989fd8be906",
+      "after": "176043125bd01807d92db912d828941c804cfc5615a00b67feb3b13cbc5edcb4",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "176043125bd01807d92db912d828941c804cfc5615a00b67feb3b13cbc5edcb4",
+    "contextMismatch": {
+      "field": "scope",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "7d01530861882f118d3c7fc930687383f3caf9a146e281a4036a2c70fc9902c1",
+      "after": "37dde0870560a468e7078638dc4e864eafcf0571b20d56fea2901932a1f8acd7",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "37dde0870560a468e7078638dc4e864eafcf0571b20d56fea2901932a1f8acd7",
+    "contextMismatch": {
+      "field": "scope",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "44b9a37fd8b6ea595e6a1c4d195736e75cc5de41689cd29d46b10e0bbf3db822",
+      "after": "52200046a156b02cddf4f36486815c37df64579fc34289e5b0c33d6dd3992d1b",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "52200046a156b02cddf4f36486815c37df64579fc34289e5b0c33d6dd3992d1b",
+    "contextMismatch": {
+      "field": "scope",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1024,
+    "theme": "light",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "073f329f6158d55297f222dd14eff6108d1a15ef9e6e78bcc8d6fdc3ded627be",
+      "after": "7473db722f6ca7b7b736c65b68394ef5bd95c6d446eb12827286348d27783cbf",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "7473db722f6ca7b7b736c65b68394ef5bd95c6d446eb12827286348d27783cbf",
+    "contextMismatch": {
+      "field": "uid",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1024,
+    "theme": "light",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "9b3e9e822df2b6a896adf32ac94f9ceb776abbd073690b729eefba450f7ffe88",
+      "after": "f450b9b447a7a71256f77f2ee240fe2b5f265e8f0a1b3e819186e269c82230d3",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "f450b9b447a7a71256f77f2ee240fe2b5f265e8f0a1b3e819186e269c82230d3",
+    "contextMismatch": {
+      "field": "uid",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1024,
+    "theme": "dark",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "03888e3a4367a7baf9148a7f06addbe3f8d328f61c0355b35ecfabc699e2af13",
+      "after": "f53c98c5181f9979c5e18c3b04e1d9a8cc42db843c98cb3ecc9db36389f107fe",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "f53c98c5181f9979c5e18c3b04e1d9a8cc42db843c98cb3ecc9db36389f107fe",
+    "contextMismatch": {
+      "field": "uid",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1024,
+    "theme": "dark",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "81af467f556b34b44eb599a75aeab9dccf16a7e9bd6e404b2b871b9afbf0499b",
+      "after": "2e7017d4153dcc51315cdf7b6a28083c1785e1fce8fe02dc19a91e13c36f3594",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "drawerEscapeFocusAndInert": true,
+    "restoredAltMatchesControl": true,
+    "restoredAltHash": "2e7017d4153dcc51315cdf7b6a28083c1785e1fce8fe02dc19a91e13c36f3594",
+    "contextMismatch": {
+      "field": "uid",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1025,
+    "theme": "light",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "0c2cae79abd2813e1e4ccce65f47e21cefad928d9692455e56ddcbbdcbd5ddd3",
+      "after": "ad7c05ec418c242311ed1cbe75eee27ab6b7c8c00edbeb0d4ed03688d2702500",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "43fe191884cd4e933a42bac7189c0a141af49ad26d231a976c6fcc5075bd29c7",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1025,
+    "theme": "light",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "52d14daa5cdba5539eb23508dc3f0113fb1e5172bbde6e3a0372fcf01f8206de",
+      "after": "3eff5685a0a0db532fb258433a47cc9b9d38979a055f5daaa065990c7e7b355e",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "454827f74f8799bd8049400a4c409284ec12503d9050eba0a36d2ec94f7cd0e3",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1025,
+    "theme": "dark",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "ba6373295d25ac3f0bb22a2eb1712ff3e906592a40ed40525ad5920ace205634",
+      "after": "5e0fac29a114a2ca6a7a9b81d3e1c680aeaf80ce1764cbdb7f02b9890fa7a5b7",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "d264d1e9ca10090c0c06b2854ed1b957eef71cef2e02bce531562c00dd47e794",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1025,
+    "theme": "dark",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "7dc1d7dfd4c65a59b59e669845478f09570b643d22d21dc92677ff5969394012",
+      "after": "ba16c5e471799f4d828243f69968bf7fb5c0c6565acf0d9c6e2edcba4b7896b2",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "e118781d8a607e816a5cde765de400f14f08946b6b794bf2990015bf45bd4c39",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "63eefab5de03d9d698bdcce025a5389d2e0853c78748be16e533d11b586f3cef",
+      "after": "00d4bb0cce7172a8af7dcb77735d81d11ec8e29046d3fee00675eb40f0faf688",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "be3c591ce825162d9ed7afc4667aa2af8c85ebfd37d3f315eb9f8cd38bb44a17",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "e3f56cb806635f5b35f3aba431eec54ff3e9a0b446fc65cc5cf46bd5a5b33a0b",
+      "after": "03450badb6cd77616b4200d0b159e4180dd55af86e3dc534182176489259d7a0",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "5fe39534f9de6921d083afbdc0a3a4db6f8b2069c85891292a0c22f6180092b7",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "role": "owner",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "671ab782b402fbe8747588b2d33d245697ed074af4d011f2de2b6b3293b73595",
+      "after": "8744d2279a1f3f0fc3417219e9e1154c5f2fe7467cc7a85eee95581cf8c8fff8",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "671ab782b402fbe8747588b2d33d245697ed074af4d011f2de2b6b3293b73595",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "role": "employee",
+    "unauthenticatedDenied": true,
+    "mountedAltPixelEqual": true,
+    "control": {
+      "baseline": "20e88756f6eab20ba67baa5e4bc1f5b5c994c6f9a1b4e6722c3675d6c353cc46",
+      "after": "5306aa54635bbc717764632880b7945b125431ddc2cdc0e36e045602cfa34533",
+      "pixelEqual": false
+    },
+    "navigationIdentity": true,
+    "patientSearchDelegates": true,
+    "collapseFlyoutEscape": true,
+    "restoredAltMatchesControl": false,
+    "restoredAltHash": "20e88756f6eab20ba67baa5e4bc1f5b5c994c6f9a1b4e6722c3675d6c353cc46",
+    "contextMismatch": {
+      "field": "role",
+      "disabled": true
+    },
+    "reloadAltPixelEqual": true
+  }
+]
