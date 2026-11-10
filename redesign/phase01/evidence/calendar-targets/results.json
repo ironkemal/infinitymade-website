@@ -1,0 +1,404 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 67.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 62.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 161.875,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 67.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 62.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 161.875,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 67.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 62.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 161.875,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 67.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 62.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 161.875,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 51.875,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 75.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 70.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 127.5,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 172.9375,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "targets": [
+      {
+        "id": "calAddBookingBtn",
+        "width": 86.046875,
+        "height": 44
+      },
+      {
+        "id": "dayViewPrev",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "dayViewNext",
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "calTodayBtn",
+        "width": 70.9375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn active",
+        "width": 51.875,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 75.734375,
+        "height": 44
+      },
+      {
+        "id": "cal-view-btn",
+        "width": 70.703125,
+        "height": 44
+      },
+      {
+        "id": "myBookingCopy",
+        "width": 127.5,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip active",
+        "width": 65.328125,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "cal-emp-chip ",
+        "width": 121.890625,
+        "height": 44
+      },
+      {
+        "id": "calAddLeaveBtn",
+        "width": 172.9375,
+        "height": 44
+      }
+    ],
+    "altPixelEqual": true
+  }
+]

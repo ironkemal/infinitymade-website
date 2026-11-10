@@ -9,7 +9,7 @@
    ========================================================================== */
 
 /* ── V5.01 Kopfzeile ──────────────────────────────────────────────────────────
-   Ein Höhenmaß (36 px) für alle Bedienelemente. Reihenfolge wie in gängigen Kalendern:
+   Mindestens 44 px für alle Bedienelemente. Reihenfolge wie in gängigen Kalendern:
    „Heute“, dann ‹ › zusammen, dann das Datum als Überschrift; rechts Ansicht und Aktionen.
    Umgestellt nur per `order` — ids und HTML-Reihenfolge bleiben (dashboard.js). */
 @media screen {
@@ -19,8 +19,8 @@
   [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { order: 3; padding-left: 10px; }
 
   [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext) {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-color: var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
@@ -29,7 +29,7 @@
   [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext):hover { background: var(--bg-hover); color: var(--text-main); }
 
   [data-design="neu"] #panel-calendar :is(#calTodayBtn, #myBookingCopy, #calAddLeaveBtn, #calAddBookingBtn) {
-    height: 36px;
+    height: 44px;
     padding: 0 14px;
     border-radius: var(--radius-sm);
     font-size: 14px;
@@ -41,7 +41,7 @@
 
   /* Tag | Woche | Monat: ein Segment auf grauem Track, ohne Trennstriche. */
   [data-design="neu"] #panel-calendar .cal-view-toggle {
-    height: 36px;
+    height: 50px;
     padding: 3px;
     gap: 2px;
     margin-left: auto;
@@ -50,7 +50,8 @@
     border-radius: var(--radius-sm);
   }
   [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn {
-    height: 30px;
+    min-width: 44px;
+    height: 44px;
     padding: 0 14px;
     border: 0;
     border-radius: var(--radius-xs);
@@ -102,7 +103,7 @@
 
   /* Kontextmenü (module/kalender-kontextmenue.js): Fokus innen statt eines Rings, der über den
      Menürand ragt. Gegen den globalen Fokusring mit !important (praxura-design.css Fokus-Block). */
-  [data-design="neu"] .kal-kontextmenue-eintrag { min-height: 36px; font-size: 14px; border-radius: var(--radius-xxs); }
+  [data-design="neu"] .kal-kontextmenue-eintrag { min-height: 44px; font-size: 14px; border-radius: var(--radius-xxs); }
   [data-design="neu"] .kal-kontextmenue-eintrag:hover:not(:disabled) { background: var(--bg-hover); }
   [data-design="neu"] .kal-kontextmenue-eintrag:focus-visible {
     background: var(--bg-hover);
@@ -126,7 +127,7 @@
 }
 @media screen {
   @container pxkalender (max-width: 900px) {
-    [data-design="neu"] #panel-calendar #myBookingCopy { width: 36px; padding: 0; justify-content: center; }
+    [data-design="neu"] #panel-calendar #myBookingCopy { width: 44px; padding: 0; justify-content: center; }
     [data-design="neu"] #panel-calendar #myBookingCopy > span { display: none; }
     [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { font-size: 18px; min-width: 0; padding-left: 6px; }
     [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn { padding: 0 10px; }
@@ -161,7 +162,7 @@
 
   /* Mitarbeiter-Chips: gleiche Höhe wie die Kopfzeile darüber, ruhige Pille. */
   [data-design="neu"] #panel-calendar .cal-emp-leiste { border-bottom: 0; margin-bottom: 12px; }
-  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 36px; padding: 0 12px; font-size: 13px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 44px; padding: 0 12px; font-size: 13px; }
   [data-design="neu"] #panel-calendar .cal-emp-chip:hover { border-color: var(--border-strong); background: var(--bg-hover); }
   [data-design="neu"] #panel-calendar .cal-emp-chip.active { border-color: var(--text-main); background: var(--nav-active); }
 }
