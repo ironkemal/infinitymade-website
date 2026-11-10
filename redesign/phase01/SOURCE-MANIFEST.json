@@ -1,0 +1,287 @@
+{
+  "created": "2026-11-10T20:38:14.041241",
+  "private_path": "/Users/melihdonmez/.codex/private-snapshots/praxura-phase01-20261110-203814",
+  "sources": {
+    "main": {
+      "root": "/Users/melihdonmez/infinitymade-website",
+      "head": "94eaf6357d099ab36237dc6eb5d328317a654a7a",
+      "branch": "main",
+      "files": [],
+      "excluded_path_count": 2263,
+      "exclusion_note": "Nicht freigegebene Pfade nur im privaten Manifest; keine Inhalte gelesen/kopiert."
+    },
+    "design": {
+      "root": "/Users/melihdonmez/.t3/worktrees/infinitymade-website/redesign-praxura-design",
+      "head": "510be24cd6d0acbe695fa35f19b4ed00bf47b6a5",
+      "branch": "redesign/praxura-design",
+      "files": [
+        {
+          "path": "dashboard.css",
+          "sha256": "2148ce7b6596d193843e0c23725e5ef9dde57a059273f542f5e96221da6b33b7",
+          "bytes": 183840,
+          "patch_sha256": "34fd2dbb4c6d41b01b33d339be339bff87ed0ebcfc3d0a23aa92b7124fd95441"
+        },
+        {
+          "path": "dashboard.html",
+          "sha256": "56c77399d63b1125669a0712ff740f65ef341ce38ac411f742d0c75da1fa15b9",
+          "bytes": 383220,
+          "patch_sha256": "b1ec981ab21447ca964b9dbee55e923411ac645bdbdb8839a56f195a82eb7e26"
+        },
+        {
+          "path": "dashboard.js",
+          "sha256": "d36c171dae948e6859419e800030eda63968714fb21e8fdc10beea30e895a3b9",
+          "bytes": 878853,
+          "patch_sha256": "db977ac3405f7a52b6c163ece86ae775b16ee7d3ed4631e14f500fe3e707813b"
+        },
+        {
+          "path": "design/formulare.css",
+          "sha256": "267e6bd619a68ef96a58d1aa5baaf541a5f3210ccf04db5c34dd6d263002d2cf",
+          "bytes": 4047,
+          "patch_sha256": null
+        },
+        {
+          "path": "design/seiten.css",
+          "sha256": "0889d206c8b96633671d1866a2255a1eceb31ec0ccc092315c520eab02eb9251",
+          "bytes": 22675,
+          "patch_sha256": "dd53e72fa01ce860db334908fac0a0350b3da9e0eddac4c263c3c338c62a320f"
+        },
+        {
+          "path": "design/shell.css",
+          "sha256": "f89b8cb4ed9bff96e0faa2a62ab74623aec1f99a78e95d65a858f69cd480c5f5",
+          "bytes": 27538,
+          "patch_sha256": "c4f338c87c27871b3a79014606975ebb99602c87d171bf60b847221c8038c3af"
+        },
+        {
+          "path": "kalender.html",
+          "sha256": "76a5329ced5a5887be579b9d2351271faa9d367e6c060c8325c8cf5885eb9bd4",
+          "bytes": 27238,
+          "patch_sha256": "b18be93f33648f01332caf308ba4d0511cb6fdff0c37bf78e7ef90b7145e4ba9"
+        },
+        {
+          "path": "kalender.js",
+          "sha256": "6134ae88133c06fa27c70cd1f8b19fb5a83754edf865676a3c7a7e27d14cde51",
+          "bytes": 35812,
+          "patch_sha256": "240d5f0faa41d993b8daeb54a62848f6609ddcde0968438a3a167be8f4dd675d"
+        },
+        {
+          "path": "module/abrechnungsstatus.js",
+          "sha256": "0667a7de6c5dc6c40d6e8bee0e004f72de4ba8f5267f22e5bd2d40d27e53d43e",
+          "bytes": 37247,
+          "patch_sha256": "f088abecab9bb483919e27e73719d93f798d07b330336ab0db79780de61a2ca2"
+        },
+        {
+          "path": "module/abrechnungsstatus.test.js",
+          "sha256": "edd53c2426475275fb97698b3a4640c70e172f21f8ce17bd49ca562632e40a41",
+          "bytes": 4878,
+          "patch_sha256": "19d559ccb0f636e884e94941971fe521eea6e3dbdb578a85d140561a28dd872f"
+        },
+        {
+          "path": "module/absagegrund-modal.js",
+          "sha256": "b60c9e6d551ccc572951c9d48d5b18ae303a6af4f6a45af47f1971d5805a319e",
+          "bytes": 5253,
+          "patch_sha256": "15744000743bb43d98076e436c23cdb9056862f1af27f2b02809819295623756"
+        },
+        {
+          "path": "module/api-fehler.js",
+          "sha256": "18727b1cb01a3dfdaefa33f57950e9e7de8f192481ab95217a140671ccf94af1",
+          "bytes": 945,
+          "patch_sha256": null
+        },
+        {
+          "path": "module/api-fehler.test.js",
+          "sha256": "ed97338f4a50ae03a549a5eafac68d28925d52e520a50ec54dc1b6ff3eb74ac0",
+          "bytes": 1184,
+          "patch_sha256": null
+        },
+        {
+          "path": "module/einstellungen-nav.js",
+          "sha256": "8ae57291160c88b4589c68395006a53b3548698b2013a03ea316896c12b3726c",
+          "bytes": 7710,
+          "patch_sha256": "b119d9c20f89e11a441b5cf6109175d9716914211e6f4448ad70be448144f9ee"
+        },
+        {
+          "path": "module/einstellungen-nav.test.js",
+          "sha256": "5302ef2fb849d0c8c36c86feda68909cf99242a89e1365782996c164e3c16cce",
+          "bytes": 2834,
+          "patch_sha256": "f24f6038f1cd9de6a82c1bf7ff409510d5ca986cf4a1c43a908080fe0921b7ef"
+        },
+        {
+          "path": "module/fussbefund.js",
+          "sha256": "56f8af8856b8ab1c92512d200557b7f1d57122c6a3b4eeae31cefa678a69d6f0",
+          "bytes": 83019,
+          "patch_sha256": "0b3492c4ff65ca607a8b6e4e9755ead0907d8e41e36575d0b888fbff91da6ee6"
+        },
+        {
+          "path": "module/kalender-woche.js",
+          "sha256": "7c08ad1abd80a1dd47462412405ddd8b9c7863bbd211536bc0ef0c6f19440fe3",
+          "bytes": 15410,
+          "patch_sha256": "7368f12bfae2c6e5816d5165b57f788143130485d2c82397ac62bca008061a18"
+        },
+        {
+          "path": "module/kopf-dokumente.js",
+          "sha256": "9c2aea943127f8eaa0837d27ba157115fac728cbad80a6fcf0078dc3d3a1ac64",
+          "bytes": 9575,
+          "patch_sha256": "0d72221e3e99e251c4c3eb9a2143e2f392573ba24d06f583ffe83a0b9ed369e4"
+        },
+        {
+          "path": "module/kopf-suche.js",
+          "sha256": "81a0cef0aaca827b5f505d026bde72fdab638e45399571661cb6d61636fc5c4d",
+          "bytes": 7400,
+          "patch_sha256": "db4e984daf3d04c48a727ae0af5e7a46e60779d74e1abe4f3ab3e15daf445f2d"
+        },
+        {
+          "path": "module/neu-start.js",
+          "sha256": "4b93ce1d0fb6578a6d09d92bf3e59e4147fada28d8e91253aedfebefcb194802",
+          "bytes": 1477,
+          "patch_sha256": "8376e9dc80523af392a06fbe5d6e0866bb91e5babffc2ae9b51e7050e2311541"
+        },
+        {
+          "path": "module/patientenliste.js",
+          "sha256": "f2539c921c2da2c08b830c3b995f8b362b0dbe467632c693a965859981711b71",
+          "bytes": 9344,
+          "patch_sha256": "5061c47fa424bf1225a1c248cb96c8a4e4630fb321c019ddab603fef640825c2"
+        },
+        {
+          "path": "module/patientenliste.test.js",
+          "sha256": "ba774a1e4d71a036a45e06f5005cfc8f8e05a6b22fb6760d28d50ecd53e35f88",
+          "bytes": 1075,
+          "patch_sha256": null
+        },
+        {
+          "path": "module/podo-einheiten.js",
+          "sha256": "4ba35a384beb8c4016fb9359701580a25ddc5e6d38a5712faa225931b5d3b11c",
+          "bytes": 30798,
+          "patch_sha256": "1dba039154858c0a5a8ff1626d98dd1408a8485b732503646d24ed1dc0b25a24"
+        },
+        {
+          "path": "module/podo-storno.js",
+          "sha256": "6f461280ef0a9021fdd376be2d402219a4fa7c43804efe6ea99fd9038de22bed",
+          "bytes": 7251,
+          "patch_sha256": "d3dfd435362de4ef52b60ce118cd1e640cc932834a4c2c8dfb93719b13987d24"
+        },
+        {
+          "path": "module/podologie-abrechnung.js",
+          "sha256": "822d346827fbf1fa5102f17fa26beeb161a3eb6ea6f9eb7fe23ac73c7d36548c",
+          "bytes": 91173,
+          "patch_sha256": "d516e8bbb03225700a1ccbde4e60854c8e9059a7e330a55d198866c74c39b50c"
+        },
+        {
+          "path": "module/rezeptinfo-geld.js",
+          "sha256": "f14e4355cbb2aa42ca493c774610d525101e6ee0fa225a47fbe506ea399446a9",
+          "bytes": 27311,
+          "patch_sha256": "54d601418832ce6e4cfd4e55d526906813ee9867e6d0e8cecc6b8f62728a7504"
+        },
+        {
+          "path": "module/serien-speicherkontext.test.js",
+          "sha256": "ebfe4ae8a6049bd581313c7f9ef39d0318a88a39c75a8ef103f7917297002263",
+          "bytes": 3371,
+          "patch_sha256": "95728e3b1d17e13a8a36248f4ac633131e7fa56837e410b0a95fd0fd531e79fa"
+        },
+        {
+          "path": "module/shell-neu.js",
+          "sha256": "bb73e24da6103ab77d38ab36e62e3637653e52ebac736973f95547f4ec1007ba",
+          "bytes": 7324,
+          "patch_sha256": "16941d6b6d6392e45758ce70465c51a838fc3139fadb62cca6acf19f65d8bb5c"
+        },
+        {
+          "path": "module/startseite-handlungsbedarf-karte.js",
+          "sha256": "480e81ee8b770b67dac06ec6ce358431954af03eede72f5166f83449074aafc1",
+          "bytes": 6753,
+          "patch_sha256": "563352c36a8745469881a93a9502afffe59f90b63090f13edfd8744814bac6e1"
+        },
+        {
+          "path": "module/startseite-handlungsbedarf-karte.test.js",
+          "sha256": "86f08c3b615c129f3d5964d9899517a49547ebd039f75e2aa414eb0b2e41f657",
+          "bytes": 12590,
+          "patch_sha256": "19731cce7469f5fd12231c37a0c3b958edd893c3ea8d21351614e2d1b383e41c"
+        },
+        {
+          "path": "module/startseite-handlungsbedarf-laden.js",
+          "sha256": "8f945cbfa9ea2305396c70e1b50212c461e5280c8ce9a3c51df95819b833e5e7",
+          "bytes": 13126,
+          "patch_sha256": "ce11122d90130c01457c9f0a047e3cba8567cb34ee8d8ac049f70ed2c0bf92bd"
+        },
+        {
+          "path": "module/startseite-neu.js",
+          "sha256": "75f4ef1530d818ddfc60873a09498b0062d11803ff7aa09889d3374999f8a1e7",
+          "bytes": 21989,
+          "patch_sha256": "f823e9d8fec02167f39ac997e604267e6de4a847370b360797553785b7ac7a28"
+        },
+        {
+          "path": "module/verordnung-detail.js",
+          "sha256": "2d9f456e24f9caffe6285a904c8d2f19533c43f3eaee9fc36bce372493c411c4",
+          "bytes": 60777,
+          "patch_sha256": "d19bd81a38a4fe0d05eee60447c60b4220059a371b9297e7e13e33ada5bdbcbc"
+        },
+        {
+          "path": "module/verordnung-liste.js",
+          "sha256": "875601378ac11cdc3cdd0216d02089ab8ff33570172dafab35a612322159f7c1",
+          "bytes": 12749,
+          "patch_sha256": "b841cf41331b7edc247ee9f3db537aa164d1294153dd003b94ba4419890a061f"
+        },
+        {
+          "path": "module/verordnung-uebersicht.js",
+          "sha256": "cfd541889dc39bc2a366f8606e6625a2fec4cdd6a38d635bf0b923ab49bdcc5c",
+          "bytes": 34652,
+          "patch_sha256": "747c40821e8962a0032d41f53a2c7d8562220a0fc730eee3e22901f559472349"
+        },
+        {
+          "path": "redesign/V803-UEBERGABE.md",
+          "sha256": "8179764b08c8d94f952855c64a0328d3ec847220e44f5910524c3fe8a7ae32c6",
+          "bytes": 30800,
+          "patch_sha256": "6d6ce13ebeb96d209e21c0ddcf5a5d851471673891fb9d7bffc650ff224b691e"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/README.md",
+          "sha256": "4d975e2adda9bb675f2b823fedb8338180d77c8f11454dba953f273b19902724",
+          "bytes": 9370,
+          "patch_sha256": "ccf11739d0caad9d365f076f40ffdf93db3a0938b09dd888aa592ce67d1e5385"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/controlling.mjs",
+          "sha256": "d94ed256c9334daf370c3c5a4a7372a540687482c042fc2ff826fcda423a2b50",
+          "bytes": 9863,
+          "patch_sha256": "fb518fe1c9da40b8ce131dcf448944d3cd0ac34aa2e77d89d04bb1a4b6fa9504"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/daten.mjs",
+          "sha256": "46b0e1de596a58402f3538b12edb424559799c68e5130be44addad2e9ee19991",
+          "bytes": 10787,
+          "patch_sha256": "e61ce1989cb02be842c8e15d07afbbad3007304f8b367eaffcf638966e3d2f1f"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/daten.test.js",
+          "sha256": "adb20d574c319b1f9279faddf8fb2e92663bb903f9c36bdc7367b36bd66c9671",
+          "bytes": 6682,
+          "patch_sha256": "e3052399036a019f27efd58cda22d8acf9c0f8f10b3ae83869e2a880d498dbce"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/filter.mjs",
+          "sha256": "1928c9a6ac31785eac651ca564ff0d497c1e78ca18b2af4d52daf33a577cde38",
+          "bytes": 2569,
+          "patch_sha256": null
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/filter.test.js",
+          "sha256": "e9e8f485c46a3d8afd00ca105efdf16f50bfde208a3859e87d0b631fbc02b97b",
+          "bytes": 2083,
+          "patch_sha256": null
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/server.mjs",
+          "sha256": "70d635e6a805ff79aa56f2903517112e72a78e994a6fb1013880c5404ce22204",
+          "bytes": 27529,
+          "patch_sha256": "0adbe9da687e51583fc5f9ac6743fa4d69fa7a2f3c34e47e240bb27d9417442b"
+        },
+        {
+          "path": "tools/browser-probe/physio-demo/server.test.js",
+          "sha256": "1bf21e9ce939640573dc74807dbc8048a181aaef3cc6ae2cc665c90eacc96d63",
+          "bytes": 20685,
+          "patch_sha256": "f7711a1bc8bed26887976c661ba937be6c4098f5dfea5015885bfb4f0ae91a26"
+        }
+      ],
+      "excluded_path_count": 3,
+      "exclusion_note": "Nicht freigegebene Pfade nur im privaten Manifest; keine Inhalte gelesen/kopiert."
+    }
+  }
+}

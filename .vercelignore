@@ -155,3 +155,6 @@ redesign/
 *.cjs
 komponenten.html
 dashboard-vorschau.html
+
+# Lokales Redesign-Inventar, Hashmanifeste und Übergaben (kein Runtime-Inhalt)
+redesign/phase01/

@@ -1,0 +1,50 @@
+[
+  {
+    "path": "praxura-design.css",
+    "sha256": "3d9e7639ae0fb9809ba0d643aa9f27054044d6ea7607387a36c3518198055ad6"
+  },
+  {
+    "path": "design/shell.css",
+    "sha256": "f89b8cb4ed9bff96e0faa2a62ab74623aec1f99a78e95d65a858f69cd480c5f5"
+  },
+  {
+    "path": "design/startseite.css",
+    "sha256": "a177a36c67bc85d9396926e840192594fc4cf46a13a630b013a37837820e221c"
+  },
+  {
+    "path": "design/kalender.css",
+    "sha256": "d43ff6532476e1d98894e40ab2bc9621fb3b0c4134673e2d0cf7c982644b52b8"
+  },
+  {
+    "path": "design/seiten.css",
+    "sha256": "0889d206c8b96633671d1866a2255a1eceb31ec0ccc092315c520eab02eb9251"
+  },
+  {
+    "path": "design/formulare.css",
+    "sha256": "267e6bd619a68ef96a58d1aa5baaf541a5f3210ccf04db5c34dd6d263002d2cf"
+  },
+  {
+    "path": "design/verwaltung.css",
+    "sha256": "e4346c62d14a41b06a734568a705e0ba2a7bcd5a230abe372067d86260a39715"
+  },
+  {
+    "path": "dashboard.html",
+    "sha256": "56c77399d63b1125669a0712ff740f65ef341ce38ac411f742d0c75da1fa15b9"
+  },
+  {
+    "path": "module/neu-start.js",
+    "sha256": "4b93ce1d0fb6578a6d09d92bf3e59e4147fada28d8e91253aedfebefcb194802"
+  },
+  {
+    "path": "module/shell-neu.js",
+    "sha256": "bb73e24da6103ab77d38ab36e62e3637653e52ebac736973f95547f4ec1007ba"
+  },
+  {
+    "path": "redesign/V803-UEBERGABE.md",
+    "sha256": "8179764b08c8d94f952855c64a0328d3ec847220e44f5910524c3fe8a7ae32c6"
+  },
+  {
+    "path": "redesign/V804-UEBERGABE.md",
+    "sha256": "bd4d6d04264411829f3b931b377225b8d8ca7aafa8a7ebcd3dcace648eaef3bf"
+  }
+]
