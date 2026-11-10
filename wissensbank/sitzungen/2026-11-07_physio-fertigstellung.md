@@ -1,6 +1,8 @@
 # Physio-Abrechnung — Ausführung des Astra-Plans
 
-Stand: 07.11.2026. Arbeitsnotiz, keine amtliche Quelle und keine externe Abnahme.
+Stand: 10.11.2026. Arbeitsnotiz, keine amtliche Quelle und keine externe Abnahme.
+Ältere Abschnitte dokumentieren damalige Zwischenstände. Aktueller Abgleich unten;
+vorhandene Implementierung bedeutet keine vollständige Paketabnahme.
 
 ## Auftrag und Grenzen
 
@@ -14,13 +16,13 @@ Fach-/DAS-Abnahme bleibt eigener Nachweis, kein Ersatz durch lokale Tests.
 
 | Paket | Ergebnis | Status |
 |---|---|---|
-| 0 | Aktuelle Quellen, unabhängige Fallmatrix, numerischer Katalogvergleich, Testbasis | in Arbeit |
-| 1 | Wiederholbare Erzeugung, atomare Claims/Snapshots/Freigabe, geschützte Downloads | vorbereitet, offen |
-| 2 | Entlassmerkmal/-datum: Schema, UI, DTO, Neuladen, DTA, Snapshot | teilweise vorbereitet |
-| 3 | Sitzungspositionen, T/K/F-Nachweise, leistungsbezogene Zuzahlung/Befreiung | offen |
-| 4 | Standard → Entlassmanagement → LHB/BVB → Blanko mit eigener Abnahme | offen |
-| 5 | Korrektur/Teilabrechnung/Wiederaufnahme und ZAA-Idempotenz | offen |
-| 6 | Byte-/Versandpaket, Signatur/Verschlüsselung, UI→Download, unabhängige Abnahme | offen |
+| 0 | Aktuelle Quellen, unabhängige Fallmatrix, numerischer Katalogvergleich, Testbasis | Teilnachweise vorhanden; vollständiger Soll-/Ist-Abgleich offen |
+| 1 | Wiederholbare Erzeugung, atomare Claims/Snapshots/Freigabe, geschützte Downloads | Ablauf/Adapter und Migrationen 0113/0115 vorhanden; Aktivierungs-/Gesamtnachweis offen |
+| 2 | Entlassmerkmal/-datum: Schema, UI, DTO, Neuladen, DTA, Snapshot | 0112 und UI umgesetzt; historischer QA-Roundtrip dokumentiert, vollständige Paketabnahme offen |
+| 3 | Sitzungspositionen, T/K/F-Nachweise, leistungsbezogene Zuzahlung/Befreiung | Tagescalculator vorhanden und gehärtet; aktive Berechnungswege noch nicht gemeinsam angebunden |
+| 4 | Standard → Entlassmanagement → LHB/BVB → Blanko mit eigener Abnahme | Einzelabnahmen weiterhin nachzuweisen |
+| 5 | Korrektur/Teilabrechnung/Wiederaufnahme und ZAA-Idempotenz | ZAA-Migration 0114 vorhanden; gesamte Korrektur-/Wiederaufnahmekette offen |
+| 6 | Byte-/Versandpaket, Signatur/Verschlüsselung, UI→Download, unabhängige Abnahme | Teiltests vorhanden; vollständiger unabhängiger Gesamtnachweis offen |
 
 Pro Paket: Sollfall → reproduzierbarer Fehler → Umsetzung → Tests → unabhängiges
 Review → Behebung/Nachprüfung → Commit. Gemeinsame Routen/Builder/Schema seriell.
@@ -35,7 +37,7 @@ Review → Behebung/Nachprüfung → Commit. Gemeinsame Routen/Builder/Schema se
 - Ausführungsnachweise: `fortschritte/2026-11-07_PHYSIO_ABRECHNUNG.md`.
 - Testinventur: `fortschritte/2026-11-07_PHYSIO_TESTBASIS.md` (in Erstellung).
 - Lokaler Datenentwurf: `db/entwuerfe/2026-11-07-physio-abrechnung.md`.
-- Aktuelle Physio-Ausgabe bleibt wegen ungeklärtem Entlassmerkmal gesperrt.
+- Historischer Ausgangsblocker war unbekanntes Entlassmerkmal. Inzwischen existieren Eingabe und Schema; Publikationsweg bleibt standardmäßig hinter `PHYSIO_PUBLIKATION_V1` gesperrt.
 
 ## Bestätigtes Publikationsrisiko
 
@@ -103,3 +105,51 @@ externer Fachprüfer und gesonderte Live-Freigaben. CONTRL/APERAK nicht ohne Pro
 - Gezielte Prüfung: `node --test api-backend/billing/api/artefakt-registry.test.js api-backend/billing/api/physio-publikation-rpc.test.js`: 17/17 bestanden.
 - Regulärer Gesamtlauf `npm run test:backend`: 1.973 bestanden, vier übersprungen, null Fehler, Exit0 (38,15s); Log `/tmp/praxura-publication-adapter-backend-final.log`.
 - SQL-Lockprotokoll und worker_granted werden parallel separat geprüft. Veröffentlichung bleibt bis vollständiger Backend-/Storage- und Schemaabnahme gesperrt.
+
+## Fortsetzung 10.11.2026: Zuzahlung und belastbarer Restumfang
+
+Ausgangsstand `d384c2b4`, `main` nach Fetch synchron mit `origin/main`.
+Fremde Änderungen `db/NUTZUNG.*`, unversionierte Berichte und `tools/db-vollkette/`
+bleiben erhalten. Alte offene Upload-/RPC-Entwürfe aus früherer Übergabe sind im
+aktuellen Checkout bereits weiterentwickelt und werden nicht erneut gebaut.
+
+Vorhanden: `physio-publikation-ablauf.js`, Routenanbindung hinter exakt gesetztem
+Feature-Flag, Migrationen 0112–0115. Tagesprotokoll und `canli-test/REGISTER.md`
+berichten historische Live-Prüfungen; diese Fortsetzung führt keinen Live-Zugriff
+aus und bestätigt keinen aktuellen QA-Serverzustand.
+
+Funktionsberater und gkv-302 getrennt konsultiert. Reproduziert und korrigiert:
+Befreiungs-Enddatum verlor Gültigkeit am selben Tag; unmögliche Kalenderdaten
+passierten Regex; ungültige Leistungsbeträge wurden still zu null Euro;
+Positionszuzahlungen und Gesamtüberlauf blieben ungeprüft. Bestehende Helfer
+`istStichtag`, `berlinHeute`, `isDtaDecimal` wiederverwendet. Review fand zusätzlich
+normalisierte ungültige Referenzstrings; jetzt ausschließlich echte ISO-Tage oder
+gültige Date-Instanzen für Befreiungsprüfung. Vier-Zeitzonen-Test reproduzierte
+vorzeitige Volljährigkeit in Los Angeles; bestehender `isUnter18` vergleicht nun
+Kalendertage und bildet echte Zeitpunkte auf Berlin ab.
+
+Quellenabgleich ausschließlich gegen archivierte Original-TXT: W-17 §8 Abs.2–4
+(Lesefassung 04.04.2022, Zeilen 753–783), W-29 §32 Abs.2 (27–32), W-30 §§187/188
+(11–13,23–27). Kein neuer Nachweis aktueller Herausgeberfassung. Geburtstag ist
+keine offene Praxisentscheidung; Partnerfrage #22 auf Erfassungsablauf umgestellt.
+Status des ersten Behandlungstags für Blattgebühr bleibt systematische Auslegung
+mit gezielt erforderlicher externer Fallprüfung.
+
+**Nächste lokale Reihenfolge:** Jahresbindung und Herkunft von Befreiungsnachweisen
+klären; ursprünglichen ersten Behandlungstag sowie bereits erhobene Blattgebühr
+für Korrekturen festlegen; gemeinsame Sollfälle für Vorschau, Patientenforderung,
+Snapshot und DTA erstellen; danach zusammenhängend anbinden. Bloßer Importwechsel
+wäre falsch: aktive Pfade verlieren Tagesdatum oder verwenden verordnungsweiten
+Status. Ungebundener Boolean `befreit_im_jahr` und pauschales
+`verordnung_zuzahlungsfrei` sind vor Aktivierung weiter zu klären.
+
+QA-Flag, Box-/Hardwareabnahme und externe Fach-/DAS-Prüfung bleiben gesondert;
+sie blockieren diese unabhängigen lokalen Restarbeiten nicht. Zahnärztliche
+Verordnungen bleiben gesperrt. Kein vollständiger Abschluss behauptet.
+
+Nachweis dieses Schritts: `npm run test:backend` nach letztem Codefix:
+2.036 PASS, 4 SKIP, 0 FAIL, Exit0 (26,90s), Log
+`/tmp/praxura-20261110-copay-final.log`. Calculator-/Legacyfälle in UTC,
+Los Angeles, Tokio und Berlin grün. Unabhängiger Abschlussreview: 31/31 unter
+Los Angeles plus Timestamp-/Date-Kompatibilität unter Tokio, keine neuen Blocker.
+Keine Live-/Browserabnahme. Tagesverlauf: `fortschritte/2026-11-10.md`.

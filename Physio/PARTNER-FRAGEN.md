@@ -171,8 +171,9 @@
 - **Eklendi:** 2026-11-04 (physio-Prüfung M7) · **Cevap:** —
 
 ### #22 — Zuzahlung: Alter 18 und Befreiung innerhalb einer Verordnung
-- **Soru (Almanca, partnere/Kasse aynen):** „Wird der Patient am Tag seines 18. Geburtstags schon als zuzahlungsfrei/-pflichtig geführt, und gilt der Status am ersten Behandlungstag auch für die 10-€-Verordnungspauschale, wenn sich Alter oder Befreiung innerhalb der Verordnung ändern?"
-- **Varsayımımız:** Geburtstag selbst = 18 (heutige Implementierung `isUnter18`); Alter/Befreiung gelten je Leistungstag, Pauschale hängt am Status des ersten Behandlungstags (gkv-302 07.11.2026, Vertragswortlaut belegt nur „erster Behandlungstag"). `calcAbrechnungsfallZuzahlungProTag` fertig, in den Routen noch nicht aktiv.
-- **Cevap "hayır" ise değişen:** Pauschale nach Status am Tag der Verordnung oder des letzten Tags; Rechnung und DTA-Builder müssen gemeinsam angepasst werden.
+- **Soru (Almanca, Praxisablauf):** „Wie erfassen Sie Befreiungsnachweise mit Beginn und Ende, einen Jahreswechsel und bereits erhobene Blattgebühren? Können wir an synthetischen Beispielen prüfen, welche Angaben Empfang und Abrechnung dafür benötigen?"
+- **Quellenstand 10.11.2026:** Vollendung des 18. Lebensjahres am Geburtstag durch SGB V §32 Abs.2 und BGB §§187 Abs.2/188 Abs.2 belegt (W-29/W-30). Physio-Vertrag §8 Abs.2–4 (W-17, Lesefassung 04.04.2022, TXT 753–783) bindet Nachweis an Leistungszeitpunkt, verlangt Prüfung beim Jahreswechsel und nennt ersten Behandlungstag für Blattgebühr. Status dieses Tages für Blattgebühr systematisch abgeleitet; konkrete Übergangsfälle extern fachlich prüfen. Partnerantwort ersetzt keine Vertragsregel.
+- **Technisch offen:** `calcAbrechnungsfallZuzahlungProTag` vorhanden, noch nicht durchgängig angebunden oder abgenommen. Jahresbindung des Nachweises, ursprünglicher erster Behandlungstag und schon erhobene Blattgebühr müssen über Vorschau, Patientenforderung, Snapshot und DTA gemeinsam geführt werden.
+- **Auswirkung der Antwort:** Erfassungsablauf und notwendige Nachweise konkretisieren; belegte Alters-/Vertragsregeln werden nicht durch Praxisgewohnheiten überschrieben.
 - **Öncelik:** 🟠 Geld (Kassenabsetzung möglich)
 - **Eklendi:** 2026-11-07 (Zuzahlung je Tag) · **Cevap:** —

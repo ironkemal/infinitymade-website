@@ -11,6 +11,9 @@
 //
 // All amounts use 2 decimal places, kaufmännische Rundung.
 
+import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+import { isDtaDecimal } from '../dta/strict-fields.js';
+
 const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
 
 /**
@@ -113,7 +116,8 @@ export function calcAbrechnungsfallZuzahlung({
  *   - Alter (18) und Befreiung (§ 62) gelten je LEISTUNGSTAG; 10 % nur fuer Tage mit Zuzahlungspflicht.
  *   - 10-EUR-Pauschale haengt am ersten Behandlungstag der Verordnung: ist der frei, entfaellt sie.
  *     (Wortlaut belegt nur "erster Behandlungstag"; dass Alter/§62 dort gelten, ist Auslegung — offene Frage.)
- *   - Alter: Geburtstag selbst zaehlt als 18 (offene Frage, nicht im Archiv belegt).
+ *   - Alter: Geburtstag selbst zaehlt als 18 (SGB V §32 Abs.2, BGB §§187 Abs.2/188 Abs.2;
+ *     archivierte Auszuege wissensbank/gemeinsam/gesetze/, W-29/W-30).
  * Jede Session braucht `datum` (YYYY-MM-DD, Berliner Leistungstag). Fehlt eines: Fehler, nie raten.
  * Befreiung: patient.befreiungen = [{ jahr, befreit_ab, befreit_bis }] (isBefreit je Tag), oder
  * patient.befreit_im_jahr (Boolean) = ganzes Jahr der Leistung.
@@ -124,23 +128,33 @@ export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnu
   if (patient?.insurance_type === 'privat') return { zuzahlung_eur: 0, befreit: false, grund: 'privat' };
   if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('Zuzahlung je Tag: keine Sitzungen.');
   for (const s of sessions) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s.datum || ''))) {
+    if (!istStichtag(s.datum)) {
       throw new Error('Zuzahlung je Tag: Leistungstag fehlt oder ist ungueltig.');
+    }
+    if (!isDtaDecimal(s.preis_eur, 10, { positive: true })) {
+      throw new Error('Zuzahlung je Tag: Leistungsbetrag fehlt oder ist ungueltig.');
+    }
+    if (s.zuzahlung_eur_position != null &&
+        (!isDtaDecimal(s.zuzahlung_eur_position, 10) || Number(s.zuzahlung_eur_position) > Number(s.preis_eur))) {
+      throw new Error('Zuzahlung je Tag: Positionszuzahlung ist ungueltig.');
     }
   }
   const sortiert = [...sessions].sort((a, b) => a.datum.localeCompare(b.datum));
   const grundAm = (datum) => {
     if (verordnung_zuzahlungsfrei) return 'verordnung';
-    if (isUnter18(patient?.geburtsdatum, `${datum}T12:00:00`)) return 'unter_18';
+    if (isUnter18(patient?.geburtsdatum, datum)) return 'unter_18';
     const jahr = +datum.slice(0, 4);
-    if (Array.isArray(patient?.befreiungen) ? isBefreit(patient.befreiungen, jahr, `${datum}T12:00:00`) : patient?.befreit_im_jahr) {
+    if (Array.isArray(patient?.befreiungen) ? isBefreit(patient.befreiungen, jahr, datum) : patient?.befreit_im_jahr) {
       return 'befreiungsausweis';
     }
     return null;
   };
-  const tage = sortiert.map(s => ({ datum: s.datum, preis_eur: +s.preis_eur || 0, grund: grundAm(s.datum),
-    zuz: grundAm(s.datum) ? 0 : calcSessionZuzahlung(s) }));
+  const tage = sortiert.map(s => {
+    const grund = grundAm(s.datum);
+    return { datum: s.datum, preis_eur: Number(s.preis_eur), grund, zuz: grund ? 0 : calcSessionZuzahlung(s) };
+  });
   const brutto = r2(tage.reduce((a, t) => a + t.preis_eur, 0));
+  if (!isDtaDecimal(brutto, 10)) throw new Error('Zuzahlung je Tag: Gesamtbetrag ueberschreitet die Feldgrenze.');
   const prozZuzahlung = r2(tage.reduce((a, t) => a + t.zuz, 0));
   const ersterTagPflichtig = tage[0].grund === null;
   const pflichtigBrutto = r2(tage.filter(t => t.grund === null).reduce((a, t) => a + t.preis_eur, 0));
@@ -156,23 +170,33 @@ export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnu
 
 export function isUnter18(geburtsdatum, referenceDate = new Date()) {
   if (!geburtsdatum) return false;
-  const gb = geburtsdatum instanceof Date ? geburtsdatum : new Date(geburtsdatum);
-  const ref = referenceDate instanceof Date ? referenceDate : new Date(referenceDate);
-  if (Number.isNaN(gb.getTime()) || Number.isNaN(ref.getTime())) return false;
-  let age = ref.getFullYear() - gb.getFullYear();
-  const m = ref.getMonth() - gb.getMonth();
-  if (m < 0 || (m === 0 && ref.getDate() < gb.getDate())) age--;
+  const [gb, ref] = [geburtsdatum, referenceDate].map(value => {
+    if (istStichtag(value)) return value;
+    // Preserve timestamp callers, but never normalize an impossible ISO date.
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value) && !istStichtag(value.slice(0, 10))) return null;
+    const d = value instanceof Date ? value : typeof value === 'string' ? new Date(value) : null;
+    return d && !Number.isNaN(d.getTime()) ? berlinHeute(d) : null;
+  });
+  if (!gb || !ref) return false;
+  let age = Number(ref.slice(0, 4)) - Number(gb.slice(0, 4));
+  if (ref.slice(5) < gb.slice(5)) age--;
   return age < 18;
 }
 
-/** Determine if a patient is befreit for a given calendar year. */
+/** Inclusive certificate dates; Date instances refer to the Berlin calendar day. */
 export function isBefreit(befreiungenForPatient, jahr, referenceDate = new Date()) {
   if (!befreiungenForPatient || befreiungenForPatient.length === 0) return false;
-  const ref = referenceDate instanceof Date ? referenceDate : new Date(referenceDate);
-  return befreiungenForPatient.some(b => {
-    if (b.jahr !== jahr) return false;
-    if (new Date(b.befreit_ab) > ref) return false;
-    if (b.befreit_bis && new Date(b.befreit_bis) < ref) return false;
-    return true;
-  });
+  const tag = istStichtag(referenceDate) ? referenceDate
+    : referenceDate instanceof Date && !Number.isNaN(referenceDate.getTime())
+      ? berlinHeute(referenceDate) : null;
+  if (!istStichtag(tag)) throw new Error('Befreiung: Leistungstag ist ungueltig.');
+  if (Number(tag.slice(0, 4)) !== jahr) return false;
+  const nachweise = befreiungenForPatient.filter(b => b?.jahr === jahr);
+  for (const b of nachweise) {
+    if (!istStichtag(b.befreit_ab) || (b.befreit_bis != null &&
+        (!istStichtag(b.befreit_bis) || b.befreit_bis < b.befreit_ab))) {
+      throw new Error('Befreiungsnachweis: Datumsgrenzen fehlen oder sind ungueltig.');
+    }
+  }
+  return nachweise.some(b => b.befreit_ab <= tag && (b.befreit_bis == null || tag <= b.befreit_bis));
 }
