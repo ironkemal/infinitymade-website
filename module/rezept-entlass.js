@@ -67,6 +67,8 @@ export async function entlassMaskeAktualisieren(doc, db, { rxId = null, bereich 
   if (!wrap) return false;
   const meine = ++_folge;
   const aus = () => { wrap.innerHTML = ''; wrap.hidden = true; delete wrap.dataset.entlassAktiv; return false; };
+  // Die Maske uebergibt beim ersten Oeffnen den Praxis-Sektor ('physiotherapy') statt des Bereichsschluessels ('physio') — canli-test 10.11.
+  if (bereich === 'physiotherapy') bereich = 'physio';
   if (bereich !== 'physio' || typeof db?.from !== 'function') return aus();
   let zeile = {};
   try {

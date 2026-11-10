@@ -55,6 +55,13 @@ test('Maske: nur Physio; Podologie bleibt leer', async () => {
   assert.equal(d.els.rzEntlassWrap.hidden, true);
 });
 
+test('Maske: Praxis-Sektor physiotherapy zaehlt als physio (erstes Oeffnen)', async () => {
+  const d = fakeDoc();
+  const ok = await entlassMaskeAktualisieren(d, fakeDb({ data: [], error: null }), { bereich: 'physiotherapy' });
+  assert.equal(ok, true);
+  assert.equal(d.els.rzEntlassWrap.hidden, false);
+});
+
 test('Maske: Bearbeiten laedt gespeicherten Stand; Nutzlast-Paar besteht die Serverpruefung', async () => {
   const d = fakeDoc();
   const ok = await entlassMaskeAktualisieren(d, fakeDb({ data: { entlassmanagement: true, entlassungsdatum: '2026-11-01' }, error: null }), { rxId: 'r1', bereich: 'physio' });

@@ -32,7 +32,7 @@ import { POD_KATALOG, regelnFuerBereich } from './verordnung-regeln.js?v=2026103
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261031k3';
 import { pruefeVerordnung } from './verordnung-pruefung.js?v=20261031k3';
 import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20261109a';
-import { sendeAnServer } from './verordnung-maske.js?v=20261110id';
+import { sendeAnServer } from './verordnung-maske.js?v=20261110sek';
 import { gleicheSitzungenAb } from './sitzung-abgleich.js?v=20261103q';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { normalizeBereich, pruefeHeilmittelZeilen } from './heilmittel-zeilen.js';

@@ -204477,8 +204477,8 @@
    "lang": "js",
    "file": "module/rezept-entlass.js",
    "start": 65,
-   "end": 88,
-   "lines": 24,
+   "end": 90,
+   "lines": 26,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -204631,8 +204631,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezept-entlass.js",
-   "start": 94,
-   "end": 101,
+   "start": 96,
+   "end": 103,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
