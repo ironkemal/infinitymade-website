@@ -242,15 +242,13 @@ async function loadBookingSlots(date) {
   state.selectedTime = null;
   updateSidebar();
 
-  const { data: customDay } = await supabase.from('custom_days')
-    .select('type,note,start_time,end_time')
-    .eq('owner_id', state.ownerId)
-    .eq('date', dStr)
-    .maybeSingle();
+  // S-64: anon liest custom_days nicht mehr roh, nur über public_sondertage (ohne note)
+  const { data: cdRows } = await supabase.rpc('public_sondertage', { p_owner: state.ownerId, p_von: dStr, p_bis: dStr });
+  const customDay = (cdRows && cdRows[0]) || null;
 
   const isFullDay = customDay && !customDay.start_time && !customDay.end_time;
   if (isFullDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
-    listEl.innerHTML = `<div class="slots-empty">Geschlossen${customDay.note ? ': ' + customDay.note : ''}</div>`;
+    listEl.innerHTML = `<div class="slots-empty">Geschlossen</div>`;
     return;
   }
 
@@ -329,7 +327,7 @@ async function renderBookingCalendar(year, month) {
   if (userId) {
     const [{ data: wh }, { data: cd }, { data: biz }] = await Promise.all([
       supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
-      supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month + 1).padStart(2, '0')}-01`).lte('date', `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`),
+      supabase.rpc('public_sondertage', { p_owner: state.ownerId, p_von: `${year}-${String(month + 1).padStart(2, '0')}-01`, p_bis: `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}` }),
       // Kein bookings-Lesen mehr (09.10.2026): anon darf bookings nicht lesen (keine Policy) — die
       // „belegt"-Markierung war immer leer und würde sonst Auslastung öffentlich machen. Freie
       // Zeiten kommen aus /booking/get-slots.
