@@ -100,6 +100,10 @@ export const AUSNAHMEN = [
     grund: 'Patientenseiten booking.html/booking-request.html (anon, 0073): Verantwortlicher (Name+Anschrift) und Impressum-/Datenschutz-URL der Praxis, legal-de/guvenlik 09.10.2026 (K2b.15). Nur Inhaber-Zeile mit accepts_bookings, nie Mitarbeiter.',
   },
   {
+    name: 'public_sondertage',
+    grund: 'Oeffentliche Buchungsseite booking.js (anon, 0116, S-64 10.11.2026): Sondertage-Kalender ohne note, nur Praxen mit booking_slug, max. 92 Tage; ersetzt das offene Roh-Lesen von custom_days.',
+  },
+  {
     name: 'find_owner_id_by_code',
     grund: 'Oeffentliche Buchungsseite booking.js:75 loest Slug zu owner_id auf; anon-Zugriff zwingend notwendig.',
   },

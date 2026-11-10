@@ -8,6 +8,7 @@
     { "name": "find_owner_id_by_code", "args": "p_code text", "anon": false, "authenticated": true },
     { "name": "is_admin", "args": "", "anon": true, "authenticated": true },
     { "name": "public_praxis_sector", "args": "p_owner_id uuid", "anon": true, "authenticated": true },
+    { "name": "public_sondertage", "args": "p_owner uuid, p_von date, p_bis date", "anon": true, "authenticated": true },
     { "name": "search_diagnosen", "args": "p_q text, p_bereich text, p_kind text, p_limit integer", "anon": true, "authenticated": true },
     { "name": "search_heilmittel", "args": "p_q text, p_bereich text, p_diagnosegruppe text, p_datum date, p_limit integer", "anon": true, "authenticated": true },
     { "name": "st_estimatedextent", "args": "text, text, text, boolean", "anon": true, "authenticated": true },

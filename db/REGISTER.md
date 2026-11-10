@@ -294,6 +294,7 @@ Trigger-DDL und Funktionskörper vollständig, Zahlen im Dateikopf). `sqlTreffer
 - **Seit:** 12.05.2026 · `create_custom_days_table`
 - **Status:** aktiv
 - **Wer:** `saveSpecialDays()`, Buchungsseite, Backend-Slots.
+- **Zugriff seit 10.11.2026 (S-64, `0116`/`0117`):** anon liest die Tabelle nicht mehr. Buchungsseite nutzt `public_sondertage(owner, von, bis)` (ohne `note`, nur Praxen mit `booking_slug`, max. 92 Tage). Team-Lesen: Policy `custom_days_team_read`; Inhaber: `custom_days_owner_all`; Backend: service_role. Die offene Policy `custom_days_public_read` ist gelöscht.
 
 ### `rooms`
 - **Warum:** Physio-Praxen planen Räume mit. Erste Frage des Pilotkunden: „Welcher Therapeut ist gerade in welchem Raum?" Ein Termin trägt optional einen Raum (`bookings.room_id`).
