@@ -68,7 +68,7 @@ import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
-import { mailKanal, speichereGmailMailversand } from './lib/mail.js';
+import { mailKanal, speichereGmailMailversand, meldeVerbindungsfehler } from './lib/mail.js';
 import { raumFelderFuerTermin } from './lib/raum-zuordnung.js';
 import { raumLeistungenFelder, raumBuchungsFehler, raumNameFuerBuchung } from './lib/raum-automatik.js';
 import { ladeStandortPlan, planErlaubt } from './lib/standort-plan-laden.js';
@@ -4414,7 +4414,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
             to: pat.email,
             subject: mailBetreff(`Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`),
             html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${escHtml(pat.vorname)},</p><p>Ihr Termin wurde automatisch bestätigt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${escHtml(preferred_time)} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-          }).catch(e => console.error('[booking-request] auto-approve email', e.message));
+          }).catch(async e => { console.error('[booking-request] auto-approve email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
         }
         return res.json({ id: request.id, status: 'auto_approved', token: requestToken(process.env.SUPABASE_SERVICE_ROLE_KEY, request.id, resolvedPatientId) });
       }
@@ -4435,7 +4435,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         to: ownerProfile.email,
         subject: mailBetreff(`Neue Terminanfrage von ${pName}`),
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${escHtml(pName)}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + escHtml(preferred_time) + ' Uhr' : ''}</p>` : ''}${ausWidget ? '<p>Die Angaben der Anfrage stehen im Dashboard unter Termin-Anfragen.</p>' : (notizen ? `<p><strong>Notiz:</strong> ${escHtml(String(notizen).substring(0, 500))}</p>` : '')}<p><a href="${appBaseUrl()}/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(e => console.error('[booking-request] notify email', e.message));
+      }).catch(async e => { console.error('[booking-request] notify email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, praxisKanal, e); });
     }
 
     return res.json({ id: request.id, status: 'pending', token: requestToken(process.env.SUPABASE_SERVICE_ROLE_KEY, request.id, resolvedPatientId) });
@@ -4641,7 +4641,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empName ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${escHtml(empName)}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(e => console.error('[booking-request/approve] email', e.message));
+      }).catch(async e => { console.error('[booking-request/approve] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
 
     return res.json(result);
@@ -4687,7 +4687,7 @@ app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLi
         to: bookReq.patients.email,
         subject: 'Terminanfrage – Leider nicht möglich',
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Terminanfrage leider nicht möglich</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Leider können wir Ihren Wunschtermin nicht bestätigen.</p>${reason ? `<p><strong>Grund:</strong> ${escHtml(reason)}</p>` : ''}<p>Bitte rufen Sie uns an oder stellen Sie eine neue Anfrage.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(e => console.error('[booking-request/decline] email', e.message));
+      }).catch(async e => { console.error('[booking-request/decline] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
     return res.json({ ok: true });
   } catch (e) {
@@ -4799,7 +4799,7 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
         to: bookReq.patients.email,
         subject: `Terminvorschlag – ${ownerP?.business_name || 'Praxura'}`,
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Ihr Wunschtermin ist leider belegt</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>Ihren Wunschtermin können wir leider nicht anbieten.${reason ? ` <strong>${escHtml(reason)}</strong>` : ''}</p><p>Diese Zeiten hätten wir frei — ein Klick genügt:</p>${zeilen}<p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein. Es gilt, was zuerst angenommen wird; passt nichts davon, rufen Sie uns gerne an.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-      }).catch(e => console.error('[booking-request/offer] email', e.message));
+      }).catch(async e => { console.error('[booking-request/offer] email', e.code || 'VERSAND_FEHLER'); await meldeVerbindungsfehler(supabase, owner_id, kanal, e); });
     }
 
     return res.json({ ok: true, angeboten: gespeichert.length });
@@ -4853,11 +4853,11 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
       to: bookReq.patients.email,
       subject: `Nachricht von ${ownerP?.business_name || 'Ihrer Praxis'}`,
       html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Nachricht zu Ihrer Terminanfrage</h2><p>Hallo ${escHtml(bookReq.patients.vorname)},</p><p>${sicher}</p><p style="font-size:13px;color:#666">Sie können auf diese E-Mail direkt antworten.</p><hr><p style="font-size:12px;color:#888">${ownerP?.business_name || 'Praxura'} · praxura.de</p></div>`,
-    });
+    }).catch(async e => { await meldeVerbindungsfehler(supabase, owner_id, kanal, e); throw e; });
 
     return res.json({ ok: true });
   } catch (e) {
-    console.error('[booking-request/message]', e.message);
+    console.error('[booking-request/message]', e.code || 'VERSAND_FEHLER');
     return res.status(500).json({ error: 'Nachricht konnte nicht gesendet werden' });
   }
 });

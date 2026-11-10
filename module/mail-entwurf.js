@@ -26,6 +26,18 @@ export function mailtoLink({ to, subject, text } = {}) {
 /** Öffnet den Entwurf im Mailprogramm. true = geöffnet (Aufrufer zeigt dann keinen „gesendet"-Toast). */
 export function mailEntwurfOeffnen(entwurf, win = globalThis) {
   if (!entwurf?.to) return false;
+  const doc = win.document;
+  const anfragen = doc?.getElementById('panel-anfragen');
+  if (anfragen && !doc.getElementById('anfragenMailEinrichten')) {
+    const hinweis = doc.createElement('p');
+    hinweis.id = 'anfragenMailEinrichten';
+    hinweis.className = 'form-hint';
+    const link = einrichtenLink(doc);
+    link.style.display = 'inline-block';
+    hinweis.append('Direkt aus Praxura senden: ', link);
+    const liste = doc.getElementById('anfragenList');
+    if (liste && anfragen.contains(liste)) liste.before(hinweis); else anfragen.append(hinweis);
+  }
   win.location.href = mailtoLink(entwurf);
   return true;
 }

@@ -6,12 +6,12 @@ Stand: 10.11.2026. Grundlage: freigegebener Mailversand-Plan, ergänzt um STARTT
 |---|---|---|
 | 0118, RLS/service_role, verschlüsselte Geheimspalten, CHECKs, Trigger | api-backend/db/migrations/0118_praxis_mailversand.sql; DB-Test 13 PASS | SaaS-Anwendung zuvor dokumentiert; hier keine erneute Live-DB-Prüfung |
 | DSGVO Auskunft/Löschung | dsgvo/klassifikation.js, loeschen.js; expliziter Passwort-/Token-Maskierungstest klassifikation.test.js | Synthetische Tests |
-| Ein Versandselektor, DB/Env/Legacy-SaaS | lib/mail.js; sechs Booking-Aufrufer, dokument-mail, sondertag, terminerinnerung, update-alarm, verbindungen | Reale Zustellung aller Mailtypen auf Kundenbox fehlt |
+| Ein Versandselektor, DB/Env/Legacy-SaaS | lib/mail.js; sechs Booking-Aufrufer, dokument-mail, sondertag, terminerinnerung, update-alarm, verbindungen | Booking-Verbindungsfehler melden Status, Logs nur Fehlercode; reale Zustellung auf Kundenbox fehlt |
 | Einstellungen-API, Owner-Grenze, Passwortschutz, Testziel, Trennen | routes/mailversand.js und Tests; SMTP-Integrationstest mit lokalem STARTTLS-Server | Echte Anbieter-Testmail fehlt |
 | Google aus Einstellungen | server.js gmail_mailversand → speichereGmailMailversand; Vault-Fehlerprüfung, Moduswahl, SMTP-Geheimnisse entfernen; getesteter DB-Quellenstatus | Korrektur dd0ac3c lokal committet; OAuth mit Google live nicht nachgetestet |
 | Anbieter, Status, Formular, Banner, Mitarbeiter-Sichtbarkeit | tools/browser-probe/mailversand-probe.mjs: 46/46, 1024/390 px | Synthetische API-Antworten |
-| Einrichten-Links | rechnung-mail, therapiebericht, sondertag-mitteilung, terminerinnerung-einstellung; compose-Mailto ergänzt | Anfrage-Toasts nennen Einstellungen; vollständige klickbare Anfrage-Fallback-Prüfung noch offen |
-| Setup vier Schritte, kein /test-smtp | setup.html/setup.js, api-backend/setup/router.js; RELEASE-STANDARD §5.4 Kontrolle 9 | Vollständiger aktueller Setup-Browserlauf noch offen |
+| Einrichten-Links | rechnung-mail, therapiebericht, sondertag-mitteilung, terminerinnerung-einstellung; compose-Mailto ergänzt | Anfrage-Fallback ergänzt; 1280/390 px: einmaliger Link, richtiges Sprungziel, kein Überlauf |
+| Setup vier Schritte, kein /test-smtp | setup.html/setup.js, api-backend/setup/router.js; RELEASE-STANDARD §5.4 Kontrolle 9 | Setup-Probe 9/9 bestanden; synthetische API |
 | Register und Funktionskarte | db/REGISTER.md, onprem/REGISTER.md O-244, funktionen/INDEX.*, fortschritte/ | Karte wird vom Commit-Hook aktualisiert |
 | SMTP_ nur zentral | Produktionsquellen: process.env.SMTP_ nur lib/mail.js | Tests setzen zusätzlich synthetische Umgebungswerte |
 | Microsoft-Gerätecode | Ausdrücklich Phase 2 | Kein fehlendes v1-Deliverable |
@@ -34,3 +34,12 @@ Vorhandenen einrichtenLink-Baustein neben Mail vorbereiten wiederverwendet. Link
 ## Noch erforderliche externe Nachweise
 
 Authentifizierter SaaS-Nachtest inklusive Zwei-Worker-Sperre; echte Testmail über freigegebenes Postfach; reale Kundenbox: Testmail, Erinnerung, Rechnung, Dokument, Update-Alarm, Transparenzseite. QA-Token-Eingabe wurde abgelehnt und wird nicht umgangen. Diese Nachweise bleiben offen, bis freigegebene Zugänge bzw. erreichbare Testbox verfügbar sind. Kein vollständiger Abschluss behauptet.
+
+## Lokaler Abschlusslauf
+
+- `npm test`: Frontend 2738/2738; Backend 2040 bestanden, 4 übersprungen (2044 gesamt); Tools 355/355; Merkez 109/109. Kein Fehler. Protokoll `/tmp/mailversand-final-tests.log`.
+- `npm run probe`: vollständige Befehlsfolge mit Exit 0, inklusive Setup 9/9 und Mailversand 46/46. Protokoll `/tmp/mailversand-full-probes-backlog256.log`. Lokaler statischer Testserver liefert ausschließlich synthetische `/api/config`-Werte. Erste Läufe hatten lokale Socket-Resets/Timeouts; mit Testserver-Warteschlange 256 komplett bestanden. Keine Kalender-Produktänderung dafür.
+- Anfrage-Fallback: vorhandenes `mailEntwurfOeffnen` ergänzt vor der Anfragenliste einmaligen Einrichten-Link. Mailto bleibt unverändert. Browser 1280/390 px: ein Hinweis, korrektes Sprungziel, keine horizontale Überbreite; mobile Darstellung angesehen. Nach letzter Platzierungskorrektur 10 gezielte Node-Tests erneut bestanden.
+- Sechs Booking-Versandstellen nutzen `meldeVerbindungsfehler`; Rohmeldungen der SMTP-Fehler werden dort nicht protokolliert. Zusätzlicher Test `api-backend/booking/message-mail.test.js` führt tatsächlichen Nachrichten-Handler mit synthetischem EAUTH aus: DB-Postfach wird unterbrochen, Env-Kanal nicht verändert, Fehlerantwort bleibt 500, keine Empfängeradresse im Log. 2/2 bestanden.
+
+Kein authentifizierter SaaS-/Anbieter-/Kundenbox-Nachweis aus diesen lokalen Erfolgen abgeleitet. Neue Fixes lokal committet, noch nicht als live ausgegeben.
