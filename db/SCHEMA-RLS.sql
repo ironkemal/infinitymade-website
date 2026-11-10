@@ -3,8 +3,8 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261110153900 0117_custom_days_public_read_drop
--- EXPORTED AT:        2026-11-10T15:39:37Z
+-- LAST MIGRATION:     20261110164855 0119_invoices_mandant_fest
+-- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119)
 -- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
 --
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           150
---   triggers:            179
+--   functions:           151
+--   triggers:            180
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -4056,6 +4056,21 @@ $function$
 ;
 ALTER FUNCTION public.invoice_festschreibung() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.invoices_mandant_fest()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF current_user IN ('authenticated', 'anon') AND NEW.owner_id IS DISTINCT FROM OLD.owner_id THEN
+    RAISE EXCEPTION 'invoices: Rechnung kann nicht in eine andere Praxis verschoben werden' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.invoices_mandant_fest() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.is_admin()
  RETURNS boolean
  LANGUAGE sql
@@ -7484,6 +7499,8 @@ CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE O
 CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_position FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
 
 CREATE TRIGGER physio_v1_catalog BEFORE INSERT OR DELETE OR UPDATE OR TRUNCATE ON heilmittel_tarif FOR EACH STATEMENT EXECUTE FUNCTION physio_v1_catalog_guard();
+
+CREATE TRIGGER trg_a_invoices_mandant_fest BEFORE UPDATE OF owner_id ON invoices FOR EACH ROW EXECUTE FUNCTION invoices_mandant_fest();
 
 CREATE TRIGGER trg_invoice_festschreibung BEFORE DELETE OR UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION invoice_festschreibung();
 
@@ -11219,6 +11236,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=interval_dist(interval, interval) column=- grantee=supabase_admin privilege=EXECUTE grantor=supabase_admin grantable=NO
 -- ACL: type=FUNCTION schema=public object=invoice_festschreibung() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=invoice_festschreibung() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=invoices_mandant_fest() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=invoices_mandant_fest() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=is_admin() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=is_admin() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=is_admin() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
