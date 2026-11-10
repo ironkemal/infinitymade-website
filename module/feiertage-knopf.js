@@ -8,7 +8,7 @@
  * Berechnung: module/feiertage.js. Erstes Verwendungsziel: dashboard.js renderSpecialDaysList().
  */
 import { BUNDESLAENDER, feiertage, feiertageZeilen } from './feiertage.js';
-import { bundeslandKandidaten } from './plz.js';
+import { bundeslandKandidaten } from './plz.js?v=20260814';
 
 const BOX_ID = 'fnFeiertageBox';
 
