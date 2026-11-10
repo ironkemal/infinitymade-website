@@ -283,5 +283,11 @@
       "excluded_path_count": 3,
       "exclusion_note": "Nicht freigegebene Pfade nur im privaten Manifest; keine Inhalte gelesen/kopiert."
     }
+  },
+  "token_css_supplement": {
+    "source": "/Users/melihdonmez/.t3/worktrees/infinitymade-website/redesign-praxura-design/praxura-design.css",
+    "private_copy": "/Users/melihdonmez/.codex/private-snapshots/praxura-phase01-20261110-203814/praxura-design.css",
+    "sha256": "3d9e7639ae0fb9809ba0d643aa9f27054044d6ea7607387a36c3518198055ad6",
+    "bytes": 28842
   }
 }

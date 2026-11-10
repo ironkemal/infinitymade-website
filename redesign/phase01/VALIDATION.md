@@ -20,3 +20,7 @@ Keine Produkt-/Browser-/Pixel-/Fokus-/Mobil-/Fullsuiteprüfung, weil keine UI/Fa
 ## Offene Gates
 
 Fünf fehlende Moduldateien ohne Karten-UI-Pfad (Ergänzungsmitbuchung, Formular-PDF, Signaturanbindung, Logo-Upload, Erinnerungs-Einstellung) gezielt anbinden. 349 statische Kandidaten enthalten auch Wrapper/Backdrop-/Tab-Elemente; echte Unteransichtengrenzen deduplizieren. 36 dynamische Kandidaten auf Laufzeiterreichbarkeit prüfen. Fehlende vollständige Sicherung der Token-WIP-Datei vor Transfer klären. Danach P01-REP und aktuelle repräsentative Ansichtennachweise.
+
+## P01-REP CSS-Zwischenkandidat
+
+Produktdiff und genaue Befehle/Ergebnisse: P01-HANDOFF.md. 24 passende Scope-/Kontrasttests bestanden; 60 aktuelle Panelprüfungen, 12 pixelgleiche Alt-Vergleiche, isolierter Anamnese-Schreibfehler mit erhaltenem Input. Rohdaten und Bilder evidence/p01/. Unabhängiger Review und vollständige Phase-1-Abnahme offen.

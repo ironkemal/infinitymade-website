@@ -1,0 +1,324 @@
+[
+  {
+    "interactions": {
+      "width": 390,
+      "tasks": {
+        "connected": true,
+        "visible": true,
+        "display": "block"
+      },
+      "views": [
+        {
+          "view": "week",
+          "active": true
+        },
+        {
+          "view": "month",
+          "active": true
+        },
+        {
+          "view": "day",
+          "active": true
+        }
+      ],
+      "saveWithoutPatientDisabled": true,
+      "retainedAfterValidation": "Synthetische Eingabe bleibt bei Validierungsfehler erhalten.",
+      "patientOptions": 9,
+      "saveWithPatientDisabled": false,
+      "retainedAfterWriteError": "Synthetischer Schreibfehler erhält diese Eingabe.",
+      "escape": true,
+      "targets": [
+        {
+          "id": "kioskEinwilligungBtn",
+          "width": 123.640625,
+          "height": 44
+        },
+        {
+          "id": "kioskStartBtn",
+          "width": 166.390625,
+          "height": 44
+        }
+      ]
+    },
+    "log": {
+      "foreign": [],
+      "writes": [],
+      "ws": [],
+      "errors": [],
+      "api": [
+        "/api/ai/_config",
+        "/api/mailversand",
+        "/api/attendance/report"
+      ]
+    },
+    "fixture": {
+      "reads": [
+        "profiles",
+        "data_sharing_settings",
+        "businesses",
+        "user_preferences",
+        "profiles",
+        "praxis_formulare",
+        "profiles",
+        "profiles",
+        "profiles",
+        "profiles",
+        "module_visibility",
+        "profiles",
+        "profiles",
+        "terapeut_zertifikat",
+        "terapeut_zertifikat",
+        "bookings",
+        "patient_notes",
+        "invoices",
+        "fahrten",
+        "bookings",
+        "leads",
+        "prescriptions",
+        "praxis_aufgaben",
+        "working_hours",
+        "bookings",
+        "user_preferences",
+        "user_preferences",
+        "aerzte",
+        "admin_users",
+        "bookings",
+        "bookings",
+        "patient_notes",
+        "invoices",
+        "fahrten",
+        "bookings",
+        "leads",
+        "rooms",
+        "rooms",
+        "bookings",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "bookings",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "bookings",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "bookings",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "leads",
+        "prescriptions",
+        "anamnese"
+      ],
+      "writes": [
+        {
+          "tabelle": "anamnese",
+          "art": "insert"
+        }
+      ],
+      "rpc": [
+        "get_default_business"
+      ],
+      "storage": [],
+      "functions": [],
+      "unbekannt": [
+        "data_sharing_settings",
+        "user_preferences",
+        "praxis_formulare",
+        "module_visibility",
+        "patient_notes",
+        "fahrten",
+        "praxis_aufgaben",
+        "user_preferences",
+        "user_preferences",
+        "admin_users",
+        "patient_notes",
+        "fahrten",
+        "rooms",
+        "rooms",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "anamnese"
+      ],
+      "tag": "2026-10-23"
+    }
+  },
+  {
+    "interactions": {
+      "width": 1440,
+      "tasks": {
+        "connected": true,
+        "visible": true,
+        "display": "block"
+      },
+      "views": [
+        {
+          "view": "week",
+          "active": true
+        },
+        {
+          "view": "month",
+          "active": true
+        },
+        {
+          "view": "day",
+          "active": true
+        }
+      ],
+      "saveWithoutPatientDisabled": true,
+      "retainedAfterValidation": "Synthetische Eingabe bleibt bei Validierungsfehler erhalten.",
+      "patientOptions": 9,
+      "saveWithPatientDisabled": false,
+      "retainedAfterWriteError": "Synthetischer Schreibfehler erhält diese Eingabe.",
+      "escape": true,
+      "targets": [
+        {
+          "id": "kioskEinwilligungBtn",
+          "width": 123.640625,
+          "height": 44
+        },
+        {
+          "id": "kioskStartBtn",
+          "width": 166.390625,
+          "height": 44
+        }
+      ]
+    },
+    "log": {
+      "foreign": [],
+      "writes": [],
+      "ws": [],
+      "errors": [],
+      "api": [
+        "/api/ai/_config",
+        "/api/mailversand",
+        "/api/attendance/report"
+      ]
+    },
+    "fixture": {
+      "reads": [
+        "profiles",
+        "data_sharing_settings",
+        "businesses",
+        "user_preferences",
+        "profiles",
+        "praxis_formulare",
+        "profiles",
+        "profiles",
+        "profiles",
+        "profiles",
+        "module_visibility",
+        "profiles",
+        "profiles",
+        "terapeut_zertifikat",
+        "terapeut_zertifikat",
+        "bookings",
+        "patient_notes",
+        "invoices",
+        "fahrten",
+        "bookings",
+        "leads",
+        "prescriptions",
+        "praxis_aufgaben",
+        "working_hours",
+        "bookings",
+        "user_preferences",
+        "user_preferences",
+        "aerzte",
+        "admin_users",
+        "bookings",
+        "bookings",
+        "patient_notes",
+        "invoices",
+        "fahrten",
+        "bookings",
+        "leads",
+        "rooms",
+        "rooms",
+        "bookings",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "bookings",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "bookings",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "bookings",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "leads",
+        "prescriptions",
+        "anamnese"
+      ],
+      "writes": [
+        {
+          "tabelle": "anamnese",
+          "art": "insert"
+        }
+      ],
+      "rpc": [
+        "get_default_business"
+      ],
+      "storage": [],
+      "functions": [],
+      "unbekannt": [
+        "data_sharing_settings",
+        "user_preferences",
+        "praxis_formulare",
+        "module_visibility",
+        "patient_notes",
+        "fahrten",
+        "praxis_aufgaben",
+        "user_preferences",
+        "user_preferences",
+        "admin_users",
+        "patient_notes",
+        "fahrten",
+        "rooms",
+        "rooms",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "employee_standort_plan",
+        "time_offs",
+        "custom_days",
+        "custom_days",
+        "custom_days",
+        "anamnese"
+      ],
+      "tag": "2026-10-23"
+    }
+  }
+]

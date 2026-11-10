@@ -1,0 +1,167 @@
+/* ============================================================================
+   design/kalender.css — Terminkalender im neuen Design (PLAN-V2 V5)
+   ============================================================================
+   Kemals Aufbau bleibt (dashboard-feinschliff.css §5, dashboard.js day/week/month):
+   nur Optik. Geometrie unberührt — Slot-Höhen, Spaltenkopf 44 px, Zeitleiste und
+   `--sidebar-w` werden hier nicht angefasst (tools/redesign-geometrie.mjs prüft das).
+   Leistungsfarben der Blöcke (kalender-farben.js) bleiben unangetastet.
+   Nur [data-design="neu"], nur @media screen. Reihenfolge: nach design/seiten.css.
+   ========================================================================== */
+
+/* ── V5.01 Kopfzeile ──────────────────────────────────────────────────────────
+   Ein Höhenmaß (36 px) für alle Bedienelemente. Reihenfolge wie in gängigen Kalendern:
+   „Heute“, dann ‹ › zusammen, dann das Datum als Überschrift; rechts Ansicht und Aktionen.
+   Umgestellt nur per `order` — ids und HTML-Reihenfolge bleiben (dashboard.js). */
+@media screen {
+  [data-design="neu"] #panel-calendar .cal-view-toolbar { gap: 8px; }
+  [data-design="neu"] #panel-calendar #calTodayBtn { order: -1; }
+  [data-design="neu"] #panel-calendar .cal-view-nav { gap: 4px; }
+  [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { order: 3; padding-left: 10px; }
+
+  [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext) {
+    width: 36px;
+    height: 36px;
+    border-color: var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+  [data-design="neu"] #panel-calendar :is(#dayViewPrev, #dayViewNext):hover { background: var(--bg-hover); color: var(--text-main); }
+
+  [data-design="neu"] #panel-calendar :is(#calTodayBtn, #myBookingCopy, #calAddLeaveBtn, #calAddBookingBtn) {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"] #panel-calendar #calAddBookingBtn { font-weight: 600; }
+  /* dashboard.css setzt .btn-sm mit !important auf 11 px; hier gleich groß wie die Nachbarn. */
+  [data-design="neu"] #panel-calendar :is(#myBookingCopy, #calAddLeaveBtn) { font-size: 14px !important; }
+
+  /* Tag | Woche | Monat: ein Segment auf grauem Track, ohne Trennstriche. */
+  [data-design="neu"] #panel-calendar .cal-view-toggle {
+    height: 36px;
+    padding: 3px;
+    gap: 2px;
+    margin-left: auto;
+    background: var(--bg-hover);
+    border: 0;
+    border-radius: var(--radius-sm);
+  }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn {
+    height: 30px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn + .cal-view-btn { border-left: 0; }
+  [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn.active {
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    font-weight: 600;
+    box-shadow: var(--shadow-e1);
+  }
+}
+@media screen and (max-width: 768px) {
+  /* Schmal: Datum etwas kleiner, Ansicht nicht nach rechts drücken (bricht ohnehin um). */
+  [data-design="neu"] #panel-calendar .cal-view-date { font-size: 18px; min-width: 0; }
+  [data-design="neu"] #panel-calendar .cal-view-toggle { margin-left: 0; }
+}
+
+/* ── V5.02 Raster und Köpfe ──────────────────────────────────────────────────
+   Nur Farben und Schrift; Höhen (Slots, Kopf 44 px, Zeitleiste) bleiben bei Kemals Aufbau.
+   dashboard-feinschliff.css tönt die eigene Spalte und die vergangene Zeit noch bräunlich
+   (rgba 164,133,101 bzw. 43,35,28) — im neuen Design neutral aus der Grau-Palette. */
+@media screen {
+  [data-design="neu"] #panel-calendar .dv-time-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  [data-design="neu"] #panel-calendar .dv-col-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    border-bottom-color: var(--border);
+  }
+  [data-design="neu"] #panel-calendar .dv-col-highlight { background: rgba(17, 24, 39, 0.018); }
+  [data-design="neu"] #panel-calendar .dv-col-highlight .dv-col-header { background: transparent; font-weight: 600; }
+  [data-design="neu"] #panel-calendar .dv-slot--past { background-color: rgba(17, 24, 39, 0.02); }
+  [data-design="neu"][data-theme="dark"] #panel-calendar .dv-col-highlight { background: rgba(255, 255, 255, 0.018); }
+  [data-design="neu"][data-theme="dark"] #panel-calendar .dv-slot--past { background-color: rgba(255, 255, 255, 0.022); }
+}
+
+/* ── V5.03 Blöcke, Kontextmenü, Kopfzeile neben dem Terminpanel ─────────────────
+   Leistungsfarben (kalender-farben.js, inline) bleiben; nur Rundung und Auswahl. */
+@media screen {
+  [data-design="neu"] #panel-calendar :is(.dv-booking-block, .wv-booking-block) { border-radius: var(--radius-xxs); }
+
+  /* Kontextmenü (module/kalender-kontextmenue.js): Fokus innen statt eines Rings, der über den
+     Menürand ragt. Gegen den globalen Fokusring mit !important (praxura-design.css Fokus-Block). */
+  [data-design="neu"] .kal-kontextmenue-eintrag { min-height: 36px; font-size: 14px; border-radius: var(--radius-xxs); }
+  [data-design="neu"] .kal-kontextmenue-eintrag:hover:not(:disabled) { background: var(--bg-hover); }
+  [data-design="neu"] .kal-kontextmenue-eintrag:focus-visible {
+    background: var(--bg-hover);
+    outline-offset: -2px !important; /* gegen globalen Fokusring (offset 2px) */
+  }
+  /* Terminpanel: Zähler „n offen / m ges.“ (dashboard.html Inline color:#fff auf --primary) war im
+     Dunkelmodus weiß auf weiß. Ruhiger Zähler-Chip wie in der Leiste. */
+  [data-design="neu"] #bkRxSessionsBadge {
+    background: var(--bg-hover) !important; /* gegen Inline-Fläche */
+    color: var(--text-main) !important;     /* gegen Inline #fff */
+    border-radius: var(--radius-xxs) !important; /* gegen Inline 20px */
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Offenes Terminpanel (#bkActionModal, rechts 440 px) schiebt #mainArea per Inline-padding zur
+   Seite; die Kopfzeile brach dann in drei Zeilen um. Bei schmalem Kalender kompakter:
+   Buchungslink nur als Symbol (Name bleibt über title), Datum und Segment enger. */
+@media screen {
+  [data-design="neu"] #panel-calendar { container: pxkalender / inline-size; }
+}
+@media screen {
+  @container pxkalender (max-width: 900px) {
+    [data-design="neu"] #panel-calendar #myBookingCopy { width: 36px; padding: 0; justify-content: center; }
+    [data-design="neu"] #panel-calendar #myBookingCopy > span { display: none; }
+    [data-design="neu"] #panel-calendar .cal-view-nav .cal-view-date { font-size: 18px; min-width: 0; padding-left: 6px; }
+    [data-design="neu"] #panel-calendar .cal-view-toggle .cal-view-btn { padding: 0 10px; }
+    [data-design="neu"] #panel-calendar .cal-view-toggle { margin-left: 0; }
+    /* Schmaler Knopf, damit die Chips daneben sichtbar bleiben (mobil-ui V5.05). */
+    [data-design="neu"] #panel-calendar #calAddLeaveBtn { font-size: 13px !important; padding: 0 10px; } /* gegen eigene 14px !important oben */
+  }
+}
+@media screen and (max-width: 480px) {
+  [data-design="neu"] #panel-calendar #calAddLeaveBtn { font-size: 13px !important; padding: 0 10px; } /* gegen eigene 14px !important oben */
+}
+
+/* ── V5.04 Monat, Woche, Mitarbeiter-Chips ────────────────────────────────────
+   Pillenfarben im Monat sind Leistungsfarben (module/kalender-monat.js farbeFuer, inline) —
+   unangetastet. Ruhiger werden nur Tageszahl, Heute-Markierung und „+n“. */
+@media screen {
+  [data-design="neu"] #panel-calendar .month-grid-header { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] #panel-calendar .month-cell-day {
+    font-size: 13px;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+  }
+  [data-design="neu"] #panel-calendar .month-cell--other-month .month-cell-day { color: var(--text-faint); }
+  /* Heute: dunkler Kreis statt Signalrot (Rot bleibt der Jetzt-Linie vorbehalten). */
+  [data-design="neu"] #panel-calendar .month-cell--today .month-cell-day {
+    background: var(--primary);
+    color: var(--bg-card-solid);
+  }
+  [data-design="neu"] #panel-calendar .month-cell--today { border-color: var(--border-strong) !important; } /* gegen dashboard.css --primary !important */
+  [data-design="neu"] #panel-calendar .month-cell-more { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] #panel-calendar .month-event-pill { border-radius: var(--radius-xxs); }
+
+  /* Mitarbeiter-Chips: gleiche Höhe wie die Kopfzeile darüber, ruhige Pille. */
+  [data-design="neu"] #panel-calendar .cal-emp-leiste { border-bottom: 0; margin-bottom: 12px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip { height: 36px; padding: 0 12px; font-size: 13px; }
+  [data-design="neu"] #panel-calendar .cal-emp-chip:hover { border-color: var(--border-strong); background: var(--bg-hover); }
+  [data-design="neu"] #panel-calendar .cal-emp-chip.active { border-color: var(--text-main); background: var(--nav-active); }
+}

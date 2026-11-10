@@ -1,0 +1,49 @@
+/* V8.03 — begrenzte Formular-Korrekturen nach design/seiten.css laden.
+   P01: ausschließlich Anamnese/Neu/Screen; selektiv aus bestätigtem Design.
+   Dokumente, Modals, klinische Farben und Anzeigezustände bleiben beim Bestand. */
+@media screen {
+  [data-design="neu"] #panel-anamnese :is(.form-group, .form-row) {
+    min-width: 0;
+  }
+  [data-design="neu"] #panel-anamnese :is(.form-input, .form-select, .form-textarea) {
+    min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label {
+    min-width: 44px;
+    max-width: 100%;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-anamnese .anam-other {
+    min-width: 0;
+    min-height: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] #panel-anamnese .anam-slider-wrap input[type="range"] {
+    min-width: 0;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-anamnese :is(.anam-grid, .anam-radio-row) label:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  [data-design="neu"] #panel-anamnese :is(button.btn-primary, button.btn-ghost, button.btn-sm, button.btn-icon) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-anamnese :is(button, .form-input, .form-select, .form-textarea, .input-control, .anam-other, input[type="checkbox"]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-anamnese .anam-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design="neu"] #panel-anamnese .form-row {
+    grid-template-columns: minmax(0, 1fr) !important; /* gegen Inline-Arztgrid (zwei 1fr-Spalten) */
+  }
+}
