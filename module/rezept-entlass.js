@@ -45,10 +45,10 @@ export function entlassFeldHtml({ entlassmanagement = null, entlassungsdatum = n
   const a = merkmalZuAuswahl(entlassmanagement);
   const opt = (v, t) => `<option value="${v}"${a === v ? ' selected' : ''}>${t}</option>`;
   const datum = a === 'ja' && entlassungsdatum ? String(entlassungsdatum).slice(0, 10) : '';
-  return `<div class="form-group"><label for="rxEntlass">Entlassmanagement</label>
-<select id="rxEntlass">${opt('', 'Nicht geprüft')}${opt('ja', 'Ja')}${opt('nein', 'Nein')}</select></div>
-<div class="form-group"><label for="rxEntlassDatum">Entlassdatum</label>
-<input type="date" id="rxEntlassDatum" value="${datum}"${a === 'ja' ? '' : ' disabled'}></div>`;
+  return `<div class="form-group"><label for="rzEntlass">Entlassmanagement</label>
+<select id="rzEntlass">${opt('', 'Nicht geprüft')}${opt('ja', 'Ja')}${opt('nein', 'Nein')}</select></div>
+<div class="form-group"><label for="rzEntlassDatum">Entlassdatum</label>
+<input type="date" id="rzEntlassDatum" value="${datum}"${a === 'ja' ? '' : ' disabled'}></div>`;
 }
 
 const CONTAINER = 'rzEntlassWrap';

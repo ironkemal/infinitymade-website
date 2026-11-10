@@ -90,7 +90,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261109a';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261110id';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261021f';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 import { terminZielToplam } from './sitzung-abgleich.js?v=20261103q';

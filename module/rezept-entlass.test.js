@@ -61,6 +61,9 @@ test('Maske: Bearbeiten laedt gespeicherten Stand; Nutzlast-Paar besteht die Ser
   assert.equal(ok, true);
   assert.equal(d.els.rzEntlassWrap.hidden, false);
   assert.match(d.els.rzEntlassWrap.innerHTML, /value="2026-11-01"/);
+  // Markup-IDs muessen zu den getElementById-Abfragen passen (live-Fund 10.11.: rx* vs rz*)
+  assert.match(d.els.rzEntlassWrap.innerHTML, /id="rzEntlass"/);
+  assert.match(d.els.rzEntlassWrap.innerHTML, /id="rzEntlassDatum"/);
   d.els.rzEntlass.value = 'ja'; d.els.rzEntlassDatum.value = '2026-11-01';
   const felder = entlassNutzlastAusMaske(d);
   assert.deepEqual(entlassFelderAusRezept(felder), felder);

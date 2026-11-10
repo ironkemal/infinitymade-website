@@ -50,7 +50,7 @@ import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261010zd';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261010zd';
-import { entlassMaskeAktualisieren, entlassNutzlastAusMaske } from './rezept-entlass.js?v=20261109a';
+import { entlassMaskeAktualisieren, entlassNutzlastAusMaske } from './rezept-entlass.js?v=20261110id';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261010zc';
 import { initialisiereHeilmittelZeilen, fuelleHeilmittelZeilen, liesHeilmittelZeilenAusMaske, leereHeilmittelZeilen, aktualisiereAddBtnSichtbarkeit } from './heilmittel-zeilen-ui.js';
 import { pruefeHeilmittelZeilen, pruefeItemsAenderung } from './heilmittel-zeilen.js';
