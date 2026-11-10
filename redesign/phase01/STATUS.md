@@ -1,6 +1,6 @@
 # Phase 0–1: lokaler Zwischenstand
 
-Stand 10.11.2026. Gesamtziel Phasen 0–9 **offen**. Phase 0 Sicherung/Quelleninventar geschrieben; vollständige Laufzeit-/Scope-Zuordnung noch offen. Phase 1 Designvertrag geschrieben; begrenzter integrierter CSS-Kandidat lokal gebaut und geprüft; exakte Shell-/Startkomposition sowie Nutzerbestätigung **offen**. Kein Phase-0/1-Gesamtabschluss.
+Stand 10.11.2026. Gesamtziel Phasen 0–9 **offen**. Phase 0 Sicherung/Quelleninventar geschrieben; vollständige Laufzeit-/Scope-Zuordnung noch offen. Phase 1 Designvertrag geschrieben; begrenzter integrierter CSS-Kandidat lokal gebaut und geprüft; Startkomposition mit aktuellem Lader lokal integriert; Shell, vollständige Datenbindungen und Nutzerbestätigung **offen**. Kein Phase-0/1-Gesamtabschluss.
 
 ## Geliefert
 
@@ -20,3 +20,7 @@ Private Sicherung bewusst auf freigegebene Whitelist begrenzt. praxura-design.cs
 Nach unabhängigem Review stabilen Start-Viewadapter und bestätigte Shell integrieren. Elternbeleg zu den fünf Inventarbindungen liegt unter Downloads/Praxura-Redesign-Inventarbindungen-2026-11-10.md. Vor neuer Funktion Pflichtberatung, vor UI-Edit craft-floor, danach lokale aktuelle Sicht-/Regressionsnachweise und unabhängiger Review. Größerer Ausbau erst nach repräsentativer Vorlage gemäß genehmigtem Plan.
 
 Aktuelle Prüfungen und Review werden in VALIDATION.md getrennt festgehalten.
+
+## P01-START
+
+Bestätigte Startkomposition über stabilen Viewadapter lokal integriert und synthetisch geprüft; siehe P01-START-HANDOFF.md. Aktuelle Aufgaben-/KPI-/Gaps-/Kalenderknoten erhalten. Finanzdaten und vollständige Phase-1-Abnahme bleiben offen. Separater Eltern-Touchbeleg: evidence/calendar-targets/README.md.

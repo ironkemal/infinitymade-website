@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { starteServer, starteBrowser, WURZEL, wechsle } from '../redesign-harness.mjs';
-const out = `${WURZEL}/redesign/phase01/evidence/p01`;
+const out = `${WURZEL}/redesign/phase01/evidence/${process.env.P01_OUT || 'p01'}`;
 await mkdir(out, { recursive: true });
 const fixture = (await readFile(`${WURZEL}/tools/browser-probe/redesign-fixture.js`, 'utf8'))
  .replace("sector: 'podologie'", "sector: 'physiotherapy'").replace('Podologie Musterpraxis', 'Physio Musterpraxis');
@@ -32,7 +32,53 @@ async function open({width=1440,theme='hell',role='owner',scenario='voll',design
  return{context,page,log};
 }
 try{
- if(process.env.P01_INTERACTIONS){
+ if(process.env.P01_START){
+  for(const role of ['owner','employee'])for(const theme of ['hell','dunkel'])for(const width of [390,1440]){
+   const x=await open({width,theme,role});const {page}=x;
+   await page.waitForSelector('#pxStartseite .px-k-next');await page.waitForTimeout(300);
+   await page.evaluate(()=>{window.__p01Task=document.getElementById('startAufgaben');window.__p01Input=document.getElementById('startAufgabeInput');});
+   await page.locator('#startAufgabeInput').fill('Synthetischer ungespeicherter Aufgabenentwurf');
+   const voBefore=await page.locator('#physioRezKpi').evaluate(e=>({status:e.dataset.pxStatus,display:e.style.display}));
+   await page.locator('#physioRezKpi').evaluate(e=>{e.dataset.pxStatus='fehler';e.style.display='none';});
+   await page.waitForTimeout(100);
+   const afterError=await page.evaluate(()=>({same:window.__p01Task===document.getElementById('startAufgaben')&&window.__p01Input===document.getElementById('startAufgabeInput'),value:document.getElementById('startAufgabeInput').value}));
+   assert.equal(afterError.same,true);assert.equal(afterError.value,'Synthetischer ungespeicherter Aufgabenentwurf');
+   await page.locator('#physioRezKpi').evaluate((e,old)=>{e.dataset.pxStatus=old.status;e.style.display=old.display;},voBefore);
+   // Existing source nodes restore and return as identical nodes during an in-place design switch.
+   await page.evaluate(()=>document.documentElement.dataset.design='alt');await page.waitForTimeout(100);
+   assert.equal(await page.locator('#startAufgaben').evaluate(e=>e.parentElement.id),'panel-overview');
+   await page.evaluate(()=>document.documentElement.dataset.design='neu');await page.waitForTimeout(100);
+   assert.equal(await page.locator('#startAufgaben').evaluate(e=>e===window.__p01Task),true);
+   if(role==='owner'){
+    assert.ok(await page.locator('#pxStartseite [data-aktion="akte"]').count()>0);
+    await page.locator('#pxStartseite [data-aktion="akte"]').first().click();
+    await page.waitForSelector('#patientDetailModal:not([hidden])');
+    await page.locator('#patientDetailModal .modal-close').click();
+   }else{assert.equal(await page.locator('#pxStartseite [data-aktion="akte"]').count(),0);assert.ok((await page.locator('#pxStartseite .px-k-next').innerText()).includes('Heute stehen keine Termine an.'));}
+   if(role==='owner'){await page.locator('#pxStartseite [data-ziel="rechnungen"]').click();assert.equal(await page.locator('#panel-rechnungen').evaluate(e=>e.classList.contains('active')),true);await wechsle(page,'overview');}
+   await page.locator('#pxStartseite [data-aktion="kalender"]').first().click();
+   assert.equal(await page.locator('#panel-calendar').evaluate(e=>e.classList.contains('active')),true);
+   await wechsle(page,'overview');
+   await page.locator('#pxStartseite [data-ziel="ueberblick"]').click();
+   assert.equal(await page.locator('#panel-ueberblick').evaluate(e=>e.classList.contains('active')),true);
+   await wechsle(page,'overview');await page.evaluate(()=>document.getElementById('mainArea').scrollTo(0,0));
+   const metrics=await page.evaluate(()=>({width:innerWidth,document:document.documentElement.scrollWidth,finance:document.querySelectorAll('#pxStartseite .px-k-geld').length,tasksSame:window.__p01Task===document.getElementById('startAufgaben'),inputSame:window.__p01Input===document.getElementById('startAufgabeInput'),value:document.getElementById('startAufgabeInput').value}));
+   assert.ok(metrics.document<=width);assert.equal(metrics.finance,role==='owner'?1:0);assert.equal(metrics.tasksSame,true);assert.equal(metrics.inputSame,true);
+   await page.screenshot({path:`${out}/${role}-${theme}-${width}-start.png`,animations:'disabled',fullPage:true});
+   await page.locator('#startAufgabeAddBtn').click();await page.waitForTimeout(300);
+   assert.equal(await page.locator('#startAufgabeInput').inputValue(),'Synthetischer ungespeicherter Aufgabenentwurf');
+   const fixture=await page.evaluate(()=>window.__rsFixture);assert.deepEqual(fixture.writes,[{tabelle:'praxis_aufgaben',art:'insert'}]);
+   await page.locator('#startAufgaben').screenshot({path:`${out}/${role}-${theme}-${width}-tasks.png`,animations:'disabled'});
+   results.push({role,theme,width,afterError,metrics,fixture,log:x.log});await x.context.close();
+  }
+  for(const scenario of ['leer','fehler','langsam']){
+   const x=await open({width:390,scenario});await x.page.waitForSelector('#pxStartseite .px-k-next');
+   const text=await x.page.locator('#pxStartseite .px-k-next').innerText();
+   if(scenario==='leer')assert.ok(text.includes('Heute stehen keine Termine an.'));
+   if(scenario==='fehler')assert.ok(text.includes('konnte nicht geladen werden'));
+   results.push({scenario,text,log:x.log});await x.context.close();
+  }
+ }else if(process.env.P01_INTERACTIONS){
   for(const width of [390,1440]){
    const x=await open({width});const {page}=x;const checks={width};
    await wechsle(page,'overview');
@@ -50,10 +96,12 @@ try{
    if(!checks.saveWithoutPatientDisabled)await page.locator('#anamSaveBtn').click();
    checks.retainedAfterValidation=await page.locator('#anamHauptbeschwerde').inputValue();
    checks.patientOptions=await page.locator('#anamPatientSelect option').count();
-   if(checks.patientOptions>1){
+   assert.ok(checks.patientOptions>1,'required patient options');
+   {
     await page.locator('#anamPatientSelect').selectOption({index:1});
     await page.locator('#anamHauptbeschwerde').fill('Synthetischer Schreibfehler erhält diese Eingabe.');
     checks.saveWithPatientDisabled=await page.locator('#anamSaveBtn').isDisabled();
+    assert.equal(checks.saveWithPatientDisabled,false,'required enabled Save');
     if(!checks.saveWithPatientDisabled){await page.locator('#anamSaveBtn').click();await page.waitForTimeout(500);}
     checks.retainedAfterWriteError=await page.locator('#anamHauptbeschwerde').inputValue();
    }
@@ -96,7 +144,7 @@ try{
   results.push({alt:true,print:!!process.env.P01_PRINT,width,theme,pixelEqual:hashes[0].every((h,i)=>h===hashes[1][i]),hashes});
  }
  }
- await writeFile(`${out}/${process.env.P01_INTERACTIONS?'interactions':process.env.P01_PRINT?'print':'results'}.json`,JSON.stringify(results,null,2));
+ await writeFile(`${out}/${process.env.P01_START?'start':process.env.P01_INTERACTIONS?'interactions':process.env.P01_PRINT?'print':'results'}.json`,JSON.stringify(results,null,2));
  for(const r of results){
   assert.equal(r.log?.errors?.length||0,0,'page errors');
   assert.equal(r.log?.foreign?.length||0,0,'foreign request');
@@ -104,7 +152,7 @@ try{
   assert.equal(r.log?.ws?.length||0,0,'WebSocket attempt');
   if(r.alt)assert.equal(r.pixelEqual,true,'Alt pixel regression');
   for(const p of r.panels||[]){assert.equal(p.active,true,p.id+' active');if(p.document)assert.ok(p.document<=p.width,p.id+' overflow');}
-  if(r.interactions){const i=r.interactions;assert.equal(i.tasks.visible,true,'current task node visible');assert.ok(i.views.every(v=>v.active),'calendar view changes');assert.ok(i.retainedAfterValidation.includes('Synthetische'),'input retained');assert.ok(i.targets.every(t=>t.height>=44&&t.width>=44),'Anamnese action targets');}
+  if(r.interactions){const i=r.interactions;assert.equal(i.tasks.visible,true,'current task node visible');assert.ok(i.views.every(v=>v.active),'calendar view changes');assert.ok(i.retainedAfterValidation.includes('Synthetische'),'input retained');assert.deepEqual(i.targets.map(t=>t.id).sort(),['kioskEinwilligungBtn','kioskStartBtn'].sort(),'expected action IDs');assert.ok(i.targets.every(t=>t.height>=44&&t.width>=44),'Anamnese action targets');assert.equal(i.retainedAfterWriteError,'Synthetischer Schreibfehler erhält diese Eingabe.');assert.deepEqual(r.fixture.writes,[{tabelle:'anamnese',art:'insert'}],'exactly one isolated insert');}
  }
  console.log(JSON.stringify({cases:results.length,overflows:results.filter(x=>x.panels?.some(p=>p.document>p.width)).map(x=>({role:x.role,theme:x.theme,width:x.width,panels:x.panels})),alt:results.filter(x=>x.alt),pageErrors:[...new Set(results.flatMap(x=>x.log?.errors||[]))],fences:results.map(x=>({foreign:x.log?.foreign,writes:x.log?.writes,ws:x.log?.ws})).filter(x=>x.foreign?.length||x.writes?.length||x.ws?.length)},null,2));
 }finally{await browser.close();await server.stop();}

@@ -466,7 +466,7 @@ const DAYS = {
 const currentLang = 'de';
 try { localStorage.removeItem('infinity_lang'); } catch (_) { /* privater Modus */ }
 let currentProfile = null;
-let currentSession = null;
+let currentSession = null, startansicht = null;
 let ownerProfile = null;
 let teamMembers = [];
 let calendar = null;
@@ -1223,7 +1223,7 @@ async function renderGapsForDate(date) {
 }
 
 async function loadScheduleBookings(date) {
-  scheduleDate = date;
+  scheduleDate = date; startansicht?.termine({ laden: true, date });
   const loadingEl = document.getElementById('upcoming-bookings-loading');
   const emptyEl = document.getElementById('upcoming-bookings-empty');
   const gridEl = document.getElementById('upcoming-bookings-list');
@@ -1241,13 +1241,13 @@ async function loadScheduleBookings(date) {
   const dEnd = new Date(dStr + 'T23:59:59').toISOString();
   const ownerId = getOwnerId();
 
-  const { data: bookings } = await supabase.from('bookings')
+  const { data: bookings, error: bookingsError } = await supabase.from('bookings')
     .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,verordnung_id,services(title,color,code,gkv_position_nr),rezeptart,' + RX_JOIN)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
 
-  loadingEl.hidden = true;
+  loadingEl.hidden = true; startansicht?.termine({ bookings: bookings || [], error: bookingsError, date });
 
   const nowIso = new Date().toISOString();
   let displayBookings = bookings || [];
@@ -1654,7 +1654,7 @@ let _rezKpiCache = null;
 
 async function loadPhysioRezKpis() {
   const block = document.getElementById('physioRezKpi');
-  if (!block) return;
+  if (!block) return; block.dataset.pxStatus = 'laden';
   if (!isPraxisSector(getSector())) { block.style.display = 'none'; return; }
 
   const ownerId = getOwnerId();
@@ -1663,7 +1663,7 @@ async function loadPhysioRezKpis() {
     .select('id, status, gueltig_bis, patient_id, heilmittel')
     .eq('owner_id', ownerId)
     .not('status', 'in', '(completed,billed,cancelled)'), 'patients');
-  if (error) { console.warn('[rez-kpi]', error); block.style.display = 'none'; return; }
+  if (error) { console.warn('[rez-kpi]', error); block.dataset.pxStatus = 'fehler'; block.style.display = 'none'; return; }
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const soonCutoff = new Date(today); soonCutoff.setDate(today.getDate() + 7);
@@ -1680,7 +1680,7 @@ async function loadPhysioRezKpis() {
   document.getElementById('rezKpiOverdue').textContent = overdue.length;
   document.getElementById('rezKpiSoon').textContent = soon.length;
   document.getElementById('rezKpiActive').textContent = active.length;
-  block.style.display = '';
+  block.dataset.pxStatus = 'ok'; block.style.display = '';
 }
 
 (function bindRezKpiClicks() {
@@ -14170,7 +14170,7 @@ async function init() {
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
-    console.log('[init] team ok');
+    console.log('[init] team ok'); if (document.documentElement.dataset.design === 'neu') startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start')).montiereStartansicht({ uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':'), springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
     await renderOverview();
     console.log('[init] overview ok');
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }

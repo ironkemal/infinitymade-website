@@ -1,0 +1,289 @@
+/* ============================================================================
+   design/startseite.css — Startseite „Heute“ des neuen Designs (PLAN-V2 V6.F, E8/E12)
+   ============================================================================
+   Gehört zu module/startseite-neu.js. Nur [data-design="neu"], nur @media screen.
+   Form nach E12 („freundlich & übersichtlich“): Karten 18 px, Hauptkarte 22, Mini-Karten 14,
+   weiche Schatten, Kartenlücke 24, Innenabstand 24, Zeilen ≥ 56 px.
+   Raster: „next next todo / list list vo / list list frei“ (Abrechnung + Woche folgen, V6.B).
+   ========================================================================== */
+@media screen {
+  /* Alte Übersicht ausblenden, sobald die neue steht (sie lädt weiter im Hintergrund).
+     Gegen Inline-display einzelner Blöcke (z. B. #physioRezKpi, Banner) mit !important. */
+  [data-design="neu"] #panel-overview > [data-px-start-ersetzt] { display: none !important; }
+
+  [data-design="neu"] .px-start { display: flex; flex-direction: column; gap: 24px; }
+  [data-design="neu"] .px-start-kopf h1 {
+    margin: 0;
+    font-size: var(--fs-h1, 28px);
+    line-height: var(--lh-h1, 34px);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+  }
+  [data-design="neu"] .px-start-kopf p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+
+  [data-design="neu"] .px-start-raster {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "next next todo"
+      "list list vo"
+      "list list frei";
+    /* Letzte Zeile nimmt den Rest: sonst teilt „Termine heute“ seine Höhe auf beide Zeilen
+       und zwischen Verordnungen und Freie Zeit entsteht eine Lücke. */
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+  }
+  [data-design="neu"] .px-start-raster:not(:has(.px-k-vo)) {
+    grid-template-areas: "next next todo" "list list frei";
+  }
+  [data-design="neu"] .px-k-next { grid-area: next; }
+  [data-design="neu"] .px-k-todo { grid-area: todo; align-self: stretch; }
+  [data-design="neu"] .px-k-list { grid-area: list; }
+  [data-design="neu"] .px-k-vo { grid-area: vo; }
+  [data-design="neu"] .px-k-frei { grid-area: frei; }
+  [data-design="neu"] .px-k-woche { grid-column: 1 / -1; }
+  [data-design="neu"] .px-verf-personen, [data-design="neu"] .px-verf-woche { padding: 16px 24px; }
+  [data-design="neu"] .px-verf-person + .px-verf-person { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  [data-design="neu"] .px-verf-zeile { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; font-size: 14px; line-height: 21px; }
+  [data-design="neu"] .px-verf-zeile strong { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+  [data-design="neu"] .px-verf-person p, [data-design="neu"] .px-verf-woche p, [data-design="neu"] .px-verf-hinweis { font-size: 12px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-verf-hinweis { margin: 0; padding: 8px 24px 16px; }
+  [data-design="neu"] .px-startzeiten { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; }
+  [data-design="neu"] .px-startzeiten:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"] .px-verf-details ul { margin: 0; padding: 0; list-style: none; }
+  [data-design="neu"] .px-verf-details li { padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; overflow-wrap: anywhere; }
+  [data-design="neu"] .px-verf-balken { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; margin: 12px 0; }
+  [data-design="neu"] .px-verf-balken span { display: block; height: 100%; background: var(--accent); }
+
+  /* ── Karte (Grundform) ── */
+  [data-design="neu"] .px-karte {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-e1);
+  }
+  [data-design="neu"] .px-karte-kopf { display: flex; justify-content: space-between; gap: 16px; padding: 20px 24px 0; }
+  [data-design="neu"] .px-karte-kopf h2 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-main); }
+  [data-design="neu"] .px-karte-kopf p { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-karte-fuss { margin-top: auto; padding: 12px 16px 16px; }
+  [data-design="neu"] .px-fuss-knopf {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; min-height: 40px; border: 0; border-radius: var(--radius-sm);
+    background: var(--bg-hover); color: var(--accent); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  [data-design="neu"] .px-fuss-knopf:hover { background: var(--nav-active); }
+  [data-design="neu"] .px-karte-zustand { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 24px 24px; color: var(--text-muted); font-size: 14px; }
+  [data-design="neu"] .px-karte-zustand p { margin: 0; }
+  [data-design="neu"] .px-karte-zustand--ruhig { flex-direction: row; align-items: center; }
+  [data-design="neu"] .px-skelett { width: 100%; height: 14px; border-radius: 7px; background: var(--bg-hover); }
+  [data-design="neu"] .px-skelett--kurz { width: 60%; }
+  [data-design="neu"] .px-leise { color: var(--text-muted); font-size: 13px; }
+
+  [data-design="neu"] .px-pille {
+    display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+    border: 1px solid var(--border); border-radius: var(--radius-xs);
+    background: var(--bg-hover); color: var(--text-muted);
+    font-size: 12px; line-height: 16px; font-weight: 500; white-space: nowrap;
+  }
+  [data-design="neu"] .px-pille--voll { background: var(--primary); border-color: var(--primary); color: var(--bg-card-solid); }
+
+  [data-design="neu"] .px-knopf {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 0 18px; border: 1px solid var(--primary); border-radius: var(--radius-sm);
+    background: var(--primary); color: var(--bg-card-solid); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  [data-design="neu"] .px-knopf:hover { background: var(--primary-hover, var(--primary)); }
+  [data-design="neu"] .px-knopf--zweit { background: var(--bg-card-solid); color: var(--text-main); border-color: var(--border-strong); }
+  [data-design="neu"] .px-knopf--zweit:hover { background: var(--bg-hover); }
+
+  /* ── Als Nächstes ── */
+  [data-design="neu"] .px-k-next { border-radius: var(--radius-xl); }
+  [data-design="neu"] .px-naechstes-kopf { padding: 20px 24px 22px; background: var(--nav-active); border-bottom: 1px solid var(--border-subtle); }
+  [data-design="neu"] .px-zeile { display: flex; align-items: center; gap: 10px; }
+  [data-design="neu"] .px-zeile h2 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] .px-naechstes-haupt { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; }
+  [data-design="neu"] .px-naechstes-haupt .zeit { font-size: 32px; line-height: 36px; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text-main); }
+  [data-design="neu"] .px-naechstes-haupt .name { font-size: 26px; line-height: 32px; font-weight: 500; letter-spacing: -0.02em; color: var(--text-main); }
+  [data-design="neu"] .px-naechstes-sub { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 14px; color: var(--text-muted); }
+  [data-design="neu"] .px-naechstes-sub span { display: inline-flex; align-items: center; gap: 6px; }
+  [data-design="neu"] .px-naechstes-leer { margin: 8px 0 0; font-size: 18px; line-height: 24px; color: var(--text-main); }
+  [data-design="neu"] .px-naechstes-rumpf { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; padding: 20px 24px 24px; }
+  [data-design="neu"] .px-aktionen { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+  [data-design="neu"] .px-danach h3 { margin: 0 0 4px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-muted); }
+  [data-design="neu"] .px-danach ul { margin: 0; padding: 0; list-style: none; }
+  [data-design="neu"] .px-danach li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 40px; font-size: 14px; border-top: 1px solid var(--border-subtle); }
+  [data-design="neu"] .px-danach li:first-child { border-top: 0; }
+  [data-design="neu"] .px-danach .t { font-weight: 500; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .px-danach .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
+
+  /* ── Zu erledigen ── */
+  [data-design="neu"] .px-todo { padding: 12px 0 8px; }
+  [data-design="neu"] .px-todo-zeile {
+    display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 16px; align-items: center; gap: 12px;
+    width: 100%; min-height: 60px; padding: 8px 24px; border: 0; border-top: 1px solid var(--border-subtle);
+    background: transparent; color: var(--text-main); font: inherit; text-align: left; cursor: pointer;
+  }
+  [data-design="neu"] .px-todo-zeile:first-child { border-top: 0; }
+  [data-design="neu"] .px-todo-zeile:hover:not(:disabled) { background: var(--bg-hover); }
+  [data-design="neu"] .px-todo-zeile:disabled { cursor: default; }
+  [data-design="neu"] .px-todo-zeile .kachel { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-hover); color: var(--text-muted); }
+  [data-design="neu"] .px-todo-zeile.px-ton-bad .kachel { color: var(--st-bad-fg, var(--danger)); background: var(--st-bad-bg, var(--bg-hover)); border-color: var(--st-bad-line, var(--border)); }
+  [data-design="neu"] .px-todo-zeile.px-ton-warn .kachel { color: var(--warning); }
+  /* Melih 26.10.: Kachel-Hintergrund weiß, nur das Symbol farbig. */
+  [data-design="neu"] .px-todo-zeile .kachel,
+  [data-design="neu"] .px-todo-zeile.px-ton-bad .kachel { background: var(--bg-card-solid); }
+  [data-design="neu"] .px-todo-zeile.px-ton-info .kachel { color: var(--info, var(--accent)); }
+  [data-design="neu"] .px-todo-zeile b { display: block; font-size: 14px; line-height: 20px; font-weight: 500; }
+  [data-design="neu"] .px-todo-zeile small { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [data-design="neu"] .px-todo-zeile .zahl { font-size: 18px; line-height: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .px-todo-zeile .pfeil { color: var(--text-faint); display: grid; }
+
+  /* ── Termine heute ── */
+  [data-design="neu"] .px-summe { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 16px 24px 4px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-summe b { display: block; font-size: 14px; font-weight: 500; color: var(--text-main); }
+  [data-design="neu"] .px-summe small { display: block; font-size: 13px; color: var(--text-muted); }
+  [data-design="neu"] .px-summe .zahl { font-size: 28px; line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); }
+  [data-design="neu"] .px-termine { margin: 0; padding: 0 0 8px; list-style: none; }
+  [data-design="neu"] .px-termin {
+    display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    width: 100%; min-height: 60px; padding: 8px 24px; border: 0; border-top: 1px solid var(--border-subtle);
+    background: transparent; color: var(--text-main); font: inherit; text-align: left; cursor: pointer;
+  }
+  [data-design="neu"] .px-termine li:first-child .px-termin { border-top: 0; }
+  [data-design="neu"] .px-termin:hover:not(:disabled) { background: var(--bg-hover); }
+  [data-design="neu"] .px-termin:disabled { cursor: default; }
+  [data-design="neu"] .px-termin .t { font-size: 13px; font-weight: 500; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .px-termin .mitte { min-width: 0; }
+  [data-design="neu"] .px-termin .n { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [data-design="neu"] .px-termin .n svg { color: var(--text-faint); flex-shrink: 0; }
+  [data-design="neu"] .px-termin .s { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [data-design="neu"] .px-termin.ist-vorbei .n { color: var(--text-muted); }
+  [data-design="neu"] .px-termin.ist-naechster { background: var(--bg-hover); }
+  [data-design="neu"] .px-termin.ist-naechster .t { color: var(--text-main); }
+
+  /* ── Verordnungen ── */
+  [data-design="neu"] .px-minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 16px 24px 4px; }
+  [data-design="neu"] .px-mini { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+  [data-design="neu"] .px-mini .zahl { font-size: 24px; line-height: 28px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); }
+  [data-design="neu"] .px-mini .lbl { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  [data-design="neu"] .px-mini.px-ton-bad .zahl { color: var(--st-bad-fg, var(--danger)); }
+  [data-design="neu"] .px-mini.px-ton-warn .zahl { color: var(--warning-text, var(--text-main)); }
+
+  /* ── Freie Zeit: umgehängte .gaps-section ── */
+  [data-design="neu"] .px-frei-ziel { padding: 12px 24px 20px; }
+  [data-design="neu"] .px-frei-ziel .gaps-section { margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+  /* Aktuelle Datumsnavigation mit ihren Originalhandlern bleibt erreichbar. */
+  [data-design="neu"] .px-frei-ziel .gaps-total { font-size: 13px; color: var(--text-muted); }
+  [data-design="neu"] .px-frei-ziel .gaps-list { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  /* Lücke als ruhige Zeile: Zeit links, Dauer rechts (statt gestricheltem Kasten). */
+  [data-design="neu"] .px-frei-ziel .gap-card {
+    display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: 48px; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--bg-card-solid);
+  }
+  [data-design="neu"] .px-frei-ziel .gap-card-time { font-size: 14px; font-weight: 500; color: var(--text-main); font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .px-frei-ziel .gap-card-top { margin: 0; }
+  [data-design="neu"] .px-frei-ziel .gap-empty { color: var(--text-muted); font-size: 14px; }
+}
+
+/* Schmaler: eine bzw. zwei Spalten. */
+@media screen and (max-width: 1279px) {
+  [data-design="neu"] .px-start-raster,
+  [data-design="neu"] .px-start-raster:not(:has(.px-k-vo)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "next next" "todo vo" "list list" "frei frei";
+  }
+  [data-design="neu"] .px-start-raster:not(:has(.px-k-vo)) { grid-template-areas: "next next" "todo frei" "list list"; }
+}
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .px-start-raster,
+  [data-design="neu"] .px-start-raster:not(:has(.px-k-vo)) { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+  [data-design="neu"] .px-start-raster .px-karte { grid-area: auto; }
+  [data-design="neu"] .px-naechstes-rumpf { grid-template-columns: minmax(0, 1fr); }
+  [data-design="neu"] .px-karte-kopf, [data-design="neu"] .px-todo-zeile, [data-design="neu"] .px-termin { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-naechstes-kopf, [data-design="neu"] .px-naechstes-rumpf { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-naechstes-haupt .zeit { font-size: 26px; line-height: 30px; }
+  [data-design="neu"] .px-naechstes-haupt .name { font-size: 20px; line-height: 26px; }
+  [data-design="neu"] .px-minis { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-summe { margin-left: 16px; margin-right: 16px; }
+  [data-design="neu"] .px-frei-ziel { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-verf-personen, [data-design="neu"] .px-verf-woche, [data-design="neu"] .px-verf-hinweis { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ── V6.F03 Karte „Abrechnung“ (module/startseite-geld.js, nur Inhaber) ─────────
+   Rechte Spalte unter „Zu erledigen“. Raster nur, wenn die Karte da ist (:has), sonst bleibt alles wie oben. */
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] .px-start-raster:has(.px-k-geld) {
+    grid-template-areas: "next next todo" "list list geld" "list list vo" "list list frei";
+    grid-template-rows: auto auto auto 1fr;
+  }
+  [data-design="neu"] .px-start-raster:has(.px-k-geld):not(:has(.px-k-vo)) {
+    grid-template-areas: "next next todo" "list list geld" "list list frei";
+    grid-template-rows: auto auto 1fr;
+  }
+}
+@media screen and (min-width: 769px) and (max-width: 1279px) {
+  [data-design="neu"] .px-start-raster:has(.px-k-geld) { grid-template-areas: "next next" "todo geld" "list list" "vo frei"; }
+  [data-design="neu"] .px-start-raster:has(.px-k-geld):not(:has(.px-k-vo)) { grid-template-areas: "next next" "todo geld" "list list" "frei frei"; }
+}
+@media screen {
+  [data-design="neu"] .px-k-geld { grid-area: geld; }
+  /* Neuer Mahnwesen-Einstieg: Touchziel mindestens 44 px, bestehende Fußleisten unverändert. */
+  [data-design="neu"] .px-k-geld [data-ziel="mahnwesen"] { min-height: 44px; }
+  [data-design="neu"] .px-k-geld [data-ziel="abrechnung"] { min-height: 44px; }
+  [data-design="neu"] .px-bereit-gruende { margin: 12px 0 0; padding-left: 18px; font-size: 12px; line-height: 18px; color: var(--text-muted); overflow-wrap: anywhere; }
+  /* Schätzung kann „≈ Teilsumme“ plus lange Geldzahl tragen: volle Zeile verhindert Textkollision. */
+  [data-design="neu"] .px-k-geld .px-bereit-betrag { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  [data-design="neu"] .px-k-geld .px-bereit-betrag .zahl { justify-self: end; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: right; }
+  [data-design="neu"] .px-geld { display: flex; flex-direction: column; padding: 4px 24px 8px; }
+  [data-design="neu"] .px-geld-haupt { display: flex; flex-direction: column; gap: 4px; padding: 8px 0 14px; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-geld-haupt .lbl { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-haupt .zahl { font-size: var(--fs-kennzahl, 28px); line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); }
+  [data-design="neu"] .px-geld-zeile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  [data-design="neu"] .px-geld-zeile .lbl { font-size: 14px; color: var(--text-main); }
+  [data-design="neu"] .px-geld-zeile .zahl { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-main); white-space: nowrap; }
+  [data-design="neu"] .px-geld-zeile .px-geld-hinweis { grid-column: 1 / -1; }
+  [data-design="neu"] .px-geld-hinweis { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-hinweis .px-sym { color: var(--warning); flex-shrink: 0; }
+  [data-design="neu"] .px-geld-fuss { margin: 12px 0 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  /* Offene Zuzahlungen: Gruppe mit Unterzeilen Patient / Kasse / Klärung (Codex V6.F03 P2, E16). */
+  [data-design="neu"] .px-geld-gruppe { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-geld-gruppe-titel { font-size: 14px; color: var(--text-main); margin-bottom: 4px; }
+  [data-design="neu"] .px-geld-zeile--unter { padding: 4px 0 4px 12px; border-bottom: 0; }
+  [data-design="neu"] .px-geld-zeile--unter .lbl { font-size: 13px; color: var(--text-muted); }
+  [data-design="neu"] .px-geld-zeile--unter .zahl { font-size: 14px; }
+}
+@media screen and (max-width: 768px) {
+  [data-design="neu"] .px-geld { padding-left: 16px; padding-right: 16px; }
+}
+@media screen {
+  [data-design="neu"] .px-handlungsbedarf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-design="neu"] .px-handlungsbedarf .zahl { font-size: 18px; line-height: 24px; overflow-wrap: anywhere; }
+}
+
+/* Aktuelle Aufgaben und alternative Kalenderdarstellung: stabile Original-DOM-Slots. */
+@media screen {
+ [data-design="neu"] .px-start-aufgaben { grid-column: 1 / -1; min-width: 0; }
+ [data-design="neu"] .px-start-aufgaben #startAufgaben { margin: 0; }
+ [data-design="neu"] .px-start-bestand { padding: 12px 24px 20px; min-width: 0; }
+ [data-design="neu"] .px-start-bestand > summary { min-height: 44px; cursor: pointer; color: var(--accent); }
+ [data-design="neu"] .px-start-bestand .today-section { margin-top: 16px; }
+ [data-design="neu"] .px-k-vo #physioRezKpi { margin: 16px 24px; grid-template-columns: minmax(0, 1fr); }
+ [data-design="neu"] .px-frei-ziel .gaps-header { flex-wrap: wrap; }
+ [data-design="neu"] .px-frei-ziel .gaps-header button { min-width: 44px; min-height: 44px; }
+}
+
+@media screen { [data-design="neu"] .px-start[hidden] { display: none; } }

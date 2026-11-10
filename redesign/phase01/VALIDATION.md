@@ -24,3 +24,7 @@ Fünf fehlende Moduldateien ohne Karten-UI-Pfad (Ergänzungsmitbuchung, Formular
 ## P01-REP CSS-Zwischenkandidat
 
 Produktdiff und genaue Befehle/Ergebnisse: P01-HANDOFF.md. 24 passende Scope-/Kontrasttests bestanden; 60 aktuelle Panelprüfungen, 12 pixelgleiche Alt-Vergleiche, isolierter Anamnese-Schreibfehler mit erhaltenem Input. Rohdaten und Bilder evidence/p01/. Unabhängiger Review und vollständige Phase-1-Abnahme offen.
+
+## P01-START
+
+Befehle, Identitäts-/Fehler-/Rückkehrbelege und Grenzen: P01-START-HANDOFF.md, Rohdaten evidence/p01-start/. Zusätzlicher Elternbeleg für Kalender-Touchziele evidence/calendar-targets/README.md. Unabhängiger Review ausstehend.

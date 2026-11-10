@@ -1,0 +1,17 @@
+[
+  {
+    "path": "module/startseite-neu.js",
+    "sha256": "75f4ef1530d818ddfc60873a09498b0062d11803ff7aa09889d3374999f8a1e7",
+    "use": "Selective presentation functions only; no loaders/imports/autostart"
+  },
+  {
+    "path": "module/startseite-rechnen.js",
+    "sha256": "f6136e4568e1afd102a4bb7580d3933da9cc359866cbc85631b731fad2439d46",
+    "use": "Pure presentation functions before query builder"
+  },
+  {
+    "path": "design/startseite.css",
+    "sha256": "a177a36c67bc85d9396926e840192594fc4cf46a13a630b013a37837820e221c",
+    "use": "Confirmed styles with explicit source markers instead of global hiding; current navigation remains visible"
+  }
+]
