@@ -35308,7 +35308,8 @@
     "createDatevRouter",
     "erinnerungsLauf",
     "nurZiffern",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "termineAnTagen"
    ],
    "modules": [
     "abrechnung",
@@ -126497,9 +126498,11 @@
    "calledBy": [
     "berlinHeute",
     "berlinTag",
+    "feiertageKnopf",
     "geplanteAlsBehandlungen",
     "heute",
     "insertDatensatz",
+    "jahre",
     "neuerBefundZustand",
     "normalizeVoDatum",
     "nurZiffern",
@@ -126510,6 +126513,7 @@
     "terminDatum",
     "terminKalendertagBerlin",
     "terminStartenPodo",
+    "termineAnTagen",
     "verordnungAusstellungstagBerlin",
     "vorauswahlTermin",
     "w",
@@ -126721,7 +126725,8 @@
     "createDatevRouter",
     "erinnerungsLauf",
     "nurZiffern",
-    "tagesgrenzen"
+    "tagesgrenzen",
+    "termineAnTagen"
    ],
    "modules": [
     "abrechnung",
@@ -138077,9 +138082,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/feiertage-knopf.js",
-   "start": 19,
-   "end": 28,
-   "lines": 10,
+   "start": 20,
+   "end": 32,
+   "lines": 13,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -138092,6 +138097,8 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "alsBerlinDatum",
+    "berlinTagesgrenzen",
     "has"
    ],
    "calledBy": [
@@ -138147,9 +138154,9 @@
    "kind": "function",
    "lang": "js",
    "file": "module/feiertage-knopf.js",
-   "start": 35,
-   "end": 88,
-   "lines": 54,
+   "start": 39,
+   "end": 102,
+   "lines": 64,
    "spiegelHinweis": null,
    "tables": [
     "custom_days"
@@ -138169,6 +138176,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "alsBerlinDatum",
     "bundeslandKandidaten",
     "feiertage",
     "feiertageZeilen",
@@ -138229,8 +138237,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/feiertage-knopf.js",
-   "start": 54,
-   "end": 54,
+   "start": 58,
+   "end": 58,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -138241,7 +138249,9 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [],
+   "calls": [
+    "alsBerlinDatum"
+   ],
    "calledBy": [
     "feiertageKnopf",
     "zeigeOptionale"
@@ -138296,8 +138306,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/feiertage-knopf.js",
-   "start": 56,
-   "end": 61,
+   "start": 60,
+   "end": 65,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -278482,9 +278492,9 @@
       {
        "name": "feiertageKnopf",
        "file": "module/feiertage-knopf.js",
-       "start": 35,
-       "end": 88,
-       "lines": 54,
+       "start": 39,
+       "end": 102,
+       "lines": 64,
        "writes": [
         "custom_days:upsert"
        ],

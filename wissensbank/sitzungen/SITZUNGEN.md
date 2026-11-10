@@ -7,6 +7,8 @@ tags: [sitzung, uebersicht]
 
 # Sitzungsnotizen
 
+Aktuelle Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
+
 Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kemal):
 **was** war das Problem, **was** wurde gefunden, **warum** so entschieden, **was** blieb offen.
 

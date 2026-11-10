@@ -9,6 +9,7 @@
  */
 import { BUNDESLAENDER, feiertage, feiertageZeilen } from './feiertage.js';
 import { bundeslandKandidaten } from './plz.js?v=20260814';
+import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
 
 const BOX_ID = 'fnFeiertageBox';
 
@@ -19,12 +20,15 @@ const BOX_ID = 'fnFeiertageBox';
 async function termineAnTagen(supabase, ownerId, daten) {
   if (!daten.length) return 0;
   const sortiert = [...daten].sort();
-  const { data } = await supabase.from('bookings').select('start_time')
+  const von = berlinTagesgrenzen(sortiert[0]).von;
+  const bis = berlinTagesgrenzen(sortiert[sortiert.length - 1]).bisExklusiv;
+  const { data, error } = await supabase.from('bookings').select('start_time')
     .eq('owner_id', ownerId)
-    .gte('start_time', sortiert[0] + 'T00:00:00').lte('start_time', sortiert[sortiert.length - 1] + 'T23:59:59')
+    .gte('start_time', von).lt('start_time', bis)
     .not('status', 'in', '("cancelled","completed","no_show")');
+  if (error || !Array.isArray(data)) throw new Error('Termine konnten nicht geprüft werden');
   const set = new Set(daten);
-  return (data || []).filter(b => set.has(String(b.start_time).slice(0, 10))).length;
+  return data.filter(b => set.has(alsBerlinDatum(b.start_time))).length;
 }
 
 /**
@@ -51,7 +55,7 @@ export function feiertageKnopf(liste, { supabase, ownerId, profil, showToast, na
   const land = box.querySelector('#fnLand');
   const optionalBox = box.querySelector('#fnOptional');
   const hinweis = box.querySelector('#fnHinweis');
-  const jahre = () => { const j = new Date().getFullYear(); return [j, j + 1]; };
+  const jahre = () => { const j = Number(alsBerlinDatum(new Date()).slice(0, 4)); return [j, j + 1]; };
 
   const zeigeOptionale = () => {
     const namen = [...new Set(jahre().flatMap(j => feiertage(j, land.value)).filter(f => f.optional).map(f => f.name))];
@@ -76,13 +80,23 @@ export function feiertageKnopf(liste, { supabase, ownerId, profil, showToast, na
     if (!zeilen.length) { showToast?.('Keine kommenden Feiertage'); return; }
     ev.target.disabled = true;
     try {
-      const { error } = await supabase.from('custom_days').upsert(zeilen, { onConflict: 'owner_id,date', ignoreDuplicates: true });
+      let error;
+      try {
+        ({ error } = await supabase.from('custom_days').upsert(zeilen, { onConflict: 'owner_id,date', ignoreDuplicates: true }));
+      } catch {
+        showToast?.('Feiertage konnten nicht eingetragen werden. Bitte Sondertage prüfen, bevor Sie es erneut versuchen.', 'error');
+        return;
+      }
       if (error) { showToast?.('Feiertage konnten nicht eingetragen werden', 'error'); return; }
-      const betroffen = await termineAnTagen(supabase, ownerId, zeilen.map(z => z.date)).catch(() => 0);
-      showToast?.(betroffen
-        ? `${zeilen.length} Feiertage eingetragen — ${betroffen} Termin(e) liegen auf Feiertagen, bitte im Kalender prüfen`
-        : `${zeilen.length} Feiertage eingetragen`);
-      await nachher?.();
+      const betroffen = await termineAnTagen(supabase, ownerId, zeilen.map(z => z.date)).catch(() => null);
+      const ergebnis = 'Feiertage verarbeitet; bestehende Sondertage bleiben unverändert.';
+      showToast?.(betroffen === null
+        ? `${ergebnis} Bestehende Termine konnten nicht geprüft werden. Bitte Kalender prüfen.`
+        : betroffen
+          ? `${ergebnis} Mindestens ${betroffen} Termin(e) an ausgewählten Feiertagen, bitte im Kalender prüfen.`
+          : `${ergebnis} Bitte bestehende Termine im Kalender prüfen.`, betroffen === null ? 'error' : undefined);
+      try { await nachher?.(); }
+      catch { showToast?.('Feiertage verarbeitet; Ansicht konnte nicht aktualisiert werden. Bitte neu laden.', 'error'); }
     } finally { ev.target.disabled = false; }
   });
 }

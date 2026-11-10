@@ -446,7 +446,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveSpecialDays()` — [dashboard.js:8873](dashboard.js#L8873-L8899) · 27 satır · custom_days:upsert
 
 **Yol 2 — `feiertageKnopf()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
-- `feiertageKnopf()` — [module/feiertage-knopf.js:35](module/feiertage-knopf.js#L35-L88) · 54 satır · custom_days:upsert
+- `feiertageKnopf()` — [module/feiertage-knopf.js:39](module/feiertage-knopf.js#L39-L102) · 64 satır · custom_days:upsert
 
 ### `employee_scope_overrides` — 2 bağımsız yazma yolu
 
