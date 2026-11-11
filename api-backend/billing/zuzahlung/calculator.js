@@ -122,11 +122,20 @@ export function calcAbrechnungsfallZuzahlung({
  * Befreiung: patient.befreiungen = [{ jahr, befreit_ab, befreit_bis }] (isBefreit je Tag).
  * Ein ungebundenes Jahresflag ersetzt keinen jahresbezogenen Nachweis.
  *
- * @returns {{brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund, tage}}
+ * @returns {{brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund, ersterBehandlungstag, ersterTagBefreiungsgrund, tage}}
  */
-export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnung_zuzahlungsfrei = false }) {
+export function calcAbrechnungsfallZuzahlungProTag({
+  sessions,
+  patient,
+  verordnung_zuzahlungsfrei = false,
+  ersterBehandlungstag,
+  blattgebuehrBereitsErhoben = false,
+}) {
   if (patient?.insurance_type === 'privat') return { zuzahlung_eur: 0, befreit: false, grund: 'privat' };
   if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('Zuzahlung je Tag: keine Sitzungen.');
+  if (typeof blattgebuehrBereitsErhoben !== 'boolean') {
+    throw new Error('Zuzahlung je Tag: Blattgebuehr-Status ist ungueltig.');
+  }
   if ((patient?.befreit_im_jahr === true || patient?.befreiungen != null) && !Array.isArray(patient?.befreiungen)) {
     throw new Error('Befreiungsnachweis: jahresgebundene Nachweise fehlen oder sind ungueltig.');
   }
@@ -142,9 +151,13 @@ export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnu
       throw new Error('Zuzahlung je Tag: Positionszuzahlung ist ungueltig.');
     }
   }
-  // Validate every supplied certificate even when age or prescription status exempts all days.
-  if (patient?.befreiungen) isBefreit(patient.befreiungen, Number(sessions[0].datum.slice(0, 4)), sessions[0].datum);
   const sortiert = [...sessions].sort((a, b) => a.datum.localeCompare(b.datum));
+  const ersttag = ersterBehandlungstag === undefined ? sortiert[0].datum : ersterBehandlungstag;
+  if (!istStichtag(ersttag) || ersttag > sortiert[0].datum) {
+    throw new Error('Zuzahlung je Tag: Erster Behandlungstag fehlt oder ist ungueltig.');
+  }
+  // Validate every supplied certificate even when age or prescription status exempts all days.
+  if (patient?.befreiungen) isBefreit(patient.befreiungen, Number(ersttag.slice(0, 4)), ersttag);
   const grundAm = (datum) => {
     if (verordnung_zuzahlungsfrei) return 'verordnung';
     if (isUnter18(patient?.geburtsdatum, datum)) return 'unter_18';
@@ -161,7 +174,8 @@ export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnu
   const brutto = r2(tage.reduce((a, t) => a + t.preis_eur, 0));
   if (!isDtaDecimal(brutto, 10)) throw new Error('Zuzahlung je Tag: Gesamtbetrag ueberschreitet die Feldgrenze.');
   const prozZuzahlung = r2(tage.reduce((a, t) => a + t.zuz, 0));
-  const ersterTagPflichtig = tage[0].grund === null;
+  const ersterTagBefreiungsgrund = grundAm(ersttag);
+  const ersterTagPflichtig = ersterTagBefreiungsgrund === null && !blattgebuehrBereitsErhoben;
   const pflichtigBrutto = r2(tage.filter(t => t.grund === null).reduce((a, t) => a + t.preis_eur, 0));
   const pauschZuzahlung = ersterTagPflichtig ? Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozZuzahlung))) : 0;
   const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
@@ -169,6 +183,8 @@ export function calcAbrechnungsfallZuzahlungProTag({ sessions, patient, verordnu
   return {
     brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto: r2(brutto - gesZuzahlung),
     befreiungsgrund: alleFrei ? tage[0].grund : null,
+    ersterBehandlungstag: ersttag,
+    ersterTagBefreiungsgrund,
     tage: tage.map(({ datum, grund, zuz }) => ({ datum, befreiungsgrund: grund, zuzahlung: zuz })),
   };
 }

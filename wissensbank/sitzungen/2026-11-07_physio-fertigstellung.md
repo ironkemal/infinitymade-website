@@ -177,3 +177,23 @@ Nachweis: Backend 2.047 PASS, 4 SKIP, 0 FAIL (29,40s, Exit0), Log
 Legacydatei, 14/14 ProTag unter Los Angeles, keine neuen Blocker. Tagesprotokoll
 `fortschritte/2026-11-11.md`. Mehrintervall-Persistenz, Originaltag/Blattgebühr und
 gemeinsames Wiring bleiben offen; keine vollständige Paketabnahme.
+
+## Fortsetzung 11.11.2026 (Schritt 2): Ursprünglicher Ersttag und Blattgebühr im Tagescalculator
+
+`calcAbrechnungsfallZuzahlungProTag` nimmt optional `ersterBehandlungstag` (YYYY-MM-DD,
+<= frühester übergebener Leistungstag; sonst Fehler) und `blattgebuehrBereitsErhoben`
+(strikt Boolean; sonst Fehler) entgegen und liefert `ersterBehandlungstag` sowie
+`ersterTagBefreiungsgrund` zurück. Damit entfällt die 10-EUR-Pauschale sowohl dann,
+wenn der ursprüngliche Ersttag einer Teil-/Nachberechnung befreit war (z. B. U18 am
+Ersttag, später volljährig), als auch dann, wenn die Blattgebühr bereits erhoben wurde.
+Ohne explizite Angabe bleibt für Gesamtabrechnungen der früheste übergebene Leistungstag
+der Ersttag. Keine stille Rückrechnung aus Gesamtsummen; aktive Routen und Legacycalculator
+bleiben unverändert.
+
+Nachweis: `npm run test:backend` 2.048 PASS, 4 SKIP, 0 FAIL (25,53s, Exit 0), Log
+`/tmp/praxura-20261111-ersttag.log`; Zeitzonenläufe unter `America/Los_Angeles` und
+`Asia/Tokyo` grün (16/16). Funktionskarte (`funktionen/INDEX.json`, `INDEX.md`) aktualisiert.
+Offen bleiben Mehrintervall-Schema/UI-Pfad, Provenienz des ursprünglichen Ersttags aus
+allen Sitzungen/Vorgeschichte in den Datenpfaden sowie das gemeinsame Wiring von Vorschau,
+ZU-Beleg, Korrektur und DTA.
+
