@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-11",
- "dateien": 564,
- "funktionen": 4589,
+ "dateien": 565,
+ "funktionen": 4591,
  "module": [
   "abrechnung",
   "anamnese",
@@ -8488,6 +8488,7 @@
     "ladePodoZuzahlung",
     "ladeStatusJePatient",
     "leistungsRaumPayload",
+    "leseWunsch",
     "load",
     "loadAbrechnung",
     "loadPatientDetailRezepte",
@@ -36854,6 +36855,7 @@
     "ladePodoZuzahlung",
     "ladeStatusJePatient",
     "leistungsRaumPayload",
+    "leseWunsch",
     "load",
     "loadAbrechnung",
     "loadPatientDetailRezepte",
@@ -99686,6 +99688,7 @@
     "ladePodoZuzahlung",
     "ladeStatusJePatient",
     "leistungsRaumPayload",
+    "leseWunsch",
     "load",
     "loadAbrechnung",
     "loadPatientDetailRezepte",
@@ -131587,6 +131590,7 @@
     "ladePodoZuzahlung",
     "ladeStatusJePatient",
     "leistungsRaumPayload",
+    "leseWunsch",
     "load",
     "loadAbrechnung",
     "loadPatientDetailRezepte",
@@ -132247,6 +132251,60 @@
    ],
    "calledBy": [
     "init"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "leseWunsch",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/design-oeffentlich.js",
+   "start": 13,
+   "end": 18,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "get"
+   ],
+   "calledBy": [
+    "wendeAn"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "wendeAn",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/design-oeffentlich.js",
+   "start": 20,
+   "end": 24,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "leseWunsch"
+   ],
+   "calledBy": [
+    "(datei) module/design-oeffentlich.js"
    ],
    "modules": [],
    "gemeinsam": false,

@@ -1,0 +1,52 @@
+/* ============================================================================
+   design/oeffentlich.css — öffentliche Seiten im neuen Design (Redesign Phase 8)
+   ============================================================================
+   Gilt für login.html, employee-signup.html, onboarding.html, booking.html, booking-request.html.
+   Diese Seiten haben keine Anmeldung und keinen Serverkontext: das Attribut setzt vorerst nur
+   module/design-oeffentlich.js in der lokalen Vorschau (`designVorschau`). Ohne Attribut wirkt
+   nichts davon. Regeln: nur [data-design="neu"], nur @media screen, kein !important.
+   Vorgehen: die je Seite verschiedenen Variablen (system.css, onboarding.css, booking-request.css,
+   Inline-:root) auf die Palette „Grau + ein Blau“ legen, danach wenige Form-Regeln (Rundung, Fokus).
+   ========================================================================== */
+
+@media screen {
+  :root[data-design="neu"] {
+    /* system.css (login, employee-signup) */
+    --bg: #F4F6F9; --bg-card: #FFFFFF; --bg-warm: #F2F4F7; --bg-deep: #EEF1F5; --bg-input: #FFFFFF;
+    --ink: #0B0F17; --ink-soft: #344054; --ink-mute: #475467; --ink-quiet: #5B6474;
+    --line: #E6E9EE; --line-soft: #EEF1F4;
+    --bronze: #475467; --bronze-deep: #0B0F17; --sage: #067647; --emerald-deep: #0B0F17;
+    --highlight: #D0D5DD; --rose: #B42318;
+    --serif: var(--sans);
+    /* onboarding.css: Akzent = Hauptfarbe Schwarz */
+    --accent: #0B0F17; --accent-soft: rgba(11, 15, 23, 0.05); --accent-glow: rgba(37, 99, 235, 0.18);
+    --accent-hover: #1F2633; --accent-hover-soft: rgba(11, 15, 23, 0.06);
+    --danger: #B42318; --danger-soft: #FEF3F2;
+    /* booking.html (Inline-:root) */
+    --card: #FFFFFF; --panel: #F2F4F7; --border: #E6E9EE; --text: #0B0F17; --muted: #475467;
+    --green: #067647; --green-bg: rgba(6, 118, 71, 0.08);
+    /* booking-request.css */
+    --border-hover: #A9B1BC; --accent-dark: #1F2633; --accent-light: #EEF0F3; --text-muted: #475467;
+    --error: #B42318; --success: #067647; --disabled: #A9B1BC;
+    --radius: 14px; --radius-lg: 18px;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06); --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+  }
+
+  /* Gemeinsame Form: ruhige Fläche, runde Karten, deutlicher Fokus, Felder mit 3:1-Rand */
+  [data-design="neu"] body { background: var(--bg); color: var(--ink, #0B0F17); }
+  [data-design="neu"] :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+    border-color: #8A93A0; border-radius: 12px; background: #FFFFFF;
+  }
+  [data-design="neu"] :is(input, select, textarea, button, a):focus-visible {
+    outline: 2px solid #2563EB; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
+  }
+  [data-design="neu"] :is(.login-card, .signup-card, .step) { border-radius: 18px; border-color: #E6E9EE; box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08); }
+  [data-design="neu"] :is(h1, h2, h3) { font-family: var(--sans); font-weight: 500; letter-spacing: -0.015em; }
+  [data-design="neu"] :is(.btn-primary, button[type="submit"]) { border-radius: 12px; min-height: 44px; }
+  [data-design="neu"] :is(.brand, .ob-brand, h1, h2) em { font-style: normal; color: #2563EB; }
+  [data-design="neu"] .ob-topbar { background: rgba(255, 255, 255, 0.92); border-bottom-color: #E6E9EE; }
+  /* Beschriftungen: normale Schrift statt Mono-Großbuchstaben */
+  [data-design="neu"] form label { font-family: var(--sans); font-size: 0.85rem; letter-spacing: normal; text-transform: none; color: #344054; }
+  [data-design="neu"] a:not([class]) { color: #2563EB; }
+  [data-design="neu"] :is(.msg.error, .error, .field-error) { color: #B42318; }
+}
