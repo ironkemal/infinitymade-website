@@ -5,19 +5,19 @@
   },
   {
     "path": "module/shell-ansicht.js",
-    "sha256": "22ed433b2cb47bd96a9237dcba49c3a0db7518d3f696d76fe8a20bfbcfd3274f"
+    "sha256": "2a3424b3938de0533f88d0a3e815b60c5b8b02641595ef60e673754f61ac8f67"
   },
   {
     "path": "module/kopf-menue.js",
-    "sha256": "4330edafc3315034f6e43db150da491250aad681622ec55f6ed1e9474007d906"
+    "sha256": "53785379ee80017a90af20c2bbfbd3f44d188b713565edfff724fe79affc5e97"
   },
   {
     "path": "module/kopf-profil.js",
-    "sha256": "8793db6d59304675fbd8571f37f61b6c088d31be4be57a5c2a8b50466587b094"
+    "sha256": "5c145ee25fddc8625e2b2278b39c5d316bcf48b7cb34121adb738233bfebd86f"
   },
   {
     "path": "module/kopf-neu.js",
-    "sha256": "4ddeeb914fbfbb235c5767e571cae64356df1ed3fda685e37d55067397c090eb"
+    "sha256": "a6ec2dfeaa6b6b60b7ee0e84a6a8fb49d7b23b8162a33085581a1289c0c0a1de"
   },
   {
     "path": "module/kopf-suche-ansicht.js",
@@ -25,10 +25,10 @@
   },
   {
     "path": "module/leiste-flyout.js",
-    "sha256": "09fc57b9d21ac8826a4d9134d0447727fdd38aed4cd712c74d9fea0d84387769"
+    "sha256": "aba30e4e6b5f99aad90230ab7c588a3d3a69a5a80dd418b7ebca780aaf66afdd"
   },
   {
     "path": "module/schublade-neu.js",
-    "sha256": "cbb8b6b8da914e4703cde14f5da7e956f29058c5c852d1021bbe6871bd73c535"
+    "sha256": "90b689a196f4b4599a1949ab79e585d4fc396ab57baea65e14e12b5cb6a337fb"
   }
 ]

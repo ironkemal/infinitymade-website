@@ -59,7 +59,7 @@ export function kopfMenue({ klasse, id, fuellen, aktiv = () => true }) {
     const s = document.createElement('span');
     s.textContent = text;
     el.appendChild(s);
-    el.addEventListener('click', (e) => { if (!aktiv()) { e.preventDefault(); schliesse(); return; } schliesse(); handeln?.(e); });
+    el.addEventListener('click', (e) => { if (!aktiv()) { e.preventDefault(); schliesse(); return; } schliesse({ fokusZurueck: true }); handeln?.(e); });
     return el;
   }
 

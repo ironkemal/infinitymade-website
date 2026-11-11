@@ -3,11 +3,11 @@
  * `uid`, `rolle`, `scope`, `name` sind Getter des aktuell geprüften Appkontexts.
  * Scopeabweichung sperrt den Adapter bis zum nächsten Seitenstart.
  */
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261110p01shell';
-import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p01shell';
-import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell';
-import { verdrahteSchublade } from './schublade-neu.js?v=20261110p01shell';
-import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261110p01shell';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261110p01shell2';
+import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p01shell2';
+import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell2';
+import { verdrahteSchublade } from './schublade-neu.js?v=20261110p01shell2';
+import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261110p01shell2';
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };
 let instanz = null;
@@ -21,7 +21,7 @@ export function montiereShellansicht(k) {
   const uid = String(k.uid()), rolle = k.rolle();
   let gesperrt = false;
   const aktiv = () => !gesperrt && html.dataset.design === 'neu' && String(k.uid?.()) === uid && k.rolle?.() === rolle && String(k.scope?.()) === scope;
-  const originale = new Map();
+  const originale = new WeakMap();
   const merke = node => {
     if (!originale.has(node)) originale.set(node, { title: node.getAttribute('title'), kurz: node.getAttribute('data-kurz'), label: node.matches('[data-panel="overview"]') ? node.querySelector(':scope > span:not(.icon):not(.nav-badge)')?.textContent : null });
   };

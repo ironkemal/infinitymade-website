@@ -12,7 +12,7 @@
  * Ab 1025 px greift nichts davon (Leiste ist dort fester Teil der Hülle).
  */
 
-import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell';
+import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell2';
 
 const SCHMAL = '(max-width: 1024px)';
 

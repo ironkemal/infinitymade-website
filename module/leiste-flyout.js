@@ -11,7 +11,7 @@
  * Muster wie module/kalender-kontextmenue.js: erst Lage setzen, dann einhängen, Fokus ohne Scroll.
  */
 
-import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell';
+import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell2';
 
 const RAND = 8;
 const ABSTAND = 8;

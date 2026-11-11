@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-11-10",
+ "erzeugt": "2026-11-11",
  "dateien": 562,
  "funktionen": 4582,
  "module": [
@@ -88839,7 +88839,6 @@
     "log",
     "lsWireToggle",
     "montiereAnamneseAbschnitte",
-    "montiereShellansicht",
     "montiereStartansicht",
     "montiereVerordnungPruefen",
     "mountRechnungsansicht",
@@ -214255,9 +214254,7 @@
     "verdrahteProfil",
     "verdrahteSchublade"
    ],
-   "calledBy": [
-    "init"
-   ],
+   "calledBy": [],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []

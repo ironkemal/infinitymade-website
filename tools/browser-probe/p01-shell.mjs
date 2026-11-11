@@ -55,11 +55,11 @@ try {
       await writeFile(`${out}/control.json`, JSON.stringify(control, null, 2)); console.log(JSON.stringify(control));
       await context.close(); continue;
     }
-    const denied = await page.evaluate(async () => (await import('/module/shell-ansicht.js?v=20261110p01shell')).montiereShellansicht({}) === null);
+    const denied = await page.evaluate(async () => (await import('/module/shell-ansicht.js?v=20261110p01shell2')).montiereShellansicht({}) === null);
     assert.equal(denied, true, 'unauthenticated mount denied');
     await page.evaluate(async role => {
       window.__shellIdentity = { uid: 'synthetic-user', role, scope: 'synthetic-scope' };
-      const { montiereShellansicht } = await import('/module/shell-ansicht.js?v=20261110p01shell');
+      const { montiereShellansicht } = await import('/module/shell-ansicht.js?v=20261110p01shell2');
       window.__shellSearchCalls = { load: 0, matches: 0, label: 0 };
       window.__shell = montiereShellansicht({ uid: () => window.__shellIdentity.uid, rolle: () => window.__shellIdentity.role, scope: () => window.__shellIdentity.scope, name: () => role === 'owner' ? 'Synthetische Inhaberin' : 'Synthetischer Mitarbeiter',
         suche: { ensureLeadsCache: async () => { window.__shellSearchCalls.load++; return [{ id: 'synthetic-search-patient', first_name: 'Suchprobe', last_name: 'Synthetisch' }]; },

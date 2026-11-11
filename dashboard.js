@@ -14170,7 +14170,7 @@ async function init() {
     if (document.documentElement.dataset.design === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start-r1')).montiereStartansicht({ ...ansichtKontext, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
-      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); (await import('./module/shell-ansicht.js?v=20261110p01shell')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id) } });
+      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
