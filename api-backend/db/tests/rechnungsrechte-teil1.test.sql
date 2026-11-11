@@ -1,5 +1,7 @@
--- Test zu db/entwuerfe/rechnungsrechte-teil1.sql (Entwurf, Stand 10.11.2026). Nur Wegwerf-PostgreSQL, alles synthetisch, am Ende ROLLBACK.
--- Aufruf in der Vollkette nach Anwendung des Entwurfs: psql -v ON_ERROR_STOP=1 -f rechnungsrechte-teil1.test.sql
+-- Test zu 0120_rechnungsrechte_teil1.sql. Nur Wegwerf-PostgreSQL, alles synthetisch, am Ende ROLLBACK.
+-- Gilt für den Stand nach 0120 UND nach 0121 (Modulrecht): beide Mitarbeiter hängen an einer Praxis mit Gruppe, die 'abrechnung' erlaubt,
+-- die Rechnungen tragen business_id — so entscheidet allein is_active über den Unterschied.
+-- Aufruf in der Vollkette: psql -v ON_ERROR_STOP=1 -f rechnungsrechte-teil1.test.sql
 BEGIN;
 CREATE FUNCTION pg_temp.id(text) RETURNS uuid LANGUAGE sql IMMUTABLE AS 'SELECT md5($1)::uuid';
 CREATE FUNCTION pg_temp.ok(ok boolean, label text) RETURNS void LANGUAGE plpgsql AS $$
@@ -25,6 +27,10 @@ SELECT pg_temp.id(x), CASE WHEN x IN ('owner','foreign') THEN 'owner' ELSE 'empl
        CASE WHEN x IN ('owner','foreign') THEN NULL ELSE pg_temp.id('owner') END, x <> 'inaktiv'
 FROM unnest(ARRAY['owner','foreign','aktiv','inaktiv']) x
 ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, owner_id = EXCLUDED.owner_id, is_active = EXCLUDED.is_active;
+INSERT INTO public.businesses(id, owner_id, business_name) VALUES (pg_temp.id('biz'), pg_temp.id('owner'), 'Synthetic practice');
+INSERT INTO public.employee_groups(id, business_id, name) VALUES (pg_temp.id('grp'), pg_temp.id('biz'), 'Synthetic billing');
+INSERT INTO public.group_scopes(group_id, module, has_access) VALUES (pg_temp.id('grp'), 'abrechnung', true);
+INSERT INTO public.employee_business_assignments(employee_id, business_id, group_id) SELECT pg_temp.id(x), pg_temp.id('biz'), pg_temp.id('grp') FROM unnest(ARRAY['aktiv','inaktiv']) x;
 INSERT INTO public.leads(id, owner_id, title) VALUES (pg_temp.id('lead'), pg_temp.id('owner'), 'Synthetic'), (pg_temp.id('f-lead'), pg_temp.id('foreign'), 'Synthetic foreign');
 INSERT INTO public.services(id, owner_id, user_id, title, is_internal) VALUES
   (pg_temp.id('svc'), pg_temp.id('owner'), pg_temp.id('aktiv'), 'Synthetic', true),
@@ -34,10 +40,10 @@ INSERT INTO public.bookings(id, owner_id, user_id, customer_name, start_time, en
   (pg_temp.id('bk'), pg_temp.id('owner'), pg_temp.id('aktiv'), 'Synthetic', '2026-12-01 10:00Z', '2026-12-01 10:30Z'),
   (pg_temp.id('bk-legacy'), NULL, pg_temp.id('owner'), 'Synthetic legacy', '2026-12-02 10:00Z', '2026-12-02 10:30Z'),
   (pg_temp.id('f-bk'), pg_temp.id('foreign'), pg_temp.id('owner'), 'Synthetic foreign', '2026-12-03 10:00Z', '2026-12-03 10:30Z');
-INSERT INTO public.invoices(id, owner_id, patient_name, total_patient, status) VALUES
-  (pg_temp.id('inv'), pg_temp.id('owner'), 'Synthetic invoice', 100, 'draft'),
-  (pg_temp.id('inv2'), pg_temp.id('owner'), 'Synthetic invoice 2', 100, 'draft'),
-  (pg_temp.id('f-inv'), pg_temp.id('foreign'), 'Synthetic foreign invoice', 100, 'draft');
+INSERT INTO public.invoices(id, owner_id, business_id, patient_name, total_patient, status) VALUES
+  (pg_temp.id('inv'), pg_temp.id('owner'), pg_temp.id('biz'), 'Synthetic invoice', 100, 'draft'),
+  (pg_temp.id('inv2'), pg_temp.id('owner'), pg_temp.id('biz'), 'Synthetic invoice 2', 100, 'draft'),
+  (pg_temp.id('f-inv'), pg_temp.id('foreign'), NULL, 'Synthetic foreign invoice', 100, 'draft');
 INSERT INTO public.rechnung_zahlungen(id, owner_id, invoice_id, art, betrag_eur, gegenkonto_code, gegenkonto_label) VALUES
   (pg_temp.id('z1'), pg_temp.id('owner'), pg_temp.id('inv'), 'zahlung', 10, 'bank', 'Synthetic'),
   (pg_temp.id('z2'), pg_temp.id('owner'), pg_temp.id('inv2'), 'zahlung', 5, 'bank', 'Synthetic'),
@@ -58,7 +64,7 @@ DO $$ DECLARE n int; BEGIN
   PERFORM pg_temp.ok(n = 0, 'inaktiver Mitarbeiter ändert keine Rechnung (0 Zeilen)');
   PERFORM pg_temp.ok((SELECT count(*) FROM public.rechnung_zahlungen WHERE owner_id = pg_temp.id('owner')) = 0, 'inaktiver Mitarbeiter sieht das Journal nicht');
 END $$;
-SELECT pg_temp.err(format('INSERT INTO public.invoices(owner_id, patient_name) VALUES (%L, %L)', pg_temp.id('owner'), 'Synthetic denied'), '42501', 'inaktiver Mitarbeiter legt keine Rechnung an');
+SELECT pg_temp.err(format('INSERT INTO public.invoices(owner_id, business_id, patient_name) VALUES (%L, %L, %L)', pg_temp.id('owner'), pg_temp.id('biz'), 'Synthetic denied'), '42501', 'inaktiver Mitarbeiter legt keine Rechnung an');
 SELECT pg_temp.err(format('INSERT INTO public.rechnung_zahlungen(owner_id, invoice_id, art, betrag_eur, gegenkonto_code, gegenkonto_label) VALUES (%L, %L, ''zahlung'', 1, ''bank'', ''x'')', pg_temp.id('owner'), pg_temp.id('inv')), '42501', 'inaktiver Mitarbeiter bucht keine Zahlung');
 SELECT pg_temp.als('owner');
 DO $$ BEGIN

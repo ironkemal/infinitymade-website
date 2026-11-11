@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261111120825 0120_rechnungsrechte_teil1
+-- LAST MIGRATION:     20261111121954 0121_rechnungen_modulrecht
 -- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119)
 -- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
@@ -14,7 +14,7 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           153
+--   functions:           154
 --   triggers:            182
 --   indexes:             380
 --   auth_triggers:       1
@@ -1099,12 +1099,12 @@ CREATE POLICY owner_and_employee_invoices ON public.invoices
   AS PERMISSIVE
   FOR ALL
   TO PUBLIC
-  USING (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+  USING (((auth.uid() = owner_id) OR ((business_id IS NOT NULL) AND (EXISTS ( SELECT 1
    FROM profiles p
-  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id) AND (p.is_active IS TRUE))))))
-  WITH CHECK (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), business_id))))
+  WITH CHECK (((auth.uid() = owner_id) OR ((business_id IS NOT NULL) AND (EXISTS ( SELECT 1
    FROM profiles p
-  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id) AND (p.is_active IS TRUE))))));
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), business_id))));
 
 CREATE POLICY kostentraeger_read_all ON public.kostentraeger
   AS PERMISSIVE
@@ -1506,17 +1506,21 @@ CREATE POLICY "Rechnungszahlungen insert scoping" ON public.rechnung_zahlungen
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
-   FROM profiles p
-  WHERE ((p.id = auth.uid()) AND (p.is_active IS TRUE))))));
+  WITH CHECK (((owner_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM invoices i
+  WHERE ((i.id = rechnung_zahlungen.invoice_id) AND (i.owner_id = rechnung_zahlungen.owner_id) AND (i.business_id IS NOT NULL) AND (EXISTS ( SELECT 1
+           FROM profiles p
+          WHERE ((p.id = auth.uid()) AND (p.owner_id = i.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), i.business_id))))));
 
 CREATE POLICY "Rechnungszahlungen select scoping" ON public.rechnung_zahlungen
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
-   FROM profiles p
-  WHERE ((p.id = auth.uid()) AND (p.is_active IS TRUE))))));
+  USING (((owner_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM invoices i
+  WHERE ((i.id = rechnung_zahlungen.invoice_id) AND (i.owner_id = rechnung_zahlungen.owner_id) AND (i.business_id IS NOT NULL) AND (EXISTS ( SELECT 1
+           FROM profiles p
+          WHERE ((p.id = auth.uid()) AND (p.owner_id = i.owner_id)))) AND abrechnungszugriff_erlaubt(auth.uid(), i.business_id))))));
 
 CREATE POLICY "Users can delete own referral drafts" ON public.referral_drafts
   AS PERMISSIVE
@@ -2044,6 +2048,35 @@ BEGIN
 END $function$
 ;
 ALTER FUNCTION public.abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_key text, p_payload_sha256 text, p_input_sha256 text, p_generation bigint, p_expected_updated_at text, p_package jsonb, p_manifest jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.abrechnungszugriff_erlaubt(p_user uuid, p_business uuid)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+  -- Nur für den Aufrufer selbst: ein fremdes p_user liefert immer false (Klasse S-01: Argument statt Aufrufer auswerten).
+  SELECT p_user IS NOT NULL AND p_business IS NOT NULL
+     AND p_user = (SELECT auth.uid())
+     AND EXISTS (
+       SELECT 1
+         FROM public.profiles p
+         JOIN public.businesses b ON b.id = p_business AND b.owner_id = p.owner_id
+        WHERE p.id = p_user
+          AND p.is_active IS TRUE
+          AND COALESCE(
+                -- Einzelfreigabe schlägt Gruppe (wie get_my_permissions); bei Doppelzeilen entscheidet die strengere
+                (SELECT bool_and(o.has_access) FROM public.employee_scope_overrides o
+                  WHERE o.employee_id = p_user AND o.business_id = p_business AND o.module = 'abrechnung'),
+                (SELECT bool_or(gs.has_access)
+                   FROM public.employee_business_assignments eba
+                   JOIN public.group_scopes gs ON gs.group_id = eba.group_id
+                  WHERE eba.employee_id = p_user AND eba.business_id = p_business AND gs.module = 'abrechnung'),
+                false)
+     );
+$function$
+;
+ALTER FUNCTION public.abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.add_credits(p_user_id uuid, p_credits integer)
  RETURNS void
@@ -8974,6 +9007,9 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=abrechnung_physio_abort(p_owner uuid, p_abrechnung uuid, p_key  column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_k column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=abrechnung_physio_finalize(p_owner uuid, p_abrechnung uuid, p_k column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=abrechnungszugriff_erlaubt(p_user uuid, p_business uuid) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=add_credits(p_user_id uuid, p_credits integer) column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=add_credits(p_user_id uuid, p_credits integer) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=addauth(text) column=- grantee=anon privilege=EXECUTE grantor=supabase_admin grantable=NO
