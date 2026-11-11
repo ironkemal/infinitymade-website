@@ -54,7 +54,7 @@ import {
   istEinreichbar, einreichbarFilterAbrechnungStatus,
   statusAusAbrechnungStatus, abrechnungStatusAusStatus,
 } from '../utils/einreichbar.js';
-import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
+import { zeilenAusDta, betraegeFuerVerordnung } from '../utils/abrechnung-zeilen.js';
 import { ikFehltAntwort } from '../utils/ik-fehlt.js';
 import { kartenIkFehler } from '../utils/karten-ik.js';
 import { kostentraegerFrischAbleiten, kostentraegerIkZurueckschreiben, kostentraegerGeaendertAntwort } from '../utils/kostentraeger-frisch.js';
@@ -1230,12 +1230,9 @@ router.post('/abrechnung/create', async (req, res) => {
     // ---- compute totals ----
     let totalBrutto = 0, totalZu = 0;
     for (const p of prescriptions) {
-      const brutto = p.sessions.reduce((a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0);
+      const { brutto, zuzahlung } = betraegeFuerVerordnung(p);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
-        const proz = p.sessions.reduce((a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0);
-        totalZu += Math.min(brutto, proz + 10);
-      }
+      totalZu     += zuzahlung;
     }
     totalBrutto = +totalBrutto.toFixed(2);
     totalZu     = +totalZu.toFixed(2);
@@ -4520,11 +4517,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // ---- totals ----
     let totalBrutto = 0, totalZu = 0;
     for (const p of prescriptions) {
-      const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
+      const { brutto, zuzahlung } = betraegeFuerVerordnung(p);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
-        totalZu += Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10);
-      }
+      totalZu     += zuzahlung;
     }
     totalBrutto = +totalBrutto.toFixed(2);
     totalZu     = +totalZu.toFixed(2);
@@ -4816,11 +4811,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     for (let i = 0; i < (vords || []).length; i++) {
       if (!festschreiben) break;   // Testdatei: nichts auf die Verordnung schreiben (S2.1)
       if (vords[i].belegnummer) continue;
-      const p = prescriptions[i];
-      const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
-      const zuVerordnung = p.verordnung.zuzahlungskennzeichen === '3'
-        ? +Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10).toFixed(2)
-        : 0;
+      const { zuzahlung: zuVerordnung } = betraegeFuerVerordnung(prescriptions[i]);
       const { error: bnErr } = await supabase.from('prescriptions')
         .update({ belegnummer: prescriptions[i].patient.belegnummer, zuzahlung_eur: zuVerordnung })
         .eq('id', vords[i].id);
@@ -5158,12 +5149,9 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     // ---- Summen (dieselbe Schleife wie in beiden create-Wegen) ----
     let totalBrutto = 0, totalZu = 0;
     for (const p of prescriptions) {
-      const brutto = p.sessions.reduce((a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0);
+      const { brutto, zuzahlung } = betraegeFuerVerordnung(p);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
-        const proz = p.sessions.reduce((a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0);
-        totalZu += Math.min(brutto, proz + 10);
-      }
+      totalZu     += zuzahlung;
     }
     totalBrutto = +totalBrutto.toFixed(2);
     totalZu     = +totalZu.toFixed(2);

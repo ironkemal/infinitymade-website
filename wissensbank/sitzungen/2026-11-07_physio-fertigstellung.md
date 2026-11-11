@@ -160,3 +160,65 @@ werden. Bisheriges Rezeptboolean folgt Ausstellungsdatum, vorhandene Zahlungsfel
 trennen Blattgebühr nicht vom Gesamtbetrag. Konkrete nächste Datenvertragsgrenzen
 in `db/entwuerfe/2026-11-07-physio-abrechnung.md`, Nachtrag 10.11.2026. Keine
 neue Migration geschrieben; keine Altbeträge oder Nachweiszeiträume erfunden.
+
+
+## Fortsetzung 11.11.2026: Jahresbindung im Tagescalculator
+
+Lokaler Stand ab `650e6a3d`. Ungebundenes Jahresflag ohne Nachweisarray wird
+kontrolliert gesperrt. Alle übergebenen Nachweise werden vor Alters-/Rezeptstatus
+auf Integerjahr, echte Grenzen, Reihenfolge und Jahresbindung geprüft; ungültige
+Nachweise verschwinden nicht mehr durch Jahresfilter oder vorzeitige Befreiung.
+Getrennte Intervalle lassen unbelegte Lücken pflichtig; Jahreswechsel befreit nicht
+ohne passenden Jahresnachweis. Bestehende Helfer wiederverwendet, Legacycalculator
+und aktive Routen unverändert. Keine Schema-/UI-Aktivierung.
+
+Nachweis: Backend 2.047 PASS, 4 SKIP, 0 FAIL (29,40s, Exit0), Log
+`/tmp/praxura-20261111-copay.log`. Unabhängiger Review: 15/15 einschließlich
+Legacydatei, 14/14 ProTag unter Los Angeles, keine neuen Blocker. Tagesprotokoll
+`fortschritte/2026-11-11.md`. Mehrintervall-Persistenz, Originaltag/Blattgebühr und
+gemeinsames Wiring bleiben offen; keine vollständige Paketabnahme.
+
+## Fortsetzung 11.11.2026 (Schritt 2): Ursprünglicher Ersttag und Blattgebühr im Tagescalculator
+
+`calcAbrechnungsfallZuzahlungProTag` nimmt optional `ersterBehandlungstag` (YYYY-MM-DD,
+<= frühester übergebener Leistungstag; sonst Fehler) und `blattgebuehrBereitsErhoben`
+(strikt Boolean; sonst Fehler) entgegen und liefert `ersterBehandlungstag` sowie
+`ersterTagBefreiungsgrund` zurück. Damit entfällt die 10-EUR-Pauschale sowohl dann,
+wenn der ursprüngliche Ersttag einer Teil-/Nachberechnung befreit war (z. B. U18 am
+Ersttag, später volljährig), als auch dann, wenn die Blattgebühr bereits erhoben wurde.
+Ohne explizite Angabe bleibt für Gesamtabrechnungen der früheste übergebene Leistungstag
+der Ersttag. Keine stille Rückrechnung aus Gesamtsummen; aktive Routen und Legacycalculator
+bleiben unverändert.
+
+Nachweis: `npm run test:backend` 2.048 PASS, 4 SKIP, 0 FAIL (25,53s, Exit 0), Log
+`/tmp/praxura-20261111-ersttag.log`; Zeitzonenläufe unter `America/Los_Angeles` und
+`Asia/Tokyo` grün (16/16). Funktionskarte (`funktionen/INDEX.json`, `INDEX.md`) aktualisiert.
+Offen bleiben Mehrintervall-Schema/UI-Pfad, Provenienz des ursprünglichen Ersttags aus
+allen Sitzungen/Vorgeschichte in den Datenpfaden sowie das gemeinsame Wiring von Vorschau,
+ZU-Beleg, Korrektur und DTA.
+
+## Fortsetzung 11.11.2026 (Schritt 3): Konsolidierung der Zuzahlungs- und Blattgebührenberechnung in Builder, Preflight, Abrechnungszeilen, Routen und VKZ 03
+
+`calcAbrechnungsfallTotals` (`api-backend/billing/dta/builder.js`), `preflight`
+(`api-backend/billing/dta/preflight.js`) und `betraegeFuerVerordnung`
+(`api-backend/billing/utils/abrechnung-zeilen.js`, delegiert jetzt direkt an
+`calcAbrechnungsfallTotals(p, '01')`) berechnen die 10-EUR-Verordnungsblattgebühr
+einheitlich gegen `pflichtigBrutto - prozZuzahlung` (nur Sitzungen mit `!position_frei`
+und `zuzahlung > 0`), unterstützen `zuzahlungskennzeichen` `'3'`, `'4'`, `'5'` sowie
+`pauschaleFrei` / `pauschZuzahlung` (bei KZ `'5'` ohne explizite Angabe standardmäßig
+`pauschaleFrei = true`) und schreiben in `BES` Feld 4 explizit `0,00`, sobald
+`gesZuzahlung > 0`. In `preflight.js` wurde `S:01009` auf `pPflichtigBrutto` umgestellt
+und die fehlerhafte unbedingte Erhöhung von `totalZuzahlung` bei befreiten Verordnungen
+beseitigt. Die 4 duplizierten Inline-Summenschleifen in `abrechnung.routes.js` nutzen
+`betraegeFuerVerordnung(p)`. Nach unabhängiger `muhalif`-Prüfung wurden auch
+`calcAbrechnungsfallZuzahlung` (`calculator.js`) und `parseOriginalDtaMessage`
+(`zuzahlungsforderung-ursprung.js`) auf denselben `pflichtigBrutto`-Cap und die
+explizite `pauschClaim`-Übergabe für VKZ 03 gezogen.
+
+Nachweis: 4 neue Soll-/Roundtrip-Tests (`builder.test.js`, `abrechnung-zeilen.test.js`,
+`zuzahlungsforderung-ursprung.test.js` Test 35) rot vor Fix, danach grün; `npm run test:backend`
+2.056 Tests, 2.052 PASS, 4 SKIP, 0 FAIL, Exit 0 (47,33s, Log `/tmp/praxura-20261111-step3.log`);
+4-Zeitzonen-Lauf (`UTC`, `America/Los_Angeles`, `Asia/Tokyo`, `Europe/Berlin`) 83/83 grün;
+Funktionskarte aktualisiert. Offen bleiben Mehrintervall-Schema/UI-Pfad und die
+DB-/Mapper-Anbindung (`mapPrescriptionToDtaShape` / `mapVerordnungToDtaShape`) an den
+Tagescalculator.

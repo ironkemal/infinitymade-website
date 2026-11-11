@@ -315,22 +315,34 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
     }
 
     let serviceBrutto = 0;
+    let pflichtigBrutto = 0;
     prozZuzahlung = r2(sessions.reduce((a, s, i) => {
       const parsed = parseVkz03Session(s, i);
-      serviceBrutto += parsed.einzelbetrag * parsed.anzahl;
+      const zeileBrutto = parsed.einzelbetrag * parsed.anzahl;
+      serviceBrutto += zeileBrutto;
 
       const sessionZu = calcSessionZuzahlung({
         preis_eur: parsed.einzelbetrag,
         zuzahlung_eur_position: parsed.numZu,
         position_frei: parsed.isPositionFrei,
       });
+      if (!parsed.isPositionFrei && sessionZu > 0) {
+        pflichtigBrutto += zeileBrutto;
+      }
 
       return a + sessionZu * parsed.anzahl;
     }, 0));
     serviceBrutto = r2(serviceBrutto);
+    pflichtigBrutto = r2(pflichtigBrutto);
 
-    pauschZuzahlung = Math.min(10.00, r2(serviceBrutto - prozZuzahlung));
-    if (pauschZuzahlung < 0) pauschZuzahlung = 0;
+    const explicitPausch = verordnung.pauschZuzahlung ?? item?.pauschZuzahlung;
+    if (verordnung.pauschaleFrei === true || item?.pauschaleFrei === true) {
+      pauschZuzahlung = 0.00;
+    } else if (explicitPausch !== undefined && explicitPausch !== null && explicitPausch !== '') {
+      pauschZuzahlung = Math.max(0, Math.min(10.00, r2(num(explicitPausch)), r2(pflichtigBrutto - prozZuzahlung)));
+    } else {
+      pauschZuzahlung = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozZuzahlung)));
+    }
     pauschZuzahlung = r2(pauschZuzahlung);
 
     const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
@@ -353,18 +365,42 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
     };
   }
 
-  // --- Non-VKZ 03 (exact HEAD original) ---
+  // --- Non-VKZ 03 (VKZ 01 / 02 / 04) ---
   const serviceBrutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
+  const kz = String(verordnung.zuzahlungskennzeichen ?? '').trim();
 
-  if (verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig
-    prozZuzahlung = r2(sessions.reduce(
-      (a, s) => a + calcSessionZuzahlung({
-        preis_eur: num(s.einzelbetrag),
+  if (kz === '3' || kz === '4' || kz === '5') {
+    let pflichtigBrutto = 0;
+    prozZuzahlung = r2(sessions.reduce((a, s) => {
+      const anzahl = num(s.anzahl || 1);
+      const einzel = num(s.einzelbetrag);
+      const frei = s.position_frei === true;
+      const sessionZu = calcSessionZuzahlung({
+        preis_eur: einzel,
         zuzahlung_eur_position: s.zuzahlungProPos,
-        position_frei: s.position_frei === true,
-      }) * num(s.anzahl || 1), 0));
-    pauschZuzahlung = Math.min(10.00, r2(serviceBrutto - prozZuzahlung));
-    if (pauschZuzahlung < 0) pauschZuzahlung = 0;
+        position_frei: frei,
+      });
+      if (!frei && sessionZu > 0) {
+        pflichtigBrutto += einzel * anzahl;
+      }
+      return a + sessionZu * anzahl;
+    }, 0));
+    pflichtigBrutto = r2(pflichtigBrutto);
+
+    const explicitPausch = verordnung.pauschZuzahlung ?? item?.pauschZuzahlung;
+    // Bei KZ '5' (Wechsel von befreit -> pflichtig während der Behandlung) war der
+    // erste Behandlungstag definitionsgemäß zuzahlungsfrei; ohne explizite Vorgabe
+    // fällt daher keine 10-EUR-Verordnungsblattgebühr an (§ 61 S. 3 SGB V).
+    const pauschFrei = verordnung.pauschaleFrei === true || item?.pauschaleFrei === true ||
+      (kz === '5' && verordnung.pauschaleFrei === undefined && explicitPausch === undefined);
+    if (pauschFrei) {
+      pauschZuzahlung = 0.00;
+    } else if (explicitPausch !== undefined && explicitPausch !== null && explicitPausch !== '') {
+      pauschZuzahlung = Math.max(0, Math.min(10.00, r2(num(explicitPausch)), r2(pflichtigBrutto - prozZuzahlung)));
+    } else {
+      pauschZuzahlung = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozZuzahlung)));
+    }
+    pauschZuzahlung = r2(pauschZuzahlung);
   }
   const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
   const netto = r2(serviceBrutto - gesZuzahlung);
@@ -516,11 +552,14 @@ function buildSLLAMessage({
     lines.push(...buildSLLA_EVO({ evoId: verordnung.evoId }));
   }
 
+  const kz = String(verordnung.zuzahlungskennzeichen ?? '').trim();
+  const hatZuzahlung = kz === '3' || kz === '4' || kz === '5' || totals.gesZuzahlung > 0;
+
   for (let sIndex = 0; sIndex < sessions.length; sIndex++) {
     const s = sessions[sIndex];
     let anzahl = s.anzahl || 1;
     let einzelbetrag = s.einzelbetrag;
-    let zuzahlung = verordnung.zuzahlungskennzeichen === '3'
+    let zuzahlung = hatZuzahlung
       ? calcSessionZuzahlung({ preis_eur: num(s.einzelbetrag), zuzahlung_eur_position: s.zuzahlungProPos, position_frei: s.position_frei === true })
       : '';
 
@@ -614,11 +653,12 @@ function buildSLLAMessage({
       pauschZuzahlungForderung: totals.pauschZuzahlung,
     }));
   } else {
+    const besAktiv = totals.gesZuzahlung > 0;
     lines.push(...buildSLLA_BES({
       brutto:          totals.brutto,
-      gesZuzahlung:    totals.gesZuzahlung || '',
-      prozZuzahlung:   totals.prozZuzahlung || '',
-      pauschZuzahlung: totals.pauschZuzahlung || '',
+      gesZuzahlung:    besAktiv ? totals.gesZuzahlung : '',
+      prozZuzahlung:   besAktiv ? totals.prozZuzahlung : '',
+      pauschZuzahlung: besAktiv ? totals.pauschZuzahlung : '',
       // pauschKorrektur only for VKZ '04'
       pauschKorrektur: vkz === '04' && prescription.pauschKorrektur != null
                          ? prescription.pauschKorrektur : '',

@@ -1754,3 +1754,83 @@ test('34. Positivtest Grund 5: Roundtrip Builder -> Parser -> VKZ03 Builder mit 
   assert.ok(vkz03.content.includes("URI+800000000+"));
   assert.ok(vkz03.content.includes("GZF+12,89+2,89+10,00'"));
 });
+
+test('35. Positivtest Grund 5 mit freiem Ersttag (pauschZuzahlung = 0) und Misch-Sitzungen: Roundtrip Builder -> Parser -> VKZ03 Builder', () => {
+  const f = structuredClone(podoFixture);
+  f.absender.ik = '800000000';
+  f.empfaenger.ik = '108310400';
+  f.prescriptions[0].verordnung.kostentraegerIk = '108310400';
+  f.prescriptions[0].verordnung.krankenkasseIk = '108310400';
+  f.prescriptions[0].verordnung.zuzahlungskennzeichen = '5';
+  f.prescriptions[0].verordnung.pauschaleFrei = true;
+  f.prescriptions[0].sessions = [
+    { positionsnummer: '78010', datumLeistung: '2026-08-20', anzahl: 1, einzelbetrag: 28.90, zuzahlungProPos: 0, position_frei: true },
+    { positionsnummer: '78010', datumLeistung: '2026-08-28', anzahl: 1, einzelbetrag: 28.90, zuzahlungProPos: 2.89 },
+  ];
+
+  const built = buildDtaFile(f);
+  const hash = sha256Hex(Buffer.from(built.content, 'latin1'));
+
+  const parsed = parseOriginalDtaMessage({
+    dtaContent: Buffer.from(built.content, 'latin1'),
+    expectedSha256: hash,
+    sourceHeader: {
+      rechnungsnummer: f.rechnung.sammelRechnungsnummer,
+      rechnungsdatum: f.rechnung.datum,
+      kostentraeger_ik: '108310400',
+      owner_id: TEST_OWNER_ID,
+    },
+    sourceZeile: {
+      einzel_rechnungsnummer: '0',
+      belegnummer: f.prescriptions[0].patient.belegnummer,
+      versichertennummer: f.prescriptions[0].patient.kvnr,
+      verordnungsdatum: f.prescriptions[0].verordnung.ausstellungsdatum,
+      kostentraeger_ik: '108310400',
+      brutto_eur: 57.80,
+      zuzahlung_eur: 2.89,
+      netto_eur: 54.91,
+      patient_id: TEST_PATIENT_ID,
+      owner_id: TEST_OWNER_ID,
+    },
+    reason: '5',
+    selectedSessionIndices: [1],
+    currentSenderIk: '800000000',
+    nachweisPruefung: makeValidProofKZ5({
+      kostentraegerIk: '108310400',
+      gueltigAb: '2026-01-01',
+      gueltigBis: '2026-08-25',
+      statusWechselDatum: '2026-08-26',
+      zahlungsaufforderungReferenz: 'ZA-2026-08-002',
+      zahlungsaufforderungDatum: '2026-08-27',
+    }),
+    verifiedSourcePatientId: TEST_PATIENT_ID,
+  });
+
+  assert.equal(parsed.reason, 'KZ5');
+  assert.equal(parsed.claimAmount, 2.89);
+  assert.equal(parsed.prozClaim, 2.89);
+  assert.equal(parsed.pauschClaim, 0.00);
+
+  const vkz03 = buildDtaFile({
+    preflight: false,
+    absender: f.absender,
+    empfaenger: f.empfaenger,
+    rechnung: {
+      sammelRechnungsnummer: 'R2026-W40-005',
+      einzelRechnungsnummer: '0',
+      datum: new Date('2026-10-02'),
+      datennummer: 5,
+      rechnungsart: '1',
+    },
+    prescriptions: [parsed.prescription],
+    kind: 'echt',
+    vkz: '03',
+    transfernummer: 5,
+    rechnungssteller: {
+      name: f.absender.name,
+      telefon: '0224112345',
+    },
+  });
+
+  assert.ok(vkz03.content.includes("GZF+2,89+2,89+0,00'"));
+});

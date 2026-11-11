@@ -33,31 +33,23 @@
  * Datei. Der 10-€-Deckel steht in Anlage 1 TP5 V21 §5.5.2 (GES).
  */
 
+import { calcAbrechnungsfallTotals } from '../dta/builder.js';
+
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 /**
  * Brutto · Zuzahlung · Netto EINER Verordnung, aus ihren DTA-Sitzungen.
+ * Delegiert direkt an `calcAbrechnungsfallTotals` des DTA-Builders, damit
+ * `abrechnung_zeile`, `abrechnung.total_eur` und das EDIFACT-BES-Segment
+ * garantiert dieselben Beträge für KZ '3', '4', '5' und Pauschalen tragen.
  *
- * @param {{sessions: Array<{einzelbetrag:number, anzahl:number, zuzahlungProPos:number}>,
- *          verordnung: {zuzahlungskennzeichen: string}}} p
+ * @param {{sessions: Array<{einzelbetrag:number, anzahl:number, zuzahlungProPos:number, position_frei?:boolean}>,
+ *          verordnung: {zuzahlungskennzeichen: string, pauschaleFrei?: boolean, pauschZuzahlung?: number}}} p
  * @returns {{brutto:number, zuzahlung:number, netto:number}}
  */
 export function betraegeFuerVerordnung(p) {
-  const sessions = Array.isArray(p?.sessions) ? p.sessions : [];
-  const brutto = r2(sessions.reduce(
-    (a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0));
-
-  // '1' heisst zuzahlungsbefreit — dann zahlt die Kasse alles.
-  // '3' heisst zuzahlungspflichtig (Anlage 3 TP5 §8.1.3) — O-101, 14.09.2026:
-  // hier stand faelschlich '0' (das bedeutet "keine gesetzliche Zuzahlung").
-  let zuzahlung = 0;
-  if (p?.verordnung?.zuzahlungskennzeichen === '3') {
-    const proz = r2(sessions.reduce(
-      (a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0));
-    zuzahlung = r2(Math.min(brutto, proz + 10));
-  }
-
-  return { brutto, zuzahlung, netto: r2(brutto - zuzahlung) };
+  const t = calcAbrechnungsfallTotals(p, '01');
+  return { brutto: t.brutto, zuzahlung: t.gesZuzahlung, netto: t.netto };
 }
 
 /**

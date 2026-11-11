@@ -134,3 +134,25 @@ test('zeilenAusDta: ein Index ohne Quelle bricht nicht ab', () => {
   });
   assert.equal(z.length, 1);
 });
+
+test('betraege: KZ 5 mit pauschaleFrei (oder pauschZuzahlung 0) und KZ 4 mit pflichtigBrutto-Cap stimmen mit DTA überein', () => {
+  const pKz5 = {
+    patient: { vorname: 'Anna', nachname: 'Muster', kvnr: 'A123456789', belegnummer: '7-2' },
+    verordnung: { ausstellungsdatum: '2026-08-01', zuzahlungskennzeichen: '5', pauschaleFrei: true },
+    sessions: [
+      { einzelbetrag: 28.90, anzahl: 1, zuzahlungProPos: 0, position_frei: true },
+      { einzelbetrag: 28.90, anzahl: 1, zuzahlungProPos: 2.89 },
+    ],
+  };
+  assert.deepEqual(betraegeFuerVerordnung(pKz5), { brutto: 57.80, zuzahlung: 2.89, netto: 54.91 });
+
+  const pKz4 = {
+    patient: { vorname: 'Anna', nachname: 'Muster', kvnr: 'A123456789', belegnummer: '7-3' },
+    verordnung: { ausstellungsdatum: '2026-08-01', zuzahlungskennzeichen: '4' },
+    sessions: [
+      { einzelbetrag: 6.00, anzahl: 1, zuzahlungProPos: 0.60 },
+      { einzelbetrag: 30.00, anzahl: 1, zuzahlungProPos: 0, position_frei: true },
+    ],
+  };
+  assert.deepEqual(betraegeFuerVerordnung(pKz4), { brutto: 36.00, zuzahlung: 6.00, netto: 30.00 });
+});
