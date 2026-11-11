@@ -18,7 +18,7 @@ try {
       const request = route.request(), url = new URL(request.url());
       if (url.origin !== server.basis || !['GET', 'HEAD'].includes(request.method())) { violations.push(`${request.method()} ${url.origin}${url.pathname}`); return route.abort(); }
       if (url.pathname === '/vendor/supabase-js.js') return route.fulfill({ contentType: 'text/javascript', body: fixture });
-      if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false } });
+      if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false, designVorschau: true } });
       if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { records: [] } });
       return route.continue();
     });
@@ -27,7 +27,7 @@ try {
     page.on('pageerror', error => violations.push(error.message));
     await page.clock.setFixedTime(new Date('2026-10-23T10:15:00+02:00'));
     await page.goto(`${server.basis}/dashboard.html?design=alt`);
-    await page.waitForSelector('#sidebarNav .sidebar-item'); await page.waitForTimeout(350);
+    await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached' }); await page.waitForFunction(() => { const a = document.getElementById('app'); return a && a.style.display !== 'none'; }); await page.waitForTimeout(350);
     // Einrichtung has a documented delayed post-auth render; compare equally ready states.
     if (role === 'owner') await page.waitForFunction(() => !!document.getElementById('einrichtungRing')?.getAttribute('aria-label'));
     await page.evaluate(() => document.fonts.ready);
@@ -135,7 +135,7 @@ try {
     await page.evaluate(field => { window.__shellIdentity[field] = 'different-context'; window.__shell.aktualisieren(); }, changedField);
     assert.equal(await page.evaluate(() => !document.documentElement.dataset.pxShell && document.querySelector('.px-profil-wrap').hidden && document.getElementById('mainArea').inert === window.__shellOriginalInert), true, 'scope mismatch fail closed');
     entry.contextMismatch = { field: changedField, disabled: true };
-    await page.reload(); await page.waitForSelector('#sidebarNav .sidebar-item'); await page.waitForTimeout(350);
+    await page.reload(); await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached' }); await page.waitForFunction(() => { const a = document.getElementById('app'); return a && a.style.display !== 'none'; }); await page.waitForTimeout(350);
     if (role === 'owner') await page.waitForFunction(() => !!document.getElementById('einrichtungRing')?.getAttribute('aria-label'));
     await page.evaluate(() => document.fonts.ready);
     await page.addStyleTag({ url: `${server.basis}/design/shell.css` }); await page.mouse.move(0, 0);

@@ -16,7 +16,7 @@ try {
       const request = route.request(), url = new URL(request.url());
       if (url.origin !== server.basis || !['GET', 'HEAD'].includes(request.method())) { errors.push(`${request.method()} ${url.origin}${url.pathname}`); return route.abort(); }
       if (url.pathname === '/vendor/supabase-js.js') return route.fulfill({ contentType: 'text/javascript', body: fixture });
-      if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false } });
+      if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false, designVorschau: true } });
       if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { records: [] } });
       return route.continue();
     });
@@ -24,7 +24,7 @@ try {
     const page = await context.newPage(); page.on('pageerror', error => errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-10-23T10:15:00+02:00'));
     await page.goto(`${server.basis}/dashboard.html?design=alt`);
-    await page.waitForSelector('#sidebarNav .sidebar-item'); await wechsle(page, 'anamnese');
+    await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached' }); await page.waitForFunction(() => { const a = document.getElementById('app'); return a && a.style.display !== 'none'; }); await wechsle(page, 'anamnese');
     await page.waitForTimeout(1800); // existing setup ring settles before pixel baseline
     await page.locator('#anamHauptbeschwerde').fill('Synthetischer Entwurf bleibt erhalten.');
     await page.locator('#anamHauptbeschwerde').focus();

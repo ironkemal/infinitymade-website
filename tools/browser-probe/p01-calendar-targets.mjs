@@ -26,7 +26,7 @@ try {
         }
         if (url.pathname === '/vendor/supabase-js.js') return route.fulfill({ contentType: 'text/javascript', body: fixture });
         if (variant === 'alt-without-calendar-css' && url.pathname === '/design/kalender.css') return route.fulfill({ contentType: 'text/css', body: '' });
-        if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false } });
+        if (url.pathname === '/api/config') return route.fulfill({ json: { supabaseUrl: 'https://synthetic.invalid', supabaseAnonKey: 'synthetic', apiBase: '/api', istKutu: false, telemetryEnabled: false, designVorschau: true } });
         if (url.pathname.startsWith('/api/')) return route.fulfill({ json: { records: [] } });
         return route.continue();
       });
@@ -35,7 +35,7 @@ try {
       page.on('pageerror', error => violations.push(error.message));
       await page.clock.setFixedTime(new Date('2026-10-23T10:15:00+02:00'));
       await page.goto(`${server.basis}/dashboard.html?design=${variant === 'neu' ? 'neu' : 'alt'}`);
-      await page.waitForSelector('#sidebarNav .sidebar-item');
+      await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached' }); await page.waitForFunction(() => { const a = document.getElementById('app'); return a && a.style.display !== 'none'; });
       await wechsle(page, 'calendar');
       await page.waitForTimeout(300);
       if (variant === 'neu') {

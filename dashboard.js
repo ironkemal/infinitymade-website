@@ -16,7 +16,7 @@ import { zeigePatientTermine } from './module/patient-termine.js?v=20261017seven
 import { erstelleRezeptPatientenkopf } from './module/rezept-patientenkopf.js?v=20261017seven1';
 import { erstelleUeberweisungUpload } from './module/patient-ueberweisung-upload.js?v=20261017seven1';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU, DESIGN_VORSCHAU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261030k4';
 import { holeFahrzeitBeimSpeichern } from './module/hausbesuch-route.js?v=20261021r'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261103mail1'; // Box-Anpassungen (K2b.15)
 import { attachDiagnoseSearch, attachHeilmittelSearch } from './katalog-suche.js?v=20261001a';
@@ -14167,10 +14167,10 @@ async function init() {
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
     await renderSidebar(); await loadTeam();
-    if (document.documentElement.dataset.design === 'neu') {
+    if (await import('./module/design-entscheidung.js?v=20261111p2').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: () => currentSession?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261110p01start-r1')).montiereStartansicht({ ...ansichtKontext, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings });
-      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { } catch (e) { console.error('[init] shell', e); }
+      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261110p01shell3')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id) } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }

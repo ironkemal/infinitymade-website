@@ -92,7 +92,8 @@ http.createServer((req, res) => {
       return;
     }
     res.writeHead(200);
-    res.end(JSON.stringify({ supabaseUrl, supabaseAnonKey, apiBase }));
+    // designVorschau: nur dieser lokale Testserver darf ?design=neu ohne Server-Freigabe zulassen (Redesign Phase 2).
+    res.end(JSON.stringify({ supabaseUrl, supabaseAnonKey, apiBase, designVorschau: true }));
     return;
   }
 

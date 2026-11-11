@@ -19,7 +19,7 @@ async function open({width=1440,theme='hell',role='owner',scenario='voll',design
   if(!['GET','HEAD'].includes(req.method())){log.writes.push(req.method()+' '+url.pathname);return route.fulfill({status:503,json:{error:'synthetic write fence'}});}
   if(url.pathname==='/vendor/supabase-js.js')return route.fulfill({contentType:'text/javascript',body:fixture});
   if(withoutCss && (url.pathname.startsWith('/design/')||url.pathname==='/praxura-design.css'))return route.fulfill({contentType:'text/css',body:''});
-  if(url.pathname==='/api/config')return route.fulfill({json:{supabaseUrl:'https://synthetic.invalid',supabaseAnonKey:'synthetisch-anon',apiBase:'/api',istKutu:false,telemetryEnabled:false}});
+  if(url.pathname==='/api/config')return route.fulfill({json:{supabaseUrl:'https://synthetic.invalid',supabaseAnonKey:'synthetisch-anon',apiBase:'/api',istKutu:false,telemetryEnabled:false,designVorschau:true}});
   if(url.pathname.startsWith('/api/')){log.api.push(url.pathname);return route.fulfill({status:scenario==='fehler'?503:200,json:{records:[]}});}
   return route.continue();
  });
@@ -116,6 +116,7 @@ try{
  for(const role of ['owner','employee'])for(const theme of ['hell','dunkel'])for(const width of widths){
   const {context,page,log}=await open({width,theme,role});
   const entry={role,theme,width,panels:[],log};
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.pxShell),'v2','shell mounted in neu');
   for(const id of ['overview','calendar','anamnese']){
    const active=await wechsle(page,id);
    const metrics=await page.evaluate(id=>{const panel=document.getElementById('panel-'+id);const r=panel.getBoundingClientRect();return{active:panel.classList.contains('active'),width:innerWidth,document:document.documentElement.scrollWidth,panelWidth:r.width,taskNode:!!document.getElementById('startAufgaben'),physio:getComputedStyle(document.getElementById('anamPhysioForm')).display,checkboxes:document.querySelectorAll('#anamPhysioForm input[type=checkbox]').length};},id);

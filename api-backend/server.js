@@ -35,6 +35,7 @@ import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import { createUeberRouter } from './routes/ueber.js';
+import { createDesignRouter } from './routes/design.js';
 import { createManifestRouter } from './routes/manifest.js';
 import { createDokumentMailRouter } from './routes/dokument-mail.js';
 import { createSondertagMitteilungRouter } from './routes/sondertag-mitteilung.js';
@@ -637,6 +638,8 @@ app.use('/api', mitarbeiterZugangRouter);
 app.use('/api', dsgvoRouter);
 // „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
 app.use('/api', createUeberRouter({ supabase }));
+// Redesign-Pilot (Phase 2, onprem O-245): Freischaltung nur SaaS per Env, Box bleibt Alt.
+app.use('/api', createDesignRouter());
 // Therapiebericht versenden (Mail verschlüsselt / Fax / Druck) — legal-de + onprem O-216, 22.10.2026.
 app.use('/api', createDokumentMailRouter({ supabase, gmail: { newOAuthClient, fetchWithTimeout } }));
 // Einstellungen → E-Mail-Versand (AUFTRAG-MAILVERSAND): Postfach der Praxis, nur Inhaber.

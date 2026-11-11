@@ -29,3 +29,6 @@ export const IST_KUTU = _cfg.istKutu === true;
 // SaaS hep true, kutuda varsayılan false (Setup-Wizard opt-in'i Faz 2.6'da
 // gelecek). `/api/config` yoksa (fetch fehlgeschlagen) güvenli taraf: kapalı.
 export const TELEMETRY_ENABLED = _cfg.telemetryEnabled === true;
+
+// Redesign-Vorschau (Phase 2): nur der lokale Testserver (dev_server.cjs) liefert true; SaaS/Box nie → fehlend = false.
+export const DESIGN_VORSCHAU = _cfg.designVorschau === true;
