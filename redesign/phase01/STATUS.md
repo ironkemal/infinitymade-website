@@ -24,3 +24,17 @@ Aktuelle Prüfungen und Review werden in VALIDATION.md getrennt festgehalten.
 ## P01-START
 
 Bestätigte Startkomposition über stabilen Viewadapter lokal integriert und synthetisch geprüft; siehe P01-START-HANDOFF.md. Aktuelle Aufgaben-/KPI-/Gaps-/Kalenderknoten erhalten. Finanzdaten und vollständige Phase-1-Abnahme bleiben offen. Separater Eltern-Touchbeleg: evidence/calendar-targets/README.md.
+
+
+## Stand 11.11.2026 (Integrator, Branch t3/praxura-redesign-phase-one, nichts gepusht)
+| Phase | Stand |
+|---|---|
+| 0 Sicherung/Inventar | geschrieben (TRANSFER.md/.json, SOURCE-MANIFEST.json) |
+| 1 Gestaltungsvertrag | lokal integriert (Tokens, Kalender, Start, Anamnese, Shell); Nutzerbestätigung der Bilder offen |
+| 2 Grundpaket + Pilotbegrenzung | lokal gebaut und getestet: serverseitige Entscheidung (`/api/design/entscheidung`, Env-Pilot, Fail-closed), Head-Skript nur Wunsch, onprem O-245. Env nirgends gesetzt |
+| 3–6 Ansichten | Styling übernommen (`design/seiten.css`, `design/verwaltung.css`); Smoke alle Panels Neu≈Alt; keine Einzelabnahme je Unterformular |
+| 7 Rollen/Fachbereiche | Smoke Owner/Employee × Podologie/Physio/Ergo/Logo grün gegenüber Alt; Fachabnahme nicht eingeholt |
+| 8 Login/Onboarding/Buchung | nicht begonnen: kein bestätigtes Design für öffentliche Seiten, Aktivierung dort braucht Produktentscheidung |
+| 9 Integrationskandidat | `npm test` 2744+2041(+5 Skips)+355+109 grün, 0 fail; Shell/Anamnese/Kalender/Aktivierungsproben grün; A11y-Prüfung, Cache-/Update-Rollbackprobe auf echtem Auslieferungsweg und unabhängiger Gesamtreview offen |
+| 10 Deploy/Live | nicht begonnen; braucht eigenes GO |
+Offene Befunde: Pixelkante Neu→Alt ≥1025 px; Aktivierungsfälle A04–A07, A09, A12, A14–A17, A21–A22; keine Gerätetests.
