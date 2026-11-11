@@ -8,19 +8,8 @@
  * Ein öffentlicher Schalter für den Livebetrieb ist bewusst nicht gebaut (offene Produktentscheidung).
  */
 import { DESIGN_VORSCHAU } from '../supabase-config.js';
+import { wendeAn } from './design-oeffentlich-logik.js?v=20261111p8';
 
-/** Rein, testbar: Wunsch aus Query/Speicher, jeder Zugriffsfehler = kein Wunsch. */
-export function leseWunsch(suche = '', speicher = null) {
-  let d = null;
-  try { d = new URLSearchParams(suche).get('design'); } catch { d = null; }
-  if (d === 'alt' || d === 'neu') return d;
-  try { return speicher?.getItem('px-design') === 'neu' ? 'neu' : null; } catch { return null; }
-}
-
-export function wendeAn({ vorschau = DESIGN_VORSCHAU, suche = globalThis.location?.search, speicher = globalThis.localStorage, wurzel = globalThis.document?.documentElement } = {}) {
-  const neu = vorschau === true && leseWunsch(suche, (() => { try { return speicher; } catch { return null; } })()) === 'neu';
-  if (wurzel) { if (neu) wurzel.setAttribute('data-design', 'neu'); else wurzel.removeAttribute('data-design'); }
-  return neu ? 'neu' : 'alt';
-}
-
-if (globalThis.document) wendeAn();
+let speicher = null;
+try { speicher = globalThis.localStorage; } catch { speicher = null; }
+wendeAn({ vorschau: DESIGN_VORSCHAU, suche: globalThis.location?.search, speicher, wurzel: globalThis.document?.documentElement });

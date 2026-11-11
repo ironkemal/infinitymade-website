@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-const { leseWunsch, wendeAn } = await import('./design-oeffentlich.js');
+const { leseWunsch, wendeAn } = await import('./design-oeffentlich-logik.js');
 const speicher = (wert, wirft = false) => ({ getItem: () => { if (wirft) throw new Error('x'); return wert; } });
 const wurzel = () => { const a = new Map(); return { setAttribute: (k, v) => a.set(k, v), removeAttribute: (k) => a.delete(k), get: (k) => a.get(k) }; };
 
