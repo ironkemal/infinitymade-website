@@ -77,7 +77,8 @@ export async function starteBrowser() { return chromium.launch(); }
  *                      uhr?: ISO-Zeitpunkt (Standard Fr 23.10.2026 10:15 Berlin) }
  */
 export async function oeffneDashboard(browser, o) {
-  const fixture = await readFile(join(WURZEL, 'tools/browser-probe/redesign-fixture.js'), 'utf8');
+  let fixture = await readFile(join(WURZEL, 'tools/browser-probe/redesign-fixture.js'), 'utf8');
+  if (process.env.REDESIGN_SEKTOR) fixture = fixture.replace("sector: 'podologie'", `sector: '${process.env.REDESIGN_SEKTOR}'`);   // Fachbereich-Läufe (Phase 7)
   const kontext = await browser.newContext({ viewport: { width: o.breite, height: o.hoehe || 900 },
     deviceScaleFactor: 1, locale: 'de-DE', timezoneId: 'Europe/Berlin' });
   // Kein reducedMotion: 'reduce' — dashboard.css:7139 setzt dann `transform: none !important` auf alles,
