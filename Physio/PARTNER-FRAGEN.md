@@ -177,3 +177,10 @@
 - **Auswirkung der Antwort:** Erfassungsablauf und notwendige Nachweise konkretisieren; belegte Alters-/Vertragsregeln werden nicht durch Praxisgewohnheiten überschrieben.
 - **Öncelik:** 🟠 Geld (Kassenabsetzung möglich)
 - **Eklendi:** 2026-11-07 (Zuzahlung je Tag) · **Cevap:** —
+
+### #23 — Redesign Startseite/Kalender: Reihenfolge und Statusbegriffe am Empfang
+- **Soru (Almanca, Praxisablauf):** „Sortiert Ihr Empfang die Tagesliste nach Uhrzeit oder nach Behandler:in? Wird die Unterschrift direkt am Empfang oder gesammelt am Serienende abgehakt? Gehört eine offene Zuzahlung auf die Startseite? Reicht im Tageskalender eine Spalte pro Therapeut:in, auch auf dem Tablet?“
+- **Varsayımımız:** Zeit-Sortierung mit Behandler:in in der Zeile; Status „erschienen / unterschrieben / nicht erschienen“ statt „vorbei“ nach Uhrzeit.
+- **Cevap „hayır“ ise değişen:** Startseitenliste, Statusfarben/-texte, Spalten im Tagesansicht-Kalender.
+- **Öncelik:** 🟡 Redesign-Feinschliff
+- **Eklendi:** 2026-11-11 (physio-Bildabnahme Redesign) · **Cevap:** —
