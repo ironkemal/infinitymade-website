@@ -40,6 +40,11 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
   - Angestellte (`employee`) sehen die Daten **ihres** Inhabers, nie die eines anderen
     Auftraggebers — auch die Rollentrennung läuft innerhalb der RLS-Policy, nicht in der
     Oberfläche
+  - Die Modul-Berechtigungen (z. B. `anamnese`, `abrechnung`) steuern die **Anzeige** in der Oberfläche, nicht den Datenzugriff; der Zugriff läuft über die RLS
+    nach Mandant. Sie sind deshalb keine Zugriffskontrolle im Sinne von Art. 32 DSGVO (legal-de 11.11.2026). Die Rechnungen sind seit Migration 0121 die Ausnahme: dort
+    erzwingt die RLS das Modulrecht `abrechnung` zusätzlich.
+  - ⚠️ Offen (legal-de/db-ustasi 11.11.2026): Die Aussage unten gilt für `podologie_behandlungen` (Team nur lesend). Für den Fußbefund `pat_fussbefund` erlaubt die RLS
+    dem Praxisteam dagegen Lesen **und** Schreiben (Policy `pat_fussbefund_owner_access`). Angleichen: entweder Aussage anpassen oder die Policy einschränken.
   - Verordnungen und Behandlungsdokumentation sind für Angestellte **lesend** freigegeben
     (03.09.2026, siehe LEGAL_DECISIONS.md); Anlegen, Ändern und der Abrechnungsstatus
     bleiben beim Inhaber
