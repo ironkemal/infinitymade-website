@@ -88,7 +88,10 @@ $kod = $LASTEXITCODE
 $p1 = $p2 = $null
 if ($kod -ne 0) { Write-Host "RAR hatasi (kod $kod). Ara klasor duruyor: $Ara" -ForegroundColor Red; exit 1 }
 
-Remove-Item $Ara -Recurse -Force
+# Uzun yollar (>260) Remove-Item'i kirar -> once bos klasorle aynala
+$bos = Join-Path $env:TEMP 'praxura-bos'; New-Item -ItemType Directory -Force $bos | Out-Null
+robocopy $bos $Ara /MIR /R:0 /W:0 /NFL /NDL /NJH /NJS | Out-Null
+Remove-Item $Ara, $bos -Recurse -Force -ErrorAction SilentlyContinue
 Get-ChildItem $Hedef -Filter 'praxura-tasima*.rar' | ForEach-Object { "  {0}  {1:N0} MB" -f $_.Name, ($_.Length/1MB) }
 Write-Host @"
 
