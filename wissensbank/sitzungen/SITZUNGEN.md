@@ -7,6 +7,8 @@ tags: [sitzung, uebersicht]
 
 # Sitzungsnotizen
 
+**Bei „Was ist noch offen?“:** [[2026-11-11_offene-punkte-wiederaufnahme]] zuerst lesen, dann neuere Belege und führende Restmatrix abgleichen. Enthält Restpunkte, Zuständigkeiten, externe Mitwirkung und Rückstellungen.
+
 Aktuelle Ergänzung: [[2026-11-11_redesign-physio-testkonto-phase0-9]] — Redesign Phasen 0–9 lokal gebaut und geprüft; Live (Phase 10) wartet auf GO und Tenant-ID.
 
 Frühere Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
