@@ -140,7 +140,7 @@ if ($Drive -or $Yedek) {
         # a) Drive klasorunu bul - Drive'a giris yapilmamissa bekle
         if (-not $Yedek) {
             while ($true) {
-                $Yedek = Get-PSDrive -PSProvider FileSystem | ForEach-Object { Join-Path $_.Root 'My Drive\pc transfer' } |
+                $Yedek = Get-PSDrive -PSProvider FileSystem | ForEach-Object { Join-Path $_.Root 'My Drive\pc transfer'; Join-Path $_.Root 'Meine Ablage\pc transfer' } |
                          Where-Object { Test-Path $_ } | Select-Object -First 1
                 if ($Yedek) { break }
                 Start-Process "$env:ProgramFiles\Google\Drive File Stream\launch.bat" -ErrorAction SilentlyContinue
