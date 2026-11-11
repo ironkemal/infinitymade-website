@@ -224,12 +224,14 @@ FOREACH actor IN ARRAY ARRAY['owner','allowed','denied','override','foreign','in
  END LOOP;
 END LOOP;
 END $$;
--- The existing SECURITY INVOKER RPC must encounter the same RLS boundary.
+-- rechnung_zahlung_buchen ist KEIN Browser-Einstieg: nur service_role darf sie ausfuehren (Backend api-backend/billing/api/rechnung-zahlung.routes.js
+-- prueft das Modulrecht selbst per get_my_permissions; db/REGISTER.md rechnung_zahlungen "Wer: nur diese Funktion"). Ein Mitarbeiter, auch mit
+-- Recht, darf sie nicht direkt aufrufen. (Fruehere Fassung dieses Tests erwartete EXECUTE fuer authenticated — durch die Rechte-Haertung
+-- ueberholt, am 10.11.2026 angepasst; die RLS-Grenze fuer direktes INSERT bleibt oben getestet.)
 SELECT set_config('request.jwt.claim.sub',pg_temp.id('denied')::text,true);
-SELECT pg_temp.denied(format('SELECT public.rechnung_zahlung_buchen(%L,%L,%L,2,CURRENT_DATE,%L,%L,%L,p_zahlart=>%L)',pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('denied'),'bank','Synthetic bank','offen','ueberweisung'),'P0002');
+SELECT pg_temp.denied(format('SELECT public.rechnung_zahlung_buchen(%L,%L,%L,2,CURRENT_DATE,%L,%L,%L,p_zahlart=>%L)',pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('denied'),'bank','Synthetic bank','offen','ueberweisung'),'42501');
 SELECT set_config('request.jwt.claim.sub',pg_temp.id('allowed')::text,true);
-SELECT public.rechnung_zahlung_buchen(pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('allowed'),2,CURRENT_DATE,'bank','Synthetic bank','offen',p_zahlart=>'ueberweisung');
-SELECT pg_temp.denied(format('SELECT public.rechnung_zahlung_buchen(%L,%L,%L,1000,CURRENT_DATE,%L,%L,%L,p_zahlart=>%L)',pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('allowed'),'bank','Synthetic bank','offen','ueberweisung'),'23514');
+SELECT pg_temp.denied(format('SELECT public.rechnung_zahlung_buchen(%L,%L,%L,2,CURRENT_DATE,%L,%L,%L,p_zahlart=>%L)',pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('allowed'),'bank','Synthetic bank','offen','ueberweisung'),'42501');
 DO $$ DECLARE n int; BEGIN
  UPDATE public.rechnung_zahlungen SET betrag_eur=999 WHERE invoice_id=pg_temp.id('invoice');
  GET DIAGNOSTICS n=ROW_COUNT;
@@ -241,6 +243,9 @@ END $$;
 RESET ROLE;
 -- Service-role bypasses RLS, never relational storno checks or GoBD triggers.
 SET LOCAL ROLE service_role;
+-- Backend-Weg: Buchung gelingt, Ueberzahlung wird hart abgelehnt (der Riegel sitzt in der Funktion, nicht in RLS).
+SELECT public.rechnung_zahlung_buchen(pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('allowed'),2,CURRENT_DATE,'bank','Synthetic bank','offen',p_zahlart=>'ueberweisung');
+SELECT pg_temp.denied(format('SELECT public.rechnung_zahlung_buchen(%L,%L,%L,1000,CURRENT_DATE,%L,%L,%L,p_zahlart=>%L)',pg_temp.id('invoice'),pg_temp.id('owner'),pg_temp.id('allowed'),'bank','Synthetic bank','offen','ueberweisung'),'23514');
 SELECT pg_temp.denied(format('INSERT INTO public.rechnung_zahlungen(owner_id,invoice_id,art,betrag_eur,gegenkonto_code,gegenkonto_label,storniert_zeile_id) VALUES (%L,%L,%L,-1,%L,%L,%L)',pg_temp.id('owner'),pg_temp.id('invoice'),'storno','bank','Synthetic cross owner',current_setting('test.foreign_payment')),'23514');
 SELECT pg_temp.denied(format('INSERT INTO public.rechnung_zahlungen(owner_id,invoice_id,art,betrag_eur,gegenkonto_code,gegenkonto_label,storniert_zeile_id) VALUES (%L,%L,%L,-1,%L,%L,%L)',pg_temp.id('owner'),pg_temp.id('invoice'),'storno','bank','Synthetic cross invoice',current_setting('test.other_payment')),'23514');
 SELECT pg_temp.denied(format('INSERT INTO public.rechnung_zahlungen(owner_id,invoice_id,art,betrag_eur,gegenkonto_code,gegenkonto_label,storniert_zeile_id) VALUES (%L,%L,%L,-1,%L,%L,%L)',pg_temp.id('owner'),pg_temp.id('invoice'),'storno','bank','Synthetic missing original',pg_temp.id('missing')),'23514');
