@@ -140,7 +140,7 @@ http.createServer((req, res) => {
       res.end(content);
     }
   });
-}).listen(PORT, () => {
+}).listen(PORT, '127.0.0.1', () => {
   console.log(`\n  Praxura — lokaler Server:  http://localhost:${PORT}/login.html\n`);
   if (supabaseUrl && supabaseAnonKey) {
     console.log(`  /api/config liefert: ${supabaseUrl}`);

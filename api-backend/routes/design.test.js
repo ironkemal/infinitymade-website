@@ -22,7 +22,8 @@ test('rein: nur gelisteter Tenant, nur erlaubte Rolle, AUS gewinnt', () => {
   assert.equal(designNeuErlaubt({ tenantId: T2, role: 'owner' }, env), false);
   assert.equal(designNeuErlaubt({ tenantId: T1, role: 'employee' }, env), false);
   assert.equal(designNeuErlaubt({ tenantId: T1, role: 'employee' }, { ...env, DESIGN_NEU_PILOT_ROLLEN: 'owner,employee' }), true);
-  assert.equal(designNeuErlaubt({ tenantId: T1, role: 'owner' }, { ...env, DESIGN_NEU_AUS: '1' }), false);
+  for (const aus of ['1', 'true', 'yes', 'on', 'JA', ' x ']) assert.equal(designNeuErlaubt({ tenantId: T1, role: 'owner' }, { ...env, DESIGN_NEU_AUS: aus }), false, 'AUS=' + aus);
+  for (const an of ['', '0', 'false', 'no', 'off']) assert.equal(designNeuErlaubt({ tenantId: T1, role: 'owner' }, { ...env, DESIGN_NEU_AUS: an }), true, 'AUS=' + an);
   assert.equal(designNeuErlaubt({ tenantId: T1, role: 'owner' }, {}), false);
   assert.equal(designNeuErlaubt({ tenantId: T1, role: 'admin' }, env), false);
   assert.equal(designNeuErlaubt(null, env), false);

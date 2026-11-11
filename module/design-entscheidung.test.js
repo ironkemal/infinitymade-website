@@ -63,3 +63,15 @@ test('Quellwache: dashboard.js verdrahtet Entscheidung und alle drei Neu-Adapter
   const html = await readFile(new URL('../dashboard.html', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /setAttribute\('data-design','neu'\)/, 'Head-Skript darf data-design nicht mehr selbst setzen');
 });
+
+test('hängendes token() blockiert nicht: Zeitlimit → Alt', async () => {
+  const r = await frageServer({ ...basis, timeoutMs: 30, token: () => new Promise(() => {}), fetchFn: antwort(true) });
+  assert.equal(r, false);
+});
+
+test('A07 asynchron: aktuell() liest die Sitzung neu (Wechsel während des Wartens → Alt)', async () => {
+  let uid = 'A'; const w = wurzel();
+  const r = await setzeDesign({ ...basis, aktuell: async () => uid, wunsch: null, wurzel: w,
+    fetchFn: async () => { uid = 'B'; return { ok: true, json: async () => ({ neu: true }) }; } });
+  assert.equal(r, 'alt'); assert.equal(w.get('data-design'), undefined);
+});

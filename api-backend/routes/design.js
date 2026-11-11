@@ -12,6 +12,7 @@
 //   DESIGN_NEU_PILOT_ROLLEN     „owner" (Standard) oder „owner,employee"
 // Echte UUIDs gehören nie ins Repo (public) — nur in die Server-Umgebung.
 
+import { createHash } from 'node:crypto';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../ai/auth.js';
@@ -21,7 +22,9 @@ const liste = (wert) => String(wert || '').split(',').map((s) => s.trim().toLowe
 /** Rein, testbar: Entscheidung aus verifiziertem Kontext + Umgebung. Fehler → false. */
 export function designNeuErlaubt(auth, env = process.env) {
   try {
-    if (['1', 'true'].includes(String(env.DESIGN_NEU_AUS || '').trim().toLowerCase())) return false;
+    // Fail-closed: jeder nicht-leere Wert außer ausdrücklich „aus" (0/false/no/off) schaltet ab.
+    const aus = String(env.DESIGN_NEU_AUS || '').trim().toLowerCase();
+    if (aus && !['0', 'false', 'no', 'off'].includes(aus)) return false;
     if (!auth?.tenantId || !['owner', 'employee'].includes(auth.role)) return false;
     if (!liste(env.DESIGN_NEU_PILOT_TENANTS).includes(String(auth.tenantId).toLowerCase())) return false;
     const rollen = liste(env.DESIGN_NEU_PILOT_ROLLEN || 'owner');
@@ -36,6 +39,9 @@ export function createDesignRouter({ auth = requireAuth, env = process.env } = {
     limit: 30,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
+    // Je Sitzung statt je IP: Mitarbeitende hinter einer Praxis-NAT teilen sich sonst das Limit und fielen bei 429 still auf Alt.
+    keyGenerator: (req) => 'd:' + createHash('sha256').update(String(req.headers.authorization || '')).digest('hex').slice(0, 32),
+    validate: { keyGeneratorIpFallback: false },
     message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
   });
   const router = Router();

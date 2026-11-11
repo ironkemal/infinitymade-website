@@ -22,7 +22,8 @@ export async function frageServer({ apiBase, token, fetchFn = globalThis.fetch, 
   const abbruch = new AbortController();
   const uhr = setTimeout(() => abbruch.abort(), timeoutMs);
   try {
-    const t = await token();
+    // Auch das Lesen der Sitzung unterliegt dem Zeitlimit (hängendes getSession darf init nicht blockieren).
+    const t = await Promise.race([Promise.resolve().then(token), new Promise((ok) => abbruch.signal.addEventListener('abort', () => ok(null)))]);
     if (!t) return false;
     const r = await fetchFn(`${apiBase}/design/entscheidung`, {
       headers: { Authorization: `Bearer ${t}` }, cache: 'no-store', signal: abbruch.signal,
@@ -34,12 +35,12 @@ export async function frageServer({ apiBase, token, fetchFn = globalThis.fetch, 
 
 /** Entscheidet und setzt/entfernt `data-design` am <html>. Gibt 'neu' | 'alt' zurück. */
 export async function setzeDesign({ wunsch, vorschau, apiBase, token, aktuell, fetchFn, wurzel = globalThis.document?.documentElement }) {
-  const uid = aktuell?.();
+  const uid = await aktuell?.();
   let serverNeu = false;
   if (wunsch !== 'alt' && !(vorschau === true && wunsch === 'neu')) {
     serverNeu = await frageServer({ apiBase, token, fetchFn });
   }
-  const ergebnis = aktuell && aktuell() !== uid ? 'alt' : entscheideDesign({ wunsch, vorschau, serverNeu });
+  const ergebnis = aktuell && (await aktuell()) !== uid ? 'alt' : entscheideDesign({ wunsch, vorschau, serverNeu });
   if (wurzel) {
     if (ergebnis === 'neu') wurzel.setAttribute('data-design', 'neu'); else wurzel.removeAttribute('data-design');
   }
