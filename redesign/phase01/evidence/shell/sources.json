@@ -5,7 +5,7 @@
   },
   {
     "path": "module/shell-ansicht.js",
-    "sha256": "2a3424b3938de0533f88d0a3e815b60c5b8b02641595ef60e673754f61ac8f67"
+    "sha256": "508f516bd072d0e25d1fbf9bb0373d17b041ea3e9fb6ccd687fa09b08c1f781e"
   },
   {
     "path": "module/kopf-menue.js",
@@ -13,11 +13,11 @@
   },
   {
     "path": "module/kopf-profil.js",
-    "sha256": "5c145ee25fddc8625e2b2278b39c5d316bcf48b7cb34121adb738233bfebd86f"
+    "sha256": "a1a2837817e1f7a4ddd8c937f26ba549ede812f637a10ba12563e514a0c7c4c5"
   },
   {
     "path": "module/kopf-neu.js",
-    "sha256": "a6ec2dfeaa6b6b60b7ee0e84a6a8fb49d7b23b8162a33085581a1289c0c0a1de"
+    "sha256": "8148b42fac53db8ecb17c9601ea71b37a48e6b9880264446e24ff6864e02f5df"
   },
   {
     "path": "module/kopf-suche-ansicht.js",
@@ -25,10 +25,10 @@
   },
   {
     "path": "module/leiste-flyout.js",
-    "sha256": "aba30e4e6b5f99aad90230ab7c588a3d3a69a5a80dd418b7ebca780aaf66afdd"
+    "sha256": "b044b748a99761513d85254cfb1183f566c1665861ce67da4bb3864e6f12ec67"
   },
   {
     "path": "module/schublade-neu.js",
-    "sha256": "90b689a196f4b4599a1949ab79e585d4fc396ab57baea65e14e12b5cb6a337fb"
+    "sha256": "4d5b01dbb38dc5d238bd63e38c96609aaae2a31fb76d384d02abce169d20b7b0"
   }
 ]

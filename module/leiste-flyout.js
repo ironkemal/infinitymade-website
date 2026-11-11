@@ -11,7 +11,7 @@
  * Muster wie module/kalender-kontextmenue.js: erst Lage setzen, dann einhängen, Fokus ohne Scroll.
  */
 
-import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell2';
+import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell3';
 
 const RAND = 8;
 const ABSTAND = 8;
@@ -95,7 +95,7 @@ function oeffne(gruppe, kopf) {
       z.removeAttribute('id');
       knopf.appendChild(z);
     }
-    knopf.addEventListener('click', () => { schliesseFlyout(); if (aktiv()) orig.click(); });
+    knopf.addEventListener('click', () => { schliesseFlyout(); if (aktiv()) { orig.click(); requestAnimationFrame(() => { const a = document.activeElement; if (!a || a === document.body || !a.isConnected) document.querySelector('#sidebarNav .sidebar-item.active')?.focus({ preventScroll: true }); }); } });
     neu.appendChild(knopf);
   }
 

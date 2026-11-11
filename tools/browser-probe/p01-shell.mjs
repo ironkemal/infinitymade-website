@@ -55,11 +55,11 @@ try {
       await writeFile(`${out}/control.json`, JSON.stringify(control, null, 2)); console.log(JSON.stringify(control));
       await context.close(); continue;
     }
-    const denied = await page.evaluate(async () => (await import('/module/shell-ansicht.js?v=20261110p01shell2')).montiereShellansicht({}) === null);
+    const denied = await page.evaluate(async () => (await import('/module/shell-ansicht.js?v=20261110p01shell3')).montiereShellansicht({}) === null);
     assert.equal(denied, true, 'unauthenticated mount denied');
     await page.evaluate(async role => {
       window.__shellIdentity = { uid: 'synthetic-user', role, scope: 'synthetic-scope' };
-      const { montiereShellansicht } = await import('/module/shell-ansicht.js?v=20261110p01shell2');
+      const { montiereShellansicht } = await import('/module/shell-ansicht.js?v=20261110p01shell3');
       window.__shellSearchCalls = { load: 0, matches: 0, label: 0 };
       window.__shell = montiereShellansicht({ uid: () => window.__shellIdentity.uid, rolle: () => window.__shellIdentity.role, scope: () => window.__shellIdentity.scope, name: () => role === 'owner' ? 'Synthetische Inhaberin' : 'Synthetischer Mitarbeiter',
         suche: { ensureLeadsCache: async () => { window.__shellSearchCalls.load++; return [{ id: 'synthetic-search-patient', first_name: 'Suchprobe', last_name: 'Synthetisch' }]; },
@@ -101,10 +101,17 @@ try {
       await page.locator('#hamburger').click(); await page.waitForTimeout(250);
       assert.equal(await page.locator('#sidebar').evaluate(el => el.classList.contains('open') && !el.inert), true);
       assert.equal(await page.locator('#mainArea').evaluate(el => el.inert), true);
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll('.topbar-right, .topbar .px-suche')].every(el => el.inert)), true, 'topbar inert behind open drawer');
       for (let i = 0; i < 4; i++) { await page.keyboard.press('Tab'); assert.equal(await page.evaluate(() => document.getElementById('sidebar').contains(document.activeElement) || document.activeElement.id === 'hamburger'), true, 'drawer focus trap'); }
       await page.keyboard.press('Escape'); await page.waitForTimeout(250);
       assert.equal(await page.locator('#sidebar').evaluate(el => !el.classList.contains('open') && el.inert), true);
       assert.equal(await page.locator('#hamburger').evaluate(el => document.activeElement === el && el.getAttribute('aria-expanded') === 'false'), true);
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll('.topbar-right, .topbar .px-suche')].every(el => !el.inert)), true, 'topbar inert restored');
+      await page.locator('#hamburger').click(); await page.waitForTimeout(250);
+      await page.locator('#sidebarNav .sidebar-item:not(.active)').first().click(); await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => document.activeElement && document.activeElement !== document.body), true, 'focus after drawer navigation not on body');
+      await page.locator('#hamburger').click(); await page.waitForTimeout(250);
+      await page.locator('#sidebarNav .sidebar-item[data-panel="overview"]').click(); await page.waitForTimeout(400);
       entry.drawerEscapeFocusAndInert = true;
     } else {
       await page.locator('.px-einklappen').click(); await page.waitForTimeout(300);

@@ -3,11 +3,11 @@
  * `uid`, `rolle`, `scope`, `name` sind Getter des aktuell geprüften Appkontexts.
  * Scopeabweichung sperrt den Adapter bis zum nächsten Seitenstart.
  */
-import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261110p01shell2';
-import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p01shell2';
-import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell2';
-import { verdrahteSchublade } from './schublade-neu.js?v=20261110p01shell2';
-import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261110p01shell2';
+import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js?v=20261110p01shell3';
+import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p01shell3';
+import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell3';
+import { verdrahteSchublade } from './schublade-neu.js?v=20261110p01shell3';
+import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261110p01shell3';
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };
 let instanz = null;

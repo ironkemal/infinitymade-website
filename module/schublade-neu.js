@@ -12,7 +12,7 @@
  * Ab 1025 px greift nichts davon (Leiste ist dort fester Teil der Hülle).
  */
 
-import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell2';
+import { naechsterIndex } from './kopf-menue.js?v=20261110p01shell3';
 
 const SCHMAL = '(max-width: 1024px)';
 
@@ -24,6 +24,16 @@ export function schubladenZustand(schmal, offen) {
 
 const fokussierbar = (wurzel) => [...wurzel.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
   .filter((el) => !el.hidden && el.offsetParent !== null);
+
+const KOPF_BEREICHE = '.topbar-right, .topbar .px-suche, .topbar .biz-switcher';
+const kopfInert = new WeakMap();
+/** Kopfleiste (außer Menüknopf/Marke) hinter der offenen Schublade sperren; Ursprungswert bleibt erhalten. */
+function setzeKopfInert(an) {
+  for (const el of document.querySelectorAll(KOPF_BEREICHE)) {
+    if (an) { if (!kopfInert.has(el)) kopfInert.set(el, el.inert); el.inert = true; }
+    else if (kopfInert.has(el)) { el.inert = kopfInert.get(el); kopfInert.delete(el); }
+  }
+}
 
 let warOffen = false;
 let aktiv = () => false;
@@ -41,6 +51,7 @@ function anwenden() {
       if (ursprung?.[name] === null) knopf?.removeAttribute(name);
       else if (ursprung?.[name] !== undefined) knopf?.setAttribute(name, ursprung[name]);
     }
+    setzeKopfInert(false);
     warOffen = false;
     return;
   }
@@ -54,6 +65,7 @@ function anwenden() {
     else { knopf.setAttribute('aria-expanded', z.expanded); knopf.setAttribute('aria-controls', 'sidebar'); }
   }
   const jetztOffen = schmal && offen;
+  setzeKopfInert(jetztOffen);
   if (jetztOffen && !warOffen) {
     // Nach dem Einblenden: aktiver Eintrag, sonst der erste.
     requestAnimationFrame(() => {
@@ -61,7 +73,7 @@ function anwenden() {
       ziel?.focus({ preventScroll: true });
       ziel?.scrollIntoView?.({ block: 'nearest' });
     });
-  } else if (!jetztOffen && warOffen && leiste.contains(document.activeElement)) {
+  } else if (!jetztOffen && warOffen && (leiste.contains(document.activeElement) || !document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected)) {
     knopf?.focus({ preventScroll: true });
   }
   warOffen = jetztOffen;
