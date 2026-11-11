@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261110164855 0119_invoices_mandant_fest
+-- LAST MIGRATION:     20261111120825 0120_rechnungsrechte_teil1
 -- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119)
 -- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
@@ -14,8 +14,8 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        197
---   functions:           151
---   triggers:            180
+--   functions:           153
+--   triggers:            182
 --   indexes:             380
 --   auth_triggers:       1
 --   publication_tables:  8
@@ -1100,11 +1100,11 @@ CREATE POLICY owner_and_employee_invoices ON public.invoices
   FOR ALL
   TO PUBLIC
   USING (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
-   FROM profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id = invoices.owner_id))))))
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id) AND (p.is_active IS TRUE))))))
   WITH CHECK (((auth.uid() = owner_id) OR (EXISTS ( SELECT 1
-   FROM profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id = invoices.owner_id))))));
+   FROM profiles p
+  WHERE ((p.id = auth.uid()) AND (p.owner_id = invoices.owner_id) AND (p.is_active IS TRUE))))));
 
 CREATE POLICY kostentraeger_read_all ON public.kostentraeger
   AS PERMISSIVE
@@ -1508,7 +1508,7 @@ CREATE POLICY "Rechnungszahlungen insert scoping" ON public.rechnung_zahlungen
   TO authenticated
   WITH CHECK (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
    FROM profiles p
-  WHERE (p.id = auth.uid())))));
+  WHERE ((p.id = auth.uid()) AND (p.is_active IS TRUE))))));
 
 CREATE POLICY "Rechnungszahlungen select scoping" ON public.rechnung_zahlungen
   AS PERMISSIVE
@@ -1516,7 +1516,7 @@ CREATE POLICY "Rechnungszahlungen select scoping" ON public.rechnung_zahlungen
   TO authenticated
   USING (((owner_id = auth.uid()) OR (owner_id = ( SELECT p.owner_id
    FROM profiles p
-  WHERE (p.id = auth.uid())))));
+  WHERE ((p.id = auth.uid()) AND (p.is_active IS TRUE))))));
 
 CREATE POLICY "Users can delete own referral drafts" ON public.referral_drafts
   AS PERMISSIVE
@@ -6571,6 +6571,30 @@ $function$
 ;
 ALTER FUNCTION public.rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_created_by uuid, p_betrag_eur numeric, p_zahlungsdatum date, p_gegenkonto_code text, p_gegenkonto_label text, p_restbetrag_modus text, p_ausbuchungskonto_code text, p_ausbuchungskonto_label text, p_bemerkung text, p_zahlart text) OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.rechnung_zahlung_storno_referenz_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+DECLARE o public.rechnung_zahlungen%ROWTYPE;
+BEGIN
+  IF NEW.art IS DISTINCT FROM 'storno' OR NEW.storniert_zeile_id IS NULL THEN RETURN NEW; END IF;
+  SELECT * INTO o FROM public.rechnung_zahlungen WHERE id = NEW.storniert_zeile_id;
+  IF NOT FOUND
+     OR o.owner_id   IS DISTINCT FROM NEW.owner_id
+     OR o.invoice_id IS DISTINCT FROM NEW.invoice_id
+     OR o.art = 'storno'
+     OR NEW.betrag_eur <> -o.betrag_eur THEN
+    RAISE EXCEPTION 'rechnung_zahlungen: Ein Storno hebt genau eine Zahlung derselben Rechnung vollständig auf'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.rechnung_zahlung_storno_referenz_pruefen() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.search_diagnosen(p_q text, p_bereich text DEFAULT NULL::text, p_kind text DEFAULT 'both'::text, p_limit integer DEFAULT 25)
  RETURNS TABLE(kind text, code text, titel text, bereich text, terminal boolean, in_sector boolean, rank real)
  LANGUAGE sql
@@ -7263,6 +7287,33 @@ $function$
 ;
 ALTER FUNCTION public.vergebe_verordnungsnummer_rx() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.warteliste_referenzen_pruefen()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+BEGIN
+  IF NEW.lead_id IS NOT NULL AND NOT EXISTS (
+       SELECT 1 FROM public.leads l WHERE l.id = NEW.lead_id AND l.owner_id = NEW.owner_id) THEN
+    RAISE EXCEPTION 'warteliste: Patient gehört nicht zu dieser Praxis' USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.service_id IS NOT NULL AND NOT EXISTS (
+       SELECT 1 FROM public.services s WHERE s.id = NEW.service_id
+          AND (s.owner_id = NEW.owner_id OR (s.owner_id IS NULL AND s.user_id = NEW.owner_id))) THEN
+    RAISE EXCEPTION 'warteliste: Leistung gehört nicht zu dieser Praxis' USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.matched_booking_id IS NOT NULL AND NOT EXISTS (
+       SELECT 1 FROM public.bookings b WHERE b.id = NEW.matched_booking_id
+          AND (b.owner_id = NEW.owner_id OR (b.owner_id IS NULL AND b.user_id = NEW.owner_id))) THEN
+    RAISE EXCEPTION 'warteliste: Termin gehört nicht zu dieser Praxis' USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$function$
+;
+ALTER FUNCTION public.warteliste_referenzen_pruefen() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.whoami()
  RETURNS jsonb
  LANGUAGE sql
@@ -7636,6 +7687,8 @@ CREATE TRIGGER trg_sync_profiles_clinic_location BEFORE INSERT OR UPDATE OF clin
 
 CREATE TRIGGER trg_prevent_rechnung_zahlungen_mod BEFORE DELETE OR UPDATE ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION prevent_rechnung_zahlungen_mod();
 
+CREATE TRIGGER trg_rechnung_zahlung_storno_referenz BEFORE INSERT ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION rechnung_zahlung_storno_referenz_pruefen();
+
 CREATE TRIGGER trg_pruefe_rechnung_zahlung_owner BEFORE INSERT ON rechnung_zahlungen FOR EACH ROW EXECUTE FUNCTION pruefe_rechnung_zahlung_owner();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON referral_drafts FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
@@ -7687,6 +7740,8 @@ CREATE TRIGGER set_timestamp_vehicles BEFORE UPDATE ON vehicles FOR EACH ROW EXE
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON vehicles FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
 CREATE TRIGGER trg_warteliste_updated_at BEFORE UPDATE ON warteliste FOR EACH ROW EXECUTE FUNCTION set_warteliste_updated_at();
+
+CREATE TRIGGER trg_warteliste_referenzen BEFORE INSERT OR UPDATE OF lead_id, service_id, matched_booking_id ON warteliste FOR EACH ROW EXECUTE FUNCTION warteliste_referenzen_pruefen();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON working_hours FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -11897,6 +11952,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=raum_ausstattung_gueltig(punkte text[]) column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_c column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=rechnung_zahlung_buchen(p_invoice_id uuid, p_owner_id uuid, p_c column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=rechnung_zahlung_storno_referenz_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=rechnung_zahlung_storno_referenz_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=search_diagnosen(p_q text, p_bereich text, p_kind text, p_limit column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=search_diagnosen(p_q text, p_bereich text, p_kind text, p_limit column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=search_diagnosen(p_q text, p_bereich text, p_kind text, p_limit column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
@@ -14719,6 +14776,8 @@ CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON zuzahlung_korrekturen USING
 -- ACL: type=FUNCTION schema=public object=vergebe_patientennummer() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=vergebe_verordnungsnummer_rx() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=warteliste_referenzen_pruefen() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO
+-- ACL: type=FUNCTION schema=public object=warteliste_referenzen_pruefen() column=- grantee=service_role privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=anon privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=authenticated privilege=EXECUTE grantor=postgres grantable=NO
 -- ACL: type=FUNCTION schema=public object=whoami() column=- grantee=postgres privilege=EXECUTE grantor=postgres grantable=NO

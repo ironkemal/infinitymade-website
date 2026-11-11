@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas
--- LAST MIGRATION:     20261110164855 0119_invoices_mandant_fest
+-- LAST MIGRATION:     20261111120825 0120_rechnungsrechte_teil1
 -- EXPORTED AT:        2026-11-10T15:39:37Z (gezielt fortgeschrieben 2026-11-10: 0119, nur SCHEMA-RLS betroffen)
 -- ERZEUGT AM:         2026-11-10
 -- POSTGRESQL VERSION: 17.6
