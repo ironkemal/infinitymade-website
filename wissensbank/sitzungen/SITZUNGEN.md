@@ -7,7 +7,9 @@ tags: [sitzung, uebersicht]
 
 # Sitzungsnotizen
 
-Aktuelle Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
+Aktuelle Ergänzung: [[2026-11-11_redesign-physio-testkonto-phase0-9]] — Redesign Phasen 0–9 lokal gebaut und geprüft; Live (Phase 10) wartet auf GO und Tenant-ID.
+
+Frühere Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
 
 Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kemal):
 **was** war das Problem, **was** wurde gefunden, **warum** so entschieden, **was** blieb offen.
@@ -69,3 +71,4 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 | 2026-10-31 | Physio-Pilot P1 | [[2026-10-31_physio-planung-umsetzung]] | M1, M2a, M3, M5, M6a, M7 lokal gebaut und getestet, nicht live · Altfehler Resturlaub, Sondertag-Upsert, O-224 · offen: M2b, M4, Mail nach E13, GO für Live-Migration |
 
 | 2026-11-04 | Planung / Release | [[2026-11-04_planung-auslieferung-und-abnahmegrenzen]] | UTC-Fix öffentlich bytegleich nachgewiesen; echte QA-Sitzung und Hetzner-Ziel fehlen; Mail separat reserviert |
+| 2026-11-11 | Redesign / Physio-Testkonto | [[2026-11-11_redesign-physio-testkonto-phase0-9]] | Phasen 0–9 lokal gebaut, Proben/Tests grün, Reviews behoben · Aktivierung serverseitig (O-245), öffentliche Seiten nur Vorschau · eigene Korrektur: Shell-Aufruf kurz gelöscht, repariert · offen: Phase 10 (GO, Tenant-ID), Geräte-/Screenreaderabnahme, Fachbefunde |
