@@ -34,6 +34,7 @@
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { hatAbrechnungsRecht } from '../../lib/modulrecht.js';
 
 const router = express.Router();
 
@@ -137,16 +138,11 @@ async function rechnungFuer(req, res, auth) {
     return null;
   }
 
-  // get_my_permissions wertet auth.uid() aus und vereinigt Gruppen + Overrides.
-  // Deshalb zwingend Nutzer-JWT statt Service-Role-Kontext verwenden.
-  const userClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${auth.token}` } },
-  });
-  const { data: permissions, error: permissionErr } = await userClient
-    .rpc('get_my_permissions', { p_business_id: inv.business_id });
-  if (permissionErr || !Array.isArray(permissions)
-      || !permissions.some(p => p?.module === 'abrechnung' && p.has_access === true)) {
+  // Modulrecht 'abrechnung' für die Praxis der Rechnung: gemeinsame Prüfung in lib/modulrecht.js (get_my_permissions mit dem JWT des
+  // Nutzers, Gruppen + Overrides; fail closed). Dieselbe Logik nutzen dokument-mail und der Abrechnungsstatus (guvenlik S-65).
+  if (!(await hatAbrechnungsRecht({
+    auth: { userId: auth.user.id, role: auth.profile.role }, ownerId: inv.owner_id, businessIds: [inv.business_id], token: auth.token,
+  }))) {
     res.status(403).json({ error: 'Forbidden' });
     return null;
   }

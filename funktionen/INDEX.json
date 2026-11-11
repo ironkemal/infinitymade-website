@@ -14900,7 +14900,6 @@
     "loadBookingSlots",
     "loadModulePermissions",
     "physioRpc",
-    "rechnungFuer",
     "rechteAbfrage",
     "registriereVeroeffentlicht",
     "renderBookingCalendar",
@@ -16149,8 +16148,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
-   "start": 84,
-   "end": 104,
+   "start": 85,
+   "end": 105,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -16228,18 +16227,16 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
-   "start": 107,
-   "end": 154,
-   "lines": 48,
+   "start": 108,
+   "end": 150,
+   "lines": 43,
    "spiegelHinweis": null,
    "tables": [
     "invoices",
     "profiles",
     "businesses"
    ],
-   "rpcs": [
-    "get_my_permissions"
-   ],
+   "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
@@ -16247,8 +16244,8 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "hatAbrechnungsRecht",
     "json",
-    "rpc",
     "status"
    ],
    "calledBy": [
@@ -16263,8 +16260,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
-   "start": 160,
-   "end": 178,
+   "start": 156,
+   "end": 174,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [
@@ -16292,8 +16289,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
-   "start": 181,
-   "end": 188,
+   "start": 177,
+   "end": 184,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -39706,7 +39703,8 @@
    ],
    "calledBy": [
     "(datei) api-backend/billing/api/verordnung-status.routes.js",
-    "abrechnungRechtFuerRechnung"
+    "abrechnungRechtFuerRechnung",
+    "rechnungFuer"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -280464,7 +280462,7 @@
     "api-backend/billing/api/ausfall.routes.js:28",
     "api-backend/billing/api/mahnwesen.routes.js:24",
     "api-backend/billing/api/podo-empfangsnachweis.routes.js:12",
-    "api-backend/billing/api/rechnung-zahlung.routes.js:84",
+    "api-backend/billing/api/rechnung-zahlung.routes.js:85",
     "api-backend/billing/api/statistik.routes.js:19",
     "api-backend/billing/api/verordnung-status.routes.js:48",
     "api-backend/billing/api/warteliste.routes.js:24",
