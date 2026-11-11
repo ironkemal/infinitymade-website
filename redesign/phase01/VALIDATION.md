@@ -37,3 +37,6 @@ Unabhängiger Review (6 Befunde, 0 kritisch). Behoben: WeakMap statt Map (Speich
 
 ## P01-SHELL-FIX2 (11.11.2026)
 Behoben (vorher offen): Kopfleiste (`.topbar-right`, Suche, Standortwechsler) bei offener mobiler Schublade `inert`, Ursprungswerte per WeakMap wiederhergestellt; Fokus nach Navigationsklick (Schublade und Desktop-Flyout) landet auf aktivem Eintrag/Menüknopf statt `body`. Probe um drei Zusicherungen erweitert (Kopf inert, Kopf wiederhergestellt, Fokus nach Navigation); 16/16 funktional grün, Cache `p01shell3`. Hinweis: Der neue Navigationsschritt der Probe verändert den Zustand vor dem Neu→Alt-Kontrollvergleich, daher listet `dynamicControlMismatches` zusätzlich 390/1024 (Owner). Ohne diesen Schritt (Vergleichslauf) bleiben die Abweichungen wie bisher auf ≥1025 px begrenzt. Pixelkante weiter offen, nicht browserverifiziert auf echten Geräten.
+
+## P01-PROBE-INIT (11.11.2026)
+Der `loadAnamnese`-Fehler im Szenario „langsam" war ein Probenfehler: Die Probe öffnete Panels, bevor `init` fertig war (`#app` noch versteckt; in der echten App unerreichbar). Probe wartet jetzt auf sichtbares `#app`. Volllauf `physio-demo-p01.mjs` mit Shell: 0 pageErrors, 0 Fences, alle Zusicherungen grün, Alt pixelgleich. Damit ist der frühere „Bestandsfehler" kein offener Punkt mehr.

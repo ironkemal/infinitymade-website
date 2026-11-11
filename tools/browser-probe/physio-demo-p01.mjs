@@ -28,6 +28,7 @@ async function open({width=1440,theme='hell',role='owner',scenario='voll',design
  await page.clock.setFixedTime(new Date('2026-10-23T10:15:00+02:00'));
  await page.goto(`${server.basis}/dashboard.html?design=${design}`);
  await page.waitForSelector('#sidebarNav .sidebar-item',{state:'attached',timeout:20000});
+ await page.waitForFunction(()=>{const a=document.getElementById('app');return a&&a.style.display!=='none';},null,{timeout:30000});
  await page.waitForTimeout(500);
  return{context,page,log};
 }

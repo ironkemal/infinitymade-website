@@ -2704,9 +2704,7 @@
       "foreign": [],
       "writes": [],
       "ws": [],
-      "errors": [
-        "Cannot read properties of undefined (reading 'from')"
-      ],
+      "errors": [],
       "api": [
         "/api/ai/_config",
         "/api/mailversand",
@@ -2731,7 +2729,20 @@
         "terapeut_zertifikat",
         "terapeut_zertifikat",
         "bookings",
-        "working_hours"
+        "working_hours",
+        "patient_notes",
+        "invoices",
+        "fahrten",
+        "bookings",
+        "leads",
+        "prescriptions",
+        "praxis_aufgaben",
+        "bookings",
+        "user_preferences",
+        "user_preferences",
+        "aerzte",
+        "admin_users",
+        "bookings"
       ],
       "writes": [],
       "rpc": [
@@ -2743,7 +2754,13 @@
         "data_sharing_settings",
         "user_preferences",
         "module_visibility",
-        "praxis_formulare"
+        "praxis_formulare",
+        "patient_notes",
+        "fahrten",
+        "praxis_aufgaben",
+        "user_preferences",
+        "user_preferences",
+        "admin_users"
       ],
       "tag": "2026-10-23"
     }
