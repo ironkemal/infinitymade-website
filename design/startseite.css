@@ -78,6 +78,10 @@
     background: var(--bg-hover); color: var(--accent); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
   }
   [data-design="neu"] .px-fuss-knopf:hover { background: var(--nav-active); }
+  /* Fachabnahme physio/podoloji 11.11.2026: Karten mit mehreren Fußknöpfen (Abrechnung) nehmen als Reihe weniger Höhe,
+     wo sonst nur „nicht verfügbar“ steht. Knöpfe bleiben ≥ 44 px hoch. */
+  [data-design="neu"] .px-karte-fuss:has(> .px-fuss-knopf + .px-fuss-knopf) { display: flex; flex-wrap: wrap; gap: 8px; }
+  [data-design="neu"] .px-karte-fuss:has(> .px-fuss-knopf + .px-fuss-knopf) .px-fuss-knopf { width: auto; flex: 1 1 auto; min-height: 44px; padding: 0 14px; }
   [data-design="neu"] .px-karte-zustand { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 24px 24px; color: var(--text-muted); font-size: 14px; }
   [data-design="neu"] .px-karte-zustand p { margin: 0; }
   [data-design="neu"] .px-karte-zustand--ruhig { flex-direction: row; align-items: center; }
