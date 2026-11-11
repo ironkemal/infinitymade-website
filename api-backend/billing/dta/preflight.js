@@ -634,7 +634,7 @@ export function preflight(input) {
                 + '(HeilM-RL § 12 Abs. 8). Doppelten Behandlungstag stornieren.');
       }
 
-      let pBrutto = 0, pZu = 0;
+      let pBrutto = 0, pPflichtigBrutto = 0, pZu = 0;
       p.sessions.forEach((s, j) => {
         const sat = `${at}.sessions[${j}]`;
         // Apply the same wire-field bounds to every processing procedure.
@@ -781,9 +781,12 @@ export function preflight(input) {
             }
           }
 
+          if (!isPositionFrei && numZu > 0) {
+            pPflichtigBrutto += betrag * anzahl;
+          }
           pZu += numZu * anzahl;
         } else {
-          // --- Non-VKZ 03 (VKZ 01 / 02 / 04 intact - exact HEAD original) ---
+          // --- Non-VKZ 03 (VKZ 01 / 02 / 04) ---
           const betrag = Number(s.einzelbetrag);
           if (!Number.isFinite(betrag) || betrag <= 0)
             E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet)`);
@@ -793,34 +796,68 @@ export function preflight(input) {
           const anzahl = Number(s.anzahl || 1);
           pBrutto += betrag * anzahl;
 
-          if (v.zuzahlungskennzeichen === '3') { // O-101: '3' = zuzahlungspflichtig
-            const zu = Number(s.zuzahlungProPos != null ? s.zuzahlungProPos : betrag * 0.10);
+          const kz = String(v?.zuzahlungskennzeichen ?? '').trim();
+          if (kz === '3' || kz === '4' || kz === '5') {
+            const frei = s.position_frei === true;
+            const zu = calcSessionZuzahlung({
+              preis_eur: betrag,
+              zuzahlung_eur_position: s.zuzahlungProPos,
+              position_frei: frei,
+            });
+            if (!frei && zu > 0) {
+              pPflichtigBrutto += betrag * anzahl;
+            }
             pZu += zu * anzahl;
           }
         }
       });
 
+      const r2 = (x) => Math.round((+x + Number.EPSILON) * 100) / 100;
+      const explicitPausch = v?.pauschZuzahlung ?? p?.pauschZuzahlung;
+
       if (isVkz03) {
-        const r2 = (x) => Math.round((+x + Number.EPSILON) * 100) / 100;
         const pProzZu = r2(pZu);
-        const pPauschZu = Math.max(0, Math.min(10.00, r2(pBrutto - pProzZu)));
+        const pflichtigBrutto = r2(pPflichtigBrutto);
+        let pPauschZu = 0;
+        if (v?.pauschaleFrei === true || p?.pauschaleFrei === true) {
+          pPauschZu = 0;
+        } else if (explicitPausch !== undefined && explicitPausch !== null && explicitPausch !== '') {
+          pPauschZu = Math.max(0, Math.min(10.00, r2(Number(explicitPausch) || 0), r2(pflichtigBrutto - pProzZu)));
+        } else {
+          pPauschZu = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - pProzZu)));
+        }
         const pGesZu = r2(pProzZu + pPauschZu);
         if (pGesZu <= 0) {
           E(errors, 'S:01007', `${at}.zuzahlung`,
             'VKZ 03: Zuzahlungsforderung ergibt 0,00 € — Nullforderungen sind unzulässig (GZF muss > 0 sein)');
         }
-        totalServiceBrutto += pBrutto;
+        totalServiceBrutto += r2(pBrutto);
         totalZuzahlung += pGesZu;
       } else {
-        if (v.zuzahlungskennzeichen === '3') {
-          const expected = pBrutto * 0.10;
+        const kz = String(v?.zuzahlungskennzeichen ?? '').trim();
+        let pGesZu = 0;
+        if (kz === '3' || kz === '4' || kz === '5') {
+          const expected = pPflichtigBrutto * 0.10;
           const tolerance = 0.01 * p.sessions.length;
           if (Math.abs(pZu - expected) > tolerance + 0.005)
             W(warnings, 'S:01009', `${at}.sessions`,
               `Zuzahlung-Summe ${pZu.toFixed(2)} € weicht von 10% Brutto (${expected.toFixed(2)} €) ab`);
+          const pProzZu = r2(pZu);
+          const pflichtigBrutto = r2(pPflichtigBrutto);
+          const pauschFrei = v?.pauschaleFrei === true || p?.pauschaleFrei === true ||
+            (kz === '5' && v?.pauschaleFrei === undefined && explicitPausch === undefined);
+          let pPauschZu = 0;
+          if (pauschFrei) {
+            pPauschZu = 0;
+          } else if (explicitPausch !== undefined && explicitPausch !== null && explicitPausch !== '') {
+            pPauschZu = Math.max(0, Math.min(10.00, r2(Number(explicitPausch) || 0), r2(pflichtigBrutto - pProzZu)));
+          } else {
+            pPauschZu = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - pProzZu)));
+          }
+          pGesZu = r2(pProzZu + pPauschZu);
         }
-        totalBrutto += pBrutto;
-        totalZuzahlung += Math.min(pBrutto, pZu + 10); // 10€ Pauschal-Cap
+        totalBrutto += r2(pBrutto);
+        totalZuzahlung += pGesZu;
       }
     }
   });

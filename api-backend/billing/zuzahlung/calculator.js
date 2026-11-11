@@ -102,13 +102,21 @@ export function calcAbrechnungsfallZuzahlung({
     };
   }
 
-  const prozZuzahlung = r2(sessions.reduce((a, s) => a + calcSessionZuzahlung(s), 0));
-  // Pauschale 10€ je Verordnung, capped at remaining Brutto
-  const pauschZuzahlung = Math.min(10.00, r2(brutto - prozZuzahlung));
-  const gesZuzahlung   = r2(prozZuzahlung + Math.max(0, pauschZuzahlung));
-  const netto          = r2(brutto - gesZuzahlung);
+  let pflichtigBrutto = 0;
+  let prozZuzahlung = 0;
+  for (const s of sessions) {
+    const zu = calcSessionZuzahlung(s);
+    prozZuzahlung = r2(prozZuzahlung + zu);
+    if (!s.position_frei && zu > 0) {
+      pflichtigBrutto = r2(pflichtigBrutto + (+s.preis_eur || 0));
+    }
+  }
+  // Pauschale 10€ je Verordnung, gedeckelt auf das verbleibende pflichtige Brutto
+  const pauschZuzahlung = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozZuzahlung)));
+  const gesZuzahlung    = r2(prozZuzahlung + pauschZuzahlung);
+  const netto           = r2(brutto - gesZuzahlung);
 
-  return { brutto, prozZuzahlung, pauschZuzahlung: Math.max(0, pauschZuzahlung), gesZuzahlung, netto, befreiungsgrund: null };
+  return { brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund: null };
 }
 
 /**

@@ -1067,12 +1067,22 @@ export function parseOriginalDtaMessage({
     throw err;
   }
 
-  // 3. Pauschale: pausch == Math.min(10, gross - proz) nur für KZ3 zulässig; bei anderen kein ungeprüfter Anspruch
-  if (origZuzahlungskennzeichen === '3') {
-    const expectedPausch = Math.round(Math.min(10, Math.max(0, originalBrutto - originalProzZuzahlung)) * 100) / 100;
-    if (Math.round(originalPauschZuzahlung * 100) !== Math.round(expectedPausch * 100)) {
+  // 3. Pauschale: nur für KZ '3', '4', '5' zulässig (entweder 0,00 € bei befreitem Ersttag oder Math.min(10, pflichtigBrutto - proz)); bei '0'/'1' kein Anspruch
+  let pflichtigBrutto = 0;
+  for (const s of allSessions) {
+    if (s.zuzahlungProPos > 0) {
+      pflichtigBrutto += s.einzelbetrag * s.anzahl;
+    }
+  }
+  pflichtigBrutto = Math.round(pflichtigBrutto * 100) / 100;
+  const expectedPauschPflichtig = Math.round(Math.min(10, Math.max(0, pflichtigBrutto - originalProzZuzahlung)) * 100) / 100;
+
+  if (origZuzahlungskennzeichen === '3' || origZuzahlungskennzeichen === '4' || origZuzahlungskennzeichen === '5') {
+    const pCents = Math.round(originalPauschZuzahlung * 100);
+    const expPflichtigCents = Math.round(expectedPauschPflichtig * 100);
+    if (pCents !== 0 && pCents !== expPflichtigCents) {
       const err = new Error(
-        `BES-Pauschale (${originalPauschZuzahlung.toFixed(2)} €) stimmt nicht mit gesetzlicher Zuzahlung (erwartet: ${expectedPausch.toFixed(2)} €) überein.`
+        `BES-Pauschale (${originalPauschZuzahlung.toFixed(2)} €) stimmt nicht mit gesetzlicher Zuzahlung (erwartet: ${expectedPauschPflichtig.toFixed(2)} € oder 0.00 €) überein.`
       );
       err.status = 422;
       err.code = 'PAUSCHALE_MISMATCH';
@@ -1652,6 +1662,9 @@ export function parseOriginalDtaMessage({
   }
 
   // 11. Rekonstruiertes Rezeptobjekt für den Builder
+  const sessionsForBuilder = finalSessions.map(s => (
+    s.zuzahlungProPos === 0 ? { ...s, position_frei: true } : s
+  ));
   const prescription = {
     patient: {
       kvnr: versichertennummer,
@@ -1690,6 +1703,7 @@ export function parseOriginalDtaMessage({
       heilmittelBereich,
       therapiefrequenz,
       zuzahlungskennzeichen: newZuzahlungskennzeichen,
+      pauschZuzahlung: pauschClaim,
       kostentraegerIk: origKostentraegerIk,
       krankenkasseIk: origKrankenkasseIk,
       genehmigung,
@@ -1697,7 +1711,7 @@ export function parseOriginalDtaMessage({
       imageLink,
     },
     tarif: tarifData,
-    sessions: finalSessions,
+    sessions: sessionsForBuilder,
     urspruenglich: {
       ikLeistungserbringer: origSenderIk,
       sammelRechnungsnummer: origSammelRechnungsnummer,
