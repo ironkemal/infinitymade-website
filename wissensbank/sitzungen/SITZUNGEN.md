@@ -11,6 +11,8 @@ Aktuelle Ergänzung: [[2026-11-11_redesign-physio-testkonto-phase0-9]] — Redes
 
 Frühere Ergänzung: [[2026-11-10_feiertagshinweise-und-abnahmegrenzen]] — Berliner Datumsgrenzen und Fehlerrückmeldungen lokal geprüft; Live-Abnahme und erweiterte Veröffentlichung offen.
 
+Weitere Ergänzung: [[2026-11-11_physio-testbox-smtp-und-einrichtungscode]] — Podologie erhalten, Physio separat geplant; Einrichtungscode nicht erzeugt, Merkez-Zugang und SMTP-Abnahme offen.
+
 Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kemal):
 **was** war das Problem, **was** wurde gefunden, **warum** so entschieden, **was** blieb offen.
 
