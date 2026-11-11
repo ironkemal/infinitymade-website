@@ -1,0 +1,1169 @@
+[
+  {
+    "id": "POD-STD-001",
+    "titel": "Podologie: DF genau Höchstmenge (6 Einheiten)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6,
+        "requested_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe DF (Z. 3383–3384)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-002",
+    "titel": "Podologie: DF eine Einheit über Höchstmenge (7)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe DF (Z. 3383–3384)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-003",
+    "titel": "Podologie: DF eine Einheit, klar innerhalb",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 1,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe DF (Z. 3383–3384)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-004",
+    "titel": "Podologie: NF genau Höchstmenge (6 Einheiten)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6,
+        "requested_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe NF (Z. 3436–3437)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-005",
+    "titel": "Podologie: NF eine Einheit über Höchstmenge (7)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe NF (Z. 3436–3437)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-006",
+    "titel": "Podologie: QF genau Höchstmenge (6 Einheiten)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "G82.23",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6,
+        "requested_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe QF (Z. 3485–3486)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-007",
+    "titel": "Podologie: QF eine Einheit über Höchstmenge (7)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "G82.23",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe QF (Z. 3485–3486)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-008",
+    "titel": "Podologie: UI1 genau Höchstmenge (8 Einheiten)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 8,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 8,
+        "requested_sessions": 8
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 1 (Z. 3523–3524)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 8x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-009",
+    "titel": "Podologie: UI1 eine Einheit über Höchstmenge (9)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 9,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 8
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 1 (Z. 3523–3524)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 8x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-010",
+    "titel": "Podologie: UI2 genau Höchstmenge (4 Einheiten)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI2",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 4,
+        "requested_sessions": 4
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 2 (Z. 3560–3561)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 4x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-011",
+    "titel": "Podologie: UI2 eine Einheit über Höchstmenge (5)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI2",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 5,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 4
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 2 (Z. 3560–3561)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 4x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-012",
+    "titel": "Podologie: UI2 acht Einheiten (orientierende Menge ist nicht Höchstmenge je VO)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI2",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 8,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 4
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 2 (Z. 3562–3563)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Verordnung weiterer Einheiten bedarf einer Wiedervorstellung beim verordnenden Arzt."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-013",
+    "titel": "Podologie: DF überschritten: Abrechnung nur bis Höchstmenge",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 12,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6,
+        "requested_sessions": 12
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. f Behandlungseinheiten, Korrekturmöglichkeit b (Z. 427–430)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Verordnungshöchstmengen überschritten werden, kann der zugelassene Leistungserbringer maximal so viele Therapieeinheiten erbringen und abrechnen, wie sie nach der HeilM-RL zulässig sind."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-014",
+    "titel": "Podologie: DF Anzahl der Einheiten fehlt",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "ANZAHL_REQUIRED"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. f Behandlungseinheiten, Korrekturmöglichkeit a (Z. 422–424)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "a) Fehlt die Angabe der Behandlungsmenge, ist diese von der Ärztin oder dem Arzt mit erneuter Arztunterschrift und Datumsangabe zu ergänzen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-015",
+    "titel": "Podologie: DF Anzahl der Einheiten 0",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 0,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "ANZAHL_REQUIRED"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. f Behandlungseinheiten, Korrekturmöglichkeit a (Z. 422–424)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "a) Fehlt die Angabe der Behandlungsmenge, ist diese von der Ärztin oder dem Arzt mit erneuter Arztunterschrift und Datumsangabe zu ergänzen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-016",
+    "titel": "Podologie: Diagnosegruppe fehlt",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. j (Z. 624)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "j. Diagnosegruppe,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-017",
+    "titel": "Podologie: Ausstellungsdatum fehlt",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "AUSSTELLUNGSDATUM_INVALID"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Personalienfeld, fehlende Angaben (Z. 276–280)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "verordnenden Arzt (Arzt-Nr.) oder das Ausstellungsdatum, kann die Behandlung nicht begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-018",
+    "titel": "Podologie: Beginn am 28. Kalendertag (letzter erlaubter Tag)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 3 (Z. 569–570)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "In allen anderen Fällen muss mit der Behandlung innerhalb von 28 Kalendertagen nach der Verordnung begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-019",
+    "titel": "Podologie: Beginn am 29. Kalendertag (erster unerlaubter Tag)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 4 (Z. 572–573)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "Kann die Heilmittelbehandlung in den genannten Zeiträumen nach Absatz 3 nicht aufgenommen werden, verliert die Verordnung ihre Gültigkeit."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-020",
+    "titel": "Podologie: dringlich, Beginn am 14. Kalendertag",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-16"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 1 (Z. 563–564)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "Behandlungsbeginn innerhalb von 14 Kalendertagen nach Ausstellung der Verordnung sicherstellen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-021",
+    "titel": "Podologie: dringlich, Beginn am 15. Kalendertag",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-17"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 1 (Z. 563–564)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "Behandlungsbeginn innerhalb von 14 Kalendertagen nach Ausstellung der Verordnung sicherstellen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-022",
+    "titel": "Podologie: nicht dringlich, Beginn am 15. Kalendertag ist erlaubt",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": false,
+      "behandlungsbeginn": "2026-03-17"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 3 (Z. 569–570)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "In allen anderen Fällen muss mit der Behandlung innerhalb von 28 Kalendertagen nach der Verordnung begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-023",
+    "titel": "Podologie: Beginn am Ausstellungstag",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ],
+      "blocker_enthaelt_nicht": [
+        "START_BEFORE_AUSSTELLUNG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 3 (Z. 569–570)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "In allen anderen Fällen muss mit der Behandlung innerhalb von 28 Kalendertagen nach der Verordnung begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-024",
+    "titel": "Podologie: Beginn einen Tag vor Ausstellung",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-01"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "START_BEFORE_AUSSTELLUNG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 3 (Z. 569–570)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "In allen anderen Fällen muss mit der Behandlung innerhalb von 28 Kalendertagen nach der Verordnung begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-025",
+    "titel": "Podologie: spätester Beginn wird als Ausstellung + 28 Tage ausgewiesen",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "G82.23",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "computed": {
+        "latest_start_date": "2026-03-30"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 3 (Z. 569–570)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "In allen anderen Fällen muss mit der Behandlung innerhalb von 28 Kalendertagen nach der Verordnung begonnen werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-026",
+    "titel": "Podologie: dringlich: spätester Beginn = Ausstellung + 14 Tage",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "G82.23",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true
+    },
+    "erwartet": {
+      "engine": "standard",
+      "computed": {
+        "latest_start_date": "2026-03-16"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Vertrag-Lesefassung.txt",
+      "abschnitt": "§ 6 Abs. 3 Satz 1 (Z. 563–564)",
+      "version": "i. d. F. 30.11.2020, Änderungen bis 16.06.2025",
+      "zitat": "Behandlungsbeginn innerhalb von 14 Kalendertagen nach Ausstellung der Verordnung sicherstellen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-027",
+    "titel": "Podologie: UI1 mit L60.0 (im Katalog genannter Kode)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.0",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 1 (Z. 3512–3513)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Unguis incarnatus Stadium 1 - Unguis incarnatus (L60.0)"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-028",
+    "titel": "Podologie: UI1 mit anderem Kode als L60.0",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.1",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung c (Z. 552–555)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "ausschließlich der ICD-Schlüssel L60.0 maßgeblich, bei anderen Diagnosen ist eine Korrektur erforderlich."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-029",
+    "titel": "Podologie: UI2 mit anderem Kode als L60.0",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI2",
+      "icd10": "L60.8",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung c (Z. 552–555)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "ausschließlich der ICD-Schlüssel L60.0 maßgeblich, bei anderen Diagnosen ist eine Korrektur erforderlich."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-030",
+    "titel": "Podologie: UI1 falscher Kode, Freitext heilt nicht (Katalog nennt L60.0 fest)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI1",
+      "icd10": "L60.1",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02",
+      "diagnose_freitext": "Unguis incarnatus"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung c (Z. 552–555)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "ausschließlich der ICD-Schlüssel L60.0 maßgeblich, bei anderen Diagnosen ist eine Korrektur erforderlich."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-031",
+    "titel": "Podologie: UI2 mit L60.0 und weiterem Kode",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "UI2",
+      "icd10": "L60.0, M54.5",
+      "anzahl_einheiten": 4,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.2, Diagnosegruppe UI 2 (Z. 3548–3549)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Unguis incarnatus Stadium 2 oder 3 - Unguis incarnatus (L60.0)"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-032",
+    "titel": "Podologie: DF mit fachfremdem Kode (M54.5), ohne Freitext",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Korrekturmöglichkeit (Z. 563–566)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Fehlt die Angabe der Diagnose oder ist diese erkennbar nicht therapierelevant, ist diese mit einer erneuten Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-033",
+    "titel": "Podologie: DF mit fachfremdem Kode, Freitext-Diagnose vorhanden → nur milder Hinweis",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "diagnose_freitext": "Diabetisches Fußsyndrom, Neuropathie"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH"
+      ],
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung (Z. 534–537)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Form eines oder mehrerer ICD-10-Schlüssel und/oder als Klartext erfolgen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-034",
+    "titel": "Podologie: DF mit E11.74 (diabetisches Fußsyndrom)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe DF (Z. 3362–3365)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Diabetisches Fußsyndrom - diabetische Neuropathie mit oder ohne Angiopa- thie - im Stadium-Wagner 0"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-035",
+    "titel": "Podologie: NF mit Diabetes-Kode (gehört zu DF, nicht NF)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "E11.40",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung a (Z. 539–542)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "entweder das Diabetische Fußsyndrom oder eine diabetische Neuropathie deklariert."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-036",
+    "titel": "Podologie: NF mit Polyneuropathie-Kode G62.80",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G62.80",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe NF (Z. 3409–3411)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Krankhafte Schädigung am Fuß als Folge einer sensib- len oder sensomotorischen Neuropathie (primär oder sekundär)"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-037",
+    "titel": "Podologie: QF mit Querschnitt-Kode G82.23",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "G82.23",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe QF (Z. 3462–3463)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Krankhafte Schädigung am Fuß als Folge eines Quer- schnittsyndroms (komplett oder inkomplett)"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-038",
+    "titel": "Podologie: QF mit Diabetes-Kode, ohne Freitext",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "E11.74",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Korrekturmöglichkeit (Z. 563–566)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Fehlt die Angabe der Diagnose oder ist diese erkennbar nicht therapierelevant, ist diese mit einer erneuten Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-039",
+    "titel": "Podologie: DF ganz ohne Diagnose (weder ICD-10-Kode noch Klartext)",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt": [
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Korrekturmöglichkeit (Z. 563–566)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Fehlt die Angabe der Diagnose oder ist diese erkennbar nicht therapierelevant, ist diese mit einer erneuten Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren."
+    },
+    "status": "bewusst",
+    "grund": "ICD ist im Validator bewusst optional (diagnosegruppen.json → _global.ICD_OPTIONAL); ohne Kode läuft keine Diagnoseprüfung. Laut Anlage 3 muss eine fehlende Diagnose ärztlich ergänzt werden."
+  },
+  {
+    "id": "POD-STD-040",
+    "titel": "Podologie: DF ohne ICD-10-Kode, Diagnose als Klartext",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "DF",
+      "anzahl_einheiten": 3,
+      "ausstellungsdatum": "2026-03-02",
+      "diagnose_freitext": "Diabetisches Fußsyndrom mit Neuropathie"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "ICD_DG_MISMATCH",
+        "ICD_DG_MISMATCH_STRENG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt",
+      "abschnitt": "Buchst. k Diagnose, Erläuterung (Z. 534–537)",
+      "version": "i. d. F. 16.06.2025",
+      "zitat": "Form eines oder mehrerer ICD-10-Schlüssel und/oder als Klartext erfolgen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "POD-STD-041",
+    "titel": "Podologie: NF mit G60.0, 6 Einheiten: Podologie steht nicht auf der LHB-Liste → Standardprüfung",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G60.0",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB",
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G60.0 (Z. 251)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "status": "befund",
+    "grund": "Validator wählt Engine lhb_bvb allein wegen des ICD (validate.js:27), obwohl G60.0 auf der Liste nur mit WS/EX/PN, SB2/EN3, SP3 geführt ist. Folge: DG_MISMATCH_LHB statt Podologie-Prüfung."
+  },
+  {
+    "id": "POD-STD-042",
+    "titel": "Podologie: NF mit G60.0, 7 Einheiten: Höchstmenge 6 muss gemeldet werden",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "NF",
+      "icd10": "G60.0",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog II.1, Diagnosegruppe NF (Z. 3436–3437)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
+    },
+    "status": "befund",
+    "grund": "Wegen Engine-Wechsel auf lhb_bvb entfällt die Höchstmengenprüfung der Podologie (6 je VO); 7 Einheiten bleiben unbemerkt."
+  },
+  {
+    "id": "POD-STD-043",
+    "titel": "Podologie: QF mit Q05.9 (Spina bifida): Podologie-Prüfung statt LHB",
+    "bereich": "podologie",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "QF",
+      "icd10": "Q05.9",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 8 Abs. 2 Satz 1 (Z. 453–455)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "1Bei den in der Anlage 2 gelisteten Diagnosen in Verbindung mit der jeweils aufgeführ- ten Diagnosegruppe des Heilmittelkataloges ist vom Vorliegen eines langfristigen Heilmittel- bedarfs im Sinne von § 32 Absatz 1a SGB V auszugehen."
+    },
+    "status": "befund",
+    "grund": "Validator wechselt auf lhb_bvb und meldet DG_MISMATCH_LHB; LHB gilt nur in Verbindung mit der gelisteten Diagnosegruppe, QF ist dort nicht geführt."
+  }
+]

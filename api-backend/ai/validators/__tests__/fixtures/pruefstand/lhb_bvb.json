@@ -1,0 +1,635 @@
+[
+  {
+    "id": "LHB-001",
+    "titel": "LHB/BVB: G10 + ZN wird automatisch als LHB/BVB erkannt",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G10 (Z. 131)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G10 Chorea Huntington ZN EN1 SC/SP5/SP6"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-002",
+    "titel": "LHB/BVB: G10 + ZN, 30 Einheiten: Katalog-Höchstmenge (10) ist nicht bindend",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 30,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE",
+        "OVER_12_WEEKS_HEURISTIC"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 7 Abs. 6 Satz 2 (Z. 431–432)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Die im Heilmittelkatalog angegebene Höchstmenge je Verordnung und die orientierende Behandlungsmenge sind hierbei nicht bindend."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-003",
+    "titel": "LHB/BVB: G60.0 + WS, 36 Einheiten = 12 Wochen × 3 (obere Frequenz)",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "WS",
+      "anzahl_einheiten": 36,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_12_WEEKS_HEURISTIC"
+      ],
+      "computed": {
+        "max_weeks_per_verordnung": 12
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 7 Abs. 6 Satz 1 (Z. 428–430)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "dass die notwendigen Heilmittel je Verordnung für eine Behandlungsdauer von bis zu 12 Wochen verordnet werden können."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-004",
+    "titel": "LHB/BVB: G60.0 + WS, 37 Einheiten übersteigen 12 Wochen",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "WS",
+      "anzahl_einheiten": 37,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "OVER_12_WEEKS_HEURISTIC"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 7 Abs. 6 Satz 4 (Z. 434–435)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "ist der höchste Wert für die Bemessung der maximalen Verordnungsmenge maßgeblich."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-005",
+    "titel": "LHB/BVB: G10 + ZN, 36 Einheiten = 12 Wochen × 3",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 36,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_12_WEEKS_HEURISTIC"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 7 Abs. 6 Satz 1 (Z. 428–430)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "dass die notwendigen Heilmittel je Verordnung für eine Behandlungsdauer von bis zu 12 Wochen verordnet werden können."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-006",
+    "titel": "LHB/BVB: G10 + ZN, 37 Einheiten übersteigen 12 Wochen bei Frequenzempfehlung 1-3x",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 37,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "OVER_12_WEEKS_HEURISTIC"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe ZN, Frequenzempfehlung (Z. 2759)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "- 1-3x wöchentlich"
+    },
+    "status": "befund",
+    "grund": "diagnosegruppen.json führt ZN mit frequency_hint „2-5 x wöchentlich\" → Schwelle 60 statt 36. Katalog nennt für ZN 1-3x wöchentlich."
+  },
+  {
+    "id": "LHB-007",
+    "titel": "LHB/BVB: G10 + ZN, 61 Einheiten",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 61,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "OVER_12_WEEKS_HEURISTIC"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 7 Abs. 6 Satz 1 (Z. 428–430)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "dass die notwendigen Heilmittel je Verordnung für eine Behandlungsdauer von bis zu 12 Wochen verordnet werden können."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-008",
+    "titel": "LHB/BVB: G60.0 + ZN: Diagnosegruppe nicht bei diesem ICD gelistet",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G60.0 (Z. 251)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-009",
+    "titel": "LHB/BVB: G60.0 + CS: Diagnosegruppe nicht bei diesem ICD gelistet",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "CS",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G60.0 (Z. 251)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "status": "befund",
+    "grund": "heilmittel-catalog.json führt bei G60.0 zusätzlich CS, SO4, SB1 (Kürzel der Nachbarzeilen) → keine Warnung."
+  },
+  {
+    "id": "LHB-010",
+    "titel": "LHB/BVB: Q66.0 + EX passt zur Liste",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "Q66.0",
+      "diagnosegruppe": "EX",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile Q66.0 (Z. 841)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "Q66.0 Pes equinovarus congenitus (Klumpfuß) EX SB2"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-011",
+    "titel": "LHB/BVB: G60.0 + SB2 (Ergotherapie) passt zur Liste",
+    "bereich": "ergo",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "SB2",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G60.0 (Z. 251)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-012",
+    "titel": "LHB/BVB: Q66.0 + SB1: SB1 ist bei Q66.0 nicht gelistet (nur SB2)",
+    "bereich": "ergo",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "Q66.0",
+      "diagnosegruppe": "SB1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile Q66.0 (Z. 841)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "Q66.0 Pes equinovarus congenitus (Klumpfuß) EX SB2"
+    },
+    "status": "befund",
+    "grund": "heilmittel-catalog.json führt bei Q66.0 zusätzlich SB1 und SB3 → keine Warnung."
+  },
+  {
+    "id": "LHB-013",
+    "titel": "LHB/BVB: G10 + SP5 (Sprachtherapie) passt zur Liste",
+    "bereich": "logo",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "SP5",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G10 (Z. 131)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G10 Chorea Huntington ZN EN1 SC/SP5/SP6"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-014",
+    "titel": "LHB/BVB: G60.0 + SP3 passt zur Liste",
+    "bereich": "logo",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G60.0",
+      "diagnosegruppe": "SP3",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "DG_MISMATCH_LHB"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G60.0 (Z. 251)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-015",
+    "titel": "LHB/BVB: ausdrücklich als LHB/BVB eingereicht, ICD steht nicht auf der Liste (ohne Kassengenehmigung nach § 8 Abs. 3)",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "M54.5",
+      "diagnosegruppe": "WS",
+      "anzahl_einheiten": 12,
+      "ausstellungsdatum": "2026-03-02",
+      "rezept_typ": "lhb_bvb"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": false,
+      "blocker_enthaelt": [
+        "NOT_ON_LHB_BVB_LIST"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 8 Abs. 2 Satz 1 (Z. 453–455)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "1Bei den in der Anlage 2 gelisteten Diagnosen in Verbindung mit der jeweils aufgeführ- ten Diagnosegruppe des Heilmittelkataloges ist vom Vorliegen eines langfristigen Heilmittel- bedarfs im Sinne von § 32 Absatz 1a SGB V auszugehen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-016",
+    "titel": "LHB/BVB: G35.10 + ZN: Liste führt »G35.1 -« (alle Kodes der Kategorie)",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G35.10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G35.1 (Z. 196)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G35.1 - Multiple Sklerose mit vorherrschend"
+    },
+    "status": "befund",
+    "grund": "heilmittel-catalog.json enthält 238 von 400 ICD-Zeilen der Liste (162 fehlen, u. a. G35.1–G35.9). Fehlende Kodes laufen als Standardrezept: Engine standard + OVER_HOECHSTMENGE."
+  },
+  {
+    "id": "LHB-017",
+    "titel": "LHB/BVB: B94.1 + ZN: Spezifikation „längstens 1 Jahr nach Akutereignis\" wird angezeigt",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "B94.1",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt": [
+        "LHB_BVB_HINWEIS"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile B94.1 (Z. 95–99)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "B94.1 Folgezustände der Virusenzephalitis ZN/SO3 EN1 SC/ST1/SP1/"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-018",
+    "titel": "LHB/BVB: R15 + SO2: Alterskriterium „ab vollendetem 70. Lebensjahr\" muss angezeigt werden",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "R15",
+      "diagnosegruppe": "SO2",
+      "anzahl_einheiten": 12,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "LHB_BVB_HINWEIS"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile R15 (Z. 1230–1231)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "R15 Stuhlinkontinenz SO2 ab vollendetem 70. Lebensjahr"
+    },
+    "status": "befund",
+    "grund": "Hinweis fehlt im Katalog (hinweis: null). Alterskriterien sind nach § 7 Abs. 7 HeilM-RL bindend."
+  },
+  {
+    "id": "LHB-019",
+    "titel": "LHB/BVB: G61.0 + PN: bei diesem ICD steht keine Spezifikation",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G61.0",
+      "diagnosegruppe": "PN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "LHB_BVB_HINWEIS"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G61.0 (Z. 258)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G61.0 Guillain-Barré-Syndrom PN EN3"
+    },
+    "status": "befund",
+    "grund": "Katalog ordnet G61.0 den CIDP-Hinweis der Nachbarzeile (G61.8) zu → falsche Bedingung wird angezeigt."
+  },
+  {
+    "id": "LHB-020",
+    "titel": "LHB/BVB: Beginn am 28. Kalendertag gilt auch bei LHB/BVB",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ],
+      "computed": {
+        "latest_start_date": "2026-03-30"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-021",
+    "titel": "LHB/BVB: Beginn am 29. Kalendertag muss gemeldet werden",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "befund",
+    "grund": "lhbBvbRules.js prüft den Behandlungsbeginn nicht (nur computed.latest_start_date). § 15 gilt unabhängig von LHB/BVB."
+  },
+  {
+    "id": "LHB-022",
+    "titel": "LHB/BVB: Beginn vor Ausstellung muss blockieren",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-01"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": false,
+      "blocker_enthaelt": [
+        "START_BEFORE_AUSSTELLUNG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "befund",
+    "grund": "lhbBvbRules.js prüft den Behandlungsbeginn nicht."
+  },
+  {
+    "id": "LHB-023",
+    "titel": "LHB/BVB: Anzahl der Einheiten fehlt",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": false,
+      "blocker_enthaelt": [
+        "ANZAHL_REQUIRED"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. f (Z. 619)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "f. Anzahl der Behandlungseinheiten,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LHB-024",
+    "titel": "LHB/BVB: Ausstellungsdatum fehlt",
+    "bereich": "physio",
+    "engine_erwartet": "lhb_bvb",
+    "eingabe": {
+      "icd10": "G10",
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 20
+    },
+    "erwartet": {
+      "engine": "lhb_bvb",
+      "ok": false,
+      "blocker_enthaelt": [
+        "AUSSTELLUNGSDATUM_INVALID"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 1 Satz 2 (Z. 607–608)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Der Vordruck muss nach Maßgabe des Absatzes 2 vollständig ausgefüllt werden."
+    },
+    "status": "aktiv"
+  }
+]

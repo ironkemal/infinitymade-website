@@ -1,0 +1,369 @@
+[
+  {
+    "id": "BLK-001",
+    "titel": "Blanko: Schulter-ICD M13.11 + EX, ohne Anzahl/Heilmittel/Frequenz",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "ANZAHL_REQUIRED",
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13a Abs. 1 (Z. 643–645)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Bei Verordnungen aufgrund von Indikationen nach § 125a SGB V kann auf folgende Angaben nach § 13 Absatz 2 verzichtet werden:"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-002",
+    "titel": "Blanko: M13.11 steht auf der Blanko-Liste Physiotherapie",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1496)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "M13.11 EX Monarthritis, anderenorts nicht klassifiziert: Schulterregion"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-003",
+    "titel": "Blanko: Gültigkeit 16 Wochen ab Verordnungsdatum",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "computed": {
+        "gueltig_bis": "2026-06-22",
+        "gueltig_wochen": 16
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13a Abs. 2 Satz 2 (Z. 655–656)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Schlucktherapie sowie der Ernährungstherapie maximal 16 Wochen, bei Maßnahmen der Po- dologischen Therapie maximal 40 Wochen, ab Verordnungsdatum gültig."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-004",
+    "titel": "Blanko: Beginn am 28. Kalendertag",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "BLANKO_BEGIN_AFTER_28D"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13a Abs. 2 Satz 1 (Z. 652–653)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "1Wenn die Heilmittelbehandlung nicht gemäß den vorgegebenen Zeiträumen nach § 15 begonnen wird, verliert die Verordnung ihre Gültigkeit."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-005",
+    "titel": "Blanko: Beginn am 29. Kalendertag → Verordnung ungültig",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": false,
+      "blocker_enthaelt": [
+        "BLANKO_BEGIN_AFTER_28D"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13a Abs. 2 Satz 1 (Z. 652–653)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "1Wenn die Heilmittelbehandlung nicht gemäß den vorgegebenen Zeiträumen nach § 15 begonnen wird, verliert die Verordnung ihre Gültigkeit."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-006",
+    "titel": "Blanko: dringlich: spätester Beginn nach 14 Kalendertagen",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "computed": {
+        "behandlungsbeginn_spaetestens": "2026-03-16"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 2 (Z. 679–680)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
+    },
+    "status": "befund",
+    "grund": "blankoRules.js kennt is_dringend nicht (immer 28 Tage). § 13a Abs. 2 verweist auf die Zeiträume des § 15, also auch 14 Tage bei dringlichem Bedarf."
+  },
+  {
+    "id": "BLK-007",
+    "titel": "Blanko: M75.1 fällt unter „M75.-\" der Blanko-Liste",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M75.1",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1579)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "M75.- EX Schulterläsionen"
+    },
+    "status": "befund",
+    "grund": "Katalog hält M75.-, S43.-, S46.-, S49.- nur als wörtliche Schlüssel; echte Kodes werden nicht gefunden → BLANKO_NICHT_VERFUEGBAR."
+  },
+  {
+    "id": "BLK-008",
+    "titel": "Blanko: S42.00 (Fraktur der Klavikula): Liste führt »S42.0 -«",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "S42.00",
+      "diagnosegruppe": "EX",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1613)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "S42.0 - EX Fraktur der Klavikula"
+    },
+    "status": "befund",
+    "grund": "S42.0-, S42.1-, S42.2- fehlen im Katalog (blanko_physio_shoulder)."
+  },
+  {
+    "id": "BLK-009",
+    "titel": "Blanko: Blanko-Kennzeichnung mit WS + M54.5 (keine Schulter-Indikation)",
+    "bereich": "physio",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "M54.5",
+      "diagnosegruppe": "WS",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": false,
+      "blocker_enthaelt": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1493–1494)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "PHYSIOTHERAPIE AB 1. NOVEMBER 2024 ERKRANKUNGEN DES SCHULTERGELENKS"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-010",
+    "titel": "Blanko: Podologie (DF) mit Blanko-Kennzeichnung: kein Vertrag nach § 125a",
+    "bereich": "podologie",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "E11.74",
+      "diagnosegruppe": "DF",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": false,
+      "blocker_enthaelt": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2 Blankoverordnung (Z. 1459–1460)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "Konkret ist dies seit April 2024 im Bereich Ergotherapie möglich und ab November 2024 auch im Bereich Physiotherapie."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-011",
+    "titel": "Blanko: Podologie (UI1) mit Blanko-Kennzeichnung",
+    "bereich": "podologie",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "icd10": "L60.0",
+      "diagnosegruppe": "UI1",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": false,
+      "blocker_enthaelt": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2 Blankoverordnung (Z. 1459–1460)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "Konkret ist dies seit April 2024 im Bereich Ergotherapie möglich und ab November 2024 auch im Bereich Physiotherapie."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "BLK-012",
+    "titel": "Blanko: Ergotherapie SB1 mit Blanko-Kennzeichnung ist seit 01.04.2024 zulässig",
+    "bereich": "ergo",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "diagnosegruppe": "SB1",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Ergotherapie ab 1. April 2024 (Z. 1487)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "SB1 Erkrankungen der Wirbelsäule, Gelenke und Extremitäten"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-Blankoverordnung (seit 01.04.2024) ist im Validator bewusst nicht abgebildet (validate.js:33-39, Ratsbeschluss 2026-08-05; Ops-Dashboard → Teknik)."
+  },
+  {
+    "id": "BLK-013",
+    "titel": "Blanko: Ergotherapie PS4 mit Blanko-Kennzeichnung ist seit 01.04.2024 zulässig",
+    "bereich": "ergo",
+    "engine_erwartet": "blanko",
+    "eingabe": {
+      "diagnosegruppe": "PS4",
+      "heilmittel_feld_text": "BLANKOVERORDNUNG",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "blanko",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "BLANKO_NICHT_VERFUEGBAR"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Ergotherapie ab 1. April 2024 (Z. 1492)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "PS4 Dementielle Syndrome"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-Blankoverordnung (seit 01.04.2024) ist im Validator bewusst nicht abgebildet (validate.js:33-39, Ratsbeschluss 2026-08-05; Ops-Dashboard → Teknik)."
+  },
+  {
+    "id": "BLK-014",
+    "titel": "Blanko: Schulter-ICD + EX ohne Kennzeichnung → Standardprüfung mit Blanko-Hinweis",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "icd10": "M13.11",
+      "diagnosegruppe": "EX",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt": [
+        "BLANKO_HINT"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1496)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "M13.11 EX Monarthritis, anderenorts nicht klassifiziert: Schulterregion"
+    },
+    "status": "aktiv"
+  }
+]

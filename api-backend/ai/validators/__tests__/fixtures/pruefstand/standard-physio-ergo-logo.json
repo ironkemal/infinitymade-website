@@ -1,0 +1,1087 @@
+[
+  {
+    "id": "PHY-STD-001",
+    "titel": "Physio: WS genau Höchstmenge (6)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe WS (Z. 2508–2509)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-002",
+    "titel": "Physio: WS eine Einheit über Höchstmenge (7)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe WS (Z. 2508–2509)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-003",
+    "titel": "Physio: ZN genau Höchstmenge (10)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 10
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe ZN (Z. 2752–2753)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-004",
+    "titel": "Physio: ZN eine Einheit über Höchstmenge (11)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 11,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 10
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe ZN (Z. 2752–2753)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-005",
+    "titel": "Physio: PN genau Höchstmenge (10)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "PN",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 10
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe PN (Z. 2826–2827)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-006",
+    "titel": "Physio: PN eine Einheit über Höchstmenge (11)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "PN",
+      "anzahl_einheiten": 11,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 10
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe PN (Z. 2826–2827)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-007",
+    "titel": "Physio: CS genau Höchstmenge (6)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "CS",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe CS (Z. 2669–2670)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-008",
+    "titel": "Physio: CS eine Einheit über Höchstmenge (7)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "CS",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe CS (Z. 2669–2670)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-009",
+    "titel": "Physio: LY genau Höchstmenge (6)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "LY",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe LY (Z. 3053–3054)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-010",
+    "titel": "Physio: LY eine Einheit über Höchstmenge (7)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "LY",
+      "anzahl_einheiten": 7,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "computed": {
+        "max_sessions": 6
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe LY (Z. 3053–3054)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-011",
+    "titel": "Physio: SO5 mit 6 Einheiten (Diagnosegruppe steht im Katalog)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SO5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "blocker_enthaelt_nicht": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe SO5 (Z. 3328–3329)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "befund",
+    "grund": "SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt."
+  },
+  {
+    "id": "PHY-STD-012",
+    "titel": "Physio: EX3 ist keine Diagnosegruppe des geltenden Katalogs (nur EX, bis zu 6x/VO)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "EX3",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog I, Diagnosegruppe EX (Z. 2603–2604)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
+    },
+    "status": "befund",
+    "grund": "diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie."
+  },
+  {
+    "id": "PHY-STD-013",
+    "titel": "Physio: Beginn am 28. Kalendertag",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-014",
+    "titel": "Physio: Beginn am 29. Kalendertag",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-015",
+    "titel": "Physio: dringlich, Beginn am 14. Kalendertag",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-16"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 2 (Z. 679–680)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-016",
+    "titel": "Physio: dringlich, Beginn am 15. Kalendertag",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-17"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 2 (Z. 679–680)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-017",
+    "titel": "Physio: Beginn vor Ausstellung",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-02-27"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "START_BEFORE_AUSSTELLUNG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-018",
+    "titel": "Physio: Fristende über Monats- und Zeitumstellung (Ausstellung 02.03., Ende 30.03.)",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ZN",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "computed": {
+        "latest_start_date": "2026-03-30"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-019",
+    "titel": "Physio: Anzahl der Einheiten fehlt",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "ANZAHL_REQUIRED"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. f (Z. 619)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "f. Anzahl der Behandlungseinheiten,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-020",
+    "titel": "Physio: Diagnosegruppe fehlt",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. j (Z. 624)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "j. Diagnosegruppe,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-021",
+    "titel": "Physio: unbekanntes Diagnosegruppen-Kürzel",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "XX",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. j (Z. 624)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "j. Diagnosegruppe,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-022",
+    "titel": "Physio: Ausstellungsdatum ungültig",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "WS",
+      "icd10": "M54.5",
+      "anzahl_einheiten": 6,
+      "ausstellungsdatum": "2026-13-40"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "AUSSTELLUNGSDATUM_INVALID"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 1 Satz 2 (Z. 607–608)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Der Vordruck muss nach Maßgabe des Absatzes 2 vollständig ausgefüllt werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "PHY-STD-023",
+    "titel": "Physio: G10 + ZN als Standard geprüft → Hinweis auf LHB/BVB",
+    "bereich": "physio",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ZN",
+      "icd10": "G10",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "rezept_typ": "standard"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "LHB_HINT"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt",
+      "abschnitt": "Abschnitt 1, Zeile G10 (Z. 131)",
+      "version": "KBV-Diagnoseliste, Stand 01.01.2026",
+      "zitat": "G10 Chorea Huntington ZN EN1 SC/SP5/SP6"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ERG-STD-001",
+    "titel": "Ergo: SB1 genau Höchstmenge (10)",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SB1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog IV, Diagnosegruppe SB1 (Z. 4472–4473)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "ERG-STD-002",
+    "titel": "Ergo: SB1 eine Einheit über Höchstmenge (11)",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SB1",
+      "anzahl_einheiten": 11,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "blocker_enthaelt_nicht": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog IV, Diagnosegruppe SB1 (Z. 4472–4473)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "ERG-STD-003",
+    "titel": "Ergo: PS2 genau Höchstmenge (20)",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "PS2",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog IV, Diagnosegruppe PS2 (Z. 4973–4974)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "ERG-STD-004",
+    "titel": "Ergo: PS2 eine Einheit über Höchstmenge (21)",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "PS2",
+      "anzahl_einheiten": 21,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "blocker_enthaelt_nicht": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog IV, Diagnosegruppe PS2 (Z. 4973–4974)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "ERG-STD-005",
+    "titel": "Ergo: Beginn am 28. Kalendertag",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "EN1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ],
+      "computed": {
+        "latest_start_date": "2026-03-30"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ERG-STD-006",
+    "titel": "Ergo: Beginn am 29. Kalendertag",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "EN1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ERG-STD-007",
+    "titel": "Ergo: dringlich, Beginn am 15. Kalendertag",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SB2",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-17"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 2 (Z. 679–680)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ERG-STD-008",
+    "titel": "Ergo: Beginn vor Ausstellung",
+    "bereich": "ergo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SB1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-01"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "START_BEFORE_AUSSTELLUNG"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LOG-STD-001",
+    "titel": "Logo: SP1 genau Höchstmenge (10)",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SP1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog III, Diagnosegruppe SP1 (Z. 3851–3852)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "LOG-STD-002",
+    "titel": "Logo: SP1 eine Einheit über Höchstmenge (11)",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SP1",
+      "anzahl_einheiten": 11,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "blocker_enthaelt_nicht": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog III, Diagnosegruppe SP1 (Z. 3851–3852)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 10x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "LOG-STD-003",
+    "titel": "Logo: SP4 genau Höchstmenge (20)",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SP4",
+      "anzahl_einheiten": 20,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": true,
+      "warnung_enthaelt_nicht": [
+        "OVER_HOECHSTMENGE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog III, Diagnosegruppe SP4 (Z. 4027–4028)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "LOG-STD-004",
+    "titel": "Logo: SP4 eine Einheit über Höchstmenge (21)",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SP4",
+      "anzahl_einheiten": 21,
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "OVER_HOECHSTMENGE"
+      ],
+      "blocker_enthaelt_nicht": [
+        "DG_UNKNOWN"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "Heilmittelkatalog III, Diagnosegruppe SP4 (Z. 4027–4028)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Höchstmenge je VO: - bis zu 20x/VO"
+    },
+    "status": "bewusst",
+    "grund": "Ergo-/Logo-Diagnosegruppen sind im Validator bewusst nicht hinterlegt (diagnosegruppen.json → _global.NUR_PODOLOGIE; Vertikal-Reihenfolge: Podologie zuerst). Ergebnis heute: DG_UNKNOWN."
+  },
+  {
+    "id": "LOG-STD-005",
+    "titel": "Logo: Beginn am 28. Kalendertag",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ST1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-30"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ],
+      "computed": {
+        "latest_start_date": "2026-03-30"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LOG-STD-006",
+    "titel": "Logo: Beginn am 29. Kalendertag",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "ST1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "behandlungsbeginn": "2026-03-31"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt": [
+        "START_AFTER_DEADLINE"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 1 (Z. 678)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LOG-STD-007",
+    "titel": "Logo: dringlich, Beginn am 14. Kalendertag",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "RE1",
+      "anzahl_einheiten": 10,
+      "ausstellungsdatum": "2026-03-02",
+      "is_dringend": true,
+      "behandlungsbeginn": "2026-03-16"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "warnung_enthaelt_nicht": [
+        "START_AFTER_DEADLINE"
+      ],
+      "computed": {
+        "latest_start_date": "2026-03-16"
+      }
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 15 Abs. 1 Satz 2 (Z. 679–680)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "LOG-STD-008",
+    "titel": "Logo: Anzahl der Einheiten fehlt",
+    "bereich": "logo",
+    "engine_erwartet": "standard",
+    "eingabe": {
+      "diagnosegruppe": "SC",
+      "ausstellungsdatum": "2026-03-02"
+    },
+    "erwartet": {
+      "engine": "standard",
+      "ok": false,
+      "blocker_enthaelt": [
+        "ANZAHL_REQUIRED"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 2 Buchst. f (Z. 619)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "f. Anzahl der Behandlungseinheiten,"
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ALL-001",
+    "titel": "Leere Eingabe (null)",
+    "bereich": "uebergreifend",
+    "engine_erwartet": null,
+    "eingabe": null,
+    "erwartet": {
+      "ok": false,
+      "engine": null,
+      "blocker_enthaelt": [
+        "INVALID_INPUT"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 1 Satz 2 (Z. 607–608)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Der Vordruck muss nach Maßgabe des Absatzes 2 vollständig ausgefüllt werden."
+    },
+    "status": "aktiv"
+  },
+  {
+    "id": "ALL-002",
+    "titel": "Eingabe ist kein Objekt",
+    "bereich": "uebergreifend",
+    "engine_erwartet": null,
+    "eingabe": "Rezept",
+    "erwartet": {
+      "ok": false,
+      "engine": null,
+      "blocker_enthaelt": [
+        "INVALID_INPUT"
+      ]
+    },
+    "quelle": {
+      "datei": "wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt",
+      "abschnitt": "§ 13 Abs. 1 Satz 2 (Z. 607–608)",
+      "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
+      "zitat": "2Der Vordruck muss nach Maßgabe des Absatzes 2 vollständig ausgefüllt werden."
+    },
+    "status": "aktiv"
+  }
+]
