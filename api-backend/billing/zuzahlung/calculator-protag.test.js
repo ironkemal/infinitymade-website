@@ -29,7 +29,9 @@ test('je Tag: unterjaehrige Befreiung ab Datum — Pauschale am (pflichtigen) er
 test('je Tag: nie ueber Brutto der pflichtigen Tage; ganz frei -> 0 mit Grund', () => {
   const klein = calcAbrechnungsfallZuzahlungProTag({ sessions: [{ datum: '2026-05-01', preis_eur: 5, zuzahlung_eur_position: 0.5 }], patient: {} });
   assert.equal(klein.gesZuzahlung, 5);
-  const frei = calcAbrechnungsfallZuzahlungProTag({ sessions: [sitz('2026-05-01')], patient: { befreit_im_jahr: true } });
+  const frei = calcAbrechnungsfallZuzahlungProTag({ sessions: [sitz('2026-05-01')], patient: {
+    befreiungen: [{ jahr: 2026, befreit_ab: '2026-01-01', befreit_bis: '2026-12-31' }],
+  } });
   assert.equal(frei.gesZuzahlung, 0);
   assert.equal(frei.befreiungsgrund, 'befreiungsausweis');
 });
@@ -114,4 +116,37 @@ test('Tagesberechnung blockiert ungültige Positionszuzahlung und Gesamtüberlau
   });
   assert.equal(ok.brutto, 20);
   assert.equal(ok.gesZuzahlung, 12);
+});
+
+
+test('Ungebundenes Jahresflag und beschädigte Nachweise sperren vor Statusauswertung', () => {
+  for (const patient of [
+    { befreit_im_jahr: true },
+    { befreiungen: {} },
+    ...[null, {}, { jahr: '2026', befreit_ab: '2026-01-01' },
+      { jahr: 2027, befreit_ab: '2026-01-01' },
+      { jahr: 2026, befreit_ab: '2026-01-01', befreit_bis: '2027-01-01' },
+      { jahr: 2025, befreit_ab: '2025-02-30' }].map(b => ({ befreiungen: [b] })),
+  ]) {
+    assert.throws(() => calcAbrechnungsfallZuzahlungProTag({
+      sessions: [sitz('2026-05-01')], patient: { geburtsdatum: '2020-01-01', ...patient },
+      verordnung_zuzahlungsfrei: true,
+    }), /Befreiungsnachweis/);
+  }
+});
+
+test('Getrennte Intervalle lassen Lücke pflichtig; Nachweis gilt nur im belegten Jahr', () => {
+  const r = calcAbrechnungsfallZuzahlungProTag({
+    sessions: ['2026-01-10', '2026-02-10', '2026-03-10', '2027-01-10'].map(sitz),
+    patient: { befreiungen: [
+      { jahr: 2026, befreit_ab: '2026-01-01', befreit_bis: '2026-01-31' },
+      { jahr: 2026, befreit_ab: '2026-03-01', befreit_bis: null },
+    ] },
+  });
+  assert.deepEqual(r.tage.map(t => t.zuzahlung), [0, 2, 0, 2]);
+  assert.equal(r.gesZuzahlung, 4);
+  const leer = calcAbrechnungsfallZuzahlungProTag({
+    sessions: [sitz('2026-05-01')], patient: { befreit_im_jahr: true, befreiungen: [] },
+  });
+  assert.equal(leer.gesZuzahlung, 12);
 });

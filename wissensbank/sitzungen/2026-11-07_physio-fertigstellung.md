@@ -160,3 +160,20 @@ werden. Bisheriges Rezeptboolean folgt Ausstellungsdatum, vorhandene Zahlungsfel
 trennen Blattgebühr nicht vom Gesamtbetrag. Konkrete nächste Datenvertragsgrenzen
 in `db/entwuerfe/2026-11-07-physio-abrechnung.md`, Nachtrag 10.11.2026. Keine
 neue Migration geschrieben; keine Altbeträge oder Nachweiszeiträume erfunden.
+
+
+## Fortsetzung 11.11.2026: Jahresbindung im Tagescalculator
+
+Lokaler Stand ab `650e6a3d`. Ungebundenes Jahresflag ohne Nachweisarray wird
+kontrolliert gesperrt. Alle übergebenen Nachweise werden vor Alters-/Rezeptstatus
+auf Integerjahr, echte Grenzen, Reihenfolge und Jahresbindung geprüft; ungültige
+Nachweise verschwinden nicht mehr durch Jahresfilter oder vorzeitige Befreiung.
+Getrennte Intervalle lassen unbelegte Lücken pflichtig; Jahreswechsel befreit nicht
+ohne passenden Jahresnachweis. Bestehende Helfer wiederverwendet, Legacycalculator
+und aktive Routen unverändert. Keine Schema-/UI-Aktivierung.
+
+Nachweis: Backend 2.047 PASS, 4 SKIP, 0 FAIL (29,40s, Exit0), Log
+`/tmp/praxura-20261111-copay.log`. Unabhängiger Review: 15/15 einschließlich
+Legacydatei, 14/14 ProTag unter Los Angeles, keine neuen Blocker. Tagesprotokoll
+`fortschritte/2026-11-11.md`. Mehrintervall-Persistenz, Originaltag/Blattgebühr und
+gemeinsames Wiring bleiben offen; keine vollständige Paketabnahme.
