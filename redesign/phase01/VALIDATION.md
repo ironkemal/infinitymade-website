@@ -59,3 +59,6 @@ Smoke T5 dunkel, Owner+Employee, 1440/390, Szenario voll, Neu gegen Alt, je Fach
 
 ## P02-REVIEW (11.11.2026)
 Unabhängiger Review der Aktivierung (0 kritisch, 6 mittel), alle behoben: Kill-Switch fail-closed (jeder nicht-leere Wert außer 0/false/no/off schaltet ab, getestet), Limiter je Sitzung statt je IP, Zeitlimit auch für `getSession`, Sitzungsvergleich liest die Sitzung asynchron neu (A07 wirksam, getestet), `dev_server.cjs` nur an 127.0.0.1. Nachlauf: Backend+Modul 10/10, `p02-aktivierung.mjs` 18 Fälle grün, integrierte Probe grün, Wachen grün, Cache `p2b`. Kein neuer Gesamtreview nach den Korrekturen.
+
+## P09-ZUSTAENDE (11.11.2026)
+`redesign-zustaende.mjs` Neu, hell+dunkel: 28 Zustände aufgenommen, 0 Fehler (Laden/leer/Fehler/groß, Dialoge, mobile Schublade, 1024/1025, Mitarbeiterin). Die drei zuvor „fehlt"-Rezepte (eingeklappte Leiste, Flyout, Seitenpanel Verordnung) zielten auf alte Auslöser; Rezepte auf `.px-einklappen` und `#vordDetailPanel` angepasst, danach alle drei aufgenommen. Seitenpanel Verordnung 1440 hell gesichtet (Liste links, Detail rechts). Roh-Statuswerte wie `in_behandlung` erscheinen in den Fixture-Zeilen unübersetzt, auch im Alt-Stand (Daten, kein Design). Bilder liegen unter `.redesign-shots/z-p3*` (ignoriert, nicht im Repo).
