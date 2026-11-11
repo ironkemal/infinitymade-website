@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-11",
- "dateien": 552,
- "funktionen": 4508,
+ "dateien": 553,
+ "funktionen": 4510,
  "module": [
   "abrechnung",
   "anamnese",
@@ -14886,11 +14886,11 @@
     "(datei) api-backend/server.js",
     "(datei) api-backend/setup/owner-passwort-reset.mjs",
     "(datei) ops/vendor/supabase-js.js",
-    "abrechnungRechtFuerRechnung",
     "bootBusinessSwitcher",
     "createMailversandRouter",
     "createPodoEmpfangsnachweisRouter",
     "erzeugeRegistryFake",
+    "hatAbrechnungsRecht",
     "init",
     "kontoLoeschen",
     "kontoLoeschenIntern",
@@ -16574,8 +16574,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/verordnung-status.routes.js",
-   "start": 47,
-   "end": 60,
+   "start": 48,
+   "end": 61,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [
@@ -16649,12 +16649,40 @@
    ]
   },
   {
+   "name": "praxenFuerPruefung",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/billing/api/verordnung-status.routes.js",
+   "start": 67,
+   "end": 76,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [
+    "employee_business_assignments",
+    "businesses"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [],
+   "calledBy": [
+    "(datei) api-backend/billing/api/verordnung-status.routes.js"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "dgStamm",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/verordnung-status.routes.js",
-   "start": 102,
-   "end": 106,
+   "start": 118,
+   "end": 122,
    "lines": 5,
    "spiegelHinweis": "Spiegel von `dgWurzel()` in `module/verordnung-regeln",
    "tables": [],
@@ -16678,8 +16706,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/billing/api/verordnung-status.routes.js",
-   "start": 121,
-   "end": 142,
+   "start": 137,
+   "end": 158,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -39630,6 +39658,61 @@
    ]
   },
   {
+   "name": "rechteAbfrage",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/modulrecht.js",
+   "start": 8,
+   "end": 14,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [
+    "get_my_permissions"
+   ],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "rpc"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "hatAbrechnungsRecht",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/modulrecht.js",
+   "start": 21,
+   "end": 32,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "rpc"
+   ],
+   "calledBy": [
+    "(datei) api-backend/billing/api/verordnung-status.routes.js",
+    "abrechnungRechtFuerRechnung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "minPasswortLaenge",
    "kind": "function",
    "lang": "js",
@@ -48361,9 +48444,9 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 101,
-   "end": 108,
-   "lines": 8,
+   "start": 96,
+   "end": 98,
+   "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -48374,7 +48457,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "rpc"
+    "hatAbrechnungsRecht"
    ],
    "calledBy": [
     "createDokumentMailRouter"
@@ -48384,39 +48467,12 @@
    "uiPfad": []
   },
   {
-   "name": "rechteAbfrage",
-   "kind": "function",
-   "lang": "js",
-   "file": "api-backend/routes/dokument-mail.js",
-   "start": 109,
-   "end": 115,
-   "lines": 7,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [
-    "get_my_permissions"
-   ],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "domIds": [],
-   "domRenderIds": [],
-   "domRender": false,
-   "calls": [
-    "rpc"
-   ],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
    "name": "createDokumentMailRouter",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 117,
-   "end": 379,
+   "start": 100,
+   "end": 362,
    "lines": 263,
    "spiegelHinweis": null,
    "tables": [
@@ -275156,8 +275212,8 @@
       {
        "name": "createDokumentMailRouter",
        "file": "api-backend/routes/dokument-mail.js",
-       "start": 117,
-       "end": 379,
+       "start": 100,
+       "end": 362,
        "lines": 263,
        "writes": [
         "prescriptions:update"
@@ -280410,7 +280466,7 @@
     "api-backend/billing/api/podo-empfangsnachweis.routes.js:12",
     "api-backend/billing/api/rechnung-zahlung.routes.js:84",
     "api-backend/billing/api/statistik.routes.js:19",
-    "api-backend/billing/api/verordnung-status.routes.js:47",
+    "api-backend/billing/api/verordnung-status.routes.js:48",
     "api-backend/billing/api/warteliste.routes.js:24",
     "api-backend/billing/api/zuzahlung.routes.js:47"
    ],
@@ -282603,8 +282659,8 @@
   {
    "name": "dgStamm",
    "file": "api-backend/billing/api/verordnung-status.routes.js",
-   "start": 102,
-   "end": 106,
+   "start": 118,
+   "end": 122,
    "hinweis": "Spiegel von `dgWurzel()` in `module/verordnung-regeln"
   },
   {

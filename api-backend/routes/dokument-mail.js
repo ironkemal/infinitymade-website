@@ -15,7 +15,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { createClient } from '@supabase/supabase-js';
+import { hatAbrechnungsRecht } from '../lib/modulrecht.js';
 import { requireAuth } from '../ai/auth.js';
 import { istKutu } from '../lib/dagitim.js';
 import { createSMTPTransport, mailKanal, transportFabrikFuer, meldeVerbindungsfehler } from '../lib/mail.js';
@@ -90,28 +90,11 @@ export function dokumentKanal(supabase, tenantId, env = process.env, kutu = istK
 
 /**
  * Darf der Aufrufer diese Rechnung sehen/versenden? Inhaber: ja. Mitarbeiter: nur mit dem Recht 'abrechnung' für die Praxis der
- * Rechnung (wie api-backend/billing/api/rechnung-zahlung.routes.js und die Datenbank-Policy 0121). Das Backend arbeitet mit
- * service_role und umgeht RLS — ohne diese Prüfung bliebe der Versandweg offen. get_my_permissions wertet auth.uid() aus und braucht
- * deshalb das JWT des Nutzers. Fehlt Token, Praxis oder antwortet die Abfrage mit Fehler: nein (fail closed).
- * @param {{userId:string, role:string}} auth
- * @param {{owner_id:string, business_id?:string|null}} inv
- * @param {string|null} token Bearer-JWT des Nutzers
- * @param {(token:string, businessId:string) => Promise<{data:any, error:any}>} [rpc]
+ * Rechnung (wie api-backend/billing/api/rechnung-zahlung.routes.js und die Datenbank-Policy 0121). Die Prüfung selbst steht in
+ * lib/modulrecht.js (gemeinsam mit dem Abrechnungsstatus, guvenlik S-65). Rechnung ohne Praxis: für Mitarbeiter nein.
  */
-export async function abrechnungRechtFuerRechnung(auth, inv, token, rpc = rechteAbfrage) {
-  if (auth?.role === 'owner' && auth.userId === inv?.owner_id) return true;
-  if (auth?.role !== 'employee' || !inv?.business_id || !token) return false;
-  try {
-    const { data, error } = await rpc(token, inv.business_id);
-    return !error && Array.isArray(data) && data.some(p => p?.module === 'abrechnung' && p.has_access === true);
-  } catch { return false; }
-}
-function rechteAbfrage(token, businessId) {
-  const userClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-  return userClient.rpc('get_my_permissions', { p_business_id: businessId });
+export function abrechnungRechtFuerRechnung(auth, inv, token, rpc) {
+  return hatAbrechnungsRecht({ auth, ownerId: inv?.owner_id, businessIds: inv?.business_id ? [inv.business_id] : [], token, rpc });
 }
 
 export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null } = {}) {

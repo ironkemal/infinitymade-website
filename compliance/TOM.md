@@ -43,11 +43,19 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
   - Die Modul-Berechtigungen (z. B. `anamnese`, `abrechnung`) steuern die **Anzeige** in der Oberfläche, nicht den Datenzugriff; der Zugriff läuft über die RLS
     nach Mandant. Sie sind deshalb keine Zugriffskontrolle im Sinne von Art. 32 DSGVO (legal-de 11.11.2026). Die Rechnungen sind seit Migration 0121 die Ausnahme: dort
     erzwingt die RLS das Modulrecht `abrechnung` zusätzlich.
-  - ⚠️ Offen (legal-de/db-ustasi 11.11.2026): Die Aussage unten gilt für `podologie_behandlungen` (Team nur lesend). Für den Fußbefund `pat_fussbefund` erlaubt die RLS
-    dem Praxisteam dagegen Lesen **und** Schreiben (Policy `pat_fussbefund_owner_access`). Angleichen: entweder Aussage anpassen oder die Policy einschränken.
-  - Verordnungen und Behandlungsdokumentation sind für Angestellte **lesend** freigegeben
-    (03.09.2026, siehe LEGAL_DECISIONS.md); Anlegen, Ändern und der Abrechnungsstatus
-    bleiben beim Inhaber
+  - Rechte der Angestellten desselben Mandanten an Behandlungsdaten (RLS, live geprüft
+    11.11.2026, siehe LEGAL_DECISIONS.md):
+    - Nur lesend: podologische Behandlungseinträge (`podologie_behandlungen`).
+      Anlegen, Ändern und Löschen bleiben beim Inhaber.
+    - Lesen und Schreiben einschließlich Löschen: Fußbefund (`pat_fussbefund`), weil die
+      behandelnde Therapeutin ihn erhebt. Es gibt keine Beschränkung auf eigene Einträge.
+      Die Anwendung führt Korrekturen als neue Version (`eintrag_id`/`version`,
+      `erfasst_von`); die Datenbank erzwingt das nicht.
+    - Lesen und Schreiben: Verordnungen (`prescriptions`, alle Fachbereiche). Abrechnungs-,
+      Storno-, BG- und Mandantenfelder sowie der Status „abgerechnet" sind für jeden
+      Browser-Zugriff gesperrt und nur über das Backend änderbar. Abgerechnete
+      Verordnungen sind nicht löschbar (GoBD).
+    - Rechnungen: zusätzlich an das Modulrecht `abrechnung` gebunden (Migration 0121).
   - Patientennotizen (`patient_notes`) sind für Angestellte **lesend** freigegeben, die
     Warteliste (`warteliste`) **lesend und schreibend, aber ohne Löschrecht**
     (17.09.2026, siehe LEGAL_DECISIONS.md). Die Schranken sind Teil der Zusicherung, nicht

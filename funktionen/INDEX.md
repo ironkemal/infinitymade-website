@@ -3,7 +3,7 @@
 > Üretim: 2026-11-11 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4508 fonksiyon** (4386 JS · 95 bash · 27 ps1) · 552 dosya · 42 sidebar modülü
+**4510 fonksiyon** (4388 JS · 95 bash · 27 ps1) · 553 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -156,7 +156,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · prescriptions:delete
 
 **Yol 3 — `createDokumentMailRouter()`** · Ekran: _UI yolu çözülemedi_
-- `createDokumentMailRouter()` — [api-backend/routes/dokument-mail.js:117](api-backend/routes/dokument-mail.js#L117-L379) · 263 satır · prescriptions:update
+- `createDokumentMailRouter()` — [api-backend/routes/dokument-mail.js:100](api-backend/routes/dokument-mail.js#L100-L362) · 263 satır · prescriptions:update
 
 **Yol 4 — `kassiereZuzahlung()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `kassiereZuzahlung()` — [dashboard.js:5971](dashboard.js#L5971-L6043) · 73 satır · prescriptions:update
@@ -577,7 +577,7 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 
 - `ausstellerSnapshot()` — [api-backend/lib/rechnung-snapshot.js:18](api-backend/lib/rechnung-snapshot.js#L18-L31) — Spiegel von module/branding
 - `bgFehltFuerRechnung()` — [api-backend/lib/rezept-felder.js:326](api-backend/lib/rezept-felder.js#L326-L332) — Spiegel von `bgFehltFuerRechnung` in `module/bg-angaben
-- `dgStamm()` — [api-backend/billing/api/verordnung-status.routes.js:102](api-backend/billing/api/verordnung-status.routes.js#L102-L106) — Spiegel von `dgWurzel()` in `module/verordnung-regeln
+- `dgStamm()` — [api-backend/billing/api/verordnung-status.routes.js:118](api-backend/billing/api/verordnung-status.routes.js#L118-L122) — Spiegel von `dgWurzel()` in `module/verordnung-regeln
 - `empfaengerSnapshot()` — [api-backend/lib/rechnung-snapshot.js:53](api-backend/lib/rechnung-snapshot.js#L53-L74) — Spiegel von module/bg-angaben
 - `fehlendePflichtangaben()` — [api-backend/billing/api/abrechnung.routes.js:446](api-backend/billing/api/abrechnung.routes.js#L446-L452) — Spiegel von module/beleg-druck
 - `fehlendePflichtangaben()` — [module/beleg-druck.js:57](module/beleg-druck.js#L57-L63) — Identisch mit `fehlendePflichtangaben()` im Backend — beim Ändern beide
@@ -609,7 +609,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `cleanup` — dashboard.js:5855 · dashboard.js:5942 · dashboard.js:17529 · merkez/test/dev-server.js:84 · module/absagegrund-modal.js:82 · module/bestaetigungs-dialog.js:20 · module/formular-editor.js:565 · module/formular-unterschreiben.js:201 · module/formular-unterschreiben.js:371
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:11 · api-backend/ai/tasks/b2b-draft.js:62 · api-backend/ai/tasks/b2c-draft.js:62 · api-backend/ai/tasks/rezept-normalize.js:109 · api-backend/ai/tasks/rezept-ocr.js:19 · api-backend/ai/tasks/rezept-validate.js:8 · api-backend/ai/tasks/series-scheduler.js:3 · api-backend/ai/tasks/transkribieren.js:11 · merkez/db.js:125
 - `speichern` — cookie-consent.js:119 · module/arzt-register.js:294 · module/fax-einstellungen.js:112 · module/fussbefund.js:792 · module/mailversand.js:325 · module/physio-befund.js:906 · module/praxis-rechtslinks-einstellungen.js:102 · module/standort-plan.js:397 · module/verordnung-detail.js:959
-- `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:24 · api-backend/billing/api/zuzahlung.routes.js:47
+- `resolveAuth` — api-backend/billing/api/ausfall.routes.js:28 · api-backend/billing/api/mahnwesen.routes.js:24 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:48 · api-backend/billing/api/warteliste.routes.js:24 · api-backend/billing/api/zuzahlung.routes.js:47
 - `zeichne` — module/abrechnung-auswahl.js:769 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:44 · module/patienten-einwilligung.js:540 · module/patienten-import.js:394 · module/praxis-standort.js:115 · module/raum-auswahl.js:251 · module/rezeptinfo-geld.js:461
 - `zeile` — api-backend/lib/therapiebericht.js:299 · module/branding-ui.js:39 · module/fax-deckblatt.js:62 · module/rechnung-druck.js:33 · module/verordnung-detail.js:293 · module/verordnung-detail.js:428 · module/verordnung-detail.js:496 · module/verordnung-pruefen-knopf.js:122
 - `el` — module/arzt-register.js:253 · module/fussbefund.js:232 · module/mailversand.js:58 · module/patient-notizen.js:3 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:765

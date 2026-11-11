@@ -53,8 +53,31 @@ test('manual billing release cannot lift a prescription draft',async()=>{
     select(){return this;},eq(){return this;},async maybeSingle(){return {data:{id:'synthetic-rx',owner_id:'synthetic-owner',status:'parsed',therapie_bereich:'podo'},error:null};},
     update(){f.writes.push(table);throw new Error('Unexpected write');}};}};
   const fn=handler('./verordnung-status.routes.js','patch','/verordnung/:id/abrechnungsstatus',{
-    supabase:db,console:f.console,resolveAuth:async()=>({tenantId:'synthetic-owner'}),UEBERGAENGE:{abrechenbar:[]}});
+    supabase:db,console:f.console,UEBERGAENGE:{abrechenbar:[]},
+    resolveAuth:async()=>({tenantId:'synthetic-owner',user:{id:'synthetic-owner'},profile:{role:'owner'},token:'synthetic'}),
+    praxenFuerPruefung:async()=>[],hatAbrechnungsRecht:async({auth,ownerId})=>auth.role==='owner'&&auth.userId===ownerId});
   await fn({params:{id:'synthetic-rx'},body:{status:'abrechenbar'}},f.res);
   assert.deepEqual(f.errors,[]);assert.equal(f.res.statusCode,409);
   assert.equal(f.res.body.code,'VERORDNUNG_ENTWURF');assert.deepEqual(f.writes,[]);
+});
+
+// guvenlik S-65: ein Angestellter OHNE Modulrecht 'abrechnung' ändert den Abrechnungsstatus nicht (403, vor jeder Änderung)
+test('abrechnungsstatus: Angestellter ohne Recht abgewiesen, mit Recht kommt er bis zur Statusprüfung',async()=>{
+  for(const [hat,erwartet] of [[false,403],[true,409]]){
+    const f=fixture();
+    const db={from(table){assert.equal(table,'prescriptions');return {
+      select(){return this;},eq(){return this;},async maybeSingle(){return {data:{id:'synthetic-rx',owner_id:'synthetic-owner',business_id:'synthetic-biz',status:'parsed',therapie_bereich:'podo'},error:null};},
+      update(){f.writes.push(table);throw new Error('Unexpected write');}};}};
+    let gefragt=null;
+    const fn=handler('./verordnung-status.routes.js','patch','/verordnung/:id/abrechnungsstatus',{
+      supabase:db,console:f.console,UEBERGAENGE:{abrechenbar:[]},
+      resolveAuth:async()=>({tenantId:'synthetic-owner',user:{id:'synthetic-employee'},profile:{role:'employee'},token:'synthetic'}),
+      praxenFuerPruefung:async(_db,p)=>{gefragt=p;return ['synthetic-biz'];},
+      hatAbrechnungsRecht:async()=>hat});
+    await fn({params:{id:'synthetic-rx'},body:{status:'abrechenbar'}},f.res);
+    assert.equal(f.res.statusCode,erwartet,`Recht=${hat}`);
+    if(!hat){assert.equal(f.res.body.code,'KEINE_BERECHTIGUNG');}
+    assert.deepEqual(f.writes,[]);
+    assert.equal(gefragt.userId,'synthetic-employee');assert.equal(gefragt.businessId,'synthetic-biz');
+  }
 });
