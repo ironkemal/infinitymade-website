@@ -125,7 +125,8 @@ export async function oeffneDashboard(browser, o) {
 
   const suche = o.design === 'neu' ? '?design=neu' : '?design=alt';
   await page.goto(`${o.basis}/dashboard.html${suche}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#sidebarNav .sidebar-item', { timeout: 20000 });
+  await page.waitForSelector('#sidebarNav .sidebar-item', { state: 'attached', timeout: 20000 });
+  await page.waitForFunction(() => { const a = document.getElementById('app'); return a && a.style.display !== 'none'; }, null, { timeout: 30000 });
   await ruhe(page);
   return { kontext, page, protokoll };
 }

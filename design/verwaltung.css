@@ -1,0 +1,177 @@
+/* V8.04 — Ergänzungen zu bestehenden Neu-Bausteinen.
+   Ausschließlich Bildschirm und zugeteilte Panels. Keine Dokument-/Modalstile.
+   Tokens, Fokus und Statusetiketten bleiben in praxura-design.css/seiten.css.
+   Einbindung und Cache-Version übernimmt der Integrator. */
+
+/* Gruppe 1: Team, Ärzte, Fahrtenbuch. */
+@media screen {
+  [data-design="neu"] :is(#panel-team, #panel-doctors, #panel-fahrtenbuch) :is(button, .btn-outline, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select) {
+    min-height: 44px;
+  }
+  [data-design="neu"] :is(#panel-team, #panel-doctors, #panel-fahrtenbuch) button {
+    min-width: 44px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) .tabs,
+  [data-design="neu"] #panel-team .tab-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) :is(.table, .data-table) th {
+    height: 44px;
+  }
+  [data-design="neu"] :is(#panel-doctors, #panel-fahrtenbuch) :is(.table, .data-table) td {
+    height: 60px;
+  }
+  [data-design="neu"] #panel-team .employee-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 24px;
+  }
+  [data-design="neu"] #panel-team .emp-card {
+    min-width: 0;
+    background: var(--bg-card-solid);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  [data-design="neu"] #panel-team .emp-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+  }
+  [data-design="neu"] #panel-team :is(.emp-name, .emp-role, .emp-link-row, .emp-info) {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-team .emp-urlaub-toggle {
+    min-height: 44px;
+    width: 100%;
+  }
+  [data-design="neu"] #panel-team .emp-link-text {
+    min-height: 44px;
+    padding-block: 12px;
+    line-height: 20px;
+    box-sizing: border-box;
+  }
+  [data-design="neu"] #panel-team #anwStandortBox label {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  [data-design="neu"] #panel-team #anwStandortBox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  [data-design="neu"] #panel-team .emp-detail-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  [data-design="neu"] #panel-fahrtenbuch #fbTabVehicles > div:first-child {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  [data-design="neu"] #panel-fahrtenbuch #fbVehiclesTbody .fb-veh-edit:hover {
+    color: var(--text-main);
+  }
+}
+
+/* Folgegruppe: Zuweiser und Patientenpost. Status und Inhalte unverändert. */
+@media screen {
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) :is(button, input:not([type="hidden"]), textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) :is(.b2b-layout > *, .ai-input-row textarea) {
+    min-width: 0;
+  }
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] :is(#panel-b2b, #panel-b2c) .ai-input-row textarea {
+    min-height: 64px; /* zwei Platzhalterzeilen bei vorhandenen mobilen 16px */
+  }
+  [data-design="neu"] #panel-b2b .apify-bar {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-b2b :is(#apifyQuery, #apifyCity) { flex: 1 1 100% !important; } /* gegen Inline-flex:2/1 der auf 26px geschrumpften Suchfelder */
+}
+
+/* Gruppe 2: Notizen, Feedback und Beispielmodus. */
+@media screen {
+  [data-design="neu"] :is(#panel-notizen, #panel-feedback, #panel-beispielmodus) :is(button, a.btn-primary, input:not([type="hidden"]), select, textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] #panel-notizen .patient-search-list li[data-id] {
+    min-height: 44px;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-notizen #notesForm > div:last-child {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-header, .feedback-badges) {
+    flex-wrap: wrap;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-title, .feedback-desc, .feedback-meta, .feedback-admin-note) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  [data-design="neu"] #panel-feedback :is(.feedback-item, .feedback-admin-note) {
+    background: var(--bg-card-solid);
+  }
+  [data-design="neu"] #panel-feedback .feedback-admin-note {
+    border: 1px solid var(--border);
+  }
+}
+
+@media screen and (max-width: 600px) {
+  [data-design="neu"] #panel-doctors .apify-bar { flex-wrap: wrap; }
+  [data-design="neu"] #panel-doctors :is(#docQuery, #docCity) { flex: 1 1 100% !important; } /* gegen Inline-flex:2/1, das Suchfelder auf rund 30px zusammendrückt */
+  [data-design="neu"] #panel-team .emp-card { padding: 16px; }
+  [data-design="neu"] #panel-team .emp-urlaub-body :is(input, select) { flex-basis: 100% !important; } /* gegen Inline-flex:1 der drei nebeneinanderliegenden Felder */
+  [data-design="neu"] #panel-fahrtenbuch .fb-tab > div:first-child > button {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+  }
+}
+
+/* Abschlussgruppe: ausschließlich Tippflächen; Fachstatus bleibt im Bestand. */
+@media screen {
+  [data-design="neu"] :is(#panel-statistik, #panel-ueberblick, #panel-podologie-billing, #panel-abrechnung) :is(button, a, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+  }
+  [data-design="neu"] :is(#panel-podologie-billing, #panel-abrechnung) label:has(input:is([type="checkbox"], [type="radio"])) {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Einzelne native Auswahl ohne Label: eigene, unverdeckte Tippfläche. */
+  [data-design="neu"] #panel-abrechnung .ab-gruppe-check {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-design="neu"] #panel-abrechnung #abDetailPanel > div:first-child {
+    flex-wrap: wrap;
+  }
+}
+
+@media screen {
+  /* Native Datumssegmente behalten den Ring auch bei interner Tab-Navigation. */
+  [data-design="neu"] #panel-abrechnung :is(#abZeitraumVon, #abZeitraumBis):focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}

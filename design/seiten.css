@@ -1,0 +1,368 @@
+/* ============================================================================
+   design/seiten.css — Seiten-Archetypen des neuen Designs (PLAN-V2 V4)
+   ============================================================================
+   Einmal zentral statt je Ansicht neu (Melih 26.10.: „schneller“, Bausteine bündeln).
+   Nur [data-design="neu"], nur @media screen. Reihenfolge: nach design/startseite.css.
+
+   Archetyp „Liste + Seitenpanel“ (Entwurf .redesign-shots/plan-v2/archetyp-liste-detail.html):
+   ab 1280 px Liste links, ausgewählter Datensatz rechts als mitlaufendes Panel; darunter
+   bleibt die Anordnung untereinander. Nur Anordnung und Form — Daten, Klicks und Detail-
+   Inhalt kommen unverändert aus den bestehenden Modulen (verordnung-liste/-detail.js).
+   ========================================================================== */
+
+/* V7.03: Abschlussaktionen bleiben auch mit drittem Knopf mobil erreichbar. */
+@media screen {
+  [data-design="neu"] #confirmModal[data-abschluss] .modal-footer button { min-height: 44px; max-width: 100%; white-space: normal; }
+}
+
+/* V7.02: Akte-Aktionen neben den bestehenden Leseinhalten, auch in Podo-Verlauf. */
+@media screen {
+  [data-design="neu"] .px-akte-aktionen { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  [data-design="neu"] .px-akte-aktionen button { min-height: 44px; max-width: 100%; white-space: normal; text-align: left; }
+}
+
+/* ── V8.02 Listen: eine Hülle, einheitliche Zeilen und erreichbare Aktionen.
+   Nur Verwaltungslisten; Rechnungsdokument, Editor und Druck bleiben außerhalb. */
+@media screen {
+  [data-design="neu"] :is(#panel-belegliste, #panel-mahnwesen, #panel-warteliste) > .card:has(> .table-wrap) { padding: 0 !important; overflow: hidden; } /* gegen zentrale .card-Padding-Regeln mit !important */
+  [data-design="neu"] :is(#panel-belegliste, #panel-mahnwesen, #panel-warteliste) > .card > .table-wrap { border: 0; border-radius: inherit; box-shadow: none; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table th { height: 44px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table td { height: 60px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .data-table :is(button, a) { min-height: 44px; min-width: 44px; }
+  [data-design="neu"] :is(#invListWrap, #panel-belegliste, #panel-mahnwesen, #panel-warteliste) .td-actions { flex-wrap: wrap; }
+  [data-design="neu"] #panel-belegliste > .card:has(#blFilterFrom) { gap: 16px !important; } /* gegen Inline-gap:12px */
+  [data-design="neu"] #panel-belegliste :is(.form-input, .form-select) { min-height: 44px; max-width: 100%; }
+  [data-design="neu"] #panel-belegliste .form-label { font-size: 12px !important; } /* gegen Inline-11px */
+  [data-design="neu"] :is(#blExportCsvBtn, #blDatevExportBtn) { min-height: 44px; }
+  [data-design="neu"] #wlStatusTabs { flex-wrap: wrap; }
+  [data-design="neu"] #wlStatusTabs button { min-height: 44px; }
+  [data-design="neu"] :is(#invNewBtn, #wlAddBtn) { min-height: 44px; min-width: 44px; }
+
+  [data-design="neu"] .anfragen-list { gap: 0; background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  [data-design="neu"] .anfragen-card { border: 0; border-radius: 0; padding: 20px 24px; background: transparent; }
+  [data-design="neu"] .anfragen-card + .anfragen-card { border-top: 1px solid var(--border); }
+  [data-design="neu"] .anfragen-card:hover { background: var(--bg-hover); }
+  [data-design="neu"] .anfragen-card :is(strong, span) { overflow-wrap: anywhere; }
+  [data-design="neu"] .anfragen-card-top { gap: 12px; }
+  [data-design="neu"] .anfragen-card-patient { min-width: 0; }
+  [data-design="neu"] .anfragen-card-footer { flex-wrap: wrap; gap: 12px; }
+  [data-design="neu"] .anfragen-card-actions { flex-wrap: wrap; }
+  [data-design="neu"] .anfragen-card-actions button { min-height: 44px; }
+  [data-design="neu"] .anfragen-card-actions .btn-success { background: var(--bg-card-solid); color: var(--text-main); border-color: var(--border); }
+  [data-design="neu"] .anfragen-card-actions .btn-success:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  [data-design="neu"] .anfragen-card-actions .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+  [data-design="neu"] .anfragen-badge { background: var(--bg-hover) !important; color: var(--text-muted) !important; border-color: var(--border) !important; font-weight: 500; letter-spacing: 0; } /* gegen Inline-Kassenartfarben; Text bleibt */
+  [data-design="neu"] .anfragen-tabs .tab-btn { min-height: 44px; }
+  [data-design="neu"] .anfragen-tabs .tab-btn.active { background: var(--nav-active) !important; color: var(--text-main) !important; } /* gegen Inline-transparent/Textfarbe */
+  [data-design="neu"] #bookingRequestLinkInput { min-width: 0; min-height: 44px; border: 1px solid var(--border-input); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text-main); padding: 8px 12px; }
+  [data-design="neu"] #copyBookingLinkBtn { min-height: 44px; }
+
+  /* Vorbestehende Anfragen-Markupabweichung: .slider statt .toggle-slider und
+     classList.hidden statt hidden-Attribut. Vorhandene Zustandslogik sichtbar machen. */
+  [data-design="neu"] #autoAcceptTypes.hidden { display: none; }
+  [data-design="neu"] #panel-anfragen .toggle-switch { width: 44px; height: 44px; }
+  [data-design="neu"] #panel-anfragen .slider { position: absolute; inset: 11px 3px; border: 1px solid var(--border-input); border-radius: 11px; background: var(--bg-input); cursor: pointer; }
+  [data-design="neu"] #panel-anfragen .slider::before { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-muted); }
+  [data-design="neu"] #autoAcceptToggle:checked + .slider { background: var(--primary); }
+  [data-design="neu"] #autoAcceptToggle:checked + .slider::before { transform: translateX(16px); background: var(--bg-card-solid); }
+  [data-design="neu"] #autoAcceptToggle:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 3px; }
+}
+@media screen and (min-width: 1200px) {
+  [data-design="neu"] .anfragen-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 1.2fr); gap: 24px; align-items: center; }
+  [data-design="neu"] .anfragen-card-top, [data-design="neu"] .anfragen-card-info { margin-bottom: 0; }
+}
+@media screen and (max-width: 600px) {
+  [data-design="neu"] .anfragen-card { padding: 16px; }
+  [data-design="neu"] #panel-anfragen .auto-accept-card { width: 100%; justify-content: space-between; }
+  [data-design="neu"] #panel-anfragen div:has(> #bookingRequestLinkInput) { flex-wrap: wrap; }
+  [data-design="neu"] #bookingRequestLinkInput { flex-basis: 100%; }
+  [data-design="neu"] #wlStatusTabs { margin-left: 0 !important; } /* gegen Inline-auto, mobil unter Zusammenfassung */
+}
+
+/* ── V4.01 Verordnungen ─────────────────────────────────────────────────────── */
+/* Klassisches Liste-Detail: ohne geöffnete Verordnung volle Liste; mit geöffneter (oder neuer)
+   Verordnung wird die Liste schmal (Nachname, Vorname, Status; Datum steht im Detail) und das Detail breit – das
+   Detail enthält die Muster-13-Maske und braucht Platz. „Offen“ = #vordDetailContent hat
+   Elemente; der reine Hinweistext „Wählen Sie oben …“ zählt nicht. */
+@media screen {
+  [data-design="neu"] #panel-verordnungen #vordDetailPanel:not(:has(#vordDetailContent *)) { display: none; }
+}
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] #panel-verordnungen.active:has(#vordDetailContent *) {
+    display: grid;
+    grid-template-columns: minmax(420px, 0.85fr) minmax(0, 1.6fr);
+    grid-template-areas: "kopf kopf" "liste detail";
+    gap: 24px;
+    align-items: start;
+  }
+  [data-design="neu"] #panel-verordnungen > .panel-header { grid-area: kopf; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) > .panel-header { margin-bottom: 0; }
+  [data-design="neu"] #panel-verordnungen > .card:not(#vordDetailPanel) { grid-area: liste; min-width: 0; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) .data-table :is(th, td):nth-child(n+3):nth-child(-n+6) { display: none; }
+  [data-design="neu"] #panel-verordnungen:has(#vordDetailContent *) .table-wrap { overflow-x: auto; }
+  [data-design="neu"] #panel-verordnungen > #vordDetailPanel {
+    grid-area: detail;
+    min-width: 0;
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - var(--topbar-h) - 32px);
+    overflow: auto;
+    /* Gegen Inline-margin-top:14px (dashboard.html): im Raster steht das Panel neben der Liste. */
+    margin-top: 0 !important;
+  }
+}
+
+@media screen {
+  [data-design="neu"] #panel-verordnungen > .card { border-radius: var(--radius); box-shadow: var(--shadow-e1); }
+  [data-design="neu"] #vordDetailPanel { padding: 20px 24px; }
+  [data-design="neu"] #vordDetailName { font-size: 18px !important; line-height: 24px; font-weight: 500 !important; } /* gegen Inline 16/700 */
+  [data-design="neu"] #vordDetailContent { font-size: 14px !important; } /* gegen Inline 13px */
+
+  /* Zeilen ruhig: 56 px, ausgewählte Zeile grau getönt mit dunklem Text. */
+  [data-design="neu"] #vordTbody .vord-row td { height: 56px; }
+  [data-design="neu"] #vordTbody .vord-row:hover { background: var(--bg-hover); }
+  [data-design="neu"] #vordTbody .vord-row.vord-row-gewaehlt { background: var(--nav-active) !important; } /* gegen Inline-Fläche */
+  [data-design="neu"] #vordTbody .vord-row.vord-row-gewaehlt td:first-child { box-shadow: inset 3px 0 0 var(--text-main); }
+
+  /* „Bitte prüfen“ (abrechnungsstatus.js BITTE_PRUEFEN_FARBE, Orange inline): nach Melihs Regel
+     Text neutral, kein farbiger Balken – nur das Warnsymbol trägt das Orange. */
+  [data-design="neu"] #vordTbody .vord-row { border-left-color: transparent !important; } /* gegen Inline-Orangebalken */
+  [data-design="neu"] #vordTbody .vord-row td:first-child { color: var(--text-main) !important; white-space: nowrap; } /* gegen Inline-Orange */
+  [data-design="neu"] #vordTbody .vord-row td:first-child .px-sym { color: var(--warning); margin-right: 4px; }
+}
+
+/* Muster-13-Maske: aktiver Abrechnungsweg. dashboard.html:3950 setzt color:#fff fest; im
+   dunklen Neu-Design ist --primary Weiß → weiße Schrift auf Weiß. */
+@media screen {
+  [data-design="neu"] .m13-art-btns button.on { color: var(--bg-card-solid); }
+}
+
+/* ── V4.01 Patienten: Akte als Seitenpanel ─────────────────────────────────────
+   #patientDetailModal (dashboard.html:4122) ist heute ein großes, mittiges Modal. Im Neu-Design
+   fährt es ab 1025 px als Seitenpanel rechts über die volle Höhe ein; die Liste bleibt links
+   sichtbar (leicht abgedunkelt). Öffnen/Schließen/Escape/Fokus bleiben bei dashboard.js. */
+@keyframes pxPanelEin { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media screen and (min-width: 1025px) {
+  [data-design="neu"] #patientDetailModal {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+    background: rgba(11, 15, 23, 0.18);
+    backdrop-filter: none;
+  }
+  [data-design="neu"] #patientDetailModal > .modal {
+    width: min(900px, 66vw);
+    max-width: none;
+    height: 100vh;
+    max-height: none;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    border-right: 0;
+    box-shadow: var(--shadow-e3);
+    animation: pxPanelEin var(--dur-lang, 240ms) var(--ease-standard, ease);
+  }
+}
+@media screen and (prefers-reduced-motion: reduce) {
+  [data-design="neu"] #patientDetailModal > .modal { animation: none; }
+}
+
+/* Alle Reiter der Akte bleiben sichtbar (Rechnungen, Termine und Mail lagen sonst rechts im Aus). */
+@media screen {
+  [data-design="neu"] #patientDetailModal .pd-tabs { padding-inline: 12px; }
+  [data-design="neu"] #patientDetailModal .pd-tab { padding-inline: 10px; }
+}
+
+/* `.btn .btn-secondary` hatte keine eigenen Regeln: Behandlungsbestätigung, Therapiebericht und
+   Fax-Deckblatt standen als loser Text da. `.btn-sm` setzt Radius und Größe mit !important. */
+@media screen {
+  [data-design="neu"] :is(.btn.btn-primary, .btn.btn-secondary, #srvNeuBtn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 14px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  [data-design="neu"] .btn.btn-secondary {
+    background: var(--bg-card-solid);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+  }
+  [data-design="neu"] .btn.btn-secondary:hover { background: var(--bg-hover); }
+}
+
+/* Patientenliste: Nummer nicht umbrechen („P-1008“). */
+@media screen {
+  [data-design="neu"] #panel-kunden .data-table td:first-child { white-space: nowrap; }
+}
+
+/* ── V4.02 Einstellungen: Abschnittsnavigation (module/einstellungen-nav.js) ───────
+   Ab 1280 px links eine mitlaufende Liste der sichtbaren Abschnitte, rechts der Inhalt.
+   Darunter ist die Liste aus (die Seite bleibt eine Spalte wie bisher). */
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] #panel-settings.active.px-mit-abschnitten {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-areas: "kopf kopf" "nav inhalt";
+    column-gap: 32px;
+    align-items: start;
+  }
+  [data-design="neu"] #panel-settings.px-mit-abschnitten > .panel-header { grid-area: kopf; }
+  /* dashboard.css:4320 begrenzt auf 560 px; mit Navigation darf der Inhalt bis 760 px. */
+  [data-design="neu"] #panel-settings.px-mit-abschnitten > .settings-sections { grid-area: inhalt; min-width: 0; max-width: 760px; }
+  [data-design="neu"] #panel-settings.px-mit-abschnitten > .px-abschnitte {
+    grid-area: nav;
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: calc(100vh - var(--topbar-h) - 32px);
+    overflow-y: auto;
+  }
+  [data-design="neu"] #panel-settings.px-mit-abschnitten > :not(.panel-header):not(.settings-sections):not(.px-abschnitte) { grid-column: 1 / -1; }
+}
+@media screen and (max-width: 1279px) {
+  [data-design="neu"] .px-abschnitte { display: none; }
+}
+@media screen {
+  [data-design="neu"] .px-abschnitt-gruppe {
+    padding: 14px 12px 6px;
+    font-size: var(--fs-meta, 12px);
+    line-height: var(--lh-meta, 16px);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  [data-design="neu"] .px-abschnitt-gruppe:first-child { padding-top: 0; }
+  [data-design="neu"] .px-abschnitt {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  [data-design="neu"] .px-abschnitt:hover { background: var(--bg-hover); color: var(--text-main); }
+  [data-design="neu"] .px-abschnitt.aktiv { background: var(--nav-active); color: var(--text-main); font-weight: 600; }
+  [data-design="neu"] #panel-settings .settings-section { scroll-margin-top: 16px; }
+}
+
+/* Formular-Archetyp: gemeinsame Abschnittsnavigation, Felder und Reihenfolge erhalten. */
+@media screen {
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-formular-inhalt { min-width: 0; }
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-abschnitt { min-height: 44px; }
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours) .px-formular-inhalt [id] { scroll-margin-top: 16px; }
+}
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours).active.px-formular-nav {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-areas: "kopf kopf" "nav inhalt";
+    column-gap: 24px;
+    align-items: start;
+  }
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours).px-formular-nav > .panel-header { grid-area: kopf; }
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours).px-formular-nav > .px-formular-inhalt { grid-area: inhalt; }
+  [data-design="neu"] :is(#panel-anamnese, #panel-services, #panel-hours).px-formular-nav > .px-abschnitte {
+    grid-area: nav;
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: calc(100vh - var(--topbar-h) - 32px);
+    overflow-y: auto;
+  }
+}
+
+/* ── V8.01 Status- und Bereichsetiketten ruhig (E5, Melih 25.10.; Töne: gkv-302 27.10.) ─────
+   module/abrechnungsstatus.js rendert Etiketten mit Inline-Farben (statusBadge, statusBadgeGross,
+   bereichBadge). Im Neu-Design: Text neutral, ein kleiner Punkt trägt den Ton. Nur ECHTE
+   Probleme farbig: Absetzung (#be185d) → Rot; Teilabsetzung (#ea580c) → Orange; „Bereit zur
+   Abrechnung“ (#2563eb) → ruhiges Blau; alles andere grau. Erkannt am festen Inline-Muster
+   (Test: tools/redesign-etiketten.test.js) — keine JS-Änderung, Altdesign unberührt.
+   !important nur gegen die Inline-Stile der Etiketten. */
+@media screen {
+  [data-design="neu"] :is(span[style*="padding:2px 8px"][style*="border-radius:10px"][style*="background:"], span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"]) {
+    display: inline-flex !important;          /* gegen Inline inline-block */
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card-solid) !important; /* gegen Inline-Tönung */
+    color: var(--text-main) !important;          /* gegen Inline-Farbe */
+    border: 1px solid var(--border) !important;  /* gegen Inline-Farbrand (groß) */
+    border-radius: var(--radius-xs) !important;  /* gegen Inline 10/14px */
+    font-weight: 500 !important;                 /* gegen Inline 600/700 */
+    font-size: 12px !important;                  /* gegen Inline 11/13px */
+    line-height: 16px !important;                /* gegen Inline 1.3 */
+    padding: 3px 10px 3px 8px !important;        /* gegen Inline-Abstände */
+    white-space: nowrap;
+  }
+  [data-design="neu"] span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"] {
+    font-size: 13px !important;                  /* groß: Kopf der Verordnung */
+    padding: 5px 12px 5px 10px !important;       /* gegen Inline 5px 14px */
+    border-radius: var(--radius-sm) !important;  /* darf in schmaler Liste umbrechen (Inline white-space:normal) */
+    white-space: normal;
+  }
+  [data-design="neu"] :is(span[style*="padding:2px 8px"][style*="border-radius:10px"][style*="background:"], span[style*="padding:5px 14px"][style*="border-radius:14px"][style*="background:"])::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    flex-shrink: 0;
+  }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#2563eb"]::before { background: var(--accent); }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#be185d"]::before { background: var(--danger); }
+  [data-design="neu"] span[style*="padding:"][style*="border-radius:"][style*="background:"][style*="color:#ea580c"]::before { background: var(--warning); }
+
+  /* Bereich (Heilmittel/Podologie): Ortsangabe, kein Signal — grau, normale Schreibung. */
+  [data-design="neu"] :is(span[style*="text-transform:uppercase"][style*="color:#15803d"], span[style*="text-transform:uppercase"][style*="color:#0e7490"]) {
+    color: var(--text-muted) !important;       /* gegen Inline-Grün/Cyan */
+    text-transform: none !important;           /* gegen Inline-Versalien */
+    letter-spacing: 0 !important;              /* gegen Inline-Sperrung */
+    font-weight: 500 !important;               /* gegen Inline 700 */
+    font-size: 13px !important;                /* gegen Inline 11px */
+    background: transparent !important;        /* gegen Inline-Tönung (groß) */
+    border-color: var(--border) !important;    /* gegen Inline-Rand (groß) */
+  }
+
+  /* „ohne Akte“ (verordnung-liste.js): Hinweis, kein Alarm — grau statt Orange. */
+  [data-design="neu"] span[style*="color:var(--warning,#f59e0b)"][title*="keiner Patientenakte"] {
+    color: var(--text-muted) !important;       /* gegen Inline-Orange */
+    font-size: 12px !important;                /* gegen Inline 11px */
+  }
+}
+
+/* V8.01 Merkmale im Verordnungskopf (verordnung-detail.js _merkmale: „Bitte prüfen“, „Unterschrift fehlt“ …)
+   und Kassenart-Kürzel in der Patientenliste (patientenliste.js: GKV/PRIVAT): Text neutral, Ton als Punkt. */
+@media screen {
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-main) !important;          /* gegen Inline-Farbe */
+    border-color: var(--border) !important;      /* gegen Inline-Farbrand */
+    background: var(--bg-card-solid);
+    border-radius: var(--radius-xs) !important;  /* gegen Inline 12px */
+    font-weight: 500 !important;                 /* gegen Inline 600 */
+    font-size: 12px !important;                  /* gegen Inline 11px */
+    padding: 3px 10px 3px 8px !important;        /* gegen Inline-Abstände */
+  }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid"]::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0;
+  }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid #ef4444"]::before { background: var(--danger); }
+  [data-design="neu"] span[style*="padding:2px 8px"][style*="border-radius:12px"][style*="border:1px solid #f59e0b"]::before { background: var(--warning); }
+
+  [data-design="neu"] span[style*="padding:1px 5px"][style*="border-radius:8px"][style*="margin-left:5px"] {
+    background: var(--bg-hover) !important;      /* gegen Inline-Blau/-Gelb */
+    color: var(--text-muted) !important;         /* gegen Inline-Farbe */
+    border-radius: var(--radius-xxs) !important; /* gegen Inline 8px */
+    font-weight: 500 !important;                 /* gegen Inline 600 */
+  }
+}
