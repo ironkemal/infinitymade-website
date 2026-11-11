@@ -29,7 +29,7 @@ curl() {
 ${tlsBlock}
 echo TLS_ACCEPTED
 `;
-  const result = spawnSync('bash', ['-c', script, '_', mode, tlsArg], { encoding: 'utf8', timeout: 2000 });
+  const result = spawnSync('bash', ['-c', script, '_', mode, tlsArg], { encoding: 'utf8', timeout: 20000 } /* war 2000: unter Last (Parallel-Sitzungen, direkt nach der Backend-Suite) reicht der bash-Start nicht immer; das Skript selbst braucht Millisekunden */);
   if (result.error?.code === 'ENOENT') { t.skip('bash nicht vorhanden'); return null; }
   assert.ifError(result.error);
   return result;
