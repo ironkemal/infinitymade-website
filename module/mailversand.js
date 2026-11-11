@@ -18,7 +18,8 @@ export const ANBIETER_REIHENFOLGE = ['outlook', 'gmail', 'ionos', 'strato', 'ein
 export const OHNE_POSTFACH_TEXT = 'Ohne Postfach funktioniert Praxura vollständig — E-Mails an Patienten werden dann nicht '
   + 'verschickt, sondern als Entwurf für Ihr Mailprogramm oder als PDF bereitgestellt.';
 export const MICROSOFT_TEXT = 'Die Anmeldung „Mit Microsoft verbinden" folgt. Bis dahin funktioniert Microsoft 365 / Outlook '
-  + 'über Adresse und Passwort (bei Zwei-Faktor-Anmeldung ein App-Kennwort).';
+  + 'über Adresse und Passwort (bei Zwei-Faktor-Anmeldung ein App-Kennwort), sofern „Authentifiziertes SMTP" für das Postfach erlaubt ist. '
+  + 'Hinweis: Microsoft schaltet die Passwort-Anmeldung für SMTP ab Ende 2026 standardmäßig aus; dann muss Ihre IT sie für das Postfach wieder erlauben.';
 export const GMAIL_SCHRITTE = [
   ['Im Google-Konto die „Bestätigung in zwei Schritten" einschalten.', 'https://myaccount.google.com/signinoptions/two-step-verification'],
   ['Ein App-Passwort erstellen (Name z. B. „Praxura") und das 16-stellige Passwort kopieren.', 'https://myaccount.google.com/apppasswords'],

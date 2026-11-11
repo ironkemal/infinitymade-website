@@ -104,7 +104,7 @@ export const ANBIETER_HINWEIS = Object.freeze({
   gmx: 'GMX: Unter Einstellungen → POP3/IMAP Abruf den Zugriff per POP3/IMAP erlauben, danach erneut testen.',
   webde: 'WEB.DE: Unter Einstellungen → POP3/IMAP Abruf den Zugriff per POP3/IMAP erlauben, danach erneut testen.',
   gmail: 'Gmail: Das normale Passwort funktioniert nicht. Bestätigung in zwei Schritten aktivieren und ein App-Passwort erstellen (myaccount.google.com/apppasswords), dann dieses eintragen.',
-  outlook: 'Microsoft 365: „Authentifiziertes SMTP" muss für das Postfach erlaubt sein (Microsoft 365 Admin Center). Bei Zwei-Faktor-Anmeldung ein App-Kennwort verwenden.',
+  outlook: 'Microsoft 365: „Authentifiziertes SMTP" muss für das Postfach erlaubt sein (Microsoft 365 Admin Center). Bei Zwei-Faktor-Anmeldung ein App-Kennwort verwenden. Ab Ende 2026 ist die Passwort-Anmeldung für SMTP bei Microsoft standardmäßig ausgeschaltet.',
 });
 
 /** Nodemailer-Code → verständliche Diagnose (vorher inline in setup/router.js /test-smtp). */

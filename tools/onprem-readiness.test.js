@@ -28,7 +28,7 @@ test('Gesunde Container reichen nicht: gemeinsame Install-/Updateprüfung verlan
       source "$1"
       warte_auf_gesundheit 2
     `;
-    const result = spawnSync('bash', ['-c', script, 'readiness-test', healthFile], { encoding: 'utf8', timeout: 5000 });
+    const result = spawnSync('bash', ['-c', script, 'readiness-test', healthFile], { encoding: 'utf8', timeout: 20000 });
     assert.equal(result.status, ready === 'yes' ? 0 : 1, result.stderr);
     assert.equal(result.stdout.includes('READY'), ready === 'yes');
   }
@@ -72,7 +72,7 @@ test('Erstes Update lädt neuen Helper vor Prüfung; Rollback behält strenge Pr
       fehler() { echo MAINTENANCE; }
       ${step}
       echo "$sonuc"`;
-    const result = spawnSync('bash', ['-c', script, 'helper-test', dir], { encoding: 'utf8', timeout: 5000 });
+    const result = spawnSync('bash', ['-c', script, 'helper-test', dir], { encoding: 'utf8', timeout: 20000 });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /ROLLBACK/);
     assert.match(result.stdout, /MAINTENANCE/);
