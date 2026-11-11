@@ -166,10 +166,16 @@ if ($Drive -or $Yedek) {
         }
         if (Test-Path "$Yedek\website") { robocopy "$Yedek\website" $RepoDir /E /R:1 /W:1 /NFL /NDL /NP /MT:16 | Out-Null }
         if (Test-Path "$Yedek\home")    { robocopy "$Yedek\home" $env:USERPROFILE /E /R:1 /W:1 /NFL /NDL /NP /MT:16 | Out-Null }
-        if ((Test-Path "$Yedek\localappdata\agy") -and -not (Var 'agy')) {
+        # Var 'agy' kullanma: Python Scripts\agy.exe (baska paket) yaniltir - gercek yolu kontrol et
+        if ((Test-Path "$Yedek\localappdata\agy") -and -not (Test-Path "$env:LOCALAPPDATA\agy\bin\agy.exe")) {
             robocopy "$Yedek\localappdata\agy" "$env:LOCALAPPDATA\agy" /E /R:1 /W:1 /NFL /NDL /NP | Out-Null
+        }
+        if (Test-Path "$env:LOCALAPPDATA\agy\bin\agy.exe") {
+            # agy\bin PATH'te EN ONDE olmali, yoksa Python'un agy.exe'si araya girer
+            $agyBin = "$env:LOCALAPPDATA\agy\bin"
             $up = [Environment]::GetEnvironmentVariable('Path','User')
-            if ($up -notmatch 'agy\\bin') { [Environment]::SetEnvironmentVariable('Path', "$up;$env:LOCALAPPDATA\agy\bin", 'User') }
+            $rest = ($up -split ';' | Where-Object { $_ -and $_ -ne $agyBin }) -join ';'
+            [Environment]::SetEnvironmentVariable('Path', "$agyBin;$rest", 'User')
             PathTazele
         }
         if (Test-Path "$Yedek\wsl-Praxura.tar") {
