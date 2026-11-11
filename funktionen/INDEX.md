@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-11-10 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-11-11 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4506 fonksiyon** (4384 JS · 95 bash · 27 ps1) · 552 dosya · 42 sidebar modülü
+**4508 fonksiyon** (4386 JS · 95 bash · 27 ps1) · 552 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -156,7 +156,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `kontoLoeschenIntern()` — [api-backend/dsgvo/loeschen.js:106](api-backend/dsgvo/loeschen.js#L106-L821) · 716 satır · prescriptions:delete
 
 **Yol 3 — `createDokumentMailRouter()`** · Ekran: _UI yolu çözülemedi_
-- `createDokumentMailRouter()` — [api-backend/routes/dokument-mail.js:90](api-backend/routes/dokument-mail.js#L90-L348) · 259 satır · prescriptions:update
+- `createDokumentMailRouter()` — [api-backend/routes/dokument-mail.js:117](api-backend/routes/dokument-mail.js#L117-L379) · 263 satır · prescriptions:update
 
 **Yol 4 — `kassiereZuzahlung()`** · Ekran: ortak yardımcı — 38 modülden çağrılıyor
 - `kassiereZuzahlung()` — [dashboard.js:5971](dashboard.js#L5971-L6043) · 73 satır · prescriptions:update

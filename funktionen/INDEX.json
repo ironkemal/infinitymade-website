@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-11-10",
+ "erzeugt": "2026-11-11",
  "dateien": 552,
- "funktionen": 4506,
+ "funktionen": 4508,
  "module": [
   "abrechnung",
   "anamnese",
@@ -14886,6 +14886,7 @@
     "(datei) api-backend/server.js",
     "(datei) api-backend/setup/owner-passwort-reset.mjs",
     "(datei) ops/vendor/supabase-js.js",
+    "abrechnungRechtFuerRechnung",
     "bootBusinessSwitcher",
     "createMailversandRouter",
     "createPodoEmpfangsnachweisRouter",
@@ -14900,6 +14901,7 @@
     "loadModulePermissions",
     "physioRpc",
     "rechnungFuer",
+    "rechteAbfrage",
     "registriereVeroeffentlicht",
     "renderBookingCalendar",
     "reserviereUndLadeHoch",
@@ -48180,8 +48182,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 37,
-   "end": 40,
+   "start": 38,
+   "end": 41,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -48207,8 +48209,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 47,
-   "end": 57,
+   "start": 48,
+   "end": 58,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -48236,8 +48238,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 60,
-   "end": 72,
+   "start": 61,
+   "end": 73,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -48262,8 +48264,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 79,
-   "end": 83,
+   "start": 80,
+   "end": 84,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -48331,8 +48333,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 86,
-   "end": 88,
+   "start": 87,
+   "end": 89,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -48355,13 +48357,67 @@
    "uiPfad": []
   },
   {
+   "name": "abrechnungRechtFuerRechnung",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/routes/dokument-mail.js",
+   "start": 101,
+   "end": 108,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "rpc"
+   ],
+   "calledBy": [
+    "createDokumentMailRouter"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "rechteAbfrage",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/routes/dokument-mail.js",
+   "start": 109,
+   "end": 115,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [
+    "get_my_permissions"
+   ],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "rpc"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "createDokumentMailRouter",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/routes/dokument-mail.js",
-   "start": 90,
-   "end": 348,
-   "lines": 259,
+   "start": 117,
+   "end": 379,
+   "lines": 263,
    "spiegelHinweis": null,
    "tables": [
     "profiles",
@@ -48382,6 +48438,7 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
+    "abrechnungRechtFuerRechnung",
     "all",
     "berichtDateiname",
     "dokumentKanal",
@@ -275099,9 +275156,9 @@
       {
        "name": "createDokumentMailRouter",
        "file": "api-backend/routes/dokument-mail.js",
-       "start": 90,
-       "end": 348,
-       "lines": 259,
+       "start": 117,
+       "end": 379,
+       "lines": 263,
        "writes": [
         "prescriptions:update"
        ],
@@ -282081,7 +282138,7 @@
    "name": "pruefeEingabe",
    "orte": [
     "api-backend/billing/zuzahlung/korrektur.js:85",
-    "api-backend/routes/dokument-mail.js:60"
+    "api-backend/routes/dokument-mail.js:61"
    ],
    "aynalar": []
   },

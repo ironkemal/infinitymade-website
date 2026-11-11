@@ -619,9 +619,9 @@ const SIDEBAR_TO_MODULE = {
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
   verordnungen: 'prescriptions',
-  abrechnung: 'abrechnung',
+  abrechnung: 'abrechnung', rechnungen: 'abrechnung', // 0121: Rechnungen-Panel nur mit Recht 'abrechnung' (Datenbank-Policy gleich)
   'podologie-billing': 'abrechnung',
-  fussstatus: 'abrechnung',
+  fussstatus: 'fussstatus', // eigener Schluessel: war an 'abrechnung' gekoppelt; die Freigabe 0121 haette den Fussbefund sonst fuer Empfang/Mitarbeiter geoeffnet
   fahrtenbuch: 'fahrtenbuch',
   b2b: 'b2b',
   b2c: 'b2c',
