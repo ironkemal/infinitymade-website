@@ -15,6 +15,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import { hatAbrechnungsRecht } from '../lib/modulrecht.js';
 import { requireAuth } from '../ai/auth.js';
 import { istKutu } from '../lib/dagitim.js';
 import { createSMTPTransport, mailKanal, transportFabrikFuer, meldeVerbindungsfehler } from '../lib/mail.js';
@@ -85,6 +86,15 @@ export function versandWeg(env = process.env, kutu = istKutu(), kanal = null) {
 /** Kanal für Dokumente einer Praxis (Einstellung → SMTP_* → kein), mit den injizierten env/kutu der Tests. */
 export function dokumentKanal(supabase, tenantId, env = process.env, kutu = istKutu()) {
   return mailKanal({ supabase, ownerId: tenantId, zweck: 'dokument', env, kutu });
+}
+
+/**
+ * Darf der Aufrufer diese Rechnung sehen/versenden? Inhaber: ja. Mitarbeiter: nur mit dem Recht 'abrechnung' für die Praxis der
+ * Rechnung (wie api-backend/billing/api/rechnung-zahlung.routes.js und die Datenbank-Policy 0121). Die Prüfung selbst steht in
+ * lib/modulrecht.js (gemeinsam mit dem Abrechnungsstatus, guvenlik S-65). Rechnung ohne Praxis: für Mitarbeiter nein.
+ */
+export function abrechnungRechtFuerRechnung(auth, inv, token, rpc) {
+  return hatAbrechnungsRecht({ auth, ownerId: inv?.owner_id, businessIds: inv?.business_id ? [inv.business_id] : [], token, rpc });
 }
 
 export function createDokumentMailRouter({ supabase, transportFabrik = createSMTPTransport, env = process.env, kutu = istKutu, gmail = null } = {}) {
@@ -262,6 +272,10 @@ export function createDokumentMailRouter({ supabase, transportFabrik = createSMT
         .eq('id', invoice_id).eq('owner_id', tenantId).maybeSingle();
       if (error) throw error;
       if (!inv) return res.status(404).json({ error: 'Rechnung nicht gefunden.' });
+      const bearer = String(req.headers.authorization || '');
+      if (!(await abrechnungRechtFuerRechnung(req.auth, inv, bearer.startsWith('Bearer ') ? bearer.slice(7) : null))) {
+        return res.status(403).json({ error: 'Für Rechnungen fehlt die Berechtigung „Abrechnung“. Bitte die Praxisinhaberin oder den Praxisinhaber fragen.', code: 'KEINE_BERECHTIGUNG' });
+      }
       if (inv.status === 'draft') return res.status(409).json({ error: 'Entwürfe werden nicht versendet. Bitte die Rechnung zuerst abschließen.' });
       const rezeptId = inv.prescription_id || inv.verordnung_id;
       const [patR, rxR, profR] = await Promise.all([

@@ -33,7 +33,9 @@ Vorhandenen einrichtenLink-Baustein neben Mail vorbereiten wiederverwendet. Link
 
 ## Noch erforderliche externe Nachweise
 
-Authentifizierter SaaS-Nachtest inklusive Zwei-Worker-Sperre; echte Testmail über freigegebenes Postfach; reale Kundenbox: Testmail, Erinnerung, Rechnung, Dokument, Update-Alarm, Transparenzseite. QA-Token-Eingabe wurde abgelehnt und wird nicht umgangen. Diese Nachweise bleiben offen, bis freigegebene Zugänge bzw. erreichbare Testbox verfügbar sind. Kein vollständiger Abschluss behauptet.
+**Erledigt am 10.11.2026 (live, QA-Physio-Inhaber/-Mitarbeiter, Playwright + API, KEIN Mailversand, nur falsche Passwörter):** authentifizierter SaaS-Nachtest — Speichern/Status/Testmail/Trennen, Passwort nie in Antworten, DB nach Trennen ohne Passwort, Banner und Sprung zu den Einstellungen (1280/390 px), Mitarbeiter 403, ungültiger Port und IP-Literal 400, **Zwei-Worker-Sperre: 6 gleichzeitige Testmail-Anfragen → 1× durchgeführt, 5× 429** (`245fbe4d`). Dabei gefunden und behoben: Port 465 ist auf dem SaaS-VPS gesperrt → Vorlagen jetzt 587/STARTTLS (`9c66c29e`); Sprung zu Einstellungen blieb auf halbem Weg stehen (`0b0949ba`). Eintrag in `canli-test/REGISTER.md`.
+
+**Weiter offen:** echte Testmail über ein freigegebenes Postfach (Melih); reale Kundenbox: Testmail, Erinnerung, Rechnung, Dokument, Update-Alarm, Transparenzseite. QA-Token-Eingabe wurde abgelehnt und wird nicht umgangen. Diese Nachweise bleiben offen, bis freigegebene Zugänge bzw. erreichbare Testbox verfügbar sind. Kein vollständiger Abschluss behauptet.
 
 ## Lokaler Abschlusslauf
 

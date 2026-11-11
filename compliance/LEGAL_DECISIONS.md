@@ -897,3 +897,16 @@ Inhaber Yavuz Kemal Demir aktiviert die KI auf der Box (maskiertes Azure Sweden 
 Bekannt und akzeptiert: Restleak der regelbasierten Maske 36/156 = 23,08 % (Z. 826), abgelehnte Modified Abuse Monitoring (Prüfung markierter Prompts durch EWR-Mitarbeiter bleibt möglich), C5 ohne Microsoft-Bestätigung von Scope und Bridge Letter.
 Es wird kein Anwalt beauftragt. Hebt Auflage 5 aus Nachtrag (4) auf, samt Sperre der Mail-Entwürfe; der Halbsatz „Freitext ausgeschlossen" in Auflage 1, Z. 826 letzter Satz und Z. 829 gelten entsprechend nicht mehr. Dies ist eine Inhaberentscheidung, keine externe Rechtsfreigabe. Übrige Auflagen bleiben.
 Umsetzung: KI-Absatz der Patienteninformation `datenschutz-v5-2026-10-30` (Wortlaut legal-de), Inhaber-Einwilligung `2026-10-30-v1`. Für Bestandspatienten genügt ein Aushang (Z. 797).
+
+## 2026-11-11 — TOM-Rollentrennung an die RLS angeglichen
+
+Seit 04.09.2026 liegen Podologie-Verordnungen in `prescriptions` (Team-Policy `prescriptions_owner_all`, ALL); das Leserecht vom 03.09. betraf die inzwischen
+gelöschte Tabelle `verordnungen`. Entschieden (legal-de 11.11.2026, Produktentscheid Melih nach `podoloji`): Fußbefund mit Team-Schreibrecht bestätigt
+(Verfasserspalte `erfasst_von` und Versionierung vorhanden, Kriterium vom 03.09. erfüllt); Verordnungen mit Team-Schreibrecht als Ist-Zustand akzeptiert,
+Abrechnungsfelder nur über das Backend (Trigger `pruefe_prescriptions_clientrechte`); `podologie_behandlungen` bleibt für das Team lesend. TOM §1.3 korrigiert,
+weil sie mehr zusicherte, als die RLS leistet. Die Praxis entscheidet als Verantwortliche, wer die Rolle `employee` erhält (Art. 32 Abs. 4 DSGVO); jedes
+Angestelltenkonto sieht alle Patienten der Praxis, Modulrechte blenden nur in der Oberfläche aus (Ausnahme Rechnungen, Migration 0121) — Hinweis gehört ins Handbuch.
+Neubewertung wie am 03.09.: Rolle Empfang, mehrere Standorte.
+**Nachtrag 11.11.2026 (guvenlik S-65, behoben):** `PATCH /verordnung/:id/abrechnungsstatus` hatte keine Rollenprüfung; jeder Angestellte konnte den Abrechnungsstatus
+(auch Storno, Archiv, Absetzung) ändern. Seitdem: Inhaber oder Mitarbeiter mit dem Modulrecht `abrechnung` (gemeinsame Prüfung `lib/modulrecht.js`, wie bei Rechnungen);
+bestehende Mitarbeiter behalten den Zugriff durch die Freigabe aus Migration 0121. Das TOM sagt deshalb „nur über das Backend“ bzw. „mit Modulrecht“, nicht „nur der Inhaber“.

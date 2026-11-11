@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 process.env.SUPABASE_URL ||= 'http://localhost:54321';
 process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'test-key';
-const { pruefeEingabe, versandMoeglich, entscheideFaxVersand } = await import('./dokument-mail.js');
+const { pruefeEingabe, versandMoeglich, entscheideFaxVersand, abrechnungRechtFuerRechnung } = await import('./dokument-mail.js');
 
 const RX = '11111111-2222-3333-4444-555555555555';
 
@@ -70,4 +70,22 @@ test('entscheideFaxVersand: SaaS, kein SMTP, kein Muster, keine Faxnummer, erfol
     senden: true,
     adresse: '0221123@fax.provider.de',
   });
+});
+
+test('Rechnung per Mail: Inhaber ja; Mitarbeiter nur mit Modulrecht abrechnung der Praxis (fail closed)', async () => {
+  const inv = { owner_id: 'o1', business_id: 'b1' };
+  const owner = { userId: 'o1', role: 'owner' }; const emp = { userId: 'e1', role: 'employee' };
+  const mit = (module, has_access = true) => async () => ({ data: [{ module, has_access }, { module: 'calendar', has_access: true }], error: null });
+  let aufrufe = 0; const zaehle = (f) => async (...a) => { aufrufe += 1; return f(...a); };
+  assert.equal(await abrechnungRechtFuerRechnung(owner, inv, null, zaehle(mit('abrechnung'))), true, 'Inhaber ohne Rechteabfrage');
+  assert.equal(aufrufe, 0, 'Inhaber braucht keine Abfrage');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', mit('abrechnung')), true, 'Mitarbeiter mit Recht');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', mit('abrechnung', false)), false, 'Recht ausdrücklich verweigert');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', mit('calendar')), false, 'anderes Modul zählt nicht');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, null, mit('abrechnung')), false, 'ohne Token');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, { owner_id: 'o1', business_id: null }, 'tok', mit('abrechnung')), false, 'Rechnung ohne Praxis');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', async () => ({ data: null, error: { code: 'x' } })), false, 'Abfragefehler');
+  assert.equal(await abrechnungRechtFuerRechnung(emp, inv, 'tok', async () => { throw new Error('netz'); }), false, 'Ausnahme');
+  assert.equal(await abrechnungRechtFuerRechnung({ userId: 'o2', role: 'owner' }, inv, 'tok', mit('abrechnung')), false, 'fremder Inhaber ohne Mitarbeiter-Rolle');
+  assert.equal(await abrechnungRechtFuerRechnung(undefined, inv, 'tok', mit('abrechnung')), false, 'ohne Auth');
 });

@@ -619,9 +619,9 @@ const SIDEBAR_TO_MODULE = {
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
   verordnungen: 'prescriptions',
-  abrechnung: 'abrechnung',
+  abrechnung: 'abrechnung', rechnungen: 'abrechnung', // 0121: Rechnungen-Panel nur mit Recht 'abrechnung' (Datenbank-Policy gleich)
   'podologie-billing': 'abrechnung',
-  fussstatus: 'abrechnung',
+  fussstatus: 'anamnese', // Melih 11.11.2026 + podoloji/legal-de: Therapeuten (Gruppe Mitarbeiter) sehen den Fussbefund, Empfang (ohne Anamnese) nicht; steuert nur die Anzeige, nicht den Datenzugriff (RLS)
   fahrtenbuch: 'fahrtenbuch',
   b2b: 'b2b',
   b2c: 'b2c',

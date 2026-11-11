@@ -36,6 +36,7 @@ import { fehlendeArztangaben } from '../utils/arztangaben.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { abrechenbareBehandlungstage } from '../utils/behandlungstage.js';
 import { pruefePodologieEmpfangsnachweise } from '../utils/podo-empfangsnachweis.js';
+import { hatAbrechnungsRecht } from '../../lib/modulrecht.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -56,7 +57,22 @@ async function resolveAuth(req, res) {
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
 
   const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
-  return { user: u.user, profile, tenantId };
+  return { user: u.user, profile, tenantId, token };
+}
+
+/**
+ * Praxen, für die ein Mitarbeiter das Recht 'abrechnung' haben kann: die der Verordnung, sonst seine eigenen Zuordnungen beim Inhaber
+ * (prescriptions.business_id darf leer sein). Fehler → leere Liste → Ablehnung (fail closed).
+ */
+export async function praxenFuerPruefung(db, { userId, ownerId, businessId }) {
+  if (businessId) return [businessId];
+  try {
+    const { data: zuo } = await db.from('employee_business_assignments').select('business_id').eq('employee_id', userId);
+    const ids = (zuo || []).map(z => z.business_id).filter(Boolean);
+    if (!ids.length) return [];
+    const { data: eigene } = await db.from('businesses').select('id').eq('owner_id', ownerId).in('id', ids);
+    return (eigene || []).map(b => b.id);
+  } catch { return []; }
 }
 
 // Erlaubte Uebergaenge. Was hier nicht steht, geht nicht.
@@ -169,12 +185,20 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, status, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden, leitsymptomatik, pat_leitsymptomatik')
+      .select('id, owner_id, business_id, status, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden, leitsymptomatik, pat_leitsymptomatik')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
     if (!vRoh) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
     if (vRoh.owner_id !== tenantId) return res.status(403).json({ error: 'Kein Zugriff' });
+    // guvenlik S-65: Der Abrechnungsstatus (auch Storno/Absetzung/Archiv) ist Geldsache — Inhaber oder Mitarbeiter mit dem Recht 'abrechnung'.
+    // Das Backend liest mit service_role an RLS vorbei, deshalb hier prüfen (wie Rechnungen, Migration 0121).
+    const praxen = auth.profile.role === 'employee'
+      ? await praxenFuerPruefung(supabase, { userId: auth.user.id, ownerId: tenantId, businessId: vRoh.business_id })
+      : [];
+    if (!(await hatAbrechnungsRecht({ auth: { userId: auth.user.id, role: auth.profile.role }, ownerId: tenantId, businessIds: praxen, token: auth.token }))) {
+      return res.status(403).json({ error: 'Für Änderungen am Abrechnungsstatus fehlt die Berechtigung „Abrechnung“. Bitte die Praxisinhaberin oder den Praxisinhaber fragen.', code: 'KEINE_BERECHTIGUNG' });
+    }
     // Dieser Statuswechsel ist podologisch — eine physiotherapeutische Zeile
     // liefe hier durch UEBERGAENGE-Regeln, die für sie nie gedacht waren.
     if (vRoh.therapie_bereich !== 'podo') {

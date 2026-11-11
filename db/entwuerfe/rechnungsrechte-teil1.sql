@@ -1,0 +1,4 @@
+-- Verweis: Teil 1 der Rechnungsrechte ist seit 11.11.2026 live und liegt als Migration vor:
+--   api-backend/db/migrations/0120_rechnungsrechte_teil1.sql
+-- Test: api-backend/db/tests/rechnungsrechte-teil1.test.sql
+-- Teil 2 (Modulrecht 'abrechnung'): db/entwuerfe/rechnungsrechte-teil2-modulrecht.sql
