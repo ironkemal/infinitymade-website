@@ -49,6 +49,7 @@ Git'ten klonlamak **yetmez**, çünkü şunlar gitignore'lu:
 | `AppData\Local\agy\` | `agy` CLI ikilisi | IDE kurulunca gelmezse betik geri koyar + PATH'e ekler |
 | `.ssh\` | `id_ed25519`, `praxura_merkez`, `infinitymade_kobi`, `config`, `known_hosts` | VPS + merkez erişimi |
 | `.n8n-mcp\` · `.mcp-auth\` · `.azure\` · `.docker\` | MCP anahtarları, Azure CLI, Docker girişi | |
+| Windows kullanıcı ortam değişkenleri | `N8N_API_KEY`, `SUPABASE_ACCESS_TOKEN` (registry'de, dosya değil) | `user-env.json` olarak şifreli arşive girer, yeni PC'de geri yazılır |
 | WSL `Praxura` dağıtımı | Lokal on-prem test kutusu | Betik sorar, `wsl --export` ile |
 
 ### Taşınmayan / yeniden giriş yapılan

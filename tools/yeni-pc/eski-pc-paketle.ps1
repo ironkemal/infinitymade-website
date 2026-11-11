@@ -65,6 +65,14 @@ foreach ($f in '.claude.json', '.wslconfig', '.gitconfig') {
 }
 Kopyala "$env:LOCALAPPDATA\agy" (Join-Path $Ara 'localappdata\agy')
 
+# Windows kullanici ortam degiskenleri (N8N_API_KEY, SUPABASE_ACCESS_TOKEN ...) - dosya degil, registry'de
+$std = 'Path','TEMP','TMP','OneDrive','OneDriveConsumer','PSModulePath','ChocolateyLastPathUpdate'
+$uenv = [ordered]@{}
+$ue = [Environment]::GetEnvironmentVariables('User')
+foreach ($k in $ue.Keys) { if ($k -notin $std) { $uenv[$k] = $ue[$k] } }
+$uenv | ConvertTo-Json | Set-Content (Join-Path $Ara 'user-env.json') -Encoding utf8
+Write-Host ("  OK  Windows ortam degiskenleri: " + (($uenv.Keys) -join ', ')) -ForegroundColor Green
+
 # 3. WSL 'Praxura' kutusu (istege bagli, buyuk)
 if ((Read-Host "WSL 'Praxura' test kutusunu da ekleyeyim mi? (e/h)") -eq 'e') {
     wsl --shutdown

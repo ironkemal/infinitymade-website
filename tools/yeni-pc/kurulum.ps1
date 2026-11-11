@@ -177,6 +177,15 @@ if ($Drive -or $Yedek) {
             New-Item -ItemType Directory -Force $wslDir | Out-Null
             wsl --import Praxura $wslDir "$Yedek\wsl-Praxura.tar"
         }
+        # Windows kullanici ortam degiskenleri (N8N_API_KEY, SUPABASE_ACCESS_TOKEN ...)
+        $uj = Join-Path $Yedek 'user-env.json'
+        if (Test-Path $uj) {
+            $uv = Get-Content $uj -Raw | ConvertFrom-Json
+            foreach ($pr in $uv.PSObject.Properties) {
+                [Environment]::SetEnvironmentVariable($pr.Name, $pr.Value, 'User')
+                Log "ortam degiskeni kondu: $($pr.Name)"
+            }
+        }
         # .ssh izinleri: yalniz kullanicinin kendisi okusun (OpenSSH aksi halde anahtari reddeder)
         if (Test-Path "$env:USERPROFILE\.ssh") {
             Get-ChildItem "$env:USERPROFILE\.ssh" -File | Where-Object { $_.Extension -ne '.pub' -and $_.Name -notmatch 'known_hosts|config' } | ForEach-Object {
