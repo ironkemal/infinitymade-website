@@ -12,9 +12,11 @@
 #   -Android   Android Studio + JDK 21 de kur (Infinity Muslim icin)
 #   -Ekstra    OBS, CapCut, Discord, Telegram, Steam gibi kisisel uygulamalar
 #   -Sifirla   Durum dosyasini sil, bastan basla
-#   -Yedek X   eski-pc-paketle.ps1'in USB'ye yazdigi klasor: depo + hafiza + sirlar geri konur
+#   -Drive     Google Drive "My Drive\pc transfer" icindeki sifreli praxura-tasima.rar'i
+#              acar, depo + hafiza + sirlari dogru yerlere dagitir (eski-pc-paketle.ps1 ciktisi)
+#   -Yedek X   ayni is, ama .rar'in (ya da acilmis klasorun) durdugu yer elle verilir
 # --------------------------------------------------------------
-param([switch]$Android, [switch]$Ekstra, [switch]$Sifirla, [string]$Yedek)
+param([switch]$Android, [switch]$Ekstra, [switch]$Sifirla, [string]$Yedek, [switch]$Drive)
 
 $ErrorActionPreference = 'Continue'
 $DurumDir  = Join-Path $env:LOCALAPPDATA 'praxura-kurulum'
@@ -37,7 +39,7 @@ function Var($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 function YenidenBaslatVeDevam {
     $arg = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
     if ($Android) { $arg += ' -Android' }; if ($Ekstra) { $arg += ' -Ekstra' }
-    if ($Yedek) { $arg += " -Yedek `"$Yedek`"" }
+    if ($Yedek) { $arg += " -Yedek `"$Yedek`"" }; if ($Drive) { $arg += ' -Drive' }
     Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'PraxuraKurulum' `
         -Value "powershell.exe $arg"
     Log 'Yeniden baslatma gerekiyor. Oturum acinca kurulum KENDILIGINDEN devam edecek.'
@@ -133,9 +135,35 @@ Adim 'git-config' {
 }
 
 # --- 5b. Eski PC yedegini geri koy (eski-pc-paketle.ps1 ciktisi) ---
-if ($Yedek) {
+if ($Drive -or $Yedek) {
     Adim 'geri-yukle' {
-        if (-not (Test-Path $Yedek)) { throw "Yedek klasoru yok: $Yedek" }
+        # a) Drive klasorunu bul - Drive'a giris yapilmamissa bekle
+        if (-not $Yedek) {
+            while ($true) {
+                $Yedek = Get-PSDrive -PSProvider FileSystem | ForEach-Object { Join-Path $_.Root 'My Drive\pc transfer' } |
+                         Where-Object { Test-Path $_ } | Select-Object -First 1
+                if ($Yedek) { break }
+                Start-Process "$env:ProgramFiles\Google\Drive File Stream\launch.bat" -ErrorAction SilentlyContinue
+                Read-Host "Google Drive'a giris yap ('My Drive\pc transfer' gorunene kadar), sonra Enter"
+            }
+        }
+        if (-not (Test-Path $Yedek)) { throw "Yedek yeri yok: $Yedek" }
+
+        # b) Sifreli RAR varsa ac
+        $rar = Get-ChildItem $Yedek -Filter 'praxura-tasima*.rar' -ErrorAction SilentlyContinue | Sort-Object Name | Select-Object -First 1
+        if ($rar) {
+            $unrar = 'C:\Program Files\WinRAR\UnRAR.exe'
+            if (-not (Test-Path $unrar)) { throw 'WinRAR yok (winget RARLab.WinRAR)' }
+            $acik = Join-Path $env:TEMP 'praxura-geri'
+            if (Test-Path $acik) { Remove-Item $acik -Recurse -Force }
+            Log "Arsiv: $($rar.FullName) (Drive once indirir, buyukse surer)"
+            $ss = Read-Host 'Arsiv sifresi' -AsSecureString
+            $pw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss))
+            & $unrar x -o+ -idq "-p$pw" $rar.FullName "$acik\"
+            $kod = $LASTEXITCODE; $pw = $null
+            if ($kod -ne 0) { throw "Arsiv acilamadi (kod $kod) - sifre yanlis ya da Drive henuz tum parcalari indirmedi" }
+            $Yedek = $acik
+        }
         if (Test-Path "$Yedek\website") { robocopy "$Yedek\website" $RepoDir /E /R:1 /W:1 /NFL /NDL /NP /MT:16 | Out-Null }
         if (Test-Path "$Yedek\home")    { robocopy "$Yedek\home" $env:USERPROFILE /E /R:1 /W:1 /NFL /NDL /NP /MT:16 | Out-Null }
         if ((Test-Path "$Yedek\localappdata\agy") -and -not (Var 'agy')) {
@@ -149,7 +177,14 @@ if ($Yedek) {
             New-Item -ItemType Directory -Force $wslDir | Out-Null
             wsl --import Praxura $wslDir "$Yedek\wsl-Praxura.tar"
         }
-        # robocopy 0-7 = basari
+        # .ssh izinleri: yalniz kullanicinin kendisi okusun (OpenSSH aksi halde anahtari reddeder)
+        if (Test-Path "$env:USERPROFILE\.ssh") {
+            Get-ChildItem "$env:USERPROFILE\.ssh" -File | Where-Object { $_.Extension -ne '.pub' -and $_.Name -notmatch 'known_hosts|config' } | ForEach-Object {
+                icacls $_.FullName /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
+            }
+        }
+        # Acilmis gecici kopya sirlar iceriyor -> sil
+        if ($Yedek -like "$env:TEMP*") { Remove-Item $Yedek -Recurse -Force -ErrorAction SilentlyContinue }
         $global:LASTEXITCODE = 0
     }
 }

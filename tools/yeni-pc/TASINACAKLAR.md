@@ -4,20 +4,23 @@
 
 | Betik | Nerede çalışır | Ne yapar |
 |---|---|---|
-| `eski-pc-paketle.ps1 -Hedef E:\praxura-tasima` | **eski** PC | Aşağıdaki her şeyi tek klasöre toplar (USB/harici disk) |
-| `kurulum.ps1 -Yedek E:\praxura-tasima` | **yeni** PC, Yönetici PowerShell | winget ile araçları kurar, yedeği yerine koyar, `npm install`, hook'lar. Yeniden başlatmadan sonra kendiliğinden devam eder; tekrar çalıştırmak zararsız |
+| `eski-pc-paketle.ps1` | **eski** PC | Aşağıdaki her şeyi toplar → **tek şifreli RAR** (AES-256, dosya adları da şifreli, 2 GB parçalar) → Google Drive `My Drive\pc transfer` |
+| `kurulum.ps1 -Drive` | **yeni** PC, Yönetici PowerShell | winget ile araçları kurar, Drive'daki RAR'ı şifreyle açar, her dosyayı **eski yerine** dağıtır, geçici açık kopyayı siler, `npm install`, hook'lar. Yeniden başlatmadan sonra kendiliğinden devam eder; tekrar çalıştırmak zararsız |
 
-> ⛔ Taşıma klasörü **USB / harici disk** olur, Google Drive **değil** — içinde `.env`,
-> SSH anahtarları, Azure/Supabase/Stripe sırları var.
+> Sırlar Drive'a yalnız **şifreli RAR içinde** girer (CLAUDE.md: sır düz metin Drive'a girmez).
+> Şifre hiçbir yere kaydedilmez → parola kasasına yaz. Şifre kaybolursa arşiv açılmaz.
 
 ## Sıra
 
-1. **Eski PC:** depoda `git status -sb` → mümkünse commit + push (yine de klasör bütünüyle kopyalanır).
-2. **Eski PC:** `eski-pc-paketle.ps1 -Hedef <USB>`
-3. **Yeni PC:** Windows kullanıcı adını **`Kemal Demir`** yap (aşağıya bak), sonra
-   `Set-ExecutionPolicy -Scope Process Bypass -Force; & <USB>\website\tools\yeni-pc\kurulum.ps1 -Yedek <USB>`
-   (Android işi için `-Android` ekle.)
-4. Betiğin sonunda yazan "ELLE YAPILACAKLAR" listesi (Docker'ı aç, Antigravity'ye gir, `claude` → `/login`, `gh auth login`, Drive'a gir).
+1. **Eski PC:** depoda `git status -sb` → mümkünse commit + push (yine de klasör bütünüyle gider).
+2. **Eski PC**, Yönetici PowerShell:
+   `Set-ExecutionPolicy -Scope Process Bypass -Force; & "$env:USERPROFILE\Desktop\claude\website\tools\yeni-pc\eski-pc-paketle.ps1"`
+   → şifre sorar → RAR'ı + `kurulum.ps1`'i Drive'a koyar. Drive simgesinde yükleme bitene kadar PC'yi kapatma.
+3. **Yeni PC:** Windows kullanıcı adı **`Kemal Demir`** olsun (aşağıya bak). drive.google.com → `pc transfer` →
+   yalnız `kurulum.ps1`'i indir. Yönetici PowerShell'de, indirdiğin klasörde:
+   `Set-ExecutionPolicy -Scope Process Bypass -Force; & .\kurulum.ps1 -Drive`  (Android için `-Android` ekle)
+4. Betik Drive masaüstü uygulamasını kurar; Drive'a giriş yapmanı bekler, sonra şifreyi sorar ve dağıtır.
+5. Sonda yazan "ELLE YAPILACAKLAR" (Docker'ı aç, Antigravity'ye gir, `claude` → `/login`, `gh auth login`).
 
 ## Taşınanlar ve nedenleri
 
