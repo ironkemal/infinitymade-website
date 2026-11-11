@@ -142,19 +142,25 @@ export function berechneZuzahlungAusPosten({ posten, befreit = false }) {
   }
 
   // Je Posten runden und dann summieren — nicht summieren und dann runden.
-  // Der Calculator tut es genauso (`sessions.reduce(… calcSessionZuzahlung)`);
+  // Der Calculator tut es genauso (`calcSessionZuzahlung` je Sitzung, dann Summe);
   // bei halben Cents je Einheit laufen die beiden Reihenfolgen auseinander.
-  const prozent = r2(liste.reduce((s, p) => {
-    if (p?.frei) return s;
+  // `pflichtigBrutto` = Preise der Posten, die wirklich zuzahlungspflichtig sind (nicht frei, Zuzahlung > 0) —
+  // genau wie im Backend (calcAbrechnungsfallZuzahlung), Paritätstest module/zuzahlung-rechnen.test.js.
+  let prozent = 0;
+  let pflichtigBrutto = 0;
+  for (const p of liste) {
     const preis = Number(p?.preis) || 0;
-    return s + (p?.zuzahlung != null ? r2(p.zuzahlung) : r2(preis * 0.10));
-  }, 0));
+    const zu = p?.frei ? 0 : (p?.zuzahlung != null ? r2(p.zuzahlung) : r2(preis * 0.10));
+    prozent = r2(prozent + zu);
+    if (!p?.frei && zu > 0) pflichtigBrutto = r2(pflichtigBrutto + preis);
+  }
 
-  // ⚠️ Offen (aus calculator.js übernommen, nicht hier entschieden): ob eine
-  // ausschliesslich zuzahlungsfreie Verordnung die 10-€-Pauschale trotzdem
-  // auslöst. Beide Wege sagen heute „ja". Wer das ändert, ändert BEIDE Dateien
-  // und fragt vorher `gkv-302` — es ist bares Geld je Verordnung.
-  const pauschale = Math.max(0, Math.min(10.00, r2(brutto - prozent)));
+  // Die 10-€-Pauschale hängt an der Verordnung und an zuzahlungspflichtigen Kosten (§ 61 Satz 3 SGB V; Verträge § 8 Abs. 1: Zuzahlung nur
+  // bis zur Höhe der Kosten der erbrachten Therapie). Eine Verordnung, die NUR aus zuzahlungsfreien Positionen besteht, löst sie nicht aus
+  // (gkv-302 11.11.2026). Gedeckelt auf das pflichtige Brutto minus Prozentanteil — wie das Backend. Bei gemischten Verordnungen ist das die
+  // vorsichtige Variante (erhebt eher zu wenig als zu viel); eine ausdrückliche Quelle dafür fehlt. Wer das ändert, ändert BEIDE Dateien und
+  // fragt vorher `gkv-302` — es ist bares Geld je Verordnung.
+  const pauschale = Math.max(0, Math.min(10.00, r2(pflichtigBrutto - prozent)));
 
   return { brutto, prozent, pauschale, gesamt: r2(prozent + pauschale), befreit: false };
 }
