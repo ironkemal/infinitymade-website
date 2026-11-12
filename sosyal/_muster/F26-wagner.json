@@ -1,0 +1,67 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Aoede",
+  "sprechweise": "Natürliche warme, kompetente Frauenstimme einer erfahrenen Podologin, ruhig und sympathisch, wie in einem hochwertigen Werbespot, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Diabetisches Fußsyndrom, Wagner-Grad 2. Und beim nächsten Termin: Wo stand das noch mal?\n\nIn Praxura erfassen Sie den Wagner-Grad einmal im Fußbefund. Beim nächsten Termin sehen Sie ihn sofort, mit Datum.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #DiabetischerFuß #Fußbefund #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/podo2/pd1.jpg",
+      "kicker": "Podologie · DFS",
+      "titel": "Wagner 2. <em>Und dann?</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Diabetisches Fußsyndrom, Wagner-Grad zwei. Und beim nächsten Termin?"
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.8,
+      "ansicht": "fuss",
+      "kicker": "Mit Praxura",
+      "titel": "Einmal <em>erfasst.</em>",
+      "kopf": "Fußbefund",
+      "punkte": [
+        "Ulkus",
+        "Hyperkeratose"
+      ],
+      "ergebnis": "Wagner 2 im Befund gespeichert",
+      "sprecher": "In Praxura erfassen Sie den Wagner-Grad einmal im Fußbefund. Mit Datum."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 3.8,
+      "kicker": "Beim nächsten Termin",
+      "titel": "Sofort <em>sichtbar.</em>",
+      "kopf": "Patient",
+      "schritte": [
+        "Letzter Befund geladen",
+        "Wagner-Grad angezeigt"
+      ],
+      "sprecher": "Und beim nächsten Termin sehen Sie ihn sofort."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Befund, <em>der bleibt.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Podologie."
+    }
+  ]
+}

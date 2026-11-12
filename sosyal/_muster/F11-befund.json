@@ -1,0 +1,22 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Aoede",
+  "sprechweise": "Natürliche, warme Frauenstimme einer erfahrenen Kollegin, ruhig und sympathisch, wie in einem hochwertigen Werbespot. Nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Ein Fußbefund auf Papier. Skizze, Kreuzchen, Randnotiz.\n\nIn Praxura tippen Sie den Befund direkt auf die Fußgrafik. Beim nächsten Termin ist alles da, wo es hingehört.\n\nMarkieren Sie eine Podologin, die noch skizziert.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #Fußbefund #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    { "typ": "foto", "dauer": 3.4, "bild": "foto/doku/d2.jpg", "kicker": "Podologie", "titel": "Befund auf <em>Papier.</em>",
+      "effekt": ["korn", "kino"],
+      "sprecher": "Ein Fußbefund auf Papier. Skizze, Kreuzchen, Randnotiz." },
+    { "typ": "foto", "dauer": 3.2, "bild": "foto/doku/d3.jpg", "titel": "Wo war das <em>noch mal?</em>",
+      "effekt": ["korn", "kino"], "zoom": "raus",
+      "sprecher": "Und beim nächsten Termin die Frage: Wo war das noch mal?" },
+    { "typ": "geraet", "buehne": true, "dauer": 4.8, "ansicht": "fuss", "kicker": "Mit Praxura", "titel": "Tippen statt <em>zeichnen.</em>", "kopf": "Fußbefund",
+      "punkte": ["Clavus", "Hyperkeratose", "Rhagade"], "ergebnis": "Befund gespeichert",
+      "sprecher": "Mit Praxura tippen Sie direkt auf den Fuß. Der Befund steht, sauber, für jeden nächsten Termin." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Befund mit <em>einem Tipp.</em>", "cta": "Gebaut für Podologie",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen. Auch für Ihre Podologie." }
+  ]
+}

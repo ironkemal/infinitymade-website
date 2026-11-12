@@ -1,0 +1,92 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "stimme": "Gacrux",
+  "sprechweise": "Laute, neugierige Verwandte beim Sonntagskaffee, gut gemeint und völlig ahnungslos.",
+  "caption": "Jedes. Einzelne. Familienfest. ☕🙃\n\nSchick das deiner Familie. Oder der Kollegin, die es auch erklären muss.\n\nMehr auf praxura.de\n\n(Bilder und Stimmen KI-generiert)\n\n#Physiotherapie #Ergotherapie #Logopädie #Podologie #Therapeutenleben #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/beruf/b1.jpg",
+      "kicker": "Sonntag · Familienkaffee",
+      "titel": "Und, was machst du <em>eigentlich beruflich?</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Und, Lena … was machst du eigentlich beruflich?"
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b2.jpg",
+      "kicker": "Physiotherapie",
+      "titel": "„Ah, du <em>massierst</em> also!“",
+      "stimme": "Algenib",
+      "sprechweise": "Jovialer Onkel mit Bier, laut und stolz auf seinen Witz.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Ah, du massierst also!"
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b3.jpg",
+      "kicker": "Ergotherapie",
+      "titel": "„Also … <em>basteln?</em>“",
+      "stimme": "Vindemiatrix",
+      "sprechweise": "Liebe, begeisterte Oma, die es wirklich ernst meint.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Ergotherapie? Ach, also basteln!"
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b4.jpg",
+      "kicker": "Logopädie",
+      "titel": "„Kindern das Sprechen beibringen? <em>Süß!</em>“",
+      "stimme": "Puck",
+      "sprechweise": "Übermotivierter Cousin, herablassend-niedlich, wie zu einem Kind.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Du bringst Kindern das Sprechen bei? Süß!"
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/beruf/b5.jpg",
+      "kicker": "Podologie",
+      "titel": "„Fußpflege! Machst du mir <em>die Nägel?</em>“",
+      "sprechweise": "Fröhliche Tante, völlig schamlos, schon halb aus dem Schuh.",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprecher": "Fußpflege! Machst du mir mal die Nägel?"
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/beruf/b6.jpg",
+      "musikStopp": true,
+      "kicker": "Und dann noch",
+      "titel": "„Und die Abrechnung <em>macht ihr auch?</em>“",
+      "stimme": "Algenib",
+      "sprechweise": "Jovialer Onkel, ahnungslos neugierig.",
+      "nachlauf": 1.2,
+      "sprecher": "Und die Abrechnung … macht ihr dann auch noch?"
+    },
+    {
+      "typ": "outro",
+      "dauer": 3,
+      "kicker": "Praxura Lokal",
+      "titel": "Schick das <em>deiner Familie.</em>",
+      "cta": "Für Physio, Ergo, Logo und Podologie.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ]
+    }
+  ]
+}

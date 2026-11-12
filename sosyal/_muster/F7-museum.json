@@ -1,0 +1,105 @@
+{
+  "art": "video",
+  "musik": "museum",
+  "stimme": "Sadaltager",
+  "sprechweise": "Natürliche, warme Männerstimme eines professionellen Sprechers, wie ein hochwertiger Museums-Audioguide. Ruhig, menschlich und souverän, nicht theatralisch. Normales Sprechtempo.",
+  "caption": "Willkommen im Museum der Praxisgeschichte. 🏛️\n\nTerminbuch, Kilometerzettel, Karteikasten: Manches gehört ins Museum. In Praxura liegen Termine, Fahrtenbuch und Patientenakte an einem Ort, lokal in Ihrer Praxis.\n\nSchicken Sie das der Kollegin, die das Terminbuch noch verteidigt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Praxisalltag #Therapiepraxis #Heilmittel #Praxissoftware #Therapeutenleben",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/museum/m1.jpg",
+      "kicker": "Museum der Praxisgeschichte",
+      "titel": "Bitte <em>nicht berühren.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "sprecher": "Willkommen im Museum der Praxisgeschichte."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/museum/m2.jpg",
+      "kicker": "Exponat 1",
+      "titel": "Das <em>Terminbuch.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "sprecher": "Exponat eins: das Terminbuch."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/museum/m3.jpg",
+      "kicker": "Exponat 2",
+      "titel": "Der <em>Kilometerzettel.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "schwenk": -30,
+      "sprecher": "Der Kilometerzettel. Bis heute nicht entziffert."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/museum/m4.jpg",
+      "kicker": "Exponat 3",
+      "titel": "Der <em>Karteikasten.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "nachlauf": 0.6,
+      "sprecher": "Der Karteikasten. Alphabetisch sortiert. Meistens."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/museum/m5.jpg",
+      "kicker": "Exponat 4 · Hauptwerk",
+      "titel": "Der <em>Verordnungsstapel.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "zoom": "raus",
+      "sprecher": "Das Hauptwerk: der Verordnungsstapel. Nie ganz abgearbeitet."
+    },
+    {
+      "typ": "geraet",
+      "dauer": 4.6,
+      "kicker": "Ende des Rundgangs",
+      "titel": "Ausgang: <em>ins Heute.</em>",
+      "kopf": "Heute",
+      "schritte": [
+        "Termine und Serien",
+        "Fahrtenbuch",
+        "Patientenakte",
+        "Verordnung geprüft"
+      ],
+      "ergebnis": "Alles an einem Ort",
+      "sprecher": "Der Ausgang führt ins Heute. Alles an einem Ort.",
+      "buehne": true
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "kicker": "Praxura Lokal",
+      "titel": "Manches gehört <em>ins Museum.</em>",
+      "cta": "Ihre Praxis gehört ins Heute.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "premium": true,
+      "sprecher": "Praxura. Ihre Praxis gehört ins Heute.",
+      "nachlauf": 1.0
+    }
+  ],
+  "tempo": 1.1
+}

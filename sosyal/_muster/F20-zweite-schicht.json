@@ -1,0 +1,74 @@
+{
+  "art": "video",
+  "musik": "museum",
+  "stimme": "Orus",
+  "sprechweise": "Natürliche, ruhige und warme Männerstimme, verständnisvoll und souverän, wie in einem hochwertigen, ruhigen Werbefilm. Nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Die letzte Behandlung ist vorbei. Und dann beginnt die zweite Schicht.\n\nPraxura bereitet die Abrechnung nach § 302 SGB V vor, ohne Prozente vom Umsatz. Sie reichen mit Ihrem eigenen Zertifikat selbst ein.\n\nFür alle Praxisinhaber:innen, die abends noch am Küchentisch sitzen.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Praxisinhaber #Abrechnung #Heilmittel #Therapiepraxis #Praxisalltag",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/schicht/s1.jpg",
+      "kicker": "Für Praxisinhaber:innen",
+      "titel": "Die <em>zweite Schicht.</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "schwenk": 30,
+      "sprecher": "Die letzte Behandlung ist vorbei. Und dann beginnt die zweite Schicht."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/schicht/s2.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Verordnungen sortieren. Zuzahlungen prüfen. Die Abrechnung zusammenstellen."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.6,
+      "kicker": "Mit Praxura",
+      "titel": "Ohne <em>Prozente.</em>",
+      "kopf": "Abrechnung",
+      "schritte": [
+        "Verordnungen geprüft",
+        "Zuzahlungen im Blick",
+        "Abrechnung vorbereitet"
+      ],
+      "sprecher": "Praxura bereitet die Abrechnung vor. Ohne Prozente von Ihrem Umsatz. Sie reichen selbst ein."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/schicht/s3.jpg",
+      "titel": "Der Abend <em>gehört Ihnen.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Und der Abend gehört wieder Ihnen."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Eine Schicht <em>reicht.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Eine Schicht reicht."
+    }
+  ]
+}

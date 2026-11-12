@@ -1,0 +1,57 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Achernar",
+  "sprechweise": "Natürliche warme, sanfte Frauenstimme, wie in einem hochwertigen, ruhigen Werbefilm. Herzlich, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Montag. Neue Kollegin. Erster Tag. Und wo stehen die Zugangsdaten?\n\nIn Praxura legt die Praxisleitung die Kollegin an und gibt ihr einen Einrichtungscode. Ihr Passwort setzt sie selbst, die Leitung kennt es nie.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Ergotherapie #Praxisteam #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "tippen",
+      "ton": "dunkel",
+      "dauer": 3.6,
+      "kicker": "Ergotherapie",
+      "titel": "Montag. Neue Kollegin. Erster Tag.",
+      "sprecher": "Montag. Neue Kollegin. Erster Tag."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.2,
+      "titel": "Und das <em>Passwort?</em>",
+      "text": "Klebt es am Monitor?",
+      "sprecher": "Und wo stehen die Zugangsdaten? Am Monitor?"
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.6,
+      "kicker": "Mit Praxura",
+      "titel": "Ein <em>Code.</em>",
+      "kopf": "Team",
+      "schritte": [
+        "Kollegin angelegt",
+        "Einrichtungscode übergeben",
+        "Passwort selbst gesetzt"
+      ],
+      "sprecher": "In Praxura bekommt sie einen Einrichtungscode. Ihr Passwort setzt sie selbst. Niemand sonst kennt es."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Willkommen <em>im Team.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Willkommen im Team."
+    }
+  ]
+}

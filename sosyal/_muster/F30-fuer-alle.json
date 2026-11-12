@@ -1,0 +1,78 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Vindemiatrix",
+  "sprechweise": "Natürliche warme, bewegte Frauenstimme wie in einem hochwertigen, emotionalen Markenfilm. Getragen, herzlich, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Für Physios. Für Ergos. Für Logos. Für Podologinnen. Für alle, die Therapie lieben und Papier nicht.\n\nPraxura ist für die vier Heilmittelberufe gebaut: Termine, Akte, Verordnungsprüfung, Abrechnungsvorbereitung ohne Provision. Lokal, in Ihrer Praxis.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Ergotherapie #Logopädie #Podologie #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/test/test3.jpg",
+      "kicker": "Physiotherapie",
+      "titel": "Für <em>Physios.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Für Physios."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/alle/e1.jpg",
+      "kicker": "Ergotherapie",
+      "titel": "Für <em>Ergos.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Für Ergos."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/alle/l1.jpg",
+      "kicker": "Logopädie",
+      "titel": "Für <em>Logos.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Für Logos."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/pflegeheim/p2.jpg",
+      "kicker": "Podologie",
+      "titel": "Für <em>Podologinnen.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Für Podologinnen."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.4,
+      "titel": "Für alle, die Therapie lieben. <em>Und Papier nicht.</em>",
+      "sprecher": "Für alle, die Therapie lieben. Und Papier nicht."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Gebaut für <em>Heilmittel.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für die, die heilen."
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "art": "video",
+  "musik": "museum",
+  "stimme": "Sadaltager",
+  "sprechweise": "Natürliche ruhige, kultivierte Männerstimme wie ein Museums-Audioguide in einem hochwertigen Werbefilm. Würdevoll, mit einem feinen Augenzwinkern, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Was sieht eigentlich unser Support von Ihren Patientendaten? Nichts.\n\nMit Praxura Lokal liegen die Patientendaten nur in Ihrer Praxis. Wir als Hersteller haben keinen Zugriff, auch nicht im Support.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Datenschutz #Praxissoftware #Heilmittel #Therapiepraxis #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/museum/m1.jpg",
+      "kicker": "Sonderausstellung",
+      "titel": "Was sieht <em>unser Support?</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "sprecher": "Willkommen zur Sonderausstellung: Was sieht unser Support von Ihren Patientendaten?"
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/vitrine/v1.jpg",
+      "titel": "<em>Nichts.</em>",
+      "effekt": [
+        "staub",
+        "kino"
+      ],
+      "zoom": "raus",
+      "nachlauf": 0.8,
+      "sprecher": "Bitte sehr. Das ist alles."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Praxura Lokal",
+      "titel": "Nur <em>bei Ihnen.</em>",
+      "kopf": "Datenschutz",
+      "schritte": [
+        "Daten in Ihrer Praxis",
+        "Kein Zugriff für uns",
+        "Auch nicht im Support"
+      ],
+      "sprecher": "Ihre Patientendaten liegen nur in Ihrer Praxis. Wir haben keinen Zugriff. Auch nicht im Support."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Die leerste Vitrine <em>der Welt.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Die leerste Vitrine der Welt. Mit Absicht."
+    }
+  ]
+}

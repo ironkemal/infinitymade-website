@@ -31,7 +31,7 @@
   .quelle{font-family:var(--mono);font-size:30px;color:var(--ink-mute);margin-top:40px;letter-spacing:.04em}
 
   /* dunkler Ton für jede Szene (ton: "dunkel") und Outro */
-  .dunkel{background:var(--emerald);color:var(--bg)}
+  .dunkel{background:radial-gradient(ellipse 85% 60% at 50% 34%,#2c4d3d 0%,var(--emerald) 46%,#11241b 100%);color:var(--bg)}
   .dunkel .big em,.dunkel .mid em{color:var(--gold)}
   .dunkel .kicker{color:var(--gold)}
   .dunkel .sub{color:rgba(248,243,232,.78)}
@@ -149,6 +149,20 @@
   .foto.unten{justify-content:flex-end;padding-top:230px}
   .foto .kicker{color:#E3C892} .foto .mid em{color:#E8CF9C}
   .foto .mid,.foto .sub{text-shadow:0 2px 30px rgba(0,0,0,.45)} .foto .sub{color:rgba(255,255,255,.9)}
+  /* Kino-Effekte für foto (effekt: staub · blaetter · glanz · korn · kino), Blitz über allem */
+  .foto .fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .fx .staub{position:absolute;border-radius:50%;background:rgba(255,222,160,.9);box-shadow:0 0 12px rgba(255,200,120,.8)}
+  .fx .blatt{position:absolute;background:linear-gradient(160deg,#fbfaf6,#e9e5da);border-radius:3px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .fx .blatt::before{content:"";position:absolute;inset:14% 14% auto;height:46%;background:repeating-linear-gradient(180deg,rgba(60,60,70,.28) 0 3px,transparent 3px 12px)}
+  .fx .glanz{position:absolute;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,236,190,.95) 0%,rgba(255,200,110,.45) 22%,rgba(255,180,90,0) 60%);mix-blend-mode:screen}
+  .fx .strahlen{position:absolute;width:2200px;height:2200px;margin:-1100px 0 0 -1100px;mix-blend-mode:screen;
+    background:repeating-conic-gradient(from 0deg,rgba(255,225,160,.16) 0deg 4deg,rgba(255,225,160,0) 4deg 15deg);
+    -webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 25%,transparent 55%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 25%,transparent 55%)}
+  .fx .vignette{position:absolute;inset:0;background:radial-gradient(ellipse 75% 60% at 50% 48%,transparent 40%,rgba(0,0,0,.65) 100%)}
+  .fx svg.korn{position:absolute;inset:0;width:100%;height:100%;opacity:.13;mix-blend-mode:overlay}
+  #blitz{position:absolute;inset:0;background:#fffaf0;opacity:0;z-index:50;pointer-events:none}
+  #schwarz{position:absolute;inset:0;background:#000;opacity:0;z-index:49;pointer-events:none}
   .kilabel{position:absolute;top:150px;right:90px;z-index:3;font-family:var(--mono);font-size:22px;letter-spacing:.08em;color:rgba(255,255,255,.7)}
 
   /* Untertitel zur Sprachspur (Karaoke): Band über der unteren Safe-Zone, Inhalt rückt dafür nach oben */
@@ -163,6 +177,23 @@
   .marke{font-family:var(--serif);font-weight:500;font-size:96px;letter-spacing:-.02em;margin-top:120px}
   .marke em{font-style:italic;color:var(--gold)}
   .cta{font-family:var(--mono);font-size:34px;letter-spacing:.1em;color:rgba(248,243,232,.7);margin-top:24px;text-transform:uppercase}
+  .linie{display:none}
+
+  /* Premium-Finale (Kemal, 24.10.2026: „Praxura-Teil am Ende premium"): geraet "buehne": true · outro "premium": true */
+  .scene.buehne{background:radial-gradient(ellipse 75% 50% at 50% 30%,#29483a 0%,#10201a 48%,#060a08 100%);color:#F8F3E8}
+  .buehne .kicker{color:var(--gold)} .buehne .mid em{color:#E8CF9C}
+  .buehne .spot{position:absolute;left:50%;top:-120px;width:1600px;height:2000px;margin-left:-800px;pointer-events:none;
+    background:conic-gradient(from 166deg at 50% 0%,transparent 0deg,rgba(255,228,170,.14) 14deg,transparent 28deg)}
+  .buehne .geraet{background:#0c0c0b;transform-origin:50% 100%;
+    box-shadow:0 0 0 2px rgba(201,168,118,.6),0 70px 140px rgba(0,0,0,.65),0 0 180px rgba(201,168,118,.2);
+    -webkit-box-reflect:below 28px linear-gradient(transparent 88%,rgba(255,255,255,.07))}
+  .buehne .fx,.premium .fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .scene.premium{background:radial-gradient(ellipse 85% 55% at 50% 46%,#21402f 0%,#0c1712 55%,#040605 100%)}
+  .premium .marke{font-size:176px;margin-top:80px;
+    background:linear-gradient(100deg,#F8F3E8 0 42%,#FFF6DE 50%,#F8F3E8 58% 100%);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .premium .marke em{background:linear-gradient(100deg,#C9A876 0 42%,#FFF1CC 50%,#C9A876 58% 100%);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .premium .linie{display:block;height:3px;width:0;margin-top:36px;background:linear-gradient(90deg,var(--gold),rgba(201,168,118,0))}
+  .premium .cta{color:rgba(232,207,156,.85);margin-top:34px}
 </style>
 </head>
 <body>
@@ -177,6 +208,7 @@ const E = {
   out: x => 1 - Math.pow(1 - x, 3),
   back: x => { const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); },
   in: x => x * x * x,
+  inOut: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
 };
 // Wörter einzeln umschließen, <em> bleibt erhalten
 const words = html => html.replace(/(<em>.*?<\/em>|[^\s<]+)/g, m => `<span class="w">${m}</span>`);
@@ -568,16 +600,20 @@ const szenen = V.szenen.map(s => {
     html = `${k}${s.titel ? `<div class="mid" style="font-size:${s.gross ? 112 : 96}px">${words(s.titel)}</div>` : ''}${s.text ? `<div class="sub">${s.text}</div>` : ''}`;
   } else if (s.typ === 'outro') {
     html = `${k}<div class="mid">${words(s.titel)}</div>
-      <div class="marke">Prax<em>ura</em></div><div class="cta">${s.cta || ''}</div>`;
+      <div class="marke">Prax<em>ura</em></div><div class="linie"></div><div class="cta">${s.cta || ''}</div>`;
   } else { // aussage
     html = `${k}<div class="mid">${words(s.titel)}</div>${s.text ? `<div class="sub">${s.text}</div>` : ''}${q}`;
   }
   el.innerHTML = `<div class="inhalt">${html}</div>`;
   if (s.typ === 'foto') {
-    // Bildpfad relativ zu sosyal/ · KI-Kennzeichnung (AI Act Art. 50) immer sichtbar, abschaltbar nur für echte Fotos
+    // Bildpfad relativ zu sosyal/ · KI-Hinweis steht in der Caption (Kemal, 23.10.2026: kein Bild-Etikett); "kiLabel": true blendet ihn trotzdem ein
     el.classList.add('foto'); if (s.position === 'unten') el.classList.add('unten');
-    el.insertAdjacentHTML('afterbegin', `<div class="bild" style="background-image:url('../${s.bild}')"></div><div class="verlauf"></div>
-      ${s.echt ? '' : '<div class="kilabel">KI-generiertes Bild</div>'}`);
+    el.insertAdjacentHTML('afterbegin', `<div class="bild" style="background-image:url('../${s.bild}')"></div>${fxHTML(s, el)}<div class="verlauf"></div>
+      ${s.kiLabel ? '<div class="kilabel">KI-generiertes Bild</div>' : ''}`);
+  }
+  if (s.typ === 'geraet' && s.buehne || s.typ === 'outro' && s.premium) {
+    el.classList.add(s.typ === 'geraet' ? 'buehne' : 'premium');
+    el.insertAdjacentHTML('afterbegin', (s.typ === 'geraet' ? '<div class="spot"></div>' : '') + fxHTML({ ...s, effekt: s.effekt || ['staub'] }, el));
   }
   stage.appendChild(el);
   const seg = { s, el, a: start, b: start + s.dauer, ws: [...el.querySelectorAll('.w')],
@@ -594,6 +630,60 @@ const szenen = V.szenen.map(s => {
   return seg;
 });
 window.DAUER = start;
+const blitzEl = document.createElement('div'); blitzEl.id = 'blitz'; stage.appendChild(blitzEl);
+const schwarzEl = document.createElement('div'); schwarzEl.id = 'schwarz'; stage.appendChild(schwarzEl);
+// Übergang IN Szene i: "uebergang" explizit (schnitt · blende · schwarz), sonst Foto→Foto schwarz, →Foto blende
+function uebergang(i) {
+  const s = szenen[i]?.s; if (!s) return null;
+  if (s.uebergang) return s.uebergang;
+  if (s.typ === 'foto') return szenen[i - 1]?.s.typ === 'foto' ? 'schwarz' : 'blende';
+  return 'standard';
+}
+
+// Kino-Effekte: Teilchen werden einmal mit festem Seed gesetzt, renderAt bewegt sie deterministisch
+function zufall(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function fxHTML(s, el) {
+  const fx = s.effekt || [];
+  if (!fx.length) return '';
+  const r = zufall((s.bild || '').length * 7919 + fx.length);
+  let h = '';
+  if (fx.includes('glanz')) { const [x, y] = s.glanzBei || [50, 50]; h += `<div class="strahlen" style="left:${x}%;top:${y}%"></div><div class="glanz" style="left:${x}%;top:${y}%"></div>`; }
+  if (fx.includes('staub')) for (let i = 0; i < 46; i++) {
+    const g = 2 + r() * 5;
+    h += `<div class="staub" data-x="${r() * 1080}" data-y="${r() * 1920}" data-v="${15 + r() * 40}" data-p="${r() * 6.28}" style="width:${g}px;height:${g}px;filter:blur(${g > 5 ? 1.5 : 0}px)"></div>`;
+  }
+  if (fx.includes('blaetter')) for (let i = 0; i < 16; i++) {
+    const w = 70 + r() * 70, nah = r() > .7;
+    h += `<div class="blatt" data-x="${r() * 1080}" data-y="${r() * 2300 - 300}" data-v="${(nah ? 260 : 120) + r() * 120}" data-p="${r() * 6.28}" data-rot="${r() * 360}" data-rv="${(r() - .5) * 140}"
+      style="width:${w * (nah ? 1.6 : 1)}px;height:${w * 1.38 * (nah ? 1.6 : 1)}px;filter:blur(${nah ? 3 : r() * 1.2}px)"></div>`;
+  }
+  if (fx.includes('kino')) h += '<div class="vignette"></div>';
+  if (fx.includes('korn')) h += '<svg class="korn"><filter id="k"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/></filter><rect width="100%" height="100%" filter="url(#k)"/></svg>';
+  return `<div class="fx">${h}</div>`;
+}
+function fxRender(z, lt) {
+  const s = z.s, fxEl = z.el.querySelector('.fx');
+  if (!fxEl) return;
+  fxEl.querySelectorAll('.staub').forEach(d => {
+    const v = +d.dataset.v, p = +d.dataset.p;
+    const y = ((+d.dataset.y - lt * v) % 1920 + 1920) % 1920, x = +d.dataset.x + Math.sin(lt * .8 + p) * 30;
+    d.style.transform = `translate(${x}px,${y}px)`; d.style.opacity = .35 + .65 * Math.abs(Math.sin(lt * 1.7 + p));
+  });
+  fxEl.querySelectorAll('.blatt').forEach(d => {
+    const v = +d.dataset.v, p = +d.dataset.p;
+    const y = ((+d.dataset.y + lt * v + 300) % 2300) - 300, x = +d.dataset.x + Math.sin(lt * 1.3 + p) * 70;
+    d.style.transform = `translate(${x}px,${y}px) rotate(${+d.dataset.rot + lt * +d.dataset.rv}deg) scaleY(${.35 + .65 * Math.abs(Math.cos(lt * 1.9 + p))})`;
+  });
+  const gl = fxEl.querySelector('.glanz'), st = fxEl.querySelector('.strahlen');
+  if (gl) {
+    const auf = s.blitz ? E.in(prog(lt, s.dauer * .45, s.dauer)) : 0;
+    gl.style.opacity = .55 + .2 * Math.sin(lt * 3.2) + .45 * auf; gl.style.transform = `scale(${.9 + .06 * Math.sin(lt * 2.1) + 1.4 * auf})`;
+    st.style.opacity = .7 + .3 * auf; st.style.transform = `rotate(${lt * 6}deg) scale(${1 + .5 * auf})`;
+  }
+  const korn = fxEl.querySelector('feTurbulence');
+  if (korn) korn.setAttribute('seed', String(Math.floor((z.a + lt) * 30) % 997));
+}
 
 // Untertitel: Wortzeiten proportional zur Wortlänge (+ Pause nach Satzzeichen) über die gemessene Sprechdauer
 const MITVO = szenen.some(z => z.s.vo);
@@ -656,27 +746,53 @@ function untertitel(t) {
 
 window.renderAt = t => {
   barFill.style.width = (prog(t, 0, start) * 100) + '%';
+  // Bühnengrund folgt der laufenden Szene: zwischen zwei dunklen Szenen blitzt sonst beim Überblenden der helle Grund auf
+  const ji = Math.max(0, szenen.findIndex(z => t >= z.a && t < z.b)), jetzt = szenen.find(z => t >= z.a && t < z.b) || szenen[szenen.length - 1];
+  const istDunkel = z => z && ['dunkel', 'foto', 'buehne'].some(k => z.el.classList.contains(k));
+  // hell → dunkel: in den letzten 0,2 s wird auch der Grund schon dunkel, sonst blitzt beim Ausblenden Creme auf
+  const dunkelGrund = istDunkel(jetzt) || (istDunkel(szenen[ji + 1]) && t > jetzt.b - .2);
+  stage.style.background = dunkelGrund ? '#0f1d17' : '';
+  // blitz: Szene endet in Weiß · blitzEin: Szene beginnt aus Weiß
+  let weiss = 0;
+  szenen.forEach(z => {
+    if (z.s.blitz && t >= z.b - .9 && t < z.b) weiss = Math.max(weiss, E.in(prog(t, z.b - .9, z.b - .05)));
+    if (z.s.blitzEin && t >= z.a && t < z.a + .7) weiss = Math.max(weiss, 1 - E.out(prog(t, z.a, z.a + .7)));
+  });
+  blitzEl.style.opacity = weiss;
+  // schwarz: Foto→Foto taucht kurz durch Schwarz — nie zwei Bilder/Texte übereinander (Kemal, 23.10.2026)
+  let dunkel = 0;
+  szenen.forEach((z, i) => {
+    if (i && uebergang(i) === 'schwarz') { const x = clamp(1 - Math.abs(t - z.a) / .32); dunkel = Math.max(dunkel, x * x * (3 - 2 * x)); }
+  });
+  schwarzEl.style.opacity = dunkel;
   untertitel(t);
   szenen.forEach((z, i) => {
     const lt = t - z.a;
-    // Ein Foto blendet über die vorige Szene: die bleibt so lange stehen, bis es deckt
+    // blende: Foto blendet über die vorige Szene, die bleibt so lange stehen, bis es deckt
     const naechste = szenen[i + 1]?.s;
-    const naechsteBlende = naechste && naechste.typ === 'foto' && naechste.uebergang !== 'schnitt';
+    const naechsteBlende = naechste && uebergang(i + 1) === 'blende';
     const aktiv = t >= z.a && t < z.b + (naechsteBlende ? .45 : 0) || (i === szenen.length - 1 && t >= z.b);
     if (!aktiv) { z.el.style.opacity = 0; return; }
     const ersteSzene = i === 0;
-    const schnitt = z.s.uebergang === 'schnitt';
+    const schnitt = ['schnitt', 'schwarz'].includes(uebergang(i));
     const foto = z.s.typ === 'foto';
     // Auftritt: schneller Schub von unten (Foto: Überblendung). Szene 1 steht ab Frame 0 (Vorschaubild muss packen).
     const ein = ersteSzene || schnitt ? 1 : foto ? E.out(prog(lt, 0, .45)) : E.out(prog(lt, 0, .28));
-    const naechsteSchnitt = naechste && naechste.uebergang === 'schnitt';
+    const naechsteSchnitt = naechste && ['schnitt', 'schwarz'].includes(uebergang(i + 1));
     const aus = i < szenen.length - 1 && !naechsteSchnitt && !naechsteBlende ? 1 - prog(lt, z.s.dauer - .15, z.s.dauer) : 1;
     z.el.style.opacity = Math.min(ein, aus);
     z.el.style.transform = foto ? 'none' : `translateY(${(1 - ein) * 80}px) scale(${1 + lt * .012})`;
     if (foto) {
       const p = lt / (z.s.dauer + .45), raus = z.s.zoom === 'raus';
-      const sk = raus ? 1.1 - .08 * p : 1.02 + .08 * p;
-      z.el.querySelector('.bild').style.transform = `scale(${sk}) translateX(${(z.s.schwenk || 0) * p}px)`;
+      // ruck: Sekunde eines harten Schnapp-Zooms (Pointe) · wackeln: Einschlag am Szenenanfang · hub: senkrechte Kamerafahrt (px)
+      const rb = z.s.ruck === 'nach' ? (z.s.vo ? z.s.vo.bei + z.s.vo.dauer + .12 : z.s.dauer * .5) : z.s.ruck; // "nach" = direkt nach dem letzten Wort
+      const ruck = rb != null ? .16 * E.out(prog(lt, rb, rb + .07)) : 0;
+      const sk = (raus ? 1.1 - .08 * p : 1.02 + .08 * p) + ruck + (z.s.hub ? Math.abs(z.s.hub) / 1920 * 1.1 : 0);
+      const stoss = (z.s.effekt || []).includes('wackeln') ? Math.max(0, 1 - lt / .7) : 0;
+      const wx = Math.sin(lt * 61) * 22 * stoss, wy = Math.cos(lt * 47) * 16 * stoss;
+      const fahrt = .5 - (1 - Math.cos(Math.PI * Math.min(p * 1.1, 1))) / 2; // +½ → −½, weich
+      z.el.querySelector('.bild').style.transform = `translate(${(z.s.schwenk || 0) * p + wx}px,${(z.s.hub || 0) * fahrt + wy}px) scale(${sk})`;
+      fxRender(z, lt);
       z.el.querySelector('.inhalt').style.transform = `translateY(${(1 - E.out(prog(lt, 0, .5))) * (ersteSzene ? 0 : 40)}px)`;
     }
     z.ws.forEach((w, j) => {
@@ -696,7 +812,9 @@ window.renderAt = t => {
       rz.style.transform = `rotate(-3deg) translateX(${wackel}px)`;
     }
     if (z.s.typ === 'zaehler') {
-      const p = E.in(prog(lt, .3, z.s.dauer - .7));
+      // mit Sprecher: Zahl erreicht ihr Ziel, wenn sie ausgesprochen wird (Satzende), nicht erst am Szenenende
+      const zEnde = z.s.vo ? z.s.vo.bei + z.s.vo.dauer * .88 : z.s.dauer - .7;
+      const p = z.s.vo ? E.inOut(prog(lt, .3, zEnde)) : E.in(prog(lt, .3, zEnde));
       const n = Math.round(z.s.von + (z.s.bis - z.s.von) * p);
       const nel = z.el.querySelector('.n');
       nel.textContent = n;
@@ -736,6 +854,21 @@ window.renderAt = t => {
     }
     if (z.s.typ === 'figur') figurRender(z, lt, ersteSzene);
     if (z.s.typ === 'geraet') geraetRender(z, lt);
+    if (z.s.buehne || z.s.premium) fxRender(z, lt);
+    if (z.s.typ === 'geraet' && z.s.buehne) {
+      // Tablet richtet sich aus der Schräge auf, Spot atmet
+      const e = E.out(prog(lt, 0, 1.2));
+      z.el.querySelector('.geraet').style.transform = `perspective(1800px) rotateX(${(1 - e) * 22}deg) translateY(${(1 - e) * 90}px)`;
+      z.el.querySelector('.spot').style.opacity = .75 + .25 * Math.sin(lt * 1.4);
+    }
+    if (z.s.typ === 'outro' && z.s.premium) {
+      // Wortmarke zieht sich aus Weite und Unschärfe zusammen, dann gleitet ein Lichtstreif darüber, Goldlinie zeichnet sich
+      const m = z.el.querySelector('.marke'), e = E.out(prog(lt, .15, 1.4));
+      m.style.letterSpacing = `${.22 - .24 * e}em`; m.style.filter = `blur(${(1 - e) * 14}px)`; m.style.opacity = clamp(e * 1.4);
+      const lp = `${100 - 100 * E.inOut(prog(lt, 1.1, 2.3))}% 0`;
+      m.style.backgroundPosition = lp; m.querySelector('em').style.backgroundPosition = lp;
+      z.el.querySelector('.linie').style.width = `${560 * E.out(prog(lt, 1.2, 2.2))}px`;
+    }
     if (z.s.typ === 'tippen') {
       const tempo = z.s.tempo ?? 22; // Zeichen pro Sekunde
       // Szene 1: ein Drittel steht ab Frame 0 (Vorschaubild darf nicht leer sein)

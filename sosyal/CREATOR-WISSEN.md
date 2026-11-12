@@ -81,3 +81,20 @@ Kaynaklar: smashballoon.com (reels vs feed, Buffer 52 Mio. Posts), socialinsider
 5. CTA'lardan biri haftada en az iki kez „gönder/etiketle" türü.
 6. KI görüntü/ses kullanıldıysa caption'da tek satır açıklama.
 7. Her ay sonu: en iyi 3 hook kalıbı ve en kötü 3 kayda geçer, bu dosya güncellenir.
+
+## 8. KI içeriğinde mizah — neden zorlama duruyor (23.10.2026)
+
+Kemal: F3–F6 espriler „zorlama" geliyor. Araştırma sonucu:
+
+- **İzleyici KI'yi yakalıyor ve kusur avına çıkıyor.** %83 KI videosu gördüğünü düşünüyor. En sık ele veren üç şey: robot gibi jest (%67), doğal olmayan ses (%55), duygusuz ton (%51). „Bu KI" anlaşıldığı anda izleyici içeriği değil hataları izliyor (Animoto 01/2026, eMarketer).
+- **Komedi zamanlamayla yaşar, KI sesi zamanlamayı tutturamıyor.** Gerçekçi KI insan + KI ses + espri, üç zayıf noktayı aynı anda gösteriyor.
+- **Tutan şey espri değil, tanıdık gelmesi.** Paylaşılan POV videolarda ekran yazısı tanıdık bir durumu söylüyor, görüntü sıradan bir hareket gösteriyor. İzleyici „aynen bizde de böyle" deyip gönderiyor (async.com, tl;dv).
+- **Kendi KI'siyle dalga geçmek bir kez işe yarıyor, şartlarıyla:** absürtlük o kadar açık olmalı ki kimse gerçek sanmasın, espri de markanın asıl mesajına bağlanmalı. Almond Breeze tuttu (%43 olumlu). Equinox'ta alay fazla inceydi, tepki nötr kaldı (Marketing Brew 01/2026).
+- **Stilize görüntü (kil, minyatür, oyuncak) kuşkuyu atlatıyor.** Gerçekçi görüntü ancak açıkça kurgu olan bir fikirde ya da konuşmasız atmosfer sahnelerinde çalışıyor.
+
+### Sonuç kuralları
+8. Gerçekçi KI insan **konuşturulmaz, şaka yaptırılmaz.** Foto yalnız atmosfer için: yavaş, sessiz, sinematik.
+9. Mizah iki yoldan gelir: (a) **içeriden ayrıntı** (yalnız Heilmittel çalışanının bildiği şey), ya da (b) **stilize/absürt görüntü** (kil/minyatür).
+10. ~~KI sesi yalnız düz tonun espriye dahil olduğu rollerde~~ → **24.10.2026 Kemal, KATI KURAL: her videoda arkada gerçekçi bir dış ses konuşur.** Ton doğal ve abartısız olur: tiyatral talimat yok ("flüsternd", "todernst", "roboterhaft"). `tempo` en fazla ~1,1, süre metin kısaltılarak tutturulur. Bazı videolar düz reklam tonunda olabilir ("Kennen Sie das?").
+12. **Praxura kapanışı premium:** `geraet` + `"buehne": true` (koyu sahne, spot, yansıma, tablet eğikten doğrulur) ve `outro` + `"premium": true` (logo bulanıktan toplanır, altın ışık geçer, altın çizgi). Son cümleyi ses söyler, marka adıyla.
+11. „Biz KI'yiz" esprisi en fazla bir kez, o da mesaja bağlı olarak („Hype yok, Ihre Daten bleiben bei Ihnen").

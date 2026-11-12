@@ -1,0 +1,138 @@
+{
+  "art": "video",
+  "musik": "warteschleife",
+  "stimme": "Kore",
+  "sprechweise": "Freundliche, völlig monotone Telefon-Bandansage einer Krankenkasse. Leicht roboterhaft, jedes Mal exakt gleich betont, ohne jede Emotion.",
+  "caption": "Nur kurz bei der Kasse anrufen. 📞💀\n\nMarkier die Kollegin, die gerade in der Warteschleife hängt.\n\nMehr auf praxura.de\n\n(Bilder und Stimmen KI-generiert)\n\n#Physiotherapie #Praxisalltag #Krankenkasse #Warteschleife #Therapeutenleben #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/warteschleife/w1.jpg",
+      "kicker": "Tag 1 · 9:14 Uhr",
+      "titel": "Nur kurz bei der <em>Kasse anrufen.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "telefon": true,
+      "sprecher": "Ihr Anruf ist uns wichtig. Sie sind auf Platz drei."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/warteschleife/w2.jpg",
+      "kicker": "Tag 63",
+      "effekt": [
+        "korn"
+      ],
+      "telefon": true,
+      "sprecher": "Sie sind auf Platz … zwei.",
+      "titel": "Platz <em>2.</em>",
+      "gross": true
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/warteschleife/w3.jpg",
+      "kicker": "Jahr 41",
+      "effekt": [
+        "korn"
+      ],
+      "telefon": true,
+      "sprecher": "Sie sind auf Platz … eins.",
+      "titel": "Platz <em>1.</em>",
+      "gross": true
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/warteschleife/w4.jpg",
+      "kicker": "Jahr 312",
+      "effekt": [
+        "korn",
+        "staub"
+      ],
+      "telefon": true,
+      "sprecher": "Sie sind auf Platz … viertausendachthundertsiebzehn.",
+      "titel": "Platz <em>4.817.</em>",
+      "gross": true
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.8,
+      "bild": "foto/warteschleife/w5.jpg",
+      "kicker": "Jahr 2.740 · Ausgrabung",
+      "effekt": [
+        "korn",
+        "staub"
+      ],
+      "telefon": true,
+      "sprecher": "Bitte legen Sie nicht auf."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.8,
+      "bild": "foto/warteschleife/w6.jpg",
+      "kicker": "Jahr 5.000 · Museum",
+      "titel": "Homo <em>Warteschleifus.</em>",
+      "text": "Fundort: Empfangstresen.",
+      "effekt": [
+        "korn",
+        "kino"
+      ]
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/warteschleife/w7.jpg",
+      "uebergang": "schnitt",
+      "musikStopp": true,
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "klang": [
+        {
+          "art": "klick",
+          "bei": 0,
+          "laut": 3
+        }
+      ],
+      "stimme": "Leda",
+      "telefon": true,
+      "sprechweise": "Fröhlich, munter und völlig ahnungslos, wie eine Callcenter-Mitarbeiterin, die gerade gut gelaunt ihren Kaffee hingestellt hat.",
+      "sprecher": "Krankenkasse, guten Morgen! Was kann ich für Sie tun?",
+      "tempo": 1.15
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/warteschleife/w7.jpg",
+      "uebergang": "schnitt",
+      "ruck": 0.25,
+      "effekt": [
+        "korn",
+        "kino",
+        "staub"
+      ],
+      "stimme": "Gacrux",
+      "sprechweise": "Uralt, heiser und krächzend, völlig erschöpft, aber immer noch höflich, als hätte sie seit Jahrtausenden nicht gesprochen. Langsam.",
+      "sprecher": "Ja, hallo … es geht um die Absetzung von März.",
+      "tempo": 1.2
+    },
+    {
+      "typ": "outro",
+      "dauer": 3,
+      "kicker": "Praxura Lokal",
+      "titel": "Die Warteschleife können wir <em>nicht abschaffen.</em>",
+      "cta": "Die Abrechnung bereiten wir trotzdem vor.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ]
+    }
+  ],
+  "tempo": 1.25
+}

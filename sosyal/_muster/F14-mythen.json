@@ -1,0 +1,81 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Charon",
+  "sprechweise": "Natürliche, ruhige und souveräne Männerstimme, sachlich und freundlich, wie ein vertrauenswürdiger Experte in einem hochwertigen Erklärfilm. Nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Lokal heißt unsicher? Ohne Internet steht alles still? Zwei Mythen, zwei Fakten.\n\nMit Praxura Lokal bleiben Ihre Patientendaten in Ihrer Praxis, jede Nacht verschlüsselt gesichert. Und fällt das Internet aus, läuft die Praxis im eigenen Netz weiter.\n\nSchicken Sie das Ihrer Praxisleitung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Praxissoftware #Datenschutz #Heilmittel #Therapiepraxis #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.0,
+      "kicker": "Mythos-Check",
+      "titel": "Zwei Mythen. <em>Zwei Fakten.</em>",
+      "sprecher": "Zwei Mythen über Praxissoftware. Und was wirklich stimmt."
+    },
+    {
+      "typ": "vergleich",
+      "ton": "dunkel",
+      "dauer": 5.2,
+      "titel": "Mythos <em>1</em>",
+      "links": {
+        "label": "Mythos",
+        "text": "Lokal heißt unsicher.",
+        "weg": true
+      },
+      "rechts": {
+        "label": "Fakt",
+        "text": "Ihre Daten bleiben in der Praxis. Jede Nacht verschlüsselt gesichert."
+      },
+      "sprecher": "Lokal heißt unsicher? Im Gegenteil: Ihre Daten bleiben in Ihrer Praxis, und jede Nacht wird verschlüsselt gesichert."
+    },
+    {
+      "typ": "vergleich",
+      "ton": "dunkel",
+      "dauer": 5.0,
+      "titel": "Mythos <em>2</em>",
+      "links": {
+        "label": "Mythos",
+        "text": "Ohne Internet steht alles still.",
+        "weg": true
+      },
+      "rechts": {
+        "label": "Fakt",
+        "text": "Die Praxis läuft im eigenen Netz weiter."
+      },
+      "sprecher": "Ohne Internet steht alles still? Nicht mit Praxura. Die Praxis läuft im eigenen Netz einfach weiter."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.2,
+      "kicker": "Praxura Lokal",
+      "titel": "Bei <em>Ihnen.</em>",
+      "kopf": "Praxis-Netz",
+      "schritte": [
+        "Daten in der Praxis",
+        "Nachts verschlüsselt gesichert",
+        "Läuft auch ohne Internet"
+      ],
+      "sprecher": "Ihre Software, Ihre Daten, Ihr Netz."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Ihre Daten. <em>Ihre Praxis.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Die Praxissoftware, die bei Ihnen wohnt."
+    }
+  ]
+}

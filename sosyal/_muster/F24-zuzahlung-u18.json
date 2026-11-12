@@ -1,0 +1,52 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Kore",
+  "sprechweise": "Natürliche klare, freundliche Frauenstimme einer erfahrenen Kollegin, die ein kurzes Quiz stellt. Kompetent und ein wenig verschmitzt, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Logopädie-Praxen, kurze Frage: Muss ein 17-Jähriger zuzahlen?\n\nNein. Kinder und Jugendliche sind bis zur Vollendung des 18. Lebensjahres von der Zuzahlung befreit (KBV Praxiswissen Heilmittel). Praxura erkennt das am Geburtsdatum und rechnet keine Zuzahlung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Logopädie #Zuzahlung #Heilmittel #Praxisalltag #GKV",
+  "szenen": [
+    {
+      "typ": "frage",
+      "ton": "dunkel",
+      "dauer": 5.6,
+      "kicker": "Logopädie · Kurze Frage",
+      "titel": "Muss ein 17-Jähriger <em>zuzahlen?</em>",
+      "antwortLabel": "Antwort",
+      "antwort": "Nein. Bis zum 18. Geburtstag entfällt die Zuzahlung.",
+      "quelle": "KBV Praxiswissen Heilmittel",
+      "sprecher": "Logopädie-Praxen, kurze Frage: Muss ein Siebzehnjähriger zuzahlen? Nein. Bis zum achtzehnten Geburtstag entfällt die Zuzahlung."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.2,
+      "kicker": "Mit Praxura",
+      "titel": "Automatisch <em>erkannt.</em>",
+      "kopf": "Zuzahlung",
+      "schritte": [
+        "Geburtsdatum geprüft",
+        "Unter 18 erkannt"
+      ],
+      "ergebnis": "Keine Zuzahlung",
+      "sprecher": "Praxura erkennt das am Geburtsdatum und rechnet keine Zuzahlung."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Richtig <em>gerechnet.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen. Auch für Ihre Logopädie."
+    }
+  ]
+}

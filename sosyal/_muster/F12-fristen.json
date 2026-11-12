@@ -1,0 +1,89 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Iapetus",
+  "sprechweise": "Natürliche, klare Männerstimme eines erfahrenen Fachreferenten. Ruhig, kompetent und freundlich, wie ein guter Erklärfilm. Nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Drei Zahlen entscheiden, ob Ihre Verordnung gültig bleibt: 28, 14 und 14.\n\n28 Kalendertage bis zum Behandlungsbeginn, 14 bei dringlichem Behandlungsbedarf (HeilM-RL § 15 Abs. 1). Eine Unterbrechung von mehr als 14 Kalendertagen ohne angemessene Begründung kostet die Gültigkeit (§ 16 Abs. 4). Für Podologie gelten bei Unterbrechungen eigene Regeln.\n\nSpeichern Sie sich das für das Team.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Physiotherapie #Ergotherapie #Logopädie #Heilmittel #Verordnung",
+  "szenen": [
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.4,
+      "kicker": "Physio · Ergo · Logo",
+      "titel": "Drei Zahlen. <em>Kennen Sie alle?</em>",
+      "sprecher": "Drei Zahlen entscheiden, ob Ihre Verordnung gültig bleibt. Kennen Sie alle drei?"
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.6,
+      "kicker": "Behandlungsbeginn",
+      "praefix": "Tage",
+      "von": 0,
+      "bis": 28,
+      "text": "ab Ausstellung, um die Behandlung zu beginnen.",
+      "quelle": "HeilM-RL § 15 Abs. 1",
+      "sprecher": "Für den Behandlungsbeginn haben Sie achtundzwanzig Tage.",
+      "nachlauf": 0.6
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.6,
+      "kicker": "Dringlich angekreuzt",
+      "praefix": "Tage",
+      "von": 0,
+      "bis": 14,
+      "text": "wenn dringlicher Behandlungsbedarf vermerkt ist.",
+      "quelle": "HeilM-RL § 15 Abs. 1",
+      "sprecher": "Steht dringlicher Behandlungsbedarf drauf, sind es nur vierzehn Tage.",
+      "nachlauf": 0.6
+    },
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.8,
+      "kicker": "Unterbrechung",
+      "praefix": "Tage",
+      "von": 0,
+      "bis": 15,
+      "grenze": 14,
+      "text": "Pause ohne Begründung: Die Verordnung verliert ihre Gültigkeit.",
+      "quelle": "HeilM-RL § 16 Abs. 4",
+      "sprecher": "Und wer länger als vierzehn Tage ohne Begründung pausiert, verliert die Verordnung.",
+      "nachlauf": 0.6
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "kicker": "Mit Praxura",
+      "titel": "Fristen im <em>Blick.</em>",
+      "kopf": "Verordnung",
+      "schritte": [
+        "Behandlungsbeginn geprüft",
+        "Dringlichkeit erkannt",
+        "Pausen im Blick"
+      ],
+      "sprecher": "Praxura prüft die Fristen, bevor sie Ihnen Geld kosten."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "28. 14. <em>14.</em>",
+      "cta": "Gebaut für Heilmittelpraxen",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen."
+    }
+  ]
+}
