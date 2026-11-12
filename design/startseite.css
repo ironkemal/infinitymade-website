@@ -108,7 +108,8 @@
 
   /* ── Als Nächstes ── */
   [data-design="neu"] .px-k-next { border-radius: var(--radius-xl); }
-  [data-design="neu"] .px-naechstes-kopf { padding: 20px 24px 22px; background: var(--nav-active); border-bottom: 1px solid var(--border-subtle); }
+  /* E12 / form-v3.css: Hauptkarte innen 24–28 px (Kopf und Rumpf gleiche Seitenkante, mobil 16 px siehe unten). */
+  [data-design="neu"] .px-naechstes-kopf { padding: 24px 28px 22px; background: var(--nav-active); border-bottom: 1px solid var(--border-subtle); }
   [data-design="neu"] .px-zeile { display: flex; align-items: center; gap: 10px; }
   [data-design="neu"] .px-zeile h2 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 500; color: var(--text-muted); }
   [data-design="neu"] .px-naechstes-haupt { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; }
@@ -117,7 +118,7 @@
   [data-design="neu"] .px-naechstes-sub { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 14px; color: var(--text-muted); }
   [data-design="neu"] .px-naechstes-sub span { display: inline-flex; align-items: center; gap: 6px; }
   [data-design="neu"] .px-naechstes-leer { margin: 8px 0 0; font-size: 18px; line-height: 24px; color: var(--text-main); }
-  [data-design="neu"] .px-naechstes-rumpf { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; padding: 20px 24px 24px; }
+  [data-design="neu"] .px-naechstes-rumpf { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 24px; padding: 24px 28px 28px; }
   [data-design="neu"] .px-aktionen { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
   [data-design="neu"] .px-danach h3 { margin: 0 0 4px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-muted); }
   [data-design="neu"] .px-danach ul { margin: 0; padding: 0; list-style: none; }
