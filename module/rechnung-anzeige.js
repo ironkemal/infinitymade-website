@@ -18,7 +18,10 @@ export const PRIVAT_ANZEIGE = Object.freeze({
 /** Titel, mit denen die Standardleistungen aus dem Katalog angelegt werden (`GKV_LEISTUNGSKATALOG` in dashboard.js). */
 export const STANDARD_KATALOGTITEL = new Set(['Podologische Behandlung (groß)', 'Podologische Behandlung (klein)']);
 
-/** Gilt die Verordnung als Nicht-Kasse (Rechnung an Patient, PKV oder BG)? NULL/gkv/kassen = Kasse. */
+/** Gilt die Verordnung als Nicht-Kasse (Rechnung an Patient, PKV oder BG)? NULL/gkv/kassen = Kasse.
+ * @param {string | null | undefined} rezeptart
+ * @returns {boolean}
+ */
 export function istNichtKasse(rezeptart) {
   return ['privat', 'selbstzahler', 'bg'].includes(String(rezeptart ?? '').trim().toLowerCase());
 }
@@ -31,5 +34,5 @@ export function istNichtKasse(rezeptart) {
 export function rechnungsTitel(code, eigenerTitel, katalogTitel) {
   const eigen = String(eigenerTitel ?? '').trim();
   const bewusst = eigen && !STANDARD_KATALOGTITEL.has(eigen) ? eigen : null;
-  return bewusst || PRIVAT_ANZEIGE[String(code)] || eigen || katalogTitel || String(code);
+  return bewusst || (/** @type {Record<string, string>} */ (PRIVAT_ANZEIGE))[String(code)] || eigen || katalogTitel || String(code);
 }

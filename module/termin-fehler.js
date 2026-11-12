@@ -10,7 +10,9 @@
  * Erfolgsmeldungen bleiben Toasts — dieses Modul kennt nur Fehler.
  */
 
-/** Rein: Text -> Anzeigezustand der Fehlerbox. */
+/** Rein: Text -> Anzeigezustand der Fehlerbox.
+ * @param {string | null | undefined} text
+ */
 export function fehlerAnzeige(text) {
   const t = String(text ?? '').trim();
   return { sichtbar: t.length > 0, text: t };
@@ -18,6 +20,7 @@ export function fehlerAnzeige(text) {
 
 function box() { return document.getElementById('bkSaveError'); }
 
+/** @param {string | null | undefined} text */
 export function zeigeTerminFehler(text) {
   const el = box();
   if (!el) return;

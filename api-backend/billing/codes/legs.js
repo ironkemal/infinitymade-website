@@ -110,7 +110,7 @@ export const LEGS_BY_FACHBEREICH = Object.freeze({
  * @returns {string} 7 Stellen, z. B. '7100501'
  */
 export function legsFuer(fachbereich, opts = {}) {
-  const eintrag = LEGS_BY_FACHBEREICH[fachbereich];
+  const eintrag = (/** @type {Record<string, any>} */ (LEGS_BY_FACHBEREICH))[fachbereich];
   if (!eintrag) {
     throw new Error(
       `Unbekannter Fachbereich für LEGS: "${fachbereich}". ` +
@@ -143,12 +143,16 @@ export function legsFuer(fachbereich, opts = {}) {
   return legs;
 }
 
-/** Stelle 1–2 des LEGS. */
+/** Stelle 1–2 des LEGS.
+ * @param {string} legs
+ */
 export function abrechnungscodeAusLegs(legs) {
   return legs.slice(0, 2);
 }
 
-/** Stelle 3–7 des LEGS. */
+/** Stelle 3–7 des LEGS.
+ * @param {string} legs
+ */
 export function tarifkennzeichenAusLegs(legs) {
   return legs.slice(2);
 }
@@ -166,6 +170,7 @@ export const GUELTIGE_LEGS = Object.freeze(
   )].sort()
 );
 
+/** @param {string} legs */
 export function istGueltigerLegs(legs) {
   return GUELTIGE_LEGS.includes(legs);
 }

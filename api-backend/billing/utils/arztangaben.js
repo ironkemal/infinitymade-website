@@ -11,7 +11,10 @@
 
 export const LANR_ERSATZWERT = '999999999';
 
-/** @returns {string[]} leer = Arztangaben vollstaendig */
+/**
+ * @param {{ doctor_lanr?: unknown, unterschrift_vorhanden?: unknown } | null | undefined} v
+ * @returns {string[]} leer = Arztangaben vollstaendig
+ */
 export function fehlendeArztangaben(v) {
   const fehlt = [];
   const lanr = String(v?.doctor_lanr || '').trim();
