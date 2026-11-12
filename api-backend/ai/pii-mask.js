@@ -29,6 +29,80 @@ const COMMON_WORD_SURNAMES = new Set([
   'lang', 'jung', 'busch', 'stein', 'schneider', 'richter', 'schulz'
 ]);
 
+// Two-letter capitalised words that are far more often ordinary words or weekday
+// abbreviations than a name. A patient called "Do" is only masked with an Anrede.
+const KURZWORT_KEIN_NAME = new Set([
+  'an', 'am', 'im', 'in', 'zu', 'da', 'so', 'ja', 'ob', 'um', 'es', 'er', 'du', 'wo',
+  'ab', 'ok', 'je', 'mo', 'di', 'mi', 'do', 'fr', 'sa', 'nr', 'dr', 'hr', 'st', 'kg'
+]);
+
+// Capitalised words that follow "Am/Im/Zum …" or "Hausbesuch" without being a street or place.
+const KALENDER_WORTE = new Set([
+  'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonnabend', 'sonntag',
+  'januar', 'februar', 'märz', 'maerz', 'april', 'mai', 'juni', 'juli', 'august', 'september',
+  'oktober', 'november', 'dezember', 'vormittag', 'nachmittag', 'mittag', 'abend', 'morgen',
+  'wochenende', 'anfang', 'ende', 'termin', 'tag', 'datum', 'rezept', 'herr', 'herrn', 'frau',
+  'heute', 'dr', 'prof', 'familie'
+]);
+
+// Invisible characters split a name for a regex but not for a reader or a model:
+// "Yil<U+200B>maz" would pass every name rule. Detection therefore runs on a copy without them.
+const UNSICHTBAR_RE = /[\u00AD\u034F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
+export function bereinigeUnsichtbares(text) {
+  if (typeof text !== 'string' || !text) return text;
+  return text.replace(UNSICHTBAR_RE, '');
+}
+
+// Detection copy plus a way back: spans found in the copy are cut out of the ORIGINAL text, so an
+// invisible character inside a name disappears into the token and unmasking restores the input exactly.
+function erkennungsSicht(text) {
+  UNSICHTBAR_RE.lastIndex = 0;
+  if (!UNSICHTBAR_RE.test(text)) return { sicht: text, zurueck: span => span };
+  const pos = [];
+  let sicht = '';
+  for (let i = 0; i < text.length; i++) {
+    UNSICHTBAR_RE.lastIndex = 0;
+    if (UNSICHTBAR_RE.test(text[i])) continue;
+    pos.push(i);
+    sicht += text[i];
+  }
+  return { sicht, zurueck: span => ({ ...span, start: pos[span.start], end: pos[span.end - 1] + 1 }) };
+}
+
+// One pass for both entry points: find spans in the detection copy, replace them in the original.
+function maskiereText(text, { allocate, map, entities, namen, preserveAppointments, strengeDaten, ignoreProtected }) {
+  const { sicht, zurueck } = erkennungsSicht(text);
+  const protectedSpans = ignoreProtected ? [] : findProtectedSpans(sicht);
+  for (const key of Object.keys(map)) { let at = sicht.indexOf(key); while (at >= 0) { protectedSpans.push({ start: at, end: at + key.length, trusted: true }); at = sicht.indexOf(key, at + key.length); } }
+  const rawSpans = findPiiSpans(sicht, entities, namen, preserveAppointments, map, strengeDaten);
+  let masked = '';
+  let cursor = 0;
+  for (const span of resolveSpans(rawSpans, protectedSpans).map(zurueck)) {
+    masked += text.slice(cursor, span.start);
+    masked += allocate(span.type, text.slice(span.start, span.end));
+    cursor = span.end;
+  }
+  return masked + text.slice(cursor);
+}
+
+// A full calendar date strictly before today. Today and later always stay readable (appointments).
+// Ten or more years back: always hidden (DOB). Younger than that it may be the birth date of a child
+// or an ordinary past appointment — the corpus gate (m4-corpus.test.js) requires past appointments to
+// stay readable, so it is hidden only where the words before it speak of a child or a birth
+// (kontext = true). Structured prompt pass and answer scan never pass kontext.
+const GEBURTS_KONTEXT_RE = /(?:\b(?:Kind|Kindes|Säugling|Baby|Frühchen|Junge|Mädchen|Sohn|Tochter|Enkel|Enkelin|Zwilling|Geburt|Geburtstag|geboren|geb|Alter|Jahre\s+alt|Monate\s+alt|Wochen\s+alt)\b|jährige[rns]?\b)[^.!?\n]{0,40}$/iu;
+function vergangenesDatum(tag, monat, jahr, currentYear, kontext) {
+  let y = jahr;
+  if (y < 100) y = (2000 + y <= currentYear + 5) ? 2000 + y : 1900 + y;
+  if (y < 1900 || y > 2100 || monat < 1 || monat > 12 || tag < 1 || tag > 31) return null;
+  const heute = new Date();
+  const d = new Date(y, monat - 1, tag);
+  const start = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  if (d >= start) return null;
+  if (y <= currentYear - 10) return 'DOB';
+  return kontext ? 'DATE' : null;
+}
+
 const MONATE = '(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)';
 
 // Umlaut transliteration (ä↔ae, ö↔oe, ü↔ue, ß↔ss)
@@ -71,21 +145,24 @@ function buildNameVariants(namesList) {
   const variants = [];
   for (const rawName of namesList) {
     if (!rawName || typeof rawName !== 'string') continue;
-    const clean = rawName.trim();
+    const clean = bereinigeUnsichtbares(rawName).trim();
     if (clean.length < 2) continue;
+    // The same name may be stored composed and typed decomposed ("Zoë"), or the other way round.
+    const formen = new Set([clean, clean.normalize('NFC'), clean.normalize('NFD')]);
 
     const parts = clean.split(/[\s\-_/.,;:!?()]+/)
       .map(p => p.trim())
       .filter(p => p.length >= 3 && !NAME_STOP_WORDS.has(p.toLowerCase()));
 
-    for (const cand of [clean, ...parts]) {
+    for (const cand of [...formen, ...parts, ...parts.map(p => p.normalize('NFC')), ...parts.map(p => p.normalize('NFD'))]) {
       for (const uVar of getUmlautVariants(cand)) {
         variants.push(uVar);
-        if (!uVar.endsWith('s') && !uVar.endsWith('ß')) variants.push(uVar + 's');
+        if (uVar.length >= 3 && !uVar.endsWith('s') && !uVar.endsWith('ß')) variants.push(uVar + 's');
       }
     }
   }
-  return Array.from(new Set(variants)).filter(v => v.length >= 3).sort((a, b) => b.length - a.length);
+  // Two-letter entries survive only as a whole dictionary entry ("Li", "Wu"); see the case-sensitive rule in findPiiSpans.
+  return Array.from(new Set(variants)).filter(v => v.length >= 2).sort((a, b) => b.length - a.length);
 }
 
 // Protected clinical terms that must never be masked
@@ -114,7 +191,7 @@ function findProtectedSpans(text) {
 }
 
 // Find PII spans in text
-function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointments = true, map = null) {
+function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointments = true, map = null, strengeDaten = false) {
   const spans = [];
   const currentYear = new Date().getFullYear();
 
@@ -142,8 +219,23 @@ function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointmen
   add(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, 'EMAIL');
 
   // 5. Phone numbers (German formats with +49, 0049, local area codes, min 7 digits)
-  add(/(?:\+49|0049|\(0\d{2,5}\)|\b0\d{2,5})[\s/()-]*\d[\s/()-]*\d[\s/()-]*\d[\s/()-]*\d(?:[\s/()-]*\d)*/g, 'PHONE', (m) => {
+  add(/(?:\+\d{1,3}|\b00\d{2,3}|\(0\d{2,5}\)|\b0\d{2,5})[\s/()-]*\d[\s/()-]*\d[\s/()-]*\d[\s/()-]*\d(?:[\s/()-]*\d)*/g, 'PHONE', (m) => {
     return m[0].replace(/\D/g, '').length >= 7 ? { start: m.index, end: m.index + m[0].length, type: 'PHONE' } : null;
+  });
+
+  // 5b. Labelled numbers without a leading 0 ("Handy: 171 234 56 78")
+  add(/\b(?:Handy|Mobil|Mobilnummer|Tel\.?|Telefon|Telefonnummer|Fon|Fax|Rückruf|Rückrufnummer)\s*(?:nummer|nr\.?)?\s*:?\s*(\d[\d\s/()-]{5,}\d)/gi, null, (m) => {
+    if (m[1].replace(/\D/g, '').length < 7) return null;
+    const idx = m.index + m[0].lastIndexOf(m[1]);
+    return { start: idx, end: idx + m[1].length, type: 'PHONE' };
+  });
+
+  // 5c. Grouped digit runs (insurance / customer / phone numbers written with separators).
+  // The residual scanner only sees 7+ contiguous digits, so "123 456 789" needs its own rule.
+  add(/\b\d{2,}(?:[ /-]\d{2,}){2,}\b/g, null, (m) => {
+    if (m[0].replace(/\D/g, '').length < 8) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(m[0]) || /^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(m[0])) return null; // dates: rule 9
+    return { start: m.index, end: m.index + m[0].length, type: 'NUMBER' };
   });
 
   // 6. LANR / BSNR / IK
@@ -156,28 +248,51 @@ function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointmen
   });
 
   // 7. Organizations / Facilities
-  add(/\b(Pflegeheim|Altenzentrum|Seniorenresidenz|Seniorenheim|Wohnstift|Caritas-Haus|Caritas|Pflegedienst|Klinik|Klinikum|Taxi)\s+(?:(?:am|an|der|die|das|im|in|zum|zur|St\.|Sankt)\s+)?(?:[A-ZÄÖÜ][A-Za-zÄÖÜäöüß0-9\-\.]*(?:\s+(?:am|an|der|die|das|im|in|zum|zur|St\.|Sankt)\b|\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß0-9\-\.]*)*)\b/gu, 'ORGANIZATION');
+  add(/\b(Pflegeheim|Altenzentrum|Seniorenresidenz|Seniorenheim|Wohnstift|Caritas-Haus|Caritas|Pflegedienst|Klinik|Klinikum|Krankenhaus|Gemeinschaftspraxis|Arztpraxis|MVZ|Kita|Kindergarten|Grundschule|Realschule|Gymnasium|Schule|Firma|Taxi)\s+(?:(?:am|an|der|die|das|im|in|zum|zur|St\.|Sankt)\s+)?(?:[A-ZÄÖÜ][A-Za-zÄÖÜäöüß0-9\-\.]*(?:\s+(?:am|an|der|die|das|im|in|zum|zur|St\.|Sankt)\b|\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß0-9\-\.]*)*)\b/gu, 'ORGANIZATION');
+
+  // 7b. Employer ("arbeitet bei Zurich Versicherung")
+  add(/\b(?:arbeitet|beschäftigt|angestellt|tätig)\s+(?:bei(?:\s+der|\s+dem)?|beim|in\s+der|im)\s+([A-ZÄÖÜ][\p{L}0-9&-]*(?:\s+[A-ZÄÖÜ][\p{L}0-9&-]*){0,2})/gu, null, (m) => {
+    const idx = m.index + m[0].lastIndexOf(m[1]);
+    return { start: idx, end: idx + m[1].length, type: 'ORGANIZATION' };
+  });
 
   // 8. Addresses: Street + Number
-  add(/\b(?:(?:[A-ZÄÖÜ][a-zäöüß]+(?:str\.|straße|strasse|weg|allee|platz|ring|gasse|damm|kamp|chaussee|ufer)|[A-ZÄÖÜ][a-zäöüß]+\s+(?:Str\.|Straße|Strasse|Weg|Allee|Platz|Ring|Gasse)|Markt)\s+\d{1,4}\s*[a-zA-Z]?(?:[-/]\d{1,4}\s*[a-zA-Z]?)?)(?:,?\s*\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)?\b/gu, 'ADDRESS');
+  add(/\b(?:(?:(?:[A-ZÄÖÜ][a-zäöüß]+-)*[A-ZÄÖÜ][a-zäöüß]+(?:str\.?|straße|strasse|weg|allee|platz|ring|gasse|damm|kamp|chaussee|ufer)|(?:[A-ZÄÖÜ][a-zäöüß]+-)*[A-ZÄÖÜ][a-zäöüß]+[\s-]+(?:Str\.?|Straße|Strasse|Weg|Allee|Platz|Ring|Gasse)|Markt)\s+\d{1,4}(?:\s?[a-zA-Z]\b)?(?:[-/]\d{1,4}(?:\s?[a-zA-Z]\b)?)?)(?:,?\s*\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)?\b/gu, 'ADDRESS');
   add(/\b\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?\b/gu, 'ADDRESS');
+
+  // 8b. Streets named with a preposition ("Am Turm 4b", "Zur Mühle 12"). The house number must end
+  // the phrase, so "Am Montag 3 Termine" or "Im Rezept 6 KG" are not addresses.
+  add(/\b(?:Am|An\s+der|Im|In\s+der|Zum|Zur|Auf\s+dem|Auf\s+der|Unter\s+den)\s+([A-ZÄÖÜ][a-zäöüß]+)(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?\s+\d{1,4}\s?[a-zA-Z]?(?=\s*(?:$|[,;!?)\n]|\.(?!\d)|\d{5}\b|in\s|bei\s|Klingel\b))/gu, null, (m) => {
+    if (KALENDER_WORTE.has(m[1].toLowerCase())) return null;
+    return { start: m.index, end: m.index + m[0].length, type: 'ADDRESS' };
+  });
 
   // 9. DOB (Date of birth) — only if explicitly labeled, or year is well in the past (>= 10 yrs ago)
   // NEVER mask current/future dates or times when preserving appointments!
-  add(/\bJg\.\s*\d{2,4}\b/gi, 'DOB');
-  add(/(?<=\b(?:geb\.|geboren|Geburtsdatum)(?:\s*:?|\s+))(\d{1,2}\.\d{1,2}\.\d{2,4}|\d{4}-\d{2}-\d{2})/gi, 'DOB');
+  add(/\b(?:Jg\.|Jahrgang)\s*\d{2,4}\b/gi, 'DOB');
+  // Labelled birth date in any notation, also "geb. am …" and "*12.03.1959".
+  add(new RegExp(`(?<=(?:\\b(?:geb\\.?|geboren|Geburtsdatum|Geburtstag)\\s*:?\\s*(?:am\\s+)?|\\*\\s?))(\\d{1,2}[./-]\\d{1,2}[./-](?:\\d{4}|\\d{2})|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}\\.\\s*${MONATE}\\s+\\d{2,4})(?!\\d)`, 'gi'), 'DOB');
 
   {
-    // Historical full dates can identify birth dates; current/future appointments stay unchanged.
-    add(new RegExp(`\\b\\d{1,2}\\.\\s*${MONATE}\\s+(\\d{2,4})\\b`, 'gui'), null, (m) => {
-      const rawY = parseInt(m[1], 10);
-      const yr = rawY < 100 ? (rawY > 30 ? 1900 + rawY : 2000 + rawY) : rawY;
-      return (yr <= currentYear - 10) ? { start: m.index, end: m.index + m[0].length, type: 'DOB' } : null;
+    // Unlabelled full dates: everything before today is hidden, today and later stay (appointments).
+    add(new RegExp(`\\b(\\d{1,2})\\.\\s*(${MONATE})\\s+(\\d{4}|\\d{2})\\b`, 'gui'), null, (m) => {
+      const namen = ['januar', 'februar', 'märz', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'dezember'];
+      const monat = namen.indexOf(m[2].toLowerCase().replace('maerz', 'märz')) + 1;
+      const type = vergangenesDatum(parseInt(m[1], 10), monat, parseInt(m[3], 10), currentYear, strengeDaten && GEBURTS_KONTEXT_RE.test(text.slice(Math.max(0, m.index - 60), m.index)));
+      return type ? { start: m.index, end: m.index + m[0].length, type } : null;
     });
 
-    add(/\b(0?[1-9]|[12]\d|3[01])\.(0?[1-9]|1[0-2])\.(19\d\d|20\d\d)\b/g, null, (m) => {
-      const yr = parseInt(m[3], 10);
-      return (yr <= currentYear - 10) ? { start: m.index, end: m.index + m[0].length, type: 'DOB' } : null;
+    // 12.03.1959 · 12.03.59 · 12/03/1959 · 12-03-1959 (two-digit year only with dots)
+    add(/\b(0?[1-9]|[12]\d|3[01])([./-])(0?[1-9]|1[0-2])\2(\d{4}|\d{2})\b(?!\.\d)/g, null, (m) => {
+      if (m[4].length === 2 && m[2] !== '.') return null;
+      const type = vergangenesDatum(parseInt(m[1], 10), parseInt(m[3], 10), parseInt(m[4], 10), currentYear, strengeDaten && GEBURTS_KONTEXT_RE.test(text.slice(Math.max(0, m.index - 60), m.index)));
+      return type ? { start: m.index, end: m.index + m[0].length, type } : null;
+    });
+
+    // 1959-03-12
+    add(/\b(19\d\d|20\d\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/g, null, (m) => {
+      const type = vergangenesDatum(parseInt(m[3], 10), parseInt(m[2], 10), parseInt(m[1], 10), currentYear, strengeDaten && GEBURTS_KONTEXT_RE.test(text.slice(Math.max(0, m.index - 60), m.index)));
+      return type ? { start: m.index, end: m.index + m[0].length, type } : null;
     });
   }
 
@@ -189,33 +304,52 @@ function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointmen
   for (const variant of buildNameVariants(allNames)) {
     const isCommon = COMMON_WORD_SURNAMES.has(variant.toLowerCase());
     const escaped = variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const varRe = new RegExp(`(?<=^|[^\\p{L}\\p{N}])${escaped}(?=[^\\p{L}\\p{N}]|$)`, 'gui');
+    // Two-letter names ("Li", "Wu") match only in their exact capitalisation and never as an ordinary short word.
+    const isShort = variant.length === 2;
+    if (isShort && (!/^[A-ZÄÖÜ][a-zäöüß]$/.test(variant) || KURZWORT_KEIN_NAME.has(variant.toLowerCase()))) continue;
+    const varRe = new RegExp(`(?<=^|[^\\p{L}\\p{N}])${escaped}(?=[^\\p{L}\\p{N}]|$)`, isShort ? 'gu' : 'gui');
     add(varRe, null, (m) => {
       if (isCommon) {
         const isUpper = /^[A-ZÄÖÜ]/.test(m[0]);
         const prefix = text.slice(Math.max(0, m.index - 20), m.index);
         const hasAnrede = /\b(?:herr|herrn|frau|fräulein|dr|med|prof|dres)\b[.\s]*$/i.test(prefix);
-        return (isUpper || hasAnrede) ? { start: m.index, end: m.index + m[0].length, type: 'NAME', isExplicit: true } : null;
+        // Sloppy typing: "koch hat abgesagt." — a lower-case common-word surname opening a sentence is a name.
+        const satzAnfang = /(?:^|[.!?\n])\s*$/.test(text.slice(0, m.index));
+        return (isUpper || hasAnrede || satzAnfang) ? { start: m.index, end: m.index + m[0].length, type: 'NAME', isExplicit: true } : null;
       }
       return { start: m.index, end: m.index + m[0].length, type: 'NAME', isExplicit: true };
     });
   }
 
   // 11. Contextual names: Anrede / Titel + Name
-  add(/\b(Herr|Herrn|Frau|Fräulein|Hr\.|Fr\.|Dr\. med\.|Dr\.|Prof\. Dr\.|Prof\.|Dres\.|Schwester)\s+([A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?(?:\s+[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?)*(?:\s*(?:&|und)\s*(?:[A-ZÄÖÜ][a-zäöüß]+(?:\s+(?:Partner|Kollegen)\b)?|Partner\b|Kollegen\b))?)/gu, 'NAME', (m) => {
+  add(/\b(Herr|Herrn|Frau|Fräulein|Hr\.|Fr\.|Dr\.? med\.?|Dr\.?|Prof\.? Dr\.?|Prof\.?|Dres\.?|Schwester)\s+(\p{Lu}[\p{Ll}\p{M}]+(?:-\p{Lu}[\p{Ll}\p{M}]+)?(?:\s+\p{Lu}[\p{Ll}\p{M}]+(?:-\p{Lu}[\p{Ll}\p{M}]+)?)*(?:\s*(?:&|und)\s*(?:\p{Lu}[\p{Ll}\p{M}]+(?:\s+(?:Partner|Kollegen)\b)?|Partner\b|Kollegen\b))?)/gu, 'NAME', (m) => {
     const nameStart = m.index + m[0].indexOf(m[2]);
     return { start: nameStart, end: m.index + m[0].length, type: 'NAME', isContextual: true };
   });
 
   // Verwandtschaft / Rolle + Name
-  add(/\b(?:Tochter|Sohn|Ehemann|Ehefrau|Gatte|Gattin|Mutter|Vater|Bruder|Nachbar|Nachbarin|Pfleger|Pflegerin|Pflegekraft|Schwiegersohn|Schwiegertochter|Betreuer|Betreuerin|Therapeut|Therapeutin|Behandler|Behandlerin|Kollege|Kollegin|Fahrer|Fahrerin|Hausarzt|Hausärztin|Facharzt|Fachärztin|Patient|Patientin|Bewohner|Bewohnerin)\s+(?:(?:Herr|Herrn|Frau|Dr\.|Dr\. med\.)\s+)?([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)\b/gu, null, (m) => {
+  add(/\b(?:Tochter|Sohn|Ehemann|Ehefrau|Gatte|Gattin|Mutter|Vater|Bruder|Tante|Onkel|Cousine|Cousin|Schwager|Schwägerin|Nichte|Neffe|Großmutter|Großvater|Oma|Opa|Enkel|Enkelin|Lebensgefährte|Lebensgefährtin|Nachbar|Nachbarin|Pfleger|Pflegerin|Pflegekraft|Schwiegersohn|Schwiegertochter|Betreuer|Betreuerin|Therapeut|Therapeutin|Behandler|Behandlerin|Kollege|Kollegin|Fahrer|Fahrerin|Hausarzt|Hausärztin|Facharzt|Fachärztin|Patient|Patientin|Bewohner|Bewohnerin)\s+(?:(?:Herr|Herrn|Frau|Dr\.|Dr\. med\.)\s+)?(\p{Lu}[\p{Ll}\p{M}]+(?:\s+\p{Lu}[\p{Ll}\p{M}]+)?)\b/gu, null, (m) => {
     const namePart = m[1];
     const idx = m.index + m[0].lastIndexOf(namePart);
     return { start: idx, end: idx + namePart.length, type: 'NAME', isContextual: true };
   });
 
+  // Klingel / c/o + Name
+  add(/(?:\bKlingel|\bc\/o|\bz\.\s?Hd\.)\s+(\p{Lu}[\p{Ll}\p{M}]+(?:\s+\p{Lu}[\p{Ll}\p{M}]+)?)/gu, null, (m) => {
+    const idx = m.index + m[0].lastIndexOf(m[1]);
+    return { start: idx, end: idx + m[1].length, type: 'NAME', isContextual: true };
+  });
+
+  // Hausbesuch + place ("Hausbesuch Siegburg Kaldauen")
+  add(/\bHausbesuch(?:\s+in)?\s+([A-ZÄÖÜ][\p{L}]+(?:-[A-ZÄÖÜ][\p{L}]+)*)(\s+[A-ZÄÖÜ][\p{L}]+)?/gu, null, (m) => {
+    if (KALENDER_WORTE.has(m[1].toLowerCase())) return null;
+    const second = m[2] && !KALENDER_WORTE.has(m[2].trim().toLowerCase()) ? m[2] : '';
+    const idx = m.index + m[0].indexOf(m[1]);
+    return { start: idx, end: idx + m[1].length + second.length, type: 'LOCATION' };
+  });
+
   // Familie + Name
-  add(/\bFamilie\s+([A-ZÄÖÜ][a-zäöüß]+)\b/gu, null, (m) => {
+  add(/\bFamilie\s+(\p{Lu}[\p{Ll}\p{M}]+)\b/gu, null, (m) => {
     const fName = m[1];
     const idx = m.index + m[0].lastIndexOf(fName);
     return { start: idx, end: idx + fName.length, type: 'NAME', isContextual: true };
@@ -231,7 +365,7 @@ function findPiiSpans(text, entities = [], mandantNamen = [], preserveAppointmen
   // Locality only with explicit identity/ residence context, never arbitrary capitalized nouns.
   add(/\b(?:aus|in|wohnhaft\s+in|Wohnort\s*:)\s+([A-ZÄÖÜ][\p{L}]+(?:-[A-ZÄÖÜ][\p{L}]+)*)/gu, null, (m) => {
     const prefix = text.slice(Math.max(0, m.index - 100), m.index);
-    if (/^(?:aus|in)\s/.test(m[0]) && !/(?:\bDr\.|\b(?:Herr|Herrn|Frau|Hausarzt|Hausärztin|Facharzt|Fachärztin|Patient|Patientin|Bewohner|Bewohnerin|Ehefrau|Ehemann)\b)/.test(prefix)) return null;
+    if (/^(?:aus|in)\s/.test(m[0]) && !/(?:\bDr\.|\b(?:Herr|Herrn|Frau|Hausarzt|Hausärztin|Facharzt|Fachärztin|Patient|Patientin|Bewohner|Bewohnerin|Ehefrau|Ehemann|wohnt|Wohnung|Hausbesuch|Adresse|Anschrift)\b|(?:[Ss]tr\.?|[Ss]tra(?:ß|ss)e|weg|platz|allee|gasse|ring)\s+\d)/.test(prefix)) return null;
     const location = m[1];
     return { start: m.index + m[0].lastIndexOf(location), end: m.index + m[0].length, type: 'LOCATION' };
   });
@@ -286,6 +420,11 @@ function resolveSpans(spans, protectedSpans) {
     if (span.start >= lastEnd) {
       resolved.push(span);
       lastEnd = span.end;
+    } else if (span.end > lastEnd) {
+      // A longer finding that starts inside an earlier one keeps its tail:
+      // "Gemeinschaftspraxis Dres. Meurer" must not leave "& Schultze" readable.
+      resolved.push({ ...span, start: lastEnd });
+      lastEnd = span.end;
     }
   }
   return resolved;
@@ -297,10 +436,11 @@ function resolveSpans(spans, protectedSpans) {
  */
 export function scanneReste(maskedText, mandantNamen = []) {
   if (!maskedText || typeof maskedText !== 'string') return [];
+  maskedText = bereinigeUnsichtbares(maskedText); // "1234<U+200B>5678" is still an eight-digit run
   const befunde = [];
   const clean = maskedText.replace(/⟦[A-Za-z0-9_]+⟧|<<[A-Za-z0-9_]+>>/g, ' ');
 
-  const anredeRestRe = /\b(?:Herr|Herrn|Frau|Fräulein|Dr\.|Dr\. med\.|Prof\.|Dres\.)\s+([A-ZÄÖÜ][a-zäöüß]+)/gu;
+  const anredeRestRe = /\b(?:Herr|Herrn|Frau|Fräulein|Dr\.?|Dr\.? med\.?|Prof\.?|Dres\.?)\s+([A-ZÄÖÜ][a-zäöüß]+)/gu;
   let am;
   while ((am = anredeRestRe.exec(maskedText)) !== null) {
     befunde.push({ art: 'ANREDE_REST', text: am[0], ausschnitt: maskSnippet(am[0]) });
@@ -454,20 +594,7 @@ export function maskPII(text, opts = {}) {
   }
 
   const allMandantNamen = [...mandantNamen, ...dictionary];
-
-  const protectedSpans = opts.ignoreProtected ? [] : findProtectedSpans(text);
-  for (const key of Object.keys(map)) { let at = text.indexOf(key); while (at >= 0) { protectedSpans.push({ start: at, end: at + key.length, trusted: true }); at = text.indexOf(key, at + key.length); } }
-  const rawSpans = findPiiSpans(text, entities, allMandantNamen, preserveAppointments, map);
-  const resolvedSpans = resolveSpans(rawSpans, protectedSpans);
-
-  let masked = '';
-  let cursor = 0;
-  for (const span of resolvedSpans) {
-    masked += text.slice(cursor, span.start);
-    masked += allocate(span.type, text.slice(span.start, span.end));
-    cursor = span.end;
-  }
-  masked += text.slice(cursor);
+  const masked = maskiereText(text, { allocate, map, entities, namen: allMandantNamen, preserveAppointments, strengeDaten: opts.strengeDaten !== false, ignoreProtected: !!opts.ignoreProtected });
 
   const allNames = [
     ...entities.filter(e => e && e.type === 'NAME').map(e => e.value),
@@ -489,20 +616,8 @@ export function maskMessages(messages, opts = {}) {
 
   const maskOneText = (text) => {
     if (typeof text !== 'string' || !text) return text;
-    const protectedSpans = findProtectedSpans(text);
-    for (const key of Object.keys(sharedMap)) { let at = text.indexOf(key); while (at >= 0) { protectedSpans.push({ start: at, end: at + key.length, trusted: true }); at = text.indexOf(key, at + key.length); } }
-    const rawSpans = findPiiSpans(text, entities, allMandantNamen, preserveAppointments, sharedMap);
-    const resolvedSpans = resolveSpans(rawSpans, protectedSpans);
-
-    let masked = '';
-    let cursor = 0;
-    for (const span of resolvedSpans) {
-      masked += text.slice(cursor, span.start);
-      masked += allocate(span.type, text.slice(span.start, span.end));
-      cursor = span.end;
-    }
-    masked += text.slice(cursor);
-    return masked;
+    // Structured prompt pass: recent past dates stay (see vergangenesDatum).
+    return maskiereText(text, { allocate, map: sharedMap, entities, namen: allMandantNamen, preserveAppointments, strengeDaten: false, ignoreProtected: false });
   };
 
   const maskedMessages = messages.map(m => {

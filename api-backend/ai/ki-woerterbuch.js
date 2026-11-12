@@ -69,12 +69,14 @@ export async function loadTenantDictionary(supabase, auth) {
     }
   }
 
+  // Paging needs a fixed order: without ORDER BY Postgres may return a row on two pages and
+  // skip another, and a skipped patient name would then reach the model unmasked.
   async function readAll(table, columns, filterKey, maxRows) {
     const rows = [];
     const pageSize = 500;
     for (let from = 0; from < maxRows; from += pageSize) {
       let result;
-      try { result = await supabase.from(table).select(columns).eq(filterKey, tenantId).range(from, from + pageSize - 1); } catch { throw createDictError('Wörterbuchabfrage fehlgeschlagen'); }
+      try { result = await supabase.from(table).select(columns).eq(filterKey, tenantId).order('id', { ascending: true }).range(from, from + pageSize - 1); } catch { throw createDictError('Wörterbuchabfrage fehlgeschlagen'); }
       if (result.error || !Array.isArray(result.data) || result.data.length > pageSize) throw createDictError('Wörterbuchabfrage fehlgeschlagen');
       rows.push(...result.data);
       if (result.data.length < pageSize) return rows;

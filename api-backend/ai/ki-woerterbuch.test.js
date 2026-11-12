@@ -18,7 +18,7 @@ function createMockSupabase({ leads = [], profiles = [], ownerProfile = null, ae
   return {
     calls,
     from(table) {
-      const call = { table, selected: null, eqField: null, eqValue: null, range: null, isSingle: false };
+      const call = { table, selected: null, eqField: null, eqValue: null, range: null, isSingle: false, order: null };
       calls.push(call);
 
       const builder = {
@@ -29,6 +29,10 @@ function createMockSupabase({ leads = [], profiles = [], ownerProfile = null, ae
         eq(field, val) {
           call.eqField = field;
           call.eqValue = val;
+          return builder;
+        },
+        order(column, options) {
+          call.order = [column, options?.ascending];
           return builder;
         },
         range(from, to) {
@@ -173,4 +177,13 @@ test('pagination includes names beyond first 1000 without losing tenant filters'
   const pages = db.calls.filter(call => call.table === 'leads');
   assert.deepEqual(pages.map(page => page.range), [[0, 499], [500, 999], [1000, 1499]]);
   for (const page of pages) { assert.equal(page.eqField, 'owner_id'); assert.equal(page.eqValue, VALID_TENANT_ID); assert.equal(page.selected, 'first_name, last_name, title'); }
+});
+
+test('every paged query has a fixed order so no name is skipped between pages', async () => {
+  const leads = Array.from({ length: 501 }, (_, index) => ({ first_name: `Synthetic${index}`, last_name: `Family${index}` }));
+  const db = createMockSupabase({ leads, ownerProfile: { owner_first_name: 'Owner' } });
+  await loadTenantDictionary(db, VALID_AUTH);
+  const paged = db.calls.filter(call => call.range !== null);
+  assert.ok(paged.length >= 4);
+  for (const call of paged) assert.deepEqual(call.order, ['id', true], `unsortierte Seite: ${call.table}`);
 });

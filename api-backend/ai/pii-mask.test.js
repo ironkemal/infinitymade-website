@@ -8,7 +8,8 @@ import {
   scanneReste,
   unmaskStreng,
   unmaskValues,
-  scanOutputPII
+  scanOutputPII,
+  bereinigeUnsichtbares
 } from './pii-mask.js';
 import assert from 'node:assert/strict';
 
@@ -278,6 +279,126 @@ test('rare-age patient and geography combination is blocked; clinical grade rema
   assert.equal(result.unmask(result.masked), text);
   assert.deepEqual(scanneReste('98-jährige Verordnung, Diabetes mellitus Typ 2, Wagner-Grad 1.'), []);
 });
+
+console.log('Freitext-Lücken (Audit 12.11.2026) - synthetische Daten');
+
+// Everything a model would see: tokens collapsed to their type.
+const WOERTERBUCH = ['Yilmaz', 'Aylin', 'Aylin Yilmaz', 'Hoffmann', 'Koch', 'Li', 'Do'];
+const sicht = (text, opts = {}) => {
+  const r = maskPII(text, { mandantNamen: WOERTERBUCH, ignoreProtected: true, ...opts });
+  assert.equal(r.unmask(r.masked), text, 'Maskierung muss verlustfrei sein');
+  return r.masked.replace(/⟦([A-Z_]+)_[a-f0-9]{32}_\d+⟧/g, '[$1]');
+};
+
+test('birth date of a child under ten is hidden', () => {
+  assert.equal(sicht('Kind, 14.03.2019, Sprachentwicklungsstörung.'), 'Kind, [DATE], Sprachentwicklungsstörung.');
+});
+
+test('birth date notations: two-digit year, slash, hyphen, ISO', () => {
+  assert.equal(sicht('Patientin 12.03.59, Zustand nach Hüft-TEP.'), 'Patientin [DOB], Zustand nach Hüft-TEP.');
+  assert.equal(sicht('Patient 12/03/1959 kommt wieder.'), 'Patient [DOB] kommt wieder.');
+  assert.equal(sicht('Patient 12-03-1959 kommt wieder.'), 'Patient [DOB] kommt wieder.');
+  assert.equal(sicht('Pat. 1959-03-12 Kontrolle.'), 'Pat. [DOB] Kontrolle.');
+  assert.equal(sicht('Geboren 3. Mai 2021, Frühchen.'), 'Geboren [DOB], Frühchen.');
+});
+
+test('labelled birth date is hidden even with "am", asterisk or a future typo', () => {
+  assert.equal(sicht('geb. am 12.03.2019 in Bonn'), 'geb. am [DOB] in Bonn');
+  assert.equal(sicht('Geburtsdatum: 01.02.2099'), 'Geburtsdatum: [DOB]');
+  assert.equal(sicht('Max *12.03.1959'), 'Max *[DOB]');
+  assert.equal(sicht('Jahrgang 1959'), '[DOB]');
+});
+
+test('today and future dates stay readable in every notation', () => {
+  // Two-digit years resolve to this century only up to five years ahead ("59" is 1959, not 2059).
+  const naechstesJahr = String((new Date().getFullYear() + 1) % 100).padStart(2, '0');
+  for (const text of ['Termin am 15.10.2099 um 14:30 Uhr.', `Termin am 15.10.${naechstesJahr}, sonst 15/10/2099.`, 'Ab 2099-10-15 wöchentlich.', 'Am 3. Mai 2099 Kontrolle.']) {
+    assert.equal(sicht(text), text);
+  }
+  const heute = new Date();
+  const de = `${String(heute.getDate()).padStart(2, '0')}.${String(heute.getMonth() + 1).padStart(2, '0')}.${heute.getFullYear()}`;
+  assert.equal(sicht(`Termin heute ${de} fällt aus.`), `Termin heute ${de} fällt aus.`);
+});
+
+test('recent past appointment dates stay readable, only a birth context hides them', () => {
+  const vorjahr = new Date().getFullYear() - 1;
+  const text = `Die Unterbrechung dauerte vom 03.01.${vorjahr} bis zum 10.01.${vorjahr}.`;
+  assert.equal(sicht(text), text);
+  assert.equal(sicht(`Säugling, 03.01.${vorjahr}, Tortikollis.`), 'Säugling, [DATE], Tortikollis.');
+  assert.equal(sicht(`Die 4-jährige kam am 03.01.${vorjahr} zur Welt.`), 'Die 4-jährige kam am [DATE] zur Welt.');
+});
+
+test('contextual names with letters outside A-Z and umlauts are masked whole', () => {
+  assert.equal(sicht('Frau Tuğba Aydın kommt.'), 'Frau [NAME] kommt.');
+  assert.equal(sicht('Mail an Herrn Stanisław Wiśniewski senden.'), 'Mail an Herrn [NAME] senden.');
+  assert.equal(sicht('Die Nachbarin Ålina Dreckel ruft an, Tante Edda auch.'), 'Die Nachbarin [NAME] ruft an, Tante [NAME] auch.');
+});
+
+test('structured prompt pass and answer scan keep recent past dates (series planning)', () => {
+  const vorjahr = `${new Date().getFullYear() - 1}-03-12`;
+  const { messages } = maskMessages([{ role: 'user', content: `{"date":"${vorjahr}","time":"09:00"}` }]);
+  assert.ok(messages[0].content.includes(vorjahr));
+  assert.equal(scanOutputPII(`{"date":"${vorjahr}"}`).safe, true);
+  assert.equal(scanOutputPII('{"date":"1959-03-12"}').safe, false);
+});
+
+test('known two-letter name is masked; ordinary short words and weekday abbreviations are not', () => {
+  assert.equal(sicht('Li kommt morgen nicht.'), '[NAME] kommt morgen nicht.');
+  assert.equal(sicht('Do 14 Uhr passt, li. Knie schmerzt.'), 'Do 14 Uhr passt, li. Knie schmerzt.');
+  assert.equal(sicht('Frau Do kommt.'), 'Frau [NAME] kommt.');
+});
+
+test('lower-case common-word surname at sentence start is a name, mid-sentence it is a word', () => {
+  assert.equal(sicht('koch hat abgesagt wegen Grippe.'), '[NAME] hat abgesagt wegen Grippe.');
+  assert.equal(sicht('Sie arbeitet als koch im Hotel.'), 'Sie arbeitet als koch im Hotel.');
+});
+
+test('invisible characters cannot split a known name', () => {
+  assert.equal(sicht('Yil\u200bmaz kommt später.'), '[NAME] kommt später.');
+  // An invisible character outside a finding stays where it was (harmless, keeps the round trip exact).
+  assert.equal(sicht('Hoff\u00admann und Ay\u2060lin\ufeff absagen'), '[NAME] und [NAME]\ufeff absagen');
+  assert.equal(bereinigeUnsichtbares('A\u200b\u200d\u202eB'), 'AB');
+  assert.deepEqual(scanneReste('Nummer 1234\u200b5678').map(f => f.art), ['ZIFFERNFOLGE']);
+});
+
+test('addresses: abbreviated street, hyphenated street, preposition street, doorbell name', () => {
+  assert.equal(sicht('Hauptstr 12 in Troisdorf'), '[ADDRESS] in [LOCATION]');
+  assert.equal(sicht('Kaiser-Wilhelm-Str. 5 klingeln'), '[ADDRESS] klingeln');
+  assert.equal(sicht('Wohnt Am Turm 4b, Klingel Meier.'), 'Wohnt [ADDRESS], Klingel [NAME].');
+  assert.equal(sicht('Hausbesuch Siegburg Kaldauen, zweiter Stock links.'), 'Hausbesuch [LOCATION], zweiter Stock links.');
+});
+
+test('preposition and Hausbesuch rules leave scheduling language alone', () => {
+  for (const text of ['Am Montag 3 Termine frei.', 'Im Januar 2 Wochen Urlaub.', 'Am Freitag 14 Uhr.', 'Im Rezept 6 KG verordnet.', 'Hausbesuch Montag Vormittag möglich.', 'Zum Termin 10 Minuten früher kommen.']) {
+    assert.equal(sicht(text), text);
+  }
+});
+
+test('phone numbers: foreign prefix, labelled without leading zero', () => {
+  assert.equal(sicht('Erreichbar unter +43 660 123 45 67.'), 'Erreichbar unter [PHONE].');
+  assert.equal(sicht('Handy: 171 234 56 78'), 'Handy: [PHONE]');
+  assert.equal(sicht('Rückruf 0041 44 123 45 67 bitte'), 'Rückruf [PHONE] bitte');
+});
+
+test('grouped digit runs are hidden, short counts and future dates are not', () => {
+  assert.equal(sicht('Vers.-Nr. 123 456 789 bei Debeka'), 'Vers.-Nr. [NUMBER] bei Debeka');
+  assert.equal(sicht('Kundennummer 12-345-678'), 'Kundennummer [NUMBER]');
+  assert.equal(sicht('10 20 30 Minuten, ab 2099-10-15 oder 15-10-2099.'), '10 20 30 Minuten, ab 2099-10-15 oder 15-10-2099.');
+});
+
+test('title without dot, medical facility and employer', () => {
+  assert.equal(sicht('KG 6x, Dr Weber Gemeinschaftspraxis Lohmar'), 'KG 6x, Dr [NAME]');
+  assert.equal(sicht('Überweisung vom MVZ Rheinaue.'), 'Überweisung vom [ORGANIZATION].');
+  assert.equal(sicht('Patient arbeitet bei Zurich Versicherung.'), 'Patient arbeitet bei [ORGANIZATION].');
+  assert.deepEqual(scanneReste('Prof Unbekannt wartet.').map(f => f.art), ['ANREDE_REST']);
+});
+
+test('documented residual risk: an unknown name without any context still passes', () => {
+  // Not closable by pattern rules. If this starts failing, the residual-risk text in the
+  // KI-Anlage / DSFA is outdated and must be revised together with this test.
+  assert.equal(sicht('Bitte Termin für Mehmet Demirci verschieben.'), 'Bitte Termin für Mehmet Demirci verschieben.');
+});
+
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
