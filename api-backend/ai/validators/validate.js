@@ -3,9 +3,10 @@
 // Strategy:
 //   1. If `heilmittel_feld_text` contains "BLANKOVERORDNUNG" OR rezept_typ === 'blanko'
 //      → run blankoRules
-//   2. Else if ICD is on KBV LHB/BVB Diagnoseliste
+//   2. Else if ICD is on KBV LHB/BVB Diagnoseliste AND a non-Podologie
+//      diagnosegruppe is present
 //      → run lhbBvbRules (with explicit opt-in flag `rezept_typ === 'lhb_bvb'` for
-//        clean separation; we auto-detect but mark in 'computed' so user can override)
+//        clean separation; we auto-detect unless DG is missing or Podologie)
 //   3. Else → standardRules
 //
 // Always returns the same shape: { ok, warnings, blockers, computed, engine }.
@@ -13,7 +14,32 @@
 import { validateStandard } from './standardRules.js';
 import { validateLhbBvb } from './lhbBvbRules.js';
 import { validateBlanko } from './blankoRules.js';
-import { lookupLhbBvb, lookupBlankoShoulder } from './catalog.js';
+import { lookupLhbBvb, lookupBlankoShoulder, getIcdDgRules } from './catalog.js';
+
+const PODOLOGIE_DGS = new Set(Object.keys(getIcdDgRules()));
+
+/** Prüft, ob die normalisierte Diagnosegruppe zu Podologie (DF/NF/QF/UI1/UI2) gehört. */
+function istPodologieDg(dg) {
+  if (!dg) return false;
+  const norm = String(dg).trim().toUpperCase().replace(/\s+/g, '').replace(/-[ABC]$/, '');
+  return PODOLOGIE_DGS.has(norm);
+}
+
+/** Prüft, ob eine Diagnosegruppe nicht-leer angegeben ist. */
+function hatDiagnosegruppe(dg) {
+  return !!String(dg || '').trim();
+}
+
+/**
+ * Prüft, ob für ein Rezept ein automatischer LHB/BVB-Bezug möglich ist
+ * (vorhandene Nicht-Podologie-Diagnosegruppe und ICD auf der KBV-Diagnoseliste).
+ */
+function istAutoLhbKandidat(rezept) {
+  return !!rezept.icd10
+    && hatDiagnosegruppe(rezept.diagnosegruppe)
+    && !istPodologieDg(rezept.diagnosegruppe)
+    && !!lookupLhbBvb(rezept.icd10);
+}
 
 function inferRezeptTyp(rezept) {
   if (rezept.rezept_typ) return rezept.rezept_typ;
@@ -24,7 +50,9 @@ function inferRezeptTyp(rezept) {
     // Don't auto-promote — surface as warning instead.
     return 'standard';
   }
-  if (rezept.icd10 && lookupLhbBvb(rezept.icd10)) {
+  // Fehlende DG muss in standard → DG_UNKNOWN laufen; Podologie-DG steht nach
+  // HeilM-RL § 8 Abs. 2 S. 1 nicht auf der LHB/BVB-Liste und bleibt standard.
+  if (istAutoLhbKandidat(rezept)) {
     return 'lhb_bvb';
   }
   return 'standard';
@@ -92,7 +120,10 @@ export function validateRezept(rezept) {
             field: 'heilmittel_feld_text'
           });
         }
-        if (lookupLhbBvb(rezept.icd10) && !result.warnings.some(w => w.code === 'LHB_HINT')) {
+        if (
+          istAutoLhbKandidat(rezept)
+          && !result.warnings.some(w => w.code === 'LHB_HINT')
+        ) {
           result.warnings.push({
             code: 'LHB_HINT',
             msg: `ICD ${rezept.icd10} ist auf der KBV-Diagnoseliste für langfristigen Heilmittelbedarf / besonderen Verordnungsbedarf. Bei chronischem/schwerem Verlauf kann der Arzt bis zu 12 Wochen Behandlungsmenge verordnen.`,

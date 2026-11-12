@@ -495,3 +495,65 @@ test('physio: WS2 mit beliebigem ICD => keine ICD-DG-Warnung', () => {
   assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
 });
 
+// ── Engine-Routing Podologie (Paket A: kein Auto-Routing in lhb_bvb, kein LHB_HINT) ─
+
+test('validate: NF + G60.0 (6 Einheiten) bleibt in standard ohne DG_MISMATCH_LHB und ohne LHB_HINT', () => {
+  const r = validateRezept({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G60.0', anzahl_einheiten: 6 });
+  assert.equal(r.engine, 'standard');
+  assert.equal(r.ok, true);
+  assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), undefined, JSON.stringify(r.warnings));
+});
+
+test('validate: NF + G60.0 (7 Einheiten) bleibt in standard und meldet OVER_HOECHSTMENGE ohne LHB_HINT', () => {
+  const r = validateRezept({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G60.0', anzahl_einheiten: 7 });
+  assert.equal(r.engine, 'standard');
+  assert.ok(r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+});
+
+test('validate: QF + Q05.9 (6 Einheiten) bleibt in standard ohne DG_MISMATCH_LHB und ohne LHB_HINT', () => {
+  const r = validateRezept({ ...PODO_BASE, diagnosegruppe: 'QF', icd10: 'Q05.9', anzahl_einheiten: 6 });
+  assert.equal(r.engine, 'standard');
+  assert.equal(r.ok, true);
+  assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+});
+
+test('validate: DF-a + G60.0 wird als Podologie erkannt (standard, kein DG_MISMATCH_LHB, kein LHB_HINT)', () => {
+  const r = validateRezept({ ...PODO_BASE, diagnosegruppe: 'DF-a', icd10: 'G60.0', anzahl_einheiten: 6 });
+  assert.equal(r.engine, 'standard');
+  assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+});
+
+test('validate: UI 1 (mit Leerzeichen) + G60.0 wird als Podologie normalisiert (standard, kein LHB_HINT)', () => {
+  const r = validateRezept({ ...PODO_BASE, diagnosegruppe: 'UI 1', icd10: 'G60.0', anzahl_einheiten: 6 });
+  assert.equal(r.engine, 'standard');
+  assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+});
+
+test('validate: fehlende Diagnosegruppe + G60.0 bleibt in standard mit DG_UNKNOWN, ohne LHB_HINT', () => {
+  for (const leerDg of [undefined, null, '', '   ']) {
+    const r = validateRezept({ ...PODO_BASE, diagnosegruppe: leerDg, icd10: 'G60.0', anzahl_einheiten: 6 });
+    assert.equal(r.engine, 'standard');
+    assert.equal(r.ok, false);
+    assert.ok(r.blockers.find(b => b.code === 'DG_UNKNOWN'), JSON.stringify(r.blockers));
+    assert.equal(r.warnings.find(w => w.code === 'DG_MISMATCH_LHB'), undefined, JSON.stringify(r.warnings));
+    assert.equal(r.warnings.find(w => w.code === 'LHB_HINT'), undefined, JSON.stringify(r.warnings));
+  }
+});
+
+test('validate: explizites rezept_typ lhb_bvb bleibt unverändert, Physio LHB_HINT bleibt bei standard aktiv', () => {
+  const rExplizit = validateRezept({ ...PODO_BASE, rezept_typ: 'lhb_bvb', diagnosegruppe: 'NF', icd10: 'G60.0' });
+  assert.equal(rExplizit.engine, 'lhb_bvb');
+
+  const rPhysioStd = validateRezept({ ...PODO_BASE, rezept_typ: 'standard', diagnosegruppe: 'ZN', icd10: 'G10' });
+  assert.equal(rPhysioStd.engine, 'standard');
+  assert.ok(rPhysioStd.warnings.find(w => w.code === 'LHB_HINT'), JSON.stringify(rPhysioStd.warnings));
+});
+
+

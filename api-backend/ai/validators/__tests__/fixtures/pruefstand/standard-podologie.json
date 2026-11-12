@@ -1110,8 +1110,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
     },
-    "status": "befund",
-    "grund": "Validator wählt Engine lhb_bvb allein wegen des ICD (validate.js:27), obwohl G60.0 auf der Liste nur mit WS/EX/PN, SB2/EN3, SP3 geführt ist. Folge: DG_MISMATCH_LHB statt Podologie-Prüfung."
+    "status": "aktiv"
   },
   {
     "id": "POD-STD-042",
@@ -1136,8 +1135,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 6 x/VO"
     },
-    "status": "befund",
-    "grund": "Wegen Engine-Wechsel auf lhb_bvb entfällt die Höchstmengenprüfung der Podologie (6 je VO); 7 Einheiten bleiben unbemerkt."
+    "status": "aktiv"
   },
   {
     "id": "POD-STD-043",
@@ -1163,7 +1161,6 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "1Bei den in der Anlage 2 gelisteten Diagnosen in Verbindung mit der jeweils aufgeführ- ten Diagnosegruppe des Heilmittelkataloges ist vom Vorliegen eines langfristigen Heilmittel- bedarfs im Sinne von § 32 Absatz 1a SGB V auszugehen."
     },
-    "status": "befund",
-    "grund": "Validator wechselt auf lhb_bvb und meldet DG_MISMATCH_LHB; LHB gilt nur in Verbindung mit der gelisteten Diagnosegruppe, QF ist dort nicht geführt."
+    "status": "aktiv"
   }
 ]

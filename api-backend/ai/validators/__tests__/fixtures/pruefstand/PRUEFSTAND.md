@@ -61,8 +61,8 @@ Gesamt: **122 Fälle**.
 
 | Status | Fälle |
 |---|---|
-| aktiv | 95 |
-| befund | 16 |
+| aktiv | 98 |
+| befund | 13 |
 | bewusst | 11 |
 
 ## Aufbau eines Falls
@@ -114,9 +114,6 @@ Gesamt: **122 Fälle**.
 | LHB-022 | LHB/BVB: Beginn vor Ausstellung muss blockieren | lhbBvbRules.js prüft den Behandlungsbeginn nicht. | § 15 Abs. 1 Satz 1 (Z. 678) — „Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen." |
 | PHY-STD-011 | Physio: SO5 mit 6 Einheiten (Diagnosegruppe steht im Katalog) | SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt. | Heilmittelkatalog I, Diagnosegruppe SO5 (Z. 3328–3329) — „Höchstmenge je VO: - bis zu 6x/VO" |
 | PHY-STD-012 | Physio: EX3 ist keine Diagnosegruppe des geltenden Katalogs (nur EX, bis zu 6x/VO) | diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie. | Heilmittelkatalog I, Diagnosegruppe EX (Z. 2603–2604) — „Höchstmenge je VO: - bis zu 6x/VO" |
-| POD-STD-041 | Podologie: NF mit G60.0, 6 Einheiten: Podologie steht nicht auf der LHB-Liste → Standardprüfung | Validator wählt Engine lhb_bvb allein wegen des ICD (validate.js:27), obwohl G60.0 auf der Liste nur mit WS/EX/PN, SB2/EN3, SP3 geführt ist. Folge: DG_MISMATCH_LHB statt Podologie-Prüfung. | Abschnitt 1, Zeile G60.0 (Z. 251) — „G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3" |
-| POD-STD-042 | Podologie: NF mit G60.0, 7 Einheiten: Höchstmenge 6 muss gemeldet werden | Wegen Engine-Wechsel auf lhb_bvb entfällt die Höchstmengenprüfung der Podologie (6 je VO); 7 Einheiten bleiben unbemerkt. | Heilmittelkatalog II.1, Diagnosegruppe NF (Z. 3436–3437) — „Höchstmenge je VO: - bis zu 6 x/VO" |
-| POD-STD-043 | Podologie: QF mit Q05.9 (Spina bifida): Podologie-Prüfung statt LHB | Validator wechselt auf lhb_bvb und meldet DG_MISMATCH_LHB; LHB gilt nur in Verbindung mit der gelisteten Diagnosegruppe, QF ist dort nicht geführt. | § 8 Abs. 2 Satz 1 (Z. 453–455) — „1Bei den in der Anlage 2 gelisteten Diagnosen in Verbindung mit der jeweils aufgeführ- ten Diagnosegruppe des Heilmittelkataloges ist vom Vorliegen eines langfristigen Heilmittel- bedarfs im Sinne von § 32 Absatz 1a SGB V auszugehen." |
 
 ### Befunde ohne eigenen Fall (aus dem Tabellenabgleich, nicht als Test abgebildet)
 
