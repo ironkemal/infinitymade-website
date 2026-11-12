@@ -1231,3 +1231,17 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   `clean()` exportiert. Katmanlama, keine Kopie.
 - Bewusst unangetastet: Token-HMAC-Duplikate in `server.js` (~4386/4611/4684) — bekannter Kopie-Kandidat, nicht
   Teil dieses Schritts. Status: lokal committet, nicht gepusht; Karte taze (4389 Funktionen).
+
+### 13.11.2026 · V2.05 Leisten-Zuordnung im neuen Design (`module/leiste-zuordnung.js`)
+- `ZIEL_GRUPPE` (:5), `zielGruppe(panelId)` (:11), `ankerNach(panelId)` (:12), `planeUmzug(eintraege)` (:15) — rein,
+  DOM-frei; Test `module/leiste-zuordnung.test.js`.
+  Niye: PLAN-V2 §3.2 gruppiert anders als `nav-registry.js` (Behandlungen → Heute; Verordnungen → Patienten;
+  Leistungen, Fahrtenbuch, Zuweiser, Ärzte, Patientenpost → Praxis). Melih 12.11.2026: nur im neuen Design
+  (`data-design="neu"`), altes Design und `nav-registry.js` bleiben unverändert → fachbereichsunabhängige Map statt
+  Registry-Änderung. Katmanlama, keine Kopie.
+  Nerede: einziger Aufrufer `umzug(an)` in `module/shell-ansicht.js` (in `montiereShellansicht` → `aktualisieren()`):
+  hängt `.sidebar-item` um, zieht `.has-active`/`.open` nach, stellt bei Design=alt exakt zurück.
+  Browserprobe: `tools/browser-probe/v205-leiste.mjs`.
+- Pflege: Wer Gruppen in `nav-registry.js` ändert, prüft diese Map mit. `praxis`/`default` laufen über dieselbe Map
+  (wirkt nur, wenn Eintrag und Zielgruppe im DOM stehen; `renderSidebar` rendert leere Gruppen nicht).
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.

@@ -8,6 +8,7 @@ import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p
 import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell3';
 import { verdrahteSchublade } from './schublade-neu.js?v=20261110p01shell3';
 import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261110p01shell3';
+import { planeUmzug } from './leiste-zuordnung.js?v=20261112v205';
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };
 let instanz = null;
@@ -25,6 +26,38 @@ export function montiereShellansicht(k) {
   const merke = node => {
     if (!originale.has(node)) originale.set(node, { title: node.getAttribute('title'), kurz: node.getAttribute('data-kurz'), label: node.matches('[data-panel="overview"]') ? node.querySelector(':scope > span:not(.icon):not(.nav-badge)')?.textContent : null });
   };
+  const herkunft = new Map(), versteckt = new Set(), beruehrt = new Set(), geoeffnet = new Set();
+  const gruppeVon = n => n.closest('.nav-group');
+  const kopfNachziehen = g => g.querySelector(':scope > .nav-group-header')?.classList.toggle('has-active', !!g.querySelector('.sidebar-item.active'));
+  /** Neu-Design: einzelne Einträge in andere Gruppen hängen (leiste-zuordnung.js); aus: exakt zurück. */
+  function umzug(an) {
+    for (const [node, ph] of herkunft) if (!node.isConnected || !ph.isConnected) herkunft.delete(node);
+    for (const g of [...beruehrt, ...versteckt, ...geoeffnet]) if (!g.isConnected) { beruehrt.delete(g); versteckt.delete(g); geoeffnet.delete(g); }
+    if (an) {
+      const eintraege = [...nav.querySelectorAll('.nav-group .sidebar-item[data-panel]')].map(n => ({ panel: n.dataset.panel, gruppe: gruppeVon(n).dataset.groupId }));
+      for (const { panel, nach, hinter } of planeUmzug(eintraege)) {
+        const node = nav.querySelector(`.sidebar-item[data-panel="${panel}"]`);
+        const ziel = nav.querySelector(`.nav-group[data-group-id="${nach}"] .nav-group-items`);
+        if (!node || !ziel) continue;
+        const anker = hinter && [...ziel.children].find(c => c.dataset?.panel === hinter);
+        beruehrt.add(gruppeVon(node)); beruehrt.add(ziel.closest('.nav-group'));
+        const ph = document.createComment('px-zuordnung');
+        node.before(ph); herkunft.set(node, ph);
+        if (anker) anker.after(node); else ziel.append(node);
+      }
+    } else {
+      for (const [node, ph] of herkunft) ph.replaceWith(node);
+      herkunft.clear();
+    }
+    for (const g of nav.querySelectorAll('.nav-group')) {
+      if (an && !g.querySelector('.sidebar-item')) { g.hidden = true; versteckt.add(g); } else if (versteckt.delete(g)) g.hidden = false;
+    }
+    for (const g of beruehrt) {
+      kopfNachziehen(g);
+      if (an && g.querySelector('.sidebar-item.active') && !g.classList.contains('open')) { g.classList.add('open'); geoeffnet.add(g); }
+    }
+    if (!an) { for (const g of geoeffnet) g.classList.remove('open'); geoeffnet.clear(); beruehrt.clear(); }
+  }
   const brand = document.querySelector('.topbar .brand');
   const marke = document.createElement('a');
   marke.className = 'px-leiste-marke'; marke.href = brand?.getAttribute('href') || '/';
@@ -49,6 +82,7 @@ export function montiereShellansicht(k) {
     html.classList.toggle('px-neu-bereit', an && !!neu);
     for (const node of widgets) node.hidden = !an;
     if (!an) { profil?.schliesse(); neu?.schliesse(); schliesseFlyout(); }
+    try { umzug(an); } catch (fehler) { console.error('[shell] zuordnung', fehler); }
     for (const node of nav.querySelectorAll('.nav-group-header, .sidebar-item')) {
       merke(node);
       if (an) {
