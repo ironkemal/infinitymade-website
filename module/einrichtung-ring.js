@@ -81,7 +81,8 @@ export function mountEinrichtungRing(ctx, doc = document) {
     if (b.dataset.feld) setTimeout(() => zumFeld(b.dataset.feld, doc), 250);   // nach dem Abschnitts-Sprung von ctx.springe
   });
   doc.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !pop.hidden) { pop.hidden = true; knopf.focus(); } });
-  doc.addEventListener('click', (ev) => { if (!pop.hidden && !pop.contains(ev.target) && !knopf.contains(ev.target)) pop.hidden = true; });
+  // composedPath statt contains: der Knopf-Klick zeichnet den Inhalt neu, ev.target (Zahl/Ring) hängt dann nicht mehr im DOM
+  doc.addEventListener('click', (ev) => { const pfad = ev.composedPath(); if (!pop.hidden && !pfad.includes(pop) && !pfad.includes(knopf)) pop.hidden = true; });
 
   zeichne();
   // Das Profil kommt nach dem Laden der Seite; danach reicht ein ruhiger Takt + das Signal der Branding-Seite.

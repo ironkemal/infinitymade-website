@@ -85,7 +85,7 @@ try {
   pruef('dashboard.html enthält den Einrichtungsring in der Kopfleiste', !!wrapRing?.querySelector('#einrichtungRing') && !!wrapRing?.querySelector('#einrichtungPopover'));
   document.getElementById('buehne').appendChild(document.importNode(wrapRing, true));
   for (const st of doc.querySelectorAll('style')) { if (st.textContent.includes('einrichtung-ring')) { const n = document.createElement('style'); n.textContent = st.textContent; document.head.appendChild(n); } }
-  const { mountEinrichtungRing } = await import('../../module/einrichtung-ring.js?v=20261022q');
+  const { mountEinrichtungRing } = await import('../../module/einrichtung-ring.js?v=20261022r');
   let ringProfil = { id: 'p', business_name: 'X' }; let ringOwner = true; const spruenge = []; const ringToasts = [];
   const ring = mountEinrichtungRing({ profil: () => ringProfil, istOwner: () => ringOwner, springe: (id) => spruenge.push(id), toast: (m) => ringToasts.push(m) });
   const zielFeld = document.createElement('input'); zielFeld.id = 'setSteuernummer'; document.getElementById('buehne').appendChild(zielFeld);
