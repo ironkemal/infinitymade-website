@@ -4,13 +4,15 @@
 > **Diese Datei nach JEDEM Schritt aktualisieren.** `node tools/redesign-status-check.mjs` prüft sie (T1).
 
 ## 0 Kurzzustand
-- Branch `redesign/praxura-design` · Worktree `~/.t3/worktrees/infinitymade-website/redesign-praxura-design` · Haupt-Checkout nie anfassen
-- Letzter grüner Stand: V0-Abschluss (Werkzeuge) · npm test 4.087 grün · Alt 159 Bilder 0 ✗ gegen `alt-main-6fd0cce` · Smoke-Basen `smoke-alt-main`, `klick-alt-main`
-- Aktuelles Paket: V1.07 · Schritt: BAUEN
+- **Delta-Lauf seit 12.11.2026.** Branch `redesign/delta-20261112` (ab `origin/main` 81c82424) · Worktree `~/.t3/worktrees/infinitymade-website/redesign-delta-20261112` · Haupt-Checkout nie anfassen · `node_modules` verlinkt (Wurzel aus Worktree `redesign-praxura-design` wegen `pixelmatch`/`pngjs`, `api-backend`/`merkez` aus Haupt-Checkout)
+- Warum Delta: Diese Datei stand bis 12.11. auf dem Stand 25.10. Zwischenzeitlich kam die Spur 10.–11.11. (Physio-Testkonto, `redesign/phase01/VALIDATION.md`) nach `main`: Tokens E12, `design/` (7 Dateien), Shell, Start-Adapter, serverseitige Aktivierung. Gebaut wird nur noch, was gegenüber PLAN-V2 fehlt. Der Stand 27.–31.10. (V2–V9 alt) liegt nur im Branch `rettung/design-wip-20261031` und dient als Quelle zum gezielten Portieren, nie zum blinden Kopieren.
+- Letzter grüner Stand: `origin/main` 81c82424 (Ausgangslage dieses Laufs, Messwerte §3)
+- Aktuelles Paket: V1.07 · Schritt: ANALYSE (wartet auf Melihs Startfreigabe für Produkt-Edits)
 - Nicht committete eigene Dateien: keine
-- Cache-Nummern: praxura-design.css ?v=20261025v104
-- Gültige Referenzen: alt=`alt-main-6fd0cce` (aus `origin/main` 6fd0cce3, Basis `.redesign-shots/_basis/6fd0cce`; bei neuem main: `node tools/redesign-basis.mjs` + Lauf mit `--wurzel`) · neu=noch keine (wird nach V3 eingefroren)
-- Wartet auf Melih: nichts
+- Cache-Nummern: praxura-design.css ?v=20261110p01 · design/shell.css ?v=20261110p01shell3 · design/startseite.css ?v=20261111p9a · design/seiten.css ?v=20261111p3 · dashboard.js ?v=20261111p10-fuss
+- Gültige Referenzen: alt=noch keine in diesem Worktree (vor dem ersten Produkt-Paket: `node tools/redesign-basis.mjs` + `redesign-shots.mjs --wurzel`) · neu=noch keine
+- Aktivierung: `?design=neu` ist nur Wunsch; lokal über `dev_server.cjs` (`designVorschau`), im SaaS nur `GET /api/design/entscheidung` (Env-Pilot, nirgends gesetzt, O-245)
+- Wartet auf Melih: (1) Startfreigabe „automatisiert mit Agenten / selbst / Pakete anpassen“ · (2) R-17: ID-Baseline auf `main`-Stand nachziehen ja/nein (T1 `check-redesign-ids` ist vorbestehend rot mit 15 IDs)
 - Nächstes Paket: V1.07
 
 ## 1 Geltende Regeln (Kurzfassung, Details PLAN-V2 §2, §7, §9)
@@ -19,7 +21,8 @@
 - T3: `npm run probe` nur mit Dev-Server aus diesem Worktree und erfundener Konfiguration (R-16). T1 **nach** `git add`: `sh tools/check-syntax.sh`, `sh tools/check-dashboard-size.sh`, `node tools/check-redesign-ids.mjs`, `node tools/redesign-status-check.mjs`, `node tools/redesign-wachen.mjs` (Scope, `!important`, Cache, Auslieferung, Schrumpf). T2 `npm test`. T4 Alt-Vergleich gegen gültige alt-Referenz = 0 ✗. Neu-Bilder ansehen.
 - Gemeinsame Dateien (`dashboard.*`, `praxura-design.css`, `design/*`, `STATUS.md`) nur mit Edit ändern. Kein `sed -i`, kein Skript-Überschreiben, kein `open(p,'w')` vor dem Lesen. Nach jeder Änderung `git diff --numstat`.
 - Pro Fehler max. 3 Versuche, danach zurücknehmen, Fehlerbuch, nächstes unabhängiges Paket.
-- Nach jeder Phase: `origin/main` einmergen, T1–T5 auf dem Ergebnis, Push `main` (Vordergrund, Hauptkontext), T6 `canli-test` mit `?design=neu`.
+- Nach jeder Phase: `origin/main` einmergen, T1–T5 auf dem Ergebnis. **Kein Push, kein Deploy, keine Env-/Pilot-Aktivierung, keine Live-DB ohne Melihs ausdrückliche Freigabe** (PLAN-V2 Fassung 27.10., E1). T6 erst auf einem freigegebenen veröffentlichten Stand.
+- Delta-Lauf (12.11.): 1 Worker (`model: sonnet`) je Bau-Paket, nie parallel; Lead ändert gemeinsame Dateien und reviewt. Navigation neu gruppiert **nur unter `data-design="neu"`** (Melih 12.11., ersetzt „wirkt auch alt“). Menüzeilen nicht ausblenden, solange der Akte-Zugang (V7) fehlt. Limit: STATUS-Checkpoint vor jedem Paket; aus einem Limit-Reset folgt nie Push/Deploy/Mail/Env.
 - Pflicht-Agenten je Paket: PLAN-V2 §6.
 
 ## 2 Paketliste (einzige Quelle für Fortschritt)
@@ -44,26 +47,34 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 | V1.03 | V1 | Farbrollen v2 nach E11 „ruhig: Grau + ein Blau“ (`redesign/palette-v2.css`), hell + dunkel; alle Espresso/Bronze/Creme-Werte ersetzt | CSS global | alle (neu) | V1.01 | fertig | 9ead14d9 | Token-Blöcke hell/dunkel neu inkl. bisher fehlender `--warning` (war Beige, 42×), `--warning-dim`, `--success-dim`, `--danger-dim`, `--info`, `--today`, `--fc-today-bg-color`; neu `--st-*`, `--chart-*`, `--bg-sunken`, `--border-input`, `--focus-halo`; Feldrand 3:1; Warn-/IK-Balken neutral; Kontrast 7/7; T4 `v103alt` 0 ✗; Smoke `v103` neu beide Rollen 0 neu; Zustände `v103z` 28 Bilder; Geometrie 0; Kontaktbögen hell/dunkel 1440/390 gesichtet. Noch bunt (fest im Code, folgt V6/V8): Rezept-Kacheln-Kanten, Verordnungs-Status, GKV/PRIVAT-Etiketten | 0 |
 | V1.04 | V1 | Bewegung + `prefers-reduced-motion` (nur neu) | CSS global | alle (neu) | V1.01 | fertig | 58ec8d28 | `--dur*`, `--ease-standard`, `--transition` 120 ms; reduzierte Bewegung regelt dashboard.css schon global (R-01 → V2.11); Alt 0 ✗, Neu-Bilder = v103 (0 Abweichung), Smoke 0 neu | 0 |
 | V1.05 | V1 | Kontrast-Test erweitert (neue Token, Diagrammpalette ≥ 3:1, Status-Töne) | Werkzeug | T2 | V1.03 | fertig | 748a208b | `tools/redesign-kontrast.test.js` 7 → 15 Fälle: Status-Text auf Fläche, Grafik/Feldrand/Warnsymbol/Jetzt-Linie ≥ 3:1, Text auf eingelassener Fläche/Hover, Dunkel-Knopf, Wache „kein Beige/Braun in Neu-Token“ | 0 |
-| V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | fertig | dieser Commit | npm test 2.152/1.625/318 grün; Probes 14/14; T4 `v106alt` 159 Bilder 0 ✗; T5 `v106` beide Designs/Rollen 0 neu, Klick `v106klick` 0 neu; Geometrie `v106` 0; main ohne neue Commits → Fast-Forward | 0 |
-| V1.07 | V1 | Form v3 nach E12: Radius 18/14/12/Pille/6, weiche Kartenschatten, hellere Linien, mehr Abstand (`redesign/form-v3.css`) | CSS global | alle (neu) | V1.06 | offen | | | |
-| V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | offen | | | |
-| V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | offen | | | |
-| V2.03 | V2 | Grid-Hülle (Leiste volle Höhe, Topbar rechts), ≥ 1025 px | CSS | Shell | V2.02 | offen | | | |
-| V2.04 | V2 | Leiste v2 (Optik, Aktiv Creme, 40–44 px Einträge, Zählerplakette) | CSS | Shell | V2.03 | offen | | | |
-| V2.05 | V2 | Navigation neu gruppiert (`nav-registry.js`, E7, wirkt auch alt → Alt-Referenz bewusst neu aufnehmen) + Menüzeilen Anamnese/Notizen/Fußbefund/Überblick ausgeblendet (nur neu) | JS + Verhalten (E7) | Shell, alt | V2.04 | offen | | | |
-| V2.06 | V2 | Eingeklappt: Icon-Leiste 64–72 px mit Kurzlabel | CSS + Modul | Shell | V2.05 | offen | | | |
-| V2.07 | V2 | Gruppen-Flyout (Klick, Tastatur, Escape, Touch) | JS-Modul | Shell | V2.06 | offen | | | |
-| V2.08 | V2 | Topbar v2 (Einrichtung beschriftet, Ordnung, Profil) | CSS | Shell | V2.03 | offen | | | |
-| V2.09 | V2 | Suche oben (`module/gehe-zu.js`, Taste „/“): Patient, Verordnung, Rechnung | JS-Modul (E7) | Topbar | V2.08 | offen | | | |
-| V2.10 | V2 | „+ Neu“-Menü (Termin, Patient, Verordnung erfassen/scannen) | JS-Modul (E7) | Topbar | V2.08 | offen | | | |
-| V2.11 | V2 | Schublade mobil + R-01-Lösung (nur neu), `inert` | CSS + Modul | Shell mobil | V2.04 | offen | | | |
+| V0.13 | V0 | Delta-Neuaufsatz 12.11.: STATUS auf Ist-Stand `main`, PLAN-V2 Fassung 27.10. (E13–E16) übernommen, neuer Worktree | Doku | – | V0.12 | fertig | dieser Commit | status-check grün; Ausgangslage §3 | 0 |
+| V1.06 | V1 | Phasenabschluss V1 | Abschluss | – | V1.01–V1.05 | fertig | ab77c9a1 | npm test 2.152/1.625/318 grün; Probes 14/14; T4 `v106alt` 159 Bilder 0 ✗; T5 `v106` beide Designs/Rollen 0 neu, Klick `v106klick` 0 neu; Geometrie `v106` 0; main ohne neue Commits → Fast-Forward | 0 |
+| V1.07 | V1 | Form v3 nach E12: Radius 18/14/12/Pille/6, weiche Kartenschatten, hellere Linien, mehr Abstand (`redesign/form-v3.css`) | CSS global | alle (neu) | V1.06 | offen | | Delta: Radius-, Schatten-, Linien-Token stehen schon in `praxura-design.css` (Z. 47–52, 94, 156; Spur 10.–11.11.). Offen nur Abgleich Kartenlücke 24, Innenabstand 24–28, Zeilen ≥ 60 px, Banner-Radius 14 gegen `form-v3.css` Z. 45–59 | |
+| V2.00 | V2 | Bestandsabnahme Shell: V2.01–V2.04, V2.06–V2.08, V2.10, V2.11 sind seit 10.–11.11. gebaut (Nachweise `redesign/phase01/VALIDATION.md`). Gegen PLAN-V2 §3.2 neu prüfen (`p01-shell.mjs`, `redesign-zustaende.mjs`, `redesign-geometrie.mjs`, Wachen), Funde als eigene Zeilen V2.Fnn, danach diese Zeilen auf fertig | Prüfung | Shell | V1.07 | offen | | | |
+| V2.01 | V2 | Ordner `design/` + `shell.css`, Dockerfile/Workflow-Zeile, Auslieferungstest grün | CSS + Auslieferung | – | V1.06 | offen | | gebaut `94b6d429`/`e4baec1f` (`COPY design`, Workflow `design/**`, Auslieferungsprüfung in `redesign-wachen.mjs`); Abnahme in V2.00 | |
+| V2.02 | V2 | `module/neu-start.js` (Boot nur bei neu) + Import-Zeile + Hooks in `dashboard.js` (zeilenneutral) | JS-Modul | alle | V2.01 | offen | | anders gebaut `291894bc`: `module/design-entscheidung.js` (Server-Entscheidung) + Mount in `dashboard.js` (Suche: `montiereShellansicht`), kein `neu-start.js`; Abnahme in V2.00 | |
+| V2.03 | V2 | Grid-Hülle (Leiste volle Höhe, Topbar rechts), ≥ 1025 px | CSS | Shell | V2.02 | offen | | gebaut `e4baec1f` (`design/shell.css`); Abnahme in V2.00 | |
+| V2.04 | V2 | Leiste v2 (Optik, Aktiv Creme, 40–44 px Einträge, Zählerplakette) | CSS | Shell | V2.03 | offen | | gebaut `e4baec1f`; Abnahme in V2.00 | |
+| V2.05 | V2 | Navigation neu gruppiert HEUTE · TERMINE · PATIENTEN · ABRECHNUNG · PRAXIS · EINSTELLUNGEN, **nur unter `data-design="neu"`** in `module/shell-ansicht.js` (Melih 12.11.; `nav-registry.js` und Alt unverändert). Menüzeilen Anamnese/Notizen/Fußbefund/Überblick bleiben sichtbar, bis V7 den Akte-Zugang liefert | JS-Modul (E7) | Shell (neu) | V2.00 | offen | | | |
+| V2.06 | V2 | Eingeklappt: Icon-Leiste 64–72 px mit Kurzlabel | CSS + Modul | Shell | V2.05 | offen | | gebaut `e4baec1f` (`.px-einklappen`, `KURZ`-Map); Abnahme in V2.00 | |
+| V2.07 | V2 | Gruppen-Flyout (Klick, Tastatur, Escape, Touch) | JS-Modul | Shell | V2.06 | offen | | gebaut `e4baec1f`, Fokusrückgabe `7eed0449` (`module/leiste-flyout.js`); Abnahme in V2.00 | |
+| V2.08 | V2 | Topbar v2 (Einrichtung beschriftet, Ordnung, Profil) | CSS | Shell | V2.03 | offen | | gebaut `e4baec1f`; „Einrichtung beschriftet“ in V2.00 prüfen | |
+| V2.09 | V2 | Suche oben: Patientensuche besteht (`module/kopf-suche-ansicht.js`, `e4baec1f`). Delta: Taste „/“; Verordnung/Rechnung **nur Inhaber** (Entscheidung V2.09b 28.10.), portiert aus `rettung/design-wip-20261031` (`kopf-suche.js`, `kopf-dokumente.js`) nach Prüfung gegen aktuelle Loader; `guvenlik` + `db-ustasi` vorher | JS-Modul (E7) | Topbar | V2.00 | offen | | | |
+| V2.10 | V2 | „+ Neu“-Menü (Termin, Patient, Verordnung erfassen/scannen) | JS-Modul (E7) | Topbar | V2.08 | offen | | gebaut `e4baec1f` (`module/kopf-neu.js`); Abnahme in V2.00 | |
+| V2.11 | V2 | Schublade mobil + R-01-Lösung (nur neu), `inert` | CSS + Modul | Shell mobil | V2.04 | offen | | gebaut `e4baec1f`, Kopf `inert` + Fokus `7eed0449` (`module/schublade-neu.js`); Abnahme in V2.00 | |
 | V2.12 | V2 | Tablet 1024/1025 + Tastaturlauf | Prüfung + CSS | Shell | V2.07–V2.11 | offen | | | |
 | V2.13 | V2 | Phasenabschluss V2 | Abschluss | – | V2.01–V2.12 | offen | | | |
 | V3.xx | V3 | Bausteine v2 (Karte, Knopf, Feld, Tabelle/Liste, Status-Tag, Modal, Seitenpanel, Tabs/Segment, Banner, Leer, Toast, Fokus; neu: Skeleton, Fehlerkarte, Kennzahl, Listenzeile, Mini-Karte, „Alle anzeigen“, SVG-Balken/-Ring), Katalogseite, Neu-Referenz einfrieren | CSS | Bausteine | V2.13 | offen | | | |
 | V4.xx | V4 | Archetypen-Map + Test, Piloten kunden, verordnungen (+Seitenpanel), settings (+Abschnittsnavigation), statistik, warteliste | CSS + Modul | Piloten | V3 | offen | | | |
 | V5.xx | V5 | Kalender (Toolbar, Raster, Blöcke, Kontextmenü, Heute-Linie, Spalten, Monat, Probes neu) | CSS | calendar | V4 | offen | | | |
 | V6.Bxx | V6 | Backend: R-06, Forderungs-Modul, Monatsgrenzen, Router `startseite` (geld/mahnungen/abrechnung), freie Zeit serverseitig, guvenlik + onprem | Backend | API | V1.06 | offen | | | |
-| V6.Fxx | V6 | Startseite „Heute“: Definitionen (podoloji, gkv-302), Rechnen, Daten, 7 Karten, Raster, Rollen, Zustände, Überblick aufgehen lassen | JS-Modul + CSS | overview | V5, V6.B | offen | | | |
+| V6.F00 | V6 | Definitionen klären (nur lesen): Kartenrangfolge und Wortlaut, Rollen-Sichtbarkeit, Begriff „überfällig“; Agenten `podoloji`, `guvenlik`, `gkv-302`; Antworten in §6 | Analyse | overview | V2.13 | offen | | Bestand: Start-Adapter `module/startseite-ansicht.js` + `startseite-darstellung.js` (`67819716`, `6e5c6ffb`) mit „Als Nächstes“, „Zu erledigen“, Terminliste | |
+| V6.F01 | V6 | Rechenfunktionen: nur was `startseite-darstellung.js` gegenüber `startseite-rechnen.js` (Rettungsbranch) fehlt, keine zweite Kopie; `fonksiyon-ustasi` vorher/nachher | JS-Modul | overview | V6.F00 | offen | | | |
+| V6.F02 | V6 | Karte 4 „Verordnungen – Handlungsbedarf“ (2×2, E15 Pause 7 Tage): Port `startseite-handlungsbedarf{,-laden,-karte}.js` + Tests, Client mit RLS, bestehende `heilmittel-fristen.js`; `db-ustasi`, `guvenlik` vorher | JS-Modul | overview | V6.F01 | offen | | | |
+| V6.F03 | V6 | Karte 5 „Freie Zeit heute“ als Liste nutzbarer Lücken aus vorhandenen Daten (ohne Zeitleiste, E14: Angestellte nur eigene); Server-Variante bleibt V6.B | JS-Modul + CSS | overview | V6.F01 | offen | | | |
+| V6.F04 | V6 | Karten 6+7 „Abrechnung“ und „Diese Woche“ nur Inhaber: Bestandskarte + Zustand „nicht verfügbar“; echte Zahlen erst mit V6.B. Angestellte: Karte nicht im DOM und kein Request | JS-Modul | overview | V6.F01 | offen | | | |
+| V6.F05 | V6 | Raster E12 in `design/startseite.css` (next next todo / list list vo / list list frei / abr abr woche, Team-Variante), je Karte laden/leer/Fehler/Daten, eine Karte blockiert nie die anderen | CSS + Modul | overview | V6.F02–V6.F04 | offen | | | |
+| V6.F06 | V6 | Phasenabschluss Startseite lokal: Bildabnahme `podoloji`, 390 px `mobil-ui`, T1–T5. „Überblick“ aufgehen lassen ist **nicht** Teil (Löschen = Stopp-Punkt) | Abschluss | overview | V6.F05 | offen | | | |
 | V7.xx | V7 | Abläufe: Akte-Reiter + Menü, Doku-Recht (guvenlik), Abschlussdialog | Verhalten (E7) | Akte, Behandlung | V6 | offen | | | |
 | V8.xx | V8 | Übrige Bereiche nach Archetyp + feste Farben je Bereich + Status-Pillen (gkv-302) + 390 px | CSS + Hex | Bereiche | V4, V7 | offen | | | |
 | V9.xx | V9 | Abnahme-Schleife bis 0 Funde, Abschlussbericht | Abnahme | alle | V8 | offen | | | |
@@ -72,6 +83,7 @@ Status: offen · in Arbeit · blockiert · wartet-Melih · fertig. Pakete ab V3 
 ## 3 Messwerte
 - Ausgangslage v2 (25.10.2026, `97156628` = `0a63ce0f` + Doku): npm test 4.071 grün (2.152 / 1.625 / 294), Alt 159 Bilder 0 ✗ gegen `vorher-vollbasis7c92`, Smoke 44 bekannte Funde (neu) / 0 neue. `dashboard.js` = Baseline 18.415. `dashboard.html` 1.271 IDs.
 - Laufzeiten (Entwickler-B-Bericht): ≈ 1,5 s je Bild; Alt-Vollmatrix 312 Bilder ≈ 7,7 min; Referenzvergleich 159 Bilder ≈ 4 min.
+- Ausgangslage Delta-Lauf (12.11.2026, `origin/main` 81c82424, Worktree `redesign-delta-20261112`): `npm test` Exit 0: Frontend 2.748, Backend 2.053 (+5 Skips, vorbestehend), Tools 355, Merkez 109, 0 Fehler. `dashboard.js` = Baseline 17.927. Probes, Bildvergleich und Smoke in diesem Worktree noch nicht gelaufen.
 
 ## 4 Fehlerbuch
 Art: Produkt · Werkzeug · Flake · vorbestehend. R-01 bis R-12 siehe `STATUS-V1.md` (alle vorbestehend oder erledigt; R-01, R-05, R-06, R-07, R-08 bleiben relevant: R-01 in V2.11 nur neu gelöst, R-05/R-07 durch neue Startseite umgangen, R-06 in V6.B geschlossen, R-08 in V7 geprüft).
@@ -82,6 +94,7 @@ Art: Produkt · Werkzeug · Flake · vorbestehend. R-01 bis R-12 siehe `STATUS-V
 | R-15 | 25.10.2026 | vorbestehend | overview (Mitarbeiterin) | Begrüßung zeigt den Namen der Inhaberin statt der eingeloggten Mitarbeiterin (Bild `v007/zustaende/*/mitarbeiterin-start.png`, Podologie-Bericht A5) | noch nicht untersucht | neue Startseite (V6) nimmt den eigenen Namen; Alt bleibt, Ops-Karte | – |
 | R-16 | 25.10.2026 | Werkzeug | T3 `npm run probe` | Modul-Probe: 12 Module „APP_CONFIGURATION_UNAVAILABLE“ | Dev-Server im Worktree ohne `.env.local` beantwortet `/api/config` mit Fehler (am 24.10. antwortete vermutlich ein anderer Server auf 8081, B-2) | behoben ohne Codeänderung: Dev-Server für Probes mit erfundenen Werten starten: `NEXT_PUBLIC_SUPABASE_URL=https://synthetic.invalid NEXT_PUBLIC_SUPABASE_ANON_KEY=synthetisch-nur-probe node dev_server.cjs` → 14/14 grün | 1 |
 | R-14 | 25.10.2026 | vorbestehend | viele Bereiche | Bei Datenbankfehler (Szenario `fehler`) zeigen Patienten, Verordnungen, Kalender, Dashboard leere Listen („Noch keine …“) statt eines Fehlers | Lade-Fehler werden still verschluckt | nicht im Redesign reparieren; neue Startseite (V6) bekommt echte Fehlerzustände; Ops-Karte beim Phasenabschluss | – |
+| R-17 | 12.11.2026 | vorbestehend | T1 `check-redesign-ids` | 15 Baseline-IDs fehlen in `dashboard.html` schon auf `origin/main` 81c82424 (`addEmpResultStep`, `ae-res-*`, `aeCopy*Btn`, `aeShareWaBtn`, `urlaub*`) | Produktarbeit auf `main` am 02.11. (`422d1bd0`, Mitarbeiter-Einladung und Urlaub umgebaut), nicht Redesign. Wache steht nicht im Pre-commit, fiel darum nicht auf | offen: Baseline `tools/redesign-id-baseline.txt` nur mit Melihs OK auf den `main`-Stand nachziehen (Löschen = Stopp-Punkt). Bis dahin gilt für T1: genau diese 15, keine weitere | – |
 
 ## 5 Flake-Register
 Einzige Quelle: `tools/redesign-flakes.json` (Vergleich zeigt ⚑). Eingetragen: Statistik `owner-voll/alt-dunkel-390` (1.425 px, y 778–1316, R-11, 5× gesehen). Mahnwesen y ≈ 473 und Fußstatus 1-px-Streifen fallen schon unter die Rausch-Regel (Text gleich) und brauchen keinen Eintrag. Neue Einträge erst ab 3 Beobachtungen am selben Ort.
@@ -99,6 +112,10 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | E12 Form | „übersichtlicher, runder, wärmer (nicht Farben)“: Radius Karten 18/Knöpfe 12/Pillen, weiche Schatten, mehr Luft, Startseite neu geordnet (PLAN-V2 E12). Umsetzung: V1.07 (Token) direkt nach V1.06, dann V2/Startseite danach | Melih |
 | 25.10.2026 | Reihenfolge | Melih: „Farben top, aber Struktur wie alt – ich will neue Struktur und Design“ (Referenz: Quicken-Bild + Entwürfe `startseite.html`, `archetyp-liste-detail.html`). Struktur zuerst: nach V1.06 → V2 App-Shell → **V6.F Startseite-Struktur mit vorhandenen Daten** (Raster, 7 Karten, Termine-Liste, „Als Nächstes“) → V4 Archetypen (Liste + Seitenpanel, Formular mit Abschnittsnavigation) → V3 Bausteine nur soweit dafür nötig → V5 Kalender → V6.B Backend-Kennzahlen → V7 → V8. Paket-IDs bleiben | Melih |
 | 25.10.2026 | E11 geschärft | „nicht so bunt“, beiger Warnbalken weg. Nach Recherche (Linear/Vercel achromatisch + ein Akzent; Primer/Atlassian Banner sparsam): Grau + Schwarz/Weiß, **ein** Blau, Signalfarben nur bei Problemen, Warnbalken neutral mit farbigem Symbol. Werte `redesign/palette-v2.css` (überschrieben), Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Hellblau-Variante (`blau-*.png`) verworfen | Melih |
+| 12.11.2026 | Basis für V1.07 → V2 → V6.F | Delta auf `main`: nur Lücken bauen, fehlende Teile gezielt aus `rettung/design-wip-20261031` portieren und neu prüfen. Kein Weiterführen des Rettungsbranchs, kein Neubau ab V1.07 | Melih |
+| 12.11.2026 | V2.05 Navigation | neue Gruppen nur im neuen Design; Alt bleibt pixelgleich (ersetzt „wirkt auch alt“ aus E7) | Melih |
+| 12.11.2026 | Planstand | PLAN-V2 Fassung 27.10. gilt (E13–E16, kein main-Push ohne Freigabe); nach `main`-Linie übernommen | Melih |
+| 12.11.2026 | Menüzeilen Anamnese/Notizen/Fußbefund/Überblick | nicht ausblenden, solange V7 (Akte-Zugang) fehlt: sonst Funktionsverlust | Claude |
 
 ## 7 Offene Fragen
 - Kemal über Wegfall der Farbregel „jeder Status eigene Farbe“ informieren (Melih). Betrifft erst V8 (Verordnungen/Abrechnung).
@@ -129,7 +146,10 @@ Bis 24.10.: `STATUS-V1.md` (E-01 bis E-06). Ab 25.10.: PLAN-V2 §2 (E1–E10) un
 | 25.10.2026 | V1.04: Bewegungs-Tokens (`?v=20261025v104`) | `58ec8d28` | V1.05 |
 | 25.10.2026 | V1.05: Kontrast-Test 15 Fälle inkl. Beige-Wache | `748a208b` | V1.06 |
 | 25.10.2026 | Melih: Struktur zuerst; E12 Form freundlich/übersichtlich (Vorschau `frei-*.png`) | – | V1.07 |
-| 25.10.2026 | V1.06: Phasenabschluss V1 grün, Merge main, Push | dieser Commit | V1.07 |
+| 25.10.2026 | V1.06: Phasenabschluss V1 grün, Merge main, Push | `ab77c9a1` | V1.07 |
+| 27.–31.10.2026 | Alt-Lauf V2–V9 im Worktree `redesign-praxura-design` (nie nach `main`); gesichert als `rettung/design-wip-20261031`. Dortige STATUS (152 KB) ist Quelle für Details, nicht Fortschrittsstand | – | – |
+| 10.–11.11.2026 | Spur Physio-Testkonto (Phasen 0–9, Plan 10.11.): Tokens E12, Shell, Start-Adapter, Seiten-/Verwaltungs-CSS, öffentliche Seiten (nur Vorschau), serverseitige Aktivierung. Nach `main` gepusht `20295959`, Feature aus. Nachweise `redesign/phase01/VALIDATION.md` | `e4baec1f` … `20295959` | Pilot-Aktivierung (eigenes GO) |
+| 12.11.2026 | V0.13 Delta-Neuaufsatz: Worktree ab `origin/main`, diese Datei auf Ist-Stand, PLAN-V2 27.10. übernommen, Paketzeilen V2.00 und V6.F00–F06, Ausgangslage gemessen | dieser Commit | V1.07 (nach Melihs Startfreigabe) |
 
 ## 9 Abschluss
 offen

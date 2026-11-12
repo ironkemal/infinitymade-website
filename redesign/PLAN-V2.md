@@ -1,6 +1,24 @@
-# PLAN v2: Praxura-Dashboard modern neu (Stand 25.10.2026)
+# PLAN v2: Praxura-Dashboard modern neu (Stand 27.10.2026)
 
-> **Status: wartet auf Melihs OK.** Erst nach dem OK wird gebaut. Danach läuft die Schleife
+> **Delta-Hinweis 12.11.2026 (geht den Abschnitten unten vor, wo sie sich widersprechen):**
+> Diese Fassung stammt aus dem Branch `rettung/design-wip-20261031` und gilt inhaltlich
+> (Entscheidungen E1–E16, Design, Stopp-Punkte). Seitdem geändert:
+> 1. **Aktivierung:** `?design=neu` und `localStorage` sind nur noch ein Wunsch. Entschieden
+>    wird nach der Anmeldung über `GET /api/design/entscheidung` (Env-Pilot, fail-closed,
+>    onprem O-245), lokal über `dev_server.cjs`. Der Absatz „Aktuelle Ausgangslage“ in §1
+>    beschreibt den alten Schalter und ist überholt.
+> 2. **Bereits auf `main`** (Spur 10.–11.11., `redesign/phase01/VALIDATION.md`): Tokens E12,
+>    `design/`, Shell, Start-Adapter, Seiten-/Verwaltungs-CSS. Gebaut wird nur das Delta;
+>    Fortschritt ausschließlich in `redesign/STATUS.md`.
+> 3. **Navigation (E7):** neue Gruppen nur unter `data-design="neu"`, Alt bleibt unverändert
+>    (Melih 12.11.). Menüzeilen bleiben sichtbar, bis V7 den Zugang über die Akte liefert.
+> 4. **Technik §4:** statt `module/neu-start.js`/`shell-neu.js` gelten
+>    `module/design-entscheidung.js` und `module/shell-ansicht.js`. Die Worktree- und
+>    Kollegen-Zuteilungen vom 27.10. (§5) sind erledigt bzw. hinfällig.
+> 5. Reihenfolge dieses Laufs: V1.07 (Abgleich) → V2 (Abnahme + Lücken) → V6.F (Struktur
+>    mit vorhandenen Daten). Kein Push, kein Deploy, keine Env-Aktivierung ohne Freigabe.
+
+> **Status: Umsetzung freigegeben (Melih, 25.10.2026).** Die Schleife läuft
 > ununterbrochen, bis Phase V9 abgeschlossen ist (V10 Umschalten nur nach erneutem OK).
 >
 > Dieser Plan **ersetzt** die Phasen 2–8 aus `AUFTRAG.md` Abschnitt 5. Alles andere aus
@@ -17,11 +35,24 @@ nicht kopiert): ruhige Leiste, klare weiße Karten, **eine Startseite „Heute�
 Podologin zwischen zwei Patienten in 3 Sekunden sagt, wer kommt, was offen ist und was zu
 kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schwarz/Weiß, ein sparsames Blau, Signalfarben nur bei echten Problemen. Kein Beige, kein Braun.
 
+**Verbindliches Endziel (Melih, 27.10.2026):** Nach vollständiger Fertigstellung ersetzt das neue Design das bisherige Dashboard als Standard für sämtliche Nutzer, einschließlich bestehender Kunden-Dashboards. Keine dauerhaft separate Vorschau oder nur per Opt-in erreichbare Endlösung. Laufende Pakete fertigstellen, vollständig integrieren und testen, dann die Umstellung reviewbar vorbereiten. **V10-Vorbereitung ist ausdrücklich erlaubt und Bestandteil des Endziels**; tatsächliche Veröffentlichung und Standardaktivierung benötigen weiterhin gesonderte Freigabe. Eine technische Usage-Sperre des Goal-Tools ändert diesen Auftrag nicht.
+
+### V10: verbindliche Abnahme der Standardumstellung
+
+| Fall | Erforderlicher Nachweis vor Freigabe |
+|---|---|
+| Bestehende und neue Zugänge | Nackte `/dashboard.html`-URLs und frische Browserprofile starten Neu ohne Opt-in; vorhandener `localStorage` (fehlendes, `neu`, altes/abweichendes `px-design`, Theme und Panelwahl) verhindert den neuen Standard nicht. Gesperrter Storage wird mitgeprüft. |
+| Rollen und Bereiche | Alle27 Dashboard-Bereiche und bestehenden Einstiege, Besitzer/Mitarbeiter sowie Physio, Ergo, Logopädie, Podologie und interdisziplinäre Praxen abdecken; jeweils gültige Bereichs-/Rollensichtbarkeit erhalten. Rechte, Mandantentrennung, Funktionen und Kundendaten bleiben erhalten. |
+| Box-Auslieferung und Bestands-Caches | Dashboard, Module und Design im gebauten Auslieferungsartefakt prüfen. `onprem/frontend.Dockerfile:75/115–117` kopiert sie bereits; das beweist keine Installation bei Kunden. Update aus einer bestehenden Installation mit alten HTML-/JS-/CSS-Caches prüfen: zusammenpassende Versionen und neue Standardwahl ohne manuelles Opt-in. Installations-/Updateweg und tatsächlich installierter Kundenstand getrennt nachweisen; unbekannte Installation bleibt unbekannt. |
+| Umstellung und Rückfall | Reviewbarer Standardwechsel mit Cache-/Versionsverhalten, geprüftem Rückfall und befristetem `?design=alt`-Notausgang (eine Woche gemäß V10); keine dauerhafte Opt-in-Endlösung. Veröffentlichung erst nach Melihs Freigabe. |
+
+Aktuelle Ausgangslage: `dashboard.html:8–11` aktiviert Neu nur über `?design=neu` oder gespeichertes `px-design=neu`. Bestehende Kunden ohne diese Wahl bleiben derzeit Alt. Dieser Entwicklungszustand erfüllt das Endziel noch nicht.
+
 ## 2. Melihs Entscheidungen (25.10.2026, verbindlich)
 
 | # | Entscheidung |
 |---|---|
-| E1 | v2 nur mit `?design=neu`. Ohne Schalter bleibt alles wie heute (Ausnahmen: E7, E10). **Nach jeder fertigen Phase Merge nach `main`** (F-01 damit beantwortet). |
+| E1 | Bis zur freigegebenen Umstellung Entwicklung hinter `?design=neu`; ohne Schalter bisheriges Verhalten (Ausnahmen: E7, E10). Endziel ab 27.10.: Neu als Standard auch für alle bestehenden Kunden, siehe §1/V10. Spätere Grenze vom 26.10. ersetzt den früheren automatischen Phasen-Merge: kein main-Push und keine Standardumschaltung ohne ausdrückliche Freigabe. |
 | E2 | Navigation: Team entscheidet → siehe 3.2. |
 | E3 | Backend darf erweitert werden (Express-Router, ggf. RPC/View). **Migration live nur nach Melihs OK** (Stopp-Punkt). |
 | E4 | Geld-Kennzahlen nur Inhaber, serverseitig. R-06 wird geschlossen. |
@@ -33,6 +64,10 @@ kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schw
 | E10 | Geld-Zahl Inhaber: „Bereit zur Abrechnung n VO ≈ €“ + „Kassiert diesen Monat“. Das Wort „Umsatz“ wird nicht verwendet. |
 | E11 | **Farben neu (25.10., zweimal geschärft; ersetzt Espresso/Bronze/Creme):** nicht bunt, kein Beige. Vorbild nach Recherche: Linear/Vercel (fast achromatisch, ein Akzent), Primer/Atlassian (Banner sparsam, höchstens einer je Seite, Farbe nie allein). Flächen, Text, Linien, Auswahl, aktive Navigation, getönter Kopf: nur Grau + Schwarz/Weiß. Hauptknopf schwarz (dunkel: weiß). **Ein** Akzent Blau `#2563EB` für Fokus, Links, Fortschritt, Hauptreihe im Diagramm und Status „Bereit zur Abrechnung“. Grün/Bernstein/Rot nur als Text-/Symbolfarbe mit Bedeutung; getönte Fläche nur bei Rot. Warnbalken: neutrale Fläche, nur das Symbol farbig, Titel in Haupttextfarbe. Nur Farbwerte ändern sich. Werte: `redesign/palette-v2.css`; Vorschau `.redesign-shots/plan-v2/ruhig-*.png`. Logo-Datei bleibt. |
 | E12 | **Form „freundlich & übersichtlich“ (25.10., Melih: übersichtlicher, runder, wärmer – nicht über Farben; ersetzt E6 „kantiger“):** Karten 18 px, Hauptkarte 22, Mini-Karten/Banner 14, Knöpfe/Felder 12, Etiketten/Filter als Pillen, Checkbox 6. Weiche Schatten statt harter Linien (Linie heller `#E6E9EE`, Schatten `0 1px 2px …/.04, 0 6px 20px -8px …/.08`). Mehr Luft: Kartenlücke 24, Innenabstand 24–28, Zeilen ≥ 60 px. Startseite übersichtlicher: oben „Als Nächstes“ (breit) + „Zu erledigen“, darunter „Termine heute“ breit + rechts Verordnungen und Freie Zeit (ohne Zeitleiste, nur nutzbare Lücken), unten Abrechnung + Woche (Inhaber). Höchstens ein Etikett je Zeile. Vorschau `.redesign-shots/plan-v2/frei-*.png`, Werte `redesign/form-v3.css`. |
+| E13 | **„Kassiert diesen Monat“ (26.10., Melih):** Hauptzahl = Patienteneingänge; Kassenzahlungen getrennt daneben. Gezählt werden tatsächliche Eingänge minus Stornos, **ohne** Ausbuchungen. |
+| E14 | **Freie Zeit für Angestellte (26.10., Melih):** nur eigene nutzbare freie Lücken, keine Geldangaben; **kein** neuer Praxisschalter. |
+| E15 | **Podologie-Pausenwarnung (26.10., Melih):** 7 Tage vorher; die bestehende Gültigkeitsregel bleibt unverändert. |
+| E16 | **VKZ03 (26.10., Melih):** eigene Zeile „Bei Kasse gefordert“; eine an die Kasse übertragene Forderung zählt nicht mehr als offene Patientenzahlung. |
 
 ## 3. Das neue Design
 
@@ -51,6 +86,7 @@ kassieren ist. Farben (E11, 25.10.): ruhig wie Linear/Vercel: Grautöne und Schw
 - **Eingeklappt: 64–72 px Icon-Leiste** mit Gruppen-Symbol + Kurzlabel, Klick öffnet **Gruppen-Flyout** (Tastatur, Escape, Touch ohne Hover). Zustand pro Nutzer (`sidebar_collapsed`). Statt heute „Breite 0“.
 - **Neue Gruppen (E7, Podologie):** HEUTE (Start, Behandlungen) · TERMINE (Kalender, Anfragen, Warteliste) · PATIENTEN (Patienten, Verordnungen) · ABRECHNUNG (§302, Rechnungen, Zahlungsjournal, Mahnwesen, Auswertungen) · PRAXIS (Team, Verfügbarkeit, Fahrtenbuch, Zuweiser/Ärzte, Leistungen, Patientenpost) · EINSTELLUNGEN (Einstellungen, Vorlagen, Demo, Hilfe). Tägliche Gruppen immer offen. Anamnese, Notizen, Fußbefund, Überblick: Menüzeile ausgeblendet (Registry-Zeile bleibt, `nav-registry.js:7-11`), Zugang über Akte/Behandlung.
 - **Topbar 60 px:** Praxisname · **Suche** (Patient, Verordnung, Rechnung; Taste „/“) · **„+ Neu“** (Termin, Patient, Verordnung erfassen/scannen; „Rezept scannen“ wandert hier hinein) · „Einrichtung 31 %“ beschriftet (bei 100 % weg) · Uhr · Thema · Profil.
+- **V2.09b Rollenentscheidung28.10.:** Verordnungs-/Rechnungssuche zunächst nur Inhaber, mit geprüftem Mandanten-/Patienten-/Finance-Standortscope. Mitarbeiter behalten bestehende Patientensuche. Erweiterung erst mit belegter eigene-Patienten-/Rechteregel; keine dauerhafte Owner-only-Festlegung. Suchbestand begrenzt und ausdrücklich als Teilbestand, Auswahl öffnet vorhandene Detailrenderer als Leseansicht. Keine Schreibwege.
 - **Mobil < 1025 px:** Schublade (R-01 im Neu-Modus mit `translate` gelöst, `inert` auf Inhalt). Telefon optional später: Unterleiste mit 4 Einträgen.
 
 ### 3.3 Startseite „Heute“ (Podologie-Rangfolge, Entwurf `startseite.html`)
@@ -93,7 +129,9 @@ Zuordnung als Map `PANEL_ARCHETYP` in einem Modul mit Vollständigkeitstest gege
 
 ## 5. Phasen und Pakete
 
-Jedes Paket = ein Durchlauf der Schleife (`AUFTRAG.md` 3.3) = ein Produkt-Commit, 30–90 Min, Wirkbereich vorher festgelegt. CSS, Backend und Werkzeug nie im selben Paket. **Nach jeder Phase:** `main` einmergen (Kemal), T1–T5 auf dem Merge-Ergebnis, Push `main` im Vordergrund, T6 `canli-test` mit `?design=neu`.
+**Parallele Dateigrenzen (Melih, 27.10., korrigiert):** Hauptrolle behält V8.02 und sämtliche gemeinsame Integration. V8.03 ausschließlich Formular-Kollege: neue `design/formulare.css` + `redesign/V803-UEBERGABE.md`, eigener Worktree `/private/tmp/praxura-v803-formulare`, Branch `redesign/praxura-formulare` ab `c7fcf75e`. V8.04 ausschließlich Zusatzagent: neue `design/verwaltung.css` + `redesign/V804-UEBERGABE.md`; Panel-/Selektorgrenzen vor Baubeginn mit Hauptrolle abstimmen. Kollegen ändern weder `seiten.css`, `dashboard.*`, STATUS, Index noch Backend. Links, Cache und Auslieferung integriert allein Hauptrolle; kein Push/Deploy-GO durch Zuteilung.
+
+Jedes Paket = ein Durchlauf der Schleife (`AUFTRAG.md` 3.3) = ein Produkt-Commit, 30–90 Min, Wirkbereich vorher festgelegt. CSS, Backend und Werkzeug nie im selben Paket. **Nach jeder Phase:** T1–T5 auf dem Integrationsstand. Melihs spätere Grenze gilt: kein main-Push, keine Standardumschaltung und keine Live-DB ohne ausdrückliche Freigabe; Push nur `redesign/praxura-design` im Hauptkontext/Vordergrund. T6 erst auf einem gesondert freigegebenen veröffentlichten Stand.
 
 | Phase | Inhalt | Pakete (ca.) | Fertig, wenn … |
 |---|---|---|---|
