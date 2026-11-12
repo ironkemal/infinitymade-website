@@ -1232,6 +1232,22 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Bewusst unangetastet: Token-HMAC-Duplikate in `server.js` (~4386/4611/4684) — bekannter Kopie-Kandidat, nicht
   Teil dieses Schritts. Status: lokal committet, nicht gepusht; Karte taze (4389 Funktionen).
 
+### 12.11.2026 · KI-Maskierung: unsichtbare Zeichen + Geburtsdaten (`api-backend/ai/pii-mask.js`)
+- `bereinigeUnsichtbares(text)` (exportiert, :51) — entfernt Zero-Width, Soft Hyphen, Bidi-Steuerzeichen, BOM.
+  Niye: „Yil<U+200B>maz“ umging jede Namensregel der Maskierung. Nerede: `scanneReste`, `buildNameVariants`, Tests.
+- `erkennungsSicht(text)` (intern, :58) — bereinigte Erkennungskopie + Rückabbildung der Fundstellen aufs Original.
+  Niye: Korpus-Wächter verlangt exakten Rückweg (unmask == Eingabe), daher Ersetzung im Original, nicht in der Kopie.
+  Nerede: nur `maskiereText`.
+- `maskiereText(text, {...})` (intern, :73) — gemeinsamer Maskierungsdurchlauf; vorher derselbe Block doppelt in
+  `maskPII` und `maskMessages`. Niye: Doppelung beseitigt, Unsichtbar-Behandlung an einer Stelle. Nerede: `maskPII`
+  und `maskMessages` (dort über die innere `maskOneText`). Selbst gemeldete Kopie-Auflösung, kein offener Kandidat.
+- `vergangenesDatum(tag, monat, jahr, currentYear, kontext)` (intern, :94) — DOB / DATE / nicht maskieren für ein
+  volles Datum. Niye: Geburtsdaten in anderen Schreibweisen und von Kindern unter 10 gingen im Freitext unmaskiert
+  an Azure; vergangene Termindaten bleiben laut Korpus lesbar → Kontext-Regel `GEBURTS_KONTEXT_RE`.
+  Nerede: `findPiiSpans` Regel 9.
+- Keine neue Funktion: `readAll` in `api-backend/ai/ki-woerterbuch.js` sortiert nach `id` (stabile Seiten).
+- Karte taze (erzeugt 12.11.2026), calledBy-Angaben mit Karte abgeglichen. Code-Commit: `364506b0`.
+
 ### 13.11.2026 · V2.05 Leisten-Zuordnung im neuen Design (`module/leiste-zuordnung.js`)
 - `ZIEL_GRUPPE` (:5), `zielGruppe(panelId)` (:11), `ankerNach(panelId)` (:12), `planeUmzug(eintraege)` (:15) — rein,
   DOM-frei; Test `module/leiste-zuordnung.test.js`.
