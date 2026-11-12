@@ -1,0 +1,22 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "stimme": "Puck",
+  "sprechweise": "Natürliche, sympathische und lebendige Männerstimme, wie ein freundlicher Kollege in einem hochwertigen Werbespot. Locker, leicht schmunzelnd, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Hausbesuch. Und die Akte liegt in der Praxis?\n\nPraxura läuft im Browser. Unterwegs verbinden Sie sich über das VPN Ihrer Praxis und haben die Akte dabei. Die Daten selbst bleiben in Ihrer Praxis.\n\nMarkieren Sie eine Kollegin, die heute auf Hausbesuch ist.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Ergotherapie #Hausbesuch #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    { "typ": "figur", "dauer": 4.0, "kicker": "Ergotherapie · Hausbesuch", "titel": "Die Akte? <em>In der Praxis.</em>", "person": 1, "laune": "gestresst", "requisit": "zettel",
+      "sprechblase": "Was stand da <em>noch mal?</em>",
+      "sprecher": "Hausbesuch. Und die Akte liegt in der Praxis. Was stand da noch mal?" },
+    { "typ": "geraet", "buehne": true, "dauer": 4.6, "kicker": "Mit Praxura", "titel": "Die Akte <em>dabei.</em>", "kopf": "Patientenakte",
+      "schritte": ["Über Praxis-VPN verbunden", "Akte geöffnet", "Behandlung dokumentiert"],
+      "sprecher": "Mit Praxura haben Sie die Akte dabei. Sicher über das VPN Ihrer Praxis." },
+    { "typ": "figur", "dauer": 3.6, "titel": "Alles <em>dabei.</em>", "person": 1, "laune": "gestresst", "requisit": "zettel",
+      "wechsel": { "bei": 0.9, "laune": "entspannt", "requisit": "tablet", "sprechblase": "Ah, <em>da</em> steht's." },
+      "sprecher": "Und die Daten? Bleiben trotzdem in Ihrer Praxis." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Die Praxis <em>im Gepäck.</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Ihre Praxis, wo Sie gerade sind." }
+  ]
+}

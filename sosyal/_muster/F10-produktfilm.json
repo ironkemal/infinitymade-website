@@ -1,0 +1,24 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Sulafat",
+  "sprechweise": "Natürliche, warme Frauenstimme wie in einem hochwertigen Werbespot. Nahbar und ruhig, mit einem leichten Lächeln, spricht die Zuschauerin direkt an. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Kennen Sie das? Zehn Termine, eine Verordnung, und jeder Termin will einzeln eingetragen werden.\n\nPraxura legt Serientermine an, prüft die Verordnung vor der Behandlung, führt das Fahrtenbuch und sichert jede Nacht verschlüsselt. Lokal, in Ihrer Praxis.\n\nSchicken Sie das Ihrer Praxisleitung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Heilmittel #Praxissoftware #Therapiepraxis #Praxisalltag #Praxisinhaber",
+  "szenen": [
+    { "typ": "geraet", "buehne": true, "dauer": 4.4, "ansicht": "kalender", "kicker": "Kennen Sie das?", "titel": "Zehn Termine. <em>Eine Serie.</em>", "kopf": "Kalender", "serieLabel": "Serie",
+      "sprecher": "Kennen Sie das? Eine Verordnung, zehn Termine, und jeder will einzeln eingetragen werden." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.4, "kicker": "Vor der Behandlung", "titel": "Geprüft. <em>Vorher.</em>", "kopf": "Verordnung",
+      "schritte": ["Barcode eingelesen", "Pflichtangaben geprüft"], "ergebnis": "Bereit zur Behandlung",
+      "sprecher": "Die Verordnung wird geprüft, bevor Sie behandeln. Nicht erst, wenn die Kasse absetzt." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.0, "kicker": "Hausbesuch", "titel": "Kilometer <em>drin.</em>", "kopf": "Fahrtenbuch",
+      "schritte": ["Hausbesuch eingetragen", "Kilometer erfasst"],
+      "sprecher": "Hausbesuch? Die Kilometer stehen im Fahrtenbuch. Nicht im Handschuhfach." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.4, "kicker": "Jede Nacht", "titel": "Gesichert. <em>Bei Ihnen.</em>", "kopf": "Sicherung",
+      "schritte": ["Daten verschlüsselt", "Sicherung erstellt"], "ergebnis": "Ihre Daten bleiben in der Praxis",
+      "sprecher": "Und jede Nacht wird verschlüsselt gesichert. Ihre Daten bleiben in Ihrer Praxis." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Ihre Praxis. <em>In Ruhe.</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Die Praxissoftware, die bei Ihnen wohnt." }
+  ]
+}

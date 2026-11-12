@@ -1,0 +1,28 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Sulafat",
+  "sprechweise": "Natürliche, warme Frauenstimme wie in einem hochwertigen Werbespot. Ruhig, herzlich, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Pflegeheim, Dienstagnachmittag. Sechs Bewohner, sechs Verordnungen.\n\nMit Praxura tippen Sie den Fußbefund vor Ort ins Tablet, über das VPN Ihrer Praxis, und die Kilometer stehen im Fahrtenbuch.\n\nMarkieren Sie eine Podologin, die heute im Heim unterwegs ist.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #Hausbesuch #Pflegeheim #Heilmittel #Praxisalltag",
+  "szenen": [
+    { "typ": "foto", "dauer": 3.6, "bild": "foto/pflegeheim/p1.jpg", "kicker": "Podologie · Hausbesuch", "titel": "Sechs Bewohner. <em>Ein Nachmittag.</em>",
+      "effekt": ["korn", "kino"], "schwenk": -30,
+      "sprecher": "Pflegeheim, Dienstagnachmittag. Sechs Bewohner, sechs Verordnungen." },
+    { "typ": "foto", "dauer": 3.2, "bild": "foto/pflegeheim/p2.jpg",
+      "effekt": ["korn", "kino"],
+      "sprecher": "Dazwischen: Befunde, Unterschriften, Notizen auf Papier." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.8, "ansicht": "fuss", "kicker": "Mit Praxura", "titel": "Befund <em>vor Ort.</em>", "kopf": "Fußbefund",
+      "punkte": ["Clavus", "Onychomykose"], "ergebnis": "Befund gespeichert",
+      "sprecher": "Mit Praxura tippen Sie den Befund gleich vor Ort ins Tablet. Über das VPN Ihrer Praxis." },
+    { "typ": "geraet", "buehne": true, "dauer": 3.8, "kicker": "Fahrtenbuch", "titel": "Kilometer <em>drin.</em>", "kopf": "Fahrtenbuch",
+      "schritte": ["Hausbesuch eingetragen", "Kilometer erfasst"],
+      "sprecher": "Und die Kilometer stehen im Fahrtenbuch." },
+    { "typ": "foto", "dauer": 3.2, "bild": "foto/pflegeheim/p3.jpg", "titel": "Und dann: <em>nach Hause.</em>",
+      "effekt": ["korn"],
+      "sprecher": "Danach geht es nach Hause. Ohne Papierkram im Kofferraum." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Podologie, <em>die unterwegs ist.</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Für Podologie, die unterwegs ist." }
+  ]
+}

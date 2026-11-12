@@ -1,0 +1,107 @@
+{
+  "art": "video",
+  "musik": "traurig",
+  "stimme": "Aoede",
+  "sprechweise": "Leise, traurig, den Tränen nahe, wie der Monolog in einem Liebesdrama. Langsam, mit Pausen.",
+  "caption": "Elf Jahre. Es war nicht leicht. 💔📠\n\nSchick das der Kollegin, die ihr Faxgerät auch schon mal anschreien wollte.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Praxisalltag #Faxgerät #Therapeutenleben #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/gekuendigt/g1.jpg",
+      "titel": "Nach elf Jahren <em>ist Schluss.</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Nach elf Jahren … hab ich heute Schluss gemacht."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/gekuendigt/g2.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Ich konnte einfach nicht mehr. Er hat mich nie verstanden."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/gekuendigt/g3.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "zoom": "raus",
+      "sprecher": "Immer dieses Piepen. Dieses Rauschen. Mitten in der Nacht."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/gekuendigt/g4.jpg",
+      "effekt": [
+        "korn",
+        "kino",
+        "wackeln"
+      ],
+      "klang": [
+        {
+          "art": "whoosh",
+          "bei": 0
+        },
+        {
+          "art": "boom",
+          "bei": "nach"
+        }
+      ],
+      "nachlauf": 0.9,
+      "sprecher": "Leb wohl."
+    },
+    {
+      "typ": "foto",
+      "dauer": 4.4,
+      "bild": "foto/gekuendigt/g5.jpg",
+      "uebergang": "schnitt",
+      "musikStopp": true,
+      "position": "unten",
+      "kicker": "Eingehendes Fax",
+      "titel": "Betreff: <em>Absetzung.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "klang": [
+        {
+          "art": "fax",
+          "bei": 0.2,
+          "laut": 2
+        }
+      ]
+    },
+    {
+      "typ": "foto",
+      "dauer": 2,
+      "bild": "foto/gekuendigt/g6.jpg",
+      "uebergang": "schnitt",
+      "ruck": "nach",
+      "nachlauf": 0.8,
+      "sprechweise": "Fassungslos, tonlos geflüstert.",
+      "sprecher": "… nein."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3,
+      "kicker": "Praxura Lokal",
+      "titel": "Manche Trennungen <em>dauern länger.</em>",
+      "cta": "Weniger Papier. Mehr Therapie.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ]
+    }
+  ],
+  "tempo": 1.22
+}

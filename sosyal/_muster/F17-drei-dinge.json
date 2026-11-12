@@ -1,0 +1,24 @@
+{
+  "art": "video",
+  "musik": "museum",
+  "stimme": "Sadaltager",
+  "sprechweise": "Natürliche, ruhige und souveräne Männerstimme, wie ein vertrauenswürdiger Berater in einem hochwertigen Werbefilm. Klar, warm, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Drei Dinge, die eine Praxissoftware für Heilmittel können muss.\n\nGebaut für Heilmittel. Ihre Daten bei Ihnen. Abrechnung vorbereiten, ohne Prozente vom Umsatz. Praxura bereitet die Abrechnung nach § 302 SGB V vor, Sie reichen mit Ihrem eigenen Zertifikat ein.\n\nSchicken Sie das Ihrer Praxisleitung.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Praxissoftware #Heilmittel #Therapiepraxis #Praxisinhaber #PVS",
+  "szenen": [
+    { "typ": "aussage", "ton": "dunkel", "dauer": 3.2, "kicker": "Praxissoftware", "titel": "Drei Dinge, die sie <em>können muss.</em>",
+      "sprecher": "Drei Dinge, die eine Praxissoftware für Heilmittel können muss." },
+    { "typ": "aussage", "ton": "dunkel", "dauer": 3.6, "kicker": "1 / 3", "titel": "Gebaut für <em>Heilmittel.</em>", "text": "Nicht für Arztpraxen gebaut und umgebogen.",
+      "sprecher": "Erstens: Sie ist für Heilmittel gebaut. Nicht für Arztpraxen, und dann umgebogen." },
+    { "typ": "aussage", "ton": "dunkel", "dauer": 3.6, "kicker": "2 / 3", "titel": "Ihre Daten <em>bei Ihnen.</em>", "text": "Auf dem Rechner in Ihrer Praxis.",
+      "sprecher": "Zweitens: Ihre Patientendaten bleiben bei Ihnen. In Ihrer Praxis." },
+    { "typ": "aussage", "ton": "dunkel", "dauer": 3.6, "kicker": "3 / 3", "titel": "Abrechnung, <em>ohne Prozente.</em>", "text": "Vorbereitet nach § 302 SGB V. Sie reichen selbst ein.",
+      "sprecher": "Drittens: Sie bereitet die Abrechnung vor. Ohne Prozente von Ihrem Umsatz." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.0, "kicker": "Praxura Lokal", "titel": "Alle <em>drei.</em>", "kopf": "Praxura",
+      "schritte": ["Für Heilmittel gebaut", "Daten in der Praxis", "Abrechnung ohne Provision"],
+      "sprecher": "Praxura kann alle drei." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Ihre Praxis. <em>Ihre Software.</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Die Praxissoftware, die bei Ihnen wohnt." }
+  ]
+}

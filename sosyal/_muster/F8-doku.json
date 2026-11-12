@@ -1,0 +1,86 @@
+{
+  "art": "video",
+  "musik": "doku",
+  "stimme": "Charon",
+  "sprechweise": "Natürliche, ruhige Männerstimme eines Naturfilm-Erzählers. Warm, menschlich, mit leiser Faszination, nicht übertrieben und nicht geflüstert. Normales Sprechtempo.",
+  "caption": "Die Podologin. In ihrem natürlichen Lebensraum. 🌿\n\nNach Praxisschluss beginnt ein seltenes Ritual: Verordnungen prüfen. Praxura prüft Pflichtangaben wie Ausstellungsdatum und Diagnosegruppe schon beim Einlesen, vor der ersten Behandlung.\n\nMarkieren Sie die Kollegin, die abends noch Formulare gegen das Licht hält.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #Praxisalltag #Heilmittel #Verordnung #Therapeutenleben",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/doku/d1.jpg",
+      "kicker": "Folge 1 · Die Podologin",
+      "titel": "In ihrem natürlichen <em>Lebensraum.</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "schwenk": 30,
+      "sprecher": "Hier, nach Praxisschluss, beobachten wir ein seltenes Ritual."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/doku/d2.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Die Podologin prüft ihre Verordnungen. Jede einzelne."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.0,
+      "bild": "foto/doku/d3.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "nachlauf": 0.7,
+      "sprecher": "Dann ein Fund. Die Diagnosegruppe fehlt."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/doku/d4.jpg",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "zoom": "raus",
+      "sprecher": "Oft bemerkt es erst die Kasse."
+    },
+    {
+      "typ": "geraet",
+      "dauer": 4.6,
+      "kicker": "Doch die Art passt sich an",
+      "titel": "<em>Vorher</em> geprüft.",
+      "kopf": "Verordnung",
+      "schritte": [
+        "Barcode eingelesen",
+        "Ausstellungsdatum geprüft",
+        "Diagnosegruppe geprüft"
+      ],
+      "ergebnis": "Hinweis vor der Behandlung",
+      "sprecher": "Doch manche haben sich angepasst. Sie sehen den Fehler vor der Behandlung.",
+      "buehne": true
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "kicker": "Praxura Lokal",
+      "titel": "<em>Pünktlich</em> Feierabend.",
+      "cta": "Artgerecht arbeiten.",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "sprecher": "Und so gelingt ihr das Seltenste: pünktlich Feierabend.",
+      "premium": true,
+      "nachlauf": 1.0
+    }
+  ],
+  "tempo": 1.1
+}

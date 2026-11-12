@@ -1,0 +1,135 @@
+{
+  "art": "video",
+  "musik": "episch",
+  "stimme": "Algenib",
+  "sprechweise": "Tiefe, raue Kinotrailer-Stimme eines Mannes. Langsam, dramatisch, bedeutungsschwer, mit kurzen Pausen, todernst.",
+  "caption": "Jeden Montag derselbe Kampf. 📄⚔️\n\nSchick das der Kollegin, die montags gegen den Stapel kämpft.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Praxisalltag #Montag #Therapeutenleben #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 4.2,
+      "bild": "foto/legende/A-start.jpg",
+      "kicker": "Montag, 7:58",
+      "titel": "Der <em>Montagsstapel.</em>",
+      "hub": 260,
+      "effekt": [
+        "blaetter",
+        "staub",
+        "kino",
+        "korn",
+        "wackeln"
+      ],
+      "klang": [
+        {
+          "art": "boom",
+          "bei": 0,
+          "laut": 2
+        }
+      ],
+      "sprecher": "Man sagt … niemand hat den Montagsstapel je überlebt."
+    },
+    {
+      "typ": "foto",
+      "dauer": 4,
+      "bild": "foto/legende/B-start.jpg",
+      "uebergang": "schnitt",
+      "effekt": [
+        "staub",
+        "kino",
+        "korn",
+        "wackeln"
+      ],
+      "klang": [
+        {
+          "art": "braam",
+          "bei": 0
+        }
+      ],
+      "sprecher": "Lena. Physiotherapeutin. Jeden Montag derselbe Kampf."
+    },
+    {
+      "typ": "foto",
+      "dauer": 5,
+      "bild": "foto/legende/C-start.jpg",
+      "effekt": [
+        "glanz",
+        "staub",
+        "kino",
+        "korn"
+      ],
+      "glanzBei": [
+        33,
+        54
+      ],
+      "schwenk": -40,
+      "blitz": true,
+      "klang": [
+        {
+          "art": "whoosh",
+          "bei": 0
+        },
+        {
+          "art": "riser",
+          "bei": "ende",
+          "laut": 2
+        }
+      ],
+      "sprecher": "Doch eine alte Legende erzählt von einer Waffe … die den Stapel in Sekunden bezwingt."
+    },
+    {
+      "typ": "geraet",
+      "dauer": 3.6,
+      "uebergang": "schnitt",
+      "blitzEin": true,
+      "musikStopp": true,
+      "kicker": "Mit Praxura",
+      "titel": "Scannen. <em>Prüfen.</em>",
+      "kopf": "Verordnung",
+      "schritte": [
+        "Barcode eingelesen",
+        "Felder bestätigt",
+        "Angaben geprüft"
+      ],
+      "ergebnis": "Bereit für die Behandlung",
+      "klang": [
+        {
+          "art": "bip",
+          "bei": 0.83
+        },
+        {
+          "art": "bip",
+          "bei": -1.2
+        }
+      ],
+      "sprechweise": "Plötzlich völlig trocken und beiläufig, wie ein gelangweilter Kollege. Normales Tempo, kein Drama.",
+      "sprecher": "Barcode. Geprüft. Fertig.",
+      "tempo": 1.05
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/legende/D-start.jpg",
+      "uebergang": "schnitt",
+      "position": "unten",
+      "kicker": "Montag, 7:59",
+      "ruck": 3.5,
+      "sprechweise": "Völlig trocken und beiläufig, leicht gelangweilt, mit einem winzigen Schmunzeln.",
+      "sprecher": "Montag. Sieben Uhr neunundfünfzig. Die Legende lebt.",
+      "tempo": 1.05
+    },
+    {
+      "typ": "outro",
+      "dauer": 2.8,
+      "kicker": "Praxura Lokal",
+      "titel": "Schick das der Kollegin, <em>die montags kämpft.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ]
+    }
+  ],
+  "tempo": 1.18
+}

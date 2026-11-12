@@ -1,0 +1,64 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "stimme": "Iapetus",
+  "sprechweise": "Natürliche freundliche, klare Männerstimme wie ein sympathischer Kollege in einem hochwertigen Werbespot. Locker, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Eine Verordnung, zwölf Termine, drei Behandler. Und das alles einzeln eintragen?\n\nIn Praxura legen Sie eine Verordnung als Serie an, im Teamkalender für alle sichtbar.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Physiotherapie #Terminplanung #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "figur",
+      "dauer": 4.0,
+      "kicker": "Physiotherapie",
+      "titel": "Zwölf Termine. <em>Einzeln?</em>",
+      "person": 0,
+      "laune": "gestresst",
+      "requisit": "zettel",
+      "sprechblase": "Und wer hat <em>dienstags</em> Zeit?",
+      "sprecher": "Eine Verordnung, zwölf Termine, drei Behandler. Und jeder Termin einzeln eintragen?"
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.4,
+      "ansicht": "kalender",
+      "kicker": "Mit Praxura",
+      "titel": "Eine <em>Serie.</em>",
+      "kopf": "Teamkalender",
+      "serieLabel": "Serie",
+      "sprecher": "In Praxura legen Sie die Verordnung als Serie an. Im Teamkalender, für alle sichtbar."
+    },
+    {
+      "typ": "figur",
+      "dauer": 3.4,
+      "titel": "Und <em>fertig.</em>",
+      "person": 0,
+      "laune": "gestresst",
+      "requisit": "zettel",
+      "wechsel": {
+        "bei": 0.8,
+        "laune": "entspannt",
+        "requisit": "kaffee",
+        "sprechblase": "Kaffee, <em>bitte.</em>"
+      },
+      "sprecher": "Und die gewonnene Zeit? Gehört dem Kaffee."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Termine, <em>in Serie.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Charon",
+  "sprechweise": "Natürliche ruhige, tiefe und warme Männerstimme, gedämpft wie spätabends, wie in einem hochwertigen Werbefilm, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "23 Uhr. Die Praxis ist dunkel. Und trotzdem passiert etwas.\n\nPraxura sichert jede Nacht verschlüsselt Datenbank und Dateien, auf ein Ziel, das Ihre Praxis wählt: externe Festplatte, NAS oder Storage-Box. Updates kommen ebenfalls nachts.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Datensicherung #Praxissoftware #Heilmittel #Therapiepraxis #Praxisinhaber",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.6,
+      "bild": "foto/nacht/n1.jpg",
+      "kicker": "23:00 Uhr",
+      "titel": "Die Praxis <em>schläft.</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Dreiundzwanzig Uhr. Die Praxis ist dunkel."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.6,
+      "kicker": "Jede Nacht",
+      "titel": "<em>Verschlüsselt</em> gesichert.",
+      "kopf": "Sicherung",
+      "schritte": [
+        "Datenbank verschlüsselt",
+        "Dateien gesichert",
+        "Updates eingespielt"
+      ],
+      "ergebnis": "Auf Ihrer Festplatte oder NAS",
+      "sprecher": "Und trotzdem wird gesichert. Jede Nacht, verschlüsselt, auf Ihre eigene Festplatte."
+    },
+    {
+      "typ": "foto",
+      "dauer": 3.2,
+      "bild": "foto/versionen/b1.jpg",
+      "kicker": "7:45 Uhr",
+      "titel": "Alles <em>da.</em>",
+      "effekt": [
+        "korn"
+      ],
+      "sprecher": "Am Morgen ist alles da. Ohne dass Sie daran denken mussten."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Gesichert, <em>während Sie schlafen.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gesichert, während Sie schlafen."
+    }
+  ]
+}

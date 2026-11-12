@@ -1,0 +1,59 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Orus",
+  "sprechweise": "Natürliche klare, ruhige Männerstimme, sachlich und freundlich, wie ein guter Erklärfilm, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Offene Zuzahlungen. Hier ein Zettel, da ein Zettel. Und wer erinnert eigentlich?\n\nPraxura zeigt Ihnen, welche Zuzahlungen offen sind, und erstellt im Mahnwesen das Mahnschreiben gleich mit.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Physiotherapie #Zuzahlung #Praxisorganisation #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "zaehler",
+      "ton": "dunkel",
+      "dauer": 3.8,
+      "kicker": "Offene Zuzahlungen",
+      "praefix": "offen",
+      "von": 0,
+      "bis": 23,
+      "text": "Verteilt auf Zettel, Listen und Erinnerung.",
+      "sprecher": "Offene Zuzahlungen in einer Physiopraxis? Schnell sind es dreiundzwanzig."
+    },
+    {
+      "typ": "aussage",
+      "ton": "dunkel",
+      "dauer": 3.0,
+      "titel": "Und wer <em>erinnert?</em>",
+      "sprecher": "Und wer erinnert eigentlich daran?"
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.6,
+      "kicker": "Mit Praxura",
+      "titel": "Alles <em>im Blick.</em>",
+      "kopf": "Zuzahlungen",
+      "schritte": [
+        "Offene Zuzahlungen gelistet",
+        "Mahnung erstellt"
+      ],
+      "ergebnis": "Mahnwesen eingebaut",
+      "sprecher": "Praxura zeigt Ihnen, welche Zuzahlungen offen sind. Und die Mahnung ist schnell erstellt."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Offen? <em>Nicht lange.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen."
+    }
+  ]
+}

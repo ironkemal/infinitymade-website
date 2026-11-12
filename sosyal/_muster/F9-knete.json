@@ -1,0 +1,97 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "caption": "POV: Montag, 8:00 Uhr. Um 8:14 ist der Tag schon voll.\n\nKollegin krank, Zuzahlung auf irgendeinem Zettel, Datum fehlt auf der Verordnung. In Praxura stehen Termine, offene Zuzahlungen und die Prüfung der Verordnung an einem Ort.\n\nMarkieren Sie die Kollegin, die montags den Empfang rettet.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Praxisalltag #Montag #Therapeutenleben #Heilmittel",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 2.6,
+      "bild": "foto/knete/k1.jpg",
+      "kicker": "Kennen Sie das?",
+      "titel": "Montag, <em>8:00 Uhr.</em>",
+      "text": "Noch ist alles gut.",
+      "sprecher": "Kennen Sie das? Montag, acht Uhr. Noch ist alles gut."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.3,
+      "bild": "foto/knete/k2.jpg",
+      "uebergang": "schnitt",
+      "titel": "Kollegin krank. <em>14 Termine.</em>",
+      "sprecher": "Dann ruft die Kollegin an: krank. Vierzehn Termine."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.5,
+      "bild": "foto/knete/k3.jpg",
+      "uebergang": "schnitt",
+      "titel": "Zuzahlung? Steht auf <em>irgendeinem Zettel.</em>",
+      "sprecher": "Die Zuzahlung? Steht auf irgendeinem Zettel."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/knete/k4.jpg",
+      "uebergang": "schnitt",
+      "titel": "Auf der Verordnung fehlt <em>das Datum.</em>",
+      "sprecher": "Und auf der Verordnung fehlt das Datum."
+    },
+    {
+      "typ": "aussage",
+      "dauer": 2.2,
+      "ton": "dunkel",
+      "uebergang": "schnitt",
+      "titel": "Es ist <em>8:14 Uhr.</em>",
+      "klang": [
+        {
+          "art": "whoosh",
+          "bei": 0,
+          "laut": -6
+        }
+      ],
+      "sprecher": "Es ist acht Uhr vierzehn.",
+      "nachlauf": 0.5
+    },
+    {
+      "typ": "geraet",
+      "dauer": 4.6,
+      "kicker": "Mit Praxura",
+      "titel": "Montag, <em>sortiert.</em>",
+      "kopf": "Heute",
+      "schritte": [
+        "Termine umgeplant",
+        "Zuzahlungen im Blick",
+        "Verordnung geprüft"
+      ],
+      "ergebnis": "Bereit für den ersten Patienten",
+      "buehne": true,
+      "sprecher": "Mit Praxura haben Sie den Montag im Griff: Termine, Zuzahlungen, Verordnungen. An einem Ort."
+    },
+    {
+      "typ": "foto",
+      "dauer": 2.4,
+      "bild": "foto/knete/k1.jpg",
+      "titel": "Montag kann <em>kommen.</em>",
+      "sprecher": "Und der Montag kann kommen."
+    },
+    {
+      "typ": "outro",
+      "dauer": 3.4,
+      "kicker": "Praxura Lokal",
+      "titel": "Weniger Zettel. <em>Mehr Therapie.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15
+        }
+      ],
+      "premium": true,
+      "sprecher": "Praxura. Weniger Zettel, mehr Therapie.",
+      "nachlauf": 1.0
+    }
+  ],
+  "stimme": "Aoede",
+  "sprechweise": "Natürliche, sympathische Frauenstimme wie in einem hochwertigen Werbespot. Warm und nahbar, mit einem leichten Lächeln, spricht die Zuschauerin direkt an. Normales Sprechtempo.",
+  "tempo": 1.1
+}

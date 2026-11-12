@@ -1,0 +1,68 @@
+{
+  "art": "video",
+  "musik": "leicht",
+  "stimme": "Achernar",
+  "sprechweise": "Natürliche, freundliche und lebendige Frauenstimme, wie eine sympathische Kollegin in einem hochwertigen Werbespot. Leicht schmunzelnd, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Therapiebericht angekreuzt. Und wieder alles abtippen?\n\nIn Praxura füllt sich der Bericht aus Verordnung, Behandlungen und Befund selbst. Sie schreiben nur Verlauf und Empfehlung und senden ihn an die Arztpraxis: verschlüsselt per Mail, per Fax oder gedruckt.\n\nMarkieren Sie die Kollegin, die Berichte am Wochenende schreibt.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Logopädie #Therapiebericht #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "figur",
+      "dauer": 4.0,
+      "kicker": "Logopädie",
+      "titel": "Bericht <em>angekreuzt.</em>",
+      "person": 3,
+      "laune": "gestresst",
+      "requisit": "zettel",
+      "sprechblase": "Schon <em>wieder</em> abtippen?",
+      "sprecher": "Therapiebericht angekreuzt. Und jetzt? Alles noch mal abtippen?"
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.8,
+      "kicker": "Mit Praxura",
+      "titel": "Der Bericht <em>füllt sich.</em>",
+      "kopf": "Therapiebericht",
+      "schritte": [
+        "Verordnung übernommen",
+        "Verlauf ergänzt",
+        "An den Arzt gesendet"
+      ],
+      "ergebnis": "Per Mail, Fax oder Druck",
+      "sprecher": "Mit Praxura füllt sich der Bericht aus Verordnung und Behandlungen. Sie schreiben nur, was zählt: Verlauf und Empfehlung."
+    },
+    {
+      "typ": "figur",
+      "dauer": 3.6,
+      "titel": "Und raus <em>damit.</em>",
+      "person": 3,
+      "laune": "gestresst",
+      "requisit": "zettel",
+      "wechsel": {
+        "bei": 0.9,
+        "laune": "entspannt",
+        "requisit": "tablet",
+        "sprechblase": "<em>Fertig.</em>"
+      },
+      "sprecher": "Dann geht er verschlüsselt an die Arztpraxis. Fertig."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Berichte, <em>die sich schreiben.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen."
+    }
+  ]
+}

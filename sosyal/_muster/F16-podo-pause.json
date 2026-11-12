@@ -1,0 +1,25 @@
+{
+  "art": "video",
+  "musik": "warm",
+  "stimme": "Kore",
+  "sprechweise": "Natürliche, klare und freundliche Frauenstimme einer erfahrenen Kollegin, die ein Quiz stellt. Kompetent, ein wenig verschmitzt, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Podolog:innen, kurze Frage: Wie lange darf zwischen zwei Behandlungen liegen?\n\nAntwort: 12 Kalenderwochen nach der letzten Behandlung (bei Nagelspange auch nach dem Kontrolltermin). Danach verliert die Verordnung ihre Gültigkeit (Podologie-Vertrag nach § 125 SGB V, § 7 Abs. 7). Die 14-Tage-Regel der HeilM-RL gilt in der Podologie nicht (§ 16 Abs. 4 Satz 5).\n\nSpeichern Sie sich das fürs Team.\n\nMehr auf praxura.de\n\n(Stimme KI-generiert)\n\n#Podologie #Verordnung #Heilmittel #Praxisalltag #Podologin",
+  "szenen": [
+    { "typ": "aussage", "ton": "dunkel", "dauer": 3.4, "kicker": "Podologie · Kurze Frage", "titel": "Wie lange darf die <em>Pause</em> sein?",
+      "sprecher": "Podologinnen, kurze Frage: Wie lange darf zwischen zwei Behandlungen liegen?" },
+    { "typ": "zaehler", "ton": "dunkel", "dauer": 3.6, "kicker": "Die Antwort", "praefix": "Wochen", "von": 0, "bis": 12,
+      "text": "nach der letzten Behandlung. Danach ist die Verordnung ungültig.", "quelle": "Podologie-Vertrag § 7 Abs. 7",
+      "sprecher": "Die Antwort: höchstens zwölf Kalenderwochen." },
+    { "typ": "vergleich", "ton": "dunkel", "dauer": 4.6, "titel": "Und die <em>14 Tage?</em>",
+      "links": { "label": "Physio · Ergo · Logo", "text": "14 Tage ohne Begründung", "weg": true },
+      "rechts": { "label": "Podologie", "text": "gilt nicht. Hier zählen 12 Wochen." },
+      "sprecher": "Und die vierzehn Tage aus der Richtlinie? Gelten in der Podologie nicht." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.2, "kicker": "Mit Praxura", "titel": "Abstand im <em>Blick.</em>", "kopf": "Termin",
+      "schritte": ["Letzte Behandlung erkannt", "Abstand berechnet"], "ergebnis": "Hinweis bei mehr als 12 Wochen",
+      "sprecher": "Praxura rechnet beim Planen mit und meldet sich, wenn der Abstand zu groß wird." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Gebaut für <em>Podologie.</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen. Auch für Ihre Podologie." }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Laomedeia",
+  "sprechweise": "Natürliche, warme und lebendige Frauenstimme wie in einem hochwertigen Werbespot. Nahbar, mit einem leichten Lächeln, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Zwei Versionen desselben Montags. Welche wollen Sie?\n\nMit Praxura laufen Termine, Verordnungsprüfung und Dokumentation nebenbei mit. Lokal, in Ihrer Praxis.\n\nSchicken Sie das der Kollegin, die montags noch um acht in der Praxis sitzt.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Physiotherapie #Praxisalltag #Montag #Heilmittel #Therapeutenleben",
+  "szenen": [
+    { "typ": "foto", "dauer": 3.4, "bild": "foto/test/test1.jpg", "kicker": "Version A", "titel": "Montag. <em>Mit Papier.</em>",
+      "effekt": ["korn", "kino"], "schwenk": -30,
+      "sprecher": "Zwei Versionen desselben Montags. Version A: mit Papier." },
+    { "typ": "foto", "dauer": 3.2, "bild": "foto/versionen/a2.jpg", "titel": "19:40. <em>Noch da.</em>",
+      "effekt": ["korn", "kino"], "zoom": "raus",
+      "sprecher": "Um zwanzig vor acht sitzt sie immer noch da." },
+    { "typ": "foto", "dauer": 3.2, "bild": "foto/versionen/b1.jpg", "kicker": "Version B", "titel": "Montag. <em>Mit Praxura.</em>",
+      "effekt": ["korn"],
+      "sprecher": "Version B. Derselbe Montag, mit Praxura." },
+    { "typ": "geraet", "buehne": true, "dauer": 4.2, "kicker": "Nebenbei", "titel": "Läuft <em>einfach mit.</em>", "kopf": "Heute",
+      "schritte": ["Termine stehen", "Verordnungen geprüft", "Doku gespeichert"],
+      "sprecher": "Termine, Verordnungen, Dokumentation laufen einfach mit." },
+    { "typ": "foto", "dauer": 3.0, "bild": "foto/test/test4.jpg", "titel": "17:30. <em>Feierabend.</em>",
+      "effekt": ["korn"],
+      "sprecher": "Halb sechs. Feierabend." },
+    { "typ": "outro", "premium": true, "dauer": 3.4, "nachlauf": 1.0, "kicker": "Praxura Lokal", "titel": "Welche Version <em>wollen Sie?</em>", "cta": "Mehr auf praxura.de",
+      "klang": [{ "art": "ding", "bei": 0.15, "laut": -3 }],
+      "sprecher": "Welche Version wollen Sie? Praxura." }
+  ]
+}

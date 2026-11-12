@@ -1,0 +1,67 @@
+{
+  "art": "video",
+  "musik": "ruhig",
+  "stimme": "Sulafat",
+  "sprechweise": "Natürliche warme, ruhige Frauenstimme wie in einem hochwertigen Produktfilm. Souverän, nicht übertrieben. Normales Sprechtempo.",
+  "tempo": 1.05,
+  "caption": "Barcode scannen. Fertig. Und das Bild der Verordnung? Bleibt auf Ihrem Rechner.\n\nPraxura liest die Verordnungsdaten lokal aus dem Barcode, schlägt die Felder vor, Sie bestätigen. Formfehler fallen vor der Behandlung auf.\n\nMehr auf praxura.de\n\n(Bilder und Stimme KI-generiert)\n\n#Podologie #Verordnung #Praxisalltag #Heilmittel #Praxissoftware",
+  "szenen": [
+    {
+      "typ": "foto",
+      "dauer": 3.4,
+      "bild": "foto/scan/scan1.jpg",
+      "kicker": "Podologie",
+      "titel": "Scannen. <em>Fertig.</em>",
+      "effekt": [
+        "korn",
+        "kino"
+      ],
+      "sprecher": "Eine neue Verordnung. Einmal scannen."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 4.8,
+      "kicker": "Lokal gelesen",
+      "titel": "Nur <em>bestätigen.</em>",
+      "kopf": "Verordnung",
+      "schritte": [
+        "Barcode lokal gelesen",
+        "Felder vorgeschlagen",
+        "Von Ihnen bestätigt"
+      ],
+      "ergebnis": "Bild bleibt auf Ihrem Rechner",
+      "sprecher": "Praxura liest den Barcode lokal. Die Felder werden vorgeschlagen, Sie bestätigen. Das Bild verlässt den Rechner nicht."
+    },
+    {
+      "typ": "geraet",
+      "buehne": true,
+      "dauer": 3.8,
+      "kicker": "Vor der Behandlung",
+      "titel": "Geprüft. <em>Vorher.</em>",
+      "kopf": "Prüfung",
+      "schritte": [
+        "Pflichtangaben geprüft",
+        "Fristen geprüft"
+      ],
+      "sprecher": "Und Formfehler fallen auf, bevor Sie behandeln."
+    },
+    {
+      "typ": "outro",
+      "premium": true,
+      "dauer": 3.4,
+      "nachlauf": 1.0,
+      "kicker": "Praxura Lokal",
+      "titel": "Scannen. <em>Bleibt hier.</em>",
+      "cta": "Mehr auf praxura.de",
+      "klang": [
+        {
+          "art": "ding",
+          "bei": 0.15,
+          "laut": -3
+        }
+      ],
+      "sprecher": "Praxura. Gebaut für Heilmittelpraxen. Auch für Ihre Podologie."
+    }
+  ]
+}
