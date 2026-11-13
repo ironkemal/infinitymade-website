@@ -90,6 +90,10 @@ export function buildPhysikalischerDateiname({ kind = 'echt', transfernummer }) 
 // Datei (O-131, Kaltprüfung 21.09.2026). Deshalb: ein vorhandenes ".dta"
 // abschneiden, dann ein eigenes, von signedPath eindeutig unterscheidbares
 // Suffix anhängen statt es zu duplizieren.
+/**
+ * @param {string} base
+ * @returns {string}
+ */
 export function buildEncryptedFilename(base) {
   const stamm = base.replace(/\.dta$/i, '');
   return `${stamm}.dta.enc.p7m`;

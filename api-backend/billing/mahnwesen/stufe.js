@@ -29,7 +29,7 @@ export function naechsteStufe(bisherige = []) {
 /**
  * Prüft eine gewünschte Stufe gegen die Historie.
  *
- * @param {number} gewuenscht
+ * @param {number|string} gewuenscht
  * @param {Array<{level:number}>} bisherige
  * @returns {{ ok: boolean, stufe: number|null, fehler: string|null }}
  */
@@ -43,7 +43,7 @@ export function pruefeStufe(gewuenscht, bisherige = []) {
     };
   }
 
-  const lvl = parseInt(gewuenscht, 10);
+  const lvl = parseInt(String(gewuenscht), 10);
   if (![1, 2, 3].includes(lvl)) {
     return { ok: false, stufe: null, fehler: 'Mahnstufe muss 1, 2 oder 3 sein.' };
   }

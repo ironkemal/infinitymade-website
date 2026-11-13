@@ -7,7 +7,7 @@ test('Raumdetails bereinigen Beschreibung und vorhandene Ausstattung', () => {
   assert.deepEqual(raumDetails(), { beschreibung: '', ausstattung: [] });
 });
 test('Raumdetails weisen unbrauchbare und überlange Inhalte ab', () => {
-  for (const [text, liste] of [['x'.repeat(2001), []], ['', [' ']], ['', ['Liege', ' Liege']], ['', [null]], ['', ['x'.repeat(81)]], ['', Array.from({ length: 31 }, (_, i) => String(i))], ['', 'Liege']]) {
+  for (const [text, liste] of /** @type {Array<[string, string[]]>} */ ([['x'.repeat(2001), []], ['', [' ']], ['', ['Liege', ' Liege']], ['', [null]], ['', ['x'.repeat(81)]], ['', Array.from({ length: 31 }, (_, i) => String(i))], ['', 'Liege']])) {
     assert.throws(() => raumDetails(text, liste));
   }
   assert.equal(raumDetails('😀'.repeat(2000), ['😀'.repeat(80)]).ausstattung.length, 1);

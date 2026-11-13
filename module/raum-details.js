@@ -3,6 +3,11 @@ export const BESCHREIBUNG_MAX = 2000;
 export const AUSSTATTUNG_MAX = 30;
 export const AUSSTATTUNG_NAME_MAX = 80;
 
+/**
+ * @param {string} [beschreibung]
+ * @param {string[]} [ausstattung]
+ * @returns {{ beschreibung: string, ausstattung: string[] }}
+ */
 export function raumDetails(beschreibung = '', ausstattung = []) {
   if (typeof beschreibung !== 'string' || [...beschreibung].length > BESCHREIBUNG_MAX) throw new Error('Beschreibung darf höchstens 2000 Zeichen enthalten.');
   if (!Array.isArray(ausstattung) || ausstattung.length > AUSSTATTUNG_MAX) throw new Error('Höchstens 30 Ausstattungspunkte möglich.');
