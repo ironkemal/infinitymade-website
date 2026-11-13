@@ -62,10 +62,13 @@
     "api-backend/billing/codes/podo_positionsnummer.js",
     "api-backend/billing/dta/auftragsdatei.js",
     "api-backend/billing/dta/encoding.js",
+    "api-backend/billing/dta/envelope.js",
     "api-backend/billing/dta/fixtures.js",
     "api-backend/billing/dta/filename.js",
     "api-backend/billing/dta/leitsymptomatik.js",
+    "api-backend/billing/dta/output-validator.js",
     "api-backend/billing/dta/regel-schwere.js",
+    "api-backend/billing/dta/segments.js",
     "api-backend/billing/dta/software-hersteller-ik.js",
     "api-backend/billing/dta/strict-fields.js",
     "api-backend/billing/mahnwesen/stufe.js",
@@ -76,6 +79,7 @@
     "api-backend/billing/utils/ik-fehlt.js",
     "api-backend/billing/utils/ik-fehlt.test.js",
     "api-backend/billing/zuzahlung/bezahlt.js",
+    "api-backend/billing/zuzahlung/calculator.js",
     "api-backend/lib/berlin-tag.js"
   ],
 

@@ -14,14 +14,71 @@
 import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
 import { isDtaDecimal } from '../dta/strict-fields.js';
 
+/**
+ * @typedef {'verordnung'|'befreiungsausweis'|'unter_18'} Befreiungsgrund
+ *
+ * @typedef {object} ZuzahlungSession
+ * @property {number} preis_eur
+ * @property {number|string|null} [zuzahlung_eur_position]
+ * @property {boolean} [position_frei]
+ *
+ * @typedef {object} ProTagSession
+ * @property {string} datum
+ * @property {number|string} preis_eur
+ * @property {number|string|null} [zuzahlung_eur_position]
+ * @property {boolean} [position_frei]
+ *
+ * @typedef {object} Befreiungsnachweis
+ * @property {number} jahr
+ * @property {string} befreit_ab
+ * @property {string|null} [befreit_bis]
+ *
+ * @typedef {object} PatientFall
+ * @property {string|Date|null} [geburtsdatum]
+ * @property {boolean|null} [befreit_im_jahr]
+ * @property {string|null} [insurance_type]
+ *
+ * @typedef {object} PatientProTag
+ * @property {string|Date|null} [geburtsdatum]
+ * @property {boolean|null} [befreit_im_jahr]
+ * @property {Befreiungsnachweis[]|null} [befreiungen]
+ * @property {string|null} [insurance_type]
+ *
+ * @typedef {object} PrivatZuzahlungErgebnis
+ * @property {0} zuzahlung_eur
+ * @property {false} befreit
+ * @property {'privat'} grund
+ *
+ * @typedef {object} AbrechnungsfallZuzahlungErgebnis
+ * @property {number} brutto
+ * @property {number} prozZuzahlung
+ * @property {number} pauschZuzahlung
+ * @property {number} gesZuzahlung
+ * @property {number} netto
+ * @property {Befreiungsgrund|null} befreiungsgrund
+ *
+ * @typedef {object} TagZuzahlungEintrag
+ * @property {string} datum
+ * @property {Befreiungsgrund|null} befreiungsgrund
+ * @property {number} zuzahlung
+ *
+ * @typedef {object} AbrechnungsfallZuzahlungProTagErgebnis
+ * @property {number} brutto
+ * @property {number} prozZuzahlung
+ * @property {number} pauschZuzahlung
+ * @property {number} gesZuzahlung
+ * @property {number} netto
+ * @property {Befreiungsgrund|null} befreiungsgrund
+ * @property {string} ersterBehandlungstag
+ * @property {Befreiungsgrund|null} ersterTagBefreiungsgrund
+ * @property {TagZuzahlungEintrag[]} tage
+ */
+
+/** @param {number|string} v @returns {number} */
 const r2 = (v) => Math.round((+v + Number.EPSILON) * 100) / 100;
 
 /**
- * @param {object} opts
- * @param {number} opts.preis_eur       Brutto per Einheit (single session price)
- * @param {number|null} opts.zuzahlung_eur_position  Per-Position Zuzahlung (from heilmittel_position).
- *                                                    NULL ⇒ zuzahlungsfrei (KG-ZNS Kinder, Bericht, etc.)
- * @param {boolean} opts.position_frei   True ⇒ ignore percentage entirely.
+ * @param {ZuzahlungSession} opts
  * @returns {number} Zuzahlung for one session.
  */
 export function calcSessionZuzahlung({ preis_eur, zuzahlung_eur_position, position_frei = false }) {
@@ -48,7 +105,7 @@ export function calcSessionZuzahlung({ preis_eur, zuzahlung_eur_position, positi
  *   3. Position gar nicht gefunden (unbekannter/leerer Code) → wir wissen es
  *      nicht und rechnen ersatzweise mit 10 % vom Bruttopreis.
  *
- * @param {object|null|undefined} pos  Treffer aus findPosition/findPodologiePosition
+ * @param {{ preis?: number, zuzahlung?: number|string|null }|null|undefined} pos  Treffer aus findPosition/findPodologiePosition
  * @param {number} priceUnit           Bruttopreis je Einheit
  * @returns {{ preisUnit: number, zuzahlungUnit: number, positionFrei: boolean, gefunden: boolean }}
  */
@@ -68,11 +125,11 @@ export function resolvePositionZuzahlung(pos, priceUnit) {
  * Compute Abrechnungsfall (per prescription) totals.
  *
  * @param {object} opts
- * @param {Array} opts.sessions    [{ preis_eur, zuzahlung_eur_position, position_frei? }]
- * @param {object} opts.patient    { geburtsdatum, befreit_im_jahr }
- * @param {Date|string} opts.behandlungsende  Reference date for age check
- * @param {boolean} opts.verordnung_zuzahlungsfrei  ZuzahlungsKZ ≠ '0' / '3'
- * @returns {{brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund}}
+ * @param {ZuzahlungSession[]} opts.sessions    [{ preis_eur, zuzahlung_eur_position, position_frei? }]
+ * @param {PatientFall|null} [opts.patient]     { geburtsdatum, befreit_im_jahr }
+ * @param {Date|string|null} [opts.behandlungsende]  Reference date for age check
+ * @param {boolean} [opts.verordnung_zuzahlungsfrei=false]  ZuzahlungsKZ ≠ '0' / '3'
+ * @returns {PrivatZuzahlungErgebnis|AbrechnungsfallZuzahlungErgebnis}
  */
 export function calcAbrechnungsfallZuzahlung({
   sessions,
@@ -86,6 +143,7 @@ export function calcAbrechnungsfallZuzahlung({
 
   const brutto = r2(sessions.reduce((a, s) => a + (+s.preis_eur || 0), 0));
 
+  /** @type {Befreiungsgrund|null} */
   let befreiungsgrund = null;
   if (verordnung_zuzahlungsfrei) befreiungsgrund = 'verordnung';
   if (patient?.befreit_im_jahr) befreiungsgrund = 'befreiungsausweis';
@@ -130,7 +188,13 @@ export function calcAbrechnungsfallZuzahlung({
  * Befreiung: patient.befreiungen = [{ jahr, befreit_ab, befreit_bis }] (isBefreit je Tag).
  * Ein ungebundenes Jahresflag ersetzt keinen jahresbezogenen Nachweis.
  *
- * @returns {{brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto, befreiungsgrund, ersterBehandlungstag, ersterTagBefreiungsgrund, tage}}
+ * @param {object} opts
+ * @param {ProTagSession[]} opts.sessions
+ * @param {PatientProTag|null} [opts.patient]
+ * @param {boolean} [opts.verordnung_zuzahlungsfrei=false]
+ * @param {string} [opts.ersterBehandlungstag]
+ * @param {boolean} [opts.blattgebuehrBereitsErhoben=false]
+ * @returns {PrivatZuzahlungErgebnis|AbrechnungsfallZuzahlungProTagErgebnis}
  */
 export function calcAbrechnungsfallZuzahlungProTag({
   sessions,
@@ -166,6 +230,7 @@ export function calcAbrechnungsfallZuzahlungProTag({
   }
   // Validate every supplied certificate even when age or prescription status exempts all days.
   if (patient?.befreiungen) isBefreit(patient.befreiungen, Number(ersttag.slice(0, 4)), ersttag);
+  /** @param {string} datum @returns {Befreiungsgrund|null} */
   const grundAm = (datum) => {
     if (verordnung_zuzahlungsfrei) return 'verordnung';
     if (isUnter18(patient?.geburtsdatum, datum)) return 'unter_18';
@@ -177,7 +242,7 @@ export function calcAbrechnungsfallZuzahlungProTag({
   };
   const tage = sortiert.map(s => {
     const grund = grundAm(s.datum);
-    return { datum: s.datum, preis_eur: Number(s.preis_eur), grund, zuz: grund ? 0 : calcSessionZuzahlung(s) };
+    return { datum: s.datum, preis_eur: Number(s.preis_eur), grund, zuz: grund ? 0 : calcSessionZuzahlung(/** @type {ZuzahlungSession} */ (s)) };
   });
   const brutto = r2(tage.reduce((a, t) => a + t.preis_eur, 0));
   if (!isDtaDecimal(brutto, 10)) throw new Error('Zuzahlung je Tag: Gesamtbetrag ueberschreitet die Feldgrenze.');
@@ -197,22 +262,37 @@ export function calcAbrechnungsfallZuzahlungProTag({
   };
 }
 
+/**
+ * @param {string|Date|null|undefined} geburtsdatum
+ * @param {Date|string|null} [referenceDate]
+ * @returns {boolean}
+ */
 export function isUnter18(geburtsdatum, referenceDate = new Date()) {
   if (!geburtsdatum) return false;
-  const [gb, ref] = [geburtsdatum, referenceDate].map(value => {
-    if (istStichtag(value)) return value;
-    // Preserve timestamp callers, but never normalize an impossible ISO date.
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value) && !istStichtag(value.slice(0, 10))) return null;
-    const d = value instanceof Date ? value : typeof value === 'string' ? new Date(value) : null;
-    return d && !Number.isNaN(d.getTime()) ? berlinHeute(d) : null;
-  });
+  const [gb, ref] = [geburtsdatum, referenceDate].map(
+    /** @param {string|Date|null|undefined} value @returns {string|null} */
+    value => {
+      if (istStichtag(/** @type {unknown} */ (value))) return /** @type {string} */ (value);
+      // Preserve timestamp callers, but never normalize an impossible ISO date.
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value) && !istStichtag(value.slice(0, 10))) return null;
+      const d = value instanceof Date ? value : typeof value === 'string' ? new Date(value) : null;
+      return d && !Number.isNaN(d.getTime()) ? berlinHeute(d) : null;
+    }
+  );
   if (!gb || !ref) return false;
   let age = Number(ref.slice(0, 4)) - Number(gb.slice(0, 4));
   if (ref.slice(5) < gb.slice(5)) age--;
   return age < 18;
 }
 
-/** Inclusive certificate dates; Date instances refer to the Berlin calendar day. */
+/**
+ * Inclusive certificate dates; Date instances refer to the Berlin calendar day.
+ *
+ * @param {Befreiungsnachweis[]|null|undefined} befreiungenForPatient
+ * @param {number} jahr
+ * @param {Date|string|null} [referenceDate]
+ * @returns {boolean}
+ */
 export function isBefreit(befreiungenForPatient, jahr, referenceDate = new Date()) {
   if (befreiungenForPatient == null) return false;
   if (!Array.isArray(befreiungenForPatient)) throw new Error('Befreiungsnachweis: Liste ist ungueltig.');

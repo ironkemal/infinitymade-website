@@ -12,6 +12,36 @@ const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
   second: '2-digit',
 });
 
+/**
+ * @typedef {object} UnbParams
+ * @property {string} absenderIk
+ * @property {string} empfaengerIk
+ * @property {Date | string} erstellungsdatum
+ * @property {number | string} datennummer
+ * @property {string} [leistungsbereich='B']
+ * @property {string} [anwendungsreferenz]
+ * @property {string | number} [testIndikator='2']
+ */
+
+/**
+ * @typedef {object} UnhParams
+ * @property {number | string} nachrichtenreferenz
+ * @property {'SLGA' | 'SLLA'} nachrichtenart
+ * @property {string} [versionsnummer='21']
+ */
+
+/**
+ * @typedef {object} UntParams
+ * @property {number | string} segmentCount
+ * @property {number | string} nachrichtenreferenz
+ */
+
+/**
+ * @typedef {object} UnzParams
+ * @property {number | string} messageCount
+ * @property {number | string} datennummer
+ */
+
 // UNB — interchange header.
 //   S001 = ['UNOC', '3']
 //   S002 = absender IK (an..35; first 9 used)
@@ -21,6 +51,10 @@ const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
 //   S005 = Leistungsbereich (Anlage 3 §8.1.14; 'B' = Heilmittel)
 //   0026 = Anwendungsreferenz (logical filename, an..14, first 11 used)
 //   0035 = Testindikator (n1: '0'=Test, '1'=Erprobung, '2'=Echt)
+/**
+ * @param {UnbParams} opts
+ * @returns {string}
+ */
 export function buildUNB({
   absenderIk,
   empfaengerIk,
@@ -70,6 +104,10 @@ export function buildUNB({
 // UNH — message header.
 //   0062 = Nachrichtenreferenznummer (an..14, first 5 used)
 //   S009 = ['SLGA'|'SLLA', '21', '0', '0']
+/**
+ * @param {UnhParams} opts
+ * @returns {string}
+ */
 export function buildUNH({ nachrichtenreferenz, nachrichtenart, versionsnummer = '21' }) {
   return buildSegment('UNH', [
     String(nachrichtenreferenz).padStart(5, '0'),
@@ -83,6 +121,10 @@ export function buildUNH({ nachrichtenreferenz, nachrichtenart, versionsnummer =
 // "UNT+000015+00002'", nicht "UNT+15+00002'". Bis zum 19.09.2026 stand hier
 // die ungepolsterte Zahl — ein Formfehler in Pruefstufe 2, der nicht die
 // einzelne Nachricht, sondern die ganze Datei zurueckgibt.
+/**
+ * @param {UntParams} opts
+ * @returns {string}
+ */
 export function buildUNT({ segmentCount, nachrichtenreferenz }) {
   return buildSegment('UNT', [
     String(segmentCount).padStart(6, '0'),
@@ -91,6 +133,10 @@ export function buildUNT({ segmentCount, nachrichtenreferenz }) {
 }
 
 // UNZ — interchange trailer. Nachrichtenzaehler ebenfalls n6 (Kap. 5.4).
+/**
+ * @param {UnzParams} opts
+ * @returns {string}
+ */
 export function buildUNZ({ messageCount, datennummer }) {
   return buildSegment('UNZ', [
     String(messageCount).padStart(6, '0'),

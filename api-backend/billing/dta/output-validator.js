@@ -4,14 +4,28 @@
 import { istStichtag } from '../../lib/berlin-tag.js';
 import { ZUZAHLUNGSKENNZEICHEN, VERORDNUNGSART_HEILMITTEL, VERORDNUNGSBESONDERHEITEN, UNFALLKENNZEICHEN } from '../codes/anlage3_v22.js';
 
+/** @typedef {{ type: string, rows: string[][] }} ParsedDtaMessage */
+/** @typedef {{ fkt: string[], rec: string[], rows: string[][], totals: Map<string, number[]>, count: number }} Rechnungsgruppe */
+
+/** @param {string} s @returns {boolean} */
 const datum = s => /^\d{8}$/.test(s || '') && istStichtag(`${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`);
+/** @param {string | undefined} s @returns {boolean} */
 const geld = s => /^\d{1,10},\d{2}$/.test(s || '');
+/** @param {string | undefined} s @returns {number} */
 const cent = s => Math.round(Number(String(s || '0').replace(',', '.')) * 100);
+/** @param {string[]} f @param {number[]} indices @returns {boolean} */
 const pflicht = (f, indices) => indices.every(i => f[i] !== undefined && f[i] !== '');
 
-/** Additional output errors; no state mutation and no input-model dependency. */
+/**
+ * Additional output errors; no state mutation and no input-model dependency.
+ * @param {string} content
+ * @param {string[][]} fields
+ * @returns {string[]}
+ */
 export function pruefeAusgabeStruktur(content, fields) {
+  /** @type {string[]} */
   const errors = [];
+  /** @param {string} s @returns {number} */
   const fail = s => errors.push(s);
   if (/[^\x20-\x7e\xa0-\xff]/.test(content)) fail('Datenstrom enthält unzulässige Steuerzeichen oder Zeichen außerhalb ISO-8859-1');
   if (!content.endsWith("'") || /(?:^|[^?])(?:\?\?)*\?'$/.test(content)) fail('Datenstrom endet nicht mit einem unentwerteten Segmentabschluss');
@@ -25,7 +39,9 @@ export function pruefeAusgabeStruktur(content, fields) {
   const last = fields.at(-1) || [];
   if (last[0] !== 'UNZ' || last.length !== 3 || last[2] !== unb[5]) fail('UNZ fehlt am Dateiende oder Datenaustauschreferenz passt nicht zum UNB');
   if (fields.filter(f => f[0] === 'UNB').length !== 1 || fields.filter(f => f[0] === 'UNZ').length !== 1) fail('UNB/UNZ müssen jeweils genau einmal vorkommen');
+  /** @type {ParsedDtaMessage | null} */
   let message = null;
+  /** @type {ParsedDtaMessage[]} */
   const messages = [];
   let ordinal = 0;
   for (let i = 1; i < fields.length - 1; i++) {
@@ -46,6 +62,12 @@ export function pruefeAusgabeStruktur(content, fields) {
   return errors;
 }
 
+/**
+ * @param {ParsedDtaMessage} message
+ * @param {string[]} unb
+ * @param {(msg: string) => void} fail
+ * @returns {void}
+ */
 function pruefeNachricht({ type, rows }, unb, fail) {
   const tags = rows.map(f => f[0]).join(' ');
   const grammar = type === 'SLGA'
@@ -55,9 +77,12 @@ function pruefeNachricht({ type, rows }, unb, fail) {
   const fkt = rows[0] || [];
   if (!['01', '02', '03', '04', '10'].includes(fkt[1]) || fkt[3] !== unb[2]
       || !/^\d{9}$/.test(fkt[4] || '') || (fkt[2] !== 'J' && !/^\d{9}$/.test(fkt[5] || ''))) fail(`${type}.FKT: Pflichtfelder oder Absenderbezug ungültig`);
+  /** @type {Record<string, number | undefined>} */
   const maxFields = { FKT: type === 'SLGA' ? 7 : 6, REC: 4, INV: 6, URI: 5, NAD: 8, IMG: 4, EVO: 2, EHE: 8, TXT: 2, MWS: 3, ZHE: 18, DIA: 3, SKZ: 4, BES: 6, GZF: 4, UST: 3, SKO: 3, GES: 5, NAM: 5 };
   let gross = 0, copay = 0, tax = 0;
+  /** @type {Set<string>} */
   const statuses = new Set();
+  /** @type {string[][]} */
   const ges = [];
   let uri = false;
   for (const f of rows) {
@@ -83,7 +108,7 @@ function pruefeNachricht({ type, rows }, unb, fail) {
           || !/^\d{9}$/.test(f[1] || '') || !/^\d{9}$/.test(f[2] || '')
           || !ZUZAHLUNGSKENNZEICHEN[f[4]] || !/^[A-Za-z0-9]{1,4}$/.test(f[5] || '')
           || (!VERORDNUNGSART_HEILMITTEL[f[6]] && f[6] !== '99')
-          || (f[7] && !VERORDNUNGSBESONDERHEITEN[f[7]]) || (f[8] && !UNFALLKENNZEICHEN[f[8]])
+          || (f[7] && !(/** @type {Readonly<Record<string, string>>} */ (VERORDNUNGSBESONDERHEITEN))[f[7]]) || (f[8] && !(/** @type {Readonly<Record<string, string>>} */ (UNFALLKENNZEICHEN))[f[8]])
           || (f[9] && f[9] !== '6') || f[10] || (f[11] && f[11] !== '1') || (f[12] && f[12] !== '1')
           || !/^(?:[01]{4}|9999)$/.test(f[13] || '') || !/^[01]$/.test(f[15] || '')
           || (f[16] && !/^[1-5]$/.test(f[16])) || !/^\d$/.test(f[17] || '')
@@ -120,9 +145,22 @@ function pruefeNachricht({ type, rows }, unb, fail) {
 
 // Anlage 1 §5.3.2, §5.5.2: each regular SLGA covers its following SLLA
 // messages. A Sammel-SLGA (J) aggregates the matching regular SLGA groups.
+/**
+ * @param {ParsedDtaMessage[]} messages
+ * @param {(msg: string) => void} fail
+ * @returns {void}
+ */
 function pruefeRechnungsgruppen(messages, fail) {
+  /** @type {Rechnungsgruppe[]} */
   const groups = [];
+  /** @type {Rechnungsgruppe | null} */
   let current = null;
+  /**
+   * @param {Map<string, number[]>} map
+   * @param {string} status
+   * @param {number[]} values
+   * @returns {void}
+   */
   const add = (map, status, values) => {
     const previous = map.get(status) || [0, 0, 0];
     map.set(status, previous.map((v, i) => v + values[i]));
@@ -131,16 +169,17 @@ function pruefeRechnungsgruppen(messages, fail) {
     const fkt = message.rows.find(f => f[0] === 'FKT') || [];
     const rec = message.rows.find(f => f[0] === 'REC') || [];
     if (message.type === 'SLGA') {
+      /** @type {Rechnungsgruppe} */
       const group = { fkt, rec, rows: message.rows, totals: new Map(), count: 0 };
       groups.push(group);
       current = fkt[2] === 'J' ? null : group;
       continue;
     }
     if (!current) { fail('SLLA ohne vorangehende zugehörige Gesamtrechnungs-SLGA'); continue; }
-    if ([1, 3, 4, 5].some(i => fkt[i] !== current.fkt[i]) || [1, 2, 3].some(i => rec[i] !== current.rec[i])) fail('SLLA-FKT/REC passt nicht zur Gesamtrechnungs-SLGA');
+    if ([1, 3, 4, 5].some(i => fkt[i] !== (/** @type {Rechnungsgruppe} */ (current)).fkt[i]) || [1, 2, 3].some(i => rec[i] !== (/** @type {Rechnungsgruppe} */ (current)).rec[i])) fail('SLLA-FKT/REC passt nicht zur Gesamtrechnungs-SLGA');
     let status = '99';
     for (const row of message.rows) {
-      if (row[0] === 'INV') status = ({ '1': '11', '3': '31', '5': '51' })[row[2]?.[0]] || '99';
+      if (row[0] === 'INV') status = (/** @type {Record<string, string>} */ ({ '1': '11', '3': '31', '5': '51' }))[row[2]?.[0]] || '99';
       if (row[0] === 'BES' || row[0] === 'GZF') {
         const gross = row[0] === 'BES' ? cent(row[1]) : 0;
         const copay = cent(row[row[0] === 'BES' ? 2 : 1]);

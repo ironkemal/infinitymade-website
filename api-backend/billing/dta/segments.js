@@ -17,12 +17,184 @@ import { buildSegment, fmtAmount, fmtDate, freitext } from './encoding.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
 import { SUMMENSTATUS } from '../codes/anlage3_v22.js';
 
+/**
+ * @typedef {object} SlgaFktParams
+ * @property {string} [vkz='01']
+ * @property {string} [sammelrechnung='']  'J' for Sammelrechnung-SLGA, else ''
+ * @property {string} ikLeistungserbringer
+ * @property {string} ikKostentraeger
+ * @property {string} [ikKrankenkasse='']
+ * @property {string} ikAbsenderDatei
+ */
+
+/**
+ * @typedef {object} RecParams
+ * @property {string} sammelRechnungsnummer
+ * @property {string | number} [einzelRechnungsnummer='0']
+ * @property {Date | string} rechnungsdatum
+ * @property {string} [rechnungsart='1']
+ */
+
+/**
+ * @typedef {object} SlgaUstParams
+ * @property {string} steuernummer
+ * @property {boolean} [ustBefreit]
+ */
+
+/**
+ * @typedef {object} SlgaSkoParams
+ * @property {number | string} skontoProzent
+ * @property {number | string} zahlungszielTage
+ */
+
+/**
+ * @typedef {object} SlgaGesRow
+ * @property {string} status
+ * @property {number | string} rechnungsbetrag
+ * @property {number | string} brutto
+ * @property {number | string | null} [zuzahlung]
+ */
+
+/**
+ * @typedef {object} SlgaNamParams
+ * @property {string} name1
+ * @property {string} [name2='']
+ * @property {string} [name3='']
+ * @property {string} [name4='']
+ */
+
+/**
+ * @typedef {object} SllaFktParams
+ * @property {string} [vkz='01']
+ * @property {string} ikLeistungserbringer
+ * @property {string} ikKostentraeger
+ * @property {string} ikKrankenkasse
+ * @property {string} [ikRechnungssteller='']
+ */
+
+/**
+ * @typedef {object} SllaInvParams
+ * @property {string} [versichertennummer='']
+ * @property {string} [versichertenstatus='']
+ * @property {string} [beleginformation='']
+ * @property {string} belegnummer
+ * @property {string} [kennzeichenBesondereVersorgung='']
+ */
+
+/**
+ * @typedef {object} SllaUriParams
+ * @property {string} origIkLeistungserbringer
+ * @property {string} origSammelRechnungsnummer
+ * @property {string | number} [origEinzelRechnungsnummer='0']
+ * @property {Date | string} origRechnungsdatum
+ * @property {string} origBelegnummer
+ */
+
+/**
+ * @typedef {object} SllaNadParams
+ * @property {string} nachname
+ * @property {string} vorname
+ * @property {Date | string} geburtsdatum
+ * @property {string} [strasse='']
+ * @property {string} [plz='']
+ * @property {string} [ort='']
+ * @property {string} [laenderkennzeichen='']
+ */
+
+/**
+ * @typedef {object} SllaImgParams
+ * @property {number | string} abrechnungsjahr
+ * @property {number | string} abrechnungsmonat
+ * @property {string} ikStelle
+ */
+
+/**
+ * @typedef {object} SllaEvoParams
+ * @property {string} evoId
+ */
+
+/**
+ * @typedef {object} SllaEheParams
+ * @property {string} [abrechnungscode='22']
+ * @property {string} tarifkennzeichen
+ * @property {string} positionsnummer
+ * @property {number | string} [anzahl=1]
+ * @property {number | string} einzelbetrag
+ * @property {Date | string} datumLeistung
+ * @property {number | string} [zuzahlung='']
+ * @property {number | string} [kilometer='']
+ */
+
+/**
+ * @typedef {object} SllaTxtParams
+ * @property {string} text
+ */
+
+/**
+ * @typedef {object} SllaMwsParams
+ * @property {number | string} satz
+ * @property {number | string | null | undefined} betrag
+ */
+
+/**
+ * @typedef {object} SllaZheParams
+ * @property {string} bsnr
+ * @property {string} lanr
+ * @property {Date | string} verordnungsdatum
+ * @property {string | number} zuzahlungskennzeichen
+ * @property {string} diagnosegruppe
+ * @property {string | number} verordnungsartHeilmittel
+ * @property {string} [verordnungsbesonderheiten='']
+ * @property {string} [unfallkennzeichen='']
+ * @property {string} [bvgSonstigesSer='']
+ * @property {string} [therapieberichtAngefordert='']
+ * @property {string} [hausbesuch='']
+ * @property {string} leitsymptomatik
+ * @property {string} [patientenLeitsymptomatik='']
+ * @property {string | number} dringlicherBehandlungsbedarf
+ * @property {string} [heilmittelBereich='']
+ * @property {string | number} therapiefrequenz
+ */
+
+/**
+ * @typedef {object} SllaDiaParams
+ * @property {string} [icd10='']
+ * @property {string} [text='']
+ */
+
+/**
+ * @typedef {object} SllaSkzParams
+ * @property {string} genehmigungskennzeichen
+ * @property {Date | string} genehmigungsdatum
+ * @property {string} artGenehmigung
+ */
+
+/**
+ * @typedef {object} SllaBesParams
+ * @property {number | string} brutto
+ * @property {number | string} [gesZuzahlung='']
+ * @property {number | string} [prozZuzahlung='']
+ * @property {number | string} [pauschZuzahlung='']
+ * @property {number | string} [pauschKorrektur='']
+ */
+
+/**
+ * @typedef {object} SllaGzfParams
+ * @property {number | string} gesZuzahlungForderung
+ * @property {number | string} [prozZuzahlungForderung='']
+ * @property {number | string} [pauschZuzahlungForderung='']
+ */
+
 // ===========================================================================
 // SLGA segments — §5.5.2
 // ===========================================================================
 
 // FKT (SLGA) — §5.5.2 p.31-32
 // Fields: VKZ, Sammelrechnung(K), IK-LE/RS, IK-KT, IK-KK(K), IK-Absender
+/**
+ * @param {SlgaFktParams} opts
+ * @returns {string[]}
+ */
 export function buildSLGA_FKT({
   vkz = '01',
   sammelrechnung = '',           // 'J' for Sammelrechnung-SLGA, else ''
@@ -72,6 +244,10 @@ export function buildSLGA_FKT({
 
 // REC (SLGA) — §5.5.2 p.32-34
 // Rechnungsnummer is composite Sammel:Einzel; Einzel='0' if unused.
+/**
+ * @param {RecParams} opts
+ * @returns {string[]}
+ */
 export function buildSLGA_REC({
   sammelRechnungsnummer,
   einzelRechnungsnummer = '0',
@@ -86,6 +262,10 @@ export function buildSLGA_REC({
 }
 
 // UST (SLGA) — §5.5.2 p.34, K, NOT in Sammelrechnungs-SLGA
+/**
+ * @param {SlgaUstParams} opts
+ * @returns {string[]}
+ */
 export function buildSLGA_UST({ steuernummer, ustBefreit }) {
   return [buildSegment('UST', [
     steuernummer,
@@ -94,6 +274,10 @@ export function buildSLGA_UST({ steuernummer, ustBefreit }) {
 }
 
 // SKO (SLGA) — §5.5.2 p.35, K, max 9
+/**
+ * @param {SlgaSkoParams} opts
+ * @returns {string[]}
+ */
 export function buildSLGA_SKO({ skontoProzent, zahlungszielTage }) {
   return [buildSegment('SKO', [
     fmtAmount(skontoProzent),
@@ -103,6 +287,10 @@ export function buildSLGA_SKO({ skontoProzent, zahlungszielTage }) {
 
 // GES (SLGA) — §5.5.2 p.35-37. M, min 2 max 9. Status '00' first then per-VS.
 // Fields: Status(n2), Gesamtrechnungsbetrag, Gesamtbruttobetrag, GesZuzahlung(K)
+/**
+ * @param {SlgaGesRow[]} rows
+ * @returns {string[]}
+ */
 export function buildSLGA_GES(rows) {
   // rows: [{ status, rechnungsbetrag, brutto, zuzahlung }]
   return rows.map(r => {
@@ -114,7 +302,7 @@ export function buildSLGA_GES(rows) {
     // gehoert laut gemeldet (dieselbe Linie wie FKT und ZHE oben: Pruefstufe 2
     // weist die ganze Datei ab, nicht die einzelne Zeile).
     const status = String(r.status ?? '');
-    if (!SUMMENSTATUS[status]) {
+    if (!(/** @type {Readonly<Record<string, string>>} */ (SUMMENSTATUS))[status]) {
       throw new Error(
         `SLGA.GES.Summenstatus "${status}" ungültig — erlaubt sind nur ` +
         `${Object.keys(SUMMENSTATUS).join(', ')}. Anlage 3 TP5 V21, § 8.1.6.`
@@ -132,6 +320,10 @@ export function buildSLGA_GES(rows) {
 // NAM (SLGA) — §5.5.2 p.37-38. M, 1.
 // Vier Freitextfelder (Name und Anschrift des Rechnungsstellers) — das Komma
 // darin ist zu entwerten, siehe `freitext()` in encoding.js.
+/**
+ * @param {SlgaNamParams} opts
+ * @returns {string[]}
+ */
 export function buildSLGA_NAM({ name1, name2 = '', name3 = '', name4 = '' }) {
   return [buildSegment('NAM', [
     freitext(name1), freitext(name2), freitext(name3), freitext(name4),
@@ -144,6 +336,10 @@ export function buildSLGA_NAM({ name1, name2 = '', name3 = '', name4 = '' }) {
 
 // FKT (SLLA) — §5.5.3.1 p.41
 // Fields: VKZ, Freifeld(K, leer), IK-LE, IK-KT, IK-KK, IK-Rechnungssteller(K)
+/**
+ * @param {SllaFktParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_FKT({
   vkz = '01',
   ikLeistungserbringer,
@@ -166,6 +362,10 @@ export const buildSLLA_REC = buildSLGA_REC;
 
 // INV (SLLA) — §5.5.3.1 p.44-45
 // Fields: VersNr(K), VersStatus(K), Beleginfo(K), Belegnummer(M), Besond.Vers.(K)
+/**
+ * @param {SllaInvParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_INV({
   versichertennummer = '',
   versichertenstatus = '',
@@ -183,6 +383,10 @@ export function buildSLLA_INV({
 }
 
 // URI (SLLA) — §5.5.3.1 p.46-47. M when VKZ ≠ '01'.
+/**
+ * @param {SllaUriParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_URI({
   origIkLeistungserbringer,
   origSammelRechnungsnummer,
@@ -199,6 +403,10 @@ export function buildSLLA_URI({
 }
 
 // NAD (SLLA) — §5.5.3.1 p.47-48. 7 separate fields. No 'geschlecht'.
+/**
+ * @param {SllaNadParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_NAD({
   nachname,
   vorname,
@@ -223,6 +431,10 @@ export function buildSLLA_NAD({
 }
 
 // IMG (SLLA) — §5.5.3.1 p.48. K, 0..1.
+/**
+ * @param {SllaImgParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_IMG({ abrechnungsjahr, abrechnungsmonat, ikStelle }) {
   return [buildSegment('IMG', [
     String(abrechnungsjahr),
@@ -232,6 +444,10 @@ export function buildSLLA_IMG({ abrechnungsjahr, abrechnungsmonat, ikStelle }) {
 }
 
 // EVO (SLLA) — §5.5.3.1 p.48. K, single field = eVO-ID.
+/**
+ * @param {SllaEvoParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_EVO({ evoId }) {
   return [buildSegment('EVO', [evoId])];
 }
@@ -249,6 +465,10 @@ export function buildSLLA_EVO({ evoId }) {
 //   5 Datum der Leistungserbringung
 //   6 Betrag der Zuzahlung (K)
 //   7 Gefahrene Kilometer (K)
+/**
+ * @param {SllaEheParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_EHE({
   abrechnungscode = '22',         // §8.1.5.1
   tarifkennzeichen,               // §8.1.5.2, 5-stellig
@@ -271,16 +491,28 @@ export function buildSLLA_EHE({
 }
 
 // TXT (SLLA-B) — §5.5.3.3 p.67. K, 0..1 per EHE.
+/**
+ * @param {SllaTxtParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_TXT({ text }) {
   return [buildSegment('TXT', [freitext(text)])];
 }
 
 // MWS (SLLA-B) — §5.5.3.3 p.67-68. K, 0..1 per EHE.
+/**
+ * @param {SllaMwsParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_MWS({ satz, betrag }) {
   return [buildSegment('MWS', [fmtAmount(satz), fmtAmount(betrag)])];
 }
 
 // ZHE (SLLA-B) — §5.5.3.3 p.68-72. M, 1 per INV. Verordnung & Therapy data.
+/**
+ * @param {SllaZheParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_ZHE({
   bsnr,                          // M, '999999999' if leer
   lanr,                          // M, '999999999' if leer
@@ -341,11 +573,19 @@ export function buildSLLA_ZHE({
 // als Teil des Kodes. Die Schleife darueber steht in builder.js, damit dieses
 // Modul bei „ein Segment je Aufruf" bleibt wie alle anderen hier.
 // Der Diagnosetext ist Freitext (Komma entwerten), der Kode nicht.
+/**
+ * @param {SllaDiaParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_DIA({ icd10 = '', text = '' }) {
   return [buildSegment('DIA', [icd10, freitext(text)])];
 }
 
 // SKZ (SLLA-B) — §5.5.3.3 p.72-73. K, 0..1 per ZHE. Kostenzusage data.
+/**
+ * @param {SllaSkzParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_SKZ({
   genehmigungskennzeichen,
   genehmigungsdatum,
@@ -365,6 +605,10 @@ export function buildSLLA_SKZ({
 //   3 Gesamtbetrag prozentuale Zuzahlung           (K)
 //   4 pauschaler Zuzahlungsbetrag                  (K, 10€ cap)
 //   5 Pauschale Korrekturabzug                     (K, VKZ 04 only)
+/**
+ * @param {SllaBesParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_BES({
   brutto,
   gesZuzahlung = '',
@@ -382,6 +626,10 @@ export function buildSLLA_BES({
 }
 
 // GZF (SLLA-B) — §5.5.3.3 p.74-75. M for VKZ 03 ONLY (replaces BES).
+/**
+ * @param {SllaGzfParams} opts
+ * @returns {string[]}
+ */
 export function buildSLLA_GZF({
   gesZuzahlungForderung,
   prozZuzahlungForderung = '',
