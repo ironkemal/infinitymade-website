@@ -6,7 +6,7 @@
 //
 // Key constraints:
 //   - 16 Wochen Gültigkeit ab Ausstellungsdatum
-//   - Behandlungsbeginn innerhalb 28 Tage ab Ausstellung
+//   - Behandlungsbeginn innerhalb 28 Tage ab Ausstellung (dringend: 14 Tage)
 //   - ICD muss auf der Blanko-Schulterliste (114 EX-Diagnosen) sein
 //   - Diagnosegruppe immer EX
 //   - "BLANKOVERORDNUNG" muss im Feld "Heilmittel nach Maßgabe des Kataloges" stehen
@@ -15,20 +15,10 @@
 //     + 55€ Mehraufwandspauschale (pro Verordnung)
 
 import { lookupBlankoShoulder, BLANKO_AMPEL, BLANKO_VERGUETUNG } from './catalog.js';
+import { parseIsoDatum, addDays, pruefeBehandlungsbeginn } from './fristen.js';
 
 const GUELTIG_WOCHEN = 16;
-const BEGIN_DEADLINE_TAGE = 28;
 const ROTE_AMPEL_ABSCHLAG_PERCENT = 9;
-
-function parseDate(s) {
-  if (!s) return null;
-  // Force UTC midnight to avoid timezone off-by-one in toISOString().slice()
-  const d = new Date(s + 'T00:00:00Z');
-  return isNaN(d.getTime()) ? null : d;
-}
-function addDays(d, days) {
-  return new Date(d.getTime() + days * 86400000);
-}
 
 function classifyAmpel({ heilmittel_typ, vorrangig_einheiten, ergaenzend_einheiten }) {
   // heilmittel_typ ∈ {"weichteil_arthrose_knorpel", "fraktur"}
@@ -80,8 +70,8 @@ export function validateBlanko(rezept) {
     });
   }
 
-  // Ausstellungsdatum & deadlines
-  const ausstellung = parseDate(rezept.ausstellungsdatum);
+  // Ausstellungsdatum & deadlines (§ 13a Abs. 2 i. V. m. § 15 Abs. 1 HeilM-RL: 28 Tage / dringlich 14 Tage)
+  const ausstellung = parseIsoDatum(rezept.ausstellungsdatum);
   if (!ausstellung) {
     blockers.push({
       code: 'AUSSTELLUNGSDATUM_INVALID',
@@ -90,21 +80,19 @@ export function validateBlanko(rezept) {
     });
   }
 
-  const latestBeginDate = ausstellung ? addDays(ausstellung, BEGIN_DEADLINE_TAGE) : null;
   const validityEnd = ausstellung ? addDays(ausstellung, GUELTIG_WOCHEN * 7) : null;
-
-  if (ausstellung && rezept.behandlungsbeginn) {
-    const begin = parseDate(rezept.behandlungsbeginn);
-    if (begin && latestBeginDate && begin > latestBeginDate) {
-      blockers.push({
-        code: 'BLANKO_BEGIN_AFTER_28D',
-        msg: `Bei Blankoverordnung muss die Behandlung innerhalb von 28 Tagen nach Ausstellung beginnen. Geplant: ${rezept.behandlungsbeginn}, Frist: ${latestBeginDate.toISOString().slice(0,10)}.`,
-        field: 'behandlungsbeginn',
-        latest_allowed: latestBeginDate.toISOString().slice(0,10),
-        regulation: 'NOVENTI-Leitfaden Blankoverordnung Physiotherapie'
-      });
-    }
-  }
+  const fristPruefung = pruefeBehandlungsbeginn({
+    ausstellungsdatum: ausstellung,
+    behandlungsbeginn: rezept.behandlungsbeginn,
+    isDringend: !!rezept.is_dringend,
+    afterDeadlineCode: 'BLANKO_BEGIN_AFTER_28D',
+    afterDeadlineBlocker: true,
+    afterMessage: ({ beginIso, latestStartIso, tage }) =>
+      `Bei Blankoverordnung muss die Behandlung innerhalb von ${tage} Tagen nach Ausstellung beginnen. Geplant: ${beginIso}, Frist: ${latestStartIso}.`,
+    afterExtra: { regulation: 'NOVENTI-Leitfaden Blankoverordnung Physiotherapie' }
+  });
+  blockers.push(...fristPruefung.blockers);
+  warnings.push(...fristPruefung.warnings);
 
   // Ampelsystem evaluation (only if user provided session counts)
   let ampel = null;
@@ -145,7 +133,7 @@ export function validateBlanko(rezept) {
       verordnung_typ: 'blanko_physio_shoulder',
       blanko_diagnose: blankoEntry?.diagnose || null,
       gueltig_bis: validityEnd ? validityEnd.toISOString().slice(0,10) : null,
-      behandlungsbeginn_spaetestens: latestBeginDate ? latestBeginDate.toISOString().slice(0,10) : null,
+      behandlungsbeginn_spaetestens: fristPruefung.latestStartIso,
       gueltig_wochen: GUELTIG_WOCHEN,
       ampel,
       bonuses_eur: ok ? bonuses : null,

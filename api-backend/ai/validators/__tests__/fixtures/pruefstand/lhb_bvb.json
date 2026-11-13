@@ -551,8 +551,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
     },
-    "status": "befund",
-    "grund": "lhbBvbRules.js prüft den Behandlungsbeginn nicht (nur computed.latest_start_date). § 15 gilt unabhängig von LHB/BVB."
+    "status": "aktiv"
   },
   {
     "id": "LHB-022",
@@ -579,8 +578,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen."
     },
-    "status": "befund",
-    "grund": "lhbBvbRules.js prüft den Behandlungsbeginn nicht."
+    "status": "aktiv"
   },
   {
     "id": "LHB-023",

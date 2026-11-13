@@ -25,30 +25,13 @@
 
 import { getDiagnosegruppe, getIcdDgRules } from './catalog.js';
 import { checkIcdDg } from './icdDgRules.js';
-
+import { parseIsoDatum, pruefeBehandlungsbeginn } from './fristen.js';
 
 const ZUZAHLUNG_PERCENT = 10;
 const ZUZAHLUNG_PER_BLATT_EUR = 10;
-const DEFAULT_GUELTIG_TAGE = 28;   // Verordnung verfällt nach 28 Tagen
-const DRINGEND_GUELTIG_TAGE = 14;  // mit "dringend"-Flag: 14 Tage
-
-function parseDate(s) {
-  if (!s) return null;
-  // Force UTC midnight to avoid timezone off-by-one
-  const d = new Date(s + 'T00:00:00Z');
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function addDays(d, days) {
-  return new Date(d.getTime() + days * 86400000);
-}
-
-function daysBetween(a, b) {
-  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 function isUnder18(geburtsdatum, referenceDate) {
-  const dob = parseDate(geburtsdatum);
+  const dob = parseIsoDatum(geburtsdatum);
   if (!dob) return false;
   const ref = referenceDate || new Date();
   const age = ref.getFullYear() - dob.getFullYear()
@@ -92,7 +75,7 @@ export function validateStandard(rezept) {
     });
   }
 
-  const ausstellung = parseDate(rezept.ausstellungsdatum);
+  const ausstellung = parseIsoDatum(rezept.ausstellungsdatum);
   if (!ausstellung) {
     blockers.push({
       code: 'AUSSTELLUNGSDATUM_INVALID',
@@ -101,29 +84,15 @@ export function validateStandard(rezept) {
     });
   }
 
-  const gueltigTage = rezept.is_dringend ? DRINGEND_GUELTIG_TAGE : DEFAULT_GUELTIG_TAGE;
-  const latestStart = ausstellung ? addDays(ausstellung, gueltigTage) : null;
-
-  if (ausstellung && rezept.behandlungsbeginn) {
-    const begin = parseDate(rezept.behandlungsbeginn);
-    if (begin && latestStart && begin > latestStart) {
-      // EU-MDR compliance: validity-window enforcement is an administrative billing hint.
-      // The therapist (not the software) decides whether to accept a late-start prescription.
-      warnings.push({
-        code: 'START_AFTER_DEADLINE',
-        msg: `Behandlungsbeginn (${rezept.behandlungsbeginn}) liegt nach der regulären Verordnungsgültigkeit (${latestStart.toISOString().slice(0,10)}). ${rezept.is_dringend ? 'Bei "dringender Behandlungsbedarf" soll die Behandlung innerhalb von 14 Tagen beginnen.' : 'Verordnungen sind 28 Tage nach Ausstellung gültig.'} Bitte prüfen Sie mit dem verordnenden Arzt, ob eine erneute Ausstellung erforderlich ist.`,
-        field: 'behandlungsbeginn',
-        latest_allowed: latestStart.toISOString().slice(0,10),
-        requires_confirmation: true
-      });
-    } else if (begin && ausstellung && daysBetween(ausstellung, begin) < 0) {
-      blockers.push({
-        code: 'START_BEFORE_AUSSTELLUNG',
-        msg: 'Behandlungsbeginn liegt vor dem Ausstellungsdatum.',
-        field: 'behandlungsbeginn'
-      });
-    }
-  }
+  // EU-MDR compliance: validity-window enforcement is an administrative billing hint.
+  // The therapist (not the software) decides whether to accept a late-start prescription.
+  const fristPruefung = pruefeBehandlungsbeginn({
+    ausstellungsdatum: ausstellung,
+    behandlungsbeginn: rezept.behandlungsbeginn,
+    isDringend: !!rezept.is_dringend
+  });
+  blockers.push(...fristPruefung.blockers);
+  warnings.push(...fristPruefung.warnings);
 
   // Zuzahlung
   const under18 = isUnder18(rezept.patient_geburtsdatum, ausstellung);
@@ -154,7 +123,7 @@ export function validateStandard(rezept) {
       max_sessions: maxSessions,
       requested_sessions: anzahl,
       frequency_hint: dgMeta?.frequency_hint || null,
-      latest_start_date: latestStart ? latestStart.toISOString().slice(0,10) : null,
+      latest_start_date: fristPruefung.latestStartIso,
       zuzahlung_required: zuzahlungRequired,
       zuzahlung_percent: zuzahlungRequired ? ZUZAHLUNG_PERCENT : 0,
       zuzahlung_eur_per_blatt: zuzahlungRequired ? ZUZAHLUNG_PER_BLATT_EUR : 0,

@@ -153,8 +153,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen."
     },
-    "status": "befund",
-    "grund": "blankoRules.js kennt is_dringend nicht (immer 28 Tage). § 13a Abs. 2 verweist auf die Zeiträume des § 15, also auch 14 Tage bei dringlichem Bedarf."
+    "status": "aktiv"
   },
   {
     "id": "BLK-007",

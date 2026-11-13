@@ -3,7 +3,7 @@
 > Üretim: 2026-11-15 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4705 fonksiyon** (4583 JS · 95 bash · 27 ps1) · 576 dosya · 42 sidebar modülü
+**4704 fonksiyon** (4582 JS · 95 bash · 27 ps1) · 577 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -619,7 +619,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `onEsc` — dashboard.js:5949 · module/rechnung-leistung-picker.js:46 · module/verordnung-einheiten.js:304 · module/verordnung-einheiten.js:402 · module/verordnung-einheiten.js:596 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `wert` — module/anfrage-bearbeiten.js:186 · module/fahrtenbuch-regeln.js:307 · module/hausbesuch-route.js:32 · module/mail-entwurf.js:55 · module/mailversand.js:324 · module/verordnung-pruefen-knopf.js:44 · setup.js:290
 - `zahl` — api-backend/lib/datev.js:280 · api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:150 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:223 · module/startseite-darstellung.js:111 · module/startseite-geld.js:17
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:47 · api-backend/billing/zuzahlung/zu-beleg.js:15 · api-backend/server.js:376
 - `fehler` — api-backend/billing/api/artefakt-historie.js:26 · api-backend/billing/api/artefakt-registry.js:15 · api-backend/billing/api/physio-publikation-ablauf.js:17 · api-backend/billing/codes/physio-leistungszeilen.js:27 · api-backend/lib/gmail-senden.js:57 · module/therapiebericht.js:205
 - `laden` — module/kopf-dokumente.js:54 · module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:38 · module/start-aufgaben.js:359 · module/startseite-handlungsbedarf-karte.js:44
 - `lesen` — cookie-consent.js:100 · module/mail-signatur-editor.js:24 · module/raum-tagesansicht.js:145 · module/rezept-barcode-scan.js:90 · module/startseite-handlungsbedarf-karte.js:40 · module/startseite-handlungsbedarf-laden.js:123
@@ -635,6 +634,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/planung-bruecke.js:134 · module/verordnung-liste.js:267 · widget/booking-widget.js:107
 - `oeffne` — module/kalender-kontextmenue.js:120 · module/kopf-suche-ansicht.js:122 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:219
 - `oeffnen` — dashboard.js:7211 · module/fussbefund.js:1078 · module/kopf-dokumente.js:108 · module/raum-auswahl.js:273 · module/rechnung-mail.js:63
+- `tag` — module/podo-vorgeschichte.js:21 · module/rechnung-dmrz.js:38 · module/rezeptinfo-geld.js:257 · module/startseite-handlungsbedarf-laden.js:13 · module/startseite-handlungsbedarf.js:7
 
 ## Shell (onprem/)
 

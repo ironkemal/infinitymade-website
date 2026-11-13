@@ -6,6 +6,14 @@ import { validateStandard } from '../standardRules.js';
 import { validateBlanko } from '../blankoRules.js';
 import { validateLhbBvb } from '../lhbBvbRules.js';
 import { lookupLhbBvb, lookupBlankoShoulder, heilmittelCatalog } from '../catalog.js';
+import {
+  FRIST_TAGE,
+  parseIsoDatum,
+  addDays,
+  daysBetween,
+  spaetesterBeginn,
+  pruefeBehandlungsbeginn
+} from '../fristen.js';
 
 // ── catalog sanity ──────────────────────────────────────────────────────────
 test('catalog: LHB/BVB has 200+ entries', () => {
@@ -554,6 +562,125 @@ test('validate: explizites rezept_typ lhb_bvb bleibt unverändert, Physio LHB_HI
   const rPhysioStd = validateRezept({ ...PODO_BASE, rezept_typ: 'standard', diagnosegruppe: 'ZN', icd10: 'G10' });
   assert.equal(rPhysioStd.engine, 'standard');
   assert.ok(rPhysioStd.warnings.find(w => w.code === 'LHB_HINT'), JSON.stringify(rPhysioStd.warnings));
+});
+
+// ── Paket B: Gemeinsamer Fristen-Helfer + LHB/BVB + Blanko Fristprüfung ──────
+test('fristen: parseIsoDatum, addDays, daysBetween, spaetesterBeginn (§ 15 HeilM-RL)', () => {
+  assert.equal(FRIST_TAGE.normal, 28);
+  assert.equal(FRIST_TAGE.dringend, 14);
+
+  const d = parseIsoDatum('2026-03-02');
+  assert.ok(d instanceof Date);
+  assert.equal(d.toISOString().slice(0, 10), '2026-03-02');
+  assert.equal(parseIsoDatum(''), null);
+  assert.equal(parseIsoDatum('kein-datum'), null);
+  assert.equal(parseIsoDatum(null), null);
+
+  assert.equal(addDays(d, 14).toISOString().slice(0, 10), '2026-03-16');
+  assert.equal(addDays(d, 28).toISOString().slice(0, 10), '2026-03-30');
+  assert.equal(daysBetween(d, addDays(d, -1)), -1);
+  assert.equal(daysBetween(d, addDays(d, 14)), 14);
+
+  assert.equal(spaetesterBeginn('2026-03-02', false)?.toISOString().slice(0, 10), '2026-03-30');
+  assert.equal(spaetesterBeginn('2026-03-02', true)?.toISOString().slice(0, 10), '2026-03-16');
+  assert.equal(spaetesterBeginn(d, true)?.toISOString().slice(0, 10), '2026-03-16');
+  assert.equal(spaetesterBeginn(null, true), null);
+
+  const p = pruefeBehandlungsbeginn({
+    ausstellungsdatum: '2026-03-02',
+    behandlungsbeginn: '2026-03-17',
+    isDringend: true
+  });
+  assert.equal(p.latestStartIso, '2026-03-16');
+  assert.equal(p.blockers.length, 0);
+  assert.equal(p.warnings.length, 1);
+  assert.equal(p.warnings[0].code, 'START_AFTER_DEADLINE');
+  assert.equal(p.warnings[0].requires_confirmation, true);
+});
+
+test('lhbBvb (LHB-021/022): Beginn am 29. Tag warnt, Tag 28 ok, Beginn vor Ausstellung blockiert', () => {
+  const base = {
+    icd10: 'G10',
+    diagnosegruppe: 'ZN',
+    anzahl_einheiten: 20,
+    ausstellungsdatum: '2026-03-02'
+  };
+
+  const rTag28 = validateRezept({ ...base, behandlungsbeginn: '2026-03-30' });
+  assert.equal(rTag28.engine, 'lhb_bvb');
+  assert.equal(rTag28.ok, true);
+  assert.equal(rTag28.computed.latest_start_date, '2026-03-30');
+  assert.ok(!rTag28.warnings.find(w => w.code === 'START_AFTER_DEADLINE'));
+
+  const rTag29 = validateRezept({ ...base, behandlungsbeginn: '2026-03-31' });
+  assert.equal(rTag29.engine, 'lhb_bvb');
+  assert.equal(rTag29.ok, true);
+  const lateWarn = rTag29.warnings.find(w => w.code === 'START_AFTER_DEADLINE');
+  assert.ok(lateWarn, JSON.stringify(rTag29.warnings));
+  assert.equal(lateWarn.field, 'behandlungsbeginn');
+  assert.equal(lateWarn.latest_allowed, '2026-03-30');
+  assert.equal(lateWarn.requires_confirmation, true);
+
+  const rVorher = validateRezept({ ...base, behandlungsbeginn: '2026-03-01' });
+  assert.equal(rVorher.engine, 'lhb_bvb');
+  assert.equal(rVorher.ok, false);
+  const beforeBlocker = rVorher.blockers.find(b => b.code === 'START_BEFORE_AUSSTELLUNG');
+  assert.ok(beforeBlocker, JSON.stringify(rVorher.blockers));
+  assert.equal(beforeBlocker.field, 'behandlungsbeginn');
+});
+
+test('lhbBvb: is_dringend verkürzt Frist auf 14 Tage (Grenze Tag 14 vs. Tag 15)', () => {
+  const base = {
+    icd10: 'G10',
+    diagnosegruppe: 'ZN',
+    anzahl_einheiten: 20,
+    ausstellungsdatum: '2026-03-02',
+    is_dringend: true
+  };
+
+  const rTag14 = validateLhbBvb({ ...base, behandlungsbeginn: '2026-03-16' });
+  assert.equal(rTag14.ok, true);
+  assert.equal(rTag14.computed.latest_start_date, '2026-03-16');
+  assert.ok(!rTag14.warnings.find(w => w.code === 'START_AFTER_DEADLINE'));
+
+  const rTag15 = validateLhbBvb({ ...base, behandlungsbeginn: '2026-03-17' });
+  assert.equal(rTag15.ok, true);
+  const lateWarn = rTag15.warnings.find(w => w.code === 'START_AFTER_DEADLINE');
+  assert.ok(lateWarn, JSON.stringify(rTag15.warnings));
+  assert.equal(lateWarn.latest_allowed, '2026-03-16');
+  assert.equal(lateWarn.requires_confirmation, true);
+});
+
+test('blanko (BLK-006): is_dringend verkürzt spätesten Beginn auf 14 Tage (Tag 14 ok vs. Tag 15 Blocker)', () => {
+  const base = {
+    heilmittel_feld_text: 'BLANKOVERORDNUNG',
+    icd10: 'M19.01',
+    diagnosegruppe: 'EX',
+    ausstellungsdatum: '2026-03-02',
+    is_dringend: true
+  };
+
+  const rTag14 = validateRezept({ ...base, behandlungsbeginn: '2026-03-16' });
+  assert.equal(rTag14.engine, 'blanko');
+  assert.equal(rTag14.ok, true);
+  assert.equal(rTag14.computed.behandlungsbeginn_spaetestens, '2026-03-16');
+  assert.ok(rTag14.computed.bonuses_eur !== null);
+
+  const rTag15 = validateRezept({ ...base, behandlungsbeginn: '2026-03-17' });
+  assert.equal(rTag15.engine, 'blanko');
+  assert.equal(rTag15.ok, false);
+  assert.equal(rTag15.computed.behandlungsbeginn_spaetestens, '2026-03-16');
+  const lateBlocker = rTag15.blockers.find(b => b.code === 'BLANKO_BEGIN_AFTER_28D');
+  assert.ok(lateBlocker, JSON.stringify(rTag15.blockers));
+  assert.equal(lateBlocker.latest_allowed, '2026-03-16');
+  assert.equal(rTag15.computed.bonuses_eur, null);
+  assert.equal(rTag15.computed.total_bonuses_eur, null);
+
+  const rVorher = validateBlanko({ ...base, behandlungsbeginn: '2026-03-01' });
+  assert.equal(rVorher.ok, false);
+  assert.ok(rVorher.blockers.find(b => b.code === 'START_BEFORE_AUSSTELLUNG'), JSON.stringify(rVorher.blockers));
+  assert.equal(rVorher.computed.bonuses_eur, null);
+  assert.equal(rVorher.computed.total_bonuses_eur, null);
 });
 
 

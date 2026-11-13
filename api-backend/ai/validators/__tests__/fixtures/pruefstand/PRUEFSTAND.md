@@ -61,8 +61,8 @@ Gesamt: **122 Fälle**.
 
 | Status | Fälle |
 |---|---|
-| aktiv | 98 |
-| befund | 13 |
+| aktiv | 101 |
+| befund | 10 |
 | bewusst | 11 |
 
 ## Aufbau eines Falls
@@ -101,7 +101,6 @@ Gesamt: **122 Fälle**.
 
 | id | Regel (Soll laut Quelle) | Was der Validator tut | Quelle und Zitat |
 |---|---|---|---|
-| BLK-006 | Blanko: dringlich: spätester Beginn nach 14 Kalendertagen | blankoRules.js kennt is_dringend nicht (immer 28 Tage). § 13a Abs. 2 verweist auf die Zeiträume des § 15, also auch 14 Tage bei dringlichem Bedarf. | § 15 Abs. 1 Satz 2 (Z. 679–680) — „2Liegt ein dringlicher Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu beginnen." |
 | BLK-007 | Blanko: M75.1 fällt unter „M75.-" der Blanko-Liste | Katalog hält M75.-, S43.-, S46.-, S49.- nur als wörtliche Schlüssel; echte Kodes werden nicht gefunden → BLANKO_NICHT_VERFUEGBAR. | Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1579) — „M75.- EX Schulterläsionen" |
 | BLK-008 | Blanko: S42.00 (Fraktur der Klavikula): Liste führt »S42.0 -« | S42.0-, S42.1-, S42.2- fehlen im Katalog (blanko_physio_shoulder). | Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1613) — „S42.0 - EX Fraktur der Klavikula" |
 | LHB-006 | LHB/BVB: G10 + ZN, 37 Einheiten übersteigen 12 Wochen bei Frequenzempfehlung 1-3x | diagnosegruppen.json führt ZN mit frequency_hint „2-5 x wöchentlich" → Schwelle 60 statt 36. Katalog nennt für ZN 1-3x wöchentlich. | Heilmittelkatalog I, Diagnosegruppe ZN, Frequenzempfehlung (Z. 2759) — „- 1-3x wöchentlich" |
@@ -110,8 +109,6 @@ Gesamt: **122 Fälle**.
 | LHB-016 | LHB/BVB: G35.10 + ZN: Liste führt »G35.1 -« (alle Kodes der Kategorie) | heilmittel-catalog.json enthält 238 von 400 ICD-Zeilen der Liste (162 fehlen, u. a. G35.1–G35.9). Fehlende Kodes laufen als Standardrezept: Engine standard + OVER_HOECHSTMENGE. | Abschnitt 1, Zeile G35.1 (Z. 196) — „G35.1 - Multiple Sklerose mit vorherrschend" |
 | LHB-018 | LHB/BVB: R15 + SO2: Alterskriterium „ab vollendetem 70. Lebensjahr" muss angezeigt werden | Hinweis fehlt im Katalog (hinweis: null). Alterskriterien sind nach § 7 Abs. 7 HeilM-RL bindend. | Abschnitt 1, Zeile R15 (Z. 1230–1231) — „R15 Stuhlinkontinenz SO2 ab vollendetem 70. Lebensjahr" |
 | LHB-019 | LHB/BVB: G61.0 + PN: bei diesem ICD steht keine Spezifikation | Katalog ordnet G61.0 den CIDP-Hinweis der Nachbarzeile (G61.8) zu → falsche Bedingung wird angezeigt. | Abschnitt 1, Zeile G61.0 (Z. 258) — „G61.0 Guillain-Barré-Syndrom PN EN3" |
-| LHB-021 | LHB/BVB: Beginn am 29. Kalendertag muss gemeldet werden | lhbBvbRules.js prüft den Behandlungsbeginn nicht (nur computed.latest_start_date). § 15 gilt unabhängig von LHB/BVB. | § 15 Abs. 1 Satz 1 (Z. 678) — „Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen." |
-| LHB-022 | LHB/BVB: Beginn vor Ausstellung muss blockieren | lhbBvbRules.js prüft den Behandlungsbeginn nicht. | § 15 Abs. 1 Satz 1 (Z. 678) — „Die Behandlung hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen." |
 | PHY-STD-011 | Physio: SO5 mit 6 Einheiten (Diagnosegruppe steht im Katalog) | SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt. | Heilmittelkatalog I, Diagnosegruppe SO5 (Z. 3328–3329) — „Höchstmenge je VO: - bis zu 6x/VO" |
 | PHY-STD-012 | Physio: EX3 ist keine Diagnosegruppe des geltenden Katalogs (nur EX, bis zu 6x/VO) | diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie. | Heilmittelkatalog I, Diagnosegruppe EX (Z. 2603–2604) — „Höchstmenge je VO: - bis zu 6x/VO" |
 

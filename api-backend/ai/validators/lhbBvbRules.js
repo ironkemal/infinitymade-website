@@ -11,19 +11,9 @@
 // We surface this as a warning so the receptionist confirms the Akutereignis-Datum.
 
 import { lookupLhbBvb, getDiagnosegruppe } from './catalog.js';
+import { parseIsoDatum, pruefeBehandlungsbeginn } from './fristen.js';
 
 const MAX_WEEKS_PER_VERORDNUNG = 12;
-const DEFAULT_GUELTIG_TAGE = 28;
-const DRINGEND_GUELTIG_TAGE = 14;
-
-function parseDate(s) {
-  if (!s) return null;
-  const d = new Date(s + 'T00:00:00Z');
-  return isNaN(d.getTime()) ? null : d;
-}
-function addDays(d, days) {
-  return new Date(d.getTime() + days * 86400000);
-}
 
 export function validateLhbBvb(rezept) {
   const warnings = [];
@@ -98,7 +88,7 @@ export function validateLhbBvb(rezept) {
     });
   }
 
-  const ausstellung = parseDate(rezept.ausstellungsdatum);
+  const ausstellung = parseIsoDatum(rezept.ausstellungsdatum);
   if (!ausstellung) {
     blockers.push({
       code: 'AUSSTELLUNGSDATUM_INVALID',
@@ -106,8 +96,15 @@ export function validateLhbBvb(rezept) {
       field: 'ausstellungsdatum'
     });
   }
-  const gueltigTage = rezept.is_dringend ? DRINGEND_GUELTIG_TAGE : DEFAULT_GUELTIG_TAGE;
-  const latestStart = ausstellung ? addDays(ausstellung, gueltigTage) : null;
+
+  // § 15 HeilM-RL (28 Tage regulär, 14 Tage bei dringendem Bedarf) gilt auch für LHB/BVB.
+  const fristPruefung = pruefeBehandlungsbeginn({
+    ausstellungsdatum: ausstellung,
+    behandlungsbeginn: rezept.behandlungsbeginn,
+    isDringend: !!rezept.is_dringend
+  });
+  blockers.push(...fristPruefung.blockers);
+  warnings.push(...fristPruefung.warnings);
 
   return {
     ok: blockers.length === 0,
@@ -120,7 +117,7 @@ export function validateLhbBvb(rezept) {
       hinweis: entry.hinweis,
       max_sessions_heuristic: maxSessions,
       max_weeks_per_verordnung: MAX_WEEKS_PER_VERORDNUNG,
-      latest_start_date: latestStart ? latestStart.toISOString().slice(0,10) : null,
+      latest_start_date: fristPruefung.latestStartIso,
       exempt_from_wirtschaftlichkeitspruefung: true,
       zuzahlung_required: true,
       zuzahlung_percent: 10,
