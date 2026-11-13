@@ -490,6 +490,51 @@
 @media screen and (max-width: 899px) {
   [data-design="neu"][data-px-shell="v2"] .px-suche { display: none; }
 }
+/* ── V2.12b Suche unter 900 px (Melih 13.11.2026, module/kopf-suche-ansicht.js) ──────────────
+   Lupe (44 × 44) neben dem Menüknopf; sie klappt dasselbe Feld als Zeile unter der Kopfleiste auf.
+   Ab 900 px bleibt das Feld wie bisher in der Kopfleiste, die Lupe ist dort aus. */
+@media screen and (min-width: 900px) {
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf { display: none; }
+}
+@media screen and (max-width: 899px) {
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; margin-left: 4px; padding: 0;
+    border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-main); cursor: pointer;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf[hidden] { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf:hover,
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf[aria-expanded="true"] { background: var(--bg-hover); }
+  [data-design="neu"][data-px-shell="v2"] .px-suche-knopf:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen]:not([hidden]) {
+    /* patient-suche.js setzt inline position: relative an der Hülle; nur !important kann das hier überstimmen. */
+    position: fixed !important;
+    top: 64px; left: 8px; right: 8px; z-index: 460;
+    display: flex; align-items: center; gap: 8px;
+    height: 48px; padding: 0 8px 0 12px;
+    border: 1px solid var(--accent); border-radius: var(--radius-sm);
+    background: var(--bg-card-solid); color: var(--text-muted);
+    box-shadow: 0 0 0 3px var(--focus-halo), var(--shadow-e3);
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] svg { flex-shrink: 0; }
+  /* 16 px Schrift: iOS zoomt bei kleineren Eingabefeldern ungefragt in die Seite. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-feld {
+    flex: 1; min-width: 0; height: 46px; padding: 0;
+    border: 0; background: transparent; color: var(--text-main); font: inherit; font-size: 16px;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-feld::placeholder { color: var(--text-faint); }
+  /* Gegen `input:focus-visible { outline … !important }` (dashboard.css): den Fokus zeigt die Hülle. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-feld:focus-visible { outline: none !important; box-shadow: none !important; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-feld::-webkit-search-cancel-button { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-taste { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .patient-search-list {
+    top: calc(100% + 6px); left: 0; right: 0; width: auto; min-width: 0; max-width: none;
+    max-height: min(420px, calc(100vh - 140px)); padding: 6px;
+    border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-e3); z-index: 470;
+  }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .patient-search-list li { padding: 12px 10px; line-height: 20px; border-radius: var(--radius-sm); font-size: 15px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .patient-search-list li .match-hl { color: var(--text-main); font-weight: 700; }
+}
 /* V2.12 Tablet (769–1279 px): Kopfleiste entlasten, damit der Praxisname lesbar bleibt —
    Uhr aus, Einrichtung nur Ring + Prozent, Suche schmaler. */
 @media screen and (min-width: 769px) and (max-width: 1279px) {

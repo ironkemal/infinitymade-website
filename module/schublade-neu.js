@@ -25,7 +25,7 @@ export function schubladenZustand(schmal, offen) {
 const fokussierbar = (wurzel) => [...wurzel.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
   .filter((el) => !el.hidden && el.offsetParent !== null);
 
-const KOPF_BEREICHE = '.topbar-right, .topbar .px-suche, .topbar .biz-switcher';
+const KOPF_BEREICHE = '.topbar-right, .topbar .px-suche, .topbar .px-suche-knopf, .topbar .biz-switcher';
 const kopfInert = new WeakMap();
 /** Kopfleiste (außer Menüknopf/Marke) hinter der offenen Schublade sperren; Ursprungswert bleibt erhalten. */
 function setzeKopfInert(an) {

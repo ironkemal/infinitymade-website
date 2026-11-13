@@ -3,7 +3,7 @@
 > Üretim: 2026-11-13 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**4642 fonksiyon** (4520 JS · 95 bash · 27 ps1) · 571 dosya · 42 sidebar modülü
+**4643 fonksiyon** (4521 JS · 95 bash · 27 ps1) · 571 dosya · 42 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -632,9 +632,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `laden` — module/mailversand.js:193 · module/mein-urlaub.js:6 · module/plz.js:38 · module/start-aufgaben.js:359 · module/startseite-handlungsbedarf-karte.js:44
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `markiere` — module/kalender-auswahl.js:39 · module/leistung-farbwahl.js:47 · module/planung-bruecke.js:134 · module/verordnung-liste.js:255 · widget/booking-widget.js:107
+- `oeffne` — module/kalender-kontextmenue.js:120 · module/kopf-suche-ansicht.js:32 · module/leiste-flyout.js:64 · module/leistungen-liste.js:190 · module/verordnung-liste.js:219
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:64 · api-backend/billing/dta/preflight.js:161
 - `tag` — module/podo-vorgeschichte.js:21 · module/rechnung-dmrz.js:38 · module/rezeptinfo-geld.js:257 · module/startseite-handlungsbedarf-laden.js:13 · module/startseite-handlungsbedarf.js:7
-- `tick` — api-backend/dsgvo/fristen.js:97 · api-backend/lib/terminerinnerung-job.js:155 · api-backend/merkez-istemci/ip-abgleich.js:257 · api-backend/server.js:4035 · dashboard.js:12582
 
 ## Shell (onprem/)
 

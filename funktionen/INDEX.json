@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-11-13",
  "dateien": 571,
- "funktionen": 4642,
+ "funktionen": 4643,
  "module": [
   "abrechnung",
   "anamnese",
@@ -83965,6 +83965,7 @@
     "logoDateiAlsPng",
     "main",
     "montierePatientensuche",
+    "oeffne",
     "oeffneBerichtDialog",
     "oeffneDb",
     "offerAusfallrechnung",
@@ -152271,6 +152272,8 @@
     "schliesse"
    ],
    "calledBy": [
+    "erlaubt",
+    "montierePatientensuche",
     "renderLeistungenListe",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
@@ -158020,8 +158023,8 @@
    "lang": "js",
    "file": "module/kopf-suche-ansicht.js",
    "start": 7,
-   "end": 40,
-   "lines": 34,
+   "end": 59,
+   "lines": 53,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -158039,6 +158042,7 @@
     "displayNameWithBirth",
     "ensureLeadsCache",
     "erlaubt",
+    "oeffne",
     "patientMatchesQuery",
     "refresh",
     "resolve"
@@ -158056,8 +158060,8 @@
    "lang": "js",
    "file": "module/kopf-suche-ansicht.js",
    "start": 10,
-   "end": 39,
-   "lines": 30,
+   "end": 36,
+   "lines": 27,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -158069,14 +158073,12 @@
    "domRender": false,
    "calls": [
     "aktiv",
-    "aktualisieren",
     "attachPatientSearch",
     "close",
     "displayNameWithBirth",
     "ensureLeadsCache",
-    "patientMatchesQuery",
-    "refresh",
-    "resolve"
+    "oeffne",
+    "patientMatchesQuery"
    ],
    "calledBy": [
     "(datei) api-backend/billing/dta/preflight.js",
@@ -158092,6 +158094,79 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "oeffne",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/kopf-suche-ansicht.js",
+   "start": 32,
+   "end": 36,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "domIds": [],
+   "domRenderIds": [],
+   "domRender": false,
+   "calls": [
+    "close"
+   ],
+   "calledBy": [
+    "erlaubt",
+    "montierePatientensuche",
+    "renderLeistungenListe",
+    "verdrahteFlyout",
+    "verdrahteKontextmenue",
+    "verordnungenListeLaden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "b2c",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "patientDetailModal",
+    "podologie-billing",
+    "rechnungen",
+    "rezeptModal",
+    "services",
+    "settings",
+    "statistik",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 38 modülden çağrılıyor"
+   ]
   },
   {
    "name": "spalteAusZeilen",
@@ -162620,6 +162695,8 @@
     "schliesseFlyout"
    ],
    "calledBy": [
+    "erlaubt",
+    "montierePatientensuche",
     "renderLeistungenListe",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
@@ -163990,6 +164067,8 @@
    "domRender": false,
    "calls": [],
    "calledBy": [
+    "erlaubt",
+    "montierePatientensuche",
     "renderLeistungenListe",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
@@ -197199,7 +197278,6 @@
    ],
    "calledBy": [
     "(datei) module/verordnung-podo.js",
-    "erlaubt",
     "erstelleApp",
     "kiJeton",
     "lauf",
@@ -207829,7 +207907,6 @@
     "attachPatientSearch",
     "changed",
     "check",
-    "erlaubt",
     "initBkCustomerAutocomplete",
     "kalenderNeuLaden",
     "ladeRzPatientenCache",
@@ -216066,7 +216143,6 @@
    ],
    "calledBy": [
     "(datei) module/verordnung-podo.js",
-    "erlaubt",
     "erstelleApp",
     "kiJeton",
     "lauf",
@@ -250228,6 +250304,8 @@
     "zeigeVerordnungDetail"
    ],
    "calledBy": [
+    "erlaubt",
+    "montierePatientensuche",
     "renderLeistungenListe",
     "verdrahteFlyout",
     "verdrahteKontextmenue",
@@ -255656,7 +255734,6 @@
    ],
    "calledBy": [
     "(datei) module/verordnung-podo.js",
-    "erlaubt",
     "erstelleApp",
     "kiJeton",
     "lauf",
@@ -277447,7 +277524,6 @@
     "done",
     "el",
     "entpackeXml",
-    "erlaubt",
     "erstelleUeberweisungUpload",
     "executeTranscribeTransport",
     "executeTransport",
@@ -278590,6 +278666,7 @@
     "logoDateiAlsPng",
     "main",
     "montierePatientensuche",
+    "oeffne",
     "oeffneBerichtDialog",
     "oeffneDb",
     "offerAusfallrechnung",
@@ -291042,6 +291119,17 @@
    "aynalar": []
   },
   {
+   "name": "oeffne",
+   "orte": [
+    "module/kalender-kontextmenue.js:120",
+    "module/kopf-suche-ansicht.js:32",
+    "module/leiste-flyout.js:64",
+    "module/leistungen-liste.js:190",
+    "module/verordnung-liste.js:219"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "parseDate",
    "orte": [
     "api-backend/ai/validators/blankoRules.js:23",
@@ -291233,16 +291321,6 @@
     "module/patienten-import.js:118",
     "module/termin-aktionen.js:609",
     "ops/tools/regroup.mjs:59"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "oeffne",
-   "orte": [
-    "module/kalender-kontextmenue.js:120",
-    "module/leiste-flyout.js:64",
-    "module/leistungen-liste.js:190",
-    "module/verordnung-liste.js:219"
    ],
    "aynalar": []
   },
