@@ -1467,7 +1467,7 @@ function formatActivityTimestamp(iso) {
 
 async function loadActivityFeed() {
   const container = document.getElementById('activityFeedList');
-  if (!container) return;
+  if (!container || document.documentElement.dataset.design === 'neu') return; // E8: im neuen Design kein Feed (guvenlik S-66)
   
   try {
     const ownerId = getOwnerId();
@@ -1499,7 +1499,7 @@ async function loadActivityFeed() {
         .order('created_at', { ascending: false })
         .limit(10), 'activities')
     ]);
-
+    if (document.documentElement.dataset.design === 'neu') return; // Aktualität nach await: inzwischen neu → nichts zeichnen
     const activities = [];
 
     if (notesRes.data) {
@@ -14169,7 +14169,7 @@ async function init() {
     await renderSidebar(); await loadTeam();
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
-      startansicht = (await import('./module/startseite-ansicht.js?v=20261113f603')).montiereStartansicht({ ...ansichtKontext, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
+      startansicht = (await import('./module/startseite-ansicht.js?v=20261113f605')).montiereStartansicht({ ...ansichtKontext, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
       (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261112v205')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id) } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();

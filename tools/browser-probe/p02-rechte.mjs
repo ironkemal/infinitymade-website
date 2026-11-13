@@ -30,7 +30,14 @@ try {
     assert.deepEqual(neu.nav, alt.nav, rolle + ': Navigation identisch');
     for (const id of PANELS) {
       assert.equal(neu.panels[id].aktiv, alt.panels[id].aktiv, `${rolle}/${id}: Erreichbarkeit`);
-      assert.deepEqual(neu.panels[id].reads, alt.panels[id].reads, `${rolle}/${id}: gelesene Tabellen`);
+      // Neu darf nie mehr lesen als Alt. Einzige erlaubte Lücke: der Aktivitätsfeed der Übersicht, den das neue
+      // Design weder lädt noch zeigt (V6.F05, E8, guvenlik S-66; loadActivityFeed liest genau diese Tabellen).
+      const FEED = new Set(['bookings', 'fahrten', 'invoices', 'leads', 'patient_notes']);
+      const a = alt.panels[id].reads, n = neu.panels[id].reads;
+      assert.deepEqual(n.filter(t => !a.includes(t)), [], `${rolle}/${id}: Neu liest keine Tabelle, die Alt nicht liest`);
+      const fehlt = a.filter(t => !n.includes(t));
+      if (id === 'overview') assert.ok(fehlt.every(t => FEED.has(t)), `${rolle}/${id}: nur Feed-Tabellen fehlen (${fehlt})`);
+      else assert.deepEqual(fehlt, [], `${rolle}/${id}: gelesene Tabellen`);
     }
     assert.deepEqual(neu.schreib, alt.schreib, rolle + ': Schreibversuche identisch');
     assert.deepEqual(neu.reload, { design: 'neu', marken: 1 }, rolle + ': Reload hält Neu, eine Shell (design=neu per Vorschau)');

@@ -59,7 +59,15 @@ try {
   const maNeu = await lauf({ design: 'neu', rolle: 'employee' }), maAlt = await lauf({ design: 'alt', rolle: 'employee' });
   assert.equal(maNeu.stand.karte, 0, 'c) keine Karte'); assert.equal(maNeu.stand.bedarfInDom, false, 'c) keine Insel');
   assert.equal(maNeu.stand.voAlt?.inSlot, true, 'c) Altknoten wie bisher im Slot');
-  assert.deepEqual(maNeu.reads, maAlt.reads, 'c) Fachtabellen-Reads Mitarbeiterin neu = alt');
+  // Neu liest je Tabelle höchstens so oft wie Alt; weniger nur bei Tabellen des Aktivitätsfeeds, den das neue Design
+  // nicht lädt (V6.F05, E8). prescriptions darf sich nicht ändern (keine neue Handlungsbedarf-Abfrage für Mitarbeiterin).
+  const FEED = new Set(['bookings', 'fahrten', 'invoices', 'leads', 'patient_notes']);
+  for (const t of new Set([...Object.keys(maNeu.reads), ...Object.keys(maAlt.reads)])) {
+    const n = maNeu.reads[t] || 0, a = maAlt.reads[t] || 0;
+    assert.ok(n <= a, `c) Mitarbeiterin neu liest ${t} nicht öfter als alt (${n} > ${a})`);
+    if (n < a) assert.ok(FEED.has(t), `c) weniger Reads nur bei Feed-Tabellen (${t})`);
+  }
+  assert.equal(maNeu.reads.prescriptions || 0, maAlt.reads.prescriptions || 0, 'c) prescriptions unverändert');
   // e)
   const klein = await lauf({ design: 'neu', rolle: 'owner', breite: 390 });
   assert.ok(klein.stand.ueberlauf <= 0, 'e) kein Dokument-Überlauf'); assert.equal(klein.stand.aussen, 0, 'e) Karte vollständig im Viewport');

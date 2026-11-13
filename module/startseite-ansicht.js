@@ -182,6 +182,8 @@ export function montiereStartansicht(k) {
   return {node,anchor,slot};
  }).filter(Boolean);
  const replaced=[...panel.children].filter(n=>n.matches('.panel-header,#welcomeOverview,#todayKpiBlock'+(voNeu?',#physioRezKpi':'')));
+ // V6.F05: Mitarbeiterin behält die Altkacheln (gueltig_bis); im neuen Design neutral wie V6.F01, beim Abschalten zurück.
+ const voLbl=voNeu?[]:[['.rez-kpi-overdue .rez-kpi-lbl','Beginnfrist überschritten'],['.rez-kpi-soon .rez-kpi-lbl','Beginnfrist ≤ 7 Tage']].map(([sel,neu])=>{const e=panel.querySelector('#physioRezKpi '+sel);return e?{e,alt:e.textContent,neu}:null;}).filter(Boolean);
  panel.prepend(root);
  const bedarfKontext = () => {
   const ownerId = hb.ownerId?.(), gemeinsam = hb.patientsGemeinsam?.(), rolle = k.rolle?.(), uid = k.uid?.();
@@ -208,6 +210,7 @@ export function montiereStartansicht(k) {
   root.hidden=!neu;
   for(const m of moves){if(neu)root.querySelector(`[data-start-slot="${m.slot}"]`).append(m.node);else m.anchor.after(m.node);}
   for(const n of replaced)neu?n.setAttribute('data-px-start-ersetzt',''):n.removeAttribute('data-px-start-ersetzt');
+  for(const l of voLbl)l.e.textContent=neu?l.neu:l.alt;
   redraw();
   if(bedarf){if(neu)bedarf.laden();else bedarf.leeren();}
  }
