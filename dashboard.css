@@ -8855,7 +8855,7 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
 /* Telefon: Marke weicht dem Standort-Chip (Hamburger + Chip tragen die Orientierung) */
 @media (max-width: 480px) {
   .topbar .brand { display: none; }
-=======
+}
 /* Structured mail footers share the existing form and compose surfaces. */
 .mail-konfiguration { width: min(760px, calc(100vw - 32px)); max-width: 760px; }
 .mail-signatur-editor { padding: 0 24px 20px; }
