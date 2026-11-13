@@ -31,7 +31,7 @@ kapsar. Sebep ölçüm:
 | `api-backend/billing/codes` | **34** |
 | `module/` tamamı (2026-08-14) | **191** |
 | **Başlangıç kapsamı (2026-08-14)** | **4 giriş, 0 hata** |
-| **Güncel kapsam (2026-11-13)** | **51 giriş (50 dosya + 1 glob), 0 hata** |
+| **Güncel kapsam (2026-11-14)** | **74 giriş (73 dosya + 1 glob), 0 hata** |
 
 191 hatalı bir liste kırmızı bir duvardır; duvar görmezden gelinir, görmezden
 gelinen araç ölür. Bu yüzden kapsam sıfır hatayla başlar ve **dosya temizlendikçe
@@ -87,4 +87,7 @@ adlarında susturuyor; göreceli `./...js?v=...` import'larında TypeScript 7 (`
 import'lar editörde `any` olur ve tipini kaybeder.
 
 Tam tip isteyen modülden modüle `?v=` **olmadan** import eder; cache-buster
-yalnızca HTML'in yüklediği giriş modülünde kalır.
+yalnızca HTML'in yüklediği giriş modülünde kalır. (`supabase-config.js` ve
+`module/design-oeffentlich.js` 2026-11-14'te bu kurala çekildi; SaaS
+`max-age=0, must-revalidate` ve On-Prem Caddy `file_server` ETag/Last-Modified
+doğrulandı.)

@@ -20,8 +20,12 @@ export async function ladeAppKonfiguration({ fetchFn = globalThis.fetch, timeout
   } finally { clearTimeout(timer); }
 }
 
+/**
+ * @param {{ id?: unknown, role?: unknown, plan_status?: unknown, owner_id?: unknown, is_active?: unknown } | null | undefined} profile
+ * @param {string} userId
+ */
 export function pruefeStartprofil(profile, userId) {
-  if (!profile || profile.id !== userId || !['owner', 'employee'].includes(profile.role)
+  if (!profile || profile.id !== userId || !['owner', 'employee'].includes(/** @type {string} */ (profile.role))
     || profile.plan_status === 'deleted'
     || (profile.role === 'employee' && (!profile.owner_id || profile.is_active === false))) throw new Error('PROFILE_UNAVAILABLE');
   return profile;
@@ -31,7 +35,7 @@ export function zeigeStartfehler(doc = globalThis.document, reload = () => globa
   if (!doc) return;
   const render = () => {
     if (doc.getElementById('appStartFehler')) return;
-    for (const element of [...doc.body.children]) element.hidden = true;
+    for (const element of [...doc.body.children]) /** @type {HTMLElement} */ (element).hidden = true;
     const panel = doc.createElement('main');
     panel.id = 'appStartFehler';
     panel.setAttribute('role', 'alert');

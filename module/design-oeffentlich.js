@@ -8,8 +8,9 @@
  * Ein öffentlicher Schalter für den Livebetrieb ist bewusst nicht gebaut (offene Produktentscheidung).
  */
 import { DESIGN_VORSCHAU } from '../supabase-config.js';
-import { wendeAn } from './design-oeffentlich-logik.js?v=20261111p8';
+import { wendeAn } from './design-oeffentlich-logik.js';
 
+/** @type {Storage | null} */
 let speicher = null;
 try { speicher = globalThis.localStorage; } catch { speicher = null; }
 wendeAn({ vorschau: DESIGN_VORSCHAU, suche: globalThis.location?.search, speicher, wurzel: globalThis.document?.documentElement });

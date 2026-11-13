@@ -16,8 +16,12 @@
 
   "//include": "RATSCHE: Diese Liste wächst, sie schrumpft nie. Eine Datei kommt dazu, sobald sie fehlerfrei ist — nicht vorher. Anleitung in TYPECHECK.md.",
   "include": [
+    "supabase-config.js",
     "module/globals.d.ts",
     "module/typen/**/*.js",
+    "module/app-start.js",
+    "module/design-oeffentlich-logik.js",
+    "module/design-oeffentlich.js",
     "module/signal.js",
     "module/signal.test.js",
     "module/datum.js",
@@ -45,6 +49,7 @@
     "module/sitzung-aktiv.js",
     "module/standort-box.test.js",
     "module/standort-zuschnitt.js",
+    "module/support-kontakt.js",
     "module/rechnung-anzeige.js",
     "module/rechnung-anzeige.test.js",
     "module/rezept-speicher-riegel.js",

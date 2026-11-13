@@ -1,4 +1,4 @@
-import { ladeAppKonfiguration, zeigeStartfehler } from './module/app-start.js?v=20261014start1';
+import { ladeAppKonfiguration, zeigeStartfehler } from './module/app-start.js';
 
 let _cfg;
 try { _cfg = await ladeAppKonfiguration(); }
