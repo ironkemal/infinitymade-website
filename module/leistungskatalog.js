@@ -25,7 +25,7 @@
 
 /**
  * @param {object} p
- * @param {Array} p.katalog                Aktueller Stand von `servicesCache`.
+ * @param {Array<Record<string, unknown>> | undefined} p.katalog Aktueller Stand von `servicesCache`.
  * @param {boolean} p.sektorHatGkvKatalog   Hat der Fachbereich einen GKV-Katalog
  *                                          (GKV_LEISTUNGSKATALOG[sector].length > 0)?
  * @returns {boolean} true, wenn `loadServices()` erneut laufen muss.

@@ -1,9 +1,12 @@
-/** One save run owns one unchanged mask, including patient and paper review. */
+/**
+ * One save run owns one unchanged mask, including patient and paper review.
+ * @param {HTMLElement | null | undefined} root
+ */
 export function beginRezeptSpeicherlauf(root) {
   if(!root) throw new Error('Rezeptmaske nicht verfügbar.');
-  const fields=()=>Array.from(root.querySelectorAll('input,select,textarea'));
+  const fields=()=>/** @type {Array<HTMLInputElement>} */ (Array.from(root.querySelectorAll('input,select,textarea')));
   const parent=root.parentElement;
-  const modal=root.closest?.('.modal-overlay');
+  const modal=/** @type {HTMLElement | null | undefined} */ (root.closest?.('.modal-overlay'));
   const hidden=modal?.hidden;
   const snapshot=()=>JSON.stringify([
     root.dataset.rezeptart,
@@ -12,7 +15,7 @@ export function beginRezeptSpeicherlauf(root) {
     Array.from(root.querySelectorAll('.m13-chk')).map(el=>el.className),
   ]);
   const before=snapshot();
-  const controls=Array.from(root.querySelectorAll('input,select,textarea,button'));
+  const controls=/** @type {Array<HTMLInputElement>} */ (Array.from(root.querySelectorAll('input,select,textarea,button')));
   const previous=controls.map(el=>({el,disabled:el.disabled,readOnly:el.readOnly}));
   const inert=root.inert;
   controls.forEach(el=>{el.disabled=true;});root.inert=true;

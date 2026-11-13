@@ -31278,8 +31278,8 @@
    "lang": "js",
    "file": "api-backend/billing/utils/icd-code.js",
    "start": 63,
-   "end": 75,
-   "lines": 13,
+   "end": 76,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -35647,13 +35647,11 @@
    "calledBy": [
     "(datei) api-backend/tools/lizenzen-erzeugen.mjs",
     "beginRezeptSpeicherlauf",
-    "fields",
     "kontoLoeschenIntern",
     "physioRpc",
     "saveRezept",
     "seiten",
-    "sha256Hex",
-    "snapshot"
+    "sha256Hex"
    ],
    "modules": [
     "abrechnung",
@@ -54824,13 +54822,11 @@
    "calledBy": [
     "(datei) api-backend/tools/lizenzen-erzeugen.mjs",
     "beginRezeptSpeicherlauf",
-    "fields",
     "kontoLoeschenIntern",
     "physioRpc",
     "saveRezept",
     "seiten",
-    "sha256Hex",
-    "snapshot"
+    "sha256Hex"
    ],
    "modules": [
     "abrechnung",
@@ -210836,7 +210832,6 @@
     "beginRezeptSpeicherlauf",
     "changed",
     "check",
-    "fields",
     "mountBarcodeBestaetigung",
     "val"
    ],
@@ -215008,8 +215003,8 @@
    "kind": "function",
    "lang": "js",
    "file": "module/rezept-speicher-riegel.js",
-   "start": 2,
-   "end": 36,
+   "start": 5,
+   "end": 39,
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [],
@@ -215037,9 +215032,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezept-speicher-riegel.js",
-   "start": 4,
-   "end": 35,
-   "lines": 32,
+   "start": 7,
+   "end": 7,
+   "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -215049,10 +215044,7 @@
    "domIds": [],
    "domRenderIds": [],
    "domRender": false,
-   "calls": [
-    "pruefe",
-    "snapshot"
-   ],
+   "calls": [],
    "calledBy": [
     "(datei) api-backend/ai/router.js",
     "beginRezeptSpeicherlauf",
@@ -215108,9 +215100,9 @@
    "kind": "arrow",
    "lang": "js",
    "file": "module/rezept-speicher-riegel.js",
-   "start": 8,
-   "end": 35,
-   "lines": 28,
+   "start": 11,
+   "end": 18,
+   "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -215121,15 +215113,13 @@
    "domRenderIds": [],
    "domRender": false,
    "calls": [
-    "fields",
-    "pruefe"
+    "fields"
    ],
    "calledBy": [
     "(datei) api-backend/server.js",
     "beginRezeptSpeicherlauf",
     "changed",
     "check",
-    "fields",
     "mountBarcodeBestaetigung",
     "val"
    ],
@@ -297448,7 +297438,7 @@
    "name": "snapshot",
    "orte": [
     "module/rezept-barcode-bestaetigung.js:61",
-    "module/rezept-speicher-riegel.js:8"
+    "module/rezept-speicher-riegel.js:11"
    ],
    "aynalar": []
   },

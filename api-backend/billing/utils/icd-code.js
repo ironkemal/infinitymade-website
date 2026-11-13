@@ -61,6 +61,7 @@ export function icdAbfrageKodes(kodes) {
  * @returns {Record<string, boolean>}
  */
 export function icdTerminalMap(rows) {
+  /** @type {Record<string, boolean>} */
   const map = {};
   if (!Array.isArray(rows)) return map;
   for (const r of rows) {
