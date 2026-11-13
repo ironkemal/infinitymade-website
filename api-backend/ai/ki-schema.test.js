@@ -186,7 +186,7 @@ test('valid payload passes for all tasks', () => {
   // rezept-normalize in jeton mode without freetext
   assert.equal(
     validateTaskPayload('rezept-normalize', {
-      rezept: { frequenz: '2x pro Woche', diagnosegruppe: 'WS2' },
+      rezept: { frequenz: '2x pro Woche', diagnosegruppe: 'WS' },
       heilmittel_positionen: [{ x: 'X0501', label: 'Allgemeine Krankengymnastik (KG) Einzel' }]
     }, { mode: 'jeton' }),
     true
@@ -218,7 +218,7 @@ test('jeton mode with operator gate accepts mail freetext', () => {
 
 test('invalid calendar dates, numeric coercion, nested freeText and arbitrary diagnosis fail', () => {
   for (const payload of [{ count: '1' }, { count: 1, candidates: [{ date: '2026-02-31', time: '14:00' }] }, { count: 1, preferences: { notes: { date: 'private name' } } }, { count: 1, service: { duration: '30' } }, { count: 1, candidates: [{ date: '2026-10-15', time: '14:00', bucket: 60 }] }]) assert.throws(() => validateTaskPayload('series-scheduler', payload, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
-  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: 'WS2 Private Patient' } }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
+  assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: 'WS Private Patient' } }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
 });
 
 
@@ -231,4 +231,13 @@ test('typed catalogue code cannot carry raw identity through structured A', () =
 test('catalogue category is fixed enum and cannot hide arbitrary private text', () => {
   assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'X0501', label: 'Manuelle Therapie', kat: 'Private Person' }] }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA');
   assert.equal(validateTaskPayload('rezept-normalize', { rezept: {}, heilmittel_positionen: [{ x: 'X0501', label: 'Manuelle Therapie', kat: 'vorrangig' }] }, { mode: 'jeton' }), true);
+});
+
+test('rezept-normalize akzeptiert alle aktuellen HeilM-RL-Diagnosegruppen und lehnt Pre-2021-Altcodes ab', () => {
+  for (const dg of ['WS', 'EX', 'CS', 'ZN', 'PN', 'SO4', 'SO5', 'DF', 'UI1', 'SP5', 'SC', 'SB1', 'PS4', 'SAS', 'CF']) {
+    assert.equal(validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: dg }, heilmittel_positionen: [] }, { mode: 'jeton' }), true, dg);
+  }
+  for (const alt of ['WS1', 'WS2', 'EX3a', 'AT1', 'LY3', 'EN4', 'B3', 'EB1', 'SC1']) {
+    assert.throws(() => validateTaskPayload('rezept-normalize', { rezept: { diagnosegruppe: alt }, heilmittel_positionen: [] }, { mode: 'jeton' }), e => e.code === 'KI_SCHEMA', alt);
+  }
 });

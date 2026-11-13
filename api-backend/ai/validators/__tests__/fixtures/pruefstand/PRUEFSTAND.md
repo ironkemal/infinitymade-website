@@ -109,7 +109,7 @@ Keine offenen `befund`-Fälle (0 Stück; mit Paket D wurden `LHB-006`, `PHY-STD-
 - **`lookupLhbBvb` / `lookupBlankoShoulder`** normalisieren Eingaben per `trim().toUpperCase()`
   inkl. Wildcards (`XXX.-`, `XXX.Y-`, `G73.6*`, `C00-C97`); kommaseparierte Listen (z. B.
   „G60.0, M54.5") werden jedoch nicht aufgesplittet.
-- **Veraltete Physio-Alt-DGs außerhalb von `diagnosegruppen.json`**: `api-backend/ai/catalogs/rezept-optionen.js` (`DIAGNOSEGRUPPEN`) und `module/verordnung-import.js` führen weiterhin Alt-Codes (`WS1`, `WS2`, `EX1`–`EX3` etc.); bleiben vorerst bewusst unberührt (für KI-Normalisierung / Bestandsdaten).
+- **Veraltete Physio-Alt-DGs außerhalb von `diagnosegruppen.json`**: `api-backend/ai/catalogs/rezept-optionen.js` (`DIAGNOSEGRUPPEN`: jetzt die 44 gültigen HeilM-RL-Codes ab 2021/2025) und `module/verordnung-import.js` (`PHYSIO_FALLBACK_HOECHSTMENGE`: jetzt die 13 Physio-Codes inkl. `SO4`/`SO5`, ohne Alt- und Ergo-Codes) sind bereinigt. Offen außerhalb des Validators: `api-backend/db/migrations/0011_seed_diagnosegruppen.sql` (seedet noch 14 Alt-Codes + `'SM'` ohne `SAS`/`CF`) und `api-backend/billing/dta/preflight.js` (`isValidDiagnosegruppe` prüft bislang nur Syntax `/^[A-Z]{1,3}\d?[a-z]?$/`).
 
 ## Bewusste Abweichungen (kein Fehler)
 

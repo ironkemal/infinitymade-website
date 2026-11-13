@@ -130,17 +130,12 @@ const DG_ERLAUBT = new Set(['DF', 'NF', 'QF', 'UI1', 'UI2']);
 const HOECHSTMENGE = { DF: 6, NF: 6, QF: 6, UI1: 8, UI2: 4 };
 const LS_CODE = { a: '1000', b: '0100', c: '0010' };
 
-/** Standard-Höchstmengen für Physiotherapie nach Heilmittel-Richtlinie (Fallback wenn DB offline/Test). */
+/** Standard-Höchstmengen für Physiotherapie nach HeilM-RL (13 Gruppen; Fallback wenn DB offline/Test). */
 export const PHYSIO_FALLBACK_HOECHSTMENGE = {
-  WS1: 6, WS2: 6, WS: 6,
-  EX1: 6, EX2: 6, EX3: 10, EX: 6,
-  ZN1: 10, ZN2: 10, ZN: 10,
-  PN: 10,
-  AT1: 6, AT2: 6, AT3: 6, AT: 6,
-  LY1: 6, LY2: 6, LY3: 10, LY: 6,
-  CS: 6, GE: 6,
-  SO1: 6, SO2: 6, SO3: 6,
-  PS1: 10, PS2: 10, SB1: 10, SB2: 10,
+  WS: 6, EX: 6, CS: 6,
+  ZN: 10, PN: 10,
+  AT: 6, GE: 6, LY: 6,
+  SO1: 6, SO2: 6, SO3: 6, SO4: 6, SO5: 6,
 };
 
 /** Normalisiert Heilmittel-Positionsnummer (z. B. X0501 ↔ 20501). */

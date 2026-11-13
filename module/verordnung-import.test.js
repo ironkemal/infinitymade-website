@@ -14,6 +14,7 @@ import {
   voImportSchluessel,
   normalizeVoCode,
   codesAusVerordnung,
+  PHYSIO_FALLBACK_HOECHSTMENGE,
 } from './verordnung-import.js';
 import { PHYSIO_POSITIONS } from '../api-backend/billing/codes/physio_positions.js';
 
@@ -397,10 +398,10 @@ test('W15 P1: Gleiche Datei zweimal importiert -> beim 2. Mal 0 uebernommen, all
   assert.ok(import2.zeilen[1].hinweise.some(h => /bereits vorhanden|existiert bereits/.test(h)));
 });
 
-test('W15 P2: Ueberschreitung der Hoechstmenge in Physio (WS2: 12 > 6) zeigt gelb mit „wird als Entwurf übernommen"', () => {
+test('W15 P2: Ueberschreitung der Hoechstmenge in Physio (WS: 12 > 6) zeigt gelb mit „wird als Entwurf übernommen"', () => {
   const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
   const csv = kopf
-    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS2;M54.5;X0501;12;ja;0;nein\n';
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;12;ja;0;nein\n';
 
   const e = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
   assert.equal(e.zeilen.length, 1);
@@ -417,7 +418,7 @@ test('W15 P2: Ueberschreitung der Hoechstmenge in Physio (WS2: 12 > 6) zeigt gel
 test('W15 P3: Dublette mit Höchstmenge-Überschreitung zeigt nur „übersprungen", nicht zugleich „Entwurf"', () => {
   const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Unterschrift;Erbracht;Abgerechnet\n';
   const csv = kopf
-    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS2;M54.5;X0501;12;ja;0;nein\n';
+    + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;WS;M54.5;X0501;12;ja;0;nein\n';
   const erst = pruefeVerordnungen(csv, zuVon(csv), k({ bereich: 'physio' }));
   assert.equal(erst.zeilen[0].istEntwurf, true);
 
@@ -429,4 +430,30 @@ test('W15 P3: Dublette mit Höchstmenge-Überschreitung zeigt nur „übersprung
   assert.equal(z.istEntwurf, false);
   assert.ok(z.hinweise.some(h => /bereits vorhanden/.test(h)));
   assert.ok(!z.hinweise.some(h => h.startsWith('wird als Entwurf übernommen')), 'kein Widerspruch zum Überspringen');
+});
+
+test('PHYSIO_FALLBACK_HOECHSTMENGE enthaelt exakt die 13 HeilM-RL-Physio-Gruppen (ohne Alt-/Ergo-Codes)', () => {
+  assert.deepEqual(
+    Object.keys(PHYSIO_FALLBACK_HOECHSTMENGE).sort(),
+    ['AT', 'CS', 'EX', 'GE', 'LY', 'PN', 'SO1', 'SO2', 'SO3', 'SO4', 'SO5', 'WS', 'ZN'],
+  );
+  assert.equal(PHYSIO_FALLBACK_HOECHSTMENGE.SO4, 6);
+  assert.equal(PHYSIO_FALLBACK_HOECHSTMENGE.SO5, 6);
+  assert.equal(PHYSIO_FALLBACK_HOECHSTMENGE.ZN, 10);
+  assert.equal(PHYSIO_FALLBACK_HOECHSTMENGE.PN, 10);
+  for (const altOrErgo of ['WS1', 'WS2', 'EX1', 'EX2', 'EX3', 'ZN1', 'ZN2', 'AT1', 'AT2', 'AT3', 'LY1', 'LY2', 'LY3', 'PS1', 'PS2', 'SB1', 'SB2']) {
+    assert.equal(Object.hasOwn(PHYSIO_FALLBACK_HOECHSTMENGE, altOrErgo), false, altOrErgo);
+  }
+
+  const kopf = 'Nachname;Vorname;Geburtsdatum;Ausstellungsdatum;LANR;BSNR;Diagnosegruppe;ICD-10;Heilmittel;Anzahl;Frequenz;Unterschrift;Erbracht;Abgerechnet\n';
+  const csvOk = kopf + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;SO5;M54.5;X0501;6;1-2x wtl.;ja;0;nein\n';
+  const resOk = pruefeVerordnungen(csvOk, zuVon(csvOk), k({ bereich: 'physio' }));
+  assert.equal(resOk.ok, 1);
+  assert.equal(resOk.rot, 0);
+  assert.equal(resOk.zeilen[0].istEntwurf, false);
+
+  const csvUeber = kopf + 'Muster;Erika;01.02.1950;15.10.2026;123456601;123456700;SO5;M54.5;X0501;7;1-2x wtl.;ja;0;nein\n';
+  const resUeber = pruefeVerordnungen(csvUeber, zuVon(csvUeber), k({ bereich: 'physio' }));
+  assert.equal(resUeber.zeilen[0].istEntwurf, true);
+  assert.match(resUeber.zeilen[0].hinweise.join(' '), /SO5: 7 statt max\. 6 Einheiten/);
 });

@@ -16,21 +16,17 @@ export const FREQUENZ_OPTIONEN = Object.freeze([
   '1x alle 2 Wochen', '1x alle 3 Wochen', '1x alle 4 Wochen', '1x alle 6 Wochen', '1x alle 8 Wochen',
 ]);
 
-// Diagnosegruppen laut Heilmittelkatalog (identisch zur dgDatalist in dashboard.html).
+// Offizielle Diagnosegruppen nach HeilM-RL Zweiter Teil (Fassung 15.05.2025, iK 05.08.2025,
+// Z. 2434–5233) in leerzeichenfreier §-302-DTA-Schreibweise (44 Gruppen über alle 5 Fachbereiche).
 export const DIAGNOSEGRUPPEN = Object.freeze([
-  'WS1', 'WS2', 'WS3', 'WS4', 'WS5', 'WS6',
-  'EX1', 'EX2', 'EX3a', 'EX3b',
-  'AT1', 'AT2',
-  'EN1', 'EN2', 'EN3', 'EN4',
-  'LY1', 'LY2', 'LY3',
-  'ST1', 'ST2', 'ST3', 'ST4', 'ST5', 'ST6', 'ST7', 'ST8', 'ST9',
-  'RE1', 'RE2', 'RE3', 'RE4',
-  'SC1', 'SC2',
-  'SP1', 'SP2', 'SP3', 'SP4',
-  'SN1', 'SN2',
-  'SD1', 'SD2',
-  'PS1', 'PS2', 'PS3',
-  'NE1', 'NE2', 'NE3',
-  'B3', 'B4', 'B5',
-  'EB1', 'EB2', 'EB3',
+  // Physiotherapie (13)
+  'WS', 'EX', 'CS', 'ZN', 'PN', 'AT', 'GE', 'LY', 'SO1', 'SO2', 'SO3', 'SO4', 'SO5',
+  // Podologie (5)
+  'DF', 'NF', 'QF', 'UI1', 'UI2',
+  // Stimm-, Sprech-, Sprach- und Schlucktherapie / Logopädie (14)
+  'ST1', 'ST2', 'ST3', 'ST4', 'SP1', 'SP2', 'SP3', 'SP4', 'SP5', 'SP6', 'RE1', 'RE2', 'SF', 'SC',
+  // Ergotherapie (10)
+  'SB1', 'SB2', 'SB3', 'EN1', 'EN2', 'EN3', 'PS1', 'PS2', 'PS3', 'PS4',
+  // Ernährungstherapie (2)
+  'SAS', 'CF',
 ]);
