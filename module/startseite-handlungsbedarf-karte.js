@@ -89,7 +89,11 @@ export function handlungsbedarfHtml(state = {}, { erreichbar = false, eigene = f
     const zahlOk = id => Number.isSafeInteger(kat[id]?.anzahl) && kat[id].anzahl >= 0;
     const alleNull = sichtbar.length > 0 && sichtbar.every(([id]) => zahlOk(id) && kat[id].anzahl === 0);
     const teilweise = sichtbar.some(([id]) => !zahlOk(id));
+    // podoloji 13.11.: fünf Striche ohne einen einzigen bekannten Treffer sagen nichts und schieben auf dem Telefon
+    // die Terminliste weg. Unbekannt bleibt sichtbar (nie 0), aber als eine Zeile.
+    const nichtsBekannt = sichtbar.every(([id]) => !zahlOk(id) && !(kat[id]?.bekanntAnzahl > 0));
     if (alleNull) rumpf = '<div class="px-karte-zustand px-karte-zustand--ruhig"><p>Alles im Plan</p></div>';
+    else if (nichtsBekannt) rumpf = '<div class="px-karte-zustand"><p>Verordnungsprüfung gerade nicht möglich: Quellen unvollständig.</p></div>';
     else {
       rumpf = `<div class="px-minis px-handlungsbedarf">${sichtbar.map(([id, label, ton]) => {
         const k = kat[id], teil = Number.isSafeInteger(k?.bekanntAnzahl) ? k.bekanntAnzahl : 0;

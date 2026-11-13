@@ -35,8 +35,11 @@ try {
   });
   const altLauf = await lauf({ design: 'alt', rolle: 'owner' });
   // a)
-  assert.equal(neu.stand.karte + (neu.stand.alles ? 1 : 0) >= 1, true, 'a) Karte da');
-  if (neu.stand.karte) {
+  // Drei gültige Zustände (V6.F06): fünf Kacheln · „Alles im Plan“ · eine Zeile, wenn nichts bekannt ist (nie „0“).
+  const kompakt = /Verordnungsprüfung gerade nicht möglich/.test(neu.stand.voText || '');
+  assert.equal(neu.stand.karte + (neu.stand.alles ? 1 : 0) + (kompakt ? 1 : 0) >= 1, true, 'a) Karte da');
+  if (kompakt) assert.ok(!/(^|\D)0(\D|$)/.test(neu.stand.voText.replace(/Erneut prüfen|Alle Verordnungen/g, '')) && !neu.stand.alles, 'a) kompakt ohne 0 und ohne Entwarnung');
+  else if (neu.stand.karte) {
     assert.deepEqual(neu.stand.kachel.map(k => k.lbl), ORDER, 'a) Reihenfolge der fünf Kacheln');
     for (const k of neu.stand.kachel) {
       if (k.klasse.includes('px-unbekannt')) assert.equal(k.zahl, '–', 'a) unbekannt = „–“: ' + k.lbl);
@@ -52,7 +55,7 @@ try {
   assert.equal(altLauf.stand.karte, 0, 'Alt: keine Karte');
   // b)
   const fehl = await lauf({ design: 'neu', rolle: 'owner', szenario: 'fehler' });
-  assert.ok(fehl.stand.karte >= 1 || /nicht verfügbar|ungeklärt/.test(fehl.stand.voText), 'b) Fehler/ungeklärt sichtbar');
+  assert.ok(fehl.stand.karte >= 1 || /nicht verfügbar|ungeklärt|nicht möglich/.test(fehl.stand.voText), 'b) Fehler/ungeklärt sichtbar');
   assert.ok(!fehl.stand.kachel.some(k => k.zahl === '0'), 'b) keine 0 bei Fehler');
   assert.ok(fehl.stand.next && fehl.stand.liste, 'b) Als Nächstes und Termine heute bleiben');
   // c)
@@ -71,7 +74,7 @@ try {
   // e)
   const klein = await lauf({ design: 'neu', rolle: 'owner', breite: 390 });
   assert.ok(klein.stand.ueberlauf <= 0, 'e) kein Dokument-Überlauf'); assert.equal(klein.stand.aussen, 0, 'e) Karte vollständig im Viewport');
-  assert.ok(klein.stand.karte ? klein.stand.kachel.length === 5 : klein.stand.alles, 'e) fünf Kacheln oder Alles im Plan');
+  assert.ok(klein.stand.karte ? klein.stand.kachel.length === 5 : (klein.stand.alles || /Verordnungsprüfung gerade nicht möglich/.test(klein.stand.voText || '')), 'e) fünf Kacheln, Alles im Plan oder Kompaktzeile');
   // f)
   for (const [n, l] of Object.entries({ neu, fehl, maNeu, klein })) { assert.deepEqual(l.fehler, [], `f) ${n}: 0 Seitenfehler`); assert.equal(l.writes, 0, `f) ${n}: 0 Schreibversuche`); }
   erg.ok = true; erg.kacheln = neu.stand.kachel.map(k => `${k.lbl}=${k.zahl}`); erg.ownerReads = neu.reads; erg.maReads = maNeu.reads; erg.maAltReads = maAlt.reads;

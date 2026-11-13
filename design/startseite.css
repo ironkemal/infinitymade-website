@@ -332,3 +332,15 @@
 }
 
 @media screen { [data-design="neu"] .px-start[hidden] { display: none; } }
+
+/* V6.F06 (Messung 13.11.): Fußknöpfe „Zum Kalender“ / „Fristen, No-Shows …“ waren bei ≤ 1024 px 40 px hoch. */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"] .px-fuss-knopf { min-height: 44px; }
+}
+/* V6.F06: ab 1280 px blieb unter „Termine heute“ (229–487 px) bzw. unter der letzten Karte rechts (164 px)
+   eine leere Fläche bis „Aktuelle Aufgaben“. Beide Spalten enden jetzt bündig; Fußknöpfe rutschen per margin-top:auto nach unten. */
+@media screen and (min-width: 1280px) {
+  [data-design="neu"] .px-start-raster .px-k-list,
+  [data-design="neu"] .px-start-raster:has(.px-k-geld) .px-k-geld,
+  [data-design="neu"] .px-start-raster:not(:has(.px-k-geld)) .px-k-frei { align-self: stretch; }
+}

@@ -5,7 +5,7 @@
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, nutzbareLuecken } from './startseite-darstellung.js?v=20261113f603';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
-import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f602';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f606';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICON = {
@@ -24,6 +24,9 @@ const TODO_ICON = { 'vo-ueberfaellig': ICON.warn, 'vo-bald': ICON.uhr, anfragen:
 
 let kontext = () => null;
 let zustand = { laden: true, fehler: false, liste: [], stand: null };
+// V6.F06 (podoloji): Für die Inhaberin speist die Handlungsbedarf-Rechnung auch „Zu erledigen“, damit derselbe Fall
+// nicht zwei Zahlen hat (alte Kacheln zählen gueltig_bis). null = unbekannt; ohne Karte (Mitarbeiterin) bleibt die Altquelle.
+let bedarfLesen = null;
 const inLeiste = panel => document.querySelector(`#sidebarNav .sidebar-item[data-panel="${panel}"]`);
 const zahlAus = id => { const e = document.getElementById(id); const n = Number(e?.textContent); return e && Number.isFinite(n) ? n : null; };
 const voKpiDa = () => { const e = document.getElementById('physioRezKpi'); return !!e && e.dataset.pxStatus === 'ok' && e.style.display !== 'none' && !e.hidden; };
@@ -83,6 +86,11 @@ function todoHtml() {
     voUeberfaellig: inLeiste('verordnungen') && voKpiDa() ? zahlAus('rezKpiOverdue') : null,
     voBald: inLeiste('verordnungen') && voKpiDa() ? zahlAus('rezKpiSoon') : null,
   };
+  if (bedarfLesen) {
+    const s = bedarfLesen(), kat = !s?.laden && !s?.fehler ? s?.daten?.kategorien : null;
+    const z = (id) => (inLeiste('verordnungen') && Number.isSafeInteger(kat?.[id]?.anzahl) ? kat[id].anzahl : null);
+    quellen.voUeberfaellig = z('beginnVerpasst'); quellen.voBald = z('beginnBald');
+  }
   const zeilen = zuErledigen(quellen);
   // Nur berechtigte Quellen verlangen; jede muss erfolgreich bekannt sein.
   const relevant = [...(inLeiste('anfragen') ? [quellen.anfragen] : []), ...(inLeiste('verordnungen') ? [quellen.voUeberfaellig, quellen.voBald] : [])];
@@ -191,6 +199,7 @@ export function montiereStartansicht(k) {
     bereit: rolle === 'owner' && !!uid && uid === ownerId && (k.scope?.() || `${rolle}:${uid}`) === boundScope, supabase: hb.supabase, scope: k.scope?.() };
  };
  const bedarf = voNeu ? createHandlungsbedarfKarte({ kontext: bedarfKontext, heute: () => alsBerlinDatum(new Date()), zeichne: () => redraw() }) : null;
+ bedarfLesen = bedarf ? () => bedarf.lesen() : null;
  const insel = (name,html) => { const e=root.querySelector(`[data-start-insel="${name}"]`); if(e.innerHTML!==html)e.innerHTML=html; };
  function redraw() {
   if(root.hidden)return;

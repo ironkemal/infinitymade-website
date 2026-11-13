@@ -129,6 +129,12 @@ test('Renderer: fünf Kacheln in fester Reihenfolge mit kurzen Etiketten, Null g
   assert.match(h, /px-ton-bad" title="Kein dokumentierter Behandlungsbeginn bis Fristende \(HeilM-RL § 15\) – bitte prüfen"/);
   assert.equal((h.match(/px-mini px-null/g) || []).length, 3); assert.doesNotMatch(h, /Alles im Plan|Teilweise ungeklärt/);
 });
+test('Renderer: nichts bekannt ergibt eine Zeile statt fünf Strichen, nie „0“ oder „Alles im Plan“', () => {
+  const u = { anzahl: null, bekanntAnzahl: 0 };
+  const h = handlungsbedarfHtml({ daten: { kategorien: K5({ beginnVerpasst: u, pauseDroht: u, pauseVerpasst: u, beginnBald: u, ohneFolgetermin: u }) } });
+  assert.match(h, /Verordnungsprüfung gerade nicht möglich/); assert.doesNotMatch(h, /px-mini|Alles im Plan|>0</);
+  assert.match(h, /data-aktion="bedarf-neu"/);
+});
 test('Renderer: alle fünf bekannt und 0 ergibt „Alles im Plan“ statt Kacheln', () => {
   const h = handlungsbedarfHtml({ daten: { kategorien: K5() } });
   assert.match(h, /Alles im Plan/); assert.doesNotMatch(h, /px-mini/);
