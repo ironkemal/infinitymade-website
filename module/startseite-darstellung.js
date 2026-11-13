@@ -65,6 +65,28 @@ export function abstandText(termin, jetzt = new Date()) {
   return r ? `in ${h} Std ${r} Min` : `in ${h} Std`;
 }
 
+/**
+ * Nutzbare freie Zeit heute (Redesign V6.F03, podoloji 13.11.2026): vergangene Lücken fallen weg, eine
+ * laufende zählt nur ab jetzt, kürzer als `minDauer` zählt nicht. 30 Min ist eine Annahme, solange die
+ * kürzeste aktive Leistung beim Start nicht geladen ist (servicesCache ist dort meist leer).
+ * @param {{start:string,end:string}[]} luecken  'HH:MM' wie aus findGaps/renderGapsForDate
+ * @param {{jetztMin?: number|null, minDauer?: number}} [opt]  jetztMin = Minuten seit Mitternacht (Berlin)
+ * @returns {{liste: {start:string,end:string,dauer:number}[], summeMin: number}}
+ */
+export function nutzbareLuecken(luecken, { jetztMin = null, minDauer = 30 } = {}) {
+  const inMin = (t) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t ?? '').trim()); return m && +m[1] < 25 && +m[2] < 60 ? +m[1] * 60 + +m[2] : null; };
+  const alsZeit = (n) => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+  const liste = [];
+  for (const l of luecken || []) {
+    let s = inMin(l?.start); const e = inMin(l?.end);
+    if (s === null || e === null || e <= s) continue;
+    if (Number.isFinite(jetztMin)) { if (e <= jetztMin) continue; if (s < jetztMin) s = jetztMin; }
+    if (e - s < minDauer) continue;
+    liste.push({ start: alsZeit(s), end: alsZeit(e), dauer: e - s });
+  }
+  return { liste, summeMin: liste.reduce((n, l) => n + l.dauer, 0) };
+}
+
 /** Dauer in Minuten (0, wenn unbekannt). */
 export function dauerMin(termin) {
   const s = ms(termin?.start_time), e = ms(termin?.end_time);

@@ -195,6 +195,21 @@
   [data-design="neu"] .px-frei-ziel .gap-card-time { font-size: 14px; font-weight: 500; color: var(--text-main); font-variant-numeric: tabular-nums; }
   [data-design="neu"] .px-frei-ziel .gap-card-top { margin: 0; }
   [data-design="neu"] .px-frei-ziel .gap-empty { color: var(--text-muted); font-size: 14px; }
+  /* V6.F03: Startkarte zeigt eigene Liste nutzbarer Lücken (module/startseite-ansicht.js freiHtml).
+     Der Originalknoten bleibt im Slot, damit renderGapsForDate weiter hineinschreibt, ist aber unsichtbar;
+     damit entfallen auch Tagesblättern und „Heute“ (podoloji: gehört nicht auf den Start). */
+  [data-design="neu"] .px-k-frei .px-frei-ziel { display: none; }
+  [data-design="neu"] .px-frei { padding: 4px 24px 20px; }
+  [data-design="neu"] .px-frei-summe { margin: 0 0 10px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  [data-design="neu"] .px-frei-summe b { color: var(--text-main); font-weight: 500; font-variant-numeric: tabular-nums; }
+  [data-design="neu"] .px-frei-liste { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  [data-design="neu"] .px-frei-liste li {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: 48px; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--bg-card-solid); font-variant-numeric: tabular-nums;
+  }
+  [data-design="neu"] .px-frei-liste .t { font-size: 14px; font-weight: 500; color: var(--text-main); }
+  [data-design="neu"] .px-frei-liste .d { font-size: 13px; color: var(--text-muted); }
 }
 
 /* Schmaler: eine bzw. zwei Spalten. */
@@ -217,7 +232,7 @@
   [data-design="neu"] .px-naechstes-haupt .name { font-size: 20px; line-height: 26px; }
   [data-design="neu"] .px-minis { padding-left: 16px; padding-right: 16px; }
   [data-design="neu"] .px-summe { margin-left: 16px; margin-right: 16px; }
-  [data-design="neu"] .px-frei-ziel { padding-left: 16px; padding-right: 16px; }
+  [data-design="neu"] .px-frei-ziel, [data-design="neu"] .px-frei { padding-left: 16px; padding-right: 16px; }
   [data-design="neu"] .px-verf-personen, [data-design="neu"] .px-verf-woche, [data-design="neu"] .px-verf-hinweis { padding-left: 16px; padding-right: 16px; }
 }
 

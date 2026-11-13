@@ -1269,3 +1269,18 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   V2.09b (Dokumentsuche) soll später denselben Scope-Lader nutzen, nicht einen zweiten.
 - Bekannte Grenze: bewertet nur `rezept_typ = 'standard'` und Kassen-VO, der Rest erscheint als „ungeklärt“.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 13.11.2026 · V6.F03 Startkarte „Freie Zeit“: nur nutzbare Lücken von heute (neues Design)
+- `nutzbareLuecken(luecken, { jetztMin, minDauer = 30 })` — `module/startseite-darstellung.js:76` (rein, Test in
+  `module/startseite-darstellung.test.js`; liefert `{ liste, summeMin }`). `freiHtml()` — `module/startseite-ansicht.js:113`
+  (nicht exportiert).
+- Niye: podoloji 13.11.: auf dem Start nur nutzbare freie Zeit von heute (vergangene weg, laufende ab jetzt, mindestens
+  30 Min). Feste 30 Min, weil `servicesCache` (`dashboard.js:7940`) beim Start nicht geladen ist. `findGaps` (:1129) und
+  `renderGapsForDate` (:1149) bleiben unverändert (Alt). Katmanlama, keine Kopie: es wird nicht neu gerechnet, sondern
+  das gerenderte Ergebnis nachgefiltert.
+- Nerede: `freiHtml` liest die schon gerenderten `.gap-card-time` aus `#gapsList` und ruft `nutzbareLuecken`; Insel `frei`
+  der Startkarte „Freie Zeit“, nur neues Design. Der Originalknoten bleibt unsichtbar im Slot, damit sein Lader weiter
+  hineinschreibt.
+- Kopplung: Wer das Markup von `renderGapsForDate` ändert (`.gap-card-time` „HH:MM - HH:MM“, `.gap-empty`, `.gaps-loading`,
+  `#gapsDateLabel` „Freie Zeiten“), prüft `freiHtml` mit.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.

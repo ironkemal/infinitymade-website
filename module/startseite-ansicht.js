@@ -2,7 +2,7 @@
  * Nur Renderinseln ersetzen Markup; alle aktuellen Aufgaben/KPI/Gaps/Schedule-Knoten
  * werden mit Rückkehrankern bewegt. Eigentum ihrer Handler bleibt beim Bestand.
  */
-import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-darstellung.js?v=20261113f601';
+import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen, nutzbareLuecken } from './startseite-darstellung.js?v=20261113f603';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 import { alsBerlinDatum } from './berlin-datum.js';
 import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f602';
@@ -108,6 +108,27 @@ function todoHtml() {
     <div class="px-karte-kopf"><div><h2 id="pxTodoTitel">Zu erledigen</h2><p>Was heute Aufmerksamkeit braucht</p></div></div>${rumpf}${mehr}</section>`;
 }
 
+/** V6.F03: „Freie Zeit“ liest die schon gerenderten Lücken (renderGapsForDate → #gapsList, je eingeloggter Person)
+ *  und zeigt nur nutzbare von heute. Keine Abfrage; der Originalknoten bleibt für seinen Lader im DOM. */
+function freiHtml() {
+  const liste = document.getElementById('gapsList'), titel = document.getElementById('gapsDateLabel');
+  const zustandP = (t, ruhig = false) => `<div class="px-karte-zustand${ruhig ? ' px-karte-zustand--ruhig' : ''}"><p>${esc(t)}</p></div>`;
+  if (!liste) return zustandP('Freie Zeiten sind gerade nicht verfügbar.');
+  if (liste.querySelector('.gaps-loading')) return '<div class="px-karte-zustand"><div class="px-skelett"></div><div class="px-skelett px-skelett--kurz"></div></div>';
+  // Der Originallader folgt dem Kalendertag; zeigt er nicht heute, nichts Falsches als „heute“ ausgeben.
+  if (titel && titel.textContent.trim() !== 'Freie Zeiten') return zustandP('Die Kalenderansicht zeigt gerade einen anderen Tag.');
+  const leer = liste.querySelector('.gap-empty');
+  if (leer) return zustandP(leer.textContent.trim() || 'Heute keine freie Zeit.', true);
+  const roh = [...liste.querySelectorAll('.gap-card-time')].map(e => { const [start, end] = e.textContent.split('-').map(s => s.trim()); return { start, end }; });
+  const teile = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).formatToParts(new Date());
+  const jetztMin = Number(teile.find(t => t.type === 'hour')?.value) * 60 + Number(teile.find(t => t.type === 'minute')?.value);
+  const { liste: frei, summeMin } = nutzbareLuecken(roh, { jetztMin });
+  if (!frei.length) return zustandP('Heute keine freie Zeit ab 30 Minuten mehr.', true);
+  const dauer = (m) => (m >= 60 ? `${Math.floor(m / 60)} Std${m % 60 ? ` ${m % 60} Min` : ''}` : `${m} Min`);
+  return `<div class="px-frei"><p class="px-frei-summe"><b>${esc(dauer(summeMin))}</b> frei · ab 30 Minuten</p>
+    <ul class="px-frei-liste">${frei.map(l => `<li><span class="t">${esc(l.start)} – ${esc(l.end)}</span><span class="d">${esc(dauer(l.dauer))}</span></li>`).join('')}</ul></div>`;
+}
+
 function listeHtml() {
   let rumpf;
   if (zustand.laden) rumpf = '<div class="px-karte-zustand"><div class="px-skelett"></div><div class="px-skelett"></div><div class="px-skelett px-skelett--kurz"></div></div>';
@@ -149,7 +170,7 @@ export function montiereStartansicht(k) {
  const voNeu = istOwner() && !!hb?.supabase && typeof hb.ownerId === 'function' && k.uid() === hb.ownerId();
  const root = document.createElement('div'); root.id = 'pxStartseite'; root.className = 'px-start'; root.hidden = true;
  // Slots werden nur einmal angelegt. Insbesondere der Aufgabenslot ist keine Renderinsel.
- root.innerHTML = `<div data-start-insel="kopf"></div><div class="px-start-raster"><div data-start-insel="next" style="display:contents"></div><div data-start-insel="todo" style="display:contents"></div><section class="px-karte px-k-list"><div data-start-insel="liste" style="display:contents"></div><details class="px-start-bestand"><summary>Kalenderansicht und Filter</summary><div data-start-slot="kalender"></div></details></section><section class="px-karte px-k-vo"><div class="px-karte-kopf"><h2>Verordnungen</h2></div>${voNeu ? '<div data-start-insel="bedarf"></div>' : '<div data-start-slot="vo"></div><p class="px-karte-zustand" data-start-vo-unbekannt>Verordnungszahlen sind noch nicht verfügbar.</p>'}</section><section class="px-karte px-k-frei"><div class="px-karte-kopf"><h2>Freie Zeit</h2></div><div class="px-frei-ziel" data-start-slot="frei"></div></section><div class="px-start-aufgaben" data-start-slot="aufgaben"></div></div>`;
+ root.innerHTML = `<div data-start-insel="kopf"></div><div class="px-start-raster"><div data-start-insel="next" style="display:contents"></div><div data-start-insel="todo" style="display:contents"></div><section class="px-karte px-k-list"><div data-start-insel="liste" style="display:contents"></div><details class="px-start-bestand"><summary>Kalenderansicht und Filter</summary><div data-start-slot="kalender"></div></details></section><section class="px-karte px-k-vo"><div class="px-karte-kopf"><h2>Verordnungen</h2></div>${voNeu ? '<div data-start-insel="bedarf"></div>' : '<div data-start-slot="vo"></div><p class="px-karte-zustand" data-start-vo-unbekannt>Verordnungszahlen sind noch nicht verfügbar.</p>'}</section><section class="px-karte px-k-frei"><div class="px-karte-kopf"><h2>Freie Zeit</h2></div><div data-start-insel="frei" style="display:contents"></div><div class="px-frei-ziel" data-start-slot="frei"></div></section><div class="px-start-aufgaben" data-start-slot="aufgaben"></div></div>`;
  if(istOwner()){
   const finance=document.createElement('section');finance.className='px-karte px-k-geld';
   finance.innerHTML='<div class="px-karte-kopf"><h2>Abrechnung</h2></div><div class="px-karte-zustand"><p>Finanzübersicht ist hier noch nicht verfügbar.</p></div><div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="rechnungen">Rechnungen öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="belegliste">Belegliste öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="statistik">Statistik öffnen</button></div>';
@@ -178,6 +199,7 @@ export function montiereStartansicht(k) {
   // Die bestätigte Listenkarte wird in ihre eigene Insel entpackt, nie um aktuelle Slots herum.
   const temp=document.createElement('template'); temp.innerHTML=listeHtml();
   insel('liste',temp.content.firstElementChild.innerHTML);
+  insel('frei',freiHtml());
   if(bedarf)insel('bedarf',handlungsbedarfHtml(bedarf.lesen(),{erreichbar:!!inLeiste('verordnungen')}));
   else root.querySelector('[data-start-vo-unbekannt]').hidden=voKpiDa();
   if(focus && !focus.isConnected && key){const target=[...root.querySelectorAll('[data-termin],[data-aktion],[data-ziel]')].find(e=>e.dataset.termin===key||e.dataset.aktion===key||e.dataset.ziel===key);target?.focus({preventScroll:true});}
@@ -197,6 +219,7 @@ export function montiereStartansicht(k) {
   else {const target=b.dataset.ziel || (b.dataset.aktion==='kalender'?'calendar':null);if(target && inLeiste(target))k.springe?.(target);}
  });
  const obs=new MutationObserver(redraw);
+ for(const id of ['gapsList','gapsDateLabel']){const node=document.getElementById(id);if(node)obs.observe(node,{childList:true,subtree:true,characterData:true});}
  for(const id of ['physioRezKpi','anfragenNavBadge']){const node=document.getElementById(id);if(node)obs.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});}
  const nav=document.getElementById('sidebarNav');
  if(nav)new MutationObserver(()=>{const badge=document.getElementById('anfragenNavBadge');if(badge)obs.observe(badge,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});redraw();}).observe(nav,{childList:true,subtree:true});
