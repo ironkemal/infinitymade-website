@@ -1245,3 +1245,27 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Pflege: Wer Gruppen in `nav-registry.js` ändert, prüft diese Map mit. `praxis`/`default` laufen über dieselbe Map
   (wirkt nur, wenn Eintrag und Zielgruppe im DOM stehen; `renderSidebar` rendert leere Gruppen nicht).
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 13.11.2026 · V6.F02 Startseiten-Karte „Verordnungen – Handlungsbedarf“ (neues Design, nur Inhaberin)
+- Portiert aus `rettung/design-wip-20261031`, Rechner unverändert; je Datei ein Test, Probe
+  `tools/browser-probe/v602-handlungsbedarf.mjs`.
+  - `berechneHandlungsbedarf(input)` — `module/startseite-handlungsbedarf.js:70` (rein; fünf Kategorien:
+    Beginn verpasst · Beginn ≤ 7 Tage ohne Termin · Podo-Pause droht · Podo-Pause überschritten · ohne Folgetermin).
+  - `ladeHandlungsbedarfInput({...})` — `module/startseite-handlungsbedarf-laden.js:115` (liest `prescriptions`,
+    `prescription_sessions`, `podologie_behandlungen`, `bookings`).
+  - `ladeHandlungsbedarfScope` (:13), `createHandlungsbedarfKarte` (:38), `handlungsbedarfHtml` (:81) —
+    `module/startseite-handlungsbedarf-karte.js`.
+- Niye: PLAN-V2 §3.3 Karte 4 ersetzt im neuen Design die drei Altkacheln aus `loadPhysioRezKpis`
+  (`dashboard.js:1655`, zählt nur `gueltig_bis`; gkv-302 13.11.: `gueltig_bis` nicht belastbar). Regeln kommen
+  aus den vorhandenen Modulen (`heilmittel-fristen`, `podo-unterbrechung`, `verordnung-termine`,
+  `termin-verordnung`), keine neuen Regeln. Auflagen: gkv-302 (5 Kacheln inkl. Pause überschritten), guvenlik (nur
+  Inhaberin, Abbruch bei Design-/Scope-Wechsel, keine Rohzeilen im Log), podoloji (Reihenfolge, 0 grau,
+  „Alles im Plan“).
+- Nerede: einziger Aufrufer `montiereStartansicht` in `module/startseite-ansicht.js` (Insel `bedarf`, nur für
+  Inhaberin; sonst Altknoten `#physioRezKpi` wie bisher). `dashboard.js` übergibt zeilenneutral
+  `hb: { supabase, ownerId, businessId, patientsGemeinsam }`.
+- Bewusste Spiegelung, keine Kopie: `ladeHandlungsbedarfScope` bildet die Patientenmenge nach der Regel von
+  `bizScope` (`dashboard.js:14109`, nicht exportiert) — wer `bizScope` ändert, prüft diesen Lader mit.
+  V2.09b (Dokumentsuche) soll später denselben Scope-Lader nutzen, nicht einen zweiten.
+- Bekannte Grenze: bewertet nur `rezept_typ = 'standard'` und Kassen-VO, der Rest erscheint als „ungeklärt“.
+- Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.

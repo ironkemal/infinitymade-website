@@ -287,6 +287,19 @@
  [data-design="neu"] .px-start-bestand > summary { min-height: 44px; cursor: pointer; color: var(--accent); }
  [data-design="neu"] .px-start-bestand .today-section { margin-top: 16px; }
  [data-design="neu"] .px-k-vo #physioRezKpi { margin: 16px 24px; grid-template-columns: minmax(0, 1fr); }
+ /* V6.F02: Handlungsbedarf (fünf Kacheln). Ton nur über Text-/Randfarbe, Null grau, unbekannt als Strich. */
+ [data-design="neu"] .px-minis.px-handlungsbedarf { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); } /* 130: zwei Spalten in der schmalen rechten Kartenspalte */
+ [data-design="neu"] .px-handlungsbedarf .px-mini { min-width: 0; }
+ [data-design="neu"] .px-handlungsbedarf .px-mini .lbl { overflow-wrap: anywhere; }
+ [data-design="neu"] .px-handlungsbedarf .px-mini .teil { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+ [data-design="neu"] .px-handlungsbedarf .px-mini.px-null .zahl,
+ [data-design="neu"] .px-handlungsbedarf .px-mini.px-unbekannt .zahl { color: var(--text-muted); }
+ [data-design="neu"] .px-handlungsbedarf .px-mini.px-ton-bad { border-color: var(--st-bad-fg, var(--danger)); }
+ [data-design="neu"] .px-handlungsbedarf .px-mini.px-ton-warn .zahl { color: var(--st-warn-fg, var(--text-main)); }
+ [data-design="neu"] .px-handlungsbedarf-hinweis { padding-top: 8px; padding-bottom: 8px; font-size: 13px; line-height: 18px; }
+ @media (max-width: 480px) {
+  [data-design="neu"] .px-minis.px-handlungsbedarf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ }
  [data-design="neu"] .px-frei-ziel .gaps-header { flex-wrap: wrap; }
  [data-design="neu"] .px-frei-ziel .gaps-header button { min-width: 44px; min-height: 44px; }
 }

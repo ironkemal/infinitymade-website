@@ -4,6 +4,8 @@
  */
 import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-darstellung.js?v=20261113f601';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
+import { alsBerlinDatum } from './berlin-datum.js';
+import { createHandlungsbedarfKarte, handlungsbedarfHtml } from './startseite-handlungsbedarf-karte.js?v=20261113f602';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const ICON = {
@@ -142,21 +144,30 @@ export function montiereStartansicht(k) {
  if (!panel || panel.dataset.pxStartAdapter || !k?.uid?.() || !['owner','employee'].includes(k.rolle?.())) return null;
  const boundScope = k.scope?.() || `${k.rolle()}:${k.uid()}`;
  panel.dataset.pxStartAdapter = '1'; kontext = () => k;
+ // Handlungsbedarf (V6.F02): nur Inhaberin (Rolle owner UND uid = Mandant), sonst Karte nicht im DOM und 0 Reads.
+ const hb = k.hb;
+ const voNeu = istOwner() && !!hb?.supabase && typeof hb.ownerId === 'function' && k.uid() === hb.ownerId();
  const root = document.createElement('div'); root.id = 'pxStartseite'; root.className = 'px-start'; root.hidden = true;
  // Slots werden nur einmal angelegt. Insbesondere der Aufgabenslot ist keine Renderinsel.
- root.innerHTML = '<div data-start-insel="kopf"></div><div class="px-start-raster"><div data-start-insel="next" style="display:contents"></div><div data-start-insel="todo" style="display:contents"></div><section class="px-karte px-k-list"><div data-start-insel="liste" style="display:contents"></div><details class="px-start-bestand"><summary>Kalenderansicht und Filter</summary><div data-start-slot="kalender"></div></details></section><section class="px-karte px-k-vo"><div class="px-karte-kopf"><h2>Verordnungen</h2></div><div data-start-slot="vo"></div><p class="px-karte-zustand" data-start-vo-unbekannt>Verordnungszahlen sind noch nicht verfügbar.</p></section><section class="px-karte px-k-frei"><div class="px-karte-kopf"><h2>Freie Zeit</h2></div><div class="px-frei-ziel" data-start-slot="frei"></div></section><div class="px-start-aufgaben" data-start-slot="aufgaben"></div></div>';
+ root.innerHTML = `<div data-start-insel="kopf"></div><div class="px-start-raster"><div data-start-insel="next" style="display:contents"></div><div data-start-insel="todo" style="display:contents"></div><section class="px-karte px-k-list"><div data-start-insel="liste" style="display:contents"></div><details class="px-start-bestand"><summary>Kalenderansicht und Filter</summary><div data-start-slot="kalender"></div></details></section><section class="px-karte px-k-vo"><div class="px-karte-kopf"><h2>Verordnungen</h2></div>${voNeu ? '<div data-start-insel="bedarf"></div>' : '<div data-start-slot="vo"></div><p class="px-karte-zustand" data-start-vo-unbekannt>Verordnungszahlen sind noch nicht verfügbar.</p>'}</section><section class="px-karte px-k-frei"><div class="px-karte-kopf"><h2>Freie Zeit</h2></div><div class="px-frei-ziel" data-start-slot="frei"></div></section><div class="px-start-aufgaben" data-start-slot="aufgaben"></div></div>`;
  if(istOwner()){
   const finance=document.createElement('section');finance.className='px-karte px-k-geld';
   finance.innerHTML='<div class="px-karte-kopf"><h2>Abrechnung</h2></div><div class="px-karte-zustand"><p>Finanzübersicht ist hier noch nicht verfügbar.</p></div><div class="px-karte-fuss"><button type="button" class="px-fuss-knopf" data-ziel="rechnungen">Rechnungen öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="belegliste">Belegliste öffnen</button><button type="button" class="px-fuss-knopf" data-ziel="statistik">Statistik öffnen</button></div>';
   root.querySelector('.px-start-raster').append(finance);
  }
- const moves = [ ['#startAufgaben','aufgaben'], ['#physioRezKpi','vo'], ['.gaps-section','frei'], ['.today-section','kalender'] ].map(([sel,slot])=>{
+ const moves = [ ['#startAufgaben','aufgaben'], ...(voNeu ? [] : [['#physioRezKpi','vo']]), ['.gaps-section','frei'], ['.today-section','kalender'] ].map(([sel,slot])=>{
   const node=panel.querySelector(sel); if(!node)return null;
   const anchor=document.createComment('start-original:'+slot); node.before(anchor);
   return {node,anchor,slot};
  }).filter(Boolean);
- const replaced=[...panel.children].filter(n=>n.matches('.panel-header,#welcomeOverview,#todayKpiBlock'));
+ const replaced=[...panel.children].filter(n=>n.matches('.panel-header,#welcomeOverview,#todayKpiBlock'+(voNeu?',#physioRezKpi':'')));
  panel.prepend(root);
+ const bedarfKontext = () => {
+  const ownerId = hb.ownerId?.(), gemeinsam = hb.patientsGemeinsam?.(), rolle = k.rolle?.(), uid = k.uid?.();
+  return { rolle, uid, ownerId, businessId: hb.businessId?.() ?? null, patientsGemeinsam: typeof gemeinsam === 'boolean' ? gemeinsam : null,
+    bereit: rolle === 'owner' && !!uid && uid === ownerId && (k.scope?.() || `${rolle}:${uid}`) === boundScope, supabase: hb.supabase, scope: k.scope?.() };
+ };
+ const bedarf = voNeu ? createHandlungsbedarfKarte({ kontext: bedarfKontext, heute: () => alsBerlinDatum(new Date()), zeichne: () => redraw() }) : null;
  const insel = (name,html) => { const e=root.querySelector(`[data-start-insel="${name}"]`); if(e.innerHTML!==html)e.innerHTML=html; };
  function redraw() {
   if(root.hidden)return;
@@ -167,7 +178,8 @@ export function montiereStartansicht(k) {
   // Die bestätigte Listenkarte wird in ihre eigene Insel entpackt, nie um aktuelle Slots herum.
   const temp=document.createElement('template'); temp.innerHTML=listeHtml();
   insel('liste',temp.content.firstElementChild.innerHTML);
-  root.querySelector('[data-start-vo-unbekannt]').hidden=voKpiDa();
+  if(bedarf)insel('bedarf',handlungsbedarfHtml(bedarf.lesen(),{erreichbar:!!inLeiste('verordnungen')}));
+  else root.querySelector('[data-start-vo-unbekannt]').hidden=voKpiDa();
   if(focus && !focus.isConnected && key){const target=[...root.querySelectorAll('[data-termin],[data-aktion],[data-ziel]')].find(e=>e.dataset.termin===key||e.dataset.aktion===key||e.dataset.ziel===key);target?.focus({preventScroll:true});}
  }
  function toggle(neu = document.documentElement.dataset.design === 'neu') {
@@ -175,10 +187,12 @@ export function montiereStartansicht(k) {
   for(const m of moves){if(neu)root.querySelector(`[data-start-slot="${m.slot}"]`).append(m.node);else m.anchor.after(m.node);}
   for(const n of replaced)neu?n.setAttribute('data-px-start-ersetzt',''):n.removeAttribute('data-px-start-ersetzt');
   redraw();
+  if(bedarf){if(neu)bedarf.laden();else bedarf.leeren();}
  }
  root.addEventListener('click', e=>{
   const b=e.target.closest('[data-aktion],[data-ziel]');if(!b||b.disabled)return;
   if(b.dataset.aktion==='neu-laden')k.neuLaden?.();
+  else if(b.dataset.aktion==='bedarf-neu')bedarf?.laden({erzwingen:true});
   else if(b.dataset.aktion==='akte')k.akte?.(b.dataset.lead);
   else {const target=b.dataset.ziel || (b.dataset.aktion==='kalender'?'calendar':null);if(target && inLeiste(target))k.springe?.(target);}
  });
@@ -186,7 +200,7 @@ export function montiereStartansicht(k) {
  for(const id of ['physioRezKpi','anfragenNavBadge']){const node=document.getElementById(id);if(node)obs.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});}
  const nav=document.getElementById('sidebarNav');
  if(nav)new MutationObserver(()=>{const badge=document.getElementById('anfragenNavBadge');if(badge)obs.observe(badge,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-px-status','data-px-count','style','hidden']});redraw();}).observe(nav,{childList:true,subtree:true});
- setInterval(()=>{if(root.hidden || !panel.classList.contains('active'))return;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date());if(zustand.tag && zustand.tag!==today)zustand={...zustand,laden:false,fehler:true,liste:[],stand:null};else zustand.liste=heutigeTermine(zustand.liste,{uid:k.uid(),nurEigene:!istOwner()});redraw();},60000);
+ setInterval(()=>{if(root.hidden || !panel.classList.contains('active'))return;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date());if(zustand.tag && zustand.tag!==today){zustand={...zustand,laden:false,fehler:true,liste:[],stand:null};bedarf?.laden({erzwingen:true});}else zustand.liste=heutigeTermine(zustand.liste,{uid:k.uid(),nurEigene:!istOwner()});redraw();},60000);
  new MutationObserver(()=>toggle()).observe(document.documentElement,{attributes:true,attributeFilter:['data-design']});
  window.addEventListener('beforeprint',()=>toggle(false));window.addEventListener('afterprint',()=>toggle());
  toggle();
