@@ -15,6 +15,8 @@ const lauf = async (opt, fn) => {
       kachel: [...document.querySelectorAll('.px-handlungsbedarf .px-mini')].map(m => ({ lbl: m.querySelector('.lbl')?.textContent, zahl: m.querySelector('.zahl')?.textContent, klasse: m.className })),
       voText: document.querySelector('.px-k-vo')?.textContent || '', next: !!document.querySelector('.px-k-next'), liste: !!document.querySelector('.px-k-list'),
       voAlt: (() => { const e = document.getElementById('physioRezKpi'); return e ? { sichtbar: !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length), inSlot: !!e.closest('[data-start-slot="vo"]'), eltern: e.parentElement?.id } : null; })(),
+      therapie: (() => { const e = document.querySelector('#physioRezKpi .rez-kpi-active'); return e ? !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length) : null; })(),
+      kartenFolge: [...document.querySelectorAll('.px-start-raster > section, .px-start-raster > .px-start-aufgaben, .px-start-raster [data-start-insel] > section')].map(e => e.className.match(/px-k-\w+|px-start-aufgaben/)?.[0]).filter(Boolean),
       ueberlauf: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       aussen: [...document.querySelectorAll('.px-handlungsbedarf .px-mini, .px-k-vo')].filter(e => { const r = e.getBoundingClientRect(); return r.right > innerWidth + 0.5 || r.left < -0.5; }).length,
       bedarfInDom: !!document.querySelector('[data-start-insel="bedarf"]') }));
@@ -71,6 +73,10 @@ try {
     if (n < a) assert.ok(FEED.has(t), `c) weniger Reads nur bei Feed-Tabellen (${t})`);
   }
   assert.equal(maNeu.reads.prescriptions || 0, maAlt.reads.prescriptions || 0, 'c) prescriptions unverändert');
+  // V6.F07: Podologie (Fixture) – „in Therapie“ nur im neuen Design weg; Alt unverändert.
+  if (maAlt.stand.therapie !== null) { assert.equal(maNeu.stand.therapie, false, 'c) Podologie neu ohne „in Therapie“'); assert.equal(maAlt.stand.therapie, true, 'c) Alt zeigt „in Therapie“'); }
+  // V6.F07: DOM-Folge = Telefon-Folge (Verordnungen vor Termine heute), für Inhaberin und Mitarbeiterin.
+  for (const [n, l] of Object.entries({ neu, maNeu })) { const f = l.stand.kartenFolge; assert.ok(f.indexOf('px-k-vo') >= 0 && f.indexOf('px-k-vo') < f.indexOf('px-k-list') && f.indexOf('px-k-list') < f.indexOf('px-k-frei'), `V6.F07 ${n}: DOM-Folge ${f.join(',')}`); }
   // e)
   const klein = await lauf({ design: 'neu', rolle: 'owner', breite: 390 });
   assert.ok(klein.stand.ueberlauf <= 0, 'e) kein Dokument-Überlauf'); assert.equal(klein.stand.aussen, 0, 'e) Karte vollständig im Viewport');
@@ -78,6 +84,7 @@ try {
   // f)
   for (const [n, l] of Object.entries({ neu, fehl, maNeu, klein })) { assert.deepEqual(l.fehler, [], `f) ${n}: 0 Seitenfehler`); assert.equal(l.writes, 0, `f) ${n}: 0 Schreibversuche`); }
   erg.ok = true; erg.kacheln = neu.stand.kachel.map(k => `${k.lbl}=${k.zahl}`); erg.ownerReads = neu.reads; erg.maReads = maNeu.reads; erg.maAltReads = maAlt.reads;
+  erg.therapie = { neu: maNeu.stand.therapie, alt: maAlt.stand.therapie }; erg.folge = neu.stand.kartenFolge;
   console.log(JSON.stringify(erg));
 } catch (e) { console.error(JSON.stringify({ ok: false, fehler: String(e.message).slice(0, 400) })); process.exitCode = 1; }
 finally { await browser.close(); await server.stop(); }

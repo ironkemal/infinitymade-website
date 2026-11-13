@@ -254,11 +254,10 @@
   [data-design="neu"] .px-start-raster:has(.px-k-geld):not(:has(.px-k-vo)) { grid-template-areas: "next next" "todo frei" "list list" "geld geld"; }
 }
 /* Telefon: Als Nächstes · Zu erledigen · Handlungsbedarf · Termine heute · Freie Zeit · Aufgaben · Abrechnung.
-   Nur „Verordnungen“ springt sichtbar vor „Termine heute“; die Tab-Folge bleibt die DOM-Folge (bekannt, V6.F06 prüfen). */
-@media screen and (max-width: 768px) {
-  [data-design="neu"] .px-start-raster .px-k-list, [data-design="neu"] .px-start-raster .px-k-frei { order: 2; }
-  [data-design="neu"] .px-start-raster .px-start-aufgaben { order: 3; }
-  [data-design="neu"] .px-start-raster .px-k-geld { order: 4; }
+   V6.F07: Das ist jetzt die DOM-Folge (module/startseite-ansicht.js), ohne CSS-order; die Tab-Folge folgt der Sicht. */
+/* V6.F07: Podologie-Mitarbeiterin ohne Kachel „in Therapie“ (Markierung setzt startseite-ansicht.js, nur hier wirksam). */
+@media screen {
+  [data-design="neu"] .px-k-vo #physioRezKpi .rez-kpi-tile[data-px-start-aus] { display: none; }
 }
 /* V6.F05 (E8, guvenlik S-66): Feed „Letzte Aktivität“ im neuen Design weder geladen (loadActivityFeed kehrt um) noch gezeigt. */
 @media screen {
