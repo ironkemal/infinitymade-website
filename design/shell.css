@@ -616,3 +616,16 @@
   [data-design="neu"][data-px-shell="v2"] .sidebar,
   [data-design="neu"][data-px-shell="v2"] .sidebar.open { transition: none; }
 }
+
+/* ── V2.12 Fingerziele der Kopfleiste unter 1025 px (Messung 13.11.: Menüknopf 32×28,
+   Thema 36×36, Marke 23 hoch, Einrichtungsring 42 breit, Suchfeld 42 hoch, Suchtreffer 40 hoch).
+   Optik bleibt: nur die Trefferfläche wächst auf 44 px. */
+@media screen and (max-width: 1024px) {
+  [data-design="neu"][data-px-shell="v2"] .hamburger { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+  [data-design="neu"][data-px-shell="v2"] .theme-toggle { width: 44px; height: 44px; }
+  [data-design="neu"][data-px-shell="v2"] .topbar .brand { line-height: 44px; }
+  [data-design="neu"][data-px-shell="v2"] .einrichtung-ring { min-width: 44px; justify-content: center; }
+  /* Feld deckt den 1-px-Rand der Hülle mit ab (transparent, also unsichtbar). */
+  [data-design="neu"][data-px-shell="v2"] .px-suche-feld { height: calc(100% + 2px); margin-block: -1px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche .patient-search-list li { padding: 12px 10px; }
+}
