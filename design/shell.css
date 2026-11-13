@@ -510,6 +510,8 @@
     /* patient-suche.js setzt inline position: relative an der Hülle; nur !important kann das hier überstimmen. */
     position: fixed !important;
     top: 64px; left: 8px; right: 8px; z-index: 460;
+    /* Gegen die Tablet-Breite (769–1279 px, clamp 180–260 px weiter unten): sonst gewinnt width über left/right. */
+    width: auto;
     display: flex; align-items: center; gap: 8px;
     height: 48px; padding: 0 8px 0 12px;
     border: 1px solid var(--accent); border-radius: var(--radius-sm);

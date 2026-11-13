@@ -49,6 +49,9 @@ try {
   // b) 768: Lupe; 900/1440: Feld in der Kopfleiste, Lupe aus
   const tablet = await lauf({ breite: 768 }, async page => ({ knopf: await sicht(page, '.px-suche-knopf'), feld: await sicht(page, '.px-suche'), ueberlauf: await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth) }));
   assert.equal(tablet.knopf?.da, true, 'b) 768 Lupe'); assert.equal(tablet.feld?.da, false, 'b) 768 Feld zu'); assert.ok(tablet.ueberlauf <= 0, 'b) 768 kein Überlauf');
+  // mobil-ui 13.11.: 769–899 px gewann die Tablet-Breite (clamp 180–260) über left/right, Zeile war 198 px schmal.
+  const schmalTablet = await lauf({ breite: 899 }, async page => { await page.click('.px-suche-knopf'); await ruhe(page, 200); return { feld: await sicht(page, '.px-suche') }; });
+  assert.ok(schmalTablet.feld.da && schmalTablet.feld.w >= 899 - 16 - 1, `b) 899 offene Zeile volle Breite (${Math.round(schmalTablet.feld.w)} px)`);
   for (const breite of [900, 1440]) {
     const gross = await lauf({ breite }, async page => ({ knopf: await sicht(page, '.px-suche-knopf'), feld: await sicht(page, '.px-suche') }));
     assert.equal(gross.knopf?.da, false, `b) ${breite} Lupe aus`); assert.equal(gross.feld?.da, true, `b) ${breite} Feld in der Kopfleiste`);
