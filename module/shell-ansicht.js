@@ -7,7 +7,7 @@ import { verdrahteFlyout, kopfRollen, schliesseFlyout } from './leiste-flyout.js
 import { verdrahteProfil, profilAuffrischen } from './kopf-profil.js?v=20261110p01shell3';
 import { verdrahteNeu } from './kopf-neu.js?v=20261110p01shell3';
 import { verdrahteSchublade } from './schublade-neu.js?v=20261113v212b';
-import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261113v212b';
+import { montierePatientensuche } from './kopf-suche-ansicht.js?v=20261114v209c';
 import { planeUmzug } from './leiste-zuordnung.js?v=20261112v205';
 
 const KURZ = { uebersicht: 'Heute', termine: 'Termine', patienten: 'Patienten', abrechnung: 'Abrechn.', team: 'Praxis', einstellungen: 'Einstell.' };

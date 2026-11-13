@@ -79,6 +79,8 @@ export async function starteBrowser() { return chromium.launch(); }
 export async function oeffneDashboard(browser, o) {
   let fixture = await readFile(join(WURZEL, 'tools/browser-probe/redesign-fixture.js'), 'utf8');
   if (process.env.REDESIGN_SEKTOR) fixture = fixture.replace("sector: 'podologie'", `sector: '${process.env.REDESIGN_SEKTOR}'`);   // Fachbereich-Läufe (Phase 7)
+  // Nur auf ausdrücklichen Wunsch einer Probe (z. B. gültige UUIDs für V2.09b); ohne Option bleibt die Fixture unverändert.
+  if (typeof o.fixtureAnpassen === 'function') fixture = o.fixtureAnpassen(fixture);
   const kontext = await browser.newContext({ viewport: { width: o.breite, height: o.hoehe || 900 },
     deviceScaleFactor: 1, locale: 'de-DE', timezoneId: 'Europe/Berlin' });
   // Kein reducedMotion: 'reduce' — dashboard.css:7139 setzt dann `transform: none !important` auf alles,

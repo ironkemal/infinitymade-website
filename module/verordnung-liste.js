@@ -235,6 +235,18 @@ function oeffne({ supabase, escapeHtml, quelle, id, rolle, apiBase }) {
   });
 }
 
+/**
+ * V2.09b (13.11.2026): Sprung aus der Inhaber-Dokumentsuche der Kopfleiste (module/kopf-dokumente.js).
+ * Nur eine Hülle um `oeffne` — kein zweiter Detailweg (fonksiyon-ustasi). Rolle/Scope prüft der Aufrufer vorher
+ * (guvenlik: kein window-Global). Ungespeicherte Eingaben in der Maske werden nicht verworfen.
+ * @returns {boolean} false, wenn nicht geöffnet
+ */
+export function oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle, apiBase }) {
+  if (!['physio', 'podologie'].includes(quelle) || !id || istVeraendert()) return false;
+  oeffne({ supabase, escapeHtml, quelle, id, rolle, apiBase });
+  return true;
+}
+
 function auswahlAufheben(esc) {
   _auswahl = null;
   markiere(null);

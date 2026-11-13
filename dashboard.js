@@ -72,7 +72,7 @@ import { beginRezeptSpeicherlauf } from './module/rezept-speicher-riegel.js?v=20
 import { zeigeBestaetigungsDialog } from './module/bestaetigungs-dialog.js?v=20261007m3';
 import { installiereModalEscape } from './module/modal-escape.js?v=20261007m3';
 import { belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261109';
+import { verordnungenListeLaden, oeffneVerordnungAusSuche } from './module/verordnung-liste.js?v=20261113v209b';
 import { zeigeVerordnungDetail, multiHeilmittelTitel } from './module/verordnung-detail.js?v=20261109';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909'; import { renderDatevSettings, verdrahteDatevExport } from './module/datev-einstellungen.js?v=20261022a'; import { renderTerminerinnerungSettings } from './module/terminerinnerung-einstellung.js?v=20261109'; import { renderMailversandSettings } from './module/mailversand.js?v=20261109';
@@ -12605,9 +12605,9 @@ async function loadRechnungen() {
   const { data, error } = await bizScope(supabase.from('invoices')
     .select('*, rx1:prescriptions!invoices_prescription_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel ), rx2:prescriptions!invoices_verordnung_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel )')
     .eq('owner_id', ownerId).order('created_at', { ascending: false }), 'finance');
-  if (error) { console.error('[invoices]', error); return; }
+  if (error) { console.error('[invoices]', error); return null; } // V2.09b: null = Fehler, Suche nutzt nie den alten Cache
   invListCache = (data || []).map(inv => ({ ...inv, prescriptions: inv.rx1 || inv.rx2 || null }));
-  renderInvList();
+  renderInvList(); return invListCache;
 }
 
 function printArea() {
@@ -14170,7 +14170,7 @@ async function init() {
     if (await import('./module/design-entscheidung.js?v=20261111p2b').then(m => m.setzeDesign({ wunsch: window.__pxDesignWunsch, vorschau: DESIGN_VORSCHAU, apiBase: API, token: async () => (await supabase.auth.getSession()).data.session?.access_token, aktuell: async () => (await supabase.auth.getSession()).data.session?.user?.id })).catch(() => 'alt') === 'neu') {
       const ansichtKontext = { uid: () => currentSession?.user?.id, rolle: () => currentProfile?.role, scope: () => [currentSession?.user?.id, currentProfile?.role, getOwnerId(), currentBusiness?.id].join(':') };
       startansicht = (await import('./module/startseite-ansicht.js?v=20261113f607')).montiereStartansicht({ ...ansichtKontext, sektor: getSector, springe: switchPanel, akte: id => window.openPatientDetail?.(id), neuLaden: loadTodayBookings, hb: { supabase, ownerId: () => getOwnerId(), businessId: () => currentBusiness?.id ?? null, patientsGemeinsam: () => dataSharing.patients === true } });
-      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261113v212b')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id) } }); } catch (e) { console.error('[init] shell', e); }
+      (await import('./module/anamnese-abschnitte.js?v=20261110p01sections')).montiereAnamneseAbschnitte(ansichtKontext); try { (await import('./module/shell-ansicht.js?v=20261114v209c')).montiereShellansicht({ ...ansichtKontext, name: () => [currentProfile?.owner_first_name, currentProfile?.owner_last_name].filter(Boolean).join(' ') || currentProfile?.business_name || '', suche: { ensureLeadsCache, patientMatchesQuery, displayNameWithBirth, oeffnePatient: id => window.openPatientDetail?.(id), dokumente: { kontext: () => ({ supabase, rolle: currentProfile?.role, uid: currentSession?.user?.id, ownerId: getOwnerId(), businessId: currentBusiness?.id ?? null, patientsGemeinsam: dataSharing.patients === true, financeGemeinsam: dataSharing.finance === true }), ladeRechnungen: loadRechnungen, oeffneRechnung: id => { switchPanel('rechnungen'); return openInvView(id); }, oeffneVerordnung: (quelle, id) => { switchPanel('verordnungen'); const ok = oeffneVerordnungAusSuche({ supabase, escapeHtml, quelle, id, rolle: currentProfile?.role, apiBase: API }); if (!ok) showToast('Die offene Verordnung hat ungespeicherte Änderungen. Bitte erst speichern oder verwerfen.', 'info'); return ok; } } } }); } catch (e) { console.error('[init] shell', e); }
     }
     await renderOverview();
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }

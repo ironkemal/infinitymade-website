@@ -402,6 +402,14 @@
   [data-design="neu"][data-px-shell="v2"] .topbar .biz-name { font-size: 14px; }
 }
 
+/* V2.09b A11y: Trefferzahl-/Bereichsansage für Screenreader (module/kopf-suche-ansicht.js), sichtbar versteckt. */
+@media screen {
+  [data-design="neu"][data-px-shell="v2"] .px-suche-ansage {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+}
+
 /* ── V2.09 Suche in der Kopfleiste (module/kopf-suche.js) ──────────────────────
    Feld mit Lupe und Tastenhinweis „/“; Trefferliste ist die gemeinsame
    .patient-search-list (patient-suche.js), hier nur an die Form v3 angepasst.
@@ -536,6 +544,12 @@
   }
   [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .patient-search-list li { padding: 12px 10px; line-height: 20px; border-radius: var(--radius-sm); font-size: 15px; }
   [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .patient-search-list li .match-hl { color: var(--text-main); font-weight: 700; }
+  /* V2.09b: Suchbereich (nur Inhaberin) und Hinweis auch in der aufgeklappten Zeile. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-art { flex-shrink: 0; width: 104px; min-height: 44px; padding: 0 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; color: var(--text-main); font: inherit; font-size: 14px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-art:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-hinweis { position: absolute; left: 0; top: calc(100% + 4px); width: 100%; padding: 6px 8px; background: var(--bg-card-solid); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; z-index: 471; box-sizing: border-box; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen] .px-suche-hinweis:empty { display: none; }
+  [data-design="neu"][data-px-shell="v2"] .px-suche[data-offen]:has(.px-suche-hinweis:not(:empty)) .patient-search-list { top: calc(100% + 70px); }
 }
 /* V2.12 Tablet (769–1279 px): Kopfleiste entlasten, damit der Praxisname lesbar bleibt —
    Uhr aus, Einrichtung nur Ring + Prozent, Suche schmaler. */
@@ -543,6 +557,9 @@
   [data-design="neu"][data-px-shell="v2"] .live-clock { display: none; }
   [data-design="neu"][data-px-shell="v2"] .einrichtung-ring-text::before { content: none; }
   [data-design="neu"][data-px-shell="v2"] .px-suche { width: clamp(180px, 22vw, 260px); }
+  /* V2.09b: mit Suchbereich (nur Inhaberin) etwas breiter, Auswahl schmaler, damit das Feld lesbar bleibt. */
+  [data-design="neu"][data-px-shell="v2"] .px-suche:has(.px-suche-art) { width: clamp(240px, 27vw, 320px); }
+  [data-design="neu"][data-px-shell="v2"] .px-suche .px-suche-art { width: 88px; }
 }
 
 /* ── V2.10 „+ Neu“ (module/kopf-neu.js) ────────────────────────────────────────
