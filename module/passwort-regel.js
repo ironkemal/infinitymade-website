@@ -10,7 +10,7 @@ export const MIN_MITARBEITER = 8;
 
 /**
  * Mindestlänge für eine Rolle aus profiles.role ('owner' | 'employee'); unbekannt → strenger.
- * @param {string} [rolle]
+ * @param {string|null} [rolle]
  * @returns {number}
  */
 export function minPasswortLaenge(rolle) {
@@ -19,7 +19,7 @@ export function minPasswortLaenge(rolle) {
 
 /**
  * Fehlermeldung (de) oder null.
- * @param {string} [rolle]
+ * @param {string|null|undefined} rolle
  * @param {unknown} pw
  * @returns {string|null}
  */

@@ -5,6 +5,7 @@
  * (`new`, `contacted` …) im Badge (canli-test 30.09.2026, P3). Unbekannte Werte
  * bleiben absichtlich roh — lieber ein fremdes Wort als ein falsches.
  */
+/** @type {Record<string, string>} */
 export const LEAD_STATUS_DE = {
   new: 'Neu',
   contacted: 'Kontaktiert',

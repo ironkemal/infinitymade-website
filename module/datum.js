@@ -34,6 +34,7 @@
  * der Nutzer vor sich sieht.
  */
 
+/** @param {number|string} n @returns {string} */
 const zwei = (n) => String(n).padStart(2, '0');
 
 /**

@@ -12,6 +12,14 @@
 // kein Termin mehr an der Zeile. Ein solcher Filter traefe nur den Altbestand —
 // und wuerde ihn faelschlich ganz aus der Liste werfen, statt ihn als offen zu
 // zeigen. Weniger waere hier falscher als nichts.
+/**
+ * @typedef {{ status?: string | null, bookings?: { status?: string | null } | null }} Sitzungszeile
+ */
+/**
+ * @template {Sitzungszeile} T
+ * @param {T[]} [sitzungen=[]]
+ * @returns {T[]}
+ */
 export function aktiveSitzungszeilen(sitzungen = []) {
   return sitzungen.filter(s => s.status !== 'cancelled' && s.bookings?.status !== 'cancelled');
 }
