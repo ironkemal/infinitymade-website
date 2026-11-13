@@ -33,6 +33,215 @@ import { isValidTwoDecimalPrecision } from './builder.js';
 import { istStichtag } from '../../lib/berlin-tag.js';
 import { hasKvnrChecksum, isDtaDecimal } from './strict-fields.js';
 
+/**
+ * @typedef {import('../../../module/typen/gkv.js').IK} IK
+ * @typedef {import('../../../module/typen/gkv.js').Positionsnummer} Positionsnummer
+ * @typedef {import('../../../module/typen/gkv.js').Abrechnungscode} Abrechnungscode
+ * @typedef {import('../../../module/typen/gkv.js').Tarifkennzeichen} Tarifkennzeichen
+ */
+
+/**
+ * @typedef {object} DtaLeistungserbringer
+ * @property {IK} ik
+ * @property {string} [name]
+ */
+
+/**
+ * @typedef {object} DtaKostentraeger
+ * @property {IK} ik
+ * @property {string} [name]
+ */
+
+/**
+ * @typedef {object} DtaRechnung
+ * @property {string} sammelRechnungsnummer
+ * @property {string | number} [einzelRechnungsnummer]
+ * @property {Date | string} datum
+ * @property {number | string} datennummer
+ * @property {string} [rechnungsart]
+ * @property {IK} [rechnungsstellerIk]
+ * @property {string} [anwendungsreferenz]
+ */
+
+/**
+ * @typedef {object} DtaRechnungssteller
+ * @property {string} [name]
+ * @property {string} [kontakt]
+ * @property {string} [telefon]
+ * @property {string} [email]
+ */
+
+/**
+ * @typedef {object} DtaPatient
+ * @property {string} [kvnr]
+ * @property {string} [versichertenstatus]
+ * @property {string} nachname
+ * @property {string} vorname
+ * @property {Date | string} geburtsdatum
+ * @property {string} [strasse]
+ * @property {string} [plz]
+ * @property {string} [ort]
+ * @property {string} [laenderkennzeichen]
+ * @property {string} belegnummer
+ */
+
+/**
+ * @typedef {object} DtaDoctor
+ * @property {string} [lanr]
+ * @property {string} [bsnr]
+ */
+
+/**
+ * @typedef {object} DtaUnterbrechung
+ * @property {Date | string} [von]
+ * @property {Date | string} [bis]
+ * @property {string} [grund]
+ * @property {boolean} [dokumentiert]
+ */
+
+/**
+ * @typedef {object} DtaGenehmigung
+ * @property {string} kennzeichen
+ * @property {Date | string} datum
+ * @property {string} art
+ */
+
+/**
+ * @typedef {object} DtaVerordnung
+ * @property {Date | string} ausstellungsdatum
+ * @property {string} [icd10]
+ * @property {Array<string | null | undefined>} [icd10Liste]
+ * @property {string} [diagnosetext]
+ * @property {string} [diagnosegruppe]
+ * @property {string} verordnungsart
+ * @property {string} [verordnungsbesonderheiten]
+ * @property {string} [unfallkennzeichen]
+ * @property {string} [bvgSonstigesSer]
+ * @property {boolean} [therapieberichtAngefordert]
+ * @property {boolean} [berichtAngefordert]
+ * @property {string} [berichtStatus]
+ * @property {string} [rezeptart]
+ * @property {boolean} [hausbesuch]
+ * @property {string} leitsymptomatik
+ * @property {string} [patLeitsymptomatik]
+ * @property {boolean} [dringend]
+ * @property {string} [heilmittelBereich]
+ * @property {string | number} therapiefrequenz
+ * @property {string | number} zuzahlungskennzeichen
+ * @property {IK} kostentraegerIk
+ * @property {IK} [krankenkasseIk]
+ * @property {DtaGenehmigung} [genehmigung]
+ * @property {import('./segments.js').SllaImgParams} [imageLink]
+ * @property {string} [evoId]
+ * @property {DtaUnterbrechung[]} [unterbrechungen]
+ * @property {number | string | null} [pauschZuzahlung]
+ * @property {boolean} [pauschaleFrei]
+ * @property {IK} [davIk]
+ * @property {string} [kassenart]
+ * @property {string} [arztLanr]
+ * @property {string} [arztBsnr]
+ */
+
+/**
+ * @typedef {object} DtaTarif
+ * @property {Abrechnungscode} [abrechnungscode]
+ * @property {Tarifkennzeichen} tarifkennzeichen
+ */
+
+/**
+ * @typedef {object} DtaPosition
+ * @property {Positionsnummer} positionsnummer
+ * @property {Date | string} datumLeistung
+ * @property {number | string | null} [anzahl]
+ * @property {number | string} einzelbetrag
+ * @property {number | string | null} [zuzahlungProPos]
+ * @property {boolean} [position_frei]
+ * @property {number | string | null} [kilometer]
+ * @property {string} [text]
+ * @property {number | string} [mwsSatz]
+ * @property {number | string | null} [mwsBetrag]
+ * @property {string} [requiredCert]
+ * @property {boolean} [hasCert]
+ * @property {string} [therapistId]
+ */
+
+/**
+ * @typedef {object} DtaUrspruenglich
+ * @property {IK} [ikLeistungserbringer]
+ * @property {IK} [origIkLeistungserbringer]
+ * @property {string} [sammelRechnungsnummer]
+ * @property {string} [origSammelRechnungsnummer]
+ * @property {string | number} [einzelRechnungsnummer]
+ * @property {string | number} [origEinzelRechnungsnummer]
+ * @property {Date | string} [rechnungsdatum]
+ * @property {Date | string} [origRechnungsdatum]
+ * @property {string} [belegnummer]
+ * @property {string} [origBelegnummer]
+ */
+
+/**
+ * @typedef {object} DtaBeleg
+ * @property {DtaPatient} patient
+ * @property {DtaDoctor} [doctor]
+ * @property {DtaVerordnung} verordnung
+ * @property {DtaTarif} tarif
+ * @property {DtaPosition[]} sessions
+ * @property {DtaUrspruenglich} [urspruenglich]
+ * @property {string} [vkz]
+ * @property {string} [rezeptart]
+ * @property {number | string | null} [pauschZuzahlung]
+ * @property {boolean} [pauschaleFrei]
+ * @property {number | string | null} [pauschKorrektur]
+ */
+
+/**
+ * @typedef {object} DtaInput
+ * @property {DtaLeistungserbringer} absender
+ * @property {DtaKostentraeger} empfaenger
+ * @property {DtaRechnung} rechnung
+ * @property {DtaBeleg[]} prescriptions
+ * @property {'echt' | 'test' | 'erprobung'} [kind]
+ * @property {string} [vkz]
+ * @property {DtaRechnungssteller} [rechnungssteller]
+ * @property {import('./segments.js').SlgaUstParams} [ust]
+ * @property {import('./segments.js').SlgaSkoParams[]} [skonto]
+ * @property {boolean} [preflight]
+ * @property {IK} [davIk]
+ * @property {string} [kassenart]
+ * @property {number | string} [transfernummer]
+ * @property {boolean} [sammelrechnung]
+ * @property {Record<string, boolean>} [icdTerminal]
+ * @property {Record<string, import('../../ai/validators/icdDgRules.js').IcdDgRule> | null} [icdDgRegeln]
+ */
+
+/**
+ * @typedef {object} PreflightFinding
+ * @property {string} code
+ * @property {'error' | 'warning'} severity
+ * @property {string} where
+ * @property {string} message
+ */
+
+/**
+ * @typedef {object} PreflightTotals
+ * @property {number} brutto
+ * @property {number} zuzahlung
+ * @property {number} netto
+ * @property {number} [serviceBrutto]
+ */
+
+/**
+ * @typedef {object} PreflightResult
+ * @property {boolean} ok
+ * @property {PreflightFinding[]} errors
+ * @property {PreflightFinding[]} warnings
+ * @property {PreflightTotals} [totals]
+ */
+
+/**
+ * @typedef {Error & { status?: number, code?: string, fehler?: string[], preflight?: PreflightResult }} DtaError
+ */
+
 // ---------------------------------------------------------------------------
 // Atomic field validators
 // ---------------------------------------------------------------------------
@@ -43,20 +252,28 @@ import { hasKvnrChecksum, isDtaDecimal } from './strict-fields.js';
 //   - Position 9:   Prüfziffer
 // Algorithm: digits at pos 3..8 multiplied by [2,1,2,1,2,1]; cross-sum
 // of products; sum mod 10 must equal Prüfziffer.
+/**
+ * @param {string | null | undefined} ik
+ * @returns {boolean}
+ */
 export function isValidIkChecksum(ik) {
-  if (!/^\d{9}$/.test(ik)) return false;
+  if (!/^\d{9}$/.test(/** @type {string} */ (ik))) return false;
   const weights = [2, 1, 2, 1, 2, 1];
   let sum = 0;
   for (let i = 0; i < 6; i++) {
-    const prod = Number(ik[i + 2]) * weights[i];
+    const prod = Number((/** @type {string} */ (ik))[i + 2]) * weights[i];
     sum += prod >= 10 ? (prod - 9) : prod;  // digit-sum of product
   }
-  return (sum % 10) === Number(ik[8]);
+  return (sum % 10) === Number((/** @type {string} */ (ik))[8]);
 }
 
+/**
+ * @param {string | null | undefined} ik
+ * @returns {'kostentraeger' | 'sonstige' | 'leistungserbringer' | null}
+ */
 export function ikKlassifikation(ik) {
-  if (!/^\d{9}$/.test(ik)) return null;
-  const pre = Number(ik.slice(0, 2));
+  if (!/^\d{9}$/.test(/** @type {string} */ (ik))) return null;
+  const pre = Number((/** @type {string} */ (ik)).slice(0, 2));
   if (pre >= 10 && pre <= 69) return 'kostentraeger';
   if (pre >= 70 && pre <= 79) return 'sonstige';
   if (pre >= 80 && pre <= 99) return 'leistungserbringer';
@@ -65,11 +282,19 @@ export function ikKlassifikation(ik) {
 
 // KVNR (Krankenversichertennummer, lebenslang): 1 capital letter + 9 digits.
 // Checksum per §290 Anlage 1, not merely the printed shape.
+/**
+ * @param {unknown} kvnr
+ * @returns {boolean}
+ */
 export function isValidKvnr(kvnr) {
   return hasKvnrChecksum(kvnr);
 }
 
 // Versichertenstatus: 5 chars, first digit 1/3/5/9 (Mitglied/Familie/Rentner/sonst).
+/**
+ * @param {string | null | undefined} vs
+ * @returns {boolean}
+ */
 export function isValidVersichertenstatus(vs) {
   return /^[1359]\d{4}$/.test(vs || '');
 }
@@ -84,6 +309,10 @@ export function isValidVersichertenstatus(vs) {
 export const LANR_ERSATZWERT = '999999999';
 export const BSNR_ERSATZWERT = '999999999';
 
+/**
+ * @param {string | null | undefined} lanr
+ * @returns {boolean}
+ */
 export function isValidLanr(lanr) {
   if (lanr === LANR_ERSATZWERT) return true;
   if (!/^\d{9}$/.test(lanr || '')) return false;
@@ -91,14 +320,18 @@ export function isValidLanr(lanr) {
   const weights = [4, 9, 4, 9, 4, 9];
   let sum = 0;
   for (let i = 0; i < 6; i++) {
-    const prod = Number(lanr[i]) * weights[i];
+    const prod = Number((/** @type {string} */ (lanr))[i]) * weights[i];
     sum += prod;
   }
   const check = (10 - (sum % 10)) % 10;
-  return check === Number(lanr[6]);  // Fachgruppe at pos 8-9 not part of checksum
+  return check === Number((/** @type {string} */ (lanr))[6]);  // Fachgruppe at pos 8-9 not part of checksum
 }
 
 // BSNR (Betriebsstättennummer): 9 digits, dummy 999999999 allowed.
+/**
+ * @param {string | null | undefined} bsnr
+ * @returns {boolean}
+ */
 export function isValidBsnr(bsnr) {
   return /^\d{9}$/.test(bsnr || '');
 }
@@ -106,6 +339,10 @@ export function isValidBsnr(bsnr) {
 // ICD-10-GM: Buchstabe + 2 Ziffern + optional .1-2 Ziffern + optional Sonderzeichen (†*!) + Diagnosesicherheit (GVZA) / Seitenlokalisation (LRB).
 // B neu, †*! neu, Buchstaben nach dem Punkt nicht mehr erlaubt (Beleg: in icd10_titles hat kein Kode einen Buchstaben nach dem Punkt).
 // Vor der Prüfung: trim, Großbuchstaben, Leerzeichen weg, EIN †/*/! und ein Strich nur am Ende weg — gleiche Zerlegung wie icdFuerDta (gkv-302 01.10.2026).
+/**
+ * @param {unknown} code
+ * @returns {boolean}
+ */
 export function isValidIcd10(code) {
   if (!code) return false;
   // Dieselbe Zerlegung wie icdFuerDta: höchstens EIN †/*/! und ein Strich, beide nur am Ende
@@ -117,21 +354,37 @@ export function isValidIcd10(code) {
 }
 
 // Diagnosegruppe (Heilmittelkatalog): 2-4 chars (e.g. WS1, WS2, EX2a, PN, AT3).
+/**
+ * @param {string | null | undefined} g
+ * @returns {boolean}
+ */
 export function isValidDiagnosegruppe(g) {
-  return /^[A-Z]{1,3}\d?[a-z]?$/.test(g || '') && g.length >= 2 && g.length <= 4;
+  return /^[A-Z]{1,3}\d?[a-z]?$/.test(g || '') && (/** @type {string} */ (g)).length >= 2 && (/** @type {string} */ (g)).length <= 4;
 }
 
 // Tarifkennzeichen: 5 chars, pos 1-2 = valid Tarifbereich, pos 3-5 = Sondertarif.
+/**
+ * @param {string | null | undefined} tk
+ * @returns {boolean}
+ */
 export function isValidTarifkennzeichen(tk) {
   if (!/^[A-Z0-9]{5}$/.test(tk || '')) return false;
-  return Boolean(TARIFBEREICH[tk.slice(0, 2)]);
+  return Boolean((/** @type {Readonly<Record<string, string>>} */ (TARIFBEREICH))[(/** @type {string} */ (tk)).slice(0, 2)]);
 }
 
+/**
+ * @param {string | null | undefined} pn
+ * @returns {boolean}
+ */
 export function isValidPositionsnummer(pn) {
   return /^\d{5}$/.test(pn || '');
 }
 
 // German PLZ: 5 digits.
+/**
+ * @param {string | null | undefined} plz
+ * @returns {boolean}
+ */
 export function isValidPlz(plz) {
   return /^\d{5}$/.test(plz || '');
 }
@@ -150,6 +403,10 @@ export function isValidPlz(plz) {
 // konnte. Mit <Patientennummer>-<Verordnungsnummer> ist sie erreichbar
 // (7-stellige Patientennummer + "-" + 3-stellige Verordnungsnummer = 11) und
 // eine Ueberlaenge ist ein Syntaxfehler: die Kasse weist die GANZE Datei ab.
+/**
+ * @param {string | number | null | undefined} bn
+ * @returns {boolean}
+ */
 export function isValidBelegnummer(bn) {
   const s = String(bn || '');
   if (s.length === 0 || s.length > 10) return false;
@@ -158,6 +415,10 @@ export function isValidBelegnummer(bn) {
 }
 
 // Datum: YYYY-MM-DD or Date object; must be a real, parseable date.
+/**
+ * @param {unknown} v
+ * @returns {Date | null}
+ */
 function parseDate(v) {
   if (!v) return null;
   if (!(v instanceof Date)) {
@@ -174,15 +435,33 @@ function parseDate(v) {
 // Builders for error rows
 // ---------------------------------------------------------------------------
 
+/**
+ * @param {PreflightFinding[]} errors
+ * @param {string} code
+ * @param {string} where
+ * @param {string} message
+ */
 const E = (errors, code, where, message) => errors.push({ code, severity: 'error', where, message });
+/**
+ * @param {PreflightFinding[]} warnings
+ * @param {string} code
+ * @param {string} where
+ * @param {string} message
+ */
 const W = (warnings, code, where, message) => warnings.push({ code, severity: 'warning', where, message });
 
 // ---------------------------------------------------------------------------
 // Main entry
 // ---------------------------------------------------------------------------
 
+/**
+ * @param {DtaInput} input
+ * @returns {PreflightResult}
+ */
 export function preflight(input) {
+  /** @type {PreflightFinding[]} */
   const errors = [];
+  /** @type {PreflightFinding[]} */
   const warnings = [];
 
   // -------- file-level --------
@@ -226,7 +505,7 @@ export function preflight(input) {
 
   if (!/^[0-9]+$/.test(String(input.rechnung?.datennummer ?? '')) || !Number.isInteger(Number(input.rechnung?.datennummer)) || Number(input.rechnung.datennummer) < 1)
     E(errors, 'F:03003', 'rechnung.datennummer', 'Datennummer muss eine ganze Zahl von 1 bis 99999 sein');
-  else if (input.rechnung.datennummer > 99999)
+  else if (/** @type {number} */ (input.rechnung.datennummer) > 99999)
     E(errors, 'F:03004', 'rechnung.datennummer', 'Datennummer überschreitet 5-stelligen Wertebereich');
 
   const rechnungsDatum = parseDate(input.rechnung?.datum);
@@ -256,7 +535,15 @@ export function preflight(input) {
   // ⚠️ Gezählt wird der Klartext, nicht die entwertete Fassung: die
   //    Spezifikation meint die Nutzzeichen. `escapeEdifact()` kann ein Feld
   //    beim Schreiben verlängern (`?+`), das ist eine Transportfrage.
+  /** @param {unknown} wert @returns {number} */
   const laenge = (wert) => String(wert ?? '').trim().length;
+  /**
+   * @param {unknown} wert
+   * @param {number} max
+   * @param {string} code
+   * @param {string} wo
+   * @param {string} was
+   */
   const pruefeLaenge = (wert, max, code, wo, was) => {
     const n = laenge(wert);
     if (n > max) {
@@ -339,7 +626,7 @@ export function preflight(input) {
         'BSNR fehlt — es wird der Ersatzwert 999999999 übermittelt. Bitte gegen den Urbeleg prüfen.');
 
     // Verordnung
-    const v = p.verordnung || {};
+    const v = p.verordnung || /** @type {Partial<DtaVerordnung>} */ ({});
     const ausstellung = parseDate(v.ausstellungsdatum);
     if (!ausstellung)
       E(errors, 'V:01001', `${at}.verordnung.ausstellungsdatum`, 'Ausstellungsdatum ungültig');
@@ -402,9 +689,9 @@ export function preflight(input) {
     // Bindestrich-bereinigt prüfen und melden (gkv-302 30.09.2026).
     if (input.icdTerminal && typeof input.icdTerminal === 'object') {
       const kodes = [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])]
-        .map(k => icdFuerDta(k)).filter(Boolean);   // Zusätze (†*!, GVZA, LRB) weg, sonst trifft der Katalog nicht (01.10.2026)
+        .map(k => icdFuerDta(/** @type {string | null} */ (k))).filter(Boolean);   // Zusätze (†*!, GVZA, LRB) weg, sonst trifft der Katalog nicht (01.10.2026)
       [...new Set(kodes)].forEach(kode => {
-        if (input.icdTerminal[kode] === false)
+        if ((/** @type {Record<string, boolean>} */ (input.icdTerminal))[kode] === false)
           W(warnings, 'V:01016', `${at}.verordnung.icd10`,
             `ICD-10 "${kode}" ist nicht endständig. Bitte mit der Verordnung vergleichen — Korrektur nur durch den Arzt (neue Unterschrift + Datum).`);
       });
@@ -421,7 +708,7 @@ export function preflight(input) {
     {
       const befund = icdDgPreflightBefund({
         // Zusätze abstreifen wie im DIA-Segment (icdFuerDta), sonst meldet der Abgleich „M17.1R“ als fremd.
-        icd10: [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])].map(k => icdFuerDta(k)).filter(Boolean).join(','),
+        icd10: [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])].map(k => icdFuerDta(/** @type {string | null} */ (k))).filter(Boolean).join(','),
         diagnosegruppe: v.diagnosegruppe,
         diagnosetext: v.diagnosetext,
       }, input.icdDgRegeln ?? getIcdDgRules());
@@ -440,12 +727,12 @@ export function preflight(input) {
     if (!isValidDiagnosegruppe(v.diagnosegruppe))
       E(errors, 'V:01003', `${at}.verordnung.diagnosegruppe`, `Diagnosegruppe "${v.diagnosegruppe}" ungültig`);
 
-    if (!VERORDNUNGSART_HEILMITTEL[v.verordnungsart])
+    if (!VERORDNUNGSART_HEILMITTEL[/** @type {string} */ (v.verordnungsart)])
       E(errors, 'V:01004', `${at}.verordnung.verordnungsart`, `Verordnungsart "${v.verordnungsart}" nicht 03/04/05`);
 
-    if (!ZUZAHLUNGSKENNZEICHEN[v.zuzahlungskennzeichen]) {
+    if (!ZUZAHLUNGSKENNZEICHEN[/** @type {string} */ (v.zuzahlungskennzeichen)]) {
       E(errors, 'V:01005', `${at}.verordnung.zuzahlungskennzeichen`, `Zuzahlungskennzeichen "${v.zuzahlungskennzeichen}" ungültig`);
-    } else if (isVkz03 && (v.zuzahlungskennzeichen === '0' || v.zuzahlungskennzeichen === '3' || !['1', '2', '5'].includes(v.zuzahlungskennzeichen))) {
+    } else if (isVkz03 && (v.zuzahlungskennzeichen === '0' || v.zuzahlungskennzeichen === '3' || !['1', '2', '5'].includes(/** @type {string} */ (v.zuzahlungskennzeichen)))) {
       E(errors, 'V:01005', `${at}.verordnung.zuzahlungskennzeichen`,
         `Zuzahlungskennzeichen "${v.zuzahlungskennzeichen}" ist für VKZ 03 unzulässig (erlaubt sind nur 1, 2 oder 5) — Anlage 1 TP5 V21 Kap. 7.4.2`);
     }
@@ -513,7 +800,7 @@ export function preflight(input) {
 
 
     // Tarif
-    const t = p.tarif || {};
+    const t = p.tarif || /** @type {Partial<DtaTarif>} */ ({});
     const ac = t.abrechnungscode || '22';
     if (!ABRECHNUNGSCODE[ac])
       E(errors, 'T:01001', `${at}.tarif.abrechnungscode`, `Abrechnungscode "${ac}" unbekannt`);
@@ -610,7 +897,7 @@ export function preflight(input) {
             // to Physiotherapie; neither free text nor a client approval flag suffices.
             const pauseBelegt = istPhysio && Array.isArray(p.verordnung?.unterbrechungen)
               && p.verordnung.unterbrechungen.some(n => n?.von === sorted[k - 1].datumLeistung
-                && n?.bis === sorted[k].datumLeistung && ['T', 'K', 'F'].includes(n.grund)
+                && n?.bis === sorted[k].datumLeistung && ['T', 'K', 'F'].includes(/** @type {string} */ (n.grund))
                 && n.dokumentiert === true);
             if (diffDays > maxPause && !pauseBelegt) {
               E(errors, 'S:01010', `${at}.sessions`, istPodo
@@ -625,7 +912,7 @@ export function preflight(input) {
       // 78610 Nagelkorrekturspange darf zweimal je Tag (Anlage 2 § 2 c). Bisher
       // warnte nur das Frontend; hier wird die Datei nicht gebaut.
       for (const { datum, gruppe, anzahl } of behandlungstageJeDatum(p.sessions, s => s.datumLeistung, s => s.positionsnummer, s => s.anzahl)) {
-        const max = TAGESHOECHSTZAHL[gruppe] ?? 1;
+        const max = (/** @type {Readonly<Record<string, number>>} */ (TAGESHOECHSTZAHL))[gruppe] ?? 1;
         if (anzahl > max)
           E(errors, 'S:01013', `${at}.sessions`,
             gruppe === 'nagelspange'
@@ -812,6 +1099,7 @@ export function preflight(input) {
         }
       });
 
+      /** @param {number | string} x @returns {number} */
       const r2 = (x) => Math.round((+x + Number.EPSILON) * 100) / 100;
       const explicitPausch = v?.pauschZuzahlung ?? p?.pauschZuzahlung;
 
@@ -895,6 +1183,10 @@ export function preflight(input) {
 // Freitext beendet KEIN Segment. Der naive `split("'")` in den Tests kommt
 // damit nicht klar — hier darf er nicht stehen, sonst meldet die Pruefung
 // Fehler, die es nicht gibt (oder uebersieht welche).
+/**
+ * @param {string} inhalt
+ * @returns {string[]}
+ */
 export function segmenteTrennen(inhalt) {
   const out = [];
   let akt = '';
@@ -988,7 +1280,7 @@ export function pruefeDatenstrom(inhalt) {
 
       case 'GES': {
         const status = String(felder[1] ?? '');
-        if (!SUMMENSTATUS[status]) {
+        if (!(/** @type {Readonly<Record<string, string>>} */ (SUMMENSTATUS))[status]) {
           fehler.push(`GES-Summenstatus "${status}" steht nicht in der Schlüsseltabelle (erlaubt: ${Object.keys(SUMMENSTATUS).join(', ')}) — Anlage 3 TP5 V21, § 8.1.6`);
         }
         break;
@@ -1015,10 +1307,10 @@ export function pruefeDatenstrom(inhalt) {
   }
 
   if (fehler.length) {
-    const err = new Error(
+    const err = /** @type {DtaError} */ (new Error(
       `Selbstprüfung des erzeugten DTA-Datenstroms fehlgeschlagen (${fehler.length}):\n  ` +
       fehler.join('\n  ')
-    );
+    ));
     err.code = 'DTA_SELBSTPRUEFUNG';
     err.fehler = fehler;
     throw err;
@@ -1028,12 +1320,16 @@ export function pruefeDatenstrom(inhalt) {
 }
 
 // Convenience: throw if preflight fails. Use in build pipeline.
+/**
+ * @param {DtaInput} input
+ * @returns {PreflightResult}
+ */
 export function assertPreflight(input) {
   const r = preflight(input);
   if (!r.ok) {
     const summary = r.errors.slice(0, 5).map(e => `[${e.code}] ${e.where}: ${e.message}`).join('\n  ');
     const more = r.errors.length > 5 ? `\n  ... +${r.errors.length - 5} weitere` : '';
-    const err = new Error(`Preflight failed (${r.errors.length} errors):\n  ${summary}${more}`);
+    const err = /** @type {DtaError} */ (new Error(`Preflight failed (${r.errors.length} errors):\n  ${summary}${more}`));
     err.preflight = r;
     throw err;
   }

@@ -59,11 +59,86 @@ import {
 } from './preflight.js';
 import { icdFuerDta } from '../utils/icd-code.js';
 
+/**
+ * @typedef {import('./preflight.js').DtaInput} DtaInput
+ * @typedef {import('./preflight.js').DtaBeleg} DtaBeleg
+ * @typedef {import('./preflight.js').DtaPosition} DtaPosition
+ * @typedef {import('./preflight.js').DtaPatient} DtaPatient
+ * @typedef {import('./preflight.js').DtaLeistungserbringer} DtaLeistungserbringer
+ * @typedef {import('./preflight.js').DtaKostentraeger} DtaKostentraeger
+ * @typedef {import('./preflight.js').DtaRechnung} DtaRechnung
+ * @typedef {import('./preflight.js').DtaRechnungssteller} DtaRechnungssteller
+ * @typedef {import('./preflight.js').DtaVerordnung} DtaVerordnung
+ * @typedef {import('./preflight.js').PreflightFinding} PreflightFinding
+ * @typedef {import('./preflight.js').PreflightResult} PreflightResult
+ * @typedef {import('./preflight.js').DtaError} DtaError
+ * @typedef {import('./segments.js').SlgaUstParams} SlgaUstParams
+ * @typedef {import('./segments.js').SlgaSkoParams} SlgaSkoParams
+ */
+
+/**
+ * @typedef {object} DtaFallTotals
+ * @property {number} brutto
+ * @property {number} prozZuzahlung
+ * @property {number} pauschZuzahlung
+ * @property {number} gesZuzahlung
+ * @property {number} netto
+ * @property {number} [serviceBrutto]
+ */
+
+/**
+ * @typedef {object} DtaGesamtTotals
+ * @property {number} brutto
+ * @property {number} gesZuzahlung
+ * @property {number} netto
+ * @property {number} [serviceBrutto]
+ */
+
+/**
+ * @typedef {object} DtaStatusTotals
+ * @property {string} status
+ * @property {number} brutto
+ * @property {number} gesZuzahlung
+ * @property {number} netto
+ * @property {number} [serviceBrutto]
+ */
+
+/**
+ * @typedef {object} DtaGruppe
+ * @property {string} kostentraegerIk
+ * @property {string} kartenIk
+ * @property {string | number} einzelRechnungsnummer
+ * @property {number[]} prescriptionIndices
+ * @property {number} prescriptionCount
+ * @property {DtaGesamtTotals} totals
+ */
+
+/**
+ * @typedef {object} DtaBuildResult
+ * @property {string} filename
+ * @property {string} logischerDateiname
+ * @property {string} auftragsdatei
+ * @property {number} transfernummer
+ * @property {string} content
+ * @property {number} segmentCount
+ * @property {number} messageCount
+ * @property {number} byteLength
+ * @property {DtaGesamtTotals & { prescriptions: number, fallTotals: DtaFallTotals[] }} totals
+ * @property {DtaGruppe[]} gruppen
+ * @property {string | null} davIk
+ * @property {string | null} kassenart
+ * @property {boolean} sammelrechnung
+ * @property {PreflightFinding[]} preflightWarnings
+ */
+
+/** @param {unknown} v @returns {number} */
 const num = (v) => Number(v) || 0;
+/** @param {number | string} v @returns {number} */
 const r2 = (v) => +Number(v).toFixed(2);
+/** @param {unknown} v @returns {Date | null} */
 const parseDate = (v) => {
   if (!v) return null;
-  const d = v instanceof Date ? v : new Date(v);
+  const d = v instanceof Date ? v : new Date(/** @type {string | number} */ (v));
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
@@ -96,20 +171,28 @@ const parseDate = (v) => {
  * Kein Rückfall auf `kostentraegerIk`: beide sind verschiedene Mussfelder
  * (Anlage 1 TP5 V21 §5.5.2 / §5.5.3.1). Die Routen prüfen das schon vor dem
  * Bau mit Patientennamen (abrechnung.routes.js); dies hier ist das Netz darunter.
+ *
+ * @param {DtaVerordnung | null | undefined} verordnung
+ * @returns {string}
  */
 function kartenIkPflicht(verordnung) {
   const ik = String(verordnung?.krankenkasseIk ?? '').trim();
   if (!/^\d{9}$/.test(ik)) {
-    const e = new Error(
+    const e = /** @type {DtaError} */ (new Error(
       'IK der Krankenkasse von der Versichertenkarte fehlt oder ist nicht 9-stellig ' +
       '— in der Verordnung eintragen (Anlage 1 TP5 V21 §5.5.3.1).'
-    );
+    ));
     e.status = 422;
     throw e;
   }
   return ik;
 }
 
+/**
+ * @param {unknown} raw
+ * @param {number} num
+ * @returns {boolean}
+ */
 export function isValidTwoDecimalPrecision(raw, num) {
   if (Math.abs(num - Math.round(num * 100) / 100) > 1e-6) {
     return false;
@@ -125,15 +208,20 @@ export function isValidTwoDecimalPrecision(raw, num) {
   return true;
 }
 
+/**
+ * @param {DtaPosition | null | undefined} s
+ * @param {number} [index=0]
+ * @returns {{ anzahl: number, einzelbetrag: number, numZu: number, isPositionFrei: boolean }}
+ */
 export function parseVkz03Session(s, index = 0) {
   const posLabel = s?.positionsnummer || index;
 
   // 0. position_frei validation
   if (s?.position_frei !== undefined && s?.position_frei !== null) {
     if (typeof s.position_frei !== 'boolean') {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: position_frei für Position ${posLabel} muss boolesch (true/false) sein, erhalten: "${s.position_frei}".`
-      );
+      ));
       e.status = 422;
       throw e;
     }
@@ -144,27 +232,27 @@ export function parseVkz03Session(s, index = 0) {
   let anzahl = 1;
   if (s?.anzahl !== undefined && s?.anzahl !== null) {
     if (typeof s.anzahl !== 'number' && typeof s.anzahl !== 'string') {
-      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (nur Zahl oder String zulässig, Position ${posLabel}).`);
+      const e = /** @type {DtaError} */ (new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (nur Zahl oder String zulässig, Position ${posLabel}).`));
       e.status = 422;
       throw e;
     }
     if (typeof s.anzahl === 'string' && s.anzahl.trim() === '') {
-      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+      const e = /** @type {DtaError} */ (new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`));
       e.status = 422;
       throw e;
     }
     const anzahlStr = typeof s.anzahl === 'string' ? s.anzahl.trim().replace(',', '.') : String(s.anzahl);
     const n = Number(anzahlStr);
     if (!Number.isFinite(n) || n <= 0) {
-      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+      const e = /** @type {DtaError} */ (new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`));
       e.status = 422;
       throw e;
     }
     if (!isValidTwoDecimalPrecision(s.anzahl, n)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Anzahl "${s.anzahl}" hat unzulässige Nachkommastellen ` +
         `(maximal 2 Dezimalstellen zulässig für EHE, Position ${posLabel}).`
-      );
+      ));
       e.status = 422;
       throw e;
     }
@@ -173,34 +261,34 @@ export function parseVkz03Session(s, index = 0) {
 
   // 2. Einzelbetrag
   if (s?.einzelbetrag === undefined || s?.einzelbetrag === null) {
-    const e = new Error(`VKZ 03: Einzelbetrag fehlt (Position ${posLabel}).`);
+    const e = /** @type {DtaError} */ (new Error(`VKZ 03: Einzelbetrag fehlt (Position ${posLabel}).`));
     e.status = 422;
     throw e;
   }
   if (typeof s.einzelbetrag !== 'number' && typeof s.einzelbetrag !== 'string') {
-    const e = new Error(
+    const e = /** @type {DtaError} */ (new Error(
       `VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (nur Zahl oder String zulässig, Position ${posLabel}).`
-    );
+    ));
     e.status = 422;
     throw e;
   }
   if (typeof s.einzelbetrag === 'string' && s.einzelbetrag.trim() === '') {
-    const e = new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+    const e = /** @type {DtaError} */ (new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`));
     e.status = 422;
     throw e;
   }
   const betragStr = typeof s.einzelbetrag === 'string' ? s.einzelbetrag.trim().replace(',', '.') : String(s.einzelbetrag);
   const nBetrag = Number(betragStr);
   if (!Number.isFinite(nBetrag) || nBetrag <= 0) {
-    const e = new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+    const e = /** @type {DtaError} */ (new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`));
     e.status = 422;
     throw e;
   }
   if (!isValidTwoDecimalPrecision(s.einzelbetrag, nBetrag)) {
-    const e = new Error(
+    const e = /** @type {DtaError} */ (new Error(
       `VKZ 03: Einzelbetrag "${s.einzelbetrag}" hat unzulässige Nachkommastellen ` +
       `(maximal 2 Dezimalstellen zulässig für EHE, Position ${posLabel}).`
-    );
+    ));
     e.status = 422;
     throw e;
   }
@@ -211,40 +299,40 @@ export function parseVkz03Session(s, index = 0) {
   if (isPositionFrei) {
     if (s?.zuzahlungProPos !== undefined && s?.zuzahlungProPos !== null) {
       if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig (nur Zahl oder String zulässig).`
-        );
+        ));
         e.status = 422;
         throw e;
       }
       if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig.`
-        );
+        ));
         e.status = 422;
         throw e;
       }
       const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
       const nZu = Number(zuStr);
       if (!Number.isFinite(nZu)) {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig.`
-        );
+        ));
         e.status = 422;
         throw e;
       }
       if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} hat unzulässige Nachkommastellen ` +
           `(maximal 2 Dezimalstellen zulässig für EHE).`
-        );
+        ));
         e.status = 422;
         throw e;
       }
       if (r2(nZu) !== 0) {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `VKZ 03: Widersprüchliche Angaben für Position ${posLabel} — position_frei ist true, aber Forderungs-Zuzahlung ist ${nZu} € (> 0).`
-        );
+        ));
         e.status = 422;
         throw e;
       }
@@ -252,43 +340,43 @@ export function parseVkz03Session(s, index = 0) {
     numZu = 0;
   } else {
     if (s?.zuzahlungProPos === undefined || s?.zuzahlungProPos === null) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Explizite Forderungs-Zuzahlung für Position ${posLabel} fehlt. ` +
         'Bei Zuzahlungsforderungen ist die Forderungs-Zuzahlung je Position zwingend anzugeben (kein 10%-Fallback).'
-      );
+      ));
       e.status = 422;
       throw e;
     }
     if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig (nur Zahl oder String zulässig).`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig ` +
         `(erwartet: finite Zahl in [0, Einzelbetrag ${einzelbetrag} €]).`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
     const nZu = Number(zuStr);
     if (!Number.isFinite(nZu) || nZu < 0 || r2(nZu) > r2(einzelbetrag)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig ` +
         `(erwartet: finite Zahl in [0, Einzelbetrag ${einzelbetrag} €]).`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} hat unzulässige Nachkommastellen ` +
         `(maximal 2 Dezimalstellen zulässig für EHE).`
-      );
+      ));
       e.status = 422;
       throw e;
     }
@@ -298,18 +386,23 @@ export function parseVkz03Session(s, index = 0) {
   return { anzahl, einzelbetrag, numZu, isPositionFrei };
 }
 
+/**
+ * @param {DtaBeleg | null | undefined} item
+ * @param {string} [vkz='01']
+ * @returns {DtaFallTotals}
+ */
 export function calcAbrechnungsfallTotals(item, vkz = '01') {
   const effectiveVkz = vkz || item?.vkz || '01';
-  const { sessions = [], verordnung = {} } = item || {};
+  const { sessions = [], verordnung = /** @type {Partial<DtaVerordnung>} */ ({}) } = /** @type {Partial<DtaBeleg>} */ (item || {});
   let prozZuzahlung = 0, pauschZuzahlung = 0;
 
   if (effectiveVkz === '03') {
     const kz = String(verordnung.zuzahlungskennzeichen ?? '').trim();
     if (kz === '0' || kz === '3' || !['1', '2', '5'].includes(kz)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `Zuzahlungskennzeichen "${kz}" ist für VKZ 03 (Zuzahlungsforderung) unzulässig. ` +
         'Erlaubt sind Kennzeichen 1 (Befreiung), 2 (Zahlungsunwillig trotz Mahnung) oder 5 (Jahreswechsel) — Anlage 1 TP5 V21 Kap. 7.4.2.'
-      );
+      ));
       e.status = 422;
       throw e;
     }
@@ -348,9 +441,9 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
     const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
 
     if (gesZuzahlung <= 0) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         'VKZ 03: Zuzahlungsforderung ergibt 0,00 € — Nullforderungen sind unzulässig (GZF muss > 0 sein).'
-      );
+      ));
       e.status = 422;
       throw e;
     }
@@ -407,6 +500,17 @@ export function calcAbrechnungsfallTotals(item, vkz = '01') {
   return { brutto: serviceBrutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto };
 }
 
+/**
+ * @param {{
+ *   prescription: DtaBeleg,
+ *   rechnung: DtaRechnung,
+ *   absender: DtaLeistungserbringer,
+ *   empfaenger: DtaKostentraeger,
+ *   vkz: string,
+ *   nachrichtenreferenz: number,
+ * }} opts
+ * @returns {{ lines: string[], totals: DtaFallTotals }}
+ */
 function buildSLLAMessage({
   prescription,
   rechnung,
@@ -447,58 +551,58 @@ function buildSLLAMessage({
 
   if (vkz === '03') {
     if (!urspruenglich) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         'Ursprüngliche Rechnungsinformation (URI) fehlt für Korrekturverfahren (VKZ 03) ' +
         '— Anlage 1 TP5 V21 § 5.5.3.1.'
-      );
+      ));
       e.status = 422;
       throw e;
     }
     const origIk = String(urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer ?? '').trim();
     if (!/^\d{9}$/.test(origIk)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `URI: Ursprüngliche Absender-IK "${origIk}" ungültig (9 Stellen erwartet) — Anlage 1 TP5 V21 § 5.5.3.1.`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     if (!isValidIkChecksum(origIk)) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `URI: Ursprüngliche Absender-IK "${origIk}" Prüfziffer ungültig — Anlage 1 TP5 V21 § 5.5.3.1.`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     const origSammel = String(urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer ?? '').trim();
     if (!origSammel) {
-      const e = new Error('URI: Ursprüngliche Sammelrechnungsnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.');
+      const e = /** @type {DtaError} */ (new Error('URI: Ursprüngliche Sammelrechnungsnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.'));
       e.status = 422;
       throw e;
     }
     if (origSammel.length > 14) {
-      const e = new Error(`URI: Ursprüngliche Sammelrechnungsnummer > 14 Zeichen (${origSammel.length}) — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      const e = /** @type {DtaError} */ (new Error(`URI: Ursprüngliche Sammelrechnungsnummer > 14 Zeichen (${origSammel.length}) — Anlage 1 TP5 V21 § 5.5.3.1.`));
       e.status = 422;
       throw e;
     }
     if (!/^[A-Za-z0-9]+([-/][A-Za-z0-9]+)*$/.test(origSammel)) {
-      const e = new Error(`URI: Ursprüngliche Sammelrechnungsnummer "${origSammel}" enthält unzulässige Zeichen — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      const e = /** @type {DtaError} */ (new Error(`URI: Ursprüngliche Sammelrechnungsnummer "${origSammel}" enthält unzulässige Zeichen — Anlage 1 TP5 V21 § 5.5.3.1.`));
       e.status = 422;
       throw e;
     }
     const origDatum = parseDate(urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum);
     if (!origDatum) {
-      const e = new Error('URI: Ursprüngliches Rechnungsdatum fehlt oder ungültig — Anlage 1 TP5 V21 § 5.5.3.1.');
+      const e = /** @type {DtaError} */ (new Error('URI: Ursprüngliches Rechnungsdatum fehlt oder ungültig — Anlage 1 TP5 V21 § 5.5.3.1.'));
       e.status = 422;
       throw e;
     }
     const origBeleg = String(urspruenglich.belegnummer ?? urspruenglich.origBelegnummer ?? '').trim();
     if (!origBeleg) {
-      const e = new Error('URI: Ursprüngliche Belegnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.');
+      const e = /** @type {DtaError} */ (new Error('URI: Ursprüngliche Belegnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.'));
       e.status = 422;
       throw e;
     }
     if (!isValidBelegnummer(origBeleg)) {
-      const e = new Error(`URI: Ursprüngliche Belegnummer "${origBeleg}" ungültig — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      const e = /** @type {DtaError} */ (new Error(`URI: Ursprüngliche Belegnummer "${origBeleg}" ungültig — Anlage 1 TP5 V21 § 5.5.3.1.`));
       e.status = 422;
       throw e;
     }
@@ -512,26 +616,26 @@ function buildSLLAMessage({
     }));
   } else if (vkz === '02' || vkz === '04') {
     if (!urspruenglich) {
-      const e = new Error(
+      const e = /** @type {DtaError} */ (new Error(
         `Ursprüngliche Rechnungsinformation (URI) fehlt für Korrekturverfahren (VKZ ${vkz}) — Anlage 1 TP5 V21 § 7.2.`
-      );
+      ));
       e.status = 422;
       throw e;
     }
     lines.push(...buildSLLA_URI({
-      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer,
-      origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer,
+      origIkLeistungserbringer:  /** @type {string} */ (urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer),
+      origSammelRechnungsnummer: /** @type {string} */ (urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer),
       origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer ?? urspruenglich.origEinzelRechnungsnummer ?? '0',
-      origRechnungsdatum:        urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum,
-      origBelegnummer:           urspruenglich.belegnummer ?? urspruenglich.origBelegnummer,
+      origRechnungsdatum:        /** @type {Date | string} */ (urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum),
+      origBelegnummer:           /** @type {string} */ (urspruenglich.belegnummer ?? urspruenglich.origBelegnummer),
     }));
   } else if (vkz !== '01' && urspruenglich) {
     lines.push(...buildSLLA_URI({
-      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer,
-      origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer,
+      origIkLeistungserbringer:  /** @type {string} */ (urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer),
+      origSammelRechnungsnummer: /** @type {string} */ (urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer),
       origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer ?? urspruenglich.origEinzelRechnungsnummer ?? '0',
-      origRechnungsdatum:        urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum,
-      origBelegnummer:           urspruenglich.belegnummer ?? urspruenglich.origBelegnummer,
+      origRechnungsdatum:        /** @type {Date | string} */ (urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum),
+      origBelegnummer:           /** @type {string} */ (urspruenglich.belegnummer ?? urspruenglich.origBelegnummer),
     }));
   }
 
@@ -670,6 +774,24 @@ function buildSLLAMessage({
   return { lines: [unh, ...lines, unt], totals };
 }
 
+/**
+ * @param {{
+ *   rechnung: DtaRechnung,
+ *   absender: DtaLeistungserbringer,
+ *   empfaenger: DtaKostentraeger,
+ *   kostentraegerIk: string,
+ *   krankenkasseIk: string,
+ *   vkz: string,
+ *   perStatusTotals: DtaStatusTotals[],
+ *   gesamtTotals: DtaGesamtTotals,
+ *   nachrichtenreferenz: number,
+ *   ust?: SlgaUstParams,
+ *   skonto?: SlgaSkoParams[],
+ *   rechnungssteller?: DtaRechnungssteller,
+ *   sammelrechnung?: string,
+ * }} opts
+ * @returns {{ lines: string[] }}
+ */
 function buildSLGAMessage({
   rechnung, absender, empfaenger, kostentraegerIk, krankenkasseIk,
   vkz, perStatusTotals, gesamtTotals, nachrichtenreferenz,
@@ -728,6 +850,10 @@ function buildSLGAMessage({
   return { lines: [unh, ...lines, unt] };
 }
 
+/**
+ * @param {DtaInput} opts
+ * @returns {DtaBuildResult}
+ */
 export function buildDtaFile({
   absender,         // { ik, name }
   empfaenger,       // { ik, name }
@@ -760,6 +886,7 @@ export function buildDtaFile({
   // (nicht endständiger ICD). Ohne Angabe ändert sich nichts.
   icdTerminal,
 }) {
+  /** @type {PreflightFinding[]} */
   let preflightWarnings = [];
   if (preflight) {
     // `rechnungssteller` kommt seit 20.09.2026 mit: aus ihm entsteht das
@@ -770,7 +897,7 @@ export function buildDtaFile({
     preflightWarnings = pf.warnings || [];
     if (!pf.ok) {
       const summary = pf.errors.slice(0, 5).map(e => `[${e.code}] ${e.where}: ${e.message}`).join('; ');
-      const err = new Error(`Preflight failed (${pf.errors.length} errors): ${summary}`);
+      const err = /** @type {DtaError} */ (new Error(`Preflight failed (${pf.errors.length} errors): ${summary}`));
       err.preflight = pf;
       throw err;
     }
@@ -790,14 +917,14 @@ export function buildDtaFile({
       throw new Error(`prescription[${i}].verordnung.verordnungsart required`);
     }
     validateVerordnungsart(p.verordnung.verordnungsart);
-    validateZuzahlungskennzeichen(p.verordnung.zuzahlungskennzeichen);
+    validateZuzahlungskennzeichen(/** @type {string} */ (p.verordnung.zuzahlungskennzeichen));
     if (vkz === '03') {
       const kz = String(p.verordnung.zuzahlungskennzeichen ?? '').trim();
       if (kz === '0' || kz === '3' || !['1', '2', '5'].includes(kz)) {
-        const e = new Error(
+        const e = /** @type {DtaError} */ (new Error(
           `prescription[${i}].verordnung.zuzahlungskennzeichen "${kz}" ist für VKZ 03 unzulässig ` +
           '(erlaubt sind nur 1, 2 oder 5) — Anlage 1 TP5 V21 Kap. 7.4.2.'
-        );
+        ));
         e.status = 422;
         throw e;
       }
@@ -885,6 +1012,7 @@ export function buildDtaFile({
   const fallTotals = prescriptions.map(p => calcAbrechnungsfallTotals(p, vkz));
 
   // Karten-IK der Zeile — Pflicht, kein Rückfall auf die Kostenträger-IK.
+  /** @param {DtaBeleg} p @returns {string} */
   const kartenIkVon = (p) => kartenIkPflicht(p.verordnung);
 
   // Summen ueber eine Indexmenge — nie ueber die ganze Datei.
@@ -894,7 +1022,12 @@ export function buildDtaFile({
   // einer zweiten Karten-IK sieht dann jede Kasse die Summe der jeweils
   // anderen mit. Das ist keine Dateiabweisung, sondern still falsche Zahlen —
   // die teurere Sorte Fehler.
+  /**
+   * @param {number[]} indizes
+   * @returns {{ gesamt: DtaGesamtTotals, perStatus: DtaStatusTotals[] }}
+   */
   function summenFuer(indizes) {
+    /** @type {Map<string, { brutto: number, gesZuzahlung: number, netto: number, serviceBrutto: number }>} */
     const perStatus = new Map();
     let brutto = 0, gesZ = 0, serviceBruttoTotal = 0;
     for (const i of indizes) {
@@ -935,19 +1068,22 @@ export function buildDtaFile({
   // Map haelt die Einfuegereihenfolge fest; bei genau einer Karten-IK — dem
   // heutigen Normalfall — entsteht daraus exakt eine Gruppe mit den Rezepten
   // in Eingabereihenfolge, also zeichengleich die bisherige Ausgabe.
+  /** @type {Map<string, Map<string, number[]>>} */
   const nachKostentraeger = new Map();
   prescriptions.forEach((p, i) => {
     const ktIk     = p.verordnung.kostentraegerIk;
     const kartenIk = kartenIkVon(p);
     if (!nachKostentraeger.has(ktIk)) nachKostentraeger.set(ktIk, new Map());
-    const nachKarte = nachKostentraeger.get(ktIk);
+    const nachKarte = /** @type {Map<string, number[]>} */ (nachKostentraeger.get(ktIk));
     if (!nachKarte.has(kartenIk)) nachKarte.set(kartenIk, []);
-    nachKarte.get(kartenIk).push(i);
+    /** @type {number[]} */ (nachKarte.get(kartenIk)).push(i);
   });
 
   let nachrRef = 0;
   let einzelZaehler = 0;
+  /** @type {string[]} */
   const allLines = [];
+  /** @type {DtaGruppe[]} */
   const gruppen = [];
 
   for (const [ktIk, nachKarte] of nachKostentraeger) {
@@ -960,6 +1096,7 @@ export function buildDtaFile({
     }));
 
     if (sammelrechnung) {
+      /** @type {Map<string, { brutto: number, gesZuzahlung: number, netto: number }>} */
       const sammelPerStatus = new Map();
       let sBrutto = 0, sGesZ = 0, sNetto = 0;
       for (const t of teile) {

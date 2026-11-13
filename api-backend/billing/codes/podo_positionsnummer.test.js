@@ -21,5 +21,5 @@ test('der frühere Zusammenbau "71"+HPNR war für den Preflight ungültig (Regre
 test('eine Nicht-Positionsnummer wird laut abgelehnt statt stillschweigend gekürzt', () => {
   assert.throws(() => podoPositionsnummer('7178020'), /5-stellige/);
   assert.throws(() => podoPositionsnummer(''), /5-stellige/);
-  assert.throws(() => podoPositionsnummer(null), /5-stellige/);
+  assert.throws(() => podoPositionsnummer(/** @type {any} */ (null)), /5-stellige/);
 });
