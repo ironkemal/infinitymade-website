@@ -7,18 +7,19 @@
 // Key constraints:
 //   - 16 Wochen Gültigkeit ab Ausstellungsdatum
 //   - Behandlungsbeginn innerhalb 28 Tage ab Ausstellung (dringend: 14 Tage)
-//   - ICD muss auf der Blanko-Schulterliste (114 EX-Diagnosen) sein
+//   - ICD muss auf der Blanko-Schulterliste (65 primäre EX-Diagnosen / 66 Zeilen) sein
 //   - Diagnosegruppe immer EX
 //   - "BLANKOVERORDNUNG" muss im Feld "Heilmittel nach Maßgabe des Kataloges" stehen
 //   - Keine Höchstmenge, ABER Ampelsystem mit 9% Vergütungsabschlag in der roten Zone
 //   - Zusätzliche Vergütung: +34.34€ PD (verpflichtend) + 25.76€ Bedarfsdiagnostik (max 1x)
 //     + 55€ Mehraufwandspauschale (pro Verordnung)
 
-import { lookupBlankoShoulder, BLANKO_AMPEL, BLANKO_VERGUETUNG } from './catalog.js';
+import { heilmittelCatalog, lookupBlankoShoulder, BLANKO_AMPEL, BLANKO_VERGUETUNG } from './catalog.js';
 import { parseIsoDatum, addDays, pruefeBehandlungsbeginn } from './fristen.js';
 
 const GUELTIG_WOCHEN = 16;
 const ROTE_AMPEL_ABSCHLAG_PERCENT = 9;
+const BLANKO_SHOULDER_COUNT = Object.keys(heilmittelCatalog.blanko_physio_shoulder).length;
 
 function classifyAmpel({ heilmittel_typ, vorrangig_einheiten, ergaenzend_einheiten }) {
   // heilmittel_typ ∈ {"weichteil_arthrose_knorpel", "fraktur"}
@@ -55,7 +56,7 @@ export function validateBlanko(rezept) {
   if (!blankoEntry) {
     blockers.push({
       code: 'NOT_ON_BLANKO_LIST',
-      msg: `ICD-10 ${rezept.icd10} ist nicht auf der Blanko-Schulterliste (114 zulässige EX-Diagnosen seit 1.11.2024). Bitte als Standardverordnung ausstellen.`,
+      msg: `ICD-10 ${rezept.icd10} ist nicht auf der Blanko-Schulterliste (${BLANKO_SHOULDER_COUNT} zulässige EX-Diagnosen seit 1.11.2024). Bitte als Standardverordnung ausstellen.`,
       field: 'icd10',
       regulation: 'KBV Diagnoseliste Blankoverordnung Physiotherapie Stand 2026-01-01'
     });

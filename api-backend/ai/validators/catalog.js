@@ -16,16 +16,54 @@ function loadJson(name) {
 export const heilmittelCatalog = loadJson('heilmittel-catalog.json');
 export const diagnosegruppen = loadJson('diagnosegruppen.json');
 
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+/**
+ * Lookup an ICD-10 code in a catalog map (`lhb_bvb` or `blanko_physio_shoulder`).
+ * Matches exact key first, then asterisk partner (`G73.6` <-> `G73.6*`),
+ * 4-char subcategory wildcards (`XXX.Y-`), 3-char category wildcards (`XXX.-`),
+ * and the inclusive `C00-C97` oncology range when present.
+ */
+function lookupCatalogEntry(entries, icd) {
+  if (!entries || typeof icd !== 'string') return null;
+  const raw = icd.trim().toUpperCase().replace(/\s+-$/, '-');
+  if (!raw) return null;
+
+  if (hasOwn(entries, raw)) return entries[raw];
+
+  const base = raw.endsWith('*') ? raw.slice(0, -1) : raw;
+  if (raw.endsWith('*') && hasOwn(entries, base)) return entries[base];
+  if (!raw.endsWith('*') && hasOwn(entries, `${base}*`)) return entries[`${base}*`];
+
+  if (/^[A-Z]\d{2}\.\d/.test(base)) {
+    const subKey = `${base.slice(0, 5)}-`;
+    if (hasOwn(entries, subKey)) return entries[subKey];
+  }
+
+  if (/^[A-Z]\d{2}(?:\.|$)/.test(base)) {
+    const catKey = `${base.slice(0, 3)}.-`;
+    if (hasOwn(entries, catKey)) return entries[catKey];
+  }
+
+  const cRangeMatch = base.match(/^C(\d{2})(?:\.|$)/);
+  if (cRangeMatch && hasOwn(entries, 'C00-C97')) {
+    const num = Number(cRangeMatch[1]);
+    if (num >= 0 && num <= 97) return entries['C00-C97'];
+  }
+
+  return null;
+}
+
 /** Lookup ICD-10 in LHB/BVB index. Returns entry or null. */
 export function lookupLhbBvb(icd) {
-  if (!icd) return null;
-  return heilmittelCatalog.lhb_bvb[icd.trim()] || null;
+  return lookupCatalogEntry(heilmittelCatalog.lhb_bvb, icd);
 }
 
 /** Lookup ICD-10 in Blanko physio shoulder index. Returns entry or null. */
 export function lookupBlankoShoulder(icd) {
-  if (!icd) return null;
-  return heilmittelCatalog.blanko_physio_shoulder[icd.trim()] || null;
+  return lookupCatalogEntry(heilmittelCatalog.blanko_physio_shoulder, icd);
 }
 
 /**

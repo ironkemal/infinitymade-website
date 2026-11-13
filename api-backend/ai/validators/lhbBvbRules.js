@@ -34,12 +34,14 @@ export function validateLhbBvb(rezept) {
   }
 
   // Verify the Diagnosegruppe declared on the rezept is in the allowed list for this ICD.
+  let hasDgMismatch = false;
   if (rezept.diagnosegruppe && !entry.diagnosegruppen.includes(rezept.diagnosegruppe)) {
     // Tolerate group prefix match: rezept WS2 vs catalog WS
     const prefixHit = entry.diagnosegruppen.some(d =>
       rezept.diagnosegruppe.startsWith(d) || d.startsWith(rezept.diagnosegruppe)
     );
     if (!prefixHit) {
+      hasDgMismatch = true;
       warnings.push({
         code: 'DG_MISMATCH_LHB',
         msg: `Diagnosegruppe '${rezept.diagnosegruppe}' passt nicht zu den auf der LHB/BVB-Liste für ${rezept.icd10} hinterlegten Gruppen: ${entry.diagnosegruppen.join(', ')}.`,
@@ -59,33 +61,56 @@ export function validateLhbBvb(rezept) {
     });
   }
 
-  // Compute max sessions: 12 weeks × frequency hint upper bound from DG metadata
   const dgMeta = getDiagnosegruppe(rezept.diagnosegruppe || entry.diagnosegruppen[0]);
-  let maxSessions = null;
-  if (dgMeta?.frequency_hint) {
-    const m = dgMeta.frequency_hint.match(/(\d+)\s*-\s*(\d+)\s*x\s*w/i);
-    if (m) {
-      const maxFreqPerWeek = parseInt(m[2], 10);
-      maxSessions = MAX_WEEKS_PER_VERORDNUNG * maxFreqPerWeek;
-    }
-  }
-  maxSessions = maxSessions || (dgMeta?.orientierende_menge ?? 36);
-
   const anzahl = Number(rezept.anzahl_einheiten) || 0;
-  if (anzahl > maxSessions) {
-    warnings.push({
-      code: 'OVER_12_WEEKS_HEURISTIC',
-      msg: `Bei LHB/BVB sind bis zu 12 Wochen Behandlungsmenge je Verordnung zulässig. Bei der hinterlegten Frequenz ergibt das ca. ${maxSessions} Einheiten. Angegeben: ${anzahl}. Bitte ärztliche Bestätigung sichern.`,
-      field: 'anzahl_einheiten',
-      heuristic_max: maxSessions,
-      regulation: 'KBV PraxisWissen Heilmittel 2026 — LHB/BVB-Regel'
-    });
-  } else if (anzahl <= 0) {
-    blockers.push({
-      code: 'ANZAHL_REQUIRED',
-      msg: 'Anzahl der Behandlungseinheiten fehlt.',
-      field: 'anzahl_einheiten'
-    });
+  let maxSessions = null;
+
+  if (hasDgMismatch) {
+    // Ohne passende Diagnosegruppe greift die LHB/BVB-Ausnahme nicht (HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1):
+    // 12-Wochen-Heuristik überspringen; Regelhöchstmenge nur prüfen, wenn DG-Metadaten bekannt sind (kein 6er-Fallback).
+    if (anzahl <= 0) {
+      blockers.push({
+        code: 'ANZAHL_REQUIRED',
+        msg: 'Anzahl der Behandlungseinheiten fehlt.',
+        field: 'anzahl_einheiten'
+      });
+    } else if (dgMeta?.hoechstmenge != null && anzahl > dgMeta.hoechstmenge) {
+      warnings.push({
+        code: 'OVER_HOECHSTMENGE',
+        msg: `Für Diagnosegruppe ${rezept.diagnosegruppe} liegt die Regelhöchstmenge bei ${dgMeta.hoechstmenge} Behandlungseinheiten je Verordnung (angegeben: ${anzahl}). Bei nicht passender Diagnosegruppe greift die LHB/BVB-Ausnahme nicht.`,
+        field: 'anzahl_einheiten',
+        max_allowed: dgMeta.hoechstmenge,
+        requested: anzahl,
+        regulation: 'HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1',
+        requires_confirmation: true
+      });
+    }
+  } else {
+    // Compute max sessions: 12 weeks × frequency hint upper bound from DG metadata
+    if (dgMeta?.frequency_hint) {
+      const m = dgMeta.frequency_hint.match(/(\d+)\s*-\s*(\d+)\s*x\s*w/i);
+      if (m) {
+        const maxFreqPerWeek = parseInt(m[2], 10);
+        maxSessions = MAX_WEEKS_PER_VERORDNUNG * maxFreqPerWeek;
+      }
+    }
+    maxSessions = maxSessions || (dgMeta?.orientierende_menge ?? 36);
+
+    if (anzahl > maxSessions) {
+      warnings.push({
+        code: 'OVER_12_WEEKS_HEURISTIC',
+        msg: `Bei LHB/BVB sind bis zu 12 Wochen Behandlungsmenge je Verordnung zulässig. Bei der hinterlegten Frequenz ergibt das ca. ${maxSessions} Einheiten. Angegeben: ${anzahl}. Bitte ärztliche Bestätigung sichern.`,
+        field: 'anzahl_einheiten',
+        heuristic_max: maxSessions,
+        regulation: 'KBV PraxisWissen Heilmittel 2026 — LHB/BVB-Regel'
+      });
+    } else if (anzahl <= 0) {
+      blockers.push({
+        code: 'ANZAHL_REQUIRED',
+        msg: 'Anzahl der Behandlungseinheiten fehlt.',
+        field: 'anzahl_einheiten'
+      });
+    }
   }
 
   const ausstellung = parseIsoDatum(rezept.ausstellungsdatum);
@@ -106,23 +131,27 @@ export function validateLhbBvb(rezept) {
   blockers.push(...fristPruefung.blockers);
   warnings.push(...fristPruefung.warnings);
 
+  const lhbTyp = entry.physio ? 'lhb_bvb_physio' : (entry.ergo ? 'lhb_bvb_ergo' : 'lhb_bvb');
+
   return {
     ok: blockers.length === 0,
     warnings,
     blockers,
     computed: {
-      verordnung_typ: entry.physio ? 'lhb_bvb_physio' : (entry.ergo ? 'lhb_bvb_ergo' : 'lhb_bvb'),
+      verordnung_typ: hasDgMismatch ? 'standard' : lhbTyp,
       lhb_bvb_diagnose: entry.diagnose,
       allowed_diagnosegruppen: entry.diagnosegruppen,
       hinweis: entry.hinweis,
       max_sessions_heuristic: maxSessions,
-      max_weeks_per_verordnung: MAX_WEEKS_PER_VERORDNUNG,
+      max_weeks_per_verordnung: hasDgMismatch ? null : MAX_WEEKS_PER_VERORDNUNG,
       latest_start_date: fristPruefung.latestStartIso,
-      exempt_from_wirtschaftlichkeitspruefung: true,
+      exempt_from_wirtschaftlichkeitspruefung: !hasDgMismatch,
       zuzahlung_required: true,
       zuzahlung_percent: 10,
       zuzahlung_eur_per_blatt: 10,
-      regulation_source: 'KBV Diagnoseliste § 32 Abs. 1a SGB V / § 106b Abs. 2 Satz 4 SGB V'
+      regulation_source: hasDgMismatch
+        ? 'HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1'
+        : 'KBV Diagnoseliste § 32 Abs. 1a SGB V / § 106b Abs. 2 Satz 4 SGB V'
     }
   };
 }

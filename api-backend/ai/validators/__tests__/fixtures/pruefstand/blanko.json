@@ -179,8 +179,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "M75.- EX Schulterläsionen"
     },
-    "status": "befund",
-    "grund": "Katalog hält M75.-, S43.-, S46.-, S49.- nur als wörtliche Schlüssel; echte Kodes werden nicht gefunden → BLANKO_NICHT_VERFUEGBAR."
+    "status": "aktiv"
   },
   {
     "id": "BLK-008",
@@ -206,8 +205,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "S42.0 - EX Fraktur der Klavikula"
     },
-    "status": "befund",
-    "grund": "S42.0-, S42.1-, S42.2- fehlen im Katalog (blanko_physio_shoulder)."
+    "status": "aktiv"
   },
   {
     "id": "BLK-009",

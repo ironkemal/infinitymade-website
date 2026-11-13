@@ -683,4 +683,108 @@ test('blanko (BLK-006): is_dringend verkürzt spätesten Beginn auf 14 Tage (Tag
   assert.equal(rVorher.computed.total_bonuses_eur, null);
 });
 
+// ── Paket C: Katalog-Parser, Wildcard-Lookup, DG_MISMATCH_LHB ────────────────
+test('catalog (Paket C): Trim, Kleinschreibung, Wildcards (M75.1, S42.00, G35.10, H81.0), G73.6* und Exakt-Vorrang', () => {
+  // Blanko Schulter-Wildcards
+  const m75 = lookupBlankoShoulder('  m75.1 ');
+  assert.ok(m75, 'm75.1 muss auf M75.- matchen');
+  assert.equal(m75.diagnosegruppe, 'EX');
+
+  const s42 = lookupBlankoShoulder(' s42.00 ');
+  assert.ok(s42, 's42.00 muss auf S42.0- matchen');
+  assert.equal(s42.diagnosegruppe, 'EX');
+  assert.equal(lookupBlankoShoulder('S42.0 -')?.diagnosegruppe, 'EX');
+  assert.equal(lookupBlankoShoulder('S42.10')?.diagnosegruppe, 'EX');
+  assert.equal(lookupBlankoShoulder('S42.21')?.diagnosegruppe, 'EX');
+  assert.equal(lookupBlankoShoulder('S42.4'), null);
+
+  // LHB/BVB 4-stellige und 3-stellige Wildcards + Trim/Lowercase
+  const g35 = lookupLhbBvb('  g35.10  ');
+  assert.ok(g35, 'g35.10 muss auf G35.1- matchen');
+  assert.deepEqual(g35.diagnosegruppen, ['ZN', 'EN1', 'EN2', 'SC', 'ST1', 'SP5', 'SP6']);
+
+  const h81 = lookupLhbBvb('h81.0');
+  assert.ok(h81, 'h81.0 muss auf H81.- matchen');
+  assert.match(h81.hinweis || '', /70\. Lebensjahr/);
+
+  // Sternchen-ICD (G73.6*) und Range vs. Exakt-Vorrang (C71.0 vs. C50.9)
+  assert.ok(lookupLhbBvb('G73.6'));
+  assert.ok(lookupLhbBvb(' g73.6* '));
+  const c71 = lookupLhbBvb('C71.0');
+  assert.ok(c71?.diagnosegruppen.includes('ZN'), 'Exaktes C71.0 hat Vorrang vor C00-C97');
+  const c50 = lookupLhbBvb('c50.9');
+  assert.deepEqual(c50?.diagnosegruppen, ['LY']);
+  assert.equal(lookupLhbBvb('C98.0'), null);
+  assert.equal(lookupLhbBvb('M750'), null);
+});
+
+test('catalog (Paket C): KBV-Diagnoseliste vollständig & frei von Nachbarzeilen-Leckage', () => {
+  assert.equal(Object.keys(heilmittelCatalog.lhb_bvb).length, 416);
+  assert.equal(Object.keys(heilmittelCatalog.blanko_physio_shoulder).length, 65);
+
+  const g60 = lookupLhbBvb('G60.0');
+  assert.deepEqual(g60.diagnosegruppen, ['WS', 'EX', 'PN', 'SB2', 'EN3', 'SP3']);
+  assert.equal(g60.hinweis, null);
+
+  const q66 = lookupLhbBvb('Q66.0');
+  assert.deepEqual(q66.diagnosegruppen, ['EX', 'SB2']);
+
+  assert.equal(lookupLhbBvb('G61.0').hinweis, null);
+  assert.match(lookupLhbBvb('G61.8').hinweis || '', /CIDP/);
+  assert.equal(lookupLhbBvb('R15').hinweis, 'ab vollendetem 70. Lebensjahr');
+
+  // Zweit-ICDs bei Doppelcodes bleiben strukturiert erhalten
+  assert.deepEqual(lookupLhbBvb('M47.9-').second_icds, ['G99.2', 'G55.2']);
+  assert.deepEqual(lookupBlankoShoulder('M24.41').second_icds, [null, 'Z98.88']);
+});
+
+test('lhbBvb (Paket C / gkv-302): DG_MISMATCH_LHB steuert Höchstmenge & Standard-computed-Felder', () => {
+  // Unbekannte DG SB1 (nicht in diagnosegruppen.json): KEIN 6er-Fallback, KEINE OVER_HOECHSTMENGE
+  const rUnknownDg = validateLhbBvb({
+    icd10: 'Q66.0',
+    diagnosegruppe: 'SB1',
+    anzahl_einheiten: 10,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.ok(rUnknownDg.warnings.find(w => w.code === 'DG_MISMATCH_LHB'));
+  assert.equal(rUnknownDg.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), undefined);
+  assert.equal(rUnknownDg.warnings.find(w => w.code === 'OVER_12_WEEKS_HEURISTIC'), undefined);
+  assert.equal(rUnknownDg.computed.exempt_from_wirtschaftlichkeitspruefung, false);
+  assert.equal(rUnknownDg.computed.verordnung_typ, 'standard');
+  assert.equal(rUnknownDg.computed.max_weeks_per_verordnung, null);
+  assert.equal(rUnknownDg.computed.regulation_source, 'HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1');
+
+  // Bekannte Physio-DG CS (Regelhöchstmenge 6) bei 40 Einheiten: OVER_HOECHSTMENGE, aber KEINE OVER_12_WEEKS_HEURISTIC
+  const rKnownDg = validateLhbBvb({
+    icd10: 'G60.0',
+    diagnosegruppe: 'CS',
+    anzahl_einheiten: 40,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.ok(rKnownDg.warnings.find(w => w.code === 'DG_MISMATCH_LHB'));
+  const overHm = rKnownDg.warnings.find(w => w.code === 'OVER_HOECHSTMENGE');
+  assert.ok(overHm, JSON.stringify(rKnownDg.warnings));
+  assert.equal(overHm.max_allowed, 6);
+  assert.equal(overHm.requested, 40);
+  assert.equal(rKnownDg.warnings.find(w => w.code === 'OVER_12_WEEKS_HEURISTIC'), undefined);
+  assert.equal(rKnownDg.computed.exempt_from_wirtschaftlichkeitspruefung, false);
+  assert.equal(rKnownDg.computed.verordnung_typ, 'standard');
+  assert.equal(rKnownDg.computed.max_weeks_per_verordnung, null);
+  assert.equal(rKnownDg.computed.regulation_source, 'HeilM-RL § 7 Abs. 5 / § 8 Abs. 2 S. 1');
+});
+
+test('blanko (Paket C): NOT_ON_BLANKO_LIST nennt tatsächliche Kataloggröße (65)', () => {
+  const r = validateBlanko({
+    icd10: 'M54.5',
+    diagnosegruppe: 'EX',
+    heilmittel_feld_text: 'BLANKOVERORDNUNG',
+    ausstellungsdatum: '2026-03-02'
+  });
+  const blk = r.blockers.find(b => b.code === 'NOT_ON_BLANKO_LIST');
+  assert.ok(blk);
+  assert.match(blk.msg, /65 zulässige EX-Diagnosen/);
+  assert.doesNotMatch(blk.msg, /114/);
+});
+
+
 

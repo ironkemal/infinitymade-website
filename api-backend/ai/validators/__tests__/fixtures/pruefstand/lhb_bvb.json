@@ -231,8 +231,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
     },
-    "status": "befund",
-    "grund": "heilmittel-catalog.json führt bei G60.0 zusätzlich CS, SO4, SB1 (Kürzel der Nachbarzeilen) → keine Warnung."
+    "status": "aktiv"
   },
   {
     "id": "LHB-010",
@@ -309,8 +308,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "Q66.0 Pes equinovarus congenitus (Klumpfuß) EX SB2"
     },
-    "status": "befund",
-    "grund": "heilmittel-catalog.json führt bei Q66.0 zusätzlich SB1 und SB3 → keine Warnung."
+    "status": "aktiv"
   },
   {
     "id": "LHB-013",
@@ -415,8 +413,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "G35.1 - Multiple Sklerose mit vorherrschend"
     },
-    "status": "befund",
-    "grund": "heilmittel-catalog.json enthält 238 von 400 ICD-Zeilen der Liste (162 fehlen, u. a. G35.1–G35.9). Fehlende Kodes laufen als Standardrezept: Engine standard + OVER_HOECHSTMENGE."
+    "status": "aktiv"
   },
   {
     "id": "LHB-017",
@@ -467,8 +464,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "R15 Stuhlinkontinenz SO2 ab vollendetem 70. Lebensjahr"
     },
-    "status": "befund",
-    "grund": "Hinweis fehlt im Katalog (hinweis: null). Alterskriterien sind nach § 7 Abs. 7 HeilM-RL bindend."
+    "status": "aktiv"
   },
   {
     "id": "LHB-019",
@@ -494,8 +490,7 @@
       "version": "KBV-Diagnoseliste, Stand 01.01.2026",
       "zitat": "G61.0 Guillain-Barré-Syndrom PN EN3"
     },
-    "status": "befund",
-    "grund": "Katalog ordnet G61.0 den CIDP-Hinweis der Nachbarzeile (G61.8) zu → falsche Bedingung wird angezeigt."
+    "status": "aktiv"
   },
   {
     "id": "LHB-020",

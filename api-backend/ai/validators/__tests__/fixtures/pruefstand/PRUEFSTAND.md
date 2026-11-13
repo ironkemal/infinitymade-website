@@ -61,8 +61,8 @@ Gesamt: **122 Fälle**.
 
 | Status | Fälle |
 |---|---|
-| aktiv | 101 |
-| befund | 10 |
+| aktiv | 108 |
+| befund | 3 |
 | bewusst | 11 |
 
 ## Aufbau eines Falls
@@ -101,14 +101,7 @@ Gesamt: **122 Fälle**.
 
 | id | Regel (Soll laut Quelle) | Was der Validator tut | Quelle und Zitat |
 |---|---|---|---|
-| BLK-007 | Blanko: M75.1 fällt unter „M75.-" der Blanko-Liste | Katalog hält M75.-, S43.-, S46.-, S49.- nur als wörtliche Schlüssel; echte Kodes werden nicht gefunden → BLANKO_NICHT_VERFUEGBAR. | Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1579) — „M75.- EX Schulterläsionen" |
-| BLK-008 | Blanko: S42.00 (Fraktur der Klavikula): Liste führt »S42.0 -« | S42.0-, S42.1-, S42.2- fehlen im Katalog (blanko_physio_shoulder). | Abschnitt 2, Physiotherapie ab 1. November 2024 (Z. 1613) — „S42.0 - EX Fraktur der Klavikula" |
 | LHB-006 | LHB/BVB: G10 + ZN, 37 Einheiten übersteigen 12 Wochen bei Frequenzempfehlung 1-3x | diagnosegruppen.json führt ZN mit frequency_hint „2-5 x wöchentlich" → Schwelle 60 statt 36. Katalog nennt für ZN 1-3x wöchentlich. | Heilmittelkatalog I, Diagnosegruppe ZN, Frequenzempfehlung (Z. 2759) — „- 1-3x wöchentlich" |
-| LHB-009 | LHB/BVB: G60.0 + CS: Diagnosegruppe nicht bei diesem ICD gelistet | heilmittel-catalog.json führt bei G60.0 zusätzlich CS, SO4, SB1 (Kürzel der Nachbarzeilen) → keine Warnung. | Abschnitt 1, Zeile G60.0 (Z. 251) — „G60.0 Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3" |
-| LHB-012 | LHB/BVB: Q66.0 + SB1: SB1 ist bei Q66.0 nicht gelistet (nur SB2) | heilmittel-catalog.json führt bei Q66.0 zusätzlich SB1 und SB3 → keine Warnung. | Abschnitt 1, Zeile Q66.0 (Z. 841) — „Q66.0 Pes equinovarus congenitus (Klumpfuß) EX SB2" |
-| LHB-016 | LHB/BVB: G35.10 + ZN: Liste führt »G35.1 -« (alle Kodes der Kategorie) | heilmittel-catalog.json enthält 238 von 400 ICD-Zeilen der Liste (162 fehlen, u. a. G35.1–G35.9). Fehlende Kodes laufen als Standardrezept: Engine standard + OVER_HOECHSTMENGE. | Abschnitt 1, Zeile G35.1 (Z. 196) — „G35.1 - Multiple Sklerose mit vorherrschend" |
-| LHB-018 | LHB/BVB: R15 + SO2: Alterskriterium „ab vollendetem 70. Lebensjahr" muss angezeigt werden | Hinweis fehlt im Katalog (hinweis: null). Alterskriterien sind nach § 7 Abs. 7 HeilM-RL bindend. | Abschnitt 1, Zeile R15 (Z. 1230–1231) — „R15 Stuhlinkontinenz SO2 ab vollendetem 70. Lebensjahr" |
-| LHB-019 | LHB/BVB: G61.0 + PN: bei diesem ICD steht keine Spezifikation | Katalog ordnet G61.0 den CIDP-Hinweis der Nachbarzeile (G61.8) zu → falsche Bedingung wird angezeigt. | Abschnitt 1, Zeile G61.0 (Z. 258) — „G61.0 Guillain-Barré-Syndrom PN EN3" |
 | PHY-STD-011 | Physio: SO5 mit 6 Einheiten (Diagnosegruppe steht im Katalog) | SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt. | Heilmittelkatalog I, Diagnosegruppe SO5 (Z. 3328–3329) — „Höchstmenge je VO: - bis zu 6x/VO" |
 | PHY-STD-012 | Physio: EX3 ist keine Diagnosegruppe des geltenden Katalogs (nur EX, bis zu 6x/VO) | diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie. | Heilmittelkatalog I, Diagnosegruppe EX (Z. 2603–2604) — „Höchstmenge je VO: - bis zu 6x/VO" |
 
@@ -119,14 +112,12 @@ Gesamt: **122 Fälle**.
   kein Fall.)
 - **Frequenzempfehlung** fehlt für DF/NF/QF (`null`; Katalog: „alle 4 bis 6 Wochen") und UI2
   (`null`; Katalog: „nach Bedarf"). PN steht mit „2-3 x" statt 1-3x.
-- **LHB/BVB-Katalog** (`heilmittel-catalog.json`): 238 von 400 ICD-Zeilen der Liste vorhanden.
-  Bei 10 von 16 Stichproben-ICDs enthält die Diagnosegruppen-Liste Kürzel der Nachbarzeilen
-  (u. a. G60.0, G61.0, M45.0, Q66.0, R15, G54.6, M23.5, Z96.60, B94.1, G95.0). Hinweise fehlen
-  (R15, G54.6, E41, C70.0, E88.20) oder sind verklebt („…AkutereignisI60" bei G95.0).
-- **Zweit-ICD** (Spalte „2. ICD-10", z. B. Z98.88 bei M23.5, Z96.60, M24.41) wird nirgends geprüft.
-- **`lookupLhbBvb` / `lookupBlankoShoulder`** vergleichen nur nach `trim()`: Kleinschreibung oder
-  eine Komma-Liste („G60.0, M54.5") führen zu „nicht gefunden".
-- Kommentar und Meldung in `blankoRules.js` nennen „114" Blanko-Diagnosen, der Katalog hat 62.
+- **Zweit-ICD** (Spalte „2. ICD-10", z. B. `Z98.88` bei `M23.5-`, `Z96.60`, `M24.41`; `Z43.0` bei
+  `Z99.0`; `G99.2`/`G55.x` bei `M47.0-`..`M51.1`) ist in `heilmittel-catalog.json` strukturiert
+  hinterlegt (`second_icd`/`second_icds`), wird zur Laufzeit in den Regeln aber noch nicht geprüft.
+- **`lookupLhbBvb` / `lookupBlankoShoulder`** normalisieren Eingaben per `trim().toUpperCase()`
+  inkl. Wildcards (`XXX.-`, `XXX.Y-`, `G73.6*`, `C00-C97`); kommaseparierte Listen (z. B.
+  „G60.0, M54.5") werden jedoch nicht aufgesplittet.
 
 ## Bewusste Abweichungen (kein Fehler)
 
