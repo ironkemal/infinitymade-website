@@ -1284,3 +1284,14 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
 - Kopplung: Wer das Markup von `renderGapsForDate` ändert (`.gap-card-time` „HH:MM - HH:MM“, `.gap-empty`, `.gaps-loading`,
   `#gapsDateLabel` „Freie Zeiten“), prüft `freiHtml` mit.
 - Status: geschrieben im Worktree `redesign-delta-20261112`, Commit und Kartentazeleme durch den Lead.
+
+### 13.11.2026 · V2.12b Patientensuche unter 900 px über Lupen-Knopf (commit 7c2f1f0f, neues Design)
+- Innere Funktion `oeffne(an, fokusZurueck)` und Lupen-Knopf `.px-suche-knopf` in `montierePatientensuche`
+  (`module/kopf-suche-ansicht.js`), nicht exportiert.
+- Niye: Melih 13.11. „mach“. Unter 900 px blendet `design/shell.css` die Suche der Kopfleiste aus, Handy-Nutzer kamen nur
+  über Schublade → Patienten zur Suche.
+- Nerede: nur die Kopfleiste im neuen Design. Öffnet dasselbe `#pxSuche` mit demselben `attachPatientSearch`-Picker und
+  derselben Quelle `ensureLeadsCache`, keine neue Abfrage. Ablauf (Schließen, Fokus zurück, Escape, Klick/Fokus außerhalb)
+  wie in `kopfMenue` (`module/kopf-menue.js:46–51/81/90–91`). Bewusst nicht über `kopfMenue`: dort gilt role="menu".
+  `schublade-neu.js` KOPF_BEREICHE kennt jetzt auch `.topbar .px-suche-knopf`, damit der Knopf hinter der offenen
+  Schublade inert ist.
