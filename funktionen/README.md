@@ -1295,3 +1295,20 @@ aber nicht als generierte App-Funktionen ausgewiesen. Keine manuelle Indexergän
   wie in `kopfMenue` (`module/kopf-menue.js:46–51/81/90–91`). Bewusst nicht über `kopfMenue`: dort gilt role="menu".
   `schublade-neu.js` KOPF_BEREICHE kennt jetzt auch `.topbar .px-suche-knopf`, damit der Knopf hinter der offenen
   Schublade inert ist.
+
+### 14.11.2026 · V2.09b Dokumentsuche der Inhaberin in der Kopfleiste (commit a60fc1e4, neues Design)
+- Neu `module/kopf-dokumente.js`: `createDokumentSuche`, `dokumenteErlaubt`, `dokumentScopeKey`, `dokumentLabel`,
+  `dokumentHinweis`, `mitFehlerMelder`.
+  - Niye: Melih 28.10. „zunächst nur Inhaber“ und 13.11. „ja“. Die Inhaberin sucht Verordnungen und Rechnungen in der
+    Kopfleiste. Vorher gab es keine Suche nach Nummer und Name und kein Label „Belegnummer · Patient“ (Vorab-Prüfung 13.11.).
+  - Nerede: nur `kopf-suche-ansicht.js` (gleicher `attachPatientSearch`-Picker, typisierte IDs `vo:`/`rg:`). Quellen:
+    `ladeAktiveVerordnungen` + `ladeHandlungsbedarfScope` (Standortfilter) sowie `loadRechnungen`. Keine eigene Abfrage.
+  - `mitFehlerMelder`: Proxy um den Client, weil `ladeAktiveVerordnungen` Fehler still zu `[]` macht (guvenlik). Das
+    gemeinsame Modul wurde bewusst nicht geändert (modulweiter Zustand, `?v`-Kaskade). Wer es später ändert, prüft den
+    Proxy mit.
+- `module/verordnung-liste.js`: Export `oeffneVerordnungAusSuche`, eine Hülle um das private `oeffne`. Sie verwirft keine
+  ungespeicherte Maske. Niye und Nerede: Sprung aus der Dokumentsuche, aufgerufen über den dashboard.js-Kontext
+  (`oeffneVerordnung`). Kein zweiter Weg: Die Patientenakte nutzt weiter `zeigeVerordnungDetail` direkt.
+- `dashboard.js` `loadRechnungen`: gibt jetzt die Liste zurück, bei Fehler `null` (vorher `undefined`). Die bisherigen
+  Aufrufer (switchPanel, openInvEditor, saveInvoice, saveDataSharing, neuLaden) nutzen den Rückgabewert nicht.
+- `tools/redesign-harness.mjs`: Option `fixtureAnpassen`. Probe v209b setzt damit die Fixture-IDs auf UUID.
