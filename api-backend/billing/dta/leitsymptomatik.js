@@ -37,6 +37,7 @@ export const LEITSYMPTOMATIK_MUSTER = /^([01]{4}|9999)$/;
  * UII = b))", Podologie-Vertrag Anlage 3 Buchstabe l), Lesefassung 17.06.2025.
  *
  * Nur Rueckfallebene: steht auf dem Papier ein Kreuz, gilt das Kreuz.
+ * @type {Record<string, string>}
  */
 const DG_BUCHSTABE = { UI1: 'a', UI2: 'b' };
 

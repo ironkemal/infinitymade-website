@@ -21,14 +21,67 @@
  *   und umgekehrt. Drift wird mit node check_diagnosegruppen_icd.js --check geprueft.
  */
 
+/**
+ * @typedef {object} IcdRuleEntry
+ * @property {string} re
+ * @property {string} [note]
+ */
+
+/**
+ * @typedef {object} IcdDgRule
+ * @property {IcdRuleEntry[]} [icd_accept]
+ * @property {IcdRuleEntry[]} [icd_exclude]
+ * @property {IcdRuleEntry[]} [icd_accept_unsicher]
+ * @property {IcdRuleEntry[]} [icd_auto_select]
+ * @property {string} [enforcement]
+ */
+
+/**
+ * @typedef {object} MatchIcdResult
+ * @property {'skip' | 'ok' | 'unsicher' | 'mismatch'} status
+ * @property {string[]} matched
+ * @property {string[]} excluded
+ * @property {string[]} hints
+ */
+
+/**
+ * @typedef {object} IcdDgInput
+ * @property {string | ReadonlyArray<unknown> | null | undefined} [icd10]
+ * @property {string | null | undefined} [diagnosegruppe]
+ * @property {string | null | undefined} [diagnosetext]
+ */
+
+/**
+ * @typedef {object} IcdDgPreflightBefund
+ * @property {'fehler' | 'warnung'} art
+ * @property {string} dg
+ * @property {string[]} kodes
+ * @property {string[]} hints
+ */
+
+/**
+ * @typedef {object} IcdDgWarning
+ * @property {'ICD_DG_MISMATCH' | 'ICD_DG_MISMATCH_STRENG'} code
+ * @property {string} msg
+ * @property {'icd10'} field
+ * @property {string} diagnosegruppe
+ * @property {string[]} affected_codes
+ * @property {string[]} hints
+ */
+
 // RegExp-Cache -- compiled einmal pro re-String, nie doppelt.
+/** @type {Map<string, RegExp>} */
 const _reCache = new Map();
 
+/**
+ * @param {string} re
+ * @returns {RegExp}
+ */
 function getRegExp(re) {
   if (!_reCache.has(re)) {
     _reCache.set(re, new RegExp(re));
   }
-  return _reCache.get(re);
+  return /** @type {RegExp} */ (_reCache.get(re));
 }
 
 /**
@@ -37,6 +90,9 @@ function getRegExp(re) {
  * - Alle Leerzeichen entfernt
  * - Zeichen dagger, * und ! bleiben erhalten
  * - Nichts anderes wird entfernt
+ *
+ * @param {unknown} code
+ * @returns {string}
  */
 export function normalizeIcd(code) {
   if (typeof code !== 'string') return '';
@@ -55,9 +111,13 @@ const ICD_SHAPE = /^[A-Z]\d{2}(?:\.\d{1,2})?[†*!]?$/;
 /**
  * Parst eine rohe ICD-Angabe (String mit Komma-/Semikolon-Trennung oder Array)
  * und gibt ein Array normalisierter, nicht leerer Kodes zurueck.
+ *
+ * @param {string | ReadonlyArray<unknown> | null | undefined} raw
+ * @returns {string[]}
  */
 export function parseIcdList(raw) {
   if (!raw) return [];
+  /** @type {readonly unknown[]} */
   const items = Array.isArray(raw)
     ? raw
     : String(raw).split(/[,;\n]/);
@@ -77,11 +137,12 @@ export function parseIcdList(raw) {
 /**
  * Prueft eine Menge normalisierter ICD-Kodes gegen eine Diagnosegruppen-Regel.
  *
- * @param {string[]} codes  - Bereits normalisierte Kodes (Ausgabe von parseIcdList)
- * @param {object}   rule   - Regelobjekt aus diagnosegruppen.json (podologie-Abschnitt)
- * @returns {{ status: 'skip'|'ok'|'unsicher'|'mismatch', matched: string[], excluded: string[], hints: string[] }}
+ * @param {string[] | null | undefined} codes  - Bereits normalisierte Kodes (Ausgabe von parseIcdList)
+ * @param {IcdDgRule | null | undefined} rule  - Regelobjekt aus diagnosegruppen.json (podologie-Abschnitt)
+ * @returns {MatchIcdResult}
  */
 export function matchIcdToDg(codes, rule) {
+  /** @type {MatchIcdResult} */
   const result = { status: 'skip', matched: [], excluded: [], hints: [] };
 
   // Keine Kodes => kein ICD angegeben => skip (keine Warnung, ICD ist nicht Pflicht)
@@ -95,6 +156,7 @@ export function matchIcdToDg(codes, rule) {
   const unsicherRules = rule?.icd_accept_unsicher ?? [];
 
   // Schritt 1: Ausschluesse identifizieren
+  /** @type {Set<string>} */
   const excludedSet = new Set();
   for (const code of codes) {
     for (const entry of excludeRules) {
@@ -128,6 +190,7 @@ export function matchIcdToDg(codes, rule) {
   }
 
   // Schritt 3: icd_accept_unsicher
+  /** @type {string[]} */
   const unsicherMatched = [];
   for (const code of activeCodes) {
     for (const entry of unsicherRules) {
@@ -153,6 +216,10 @@ export function matchIcdToDg(codes, rule) {
 
 /**
  * Gibt alle Diagnosegruppen-Kuerzel zurueck, deren Regel die Kodemenge mit Status 'ok' akzeptiert.
+ *
+ * @param {string[] | null | undefined} codes
+ * @param {Record<string, IcdDgRule | null | undefined> | null | undefined} rulesByDg
+ * @returns {string[]}
  */
 export function dgsAcceptingIcd(codes, rulesByDg) {
   if (!rulesByDg) return [];
@@ -165,10 +232,15 @@ export function dgsAcceptingIcd(codes, rulesByDg) {
  * Automatische Diagnosegruppen-Selektion ueber icd_auto_select-Eintraege.
  * Ausschluesse (icd_exclude) gelten weiterhin.
  * Passt genau eine DG => gibt deren Kuerzel zurueck; sonst null.
+ *
+ * @param {string[] | null | undefined} codes
+ * @param {Record<string, IcdDgRule | null | undefined> | null | undefined} rulesByDg
+ * @returns {string | null}
  */
 export function autoSelectDg(codes, rulesByDg) {
   if (!codes || codes.length === 0 || !rulesByDg) return null;
 
+  /** @type {string[]} */
   const matches = [];
 
   for (const [dg, rule] of Object.entries(rulesByDg)) {
@@ -176,6 +248,7 @@ export function autoSelectDg(codes, rulesByDg) {
     if (!autoRules || autoRules.length === 0) continue;
 
     const excludeRules = rule?.icd_exclude ?? [];
+    /** @type {Set<string>} */
     const excludedSet = new Set();
     for (const code of codes) {
       for (const entry of excludeRules) {
@@ -201,6 +274,9 @@ const LITERAL_ANCHORED_RE = /^\^[A-Z0-9.*!\\]+\$$/;
  * Wenn icd_accept genau einen Eintrag enthaelt und dessen re ein vollstaendig
  * verankertes Literal ist (^..$ ohne Regex-Metazeichen ausser \.), gibt diese
  * Funktion den Kode als Klartext zurueck. Fuer UI1/UI2 ergibt das "L60.0".
+ *
+ * @param {IcdDgRule | null | undefined} rule
+ * @returns {string | null}
  */
 export function soleIcdForDg(rule) {
   const acceptRules = rule?.icd_accept;
@@ -211,18 +287,12 @@ export function soleIcdForDg(rule) {
 }
 
 /**
- * Erzeugt Warnungen fuer das warnings-Array von standardRules.js / validateStandard.
- * Gibt NIEMALS Blocker zurueck -- nur Warnungen.
- *
- * @param {{ icd10: string|string[]|undefined, diagnosegruppe: string|undefined }} input
- * @param {object} rulesByDg - Ausgabe von catalog.getIcdDgRules()
- * @returns {Array}
- */
-/**
  * Diagnosegruppen, in denen ein Diagnosetext (Freitext) einen unpassenden ICD-Satz
  * "heilen" kann: der Blocker wird dann zur Warnung (gkv-302 30.09.2026, SPEC-RULES
  * "Podologie DF/NF/QF: ICD-Satz ohne therapierelevanten Kode"; FAK Podologie Nr. 28).
  * UI1/UI2 NICHT — dort gibt es keinen Freitext-Ausweg.
+ *
+ * @type {Set<string>}
  */
 export const DIAGNOSETEXT_HEILT = new Set(['DF', 'NF', 'QF']);
 
@@ -233,6 +303,10 @@ export const DIAGNOSETEXT_HEILT = new Set(['DF', 'NF', 'QF']);
  *             oder DG ohne Freitext-Ausweg)
  *   warnung = dasselbe, aber der Diagnosetext traegt die Verordnung (DF/NF/QF)
  * `unsicher`, `ok`, `skip` und enforcement 'warn' → null (bleiben beim Validator).
+ *
+ * @param {IcdDgInput} input
+ * @param {Record<string, IcdDgRule | null | undefined> | null | undefined} rulesByDg
+ * @returns {IcdDgPreflightBefund | null}
  */
 export function icdDgPreflightBefund({ icd10, diagnosegruppe, diagnosetext }, rulesByDg) {
   if (!diagnosegruppe || !rulesByDg) return null;
@@ -247,6 +321,14 @@ export function icdDgPreflightBefund({ icd10, diagnosegruppe, diagnosetext }, ru
   return { art, dg: dgRoot, kodes: codes, hints };
 }
 
+/**
+ * Erzeugt Warnungen fuer das warnings-Array von standardRules.js / validateStandard.
+ * Gibt NIEMALS Blocker zurueck -- nur Warnungen.
+ *
+ * @param {IcdDgInput} input
+ * @param {Record<string, IcdDgRule | null | undefined> | null | undefined} rulesByDg - Ausgabe von catalog.getIcdDgRules()
+ * @returns {IcdDgWarning[]}
+ */
 export function checkIcdDg({ icd10, diagnosegruppe, diagnosetext }, rulesByDg) {
   if (!diagnosegruppe || !rulesByDg) return [];
 

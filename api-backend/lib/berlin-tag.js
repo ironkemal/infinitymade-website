@@ -17,7 +17,8 @@ export function berlinHeute(jetzt = new Date()) {
 
 /**
  * Prüft einen Stichtag: echtes Kalenderdatum im Format YYYY-MM-DD.
- * @returns {boolean}
+ * @param {unknown} s
+ * @returns {s is string}
  */
 export function istStichtag(s) {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -43,7 +44,10 @@ const MIDNIGHT_FORMAT = new Intl.DateTimeFormat('en-US', {
   hour: '2-digit', minute: '2-digit', second: '2-digit',
 });
 
-/** UTC-Grenzen eines Berliner Kalendertags; Ende ist exklusiv, auch bei DST. */
+/**
+ * UTC-Grenzen eines Berliner Kalendertags; Ende ist exklusiv, auch bei DST.
+ * @param {unknown} tag
+ */
 export function berlinTagesgrenzen(tag) {
   if (!istStichtag(tag) || tag.startsWith('0000-')) return null;
   const target = new Date(`${tag}T00:00:00Z`);

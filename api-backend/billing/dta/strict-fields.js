@@ -1,6 +1,12 @@
 // TP5 V21 §5.5.3.3: EHE quantity ..4,2; money ..10,2.
 // Numeric syntax is deliberately narrower than Number(): no whitespace-only,
 // exponent notation, booleans, NaN or Infinity. Comma is opt-in for VKZ03.
+/**
+ * @param {unknown} value
+ * @param {number} integerDigits
+ * @param {{ positive?: boolean, comma?: boolean }} [opts]
+ * @returns {boolean}
+ */
 export function isDtaDecimal(value, integerDigits, { positive = false, comma = false } = {}) {
   if (typeof value !== 'number' && typeof value !== 'string') return false;
   const s = String(value).trim();
@@ -13,6 +19,10 @@ export function isDtaDecimal(value, integerDigits, { positive = false, comma = f
 
 // GKV §290 Anlage 1, Stand 02.01.2023, examples C000500021/A000500015.
 // A=01 .. Z=26; alternating weights 1/2; digit sums modulo 10.
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
 export function hasKvnrChecksum(value) {
   if (typeof value !== 'string' || !/^[A-Z]\d{9}$/.test(value)) return false;
   const digits = String(value.charCodeAt(0) - 64).padStart(2, '0') + value.slice(1, 9);

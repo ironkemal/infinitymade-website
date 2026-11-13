@@ -17,6 +17,7 @@
 // (§8.2.1) are NOT included — they live in the externally maintained
 // "Bundeseinheitliches Heilmittelpositionsnummernverzeichnis" from GKV-SV.
 
+/** @type {Readonly<Record<string, string>>} */
 export const VERARBEITUNGSKENNZEICHEN = Object.freeze({
   '01': 'Abrechnung ohne Besonderheiten',
   '02': 'Nachforderung',
@@ -31,6 +32,7 @@ export const RECHNUNGSART = Object.freeze({
   '3': 'Abrechnung über Abrechnungsstelle (mit Inkasso), Zahlung an IK Abrechnungsstelle',
 });
 
+/** @type {Readonly<Record<string, string>>} */
 export const ZUZAHLUNGSKENNZEICHEN = Object.freeze({
   '0': 'keine gesetzliche Zuzahlung',
   '1': 'Zuzahlungsbefreit',
@@ -55,6 +57,7 @@ export const VERORDNUNGSBESONDERHEITEN = Object.freeze({
   '9': 'Verordnung im Rahmen eines Modellvorhabens nach § 64d SGB V',
 });
 
+/** @type {Readonly<Record<string, string>>} */
 export const VERORDNUNGSART_HEILMITTEL = Object.freeze({
   '03': 'orientierende Behandlungsmenge gemäß Heilmittelkatalog (§7 Abs.1-5 HeilM-RL)',
   '04': 'besonderer Verordnungsbedarf / langfristiger Heilmittelbedarf (§7 Abs.6 HeilM-RL)',
@@ -105,6 +108,7 @@ export const BELEGINFORMATION = Object.freeze({
 });
 
 // §8.1.5.1 — Abrechnungscode (LE-Code). Heilmittel = Leistungsbereich B.
+/** @type {Readonly<Record<string, { label: string, leistungsbereich: string }>>} */
 export const ABRECHNUNGSCODE = Object.freeze({
   '11': { label: 'Apotheke (§126 SGB V)', leistungsbereich: 'A' },
   '12': { label: 'Augenoptiker',          leistungsbereich: 'A' },
@@ -224,22 +228,38 @@ export const TARIFBEREICH = Object.freeze({
 
 // Validation helpers ---------------------------------------------------------
 
+/**
+ * @param {string} code
+ * @returns {boolean}
+ */
 export function isPhysioAbrechnungscode(code) {
   return ABRECHNUNGSCODE[code]?.leistungsbereich === 'B';
 }
 
+/**
+ * @param {string} value
+ * @returns {void}
+ */
 export function validateVerordnungsart(value) {
   if (!VERORDNUNGSART_HEILMITTEL[value]) {
     throw new Error(`Invalid Verordnungsart: "${value}". Allowed: ${Object.keys(VERORDNUNGSART_HEILMITTEL).join(', ')}`);
   }
 }
 
+/**
+ * @param {string} value
+ * @returns {void}
+ */
 export function validateVerarbeitungskennzeichen(value) {
   if (!VERARBEITUNGSKENNZEICHEN[value]) {
     throw new Error(`Invalid VKZ: "${value}". Allowed: ${Object.keys(VERARBEITUNGSKENNZEICHEN).join(', ')}`);
   }
 }
 
+/**
+ * @param {string} value
+ * @returns {void}
+ */
 export function validateZuzahlungskennzeichen(value) {
   if (!ZUZAHLUNGSKENNZEICHEN[value]) {
     throw new Error(`Invalid Zuzahlungskennzeichen: "${value}". Allowed: ${Object.keys(ZUZAHLUNGSKENNZEICHEN).join(', ')}`);

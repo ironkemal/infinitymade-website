@@ -47,6 +47,9 @@ export function istVerbotenerAbsender({ kind, absenderIk, softwareHerstellerIk =
  *
  * Aufrufstelle: `builder.js` → `buildDtaFile()`, direkt nach der
  * Absender/Empfänger-Pflichtprüfung.
+ *
+ * @param {{kind: string, absenderIk: string, softwareHerstellerIk?: string|null}} args
+ * @returns {void}
  */
 export function assertNichtSoftwareHerstellerIkAlsAbsender({ kind, absenderIk, softwareHerstellerIk = SOFTWARE_HERSTELLER_IK }) {
   if (istVerbotenerAbsender({ kind, absenderIk, softwareHerstellerIk })) {

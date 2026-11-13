@@ -19,15 +19,23 @@
 
 export const ABRECHENBARE_BEHANDLUNG = new Set(['78010', '78020', '78610']);
 
-/** Gruppe je Position für die Tageshöchstzahl. 78010 und 78020 sind beide „die" Behandlung. */
+/**
+ * Gruppe je Position für die Tageshöchstzahl. 78010 und 78020 sind beide „die" Behandlung.
+ * @type {Record<string, string>}
+ */
 const GRUPPE = { '78010': 'behandlung', '78020': 'behandlung', '78610': 'nagelspange' };
 export const TAGESHOECHSTZAHL = { behandlung: 1, nagelspange: 2 };
 
+/**
+ * @param {unknown} v
+ * @returns {string}
+ */
 const tagVon = (v) => String(v || '').slice(0, 10);
 
 /**
  * Anzahl abrechenbarer Behandlungstage (wie abrechenbareBehandlungstage im Frontend).
- * @param {Array<{behandlungsdatum:string, hpnr_codes:?string[], storniert_am?:?string}>} behandlungen
+ * @param {Array<{behandlungsdatum?: ?string, hpnr_codes?: ?string[], storniert_am?: ?string} | null | undefined> | null | undefined} behandlungen
+ * @returns {number}
  */
 export function abrechenbareBehandlungstage(behandlungen) {
   const tage = new Set();
@@ -41,8 +49,11 @@ export function abrechenbareBehandlungstage(behandlungen) {
 
 /**
  * Zählt je Kalendertag und Gruppe, wie oft eine Behandlung vorkommt.
- * @param {Array} items
- * @param {(x)=>string} datumFn  @param {(x)=>string} posFn  @param {(x)=>number} [anzahlFn]
+ * @template T
+ * @param {T[] | null | undefined} items
+ * @param {(x: T) => unknown} datumFn
+ * @param {(x: T) => unknown} posFn
+ * @param {(x: T) => number | string | null | undefined} [anzahlFn]
  * @returns {Array<{datum:string, gruppe:string, anzahl:number}>}
  */
 export function behandlungstageJeDatum(items, datumFn, posFn, anzahlFn = () => 1) {

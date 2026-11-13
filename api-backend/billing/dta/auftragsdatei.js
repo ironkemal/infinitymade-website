@@ -28,6 +28,11 @@ const ISO_8859_1_KENNUNG = 'I1';
 // --- Feld-Helfer ------------------------------------------------------------
 // Numerisches Feld: rechtsbündig, mit führenden Nullen aufgefüllt (Default-
 // Wert-Regel aus GGT Anlage 2 §1.1 für Feldtyp N).
+/**
+ * @param {string | number | null | undefined} value
+ * @param {number} len
+ * @returns {string}
+ */
 function n(value, len) {
   const s = String(value ?? '');
   if (!/^\d*$/.test(s)) {
@@ -42,6 +47,11 @@ function n(value, len) {
 // Alphanumerisches Feld: linksbündig, mit Leerzeichen aufgefüllt (Default-
 // Wert-Regel aus GGT Anlage 2 §1.1 für Feldtyp A/AN). Kein stilles Abschneiden
 // — ein zu langer Wert ist ein Programmierfehler, kein Datenproblem.
+/**
+ * @param {string | number | null | undefined} value
+ * @param {number} len
+ * @returns {string}
+ */
 function an(value, len) {
   const s = String(value ?? '');
   if (s.length > len) {
@@ -50,6 +60,10 @@ function an(value, len) {
   return s.padEnd(len, ' ');
 }
 
+/**
+ * @param {number} len
+ * @returns {string}
+ */
 const leer = (len) => ' '.repeat(len);
 
 const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
@@ -65,6 +79,10 @@ const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
 // Tag und werden auf Berliner Mitternacht (00:00:00) gesetzt, statt durch UTC-
 // Konvertierung auf 01:00/02:00 zu springen. Nicht existente Kalendertage
 // werden abgewiesen.
+/**
+ * @param {Date | string} d
+ * @returns {string}
+ */
 function fmtDateTime14(d) {
   if (!d) {
     throw new Error(`invalid erstellungsdatum: "${d}"`);

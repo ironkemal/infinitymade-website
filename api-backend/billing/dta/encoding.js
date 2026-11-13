@@ -33,6 +33,11 @@ const RESERVED = [
 // ein kaputter Betrag. Beide Werte laufen durch dieselbe Funktion, deshalb ist
 // die Unterscheidung ein ausdruecklicher Schalter und keine Heuristik —
 // geraten wuerde hier frueher oder spaeter falsch geraten.
+/**
+ * @param {unknown} value
+ * @param {{ komma?: boolean }} [opts]
+ * @returns {string}
+ */
 export function escapeEdifact(value, { komma = false } = {}) {
   if (value === null || value === undefined) return '';
   let s = String(value);
@@ -60,17 +65,30 @@ export function escapeEdifact(value, { komma = false } = {}) {
 // Betraege und Datumsangaben bleiben unberuehrt.
 const FREITEXT = Symbol('edifact.freitext');
 
+/**
+ * @param {unknown} value
+ * @returns {string | { [FREITEXT]: string }}
+ */
 export function freitext(value) {
   if (value === null || value === undefined || value === '') return '';
   return { [FREITEXT]: String(value) };
 }
 
+/**
+ * @param {unknown} v
+ * @returns {v is { [FREITEXT]: string }}
+ */
 export function istFreitext(v) {
   return typeof v === 'object' && v !== null && FREITEXT in v;
 }
 
 // Format a number with German decimal mark and no thousands separator.
 // Used for EUR amounts: 12.50 -> "12,50"
+/**
+ * @param {number | string | null | undefined} eur
+ * @param {number} [decimals=2]
+ * @returns {string}
+ */
 export function fmtAmount(eur, decimals = 2) {
   if (eur === null || eur === undefined || eur === '') return '';
   const n = typeof eur === 'number' ? eur : parseFloat(eur);
@@ -82,6 +100,10 @@ export function fmtAmount(eur, decimals = 2) {
 // Genuine YYYY-MM-DD calendar strings remain unchanged day; timestamps and Date
 // objects are formatted according to Europe/Berlin (DST-safe). Nonexistent
 // dateonly values are rejected instead of normalized.
+/**
+ * @param {Date | string | null | undefined} d
+ * @returns {string}
+ */
 export function fmtDate(d) {
   if (!d) return '';
   if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
@@ -104,7 +126,13 @@ export function fmtDate(d) {
 // Per §302 Anlage 1: trailing empty Kann-fields are dropped (segment ends
 // immediately at last non-empty); empty Kann-fields in the middle keep their
 // `+` placeholder. Composite trailing empties inside a DEG are likewise dropped.
+/**
+ * @param {string} tag
+ * @param {Array<unknown>} [elements=[]]
+ * @returns {string}
+ */
 export function buildSegment(tag, elements = []) {
+  /** @param {unknown} v @returns {string} */
   const kodiere = (v) => istFreitext(v)
     ? escapeEdifact(v[FREITEXT], { komma: true })
     : escapeEdifact(v);

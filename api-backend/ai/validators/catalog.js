@@ -9,6 +9,10 @@ import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * @param {string} name
+ * @returns {any}
+ */
 function loadJson(name) {
   return JSON.parse(readFileSync(join(__dirname, name), 'utf-8'));
 }
@@ -16,6 +20,11 @@ function loadJson(name) {
 export const heilmittelCatalog = loadJson('heilmittel-catalog.json');
 export const diagnosegruppen = loadJson('diagnosegruppen.json');
 
+/**
+ * @param {object} obj
+ * @param {string} key
+ * @returns {boolean}
+ */
 function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -25,6 +34,9 @@ function hasOwn(obj, key) {
  * Matches exact key first, then asterisk partner (`G73.6` <-> `G73.6*`),
  * 4-char subcategory wildcards (`XXX.Y-`), 3-char category wildcards (`XXX.-`),
  * and the inclusive `C00-C97` oncology range when present.
+ * @param {Record<string, any> | null | undefined} entries
+ * @param {unknown} icd
+ * @returns {any}
  */
 function lookupCatalogEntry(entries, icd) {
   if (!entries || typeof icd !== 'string') return null;
@@ -56,12 +68,20 @@ function lookupCatalogEntry(entries, icd) {
   return null;
 }
 
-/** Lookup ICD-10 in LHB/BVB index. Returns entry or null. */
+/**
+ * Lookup ICD-10 in LHB/BVB index. Returns entry or null.
+ * @param {unknown} icd
+ * @returns {Record<string, any> | null}
+ */
 export function lookupLhbBvb(icd) {
   return lookupCatalogEntry(heilmittelCatalog.lhb_bvb, icd);
 }
 
-/** Lookup ICD-10 in Blanko physio shoulder index. Returns entry or null. */
+/**
+ * Lookup ICD-10 in Blanko physio shoulder index. Returns entry or null.
+ * @param {unknown} icd
+ * @returns {Record<string, any> | null}
+ */
 export function lookupBlankoShoulder(icd) {
   return lookupCatalogEntry(heilmittelCatalog.blanko_physio_shoulder, icd);
 }
@@ -72,6 +92,8 @@ export function lookupBlankoShoulder(icd) {
  * Strips trailing -a/-b/-c suffix before lookup.
  * Searches physio first, then podologie (skips _-prefixed meta keys).
  * Returns hoechstmenge/orientierende_menge/frequency_hint or null.
+ * @param {string | null | undefined} dg
+ * @returns {Record<string, any> | null}
  */
 export function getDiagnosegruppe(dg) {
   if (!dg) return null;
@@ -87,6 +109,7 @@ export function getDiagnosegruppe(dg) {
  * Returns the ICD-rule map for all Podologie Diagnosegruppen.
  * Keys with leading _ are metadata and excluded.
  * Shape: { DF: {...}, NF: {...}, QF: {...}, UI1: {...}, UI2: {...} }
+ * @returns {Record<string, any>}
  */
 export function getIcdDgRules() {
   const podo = diagnosegruppen.podologie || {};
