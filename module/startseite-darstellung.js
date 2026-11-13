@@ -87,8 +87,10 @@ export function tageszeile(liste) {
 export function zuErledigen({ anfragen, voUeberfaellig, voBald } = {}) {
   const zeilen = [];
   const zahl = (v) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : 0);
-  if (zahl(voUeberfaellig) > 0) zeilen.push({ id: 'vo-ueberfaellig', titel: 'Verordnung überfällig', text: 'Gültigkeit abgelaufen, bitte prüfen', zahl: zahl(voUeberfaellig), ton: 'bad', ziel: 'verordnungen' });
-  if (zahl(voBald) > 0) zeilen.push({ id: 'vo-bald', titel: 'Verordnung läuft ab', text: 'in den nächsten 7 Tagen', zahl: zahl(voBald), ton: 'warn', ziel: 'verordnungen' });
+  // Wortlaut neutral (gkv-302 + podoloji, 13.11.2026): Die Zahlen kommen aus `gueltig_bis`, das je nach
+  // Speicherweg Beginnfrist, leer oder Blanko-Ende bedeutet. „Gültigkeit abgelaufen“ wäre bei laufender Serie falsch.
+  if (zahl(voUeberfaellig) > 0) zeilen.push({ id: 'vo-ueberfaellig', titel: 'Beginnfrist überschritten', text: 'Behandlungsbeginn prüfen', zahl: zahl(voUeberfaellig), ton: 'bad', ziel: 'verordnungen' });
+  if (zahl(voBald) > 0) zeilen.push({ id: 'vo-bald', titel: 'Beginnfrist endet', text: 'in den nächsten 7 Tagen', zahl: zahl(voBald), ton: 'warn', ziel: 'verordnungen' });
   if (zahl(anfragen) > 0) zeilen.push({ id: 'anfragen', titel: 'Online-Anfragen', text: 'warten auf Antwort', zahl: zahl(anfragen), ton: 'info', ziel: 'anfragen' });
   return zeilen;
 }

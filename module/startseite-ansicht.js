@@ -2,7 +2,7 @@
  * Nur Renderinseln ersetzen Markup; alle aktuellen Aufgaben/KPI/Gaps/Schedule-Knoten
  * werden mit Rückkehrankern bewegt. Eigentum ihrer Handler bleibt beim Bestand.
  */
-import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-darstellung.js?v=20261110p01start';
+import { begruessung, heutigeTermine, alsNaechstes, abstandText, dauerMin, tageszeile, zuErledigen } from './startseite-darstellung.js?v=20261113f601';
 import { uhrzeitBerlin } from './termin-heute.js?v=20261004m113';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SVG = (p, w = 18) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -48,7 +48,7 @@ function naechstesHtml() {
     const { termin, danach } = alsNaechstes(zustand.liste);
     if (!termin) {
       inhalt = `<div class="px-naechstes-kopf"><div class="px-zeile"><h2>Als Nächstes</h2></div>
-        <p class="px-naechstes-leer">${zustand.liste.length ? 'Für heute sind alle Termine vorbei.' : 'Heute stehen keine Termine an.'}</p></div>
+        <p class="px-naechstes-leer">${zustand.liste.length ? 'Heute stehen keine weiteren Termine an.' : 'Heute stehen keine Termine an.'}</p></div>
         <div class="px-naechstes-rumpf"><div class="px-aktionen"><button type="button" class="px-knopf" data-aktion="kalender">${ICON.kalender}<span>Zum Kalender</span></button></div></div>`;
     } else {
       const d = dauerMin(termin);
@@ -86,6 +86,8 @@ function todoHtml() {
   const relevant = [...(inLeiste('anfragen') ? [quellen.anfragen] : []), ...(inLeiste('verordnungen') ? [quellen.voUeberfaellig, quellen.voBald] : [])];
   const bekannt = relevant.length > 0 && relevant.every(n => n !== null);
   const unvollstaendig = relevant.some(n => n === null);
+  // Unbekannt bleibt sichtbar (nie als 0), aber benannt statt pauschal (podoloji 13.11.2026).
+  const fehlt = [inLeiste('anfragen') && quellen.anfragen === null ? 'Online-Anfragen' : '', inLeiste('verordnungen') && (quellen.voUeberfaellig === null || quellen.voBald === null) ? 'Verordnungsfristen' : ''].filter(Boolean);
   const rumpf = zeilen.length
     ? `<div class="px-todo">${zeilen.map((z) => {
       const ziel = inLeiste(z.ziel) ? z.ziel : '';
@@ -93,7 +95,7 @@ function todoHtml() {
         <span class="kachel">${TODO_ICON[z.id] || ''}</span>
         <span class="text"><b>${esc(z.titel)}</b><small>${esc(z.text)}</small></span>
         <span class="zahl">${z.zahl}</span><span class="pfeil">${ziel ? ICON.pfeil : ''}</span></button>`;
-    }).join('')}</div>${unvollstaendig ? '<div class="px-karte-zustand"><p>Hinweise sind noch nicht vollständig verfügbar.</p></div>' : ''}`
+    }).join('')}</div>${unvollstaendig ? `<div class="px-karte-zustand"><p>Nicht verfügbar: ${esc(fehlt.join(', '))}.</p></div>` : ''}`
     : bekannt
       ? `<div class="px-karte-zustand px-karte-zustand--ruhig">${ICON.haken}<p>Nichts offen. Gute Arbeit.</p></div>`
       : '<div class="px-karte-zustand"><p>Hinweise sind gerade nicht verfügbar.</p></div>';
@@ -114,13 +116,13 @@ function listeHtml() {
     const vorbei = l.filter((b) => b.zustand === 'vorbei').length;
     const hb = l.filter((b) => b.hausbesuch).length;
     const naechster = alsNaechstes(l).termin;
-    const meta = [vorbei ? `${vorbei} vorbei` : '', `${l.length - vorbei} offen`, hb ? `${hb} ${hb === 1 ? 'Hausbesuch' : 'Hausbesuche'}` : ''].filter(Boolean).join(' · ');
+    // „vorbei“ klingt nach „behandelt“, auch bei Nichterscheinen (podoloji 13.11.2026): nur zählen, was noch kommt.
+    const meta = [`${l.length - vorbei} noch offen`, hb ? `${hb} ${hb === 1 ? 'Hausbesuch' : 'Hausbesuche'}` : ''].filter(Boolean).join(' · ');
     rumpf = `<div class="px-summe"><div><b>Gesamt</b><small>${esc(meta)}</small></div><span class="zahl">${l.length}</span></div>
       <ul class="px-termine">${l.map((b) => {
         const ende = b === naechster ? '<span class="px-pille px-pille--voll">als Nächstes</span>'
           : b.zustand === 'laeuft' ? '<span class="px-pille">läuft</span>'
-          : b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>'
-          : b.zustand === 'vorbei' ? '<span class="px-leise">vorbei</span>' : '';
+          : b.hausbesuch ? '<span class="px-pille">Hausbesuch</span>' : '';
         const klick = (b.lead_id ? `data-aktion="akte" data-lead="${esc(b.lead_id)}"` : 'disabled') + (b.id ? ` data-termin="${esc(b.id)}"` : '');
         return `<li><button type="button" class="px-termin${b.zustand === 'vorbei' ? ' ist-vorbei' : ''}${b === naechster ? ' ist-naechster' : ''}" ${klick}>
           <span class="t">${esc(uhrzeitBerlin(b.start_time))}</span>
