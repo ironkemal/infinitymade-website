@@ -30,7 +30,8 @@ kapsar. Sebep ölçüm:
 | `api-backend/billing/zuzahlung` | **105** |
 | `api-backend/billing/codes` | **34** |
 | `module/` tamamı (2026-08-14) | **191** |
-| **Bugünkü kapsam** | **0** |
+| **Başlangıç kapsamı (2026-08-14)** | **4 giriş, 0 hata** |
+| **Güncel kapsam (2026-11-13)** | **51 giriş (50 dosya + 1 glob), 0 hata** |
 
 191 hatalı bir liste kırmızı bir duvardır; duvar görmezden gelinir, görmezden
 gelinen araç ölür. Bu yüzden kapsam sıfır hatayla başlar ve **dosya temizlendikçe
@@ -38,8 +39,12 @@ büyür.**
 
 ### Bir dosyayı listeye ekleme
 
+> **`tsc -p` tuzağı:** `npx tsc -p jsconfig.json --noEmit <dosya>` komutu TypeScript'te
+> `TS5042` (*Option 'project' cannot be mixed with source files*) hatası verir.
+> Tekil aday veya kapalı import zinciri ölçümü için yardımcı betiği kullanın:
+
 ```bash
-npx tsc -p jsconfig.json --noEmit <dosya>   # önce ölç
+sh tools/typecheck-kandidat.sh <dosya>      # jsconfig.json + adayı geçici birleşimde ölçer
 # hataları düzelt, sonra jsconfig.json > include listesine ekle
 npm run typecheck                            # 0 olmalı
 ```
@@ -76,8 +81,10 @@ yazmak, birinciyle çelişme riski demektir.
 Proje modül URL'lerine `./signal.js?v=20260813` gibi bir ek koyuyor. Tarayıcı
 anlıyor, TypeScript anlamıyor ("Cannot find module").
 
-`module/globals.d.ts` içindeki `declare module '*?v=*';` bu hatayı susturuyor,
-**bedeli:** o import'lar editörde `any` olur, tipini kaybeder.
+`module/globals.d.ts` içindeki `declare module '*?v=*';` bu hatayı yalnızca yalın modül
+adlarında susturuyor; göreceli `./...js?v=...` import'larında TypeScript 7 (`tsgo`) yine
+`TS2307` üretir (ör. `supabase-config.js`, `design-oeffentlich.js`). Üstelik susturulan
+import'lar editörde `any` olur ve tipini kaybeder.
 
 Tam tip isteyen modülden modüle `?v=` **olmadan** import eder; cache-buster
 yalnızca HTML'in yüklediği giriş modülünde kalır.

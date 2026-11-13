@@ -52,6 +52,7 @@
     "module/termin-fehler.test.js",
     "module/verordnung-leistung-match.js",
     "module/zahlarten.js",
+    "api-backend/ai/validators/fristen.js",
     "api-backend/billing/api/podo-empfangsnachweis-gates.test.js",
     "api-backend/billing/ausfall/standort.js",
     "api-backend/billing/codes/legs.js",

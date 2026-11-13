@@ -94,7 +94,9 @@ export function pruefeBehandlungsbeginn({
   afterMessage,
   afterExtra
 } = {}) {
+  /** @type {Array<object>} */
   const blockers = [];
+  /** @type {Array<object>} */
   const warnings = [];
   const ausstellung = alsDatum(ausstellungsdatum);
   const latestStart = spaetesterBeginn(ausstellung, isDringend);
