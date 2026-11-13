@@ -5,7 +5,7 @@ import { validateRezept } from '../validate.js';
 import { validateStandard } from '../standardRules.js';
 import { validateBlanko } from '../blankoRules.js';
 import { validateLhbBvb } from '../lhbBvbRules.js';
-import { lookupLhbBvb, lookupBlankoShoulder, heilmittelCatalog } from '../catalog.js';
+import { lookupLhbBvb, lookupBlankoShoulder, heilmittelCatalog, getDiagnosegruppe } from '../catalog.js';
 import {
   FRIST_TAGE,
   parseIsoDatum,
@@ -44,7 +44,7 @@ test('catalog: lookupLhbBvb finds known chronic entry', () => {
 test('standard: valid WS prescription with 6 sessions passes', () => {
   const r = validateStandard({
     icd10: 'M54.5',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     anzahl_einheiten: 6,
     ausstellungsdatum: '2026-05-10',
     behandlungsbeginn: '2026-05-14',
@@ -67,7 +67,7 @@ test('standard: valid WS prescription with 6 sessions passes', () => {
 test('standard: 10 sessions on WS yields OVER_HOECHSTMENGE warning (not a blocker)', () => {
   const r = validateStandard({
     icd10: 'M54.5',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     anzahl_einheiten: 10,
     ausstellungsdatum: '2026-05-10'
   });
@@ -155,7 +155,7 @@ test('blanko: missing BLANKOVERORDNUNG marker is a blocker', () => {
 test('blanko: non-EX Diagnosegruppe blocks', () => {
   const r = validateBlanko({
     icd10: 'M19.01',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     heilmittel_feld_text: 'BLANKOVERORDNUNG',
     ausstellungsdatum: '2026-05-10'
   });
@@ -238,7 +238,7 @@ test('blanko: gueltig_bis is exactly 16 weeks after ausstellung', () => {
 test('lhbBvb: ICD not on list returns blocker', () => {
   const r = validateLhbBvb({
     icd10: 'M54.5',  // standard lumbago
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     anzahl_einheiten: 30,
     ausstellungsdatum: '2026-05-10'
   });
@@ -296,7 +296,7 @@ test('validate: auto-routes to lhb_bvb if ICD is on list and no Blanko marker', 
 test('validate: standard ICD falls through to standard engine', () => {
   const r = validateRezept({
     icd10: 'M54.5',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     anzahl_einheiten: 6,
     ausstellungsdatum: '2026-05-10'
   });
@@ -497,8 +497,8 @@ test('podo: DF-a wird wie DF behandelt -- kein DG_UNKNOWN', () => {
 
 // ── Physio-DG: kein ICD-Pool, kein ICD_DG_MISMATCH ─────────────────────────
 
-test('physio: WS2 mit beliebigem ICD => keine ICD-DG-Warnung', () => {
-  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'WS2', icd10: 'E11.74' });
+test('physio: WS mit beliebigem ICD => keine ICD-DG-Warnung', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'WS', icd10: 'E11.74' });
   assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined);
   assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
 });
@@ -784,6 +784,105 @@ test('blanko (Paket C): NOT_ON_BLANKO_LIST nennt tatsächliche Kataloggröße (6
   assert.ok(blk);
   assert.match(blk.msg, /65 zulässige EX-Diagnosen/);
   assert.doesNotMatch(blk.msg, /114/);
+});
+
+// ---------------------------------------------------------------------------
+// Paket D: diagnosegruppen.json Bereinigung (Alt-DGs, SO5, ZN, PN, Podologie)
+// ---------------------------------------------------------------------------
+
+test('standard (Paket D): SO5 mit 6 Einheiten ok, ab 7 Einheiten OVER_HOECHSTMENGE', () => {
+  const okRes = validateStandard({
+    diagnosegruppe: 'SO5',
+    anzahl_einheiten: 6,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.equal(okRes.ok, true);
+  assert.equal(okRes.blockers.length, 0);
+  assert.equal(okRes.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), undefined);
+  assert.equal(okRes.computed.frequency_hint, '1-3 x wöchentlich');
+
+  const overRes = validateStandard({
+    diagnosegruppe: 'SO5',
+    anzahl_einheiten: 7,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.equal(overRes.ok, true);
+  const warn = overRes.warnings.find(w => w.code === 'OVER_HOECHSTMENGE');
+  assert.ok(warn);
+  assert.equal(warn.max_allowed, 6);
+});
+
+test('standard (Paket D): veraltete Physio-Alt-DGs (EX3, LY3, WS2 u.a.) liefern DG_UNKNOWN', () => {
+  for (const altDg of ['WS1', 'WS2', 'EX1', 'EX2', 'EX3', 'ZN1', 'ZN2', 'AT1', 'AT2', 'AT3', 'LY1', 'LY2', 'LY3']) {
+    const r = validateRezept({
+      diagnosegruppe: altDg,
+      anzahl_einheiten: 6,
+      ausstellungsdatum: '2026-03-02'
+    });
+    assert.equal(r.ok, false, `${altDg} muss blockieren`);
+    assert.ok(
+      r.blockers.some(b => b.code === 'DG_UNKNOWN'),
+      `${altDg} muss DG_UNKNOWN liefern`
+    );
+  }
+});
+
+test('lhbBvb (Paket D): ZN mit G10 — 36 Einheiten ok, 37 Einheiten OVER_12_WEEKS_HEURISTIC (Schwelle 36)', () => {
+  const okRes = validateLhbBvb({
+    icd10: 'G10',
+    diagnosegruppe: 'ZN',
+    anzahl_einheiten: 36,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.equal(okRes.ok, true);
+  assert.equal(okRes.warnings.find(w => w.code === 'OVER_12_WEEKS_HEURISTIC'), undefined);
+  assert.equal(okRes.computed.max_weeks_per_verordnung, 12);
+
+  const warnRes = validateLhbBvb({
+    icd10: 'G10',
+    diagnosegruppe: 'ZN',
+    anzahl_einheiten: 37,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.equal(warnRes.ok, true);
+  const warn = warnRes.warnings.find(w => w.code === 'OVER_12_WEEKS_HEURISTIC');
+  assert.ok(warn);
+  assert.equal(warn.heuristic_max, 36);
+});
+
+test('standard (Paket D): amtliche frequency_hint und orientierende_menge Werte für Physio & Podologie', () => {
+  for (const dg of ['DF', 'NF', 'QF']) {
+    const r = validateStandard({
+      diagnosegruppe: dg,
+      anzahl_einheiten: 6,
+      ausstellungsdatum: '2026-03-02'
+    });
+    assert.equal(r.computed.frequency_hint, 'alle 4 bis 6 Wochen', `${dg} frequency_hint`);
+  }
+
+  const ui2 = validateStandard({
+    diagnosegruppe: 'UI2',
+    anzahl_einheiten: 4,
+    ausstellungsdatum: '2026-03-02'
+  });
+  assert.equal(ui2.computed.frequency_hint, 'nach Bedarf');
+
+  for (const dg of ['ZN', 'PN']) {
+    const r = validateStandard({
+      diagnosegruppe: dg,
+      anzahl_einheiten: 10,
+      ausstellungsdatum: '2026-03-02'
+    });
+    assert.equal(r.computed.frequency_hint, '1-3 x wöchentlich', `${dg} frequency_hint`);
+  }
+
+  assert.equal(getDiagnosegruppe('WS').orientierende_menge, 18);
+  assert.equal(getDiagnosegruppe('WS').note, undefined);
+  assert.equal(getDiagnosegruppe('EX').orientierende_menge, 18);
+  assert.equal(getDiagnosegruppe('AT').orientierende_menge, 18);
+  assert.equal(getDiagnosegruppe('LY').orientierende_menge, 30);
+  assert.equal(getDiagnosegruppe('ZN').orientierende_menge, 30);
+  assert.equal(getDiagnosegruppe('SO5').orientierende_menge, 18);
 });
 
 

@@ -36,7 +36,7 @@ export function validateLhbBvb(rezept) {
   // Verify the Diagnosegruppe declared on the rezept is in the allowed list for this ICD.
   let hasDgMismatch = false;
   if (rezept.diagnosegruppe && !entry.diagnosegruppen.includes(rezept.diagnosegruppe)) {
-    // Tolerate group prefix match: rezept WS2 vs catalog WS
+    // Tolerate group prefix match (e.g. sub-specifier suffix like DF-a vs catalog DF)
     const prefixHit = entry.diagnosegruppen.some(d =>
       rezept.diagnosegruppe.startsWith(d) || d.startsWith(rezept.diagnosegruppe)
     );

@@ -9,16 +9,16 @@ const PHYSIO_PROFIL = {
   label: 'Physiotherapie',
   hoechstmengeDefault: 6,
   gruppen: {
-    WS2: { code: 'WS2', label: 'Wirbelsäulenerkrankungen', hoechstmenge: 6, icd_accept: ['M40', 'M54'], icd_exclude: [] },
-    EX3: { code: 'EX3', label: 'Extremitäten', hoechstmenge: 10, icd_accept: [], icd_exclude: [] },
+    WS: { code: 'WS', label: 'Wirbelsäulenerkrankungen', hoechstmenge: 6, icd_accept: ['M40', 'M54'], icd_exclude: [] },
+    EX: { code: 'EX', label: 'Extremitäten', hoechstmenge: 6, icd_accept: [], icd_exclude: [] },
   },
   pflichtIcd: false,
 };
 
-test('WS2 + KG: Vollstaendige Verordnung hat keine Blocker und keine fehlenden Pflichtfelder', () => {
+test('WS + KG: Vollstaendige Verordnung hat keine Blocker und keine fehlenden Pflichtfelder', () => {
   const vo = {
     bereich: 'physiotherapy',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     heilmittel: 'Krankengymnastik',
     heilmittelPosition: 'X0501',
     anzahl: 6,
@@ -48,11 +48,11 @@ test('WS2 + KG: Vollstaendige Verordnung hat keine Blocker und keine fehlenden P
   assert.equal(serverRes.blockers.length, 0);
 });
 
-test('WS2 + KG: Fehlende Pflichtfelder (LANR, Ausstellungsdatum) fuehren zur Entwurf-Meldung mit Begruendung', () => {
+test('WS + KG: Fehlende Pflichtfelder (LANR, Ausstellungsdatum) fuehren zur Entwurf-Meldung mit Begruendung', () => {
   // Wenn Ausstellungsdatum fehlt
   const voOhneDatum = {
     bereich: 'physiotherapy',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     heilmittel: 'Krankengymnastik',
     anzahl: 6,
     ausstellungsdatum: '',
@@ -66,7 +66,7 @@ test('WS2 + KG: Fehlende Pflichtfelder (LANR, Ausstellungsdatum) fuehren zur Ent
   // Server-Validierung ohne Ausstellungsdatum meldet Blocker
   const serverResDatum = validateRezept({
     icd10: 'M54.5',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     heilmittel: 'KG',
     anzahl_einheiten: 6,
     ausstellungsdatum: null,
@@ -75,11 +75,11 @@ test('WS2 + KG: Fehlende Pflichtfelder (LANR, Ausstellungsdatum) fuehren zur Ent
   assert.ok(serverResDatum.blockers.some(b => b.code === 'AUSSTELLUNGSDATUM_INVALID'));
 });
 
-test('WS2 + KG / EX3: Ueberschreitung der Hoechstmenge ist Warnung, kein Blocker (Maske speichert als Entwurf mit Begruendung, Anlage 3: Arzt korrigiert)', () => {
-  // KG 6 + MT 6 (12 > 10 in EX3 oder 12 > 6 in WS2)
+test('WS + KG / EX: Ueberschreitung der Hoechstmenge ist Warnung, kein Blocker (Maske speichert als Entwurf mit Begruendung, Anlage 3: Arzt korrigiert)', () => {
+  // KG 6 + MT 6 (12 > 6 in EX und WS)
   const serverRes = validateRezept({
     icd10: 'M54.5',
-    diagnosegruppe: 'WS2',
+    diagnosegruppe: 'WS',
     heilmittel: 'KG',
     anzahl_einheiten: 12,
     ausstellungsdatum: '2026-11-01',

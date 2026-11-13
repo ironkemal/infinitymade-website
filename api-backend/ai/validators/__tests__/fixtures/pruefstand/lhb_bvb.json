@@ -155,8 +155,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "- 1-3x wöchentlich"
     },
-    "status": "befund",
-    "grund": "diagnosegruppen.json führt ZN mit frequency_hint „2-5 x wöchentlich\" → Schwelle 60 statt 36. Katalog nennt für ZN 1-3x wöchentlich."
+    "status": "aktiv"
   },
   {
     "id": "LHB-007",

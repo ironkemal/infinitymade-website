@@ -299,8 +299,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
     },
-    "status": "befund",
-    "grund": "SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt."
+    "status": "aktiv"
   },
   {
     "id": "PHY-STD-012",
@@ -325,8 +324,7 @@
       "version": "Fassung 15.05.2025, in Kraft 05.08.2025",
       "zitat": "Höchstmenge je VO: - bis zu 6x/VO"
     },
-    "status": "befund",
-    "grund": "diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie."
+    "status": "aktiv"
   },
   {
     "id": "PHY-STD-013",

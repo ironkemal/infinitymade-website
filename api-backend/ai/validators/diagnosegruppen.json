@@ -5,119 +5,40 @@
     "version": "2026-08-10-v3"
   },
   "physio": {
-    "WS1": {
-      "title": "Wirbelsäulenerkrankungen (akut/postoperativ)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 6,
-      "frequency_hint": "1-3 x wöchentlich"
-    },
-    "WS2": {
-      "title": "Wirbelsäulenerkrankungen (prolongierter Verlauf)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 18,
-      "frequency_hint": "1-3 x wöchentlich"
-    },
     "WS": {
       "title": "Wirbelsäulenerkrankungen",
       "hoechstmenge": 6,
-      "orientierende_menge": 6,
-      "frequency_hint": "1-3 x wöchentlich",
-      "note": "Fallback wenn Spezifizierung WS1/WS2 nicht angegeben."
-    },
-    "EX1": {
-      "title": "Erkrankungen der Extremitäten und des Beckens (akut)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 6,
-      "frequency_hint": "1-3 x wöchentlich"
-    },
-    "EX2": {
-      "title": "Erkrankungen der Extremitäten und des Beckens (prolongiert)",
-      "hoechstmenge": 6,
       "orientierende_menge": 18,
-      "frequency_hint": "1-3 x wöchentlich"
-    },
-    "EX3": {
-      "title": "Erkrankungen der Extremitäten und des Beckens (schwer/postoperativ)",
-      "hoechstmenge": 10,
-      "orientierende_menge": 30,
       "frequency_hint": "1-3 x wöchentlich"
     },
     "EX": {
       "title": "Erkrankungen der Extremitäten und des Beckens",
       "hoechstmenge": 6,
-      "orientierende_menge": 6,
+      "orientierende_menge": 18,
       "frequency_hint": "1-3 x wöchentlich"
-    },
-    "ZN1": {
-      "title": "ZNS-Erkrankungen Erwachsene",
-      "hoechstmenge": 10,
-      "orientierende_menge": 40,
-      "frequency_hint": "2-5 x wöchentlich"
-    },
-    "ZN2": {
-      "title": "ZNS-Erkrankungen Kinder",
-      "hoechstmenge": 10,
-      "orientierende_menge": 40,
-      "frequency_hint": "2-5 x wöchentlich"
     },
     "ZN": {
       "title": "ZNS-Erkrankungen einschließlich des Rückenmarks / Neuromuskuläre Erkrankungen",
       "hoechstmenge": 10,
-      "orientierende_menge": 40,
-      "frequency_hint": "2-5 x wöchentlich"
+      "orientierende_menge": 30,
+      "frequency_hint": "1-3 x wöchentlich"
     },
     "PN": {
       "title": "Periphere Nervenläsionen / Muskelerkrankungen",
       "hoechstmenge": 10,
       "orientierende_menge": 30,
-      "frequency_hint": "2-3 x wöchentlich"
-    },
-    "AT1": {
-      "title": "Atemwegserkrankungen (akut)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 6,
-      "frequency_hint": "2-5 x wöchentlich"
-    },
-    "AT2": {
-      "title": "Atemwegserkrankungen (chronisch)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 18,
       "frequency_hint": "1-3 x wöchentlich"
-    },
-    "AT3": {
-      "title": "Atemwegserkrankungen Kinder",
-      "hoechstmenge": 6,
-      "orientierende_menge": 30,
-      "frequency_hint": "2-3 x wöchentlich"
     },
     "AT": {
       "title": "Störungen der Atmung",
       "hoechstmenge": 6,
-      "orientierende_menge": 6,
-      "frequency_hint": "1-3 x wöchentlich"
-    },
-    "LY1": {
-      "title": "Lymphabflussstörungen (Stadium I)",
-      "hoechstmenge": 6,
       "orientierende_menge": 18,
       "frequency_hint": "1-3 x wöchentlich"
-    },
-    "LY2": {
-      "title": "Lymphabflussstörungen (Stadium II/III)",
-      "hoechstmenge": 6,
-      "orientierende_menge": 30,
-      "frequency_hint": "2-5 x wöchentlich"
-    },
-    "LY3": {
-      "title": "Lymphabflussstörungen (schwerwiegend, z. B. nach Op.)",
-      "hoechstmenge": 10,
-      "orientierende_menge": 50,
-      "frequency_hint": "2-5 x wöchentlich"
     },
     "LY": {
       "title": "Lymphabflussstörungen",
       "hoechstmenge": 6,
-      "orientierende_menge": 18,
+      "orientierende_menge": 30,
       "frequency_hint": "1-3 x wöchentlich"
     },
     "CS": {
@@ -155,6 +76,12 @@
       "hoechstmenge": 6,
       "orientierende_menge": 18,
       "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SO5": {
+      "title": "Chronische Adnexitis, chronische Prostatitis",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
     }
   },
   "podologie": {
@@ -163,7 +90,7 @@
       "title": "Diabetisches Fußsyndrom",
       "hoechstmenge": 6,
       "orientierende_menge": null,
-      "frequency_hint": null,
+      "frequency_hint": "alle 4 bis 6 Wochen",
       "untergruppen": ["a", "b", "c"],
       "enforcement": "hard_before_dta",
       "note": "Nur Wagner-Stadium 0 verordnungsfähig (HeilM-RL § 27 Abs. 3). a/b/c ist Leitsymptomatik, keine eigene Diagnosegruppe — aus dem ICD nicht ableitbar.",
@@ -186,7 +113,7 @@
       "title": "Krankhafte Schädigung am Fuß als Folge einer sensiblen oder sensomotorischen Neuropathie",
       "hoechstmenge": 6,
       "orientierende_menge": null,
-      "frequency_hint": null,
+      "frequency_hint": "alle 4 bis 6 Wochen",
       "untergruppen": null,
       "enforcement": "hard_before_dta",
       "note": "NICHT diabetisch (HeilM-RL § 27 Abs. 1 Nr. 2a). Diabetische Neuropathie gehört nach DF.",
@@ -214,7 +141,7 @@
       "title": "Krankhafte Schädigung am Fuß als Folge eines Querschnittsyndroms",
       "hoechstmenge": 6,
       "orientierende_menge": null,
-      "frequency_hint": null,
+      "frequency_hint": "alle 4 bis 6 Wochen",
       "untergruppen": null,
       "enforcement": "hard_before_dta",
       "note": "HeilM-RL § 27 Abs. 1 Nr. 2b. G82.- ist erst fünfstellig abrechenbar.",
@@ -264,7 +191,7 @@
       "title": "Unguis incarnatus Stadium 2 oder 3",
       "hoechstmenge": 4,
       "orientierende_menge": 8,
-      "frequency_hint": null,
+      "frequency_hint": "nach Bedarf",
       "untergruppen": null,
       "enforcement": "hard_before_dta",
       "leitsymptomatik": "b",

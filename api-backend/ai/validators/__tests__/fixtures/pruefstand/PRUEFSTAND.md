@@ -61,8 +61,8 @@ Gesamt: **122 Fälle**.
 
 | Status | Fälle |
 |---|---|
-| aktiv | 108 |
-| befund | 3 |
+| aktiv | 111 |
+| befund | 0 |
 | bewusst | 11 |
 
 ## Aufbau eines Falls
@@ -99,25 +99,17 @@ Gesamt: **122 Fälle**.
 
 ## Befundliste (Validator weicht von der Quelle ab)
 
-| id | Regel (Soll laut Quelle) | Was der Validator tut | Quelle und Zitat |
-|---|---|---|---|
-| LHB-006 | LHB/BVB: G10 + ZN, 37 Einheiten übersteigen 12 Wochen bei Frequenzempfehlung 1-3x | diagnosegruppen.json führt ZN mit frequency_hint „2-5 x wöchentlich" → Schwelle 60 statt 36. Katalog nennt für ZN 1-3x wöchentlich. | Heilmittelkatalog I, Diagnosegruppe ZN, Frequenzempfehlung (Z. 2759) — „- 1-3x wöchentlich" |
-| PHY-STD-011 | Physio: SO5 mit 6 Einheiten (Diagnosegruppe steht im Katalog) | SO5 fehlt in diagnosegruppen.json → DG_UNKNOWN, obwohl der Heilmittelkatalog die Gruppe führt. | Heilmittelkatalog I, Diagnosegruppe SO5 (Z. 3328–3329) — „Höchstmenge je VO: - bis zu 6x/VO" |
-| PHY-STD-012 | Physio: EX3 ist keine Diagnosegruppe des geltenden Katalogs (nur EX, bis zu 6x/VO) | diagnosegruppen.json führt Alt-Varianten (WS1/WS2, EX1–3, ZN1/2, AT1–3, LY1–3); EX3 und LY3 mit Höchstmenge 10 statt 6. Validator akzeptiert sie. | Heilmittelkatalog I, Diagnosegruppe EX (Z. 2603–2604) — „Höchstmenge je VO: - bis zu 6x/VO" |
+Keine offenen `befund`-Fälle (0 Stück; mit Paket D wurden `LHB-006`, `PHY-STD-011` und `PHY-STD-012` behoben).
 
 ### Befunde ohne eigenen Fall (aus dem Tabellenabgleich, nicht als Test abgebildet)
 
-- **Orientierende Behandlungsmenge** in `diagnosegruppen.json` weicht vom Katalog ab: WS, EX, AT 6
-  statt 18 · ZN 40 statt 30 · LY 18 statt 30. (`validateRezept` gibt den Wert nicht aus, deshalb
-  kein Fall.)
-- **Frequenzempfehlung** fehlt für DF/NF/QF (`null`; Katalog: „alle 4 bis 6 Wochen") und UI2
-  (`null`; Katalog: „nach Bedarf"). PN steht mit „2-3 x" statt 1-3x.
 - **Zweit-ICD** (Spalte „2. ICD-10", z. B. `Z98.88` bei `M23.5-`, `Z96.60`, `M24.41`; `Z43.0` bei
   `Z99.0`; `G99.2`/`G55.x` bei `M47.0-`..`M51.1`) ist in `heilmittel-catalog.json` strukturiert
   hinterlegt (`second_icd`/`second_icds`), wird zur Laufzeit in den Regeln aber noch nicht geprüft.
 - **`lookupLhbBvb` / `lookupBlankoShoulder`** normalisieren Eingaben per `trim().toUpperCase()`
   inkl. Wildcards (`XXX.-`, `XXX.Y-`, `G73.6*`, `C00-C97`); kommaseparierte Listen (z. B.
   „G60.0, M54.5") werden jedoch nicht aufgesplittet.
+- **Veraltete Physio-Alt-DGs außerhalb von `diagnosegruppen.json`**: `api-backend/ai/catalogs/rezept-optionen.js` (`DIAGNOSEGRUPPEN`) und `module/verordnung-import.js` führen weiterhin Alt-Codes (`WS1`, `WS2`, `EX1`–`EX3` etc.); bleiben vorerst bewusst unberührt (für KI-Normalisierung / Bestandsdaten).
 
 ## Bewusste Abweichungen (kein Fehler)
 
